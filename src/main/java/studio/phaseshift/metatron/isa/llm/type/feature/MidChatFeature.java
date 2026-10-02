@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 
 import java.util.Map;
@@ -249,7 +249,7 @@ public class MidChatFeature extends AbstractFeature {
      * The messages waiting to be read.
      */
     public Lst pendingMessages(final Agent agent) {
-        final Obj pending = Router.readFromSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES));
+        final Obj pending = Machine.readFromSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES));
         return pending.isLst() ? pending.asLst() : lst();
     }
 
@@ -257,7 +257,7 @@ public class MidChatFeature extends AbstractFeature {
      * Queue a message for the next tool result.
      */
     public void push(final Agent agent, final Rec message) {
-        Router.writeToSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES), this.pendingMessages(agent).add(message));
+        Machine.writeToSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES), this.pendingMessages(agent).add(message));
     }
 
     /**
@@ -265,7 +265,7 @@ public class MidChatFeature extends AbstractFeature {
      */
     public Lst drain(final Agent agent) {
         final Lst messages = this.pendingMessages(agent);
-        Router.writeToSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES), lst());
+        Machine.writeToSpace(this.getRoot(agent).extend(this.tid().name()).extend(PENDING_MESSAGES), lst());
         return messages;
     }
 

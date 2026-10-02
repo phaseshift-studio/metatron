@@ -24,7 +24,13 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
-import studio.phaseshift.metatron.isa.mach.type.compiler.*;
+import studio.phaseshift.metatron.isa.mach.type.compiler.Rewriter;
+import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
+import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.IdentityResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
+import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.IdentityRewriter;
 
 import java.util.concurrent.ConcurrentHashMap;
 

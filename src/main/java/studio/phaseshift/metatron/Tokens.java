@@ -134,6 +134,7 @@ public final class Tokens {
     public static final String TOKEN = "token";
     public static final String EST = "est";
     public static final String COEFFICIENT = "coefficient";
+    public static final String PRE_COEFFICIENT = "preCoefficient";
     public static final String QUERY = "query";
     public static final String DOM = "dom";
     public static final String RNG = "rng";
@@ -155,6 +156,7 @@ public final class Tokens {
     public static final String SESSION = "session";
     public static final String ITERATION = "iteration";
     public static final String PREV = "prev";
+    public static final String PREVIOUS = "previous";
     public static final String NEXT = "next";
     public static final String INDEX = "index";
     public static final String NOTE = "note";
@@ -225,6 +227,7 @@ public final class Tokens {
     public static final String SUPER = "super";
     public static final String ROUTE = "route";
     public static final String PEER = "peer";
+    public static final String NETWORK = "network";
     public static final String CACHE = "cache";
     public static final String CONST = "const";
     public static final String CONSTQ = "constq";

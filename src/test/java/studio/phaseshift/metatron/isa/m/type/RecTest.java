@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Map;
@@ -899,7 +899,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[l=>[1,'a',2.5]]@x          % @x/l >>= [true,false] % *x % [l=>[true,false]]@x",
     }, delimiter = '%')
     void control_lstInRec(final String state, final String update, final String fetch, final String expected) {
-        final Obj stored = Router.readFromSpace(f(fetch));
+        final Obj stored = Machine.readFromSpace(f(fetch));
         LOG.info("stored %s => %s", fetch, stored);
         AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("x"), expected)));
     }
@@ -914,7 +914,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[l=>[1,[r=>[2,3]],4]]@x        % @x/l/1/r >>= +[5]       % *x    % [l=>[1,[r=>[2,3,5]],4]]@x",
     }, delimiter = '%')
     void nested_lstInLstInRec_append(final String state, final String update, final String fetch, final String expected) {
-        final Obj stored = Router.readFromSpace(f(fetch));
+        final Obj stored = Machine.readFromSpace(f(fetch));
         LOG.info("stored %s => %s", fetch, stored);
         AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("x"), expected)));
     }
@@ -930,7 +930,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[m=>[[r=>[a=>1,b=>2]]]]@y     % @y/m/0/r/b >>= +5     % *y    % [m=>[[r=>[a=>1,b=>7]]]]@y",
     }, delimiter = '%')
     void nested_lstInLstInLstInRec_append(final String state, final String update, final String fetch, final String expected) {
-        final Obj stored = Router.readFromSpace(f(fetch));
+        final Obj stored = Machine.readFromSpace(f(fetch));
         LOG.info("stored %s => %s", fetch, stored);
         AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("y"), expected)));
     }
@@ -946,7 +946,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[m=>[['a','b'],['c','d']]]@z   % @z/m >>= [1=>['x','y']]    % *z    % [m=>[['a','b'],['x','y']]]@z",
     }, delimiter = '%')
     void nested_innerReplaceByKey(final String state, final String update, final String fetch, final String expected) {
-        final Obj stored = Router.readFromSpace(f(fetch));
+        final Obj stored = Machine.readFromSpace(f(fetch));
         LOG.info("stored %s => %s", fetch, stored);
         AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("z"), expected)));
     }

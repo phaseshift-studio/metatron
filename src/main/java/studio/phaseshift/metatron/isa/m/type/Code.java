@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointRewriter;
+import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 
 import java.util.*;
 

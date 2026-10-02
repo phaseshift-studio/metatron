@@ -192,23 +192,26 @@ public interface Processor extends mThread, Machine.Component {
             if (TypeCheck.inst_dom.enabled() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail()
                     && !instDomRngMatch(clhs, cinst.dom()) && clhs.unique()) {
                 clhs = clhs.c(cInt::one);
-                // bindQ is applied by the compiler (ScoringInstResolver.resolveInst); the resolved
+                // bindQ is applied by the compiler (ScoringResolver.resolveInst); the resolved
                 // inst already carries ?block, so no second bindQ is needed at apply time.
                 cinst = resolveRuntime(clhs, original);
                 modulateC = true;
                 if (!instDomRngMatch(clhs, cinst.dom()))
                     return fail("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst);
             }
-            final Obj rhs = invokeCore(clhs, cinst, original, isMonadicInst);
+            final Obj rhs = applyFunction(clhs, cinst, original, isMonadicInst);
             final cInt cc = cinst.c();
             return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
         }
 
         /**
-         * The computeArgs + function-application core (ensure-f, applyArgs, f().apply, error
-         * funnel, range check, fail propagation). Called by {@link #invoke(Obj, Inst, Inst)}.
+         * The function application itself (ensure-f, applyArgs, f().apply, error funnel, range check, fail
+         * propagation), which {@link #invoke(Obj, Inst, Inst)} hands off to once its guards have passed.
+         * <p>
+         * Private with a single caller, so it is a readability split rather than an override seam — the old
+         * name {@code invokeCore} suggested otherwise.
          */
-        private static Obj invokeCore(final Obj clhs, Inst cinst, final Inst original, final boolean isMonadicInst) {
+        private static Obj applyFunction(final Obj clhs, Inst cinst, final Inst original, final boolean isMonadicInst) {
             Obj rhs;
             if (!clhs.isFail() || cinst.isCatch()) {
                 try {
@@ -224,7 +227,7 @@ public interface Processor extends mThread, Machine.Component {
                     final Inst cin1 = cinst;
                     final Obj clhs1 = clhs;
                     cinst = ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst_args, cin1.tid() + ""), () -> applyArgs(clhs1, cin1));
-                    Router.stack().push(cinst.args());
+                    Memory.argStack().push(cinst.args());
                     try {
                         final Inst cin2 = cinst;
                         final Obj clhs2 = clhs;
@@ -242,7 +245,7 @@ public interface Processor extends mThread, Machine.Component {
                         } else
                             throw MTronException.funnel(e, Inst.Helper.instContext(cinst));
                     } finally {
-                        Router.stack().pop();
+                        Memory.argStack().pop();
                     }
                 } catch (final Exception e) {
                     rhs = fail(e);

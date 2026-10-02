@@ -92,8 +92,6 @@ public class UnslothTrainingDatasetExtractor {
                 TypeTest.class.getCanonicalName(),
                 UriTest.class.getCanonicalName(),
                 //LazyObjsTest.class.getCanonicalName(),
-                //FirstFindInstResolverTest.class.getCanonicalName(),
-                //ScoringInstResolverTest.class.getCanonicalName(),
                 //ObjJavaSerializerTest.class.getCanonicalName(),
                 //ObjSQLSerializerTest.class.getCanonicalName(),
                 sysInstSetTest.class.getCanonicalName(),

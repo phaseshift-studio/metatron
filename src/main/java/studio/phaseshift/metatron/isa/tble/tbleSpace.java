@@ -33,7 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema;
@@ -195,7 +195,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
             // always route to it (the expensive existing-table discovery stays lazy — the
             // placeholder's first read triggers it and swaps in the populated instset).
             this.schemaInstset = new SQLSchemaInstSet(this.vid().extend(INSTSET), List.of(), this);
-            Router.global().addSpace(this.schemaInstset);
+            Machine.current().addSpace(this.schemaInstset);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
@@ -301,7 +301,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
         // are the single source of truth — column types AND FK references are
         // embedded in the isaPredicate; no separate native schema needed.
         this.schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
-        Router.global().addSpace(this.schemaInstset);
+        Machine.current().addSpace(this.schemaInstset);
         this.schemaInstset.setup();
 
         // Wire schema into the space's own Rec so SchemaSpace.schema()
@@ -394,7 +394,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                         .findFirst().orElse(null);
         if (metadata == null) return;
         final Type type = this.schemaGenerator.refreshTableType(metadata);
-        Router.writeToSpace(type.vid(), type);
+        Machine.writeToSpace(type.vid(), type);
     }
 
     // =========================================================================
@@ -503,7 +503,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                             final fURI typeVID = this.schemaInstset.pattern()
                                     .retractPattern().extend(dp.collection());
                             final Type typed = (Type) obj.asType().vid(typeVID);
-                            Router.writeToSpace(typeVID, typed);
+                            Machine.writeToSpace(typeVID, typed);
                             LOG.info("registered type {{b}}%s{{X}} at collection path %s", typeVID, dp.collection());
                             return typed;
                         }
@@ -577,7 +577,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                 final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
                 if (pattern.hasScheme() && aligned.hasScheme() && !pattern.scheme().equals(aligned.scheme())) {
                     LOG.warn("interspace reroute: %s => %s", pattern, aligned);
-                    return Router.readFromSpace(aligned).stream().map(o -> new IdObj(aligned, o)).iterator();
+                    return Machine.readFromSpace(aligned).stream().map(o -> new IdObj(aligned, o)).iterator();
                 }
                 // ── collection-level schema resolution ──
                 // Shared across all SchemaSpaces: /db/collection → type from schema InstSet.

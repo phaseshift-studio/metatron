@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -54,7 +54,7 @@ public class MObjs implements Objs {
         this.vid = vid;
         this.tid = tid;
         if (null != vid)
-            Router.writeToSpace(vid, this);
+            Machine.writeToSpace(vid, this);
     }
 
     @Override

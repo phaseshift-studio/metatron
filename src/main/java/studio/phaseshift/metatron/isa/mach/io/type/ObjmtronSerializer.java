@@ -25,10 +25,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.mach.type.MonadProcessor;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.processor.MonadProcessor;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -412,7 +412,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 return sb;
             }
         }
-        sb.append(Router.loaded() ? Router.global().redirect(obj.tid(), false) : obj.tid());
+        sb.append(Machine.loaded() ? Machine.current().redirect(obj.tid(), false) : obj.tid());
         if (!obj.isObjInst())
             sb.append("::");
         return sb;
@@ -424,7 +424,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
         // uris where the serializer writes them.  Going around it left every vid -- and every type
         // named inside a refinement or a collection -- unclickable while plain uri values were fine
-        final fURI vid = Router.loaded() ? Router.global().redirect(obj.vid(), false) : obj.vid();
+        final fURI vid = Machine.loaded() ? Machine.current().redirect(obj.vid(), false) : obj.vid();
         return sb.append("@").append(this.writeUri(vid.toUri()));
     }
 
@@ -503,7 +503,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         // where the serializer writes them, and appending the raw string left every type named in a
         // result (inst::T, union(…), #::T, uri::T) unclickable while the plain uri values beside it
         // were fine
-        final fURI name = Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid();
+        final fURI name = Machine.loaded() ? Machine.current().redirect(type.tid(), false) : type.tid();
         sb.append(this.writeUri(name.toUri())).append("::T");
         if (type.hasPredicate()) {
             if (type.isIsaPredicate()) {

@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.*;
 
@@ -157,7 +157,7 @@ public class ExistingGraphSchema {
                     INSTSET_TID, instSetVid
             ) {
             };
-            Router.global().addSpace(instSet);
+            Machine.current().addSpace(instSet);
             instSet.setup();
             this.space.at(uri(SCHEMA), instSet, MUTABLE);
         }
@@ -302,7 +302,7 @@ public class ExistingGraphSchema {
         // Merge into the schema InstSet at SCHEMA (bootstrap if needed)
         final Obj schema = this.space.at(uri(SCHEMA));
         if (schema.isInstSet() && schema.<InstSet>as().pattern() != null) {
-            Router.writeToSpace(
+            Machine.writeToSpace(
                     schema.<InstSet>as().pattern().retractPattern().extend(label),
                     type);
         } else {
@@ -320,7 +320,7 @@ public class ExistingGraphSchema {
                     INSTSET_TID, instSetVid
             ) {
             };
-            Router.global().addSpace(instSet);
+            Machine.current().addSpace(instSet);
             instSet.setup();
             this.space.at(uri(SCHEMA), instSet, MUTABLE);
         }

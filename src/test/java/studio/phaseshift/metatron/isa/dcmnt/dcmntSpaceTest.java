@@ -47,7 +47,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
@@ -1877,17 +1877,17 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
         try {
             // Write target record
-            Router.writeToSpace(f("mongo:locations/1"),
+            Machine.writeToSpace(f("mongo:locations/1"),
                     rec(uri(NAME), str("downtown"),
                             uri("capacity"), jnt(5000)));
 
             // Write record with intra-space auto_from → mongo:locations/1
-            Router.writeToSpace(f("mongo:arenas/1"), rec(
+            Machine.writeToSpace(f("mongo:arenas/1"), rec(
                     uri(NAME), str("main_stage"),
                     uri("venue"), auto_from_(f("mongo:locations/1")).tryToInst()));
 
             // Read back: auto_from reconstructs from DBRef with bare collection name
-            final Obj arena = Router.readFromSpace(f("mongo:arenas/1"));
+            final Obj arena = Machine.readFromSpace(f("mongo:arenas/1"));
             final Obj venueInst = arena.recValue().get(uri("venue"));
             assertTrue(venueInst.isInst(), "venue should be a lazy auto_from inst");
             assertEquals(f("mongo:locations/1"), venueInst.asInst().arg(0).uriValue(),
@@ -1921,20 +1921,20 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
         final fURI memSpaceVid = f("/sys/space/mem/dcmnt_xspace_target");
         final memSpace targetSpace = memSpace.of(f("grph:#"), memSpaceVid);
-        Router.global().addSpace(targetSpace);
+        Machine.current().addSpace(targetSpace);
         try {
             // Write the cross-space target into memSpace
-            Router.writeToSpace(f("grph:vertices/42"),
+            Machine.writeToSpace(f("grph:vertices/42"),
                     rec(uri("label"), str("plaza"),
                             uri("zone"), str("A")));
 
             // Write dcmntSpace record with cross-space auto_from → grph:vertices/42
-            Router.writeToSpace(f("mongo:stages/1"), rec(
+            Machine.writeToSpace(f("mongo:stages/1"), rec(
                     uri(NAME), str("open_air"),
                     uri("spot"), auto_from_(f("grph:vertices/42")).tryToInst()));
 
             // Read back: auto_from reconstructs from $ref: "grph:vertices" → grph:vertices/42
-            final Obj stage = Router.readFromSpace(f("mongo:stages/1"));
+            final Obj stage = Machine.readFromSpace(f("mongo:stages/1"));
             final Obj spotInst = stage.recValue().get(uri("spot"));
             assertTrue(spotInst.isInst(), "spot should be a lazy auto_from inst");
             assertEquals(f("grph:vertices/42"), spotInst.asInst().arg(0).uriValue(),
@@ -1950,7 +1950,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             LOG.info("cross-space auto_from round-trip test passed");
         } finally {
             space.close();
-            Router.global().removeSpace(targetSpace.vid());
+            Machine.current().removeSpace(targetSpace.vid());
             targetSpace.close();
             // Clean up collection so DBRef schema discovery doesn't break subsequent tests
             try (final MongoClient client = MongoClients.create(connectionString)) {
@@ -1971,11 +1971,11 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
         try {
             // Write a target record
-            Router.writeToSpace(f("mongo:cities/1"),
+            Machine.writeToSpace(f("mongo:cities/1"),
                     rec(uri(NAME), str("santa_fe")));
 
             // Write a document with a sub-document containing a DBRef
-            Router.writeToSpace(f("mongo:events/1"), rec(
+            Machine.writeToSpace(f("mongo:events/1"), rec(
                     uri(NAME), str("fiesta"),
                     uri("details"), rec(
                             uri("venue"), str("plaza"),
@@ -1983,7 +1983,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
                     )));
 
             // Read back — the nested DBRef must not crash processDocument
-            final Obj event = Router.readFromSpace(f("mongo:events/1"));
+            final Obj event = Machine.readFromSpace(f("mongo:events/1"));
             assertTrue(event.isRec(), "event should be a record");
 
             // Navigate into the sub-document and resolve the nested reference
@@ -2031,20 +2031,20 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
         try {
             // Write the full document first
-            Router.writeToSpace(f("mongo:items/1"), rec(
+            Machine.writeToSpace(f("mongo:items/1"), rec(
                     uri(NAME), str("widget"),
                     uri("color"), str("red")));
 
             // Verify the full document exists
-            final Obj before = Router.readFromSpace(f("mongo:items/1"));
+            final Obj before = Machine.readFromSpace(f("mongo:items/1"));
             assertTrue(before.isRec(), "doc should exist before field delete");
             assertEquals(str("red"), before.asRec().at(uri("color")));
 
             // Delete the 'color' field by writing noobj to the field path
-            Router.writeToSpace(f("mongo:items/1/color"), noobj());
+            Machine.writeToSpace(f("mongo:items/1/color"), noobj());
 
             // Read back — color should be gone
-            final Obj after = Router.readFromSpace(f("mongo:items/1"));
+            final Obj after = Machine.readFromSpace(f("mongo:items/1"));
             assertTrue(after.isRec(), "doc should still exist after field delete");
             assertFalse(after.recValue().containsKey(uri("color")),
                     "color field should be unset");

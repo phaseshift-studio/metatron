@@ -39,7 +39,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * The ws ladder is separate code with its own semantics: it matches route keys by <em>prefix</em>
  * ({@code routePath.qLess().hasPrefix(key)}), takes the <em>first</em> match in map-iteration order (so {@code /}
  * can shadow a longer key), resolves the value through {@code Space.Helper.resolveApply} →
- * {@code Router.readFromSpace}, materializes an {@code mcp_server} type, and throws
+ * {@code Machine.readFromSpace}, materializes an {@code mcp_server} type, and throws
  * {@code "websocket handler type required"} for any value that is neither a {@code Type} nor an
  * {@code mcpServer} instance.
  * <p>

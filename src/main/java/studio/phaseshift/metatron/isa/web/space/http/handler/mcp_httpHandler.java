@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.web.space.http.SseStream;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -175,7 +175,7 @@ public class mcp_httpHandler extends HttpRec {
             // 1 — drain notifications already fired (between subscriptions/listen and this GET)
             this.drainOutbox(sse, outbox);
             // 2 — live push: wake on each notification the server writes to its outbox
-            Router.global().write(outbox.extend("#").addQ(SUBQ),
+            Machine.current().write(outbox.extend("#").addQ(SUBQ),
                     rec(mutableMap(
                                     uri(TARGET), uri(outbox.extend("#")),
                                     uri(CODE), instC(f("mcp_sse_push").dom(LST_TID).rng(NOOBJ_TID), lst(),
@@ -201,7 +201,7 @@ public class mcp_httpHandler extends HttpRec {
                 }
             }
             // the stream is ending — drop the live-push subscription
-            Router.global().write(outbox.extend("#").addQ(SUBQ), noobj());
+            Machine.current().write(outbox.extend("#").addQ(SUBQ), noobj());
         } finally {
             sse.close();
         }
@@ -213,9 +213,9 @@ public class mcp_httpHandler extends HttpRec {
      * be stranded. Each is framed as an MCP {@code event: message}.
      */
     private void drainOutbox(final SseStream sse, final fURI outbox) {
-        if (!Router.loaded())
+        if (!Machine.loaded())
             return;
-        final Obj pending = Router.readFromSpace(outbox.extend("#"));
+        final Obj pending = Machine.readFromSpace(outbox.extend("#"));
         if (pending.isNoObj())
             return;
         pending.stream().forEach(notification -> {

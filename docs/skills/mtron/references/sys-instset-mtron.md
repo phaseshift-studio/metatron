@@ -13,8 +13,8 @@ description: >
 
 # sys instruction set (`/m/sys`)
 
-`/sys` is the required system space — created at boot, it holds the system objs
-(router, typer, rewriter, environment, thread registry). The sys instset is its
+`/sys` is the required system space — created at boot, it holds the system objs (router, typer, rewriter, environment,
+thread registry). The sys instset is its
 instruction companion: a guarded `bash`, the blocking I/O primitives `sleep`,
 `stdout`, and `stdin`, the `sys_stat` thread summary, and a file family —
 `read_file`, `edit_file` — that operates on files mounted by a `fsspace::T`.
@@ -28,15 +28,15 @@ read them.
 
 ## instructions
 
-| inst       | dom → rng           | args                                       | what it does                                |
-|------------|---------------------|--------------------------------------------|---------------------------------------------|
-| `bash`     | `#{?} → lst[str]`   | `cmd`, `timeout?`                          | guarded shell (`bash -c`), stdout as lines  |
-| `sleep`    | `A{?} → A{?}`       | `time`                                     | pause the thread, pass lhs through          |
-| `stdout`   | `#{?} → #{?}`       | `obj`                                      | print the arg's jvm obj, pass lhs through   |
-| `stdin`    | `#{?} → str`        | —                                          | read one line from terminal input           |
-| `sys_stat` | `#{?} → rec`        | —                                          | the thread executor's own summary           |
-| `read_file`| `#{?} → lst`        | `file`, `min?`, `max?`                     | a file's lines, indexed, or the `min..max` slice |
-| `edit_file`| `#{?} → rec`        | `file`, `text`, `min`, `max?`              | insert at `min` (or replace `min..max`), and report |
+| inst        | dom → rng         | args                          | what it does                                        |
+|-------------|-------------------|-------------------------------|-----------------------------------------------------|
+| `bash`      | `#{?} → lst[str]` | `cmd`, `timeout?`             | guarded shell (`bash -c`), stdout as lines          |
+| `sleep`     | `A{?} → A{?}`     | `time`                        | pause the thread, pass lhs through                  |
+| `stdout`    | `#{?} → #{?}`     | `obj`                         | print the arg's jvm obj, pass lhs through           |
+| `stdin`     | `#{?} → str`      | —                             | read one line from terminal input                   |
+| `sys_stat`  | `#{?} → rec`      | —                             | the thread executor's own summary                   |
+| `read_file` | `#{?} → lst`      | `file`, `min?`, `max?`        | a file's lines, indexed, or the `min..max` slice    |
+| `edit_file` | `#{?} → rec`      | `file`, `text`, `min`, `max?` | insert at `min` (or replace `min..max`), and report |
 
 ## bash (`/m/sys/inst/bash`)
 
@@ -80,7 +80,8 @@ the same `==` projection:
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
 
 ```mtron_pre
-["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
+[MAXOUTPUT 10] ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
+["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()>>format
 ```
 
 ### pipe over the results
@@ -123,12 +124,12 @@ once rather than negotiated per call. Query parameters are metatron's way of
 annotating an inst at its tid; `?*` is the door, and these are the ones agents meet
 first.
 
-| q-param  | type            | semantics                                                |
-|----------|-----------------|----------------------------------------------------------|
-| `allow`  | `lst[str]`      | whitelist regexes, matched whole-command (`matches()`)   |
-| `reject` | `lst[str]`      | blacklist regexes, matched anywhere (`find()`)           |
-| `env`    | `rec[str=>str]` | environment variables injected into the process          |
-| `dir`    | `str`           | the process's working directory                           |
+| q-param  | type            | semantics                                              |
+|----------|-----------------|--------------------------------------------------------|
+| `allow`  | `lst[str]`      | whitelist regexes, matched whole-command (`matches()`) |
+| `reject` | `lst[str]`      | blacklist regexes, matched anywhere (`find()`)         |
+| `env`    | `rec[str=>str]` | environment variables injected into the process        |
+| `dir`    | `str`           | the process's working directory                        |
 
 Each guard fails before the process spawns, and the failure names the pattern that
 fired:
@@ -138,7 +139,8 @@ fired:
 [ERROR] bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
 ```
 
-The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the process:
+The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
+process:
 
 ```mtron_pre
 bash?allow=['ls .+']('ls AGENTS.md')
@@ -232,8 +234,8 @@ into its structural form. Where in doubt, `?docq` and `.explain()` say what an i
 is doing — the sugar is short precisely because it is legible once:
 
 ```mtron_pre
-[NO_OUTPUT] *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
-[NO_PROMPT] [MAXOUTPUT 10] *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
+[MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
+[NO_PROMPT] [MAXOUTPUT 15] *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ```
 
 ## walking the tree
@@ -369,8 +371,8 @@ between that walk and a hung machine:
 2. the **clone gauge** (128, in objClone) — the deep read fails with
    `clone depth limit exceeded` instead of a stack overflow;
 3. the **work budget** — a walk that spins flat, within the depth cap, is
-   caught by the per-expression frame-operation count
-   (`-Dmetatron.execution.workBudget` to raise it for a legitimately big read);
+   caught by the per-expression frame-operation count (`-Dmetatron.execution.workBudget` to raise it for a legitimately
+   big read);
 4. the **×N collapse** in the rendered trace — the repeated frames render as
    `… (×63 more — same frame repeated: …)`, so the loop reads as a loop.
 
@@ -384,6 +386,7 @@ text), and `objClone` (the gauge) — a new throw site belongs to this grammar.
 ## see also
 
 * [mtron type system](type-system-mtron.md) — vid/tid, coefficients, `.as(type::T)`.
-* [mtron language reference](language-reference-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`), `->` write.
+* [mtron language reference](language-reference-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`),
+  `->` write.
 * [web instruction set](web-instset-mtron.md) — the route tables an `fsspace` mount hangs behind.
 * [tble instruction set](tble-instset-mtron.md) — the same space protocol, on a database.

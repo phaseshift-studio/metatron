@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.stream.Stream;
 
@@ -76,23 +76,23 @@ public abstract class AbstractWebSocketServerTest extends AbstractMetatronTest {
      * Look up the registered Type for this server from the Router.
      */
     protected Type serverType() {
-        return Router.global().read(server.vid()).type();
+        return Machine.current().read(server.vid()).type();
     }
 
     @BeforeEach
     public void setupTestSpace() {
         InstSet.importInstSet(WEB_ISA_TID);
         this.testSpace = wsSpace.of(mutableMap(
-                uri(PATTERN),uri(testSpacePattern()),
-                uri(HOST),uri("ws://localhost:" + generatePort()),
-                uri(ROUTE),rec()), f("/sys/space/test"));
+                uri(PATTERN), uri(testSpacePattern()),
+                uri(HOST), uri("ws://localhost:" + generatePort()),
+                uri(ROUTE), rec()), f("/sys/space/test"));
         this.server = createServer(createTestVid());
     }
 
     @AfterEach
     public void teardownTestSpace() {
         if (this.testSpace != null) {
-            Router.global().removeSpace(this.testSpace.vid());
+            Machine.current().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }
@@ -154,12 +154,12 @@ public abstract class AbstractWebSocketServerTest extends AbstractMetatronTest {
     // =========================================================
     // Handler registration
     // =========================================================
-    
+
     @Test
     public void testHasOnMessage() {
         assertFalse(server.at(uri(ON_MESSAGE)).isNoObj(), "missing ON_MESSAGE");
     }
-    
+
     // =========================================================
     // Handler invocation (no real WebSocket needed)
     // =========================================================

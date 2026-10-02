@@ -16,10 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type;
+package studio.phaseshift.metatron.isa.mach.type.processor;
 
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Processor;
 
 /**
  * MonadProcessor — a {@code Processor} that schedules monads. This is the nominal marker for the

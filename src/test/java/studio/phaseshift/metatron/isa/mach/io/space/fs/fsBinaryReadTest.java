@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
@@ -90,7 +90,7 @@ class fsBinaryReadTest extends AbstractMetatronTest {
     void testBinaryIsReadAsBytes(final String path, final String kind, final String expectedTid,
                                  final String desc) throws Exception {
         final long fileSize = Files.size(WEBSITE.resolve(path));
-        final Obj obj = Router.readFromSpace(f("mfs:" + path));
+        final Obj obj = Machine.readFromSpace(f("mfs:" + path));
         if (obj.isBytes()) {
             LOG.info("read mfs:%s => %s [%d bytes, file is %d]", path, obj.tid(), obj.asBytes().jvm().array().length, fileSize);
             assertEquals(fileSize, obj.asBytes().jvm().array().length,

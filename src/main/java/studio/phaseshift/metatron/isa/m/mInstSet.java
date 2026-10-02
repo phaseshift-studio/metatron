@@ -30,11 +30,10 @@ import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.type.resolver.ScoringInstResolver;
-import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
-import studio.phaseshift.metatron.isa.mach.type.compiler.FixPointRewriter;
-import studio.phaseshift.metatron.isa.mach.type.compiler.ScoringResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -49,9 +48,9 @@ import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
@@ -1095,7 +1094,7 @@ public class mInstSet extends AbstractInstSet {
         }
         final TypeGraph graph = TypeGraph.global();
         graph.resetStats();
-        ScoringInstResolver.resetTimings();
+        ScoringResolver.resetTimings();
         FixPointRewriter.resetRewriteTimings();
         StatefulMonad.resetTimings();
         SwarmProcessor.resetTimings();
@@ -1125,7 +1124,7 @@ public class mInstSet extends AbstractInstSet {
         }
         final Code rewritten = lastRewritten.get();
         final Code resolved = lastResolved.get();
-        final long resSum = ScoringInstResolver.T_RESOLVE.get() + ScoringInstResolver.T_BIND.get() + ScoringInstResolver.T_COMPOSE.get();
+        final long resSum = ScoringResolver.T_RESOLVE.get() + ScoringResolver.T_BIND.get() + ScoringResolver.T_COMPOSE.get();
         final long appSum = StatefulMonad.T_SPLIT.get() + StatefulMonad.T_APPLY.get() + StatefulMonad.T_NEXT.get();
         final StringBuilder sb = new StringBuilder("\n");
         sb.append("  stage     min (ms)   max (ms)\n");
@@ -1134,9 +1133,9 @@ public class mInstSet extends AbstractInstSet {
         sb.append(String.format("  apply     %8.3f   %8.3f%n", applyMin / 1_000_000.0, applyMax / 1_000_000.0));
         sb.append(String.format("  insts     %d%n", resolved.insts().size()));
         sb.append("  resolve sub-stages (avg ms):\n");
-        sb.append(String.format("    inst-resolve      %8.3f  %5.1f%%%n", ScoringInstResolver.T_RESOLVE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringInstResolver.T_RESOLVE.get() * 100.0 / resSum));
-        sb.append(String.format("    generic-binding   %8.3f  %5.1f%%%n", ScoringInstResolver.T_BIND.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringInstResolver.T_BIND.get() * 100.0 / resSum));
-        sb.append(String.format("    inst-composition  %8.3f  %5.1f%%%n", ScoringInstResolver.T_COMPOSE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringInstResolver.T_COMPOSE.get() * 100.0 / resSum));
+        sb.append(String.format("    inst-resolve      %8.3f  %5.1f%%%n", ScoringResolver.T_RESOLVE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringResolver.T_RESOLVE.get() * 100.0 / resSum));
+        sb.append(String.format("    generic-binding   %8.3f  %5.1f%%%n", ScoringResolver.T_BIND.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringResolver.T_BIND.get() * 100.0 / resSum));
+        sb.append(String.format("    inst-composition  %8.3f  %5.1f%%%n", ScoringResolver.T_COMPOSE.get() / 1_000_000.0 / iters, 0L == resSum ? 0.0 : ScoringResolver.T_COMPOSE.get() * 100.0 / resSum));
         sb.append("  rewrite rules:\n");
         final List<Map.Entry<String, AtomicLong>> rules = new ArrayList<>(FixPointRewriter.REWRITE_TIMINGS.entrySet());
         rules.sort((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()));
@@ -1250,9 +1249,9 @@ public class mInstSet extends AbstractInstSet {
                         uri(APPLY), rec(uri(MIN), real(applyMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(applyMax / ms, MILLIS_TYPE.vid(), null))),
                 uri(INSTS), jnt(resolved.insts().size()),
                 uri(RESOLVE), rec(
-                        uri(INST_RESOLVE), real(ScoringInstResolver.T_RESOLVE.get() / ms / iters, MILLIS_TYPE.vid(), null),
-                        uri(GENERIC_BINDING), real(ScoringInstResolver.T_BIND.get() / ms / iters, MILLIS_TYPE.vid(), null),
-                        uri(INST_COMPOSITION), real(ScoringInstResolver.T_COMPOSE.get() / ms / iters, MILLIS_TYPE.vid(), null)),
+                        uri(INST_RESOLVE), real(ScoringResolver.T_RESOLVE.get() / ms / iters, MILLIS_TYPE.vid(), null),
+                        uri(GENERIC_BINDING), real(ScoringResolver.T_BIND.get() / ms / iters, MILLIS_TYPE.vid(), null),
+                        uri(INST_COMPOSITION), real(ScoringResolver.T_COMPOSE.get() / ms / iters, MILLIS_TYPE.vid(), null)),
                 uri(REWRITE), rec(
                         uri(RULES), lst(ruleRecs),
                         uri(TOTAL), rec(uri(IN), jnt(originalInsts.size()), uri(OUT), jnt(rewritten.insts().size()), uri(TIME), real(totalRuleTime / ms, MILLIS_TYPE.vid(), null))),

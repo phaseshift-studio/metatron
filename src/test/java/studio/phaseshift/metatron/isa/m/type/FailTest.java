@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -199,15 +199,15 @@ public class FailTest extends AbstractObjTest {
         final Fail f = fail("transient");
         final fURI vid = f.vid();
         assertNotNull(vid, "an uncaught fail is registered in the fail space");
-        assertFalse(Router.readFromSpace(vid).isNoObj(), "the fail is present before catching");
+        assertFalse(Machine.readFromSpace(vid).isNoObj(), "the fail is present before catching");
 
         final Fail caught = f.caughtTransient();
         assertTrue(caught.isCaughtFail(), "caughtTransient wraps as caught");
         assertFalse(caught.isFail(), "a caught fail reports isFail() == false");
-        assertFalse(Router.readFromSpace(vid).isNoObj(), "caughtTransient must not delete the fail from its space");
+        assertFalse(Machine.readFromSpace(vid).isNoObj(), "caughtTransient must not delete the fail from its space");
 
         f.caught();
-        assertTrue(Router.readFromSpace(vid).isNoObj(), "caught() does delete the fail from its space");
+        assertTrue(Machine.readFromSpace(vid).isNoObj(), "caught() does delete the fail from its space");
     }
 
     @Test

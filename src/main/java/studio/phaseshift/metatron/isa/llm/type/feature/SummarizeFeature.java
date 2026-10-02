@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -182,7 +182,7 @@ public class SummarizeFeature extends AbstractFeature {
         this.surfaceWatermarkRejections(agent);
         final fURI outputBase = this.outputBase(agent);
         // always-on loose-end reminder
-        final Obj looseEnds = Router.readFromSpace(outputBase.extend("loose_end").extend("+"));
+        final Obj looseEnds = Machine.readFromSpace(outputBase.extend("loose_end").extend("+"));
         if (!looseEnds.isNoObj() && agent.hasFeature(LLM_SYSTEM_FEATURE_TID)) {
             agent.requireService(SystemService.class).addSystemMessage("""
                                                                        An analysis of the last summarization identified the following loose ends:
@@ -254,7 +254,7 @@ public class SummarizeFeature extends AbstractFeature {
                 final fURI conceptURI = concept.isUri()
                         ? concept.uriValue()
                         : conceptRoot.extend(Str.Helper.cleanString(concept));
-                final Obj cRec = Router.readFromSpace(conceptURI).orElse(noobj());
+                final Obj cRec = Machine.readFromSpace(conceptURI).orElse(noobj());
                 if (cRec.isNoObj()) {
                     LOG.warn("summarize briefing: no concept rec at %s", conceptURI);
                     continue;
@@ -268,7 +268,7 @@ public class SummarizeFeature extends AbstractFeature {
         }
         // claims of the wanted kinds (and concept-relevant sources, when concepts given)
         final List<Obj> claimEntries = new ArrayList<>();
-        for (final Rel rel : Router.readFromSpace(outputBase.extend("claim").extend("+/")).stream().map(Obj::asRel).toList()) {
+        for (final Rel rel : Machine.readFromSpace(outputBase.extend("claim").extend("+/")).stream().map(Obj::asRel).toList()) {
             final fURI claimVid = rel.first().uriValue();
             final Rec claimRec = rel.second().asRec();
             final Obj kind = claimRec.at(uri(KIND));
@@ -281,7 +281,7 @@ public class SummarizeFeature extends AbstractFeature {
         }
         // loose ends
         final List<Obj> looseEndEntries = new ArrayList<>();
-        for (final Rel rel : Router.readFromSpace(outputBase.extend("loose_end").extend("+/")).stream().map(Obj::asRel).toList()) {
+        for (final Rel rel : Machine.readFromSpace(outputBase.extend("loose_end").extend("+/")).stream().map(Obj::asRel).toList()) {
             final Rec leRec = rel.second().asRec();
             looseEndEntries.add(rec(uri(TEXT), leRec.at(uri(TITLE)).orElse(leRec.at(uri(DESC)).orElse(str(""))),
                     uri(LOCATION), auto_from_(rel.first().uriValue()).tryToInst()));
@@ -368,7 +368,7 @@ public class SummarizeFeature extends AbstractFeature {
         // 1. collect this session's messages from the ledger as rels
         //    (vid => rec) — the rel key IS the message vid (branch read)
         final fURI messagesLocation = agent.root().extend(MESSAGE).extend("+/");
-        final List<Rel> messages = Router.readFromSpace(messagesLocation)
+        final List<Rel> messages = Machine.readFromSpace(messagesLocation)
                 .stream()
                 .map(Obj::asRel)
                 .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
@@ -388,7 +388,7 @@ public class SummarizeFeature extends AbstractFeature {
                 .collect(Collectors.joining("\n"))
                 .replace("%", ""); // remove all string formatting meta-characters
         // 3. the model — from the agent home (matches <agent>/model)
-        final mModel model = modelArg.isNoObj() ? mModel.model(Router.readFromSpace(agent.root().extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
+        final mModel model = modelArg.isNoObj() ? mModel.model(Machine.readFromSpace(agent.root().extend(MODEL)).asRec()) : mModel.model(modelArg.asRec());
         // 4. distill via a mini-task
         final ChatFrame result = Agent.Helper.miniChat("session_summarizer", model(model.at(TIMEOUT, real(10.0, MATH_MINUTE_TID, null))), SUMMARIZE_PROMPT + digest);
         // 5. parse the <<json:claim>> and <<json:loose_end>> watermarks into vids
@@ -417,7 +417,7 @@ public class SummarizeFeature extends AbstractFeature {
                                     .toList()), MUTABLE);
                         }
                         rec = rec.tid(LLM_CLAIM_TID);
-                        final fURI vid = Router.writeToSpace(outputBase.extend("claim").extend("_").addQ(INCRQ), rec).vid();
+                        final fURI vid = Machine.writeToSpace(outputBase.extend("claim").extend("_").addQ(INCRQ), rec).vid();
                         claimVids.add(uri(vid));
                     } else if (keyStr.equals("loose_end")) {
                         // JSON parses status as a string ("open") — coerce to a uri
@@ -441,7 +441,7 @@ public class SummarizeFeature extends AbstractFeature {
                         // time is stamped by the inst, not the model
                         rec.at(uri(TIME), nowDatetime(), MUTABLE);
                         rec = rec.tid(LLM_LOOSE_END_TID);
-                        final fURI vid = Router.writeToSpace(outputBase.extend("loose_end").extend("_").addQ(INCRQ), rec).vid();
+                        final fURI vid = Machine.writeToSpace(outputBase.extend("loose_end").extend("_").addQ(INCRQ), rec).vid();
                         looseEndVids.add(uri(vid));
                     }
                 }

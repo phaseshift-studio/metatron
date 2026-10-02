@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Map;
 import java.util.UUID;
@@ -89,7 +89,7 @@ public class haosSpace extends mqttSpace {
             .constructor(instC(M_ISA_INST_TID.dom(ALL).rng(HAOS_SPACE_TID),
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
                         final Space space = haosSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
-                        Router.global().addSpace(space);
+                        Machine.current().addSpace(space);
                         return space;
                     })).create();
 

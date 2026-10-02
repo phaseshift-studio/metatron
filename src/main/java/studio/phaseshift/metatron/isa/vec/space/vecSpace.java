@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -151,7 +151,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
             LOG.warn("could not list collections");
             this.schemaInstset = createSchemaInstset(schemaVid, Set.of());
         }
-        Router.global().addSpace(this.schemaInstset);
+        Machine.current().addSpace(this.schemaInstset);
         this.schemaInstset.setup();
         this.at(uri(SCHEMA), this.schemaInstset, MUTABLE);
     }
@@ -189,7 +189,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
     private void onCollectionCreated(final String name) {
         if (this.schemaInstset == null) return;
         final Type type = collectionType(name, this.schemaInstset.vid());
-        Router.writeToSpace(type.vid(), type);
+        Machine.writeToSpace(type.vid(), type);
         LOG.info("registered type {{b}}%s{{X}} for collection %s", type.vid(), name);
     }
 

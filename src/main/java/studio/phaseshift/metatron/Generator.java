@@ -22,7 +22,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -116,7 +117,7 @@ public class Generator {
                 .headerDivider("{{b}}" + Border.continuous.leftSide())
                 .applyStyle();
         spaceTypes.forEach(s -> {
-            spaceTable.addRow(List.of("[ ]", s.vid().name(), Router.readFromSpace(s.vid().addQ(DOCQ_PATTERN.toString())).orElse(rec()).at(DESC)));
+            spaceTable.addRow(List.of("[ ]", s.vid().name(), Machine.readFromSpace(s.vid().addQ(DOCQ_PATTERN.toString())).orElse(rec()).at(DESC)));
         });
         System.out.println(spaceTypes);
         LOG.none(spaceTable.format());

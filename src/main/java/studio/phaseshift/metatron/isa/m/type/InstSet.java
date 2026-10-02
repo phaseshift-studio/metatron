@@ -20,9 +20,10 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -45,7 +46,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface InstSet extends Space {
+/**
+ * A machine component that happens to also be a Space.
+ * <p>
+ * The {@code Machine.Component} half is the model — an ISA is one of the five things a Machine is made of, beside
+ * its compiler, processor, network and memory. The {@code Space} half is an accident of how importing was
+ * implemented: {@code importInstSetStream} does {@code Machine.current().addSpace(isa)}, so an ISA had to be a
+ * Space to be reachable. Frame-scoping imports removes that need, and this declaration is where the two
+ * descriptions meet in the meantime.
+ */
+public interface InstSet extends Space, Machine.Component {
 
     public static InstSet instset0() {
         return new AbstractInstSet(false) {
@@ -63,7 +73,7 @@ public interface InstSet extends Space {
             .constructor(arg -> {
                 final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
                 };
-                Router.global().addSpace(isa);
+                Machine.current().addSpace(isa);
                 isa.setup();
                 return isa;
             }).create();
@@ -147,10 +157,10 @@ public interface InstSet extends Space {
 
     static Stream<InstSet> importInstSetStream(final fURI vid, final fURI prefix) {
         if (null != prefix)
-            Router.global().registerPrefix(prefix, vid);
+            Machine.current().registerPrefix(prefix, vid);
         return loadInstSetProvider(vid)
                 .map(ServiceLoader.Provider::get)///  new
-                .peek(isa -> Router.global().addSpace(isa)) // add to router
+                .peek(isa -> Machine.current().addSpace(isa)) // add to router
                 .peek(InstSet::setup); // setup
     }
 

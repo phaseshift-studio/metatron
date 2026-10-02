@@ -16,38 +16,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.compiler;
+package studio.phaseshift.metatron.isa.mach.type.compiler.resolver;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Rewriter;
+import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REWRITER_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_RESOLVER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
- * IdentityRewriter — the no-op {@code rewriter::T}: the default rewriter stage when a compiler does
- * not wire a concrete strategy. {@code rewrite(code) = code}.
+ * IdentityInstResolver — the no-op {@code resolver::T}: the default resolver stage when a compiler
+ * does not wire a concrete strategy. {@code apply(code) = code.asCode()}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class IdentityRewriter extends MRec implements Rewriter {
+public class IdentityResolver extends MRec implements Resolver {
 
-    private static final IdentityRewriter INSTANCE = new IdentityRewriter(mutableMap(), MACH_REWRITER_TID, null);
+    private static final IdentityResolver INSTANCE = new IdentityResolver(mutableMap(), MACH_RESOLVER_TID, null);
 
-    public static IdentityRewriter single() {
+    public static IdentityResolver single() {
         return INSTANCE;
     }
 
-    public IdentityRewriter() {
-        this(mutableMap(), MACH_REWRITER_TID, null);
+    public IdentityResolver() {
+        this(mutableMap(), MACH_RESOLVER_TID, null);
     }
 
-    public IdentityRewriter(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public IdentityResolver(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 

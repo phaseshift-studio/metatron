@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -91,8 +91,8 @@ public class StatusLine implements Runnable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
-        final Real inBytes = mathInstSet.normalizeData(real((double) (Router.global().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
-        final Real outBytes = mathInstSet.normalizeData(real((double) (Router.global().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
+        final Real inBytes = mathInstSet.normalizeData(real((double) (Machine.current().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
+        final Real outBytes = mathInstSet.normalizeData(real((double) (Machine.current().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
         this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
         this.addWidget(f("in_bytes"), () -> " {{w}}\uD83D\uDCE5 {{%s}}%s::%.2f ".formatted(getForegroundColor(), inBytes.tid().name(), inBytes.realValue()));
         this.addWidget(f("out_bytes"), () -> "{{w}}\uD83D\uDCE4 {{%s}}%s::%.2f ".formatted(getForegroundColor(), outBytes.tid().name(), outBytes.realValue()));
@@ -100,16 +100,16 @@ public class StatusLine implements Runnable {
         this.addWidget(f("tokens"), () -> "\uD83E\uDD16 %s ".formatted(StatusLine.widgetData.at("tokens").orElse((Obj) jnt(0)).toCleanString()));
         this.addWidget(f("message"), () -> StatusLine.bannerMarkup(getForegroundColor(), getBackgroundColor()));
         
-        /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Router.global().stats().monadicStats().runningMonads()));
-        this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
-        this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
-        this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Router.global().stats().monadicStats().barrierMonads()));
-        this.addWidget(f("ws"), () -> "{{w}}ws:{{w&[g]}}[%d]{{[%s]}} %s".formatted(Router.global().stats().ioStats().connections(), this.getColor(), formatMessage(Router.global().stats().ioStats().lastMessage())));*/
-        Router.writeToSpace(console.vid().extend(STATUS).addQ(SUBQ), instLambda((lhs, inst) -> {
+        /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Machine.current().stats().monadicStats().runningMonads()));
+        this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Machine.current().stats().monadicStats().haltedMonads()));
+        this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Machine.current().stats().monadicStats().killedMonads()));
+        this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Machine.current().stats().monadicStats().barrierMonads()));
+        this.addWidget(f("ws"), () -> "{{w}}ws:{{w&[g]}}[%d]{{[%s]}} %s".formatted(Machine.current().stats().ioStats().connections(), this.getColor(), formatMessage(Machine.current().stats().ioStats().lastMessage())));*/
+        Machine.writeToSpace(console.vid().extend(STATUS).addQ(SUBQ), instLambda((lhs, inst) -> {
             message(lhs.asRec().at(OBJ));
             return noobj();
         }));
-        Router.writeToSpace(console.vid().extend(STATUS).extend("widget").extend("#").addQ(SUBQ), instLambda((lhs, inst) -> {
+        Machine.writeToSpace(console.vid().extend(STATUS).extend("widget").extend("#").addQ(SUBQ), instLambda((lhs, inst) -> {
             message(f(lhs.asRec().at(TARGET).uriValue().name()), lhs.asRec().at(OBJ));
             return noobj();
         }));
@@ -327,7 +327,7 @@ public class StatusLine implements Runnable {
 
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            if (!Router.loaded()) {
+            if (!Machine.loaded()) {
                 this.setState(ERROR);
             } else {
                 this.compileWidgets();

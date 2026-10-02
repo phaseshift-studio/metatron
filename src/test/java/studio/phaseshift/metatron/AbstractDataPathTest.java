@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.function.Supplier;
 
@@ -70,7 +70,7 @@ public abstract class AbstractDataPathTest extends AbstractSpaceTest {
                 // skip the collection-type assertions — the !isType() check above is sufficient.
                 if (entry.vid() == null)
                     return;
-                final Obj collectionTypes = Router.readFromSpace(entry.vid().retract(1));
+                final Obj collectionTypes = Machine.readFromSpace(entry.vid().retract(1));
                 assertFalse(collectionTypes.isNoObj(),
                         "collection type(s) should exist for entry: " + entry.vid() + " → " + entry.vid().retract(1));
                 // Stream in case the collection prefix resolves to multiple Types

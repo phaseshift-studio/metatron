@@ -35,7 +35,7 @@ import studio.phaseshift.metatron.isa.llm.TokenCalculator;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Map;
 import java.util.Optional;
@@ -73,7 +73,7 @@ public class TokenMessageFeatureTest extends AbstractFeatureTest {
     public static void seedSessionPolicy() {
         // the free onBeforeChat tests run without a chat, so the session policy
         // row must already stand in this class's test memSpace
-        Router.writeToSpace(SESSION_VID, AbstractMessageFeature.createSession("tokmsg", "default", "token_window", 50));
+        Machine.writeToSpace(SESSION_VID, AbstractMessageFeature.createSession("tokmsg", "default", "token_window", 50));
     }
 
     @Override

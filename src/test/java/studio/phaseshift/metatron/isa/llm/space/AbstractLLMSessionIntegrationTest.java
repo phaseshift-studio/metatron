@@ -36,7 +36,7 @@ import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -212,7 +212,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     public void testWindowEnforcement() {
         // Write session with tight window before first chat
         final int smallMax = 3;
-        Router.writeToSpace(sessionVID(), AbstractMessageFeature.createSession(
+        Machine.writeToSpace(sessionVID(), AbstractMessageFeature.createSession(
                 "test-agent", "test-user", "message_window", smallMax).selfVID(sessionVID()));
 
         // Build agent with matching small max
@@ -286,12 +286,12 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
 
         // -- Write each message to its sub-path position -----------------
         for (int i = 0; i < messages.length; i++) {
-            Router.writeToSpace(msgBase.extend(String.valueOf(memoryId)).extend(String.valueOf(i)), messages[i]);
+            Machine.writeToSpace(msgBase.extend(String.valueOf(memoryId)).extend(String.valueOf(i)), messages[i]);
         }
 
         // -- Read back individual messages by position -------------------
         for (int i = 0; i < messages.length; i++) {
-            final Obj msg = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend(String.valueOf(i)));
+            final Obj msg = Machine.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend(String.valueOf(i)));
             assertFalse(msg.isNoObj(), "message at position " + i + " should exist");
             assertTrue(msg.isRec(), "message at position " + i + " should be a Rec");
             assertEquals(messages[i].tid(), msg.asRec().tid(),
@@ -299,33 +299,33 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
         }
 
         // Verify message 0 = system
-        final Obj m0 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"));
+        final Obj m0 = Machine.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"));
         assertEquals(f("/m/llm/system"), m0.asRec().tid());
         assertEquals(str("You are helpful."), m0.asRec().at(uri(TEXT)));
 
         // Verify message 1 = user
-        final Obj m1 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("1"));
+        final Obj m1 = Machine.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("1"));
         assertEquals(f("/m/llm/user"), m1.asRec().tid());
         assertEquals(str("marko"), m1.asRec().at(uri(NAME)));
 
         // Verify message 2 = ai
-        final Obj m2 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("2"));
+        final Obj m2 = Machine.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("2"));
         assertEquals(f("/m/llm/ai"), m2.asRec().tid());
         assertEquals(str("Yes, I am here."), m2.asRec().at(uri(TEXT)));
 
         // Verify message 3 = tool_result
-        final Obj m3 = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("3"));
+        final Obj m3 = Machine.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("3"));
         assertEquals(f("/m/llm/tool_result"), m3.asRec().tid());
         assertEquals(str("eval"), m3.asRec().at(uri(NAME)));
         assertEquals(str("42"), m3.asRec().at(uri(TEXT)));
 
         // -- Delete a message (simulating window eviction) ---------------
-        Router.writeToSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"), noobj());
-        final Obj deleted = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"));
+        Machine.writeToSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"), noobj());
+        final Obj deleted = Machine.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("0"));
         assertTrue(deleted.isNoObj(), "deleted message should be noobj");
 
         // Message at position 1 should still exist
-        final Obj stillThere = Router.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("1"));
+        final Obj stillThere = Machine.readFromSpace(msgBase.extend(String.valueOf(memoryId)).extend("1"));
         assertFalse(stillThere.isNoObj(), "undeleted message should still exist");
     }
 
@@ -351,7 +351,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
                                          final int minRows, final int maxRows) {
         int rows = 0;
         for (int id = 1; ; id++) {
-            final Obj row = Router.readFromSpace(basePath.extend(tableName).extend(String.valueOf(id)));
+            final Obj row = Machine.readFromSpace(basePath.extend(tableName).extend(String.valueOf(id)));
             if (row.isNoObj()) break;
             if (!row.isRec()) continue;
             final Rec rec = row.asRec();
@@ -376,7 +376,7 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
      * Verify the llm_session policy row has the expected fields.
      */
     private void verifySessionPolicyRow() {
-        final Obj row = Router.readFromSpace(sessionVID());
+        final Obj row = Machine.readFromSpace(sessionVID());
         assertTrue(row.isRec(), "session policy row must be Rec, got: " + row);
         final Rec rec = row.asRec();
 

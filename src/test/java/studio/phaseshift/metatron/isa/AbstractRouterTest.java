@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -35,9 +35,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  */
 public abstract class AbstractRouterTest extends AbstractMetatronTest {
 
-    final Router router;
+    final Machine router;
 
-    protected AbstractRouterTest(final Router router) {
+    protected AbstractRouterTest(final Machine router) {
         this.router = router;
     }
 
@@ -61,7 +61,7 @@ public abstract class AbstractRouterTest extends AbstractMetatronTest {
     public void testPrefix(final String small, final String big) {
         final fURI s = f(small);
         final fURI b = f(big);
-        assertEquals(Router.readFromSpace(b), Router.readFromSpace(s));
+        assertEquals(Machine.readFromSpace(b), Machine.readFromSpace(s));
         LOG.debug("testing %s prefix %s is %s", s, b, b);
     }
 

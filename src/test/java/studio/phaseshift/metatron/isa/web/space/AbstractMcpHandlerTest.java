@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
@@ -94,7 +94,7 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
     public void teardownTestSpace() {
         this.mcp = null;
         if (this.testSpace != null) {
-            Router.global().removeSpace(this.testSpace.vid());
+            Machine.current().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }
@@ -194,7 +194,7 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
         final Obj subs = notifications.asRec().at(uri("resourceSubscriptions"));
         assertTrue(subs.isLst(), "ack resourceSubscriptions should be a list");
         assertFalse(subs.asLst().lstValue().isEmpty(), "ack should echo the subscribed uri");
-        final Obj registered = Router.readFromSpace(target.addQ(SUBQ));
+        final Obj registered = Machine.readFromSpace(target.addQ(SUBQ));
         assertFalse(registered.isNoObj(), "subscribed target should have a registered ?subq sub");
         assertFalse(registered.isLst() && registered.asLst().lstValue().isEmpty(),
                 "subscribed target should not have an empty ?subq sub list");

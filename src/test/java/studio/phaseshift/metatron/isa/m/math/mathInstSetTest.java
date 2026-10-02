@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
@@ -711,7 +711,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
 
     @Test
     public void testConstants() {
-        Router.global().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QPROC), lst(QCollection.constQ())), f("abc")));
+        Machine.current().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QPROC), lst(QCollection.constQ())), f("abc")));
         assertEquals(jnt(34), ObjmtronSerializer.parse("/abc/xyz -> 34").apply());
         assertEquals(jnt(34), ObjmtronSerializer.parse("*/abc/xyz").apply());
         assertEquals(jnt(99), ObjmtronSerializer.parse("/abc/xyz -> 99").apply());

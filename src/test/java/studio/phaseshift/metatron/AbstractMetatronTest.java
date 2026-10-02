@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -166,7 +166,7 @@ public abstract class AbstractMetatronTest {
         final Obj mutationResult = ObjmtronSerializer.parse(mutationCode).apply();
         LOG.debug("testing %s <= %s", stateResult, mutationResult);
         expected.forEach((k, v) -> {
-            final Obj actual = Router.readFromSpace(k);
+            final Obj actual = Machine.readFromSpace(k);
             final Obj desired = ObjmtronSerializer.parse(v).apply();
             LOG.debug("\t%s [expected] == %s [actual]", desired, actual);
             assertEquals(desired, actual);
@@ -300,8 +300,8 @@ public abstract class AbstractMetatronTest {
      * Utility method to get router statistics
      */
     public static Obj getRouterStatistics(final GraphittyLogger LOG) {
-        if (Router.loaded()) {
-            return Router.global().at(uri("stats"));
+        if (Machine.loaded()) {
+            return Machine.current().at(uri("stats"));
         }
         LOG.warn("router not loaded, cannot get stats");
         return noobj();

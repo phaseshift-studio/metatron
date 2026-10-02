@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -174,11 +174,11 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testIncrQ(final String uri, final int pattern, final String value, final String desc) {
         final fURI vid = BASE.extend(uri).addQ("incrq");
-        final Obj r1 = Router.writeToSpace(vid,ObjmtronSerializer.parse(value));// ObjmtronSerializer.parse(value).vid(f(vid));
-        LOG.warn("incr %s => %s", vid,r1.vid());
+        final Obj r1 = Machine.writeToSpace(vid, ObjmtronSerializer.parse(value));// ObjmtronSerializer.parse(value).vid(f(vid));
+        LOG.warn("incr %s => %s", vid, r1.vid());
         assertNotNull(r1.vid(), desc + ": should have a VID");
-        final int index = BASE.segmentLength()-1 + pattern;
-        assertTrue(CommonUtil.isInt(r1.vid().segments(index,"NOT_AN_INT")), desc + ": " + r1.vid() + " should contain counter at " + index);
+        final int index = BASE.segmentLength() - 1 + pattern;
+        assertTrue(CommonUtil.isInt(r1.vid().segments(index, "NOT_AN_INT")), desc + ": " + r1.vid() + " should contain counter at " + index);
 
         //Second write produces a different path
         final Obj r2 = ObjmtronSerializer.parse(value).vid(vid);
@@ -193,7 +193,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     @Test
     public void testMintQ() {
         final fURI target = f(BASE + "/mint?mintq");
-        final Obj written = Router.writeToSpace(target, str("hello"));
+        final Obj written = Machine.writeToSpace(target, str("hello"));
         assertNotEquals(noobj(), written);
         assertNotNull(written.vid());
         assertTrue(written.vid().toString().startsWith(BASE + "/mint/"),
@@ -216,12 +216,12 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
 
         for (int i = 0; i < numSubscriptions; i++)
             for (int j = 0; j < 3; j++)
-                Router.writeToSpace(BASE + "/sub" + i, jnt(j));
+                Machine.writeToSpace(BASE + "/sub" + i, jnt(j));
 
         CommonUtil.sleepThread(500);
 
         for (int i = 0; i < numSubscriptions; i++) {
-            final Obj sub = Router.readFromSpace(BASE + "/sub" + i + "?subq");
+            final Obj sub = Machine.readFromSpace(BASE + "/sub" + i + "?subq");
             assertNotEquals(noobj(), sub, "subscription " + i + " should still exist");
         }
     }

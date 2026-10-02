@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -158,7 +158,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
     }
 
     private RouteLane classify(final Obj resolved) {
-        Obj target = resolved.isUri() ? Router.readFromSpace(resolved.uriValue()) : resolved;
+        Obj target = resolved.isUri() ? Machine.readFromSpace(resolved.uriValue()) : resolved;
         // ── mcp_server type: materialize it so the transport wraps it ──
         if (target.isType() && target.asType().hasConstructor()
                 && Obj.Helper.specificType(target).test(MCP_SERVER_TYPE)) {
@@ -237,7 +237,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             this.setReuseAddr(true);
             this.setDaemon(true);
             this.baseURI = f("/").scheme("ws").host(host).port(port);
-            if (Router.loaded()) {
+            if (Machine.loaded()) {
                 try {
                     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                         try {

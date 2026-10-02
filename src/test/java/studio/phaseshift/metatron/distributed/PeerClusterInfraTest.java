@@ -31,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+
 /**
  * Tests for the distributed <em>tooling</em>, not for distribution.
  * <p>
@@ -145,7 +147,7 @@ public class PeerClusterInfraTest {
         assertEquals(3, cluster.size());
         assertEquals(BASE_PORT, cluster.port(1));
         assertEquals(BASE_PORT + 2, cluster.port(3));
-        assertEquals("ws://localhost:" + (BASE_PORT + 1) + "/n", cluster.prefix(2));
+        assertEquals(f("ws://localhost:" + (BASE_PORT + 1) + "/n"), cluster.prefix(2));
         assertEquals(3, cluster.peers().size());
         assertEquals(1, cluster.peers().get(0).index());
         assertEquals(cluster.prefix(3), cluster.peers().get(2).prefix());

@@ -6,7 +6,7 @@
     user_home    => /usr/marko,
     session_id   => 1],
  external     =>
-  [ web       => [ http => <http://localhost:8777>,
+  [ web       => [ http => <http://0.0.0.0:8777>,
                    ws   => <ws://0.0.0.0:8555> ],
     ollama    => <http://ginger.local:11434>,
     embedding => <http://ginger.local:8025/api/v2>,
@@ -358,6 +358,7 @@ agent::[
                                         !*find_file,
                                         !*read_file,
                                         !*edit_file,
+                                        mcp_client::[host=><http://ginger.local:11437/mcp>],
                                         /m/inst/web?str<=#{?}(url=>union(uri::T,str::T),native=>bool{?}::T){ *<url>.as(uri::T).*_.-<|[*native.else(false) => as(rec::T).as(str::T), _ => _]>> },
                                         !*bash?reject=['\brm\b','\bgit\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>]],

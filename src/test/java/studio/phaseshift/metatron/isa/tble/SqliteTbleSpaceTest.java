@@ -25,7 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.TestReport;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -108,8 +108,8 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
                 LOG.warn("existingTableSchema is null");
             }
 
-            // Use Router.readFromSpace() to test table mapping
-            final Obj row1 = Router.readFromSpace(f("db:users/1"));
+            // Use Machine.readFromSpace() to test table mapping
+            final Obj row1 = Machine.readFromSpace(f("db:users/1"));
             assertFalse(row1.isNoObj(), "Row 1 should not be noobj");
             assertTrue(row1.isRec(), "Row 1 should be a record");
             final Rec row1Rec = row1.asRec();
@@ -117,7 +117,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
             assertEquals(jnt(30), row1Rec.at(uri("age")), "Age should be 30");
 
             // Read all rows using pattern
-            final Obj allRows = Router.readFromSpace(f("db:users/+"));
+            final Obj allRows = Machine.readFromSpace(f("db:users/+"));
             assertFalse(allRows.isNoObj(), "Should return results");
         } finally {
             testSpace.close();
@@ -154,17 +154,17 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
 
         try {
             // Write the value
-            Router.writeToSpace(f(uri), writeValue);
+            Machine.writeToSpace(f(uri), writeValue);
 
             // Read it back
-            final Obj actualValue = Router.readFromSpace(f(uri)).selfVID(null);
+            final Obj actualValue = Machine.readFromSpace(f(uri)).selfVID(null);
 
             // Verify exact type preservation
             assertEquals(expectedValue, actualValue, description);
             assertEquals(expectedValue.getClass(), actualValue.getClass(),
                     "Type class should be preserved: " + description);
         } finally {
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -232,31 +232,31 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
 
         try {
             // Read the entire row first to verify it's a Record
-            final Obj entireRow = Router.readFromSpace(f("db:users/1"));
+            final Obj entireRow = Machine.readFromSpace(f("db:users/1"));
             LOG.info("Read entire row: {} (type: {})", entireRow, entireRow.getClass().getSimpleName());
             assertTrue(entireRow.isRec(), "Should return a Record for the entire row");
 
             // Now read individual fields using poly unrolling
-            final Obj nameField = Router.readFromSpace(f("db:users/1/name"));
+            final Obj nameField = Machine.readFromSpace(f("db:users/1/name"));
             assertEquals(str("Alice"), nameField, "Should return just the name field value");
 
-            final Obj ageField = Router.readFromSpace(f("db:users/1/age"));
+            final Obj ageField = Machine.readFromSpace(f("db:users/1/age"));
             assertEquals(jnt(30), ageField, "Should return just the age field value");
 
-            final Obj salaryField = Router.readFromSpace(f("db:users/1/salary"));
+            final Obj salaryField = Machine.readFromSpace(f("db:users/1/salary"));
             assertEquals(real(75000.50), salaryField, "Should return just the salary field value");
 
-            final Obj activeField = Router.readFromSpace(f("db:users/1/active"));
+            final Obj activeField = Machine.readFromSpace(f("db:users/1/active"));
             try {
                 assertEquals(bool(true), activeField, "Should return just the active field value");
             } catch (AssertionError e) {
                 assertEquals(jnt(1), activeField, "Should return just the active field value");
             }
 
-            final Obj emailField = Router.readFromSpace(f("db:users/1/email"));
+            final Obj emailField = Machine.readFromSpace(f("db:users/1/email"));
             assertEquals(str("alice@example.com"), emailField, "Should return just the email field value");
         } finally {
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
 
             // Clean up database
@@ -280,20 +280,20 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
                 uri("age"), jnt(25),
                 uri("city"), str("New York")
         );
-        Router.writeToSpace(f("tble:person/123"), testRecord);
+        Machine.writeToSpace(f("tble:person/123"), testRecord);
 
         // Read the entire record first
-        final Obj entireRecord = Router.readFromSpace(f("tble:person/123"));
+        final Obj entireRecord = Machine.readFromSpace(f("tble:person/123"));
         assertEquals(testRecord, entireRecord, "Should return the entire record");
 
         // Now read individual fields using poly unrolling
-        final Obj nameField = Router.readFromSpace(f("tble:person/123/name"));
+        final Obj nameField = Machine.readFromSpace(f("tble:person/123/name"));
         assertEquals(str("Bob"), nameField, "Should return just the name field value");
 
-        final Obj ageField = Router.readFromSpace(f("tble:person/123/age"));
+        final Obj ageField = Machine.readFromSpace(f("tble:person/123/age"));
         assertEquals(jnt(25), ageField, "Should return just the age field value");
 
-        final Obj cityField = Router.readFromSpace(f("tble:person/123/city"));
+        final Obj cityField = Machine.readFromSpace(f("tble:person/123/city"));
         assertEquals(str("New York"), cityField, "Should return just the city field value");
     }
 
@@ -311,16 +311,16 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
                 ),
                 uri(STATUS), str("active")
         );
-        Router.writeToSpace(f("tble:data/789"), nestedRecord);
+        Machine.writeToSpace(f("tble:data/789"), nestedRecord);
 
         // Access nested field
-        final Obj userName = Router.readFromSpace(f("tble:data/789/user/name"));
+        final Obj userName = Machine.readFromSpace(f("tble:data/789/user/name"));
         assertEquals(str("Charlie"), userName, "Should return nested field value");
 
-        final Obj userAge = Router.readFromSpace(f("tble:data/789/user/age"));
+        final Obj userAge = Machine.readFromSpace(f("tble:data/789/user/age"));
         assertEquals(jnt(35), userAge, "Should return nested field value");
 
-        final Obj status = Router.readFromSpace(f("tble:data/789/status"));
+        final Obj status = Machine.readFromSpace(f("tble:data/789/status"));
         assertEquals(str("active"), status, "Should return top-level field value");
     }
 }

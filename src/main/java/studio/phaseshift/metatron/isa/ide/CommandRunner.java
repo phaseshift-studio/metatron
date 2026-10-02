@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.ide;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.BufferedReader;
@@ -100,7 +100,7 @@ public final class CommandRunner {
         // !* auto_from deref) materializes the str{*} line-stream, keeping the result rec compact
         if (!lines.isEmpty()) {
             final fURI outputURI = CommonUtil.mintShortUUID(f("/sys/tmp"), true);
-            Router.writeToSpace(outputURI, objs(lines));
+            Machine.writeToSpace(outputURI, objs(lines));
             map.put(uri("output"), auto_from_(outputURI).tryToInst());
         }
         if (!fails.isEmpty()) map.put(uri(ERROR), lst(fails));

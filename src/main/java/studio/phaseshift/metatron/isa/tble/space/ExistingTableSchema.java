@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
@@ -536,7 +536,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = readColumnWithMetadata(rs, col, metadata.tableName);
                 labeledValues.put(uri(col.name), value);
                 if (!value.isNoObj())
-                    Router.global().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
+                    Machine.current().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
             }
         }
         final fURI tid = storedTid != null ? storedTid : REC_TID;

@@ -26,7 +26,9 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -57,8 +59,8 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         LOG = Graphitty.log(this);
         // Don't auto-register InstSets - they're registered via importInstSetStream AFTER full construction
         // This ensures docq and other post-super() setup is complete before registration
-        if (Router.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Router) && !(this instanceof InstSet))
-            Router.global().addSpace(this);
+        if (Machine.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Machine) && !(this instanceof InstSet))
+            Machine.current().addSpace(this);
     }
 
     @Override
@@ -66,7 +68,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         // LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
         /*final fURI routedVID = Space.Helper.routeFromSpace(vid, this.routes());
         if (!routedVID.test(this.pattern()))
-            return Router.readFromSpace(routedVID);*/
+            return Machine.readFromSpace(routedVID);*/
         QProc.Helper.checkSpaceQProcs(this, vid);
         return QProc.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
             final Obj result = Space.Helper.resolveRead(this, vid, directReader());
@@ -164,7 +166,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     @Override
     public Obj parent() {
-        return null == this.parent ? this.at(uri(SUPER)).orElse(Router.global()) : this.parent;
+        return null == this.parent ? this.at(uri(SUPER)).orElse(Machine.current()) : this.parent;
     }
 
     @Override

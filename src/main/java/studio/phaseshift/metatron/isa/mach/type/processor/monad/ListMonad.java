@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.machine;
+package studio.phaseshift.metatron.isa.mach.type.processor.monad;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MLst;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+ import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +47,7 @@ public class ListMonad extends MLst {
     @Override
     public Obj append(final Obj obj) {
         this.jvm().add(obj);
-        Router.global().stats().monadicStats().incrRunningMonads(1L);
+        Machine.current().stats().monadicStats().incrRunningMonads(1L);
         return this;
     }
 
@@ -60,7 +60,7 @@ public class ListMonad extends MLst {
     public Obj take() {
         if (this.jvm().isEmpty())
             return null;
-        Router.global().stats().monadicStats().incrRunningMonads(-1L);
+        Machine.current().stats().monadicStats().incrRunningMonads(-1L);
         return this.jvm().removeFirst();
     } // TODO: explore removeLast() as a way of simulating chained iterators
 

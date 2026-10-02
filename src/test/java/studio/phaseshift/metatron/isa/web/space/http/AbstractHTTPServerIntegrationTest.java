@@ -28,7 +28,7 @@ import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.IOException;
@@ -120,8 +120,8 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
             this.httpClient = null;
         }
         if (this.space != null) {
-            Router.global().removeSpace(this.space.vid());
-            Router.global().removeSpace(WEB_ISA_TID);
+            Machine.current().removeSpace(this.space.vid());
+            Machine.current().removeSpace(WEB_ISA_TID);
             this.space.close();
             this.space = null;
         }
@@ -201,7 +201,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
             // §8.1.2). Every non-templated value is still held to the invariant.
             if (isTemplated(r.second()))
                 return;
-            final Obj type = Router.global().read(r.second().uriValue());
+            final Obj type = Machine.current().read(r.second().uriValue());
             assertFalse(type.isNoObj(),
                     "Type should be registered in Router at " + r.second().uriValue());
             // commented out so extending tests can run threaded

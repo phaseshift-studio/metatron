@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.llm.parser.JsonSchemaGenerator;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -208,7 +208,7 @@ public class mTool extends MRec {
     }
 
     public static QCollection.Docs mtronInstToDocs(final Inst inst) {
-        final Obj found = Router.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().filter(x -> x instanceof QCollection.Docs).filter(x -> !QCollection.isNoDocs(x)).orElse(noobj());
+        final Obj found = Machine.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().filter(x -> x instanceof QCollection.Docs).filter(x -> !QCollection.isNoDocs(x)).orElse(noobj());
         final QCollection.Docs doc = found.isNoObj() ? doc(inst,
                 inst.dom().tid().toString(),
                 inst.rng().tid().toString(),

@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Set;
 
@@ -55,9 +55,9 @@ public final class Device {
                 .constructor(lhs -> {
                     final fURI toVID = miotInstSet.deduceVID(lhs, f("+").extend(lhs.tid().name()));
                     if (toVID != null) {
-                        final Obj sub = Router.readFromSpace(toVID.extend("status").q("sub"));
+                        final Obj sub = Machine.readFromSpace(toVID.extend("status").q("sub"));
                         if (sub.isNoObj())
-                            Router.writeToSpace(toVID.extend("status").q("sub"), print_(uri(toVID), str(" {{g}}status{{X}}: {{y}}"), get_(uri("" + 1))));
+                            Machine.writeToSpace(toVID.extend("status").q("sub"), print_(uri(toVID), str(" {{g}}status{{X}}: {{y}}"), get_(uri("" + 1))));
                     }
                     return lhs;
                 })
@@ -66,7 +66,7 @@ public final class Device {
                             final fURI toVID = miotInstSet.deduceVID(lhs, f("+").extend(lhs.tid().name()));
                             if (null != toVID) {
                                 lhs.asRec().at(inst.arg(0).tid().name(), inst.arg(0), Poly.MUTABLE);
-                                Router.global().write(toVID.extend(inst.arg(0).tid().name()), inst.arg(0));
+                                Machine.current().write(toVID.extend(inst.arg(0).tid().name()), inst.arg(0));
                             }
                             return lhs;
                         }).create(types, insts);

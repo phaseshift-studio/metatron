@@ -23,7 +23,8 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -153,7 +154,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
     /**
      * Read the source-of-truth JVM for this object.  If the object has a
      * persistent address ({@link #vid()}), the latest state is fetched from
-     * the space via {@link Router#global() Router.global().read(vid())}.
+     * the space via {@link Machine#current() Machine.current().read(vid())}.
      * Otherwise the local construction-time JVM is returned.
      *
      * <p>Subclasses should call this before every rendering pass so that
@@ -162,7 +163,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
     protected final Map<Obj, Obj> jvmRead() {
         if (this.vid() == null) return this.jvm();
         try {
-            final Obj fresh = Router.global().read(this.vid());
+            final Obj fresh = Machine.current().read(this.vid());
             return fresh.isRec() ? fresh.jvm() : this.jvm();
         } catch (final Exception e) {
             return this.jvm(); // fallback: space unavailable
@@ -190,13 +191,13 @@ public class JRec<OBJECT> extends MObj implements Rec {
             return;
         }
         try {
-            final Obj current = Router.global().read(this.vid());
+            final Obj current = Machine.current().read(this.vid());
             final Map<Obj, Obj> merged = new LinkedHashMap<>(current.isRec() ? current.jvm() : this.jvm());
             merged.put(key, value);
-            Router.global().write(this.vid(), rec(merged, current.tid(), this.vid()));
+            Machine.current().write(this.vid(), rec(merged, current.tid(), this.vid()));
         } catch (final Exception e) {
             // Fallback: direct sub-path write
-            Router.global().write(this.vid().extend(key.uriValue()), value);
+            Machine.current().write(this.vid().extend(key.uriValue()), value);
         }
     }
 

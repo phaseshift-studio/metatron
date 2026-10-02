@@ -124,11 +124,11 @@ public class DistributedmtronTest extends AbstractMetatronTest {
 
     @Test
     public void testPeerPlaceholderSubstitution() {
-        assertEquals("*<" + cluster.prefix(1) + "/a>", peers("*$1/a"),
+        assertEquals("*<" + cluster.prefix(1).extend("a") + ">", peers("*$1/a"),
                 "the trailing path must fold inside the uri literal");
         assertEquals("<" + cluster.prefix(2) + ">", peers("$2"),
                 "a bare placeholder is the peer's data root");
-        assertEquals("{*<" + cluster.prefix(1) + "/a>,*<" + cluster.prefix(3) + "/c>}", peers("{*$1/a,*$3/c}"));
+        assertEquals("{*<" + cluster.prefix(1).extend("a") + ">,*<" + cluster.prefix(3).extend("c") + ">}", peers("{*$1/a,*$3/c}"));
         assertFalse(peers("$1").contains("$"), "no placeholder may survive the rewrite");
     }
 
@@ -150,7 +150,7 @@ public class DistributedmtronTest extends AbstractMetatronTest {
         assertEquals("<" + cluster.prefix(2) + ">", cluster.modulate("$self", 2), "$self is the peer's own address");
         assertEquals("<" + cluster.prefix(1) + ">, <" + cluster.prefix(2) + ">, <" + cluster.prefix(3) + ">",
                 cluster.modulate("$peers", 1), "$peers is the whole cluster");
-        assertEquals("<" + cluster.prefix(2) + "/data>", cluster.modulate("$2/data", 1),
+        assertEquals("<" + cluster.prefix(2).extend("data") + ">", cluster.modulate("$2/data", 1),
                 "$n names the same peer no matter which peer evaluates it");
     }
 

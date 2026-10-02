@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.LinkedHashMap;
 
@@ -60,7 +60,7 @@ public class LoopFeatureTest extends AbstractFeatureTest {
     @Test
     public void testIterationsPersisted() {
         runLifecycle(feature());
-        final Obj rows = Router.readFromSpace(f("/usr/test/loop/+"));
+        final Obj rows = Machine.readFromSpace(f("/usr/test/loop/+"));
         assertFalse(rows.isNoObj(), "loop iterations should be persisted");
     }
 

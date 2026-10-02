@@ -1008,7 +1008,7 @@ public class mParser {
 
     public static Parser m_furi_poly_type() {
         return seq(of('[').trim(),
-                seq(m_furi(REDUCED_FURI_CHARS, false, true, false), opt(seq(of("=>").trim(), m_furi(REDUCED_FURI_CHARS, false, true, false)), "")).flatten()
+                seq(opt(m_furi_coefficient(), cInt.ONE()), m_furi(REDUCED_FURI_CHARS, false, true, false), opt(seq(of("=>").trim(), m_furi(REDUCED_FURI_CHARS, false, true, false)), "")).flatten()
                         .separatedBy(of(',').trim()),
                 of(']').trim())
                 .map(t -> ((List) (pick(t, 1))).stream().filter(c -> !c.equals(',')).map(Object::toString).toList());

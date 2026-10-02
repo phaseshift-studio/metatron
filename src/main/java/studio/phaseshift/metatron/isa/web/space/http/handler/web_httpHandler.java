@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.webInstSet;
@@ -107,14 +107,14 @@ public class web_httpHandler extends HttpRec {
                 }
 
                 // 1 — Direct read from Router (space-agnostic: fsSpace, memSpace, etc.)
-                Obj requestObj = Router.readFromSpace(requestURI.qprocLess());
+                Obj requestObj = Machine.readFromSpace(requestURI.qprocLess());
 
                 // 1.5 — When the request URI looks like a directory (no file extension),
                 // try the DEFAULT_PAGE.  This handles / → local:web where fsSpace returns
                 // a directory listing (rec or lst) rather than a DIR_TID URI.
                 if (!requestObj.isNoObj() && !requestURI.name().contains(".")) {
                     final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
-                    final Obj defaultObj = Router.readFromSpace(requestURI.extend(defaultPage));
+                    final Obj defaultObj = Machine.readFromSpace(requestURI.extend(defaultPage));
                     if (!defaultObj.isNoObj()) {
                         requestObj = defaultObj;
                     }
@@ -123,7 +123,7 @@ public class web_httpHandler extends HttpRec {
                 // 2 — locateBaseObj: walk up the URI path to find a containing object, then navigate into it
                 boolean foundBase = false;
                 if (requestObj.isNoObj()) {
-                    final Space space = Router.global().getSpaceFor(requestURI);
+                    final Space space = Machine.current().getSpaceFor(requestURI);
                     if (space != null) {
                         final Space.IdObj baseObj = Space.Helper.locateBaseObj(space, requestURI, f(""));
                         // Only accept navigable base objects (rec/lst) — directories
@@ -149,7 +149,7 @@ public class web_httpHandler extends HttpRec {
                 //     Also applies when the path resolves to a directory (DIR_TID).
                 if (isNoobjOrDir(requestObj) && !foundBase) {
                     final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
-                    requestObj = Router.global().read(requestURI.extend(defaultPage));
+                    requestObj = Machine.current().read(requestURI.extend(defaultPage));
                 }
 
                 // 4 — 404 if still nothing (skip when a base document was found — see above)
@@ -271,7 +271,7 @@ public class web_httpHandler extends HttpRec {
             }
         }
         try {
-            Router.writeToSpace(resolveAddress(exchange), value);
+            Machine.writeToSpace(resolveAddress(exchange), value);
             sendStatus(exchange, 201);
         } catch (final Exception e) {
             LOG.error("error handling write: %s", e.getMessage());
@@ -340,13 +340,13 @@ public class web_httpHandler extends HttpRec {
         }
         final fURI fileURI = resolveAddress(exchange);
         try {
-            final Obj base = Router.readFromSpace(fileURI);
+            final Obj base = Machine.readFromSpace(fileURI);
             if (base.isNoObj()) {
                 sendErrorQuiet(404, "Not Found: " + fileURI);
                 return noobj();
             }
             final Obj updated = update_(delta).apply(base); // a >>= delta
-            Router.writeToSpace(fileURI, updated);
+            Machine.writeToSpace(fileURI, updated);
             sendStatus(exchange, 200);
         } catch (final Exception e) {
             LOG.error("error handling update: %s", e.getMessage());
@@ -368,7 +368,7 @@ public class web_httpHandler extends HttpRec {
             return noobj();
         }
         try {
-            Router.writeToSpace(resolveAddress(exchange), noobj());
+            Machine.writeToSpace(resolveAddress(exchange), noobj());
             sendStatus(exchange, 204);
         } catch (final Exception e) {
             LOG.error("error handling delete: %s", e.getMessage());

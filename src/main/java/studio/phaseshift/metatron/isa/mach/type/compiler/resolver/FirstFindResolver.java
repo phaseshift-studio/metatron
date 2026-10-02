@@ -16,29 +16,69 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.type.resolver;
+package studio.phaseshift.metatron.isa.mach.type.compiler.resolver;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.resolver.InstSelector;
+import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_FIRSTFIND_RESOLVER_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-/**
- * Original instruction resolver that uses {@code findFirst()} selection.
+/*
+ * FirstFindResolver — the concrete {@code firstfind_resolver::T}: a {@link Resolver} sibling to
+ * {@link ScoringResolver} that pins the original first-match selection strategy. It carries no
+ * config (empty rec) and owns its own per-instruction selection — {@link #resolveInst} filters
+ * candidates and returns the first match, order-dependent (no specificity scoring) — so a chain
+ * resolved through this stage is resolved that way without touching the active global
+ * {@link InstSelector}.
  * <p>
- * This resolver filters candidates and returns the first one that matches all criteria.
- * The order of candidates depends on insertion order in the InstSet, which can lead
- * to non-deterministic behavior when multiple instructions with the same name exist.
- * <p>
- * This is preserved for backward compatibility and A/B testing against newer resolvers.
+ * Preserved for backward compatibility and A/B testing against the {@link ScoringResolver}
+ * strategy.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class FirstFindInstResolver implements InstSelector {
+public class FirstFindResolver extends MRec implements Resolver, InstSelector {
+
+    private static final FirstFindResolver INSTANCE = new FirstFindResolver(mutableMap(), MACH_FIRSTFIND_RESOLVER_TID, null);
+
+    public static FirstFindResolver single() {
+        return INSTANCE;
+    }
+
+    public FirstFindResolver() {
+        this(mutableMap(), MACH_FIRSTFIND_RESOLVER_TID, null);
+    }
+
+    public FirstFindResolver(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+    }
+
+    @Override
+    public Code apply(final Obj code) {
+        return resolveCode(noobj(), code.asCode());
+    }
+
+    /**
+     * Resolve a full instruction chain — threads the output type of each inst as the input type of
+     * the next via {@link Resolver.Helper#resolveCode} — with this resolver's pinned first-match
+     * selection ({@link #resolveInst}), independent of the active global {@link InstSelector}.
+     */
+    public static Code resolveCode(final Obj lhs, final Code code) {
+        return Resolver.Helper.resolveCode(lhs, code, single());
+    }
 
     @Override
     public Inst resolveInst(final Obj lhs, final Inst userInst) {
@@ -82,7 +122,7 @@ public class FirstFindInstResolver implements InstSelector {
                 fromLhs = at.stream();
         }
 
-        final Stream<Obj> fromSpace = Router.readFromSpace(basePath).stream();
+        final Stream<Obj> fromSpace = Machine.readFromSpace(basePath).stream();
 
         return Stream.concat(fromLhs, fromSpace);
     }

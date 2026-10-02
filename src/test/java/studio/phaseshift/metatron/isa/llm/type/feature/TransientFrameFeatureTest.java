@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.llm.type.Frame;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -83,7 +83,7 @@ public class TransientFrameFeatureTest extends AbstractMetatronTest {
         assertTrue(popped.isComplete(), "popped frame is complete");
         assertNull(frame.current(), "stack empty after pop");
 
-        final Obj cleared = Router.readFromSpace(frameURI);
+        final Obj cleared = Machine.readFromSpace(frameURI);
         assertTrue(cleared.isNoObj(), "transient frame removed after pop");
     }
 }

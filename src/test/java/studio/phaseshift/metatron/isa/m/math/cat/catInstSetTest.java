@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.HashMap;
@@ -62,11 +62,11 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     private static Inst plus() {
-        return Router.readFromSpace(f("/m/inst/plus").rng(f("/m/int")).dom(f("/m/int"))).as();
+        return Machine.readFromSpace(f("/m/inst/plus").rng(f("/m/int")).dom(f("/m/int"))).as();
     }
 
     private static Inst asUriInt() {
-        return Router.readFromSpace(f("/m/inst/as").rng(f("/m/uri")).dom(f("/m/int"))).as();
+        return Machine.readFromSpace(f("/m/inst/as").rng(f("/m/uri")).dom(f("/m/int"))).as();
     }
 
     @Test
@@ -266,7 +266,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         int hash = code.hashCode();
         int done = 2;
         while (done != 0) {
-            Router.global().spaces()
+            Machine.current().spaces()
                     .elements()
                     .filter(r -> r.second() instanceof catInstSet)
                     .flatMap(r -> r.second().<InstSet>as().rewrites().stream())

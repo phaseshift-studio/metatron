@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.llm.type.Agent;
 import studio.phaseshift.metatron.isa.llm.type.ChatFrame;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.LinkedHashMap;
 
@@ -68,7 +68,7 @@ public class CostFeatureTest extends AbstractFeatureTest {
         cf.onAgentCtor(agent);
         cf.getCalculator().setCost(0.00435, 0.00870);
         cf.persistCost(agent);
-        final Obj rows = Router.readFromSpace(cf.at(uri("root")).uriValue().extend("+"));
+        final Obj rows = Machine.readFromSpace(cf.at(uri("root")).uriValue().extend("+"));
         assertFalse(rows.isNoObj(), "cost row should be persisted");
         /*assertEquals(0.01305,
                 rows.stream().reduce((a, b) -> b).orElse(noobj()).asRec().at(uri(TOTAL)).realValue(),

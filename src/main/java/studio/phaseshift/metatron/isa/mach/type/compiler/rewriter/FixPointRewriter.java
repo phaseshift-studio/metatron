@@ -16,15 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.compiler;
+package studio.phaseshift.metatron.isa.mach.type.compiler.rewriter;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.Rewriter;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.compiler.Rewriter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,7 +77,7 @@ public class FixPointRewriter extends MRec implements Rewriter {
         int hash = c.hashCode();
         int done = this.at(MAX).orElse(jnt(2)).intValue().intValue();
         while (done != 0) {
-            Router.global().spaces()
+            Machine.current().spaces()
                     .elements()
                     .filter(r -> r.second() instanceof InstSet)
                     .flatMap(r -> r.second().<InstSet>as().rewrites().stream())

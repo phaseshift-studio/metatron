@@ -88,11 +88,21 @@ D() {
 # /work/target is bound to $BUILD_TARGET (NOT the repo's target/), so docker
 # maven jobs never write artifacts the fs build owns; handoff jobs
 # (package_jar) copy the uber jar back to target/ afterwards.
-# trailing args are the container command.
+# first arg is an optional entrypoint override; the rest are the container
+# command. The image's maven entrypoint (mvn-entrypoint.sh) pokes /root/.m2 on
+# EVERY run — "mkdir /root: Permission denied" noise plus a wrong-repo write
+# attempt under the host user — so non-maven jobs (docs/shell/console) pass
+# /bin/sh as the entrypoint; maven jobs (package/test) keep the image default.
 build_run() {
+    ep="${1-}"
+    [ $# -gt 0 ] && shift
+    EP_FLAGS=""
+    [ -n "$ep" ] && EP_FLAGS="--entrypoint $ep"
     mkdir -p "$REPO/$BUILD_TARGET"
+    # shellcheck disable=SC2086
     D docker run --rm --name "$BUILD_NAME" \
         --user "$(id -u):$(id -g)" \
+        $EP_FLAGS \
         -e HOME=/work \
         -v "$REPO":/work -w /work \
         -v "$REPO/$BUILD_TARGET":/work/target \
@@ -272,23 +282,23 @@ cmd_build() {
                 fi
                 java $JVM_FLAGS -cp \"\$JAR\" $DOCS_RUNNER $target -o $out_dir $html_flag
                 $bundle"
-            build_run sh -c "$cmd"
+            build_run /bin/sh -c "$cmd"
             ;;
         console)
             ensure_build_image
             # the harness allocates its own pty (python pty.fork), so no docker -t is
             # needed.  An image built before python3 was added cannot do it — say so
             # instead of failing with "python3: not found".
-            if ! build_run python3 -c '' >/dev/null 2>&1; then
+            if ! build_run /bin/sh -c "python3 -c ''" >/dev/null 2>&1; then
                 echo "error: $BUILD_IMAGE has no python3 — rebuild it: bin/metatron-docker build image" >&2
                 exit 1
             fi
             # the image's JDK, not the host's (a later --java from the caller still wins)
-            build_run python3 bin/metatron-console --java java "$@"
+            build_run /bin/sh -c "python3 bin/metatron-console --java java $*"
             ;;
         shell | run)
             ensure_build_image
-            build_run sh -c "$*"
+            build_run /bin/sh -c "$*"
             ;;
         image)
             echo "==> rebuilding $BUILD_IMAGE (maven + JDK24 + patchelf + python3)"

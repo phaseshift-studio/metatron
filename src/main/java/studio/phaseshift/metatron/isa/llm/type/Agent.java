@@ -41,7 +41,7 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -463,7 +463,7 @@ public class Agent extends MRec {
      * Close the tool and mid-chat channels, and do it on a thread whose interrupt
      * flag is clear.
      *
-     * <p>Both closes <em>write to the ledger</em>, and {@code Router.writeToSpace}
+     * <p>Both closes <em>write to the ledger</em>, and {@code Machine.writeToSpace}
      * goes through a space that may do blocking IO — an interrupted thread can
      * abort that IO partway.  The damage is specific and nasty: the close writes
      * the ai message first and its results after, so an aborted close leaves an ai
@@ -594,7 +594,7 @@ public class Agent extends MRec {
         this.at(INTERRUPT, noobj(), MUTABLE);
         if (this.first.getAndSet(false))
             this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
-        Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
+        Machine.current().stats().ioStats().incrBytesSent(message.getBytes().length);
     }
 
     /**
@@ -659,7 +659,7 @@ public class Agent extends MRec {
 
     private void onPartialResponse(final String s, final List<Obj> features, final CountDownLatch latch) {
         StatusLine.message(str("\uD83D\uDCAC on_partial_response"));
-        Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
+        Machine.current().stats().ioStats().incrBytesRecv(s.getBytes().length);
         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
         if (this.isInterrupted())
             latch.countDown();
@@ -671,7 +671,7 @@ public class Agent extends MRec {
             latch.countDown();
             return;
         }
-        Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
+        Machine.current().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
         // thinking is the one stage this class does not dispatch: ThinkFeature owns it, seeds the
         // thought with the chunk, applies it, and cascades it through the other features
         this.feature(ThinkFeature.class)
@@ -701,7 +701,7 @@ public class Agent extends MRec {
                                     final long startNanos, final CountDownLatch latch) {
         StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
         final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
-        Router.global().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
+        Machine.current().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
         // Parse response format if requested
         final boolean formatted = !responseFormat.isNoObj();
         final Obj chatObj;
@@ -749,12 +749,12 @@ public class Agent extends MRec {
             // back into the frame URI, then pop — pop marks it complete and returns the answered frame
             final fURI frameURI = frameService.current();
             if (null != frameURI && null != result)
-                Router.writeToSpace(frameURI, result);
+                Machine.writeToSpace(frameURI, result);
             final Frame popped = frameService.pop();
             return null != popped ? (ChatFrame) popped : (null != result ? result : ChatFrame.chatFrame());
         }
         // no frame provider — persist the legacy chat_result ledger and return it
-        return null != result ? Router.writeToSpace(this.at(ROOT).uriValue().extend(LLM_CHAT_RESULT_TID.name()).extend("_").addQ(INCRQ), result).as() : ChatFrame.chatFrame();
+        return null != result ? Machine.writeToSpace(this.at(ROOT).uriValue().extend(LLM_CHAT_RESULT_TID.name()).extend("_").addQ(INCRQ), result).as() : ChatFrame.chatFrame();
     }
 
     private void closeTurn(final AtomicReference<Set<String>> orphanToolRequests, final AtomicInteger counter) {

@@ -64,7 +64,7 @@ public abstract class MObj implements Obj, Cloneable {
 
    /* protected void save() {
         if (null != vid && !this.isType())
-            Router.writeToSpace(this);
+            Machine.writeToSpace(this);
     }*/
 
     @Override

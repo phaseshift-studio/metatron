@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.furi.form.*;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -256,17 +256,17 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default fURI big() {
-        if (!Router.loaded())
+        if (!Machine.loaded())
             return this;
-        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Router.global().redirect(Singleton.f(p), true)).map(fURI::toString).toList()) : this;
-        return Router.global().redirect(temp, true);
+        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Machine.current().redirect(Singleton.f(p), true)).map(fURI::toString).toList()) : this;
+        return Machine.current().redirect(temp, true);
     }
 
     default fURI small() {
-        if (!Router.loaded())
+        if (!Machine.loaded())
             return this;
-        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Router.global().redirect(Singleton.f(p), false)).map(fURI::toString).toList()) : this;
-        return Router.global().redirect(temp, false);
+        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Machine.current().redirect(Singleton.f(p), false)).map(fURI::toString).toList()) : this;
+        return Machine.current().redirect(temp, false);
     }
 
     default boolean isEmpty() {

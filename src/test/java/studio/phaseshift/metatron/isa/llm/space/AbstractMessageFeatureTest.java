@@ -34,7 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -208,7 +208,9 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
         return f("/usr/test/ledger" + ROOTS.incrementAndGet());
     }
 
-    /** An ai message whose tool_requests carry the given call id. */
+    /**
+     * An ai message whose tool_requests carry the given call id.
+     */
     private static void writeAiRequest(final fURI root, final String callId) {
         writeAiRequestAt(root.extend(MESSAGE).extend("_").addQ(INCRQ), callId);
     }
@@ -228,7 +230,9 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
                 .create(location);
     }
 
-    /** Any message at all — used to break the adjacency between a request and its result. */
+    /**
+     * Any message at all — used to break the adjacency between a request and its result.
+     */
     private static void writeUnrelatedMessage(final fURI root) {
         MessageBuilder.buildUserMessage()
                 .text("meanwhile, on another subject")
@@ -311,7 +315,7 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
         assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(root, false)),
                 "the repair leaves a valid ledger, got: " + AbstractMessageFeature.sweep(root, false));
         assertEquals(2L, messageCount(root), "and drops nothing: the result was moved, not discarded");
-        final Rec result = Router.readFromSpace(root.extend(MESSAGE).extend("+/")).stream()
+        final Rec result = Machine.readFromSpace(root.extend(MESSAGE).extend("+/")).stream()
                 .map(Obj::asRel)
                 .map(Rel::second)
                 .map(Obj::asRec)
@@ -322,7 +326,9 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
                 "the result now sits in the scope of the request that asked for it");
     }
 
-    /** An ai request stamped with an explicit scope. */
+    /**
+     * An ai request stamped with an explicit scope.
+     */
     private static void writeScopedAiRequest(final fURI root, final fURI session, final String callId) {
         MessageBuilder.build(AI_MESSAGE_TID)
                 .text("running a probe")
@@ -337,7 +343,9 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
                 .create(root.extend(MESSAGE).extend("_").addQ(INCRQ));
     }
 
-    /** The result that answers it, stamped with whatever depth it was written at. */
+    /**
+     * The result that answers it, stamped with whatever depth it was written at.
+     */
     private static void writeScopedToolResult(final fURI root, final fURI session, final String callId, final int depth) {
         MessageBuilder.build(TOOL_RESULT_MESSAGE_TID)
                 .put(NAME, uri("probe_tool"))
@@ -351,26 +359,30 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
     }
 
 
-
-
-    /** How many rows the ledger holds. */
+    /**
+     * How many rows the ledger holds.
+     */
     private static long messageCount(final fURI root) {
-        final Obj rows = Router.readFromSpace(root.extend(MESSAGE).extend("+/"));
+        final Obj rows = Machine.readFromSpace(root.extend(MESSAGE).extend("+/"));
         if (rows.isNoObj())
             return 0L;
         return rows.stream().map(Obj::asRel).map(Rel::second).filter(Obj::isRec).count();
     }
 
-    /** The call ids a sweep reported under one failure mode. */
+    /**
+     * The call ids a sweep reported under one failure mode.
+     */
     private static List<String> ids(final Obj findings, final String mode) {
         final Obj list = findings.asRec().at(uri(mode));
         return list.isNoObj() ? List.of()
                 : list.asLst().elements().map(Str.Helper::cleanString).toList();
     }
 
-    /** Every tool request id still carried by the ledger's ai messages. */
+    /**
+     * Every tool request id still carried by the ledger's ai messages.
+     */
     private static List<String> requests(final fURI root) {
-        final Obj rows = Router.readFromSpace(root.extend(MESSAGE).extend("+/"));
+        final Obj rows = Machine.readFromSpace(root.extend(MESSAGE).extend("+/"));
         if (rows.isNoObj())
             return List.of();
         return rows.stream()
@@ -383,7 +395,9 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
                 .toList();
     }
 
-    /** A tool result answering the given call id. */
+    /**
+     * A tool result answering the given call id.
+     */
     private static void writeToolResult(final fURI root, final String callId) {
         MessageBuilder.buildToolResultMessage()
                 .put(NAME, uri("probe_tool"))

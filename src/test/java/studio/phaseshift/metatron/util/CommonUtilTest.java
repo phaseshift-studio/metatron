@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
@@ -115,10 +115,10 @@ public class CommonUtilTest extends AbstractMetatronTest {
                 uri(PATTERN), uri("local:#"),
                 uri(ROUTE), rec(uri("local:"), uri("/tmp/common_utils_test"))).vid(f("/sys/space/local")))).apply(noobj()).as();
         LOG.warn(space);
-        Router.global().addSpace(space);
+        Machine.current().addSpace(space);
         final List<CommonUtil.TreeEntry> nodes = new ArrayList<>();
         CommonUtil.treeConsumer(f("local:"), 3, nodes::add);
-        LOG.warn(Router.readFromSpace("local:#/"));
+        LOG.warn(Machine.readFromSpace("local:#/"));
         // Debug: dump treeConsumer results
         for (int i = 0; i < nodes.size(); i++) {
             final var n = nodes.get(i);

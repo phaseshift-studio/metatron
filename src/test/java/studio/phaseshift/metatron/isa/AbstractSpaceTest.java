@@ -36,7 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -153,7 +153,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "/x/y/z                                          % v:z"
     }, delimiter = '%')
     public void testSpaceRouter(final String lhs, final String expected) {
-        final Map<Uri, Obj> routes = (Map) Router.readFromSpace(f("routes")).asRec().jvm();
+        final Map<Uri, Obj> routes = (Map) Machine.readFromSpace(f("routes")).asRec().jvm();
         final fURI actual = Space.Helper.routeFromSpace(f(lhs), routes);
         LOG.debug("testing route from space: %s => %s [expected: %s]", lhs, actual, expected);
         assertEquals(f(expected), actual);
@@ -484,7 +484,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         if (!writeExpression.equals(".")) {
-            Router.global().write(this.testUri("#"), noobj());
+            Machine.current().write(this.testUri("#"), noobj());
             seedWriteSkipped = false; // reset on every new seed write
         }
         // If the current seed write was rejected, skip all dependent "." rows too
@@ -573,7 +573,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             }
         } finally {
             // clean up rootless data so it doesn't pollute other tests (shared DB backends)
-            Router.global().write(make("$$/rootless/#"), noobj());
+            Machine.current().write(make("$$/rootless/#"), noobj());
         }
     }
 
@@ -648,7 +648,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 assertEquals(expectedObj, readObj, Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: update: " + make(updateExpression) + " | read: " + make(readExpression)));
             }
         } finally {
-            Router.global().write(make("$$/#"), noobj());
+            Machine.current().write(make("$$/#"), noobj());
         }
     }
 
@@ -1381,7 +1381,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             return;
         }
         if (!writeExpression.equals(".")) {
-            Router.global().write(this.testUri("#"), noobj());
+            Machine.current().write(this.testUri("#"), noobj());
         }
         final Obj writeObj = ObjmtronSerializer.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression)).apply();
         if (writeObj.isFail() && expectWriteRejection(writeObj))
@@ -1393,7 +1393,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         if (!expectedExpression.equals(".")) PREVIOUS_LINE.set(2, make(expectedExpression));
         assertEquals(resultObj, readObj.selfVID(null));
         // Clean up _ops_ subtree so wildcard reads in other tests don't pick this up.
-        Router.global().write(this.testUri("_ops_/#"), noobj());
+        Machine.current().write(this.testUri("_ops_/#"), noobj());
     }
 
     // =========================================================================
@@ -1599,7 +1599,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                             "\n\tupdate: " + make(tc.update()) +
                             "\n\tread:   " + make(tc.read()));
         } finally {
-            Router.global().write(make(cleanupExpr()), noobj());
+            Machine.current().write(make(cleanupExpr()), noobj());
         }
     }
 

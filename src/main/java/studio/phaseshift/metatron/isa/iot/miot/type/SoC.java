@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.AbstractMap;
 import java.util.LinkedHashMap;
@@ -182,7 +182,7 @@ public final class SoC {
                 .inst(miotInstSet.MIOT_INST_TID.extend("reboot").dom(MIOT_DEVICE_TID).rng(MIOT_DEVICE_TID), lst(),
                         (lhs, inst) -> {
                             final fURI toVID = miotInstSet.deduceVID(lhs, f("+").extend(lhs.tid().name()));
-                            Router.global().write(toVID.extend("status"), uri("offline"));
+                            Machine.current().write(toVID.extend("status"), uri("offline"));
                             return lhs;
                         })
                 .create(types, insts);

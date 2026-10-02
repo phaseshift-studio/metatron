@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
@@ -58,7 +58,9 @@ public class SqliteLedgerIntegrationTest extends AbstractMetatronTest {
 
     private static final String DB_PATH = "target/test-llm-ledger-int.db";
 
-    /** A session vid in the store's own layout — its retraction is the ledger root. */
+    /**
+     * A session vid in the store's own layout — its retraction is the ledger root.
+     */
     private static final fURI SESSION_VID = f("sqlite:llm_ledger/1");
 
     private static final fURI SPACE_VID = f("/sys/space/test_llm_ledger_int");
@@ -89,7 +91,7 @@ public class SqliteLedgerIntegrationTest extends AbstractMetatronTest {
     void closeStore() {
         if (null != this.space) {
             try {
-                Router.global().removeSpace(this.space.vid());
+                Machine.current().removeSpace(this.space.vid());
             } catch (final Exception ignored) {
                 // the space may already be gone
             }

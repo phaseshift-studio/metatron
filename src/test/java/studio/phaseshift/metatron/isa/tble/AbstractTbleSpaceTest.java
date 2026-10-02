@@ -35,7 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -358,7 +358,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     protected tbleSpace createTestSpace() {
         // Evict the lazily-constructed parent space (SPACE_VID, pattern db:#) so it
         // doesn't block the fresh space from registering.
-        Router.global().removeSpace(SPACE_VID);
+        Machine.current().removeSpace(SPACE_VID);
         return tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("db:#"),
@@ -482,12 +482,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         setupTestDatabase();
         final tbleSpace testSpace = createTestSpace();
         try {
-            final Obj row = Router.readFromSpace(f(rowUri));
+            final Obj row = Machine.readFromSpace(f(rowUri));
             assertFalse(row.isNoObj(), "should not be a noobj");
             assertTrue(row.isRec(), "should return a rec");
             assertEquals(expectedValue, row.asRec().at(uri(fieldName)), description);
         } finally {
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -521,14 +521,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         setupTestDatabase();
         final tbleSpace testSpace = createTestSpace();
         try {
-            Router.writeToSpace(f("db:%s/%s/%s".formatted(table, rowId, field)), newValue);
-            final Obj row = Router.readFromSpace(f("db:%s/%s".formatted(table, rowId)));
+            Machine.writeToSpace(f("db:%s/%s/%s".formatted(table, rowId, field)), newValue);
+            final Obj row = Machine.readFromSpace(f("db:%s/%s".formatted(table, rowId)));
             assertFalse(row.isNoObj(), "should not be a noobj");
             assertTrue(row.isRec(), "should return a rec");
             assertEquals(expectedValue, row.asRec().at(uri(field)),
                     "field " + field + " should be updated");
         } finally {
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -555,12 +555,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         setupTestDatabase();
         final tbleSpace testSpace = createTestSpace();
         try {
-            final Obj row = Router.readFromSpace(f(uri));
+            final Obj row = Machine.readFromSpace(f(uri));
             assertTrue(row.isRec(), "Should return a record");
             assertEquals(str(expectedFieldValue), row.asRec().at(uri(fieldName)),
                     "Field " + fieldName + " should match");
         } finally {
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -603,14 +603,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         setupTestDatabase();
         final tbleSpace testSpace = createTestSpace();
         try {
-            Router.writeToSpace(f("db:%s/%s".formatted(table, rowId)), rowData);
-            final Obj insertedRow = Router.readFromSpace(
+            Machine.writeToSpace(f("db:%s/%s".formatted(table, rowId)), rowData);
+            final Obj insertedRow = Machine.readFromSpace(
                     f("db:%s/%s".formatted(table, rowId)));
             assertTrue(insertedRow.isRec(), "Should return a record");
             assertEquals(expectedValue, insertedRow.asRec().at(uri(verifyField)),
                     "Field " + verifyField + " should match");
         } finally {
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -651,9 +651,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         setupTestDatabase();
         final tbleSpace testSpace = createTestSpace();
         try {
-            Router.writeToSpace(
+            Machine.writeToSpace(
                     f("db:%s/%s/%s".formatted(table, rowId, field)), writeValue);
-            final Obj row = Router.readFromSpace(
+            final Obj row = Machine.readFromSpace(
                     f("db:%s/%s".formatted(table, rowId)));
             assertTrue(row.isRec() || row.isStr(), "should return a rec or str");
             if (expectedReadValue.isReal())
@@ -661,7 +661,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             else
                 assertEquals(expectedReadValue, row.asRec().at(uri(field)), description);
         } finally {
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -707,27 +707,27 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             LOG.info("Discovered tables: %s", testSpace.existingTableSchema.getTableNames());
 
             // Read specific row
-            final Obj user1 = Router.readFromSpace(f("db:users/1"));
+            final Obj user1 = Machine.readFromSpace(f("db:users/1"));
             assertTrue(user1.isRec(), "Should return a record");
             assertEquals(str("Alice"), user1.asRec().at(uri(NAME)), "Name should be Alice");
             assertEquals(jnt(30), user1.asRec().at(uri("age")), "Age should be 30");
 
             // Update entire row
-            Router.writeToSpace(f("db:users/1"), rec(
+            Machine.writeToSpace(f("db:users/1"), rec(
                     uri(NAME), str("Alice Smith"),
                     uri("age"), jnt(31),
                     uri("salary"), real(80000.00),
                     uri("active"), bool(true),
                     uri("email"), str("alice.smith@example.com")
             ));
-            final Obj updatedUser1 = Router.readFromSpace(f("db:users/1"));
+            final Obj updatedUser1 = Machine.readFromSpace(f("db:users/1"));
             assertEquals(str("Alice Smith"), updatedUser1.asRec().at(uri(NAME)));
             assertEquals(jnt(31), updatedUser1.asRec().at(uri("age")));
 
             // Update single fields
-            Router.writeToSpace(f("db:users/2/age"), jnt(26));
-            Router.writeToSpace(f("db:users/2/salary"), real(62000.00));
-            final Obj updatedUser2 = Router.readFromSpace(f("db:users/2"));
+            Machine.writeToSpace(f("db:users/2/age"), jnt(26));
+            Machine.writeToSpace(f("db:users/2/salary"), real(62000.00));
+            final Obj updatedUser2 = Machine.readFromSpace(f("db:users/2"));
             assertEquals(jnt(26), updatedUser2.asRec().at(uri("age")));
             assertEquals(real(62000.00), updatedUser2.asRec().at(uri("salary")));
 
@@ -741,7 +741,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             LOG.info("All comprehensive tests passed for {}!",
                     staticDbConfig.getDatabaseName());
         } finally {
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -770,30 +770,30 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                 spaceVid
         );
         try {
-            Router.writeToSpace(f("pfk:person/1"), rec(uri("name"), str("Alice")));
-            Router.writeToSpace(f("pfk:person/2"), rec(uri("name"), str("Bob")));
+            Machine.writeToSpace(f("pfk:person/1"), rec(uri("name"), str("Alice")));
+            Machine.writeToSpace(f("pfk:person/2"), rec(uri("name"), str("Bob")));
 
-            Router.writeToSpace(f("pfk:award/1"), rec(
+            Machine.writeToSpace(f("pfk:award/1"), rec(
                     uri("trophy"), str("gold"),
                     uri("recipient"), auto_from_(f("pfk:person/1")).tryToInst()));
-            Router.writeToSpace(f("pfk:award/2"), rec(
+            Machine.writeToSpace(f("pfk:award/2"), rec(
                     uri("trophy"), str("silver"),
                     uri("recipient"), auto_from_(f("pfk:person/2")).tryToInst()));
 
             // rec.at() eagerly resolves auto_from → the person record
-            final Obj award1 = Router.readFromSpace(f("pfk:award/1"));
+            final Obj award1 = Machine.readFromSpace(f("pfk:award/1"));
             assertTrue(award1.isRec(), "award/1 should be a record");
             final Obj recipient = award1.asRec().at(uri("recipient"));
             assertTrue(recipient.isRec(), "at(recipient) should resolve to person record");
             assertEquals(str("Alice"), recipient.asRec().at(uri("name")));
 
             // Path traversal pfk:award/1/recipient → also resolves to person
-            final Obj aliceRec = Router.readFromSpace(f("pfk:award/1/recipient"));
+            final Obj aliceRec = Machine.readFromSpace(f("pfk:award/1/recipient"));
             assertTrue(aliceRec.isRec(), "dereferenced recipient should be a record");
             assertEquals(str("Alice"), aliceRec.asRec().at(uri("name")));
 
             // Second row → Bob
-            final Obj award2 = Router.readFromSpace(f("pfk:award/2"));
+            final Obj award2 = Machine.readFromSpace(f("pfk:award/2"));
             final Obj recipient2 = award2.asRec().at(uri("recipient"));
             assertTrue(recipient2.isRec());
             assertEquals(str("Bob"), recipient2.asRec().at(uri("name")));
@@ -806,7 +806,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -835,9 +835,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                 spaceVid
         );
         try {
-            Router.writeToSpace(f("pmk:category/10"),
+            Machine.writeToSpace(f("pmk:category/10"),
                     rec(uri("label"), str("Books")));
-            Router.writeToSpace(f("pmk:item/1"), rec(
+            Machine.writeToSpace(f("pmk:item/1"), rec(
                     uri("title"), str("Dune"),
                     uri("category"), auto_from_(f("pmk:category/10")).tryToInst()));
 
@@ -853,7 +853,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
             // Restart: close space, re-open → FK must survive
             testSpace.close();
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
 
             final tbleSpace testSpace2 = tbleSpace.of(
                     rec(
@@ -867,14 +867,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             );
             try {
                 // at() eagerly resolves auto_from → the category record
-                final Obj item = Router.readFromSpace(f("pmk:item/1"));
+                final Obj item = Machine.readFromSpace(f("pmk:item/1"));
                 final Obj catPtr = item.asRec().at(uri("category"));
                 assertTrue(catPtr.isRec(),
                         "after restart, category should resolve to the category record, got: "
                                 + catPtr.tid());
                 assertEquals(str("Books"), catPtr.asRec().at(uri("label")));
             } finally {
-                Router.global().removeSpace(testSpace2.vid());
+                Machine.current().removeSpace(testSpace2.vid());
                 testSpace2.close();
             }
         } finally {
@@ -884,7 +884,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                 LOG.warn("[ignored] %s", ex);
             }
             try {
-                Router.global().removeSpace(testSpace.vid());
+                Machine.current().removeSpace(testSpace.vid());
                 testSpace.close();
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
@@ -918,7 +918,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         );
         try {
             // --- cross-space: addr → g:V/1 ---
-            Router.writeToSpace(f("play:place/1"), rec(
+            Machine.writeToSpace(f("play:place/1"), rec(
                     uri("name"), str("fun_area"),
                     uri("addr"), auto_from_(f("g:V/1")).tryToInst()));
 
@@ -933,14 +933,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     "cross-space ref should store scheme:segment, not bare table name");
 
             // Read back: auto_from inst points to g:V/1 (not play:V/1)
-            final Obj row = Router.readFromSpace(f("play:place/1"));
+            final Obj row = Machine.readFromSpace(f("play:place/1"));
             final Obj addr = row.recValue().get(uri("addr"));
             assertTrue(addr.isAutoFrom(), "addr should be an auto_from inst");
             final fURI targetURI = addr.asInst().arg(0).uriValue();
             assertEquals(f("g:V/1"), targetURI,
                     "cross-space auto_from should point at original URI, not space-pattern URI");
             // --- internal FK: venue.parent → play:place/1 (separate table, single create) ---
-            Router.writeToSpace(f("play:venue/1"), rec(
+            Machine.writeToSpace(f("play:venue/1"), rec(
                     uri("name"), str("indoor_zone"),
                     uri("parent"), auto_from_(f("play:place/1")).tryToInst()));
 
@@ -954,7 +954,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     "internal FK should store bare table name");
 
             // Read back: internal FK uses space pattern
-            final Obj row2 = Router.readFromSpace(f("play:venue/1"));
+            final Obj row2 = Machine.readFromSpace(f("play:venue/1"));
             final Obj parent = row2.recValue().get(uri("parent"));
             assertTrue(parent.isAutoFrom());
             final fURI parentURI = parent.asInst().arg(0).uriValue();
@@ -969,7 +969,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -991,7 +991,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
         // Target space: memSpace with pattern grph:#
         final memSpace targetSpace = memSpace.of(f("grph:#"), memSpaceVid);
-        Router.global().addSpace(targetSpace);
+        Machine.current().addSpace(targetSpace);
 
         final tbleSpace sourceSpace = tbleSpace.of(
                 rec(
@@ -1005,12 +1005,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         );
         try {
             // Write the target record into memSpace
-            Router.writeToSpace(f("grph:vertices/42"),
+            Machine.writeToSpace(f("grph:vertices/42"),
                     rec(uri("label"), str("downtown"),
                             uri("capacity"), jnt(5000)));
 
             // Write a tbleSpace record with cross-space auto_from pointing at grph:vertices/42
-            Router.writeToSpace(f("play:arena/1"), rec(
+            Machine.writeToSpace(f("play:arena/1"), rec(
                     uri("name"), str("main_stage"),
                     uri("location"), auto_from_(f("grph:vertices/42")).tryToInst()));
 
@@ -1024,7 +1024,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     "multi-segment cross-space ref stores scheme:firstSegment");
 
             // Verify the instruction is properly reconstructed
-            final Obj row = Router.readFromSpace(f("play:arena/1"));
+            final Obj row = Machine.readFromSpace(f("play:arena/1"));
             final Obj locInst = row.recValue().get(uri("location"));
             assertTrue(locInst.isAutoFrom());
             assertEquals(f("grph:vertices/42"), locInst.asInst().arg(0).uriValue());
@@ -1046,9 +1046,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(sourceSpace.vid());
+            Machine.current().removeSpace(sourceSpace.vid());
             sourceSpace.close();
-            Router.global().removeSpace(targetSpace.vid());
+            Machine.current().removeSpace(targetSpace.vid());
             targetSpace.close();
         }
     }
@@ -1078,13 +1078,13 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         );
         try {
             // --- cross-table FK: employee.org_id → org ---
-            Router.writeToSpace(f("net:org/1"),
+            Machine.writeToSpace(f("net:org/1"),
                     rec(uri("label"), str("PhaseShift Studio")));
             // Write the first employee with ALL FK columns in one shot (cross-table
             // org_id + self-referencing manager_id) so the table is created with
             // every FK column. self-ref points at its own row — the raw INTEGER
             // value stores fine before the row exists.
-            Router.writeToSpace(f("net:employee/1"), rec(
+            Machine.writeToSpace(f("net:employee/1"), rec(
                     uri("name"), str("Marko"),
                     uri("org_id"), auto_from_(f("net:org/1")).tryToInst(),
                     uri("manager_id"), auto_from_(f("net:employee/1")).tryToInst()));
@@ -1104,7 +1104,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     "cross-table internal FK stores bare target table name");
 
             // Read back: org_id instruction points within same space
-            final Obj emp = Router.readFromSpace(f("net:employee/1"));
+            final Obj emp = Machine.readFromSpace(f("net:employee/1"));
             final Obj orgInst = emp.recValue().get(uri("org_id"));
             assertTrue(orgInst.isAutoFrom());
             assertEquals(f("net:org/1"), orgInst.asInst().arg(0).uriValue());
@@ -1132,7 +1132,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -1169,7 +1169,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
         try {
             final MTronException ex = assertThrows(MTronException.class, () ->
-                    Router.writeToSpace(f("nn:" + tableName + "/1"),
+                    Machine.writeToSpace(f("nn:" + tableName + "/1"),
                             rec(uri("required_field"), Obj.none()))
             );
             assertTrue(ex.getMessage().contains("NOT NULL"),
@@ -1184,7 +1184,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -1716,7 +1716,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             LOG.info("multi-line SQL with comments test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -1810,7 +1810,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         try {
             // ── 1. Write with a string rowId → should create VARCHAR PK ──
             final fURI textRowURI = f("db:textpk_people/marko");
-            Router.writeToSpace(textRowURI, rec(
+            Machine.writeToSpace(textRowURI, rec(
                     uri("name"), str("Marko"),
                     uri("role"), str("engineer")
             ));
@@ -1834,7 +1834,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             }
 
             // Read the row back
-            final Obj row1 = Router.readFromSpace(textRowURI);
+            final Obj row1 = Machine.readFromSpace(textRowURI);
             assertFalse(row1.isNoObj(), "row should exist");
             assertTrue(row1.isRec(), "row should be a Rec");
             assertEquals(str("Marko"), row1.asRec().at(uri("name")));
@@ -1842,23 +1842,23 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
             // ── 2. Write another row to the same table ──
             final fURI textRow2URI = f("db:textpk_people/josh");
-            Router.writeToSpace(textRow2URI, rec(
+            Machine.writeToSpace(textRow2URI, rec(
                     uri("name"), str("Josh"),
                     uri("role"), str("designer")
             ));
-            final Obj row2 = Router.readFromSpace(textRow2URI);
+            final Obj row2 = Machine.readFromSpace(textRow2URI);
             assertEquals(str("Josh"), row2.asRec().at(uri("name")));
 
             // ── 3. Update a field on the string-PK row ──
-            Router.writeToSpace(f("db:textpk_people/marko/role"), str("architect"));
-            final Obj row1Updated = Router.readFromSpace(textRowURI);
+            Machine.writeToSpace(f("db:textpk_people/marko/role"), str("architect"));
+            final Obj row1Updated = Machine.readFromSpace(textRowURI);
             assertEquals(str("architect"), row1Updated.asRec().at(uri("role")));
             // Name should be unchanged
             assertEquals(str("Marko"), row1Updated.asRec().at(uri("name")));
 
             // ── 4. Write with a numeric rowId → should create INTEGER PK ──
             final fURI intRowURI = f("db:intpk_items/42");
-            Router.writeToSpace(intRowURI, rec(
+            Machine.writeToSpace(intRowURI, rec(
                     uri("label"), str("widget"),
                     uri("price"), real(9.99)
             ));
@@ -1881,18 +1881,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             }
 
             // Read the integer-PK row back
-            final Obj intRow = Router.readFromSpace(intRowURI);
+            final Obj intRow = Machine.readFromSpace(intRowURI);
             assertFalse(intRow.isNoObj(), "int-PK row should exist");
             assertEquals(str("widget"), intRow.asRec().at(uri("label")));
             assertEquals(9.99, intRow.asRec().at(uri("price")).asReal().realValue(), 0.001,
                     "price should round-trip as 9.99");
 
             // ── 5. Write another integer-PK row ──
-            Router.writeToSpace(f("db:intpk_items/99"), rec(
+            Machine.writeToSpace(f("db:intpk_items/99"), rec(
                     uri("label"), str("gadget"),
                     uri("price"), real(4.50)
             ));
-            final Obj intRow2 = Router.readFromSpace(f("db:intpk_items/99"));
+            final Obj intRow2 = Machine.readFromSpace(f("db:intpk_items/99"));
             assertEquals(str("gadget"), intRow2.asRec().at(uri("label")));
 
             LOG.info("text PK auto-create test passed on {}",
@@ -1905,7 +1905,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                 stmt.executeUpdate("DROP TABLE IF EXISTS intpk_items");
             }
         } finally {
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -1929,7 +1929,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     uri("text"), str("hello"),
                     uri("name"), str("assistant")
             ).tid(knownTid).asRec();
-            Router.writeToSpace(f("db:" + tableName + "/1"), rec);
+            Machine.writeToSpace(f("db:" + tableName + "/1"), rec);
 
             // -- Verify _tid column exists in the database --
             final java.sql.DatabaseMetaData md = space.sjvm().getMetaData();
@@ -1971,7 +1971,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2005,10 +2005,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         final tbleSpace space = createTestSpace();
         try {
             // Write a typed real value to kv_store
-            Router.writeToSpace(f(uri), value);
+            Machine.writeToSpace(f(uri), value);
 
             // Read it back
-            final Obj roundTripped = Router.readFromSpace(f(uri));
+            final Obj roundTripped = Machine.readFromSpace(f(uri));
             assertFalse(roundTripped.isNoObj(), "should read back non-noobj");
             assertTrue(roundTripped.isReal(), "should be a real");
             assertEquals(value.realValue(), roundTripped.realValue(), 0.0,
@@ -2020,7 +2020,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
             LOG.info("kv_store tid round-trip OK: %s → %s", value, roundTripped);
         } finally {
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2043,7 +2043,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         final String tableName = "meta_firstwrite";
         try {
             // Write a rec with diverse types to trigger table creation
-            Router.writeToSpace(f("db:" + tableName + "/1"), rec(
+            Machine.writeToSpace(f("db:" + tableName + "/1"), rec(
                     uri("name"), str("Alice"),
                     uri("age"), jnt(30),
                     uri("salary"), real(75000.0),
@@ -2122,7 +2122,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2141,7 +2141,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         final String tableName = "meta_alter";
         try {
             // -- First write: creates table with name + age --------------------
-            Router.writeToSpace(f("db:" + tableName + "/1"), rec(
+            Machine.writeToSpace(f("db:" + tableName + "/1"), rec(
                     uri("name"), str("Alice"),
                     uri("age"), jnt(30)
             ));
@@ -2156,7 +2156,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     "should have $table + name + age rows in _mtron_meta");
 
             // -- Second write: adds email column (triggers addColumnOnTheFly) --
-            Router.writeToSpace(f("db:" + tableName + "/2"), rec(
+            Machine.writeToSpace(f("db:" + tableName + "/2"), rec(
                     uri("name"), str("Bob"),
                     uri("age"), jnt(25),
                     uri("email"), uri("mailto:bob@example.com")
@@ -2197,7 +2197,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2228,7 +2228,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         );
         try {
             // Write data that creates the table with typed columns
-            Router.writeToSpace(f("mr:" + tableName + "/1"), rec(
+            Machine.writeToSpace(f("mr:" + tableName + "/1"), rec(
                     uri("name"), str("Alice"),
                     uri("website"), uri("https://alice.example.com"),
                     uri("score"), jnt(100)
@@ -2243,7 +2243,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     "should have at least $table + 2 columns before restart, got: " + beforeCount);
 
         } finally {
-            Router.global().removeSpace(space1.vid());
+            Machine.current().removeSpace(space1.vid());
             space1.close();
         }
 
@@ -2303,7 +2303,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(space2.vid());
+            Machine.current().removeSpace(space2.vid());
             space2.close();
         }
     }
@@ -2328,7 +2328,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     uri("name"), str("Marko"),
                     uri("role"), str("engineer")
             ).tid(customTid).asRec();
-            Router.writeToSpace(f("db:" + tableName + "/1"), rec);
+            Machine.writeToSpace(f("db:" + tableName + "/1"), rec);
 
             // -- Verify $table sentinel stores the custom TID ------------------
             final Obj sentinelRow = space.sql(
@@ -2356,7 +2356,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2385,18 +2385,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         final String childTable = "af_child";
         try {
             // -- S1: Write parent rows ------------------------------------------
-            Router.writeToSpace(f("db:" + parentTable + "/1"),
+            Machine.writeToSpace(f("db:" + parentTable + "/1"),
                     rec(uri("label"), str("alpha")));
-            Router.writeToSpace(f("db:" + parentTable + "/2"),
+            Machine.writeToSpace(f("db:" + parentTable + "/2"),
                     rec(uri("label"), str("beta")));
 
             // -- S2: Write child with explicit auto_from FK ---------------------
-            Router.writeToSpace(f("db:" + childTable + "/1"), rec(
+            Machine.writeToSpace(f("db:" + childTable + "/1"), rec(
                     uri("name"), str("first"),
                     uri("parent_ref"), auto_from_(f("db:" + parentTable + "/1")).tryToInst()));
 
             // -- S3: Read back: auto_from FK must be an inst, not resolved ------
-            final Obj childRow = Router.readFromSpace(f("db:" + childTable + "/1"));
+            final Obj childRow = Machine.readFromSpace(f("db:" + childTable + "/1"));
             assertTrue(childRow.isRec(), "child row should be a Rec");
 
             // Access via recValue().get() — must NOT trigger resolution
@@ -2408,14 +2408,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
             // -- S4: Write a row with a string that looks like mtron [!*...] ---
             final String embeddedRef = "[!*db:" + parentTable + "/2]";
-            Router.writeToSpace(f("db:" + childTable + "/2"), rec(
+            Machine.writeToSpace(f("db:" + childTable + "/2"), rec(
                     uri("name"), str("second"),
                     uri("tags"), str(embeddedRef)));
 
             // -- S5: Read back: _mtron_meta says str::T → stays a string --------
             // No heuristic JSON/mtron parsing.  The column was written as a
             // string, so it comes back as a string.
-            final Obj childRow2 = Router.readFromSpace(f("db:" + childTable + "/2"));
+            final Obj childRow2 = Machine.readFromSpace(f("db:" + childTable + "/2"));
             assertTrue(childRow2.isRec(), "child row 2 should be a Rec");
             final Obj tagsField = childRow2.asRec().recValue().get(uri("tags"));
             assertTrue(tagsField.isStr(),
@@ -2427,12 +2427,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             // (ConceptFeature stores links as serialized strings like
             //  [!*/usr/dr/concept/x, !*/usr/dr/concept/y] in TEXT columns.)
             final String serializedLinks = "[!*db:" + parentTable + "/1,!*db:" + parentTable + "/2]";
-            Router.writeToSpace(f("db:" + childTable + "/3"), rec(
+            Machine.writeToSpace(f("db:" + childTable + "/3"), rec(
                     uri("name"), str("third"),
                     uri("links"), str(serializedLinks)));
 
             // -- S7: Read back: _mtron_meta says str::T → stays a string --------
-            final Obj childRow3 = Router.readFromSpace(f("db:" + childTable + "/3"));
+            final Obj childRow3 = Machine.readFromSpace(f("db:" + childTable + "/3"));
             assertTrue(childRow3.isRec(), "child row 3 should be a Rec");
             final Obj linksField = childRow3.asRec().recValue().get(uri("links"));
             assertTrue(linksField.isStr(),
@@ -2449,7 +2449,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2488,15 +2488,15 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         );
         try {
             // Create target table so FK naming convention fires
-            Router.writeToSpace(f("x:session/1"),
+            Machine.writeToSpace(f("x:session/1"),
                     rec(uri("label"), str("test-session")));
             // Write row with absolute URI in FK column
             // (simulating SpaceChatSessionStore.updateMessages())
-            Router.writeToSpace(f("x:message/1"), rec(
+            Machine.writeToSpace(f("x:message/1"), rec(
                     uri("text"), str("hello"),
                     uri("session"), uri("x:session/1")));
 
-            final Obj msg = Router.readFromSpace(f("x:message/1"));
+            final Obj msg = Machine.readFromSpace(f("x:message/1"));
             assertTrue(msg.isRec());
             final Obj sessionField = msg.asRec().at(uri("session"));
             assertTrue(sessionField.isUri(),
@@ -2513,7 +2513,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -2535,13 +2535,13 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                 spaceVid
         );
         try {
-            Router.writeToSpace(f("x:user/1"),
+            Machine.writeToSpace(f("x:user/1"),
                     rec(uri("name"), str("Alice")));
-            Router.writeToSpace(f("x:note/1"), rec(
+            Machine.writeToSpace(f("x:note/1"), rec(
                     uri("text"), str("hi"),
                     uri("user"), jnt(1)));
 
-            final Obj note = Router.readFromSpace(f("x:note/1"));
+            final Obj note = Machine.readFromSpace(f("x:note/1"));
             assertTrue(note.isRec());
             // recValue().get() returns the raw stored value — at() eagerly
             // resolves auto_from to the target record
@@ -2564,7 +2564,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -2591,7 +2591,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         );
         try {
             // Create target table so FK naming convention fires
-            Router.writeToSpace(f("x:message/1"),
+            Machine.writeToSpace(f("x:message/1"),
                     rec(uri("text"), str("hello")));
 
             // Write a row with a MESSAGE field containing a JSON list
@@ -2599,11 +2599,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             final Obj msgLinks = lst(
                     auto_from_(f("x:message/4")).tryToInst(),
                     auto_from_(f("x:message/5")).tryToInst());
-            Router.writeToSpace(f("x:concept/test"), rec(
+            Machine.writeToSpace(f("x:concept/test"), rec(
                     uri("label"), str("test-concept"),
                     uri("message"), msgLinks));
 
-            final Obj concept = Router.readFromSpace(f("x:concept/test"));
+            final Obj concept = Machine.readFromSpace(f("x:concept/test"));
             assertTrue(concept.isRec());
             final Obj messageField = concept.asRec().at(uri("message"));
             assertTrue(messageField.isLst(),
@@ -2620,7 +2620,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -2685,7 +2685,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
                 // Seed 5 rows: val = 10, 20, 30, 40, 50; tag = odd/even alternating
                 for (int i = 1; i <= 5; i++) {
-                    Router.writeToSpace(f(fullBase + "/" + i),
+                    Machine.writeToSpace(f(fullBase + "/" + i),
                             rec(uri("val"), jnt(i * 10),
                                     uri("tag"), str(i % 2 == 0 ? "even" : "odd")));
                 }
@@ -2765,7 +2765,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     LOG.warn("[ignored] %s", ex);
                 }
             }
-            Router.global().removeSpace(testSpace.vid());
+            Machine.current().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -2784,7 +2784,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
         try {
             // Seed a table through the space so the schema tracks it
             for (int i = 1; i <= 7; i++) {
-                Router.writeToSpace(f("db:at_count_test/" + i),
+                Machine.writeToSpace(f("db:at_count_test/" + i),
                         rec(uri("val"), jnt(i)));
             }
 
@@ -2804,7 +2804,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2854,7 +2854,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     uri("time"), str("1.234s")
             ).tid(subtypeTid).asRec();
 
-            Router.writeToSpace(f("sst:" + tableName + "/1"), rec(
+            Machine.writeToSpace(f("sst:" + tableName + "/1"), rec(
                     uri("label"), str("outer row"),
                     uri("result"), nestedRec
             ));
@@ -2900,7 +2900,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Router.global().removeSpace(space.vid());
+            Machine.current().removeSpace(space.vid());
             space.close();
         }
     }

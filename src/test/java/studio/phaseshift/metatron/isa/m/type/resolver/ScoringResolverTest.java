@@ -21,21 +21,24 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 
 /**
- * Test suite for {@link ScoringInstResolver}.
+ * Test suite for {@link ScoringResolver} — the compiler's {@code scoring_resolver::T}, which
+ * owns both the whole-code threading stage and the per-instruction scoring strategy installed
+ * as the test selector.
  * <p>
- * The ScoringInstResolver scores candidate instructions by specificity and selects
+ * The ScoringResolver scores candidate instructions by specificity and selects
  * the highest-scoring match. This should resolve the "as() resolution miss" problem
  * where generic instructions were being selected over more specific ones.
  * <p>
- * Run with: mvn test -Dtest=ScoringInstResolverTest
+ * Run with: mvn test -Dtest=ScoringResolverTest
  */
-@DisplayName("ScoringInstResolver Tests")
+@DisplayName("ScoringResolver Tests")
 public class ScoringResolverTest extends AbstractResolverTest {
 
     public ScoringResolverTest() {
-        super(ScoringInstResolver::new);
+        super(ScoringResolver::new);
     }
 
     // ========================================================================
@@ -47,7 +50,7 @@ public class ScoringResolverTest extends AbstractResolverTest {
     /**
      * Tests that specific type conversions are resolved correctly without
      * explicit domain/range specification. This was the primary motivation
-     * for the ScoringInstResolver - previously these required explicit
+     * for the ScoringResolver - previously these required explicit
      * specifications like as?bytes<=file(bytes::T).
      */
     @ParameterizedTest

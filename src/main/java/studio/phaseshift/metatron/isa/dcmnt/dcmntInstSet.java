@@ -30,7 +30,8 @@ import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -133,7 +134,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 """)),
                 uri(INST), lst(
                         instC(MQL_INST_TID.dom(DCMNT_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<dcmntSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
-                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Router.global().<dcmntSpace>getSpaceFor(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
+                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Machine.current().<dcmntSpace>getSpaceFor(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
                                 "a document collection",
                                 "the result of the mql query",
                                 Map.of(jnt(0), "an mql query represented as a rec"),

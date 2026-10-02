@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.*;
 
 import java.util.*;
@@ -450,12 +450,12 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             // sits exactly at `depth` it falls back to projecting deeper uris onto their
             // depth-`depth` prefix — the implicit "directory spine" a flat space lacks.  When
             // no space supports the base uri, the walk is simply empty — not an error.
-            if (!Router.global().hasSpaceFor(base))
+            if (!Machine.current().hasSpaceFor(base))
                 return noobj();
             // The real reference spine: stored uris sitting exactly `depth` below base
             // (e.g. fsSpace directories).  This is the common, non-synthesizing path.
             final List<fURI> uris = new ArrayList<>(IteratorUtil.stream(
-                            Router.global().getSpaceFor(base).directReader().apply(pattern))
+                            Machine.current().getSpaceFor(base).directReader().apply(pattern))
                     .map(IdObj::furi)
                     .filter(u -> relativeDepth(u, base) == depth)
                     .toList());
@@ -464,7 +464,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             // filesystem would materialize as a directory on the way to a file.  Read-time
             // only (nothing is written), so * on a synthesized uri still resolves to noobj.
             if (uris.isEmpty()) {
-                IteratorUtil.stream(Router.global().getSpaceFor(base).directReader().apply(base.extend(fURI.Singleton.ALL)))
+                IteratorUtil.stream(Machine.current().getSpaceFor(base).directReader().apply(base.extend(fURI.Singleton.ALL)))
                         .map(IdObj::furi)
                         .filter(u -> relativeDepth(u, base) > depth)
                         .map(u -> u.retract(relativeDepth(u, base) - depth))
@@ -534,7 +534,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                 // real child, never a fabricated address.  Uri components (scheme, host, …)
                 // live in rec space, not uri space — use .as(rec::T)>>component for those.
                 final fURI target = lhs.uriValue().extend(argUri.toString());
-                return Router.readFromSpace(target).isNoObj() ? noobj() : uri(target);
+                return Machine.readFromSpace(target).isNoObj() ? noobj() : uri(target);
             }
             return noobj();
         }

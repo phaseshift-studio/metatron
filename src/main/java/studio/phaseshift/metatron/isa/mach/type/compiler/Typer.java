@@ -16,25 +16,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type;
+package studio.phaseshift.metatron.isa.mach.type.compiler;
 
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 /**
- * Rewriter — the first stage of {@code compiler::T}: lowers {@code code::T} to {@code code::T} by
- * applying rewrite rules to a fixpoint. A rewriter is a machine component ({@code rewriter::T}); the
- * concrete {@code fixpoint_rewriter::T} carries its convergence window as the {@code max} rec entry.
+ * Typer — the final stage of {@code compiler::T}: the runtime type-assertion pass over
+ * {@code code::T}. A typer is a machine component ({@code typer::T}) whose rec flags
+ * ({@code inst_dom}, {@code inst_rng}, {@code type_pred}) select which assertions run per machine,
+ * replacing the global {@code TypeCheck} registry.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Rewriter extends Machine.Component {
+public interface Typer extends Machine.Component {
 
     /**
-     * Rewrite {@code code} to a fixpoint over the applicable rewrite rules.
+     * Type-check {@code code} according to this typer's enabled assertions.
      *
-     * @param code the code to rewrite
-     * @return the rewritten code
+     * @param code the code to type-check
+     * @return the type-checked code
      */
-    Code apply(final Obj code);
+    Code apply(Obj code);
 }

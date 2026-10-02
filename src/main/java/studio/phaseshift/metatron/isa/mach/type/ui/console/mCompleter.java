@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
 
@@ -54,11 +54,11 @@ public class mCompleter implements Completer {
                     final Obj o = ObjmtronSerializer.parse(b);
                     if (o.isCode()) {
                         final Inst lastInst = o.resolve(noobj()).codeValue().getLast();
-                        final Obj insts = Router.readFromSpace(f("/m/inst/#?dom=" + lastInst.tid().rng()));
+                        final Obj insts = Machine.readFromSpace(f("/m/inst/#?dom=" + lastInst.tid().rng()));
                         insts.forEach(i -> candidates.add(new Candidate(i.<Inst>as().tid().basePath() + "(" + (i.<Inst>as().args().isEmpty() ? ")" : ""), Graphitty.string(i.toString()), null, null, "", null, false)));
                     }
                 } else if (bufferString.startsWith("*") && bufferString.trim().endsWith("/")) {
-                    final Obj rels = Router.readFromSpace(f(bufferString.substring(1) + "+/"));
+                    final Obj rels = Machine.readFromSpace(f(bufferString.substring(1) + "+/"));
                     rels.forEach(r -> candidates.add(new Candidate("*" + r.<Rel>as().first().uriValue().toString(), Graphitty.string(r.toString()), null, null, "", null, false)));
                 } else {
                     final Obj o = ObjmtronSerializer.parse(bufferString);

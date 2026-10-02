@@ -22,7 +22,7 @@ import org.junit.jupiter.api.*;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.http.HttpClient;
@@ -131,8 +131,8 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     @AfterAll
     public void teardownWsSpace() {
         if (this.space != null) {
-            Router.global().removeSpace(this.space.vid());
-            Router.global().removeSpace(WEB_ISA_TID);
+            Machine.current().removeSpace(this.space.vid());
+            Machine.current().removeSpace(WEB_ISA_TID);
             this.space.close();
             this.space = null;
         }
@@ -225,7 +225,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
         final Obj routes = space.at(ROUTE);
         assertFalse(routes.isNoObj(), "wsSpace should have a route table");
         routes.asRec().elements().forEach(r -> {
-            final Obj type = Router.global().read(r.second().uriValue());
+            final Obj type = Machine.current().read(r.second().uriValue());
             assertFalse(type.isNoObj(),
                     "Type should be registered in Router at " + r.second().uriValue());
             assertTrue(type.isType(),

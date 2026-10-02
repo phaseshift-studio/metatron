@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -56,10 +56,10 @@
  * );
  *
  * // Read a document
- * Obj user = Router.global().read(f("mongo:users/507f1f77bcf86cd799439011"));
+ * Obj user = Machine.current().read(f("mongo:users/507f1f77bcf86cd799439011"));
  *
  * // Access schema
- * Obj schema = Router.global().read(f("mongo:schema/mydb"));
+ * Obj schema = Machine.current().read(f("mongo:schema/mydb"));
  * </pre>
  *
  * <h2>Reference Resolution</h2>

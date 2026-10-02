@@ -26,7 +26,8 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
 import studio.phaseshift.metatron.isa.sys.space.serialSpace;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
@@ -94,7 +95,6 @@ public class sysInstSet extends AbstractInstSet {
     public static final fURI SYS_ISA_TID = M_ISA_TID.extend("sys");
     public static final fURI SYS_INST_TID = SYS_ISA_TID.extend("inst");
     public static final fURI SYS_BASH_INST_TID = SYS_INST_TID.extend("bash");
-    public static final fURI ROUTER_TID = SYS_ISA_TID.extend("router");
     public static final fURI SYS_SPACE_TID = SYS_ISA_TID.extend("space");
     public static final fURI FS_SPACE_TID = SYS_SPACE_TID.extend("fsspace");
     public static final fURI SERIAL_SPACE_TID = SYS_SPACE_TID.extend("serialspace");
@@ -102,10 +102,6 @@ public class sysInstSet extends AbstractInstSet {
     public static final fURI DIR_TID = SYS_ISA_TID.extend("dir");
     public static final fURI LOG_ENTRY_TID = SYS_ISA_TID.extend("log_entry");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
-    public static final Type ROUTER_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(ROUTER_TID)
-            .create();
     public static final Type FILE_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(FILE_TID)
@@ -148,8 +144,8 @@ public class sysInstSet extends AbstractInstSet {
 
     /*
         lst(() ->{ Space sys = new sysInstSet();
-               Router.global().addSpace(sys);
-               Router.writeToSpace(sys); 
+               Machine.current().addSpace(sys);
+               Machine.writeToSpace(sys); 
                }(),() -> {
                System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
@@ -190,7 +186,7 @@ public class sysInstSet extends AbstractInstSet {
                         docWrap(instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
                                 (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)), "render an image's bytes as ascii art — the second arg scales the rendering (default 1.0)", "<mfs:.>/photo.png.as(image::T, 0.5)   [-- the image as a multi-line ascii str --]"),
                         docWrap(instC(SYS_INST_TID.extend("close").dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-                            if (lhs instanceof Router)
+                            if (lhs instanceof Machine)
                                 return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
                             CommonUtil.close(lhs);
                             if (lhs.isNoObj())
@@ -198,9 +194,23 @@ public class sysInstSet extends AbstractInstSet {
                             return noobj();
                         }), "close the lhs — release its resources; a router exits the vm, and a noobj runs the boot loader teardown"),
                         docWrap(instC(SYS_INST_TID.extend("redirect").dom(ALL.maybe()).rng(f("rec[short=>uri,long=>uri]")), lst(URI_TYPE), (lhs, inst) -> rec(
-                                uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)),
-                                uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
-                        docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> ThreadExecutor.instance().summary()), "a summary of thread counts"),
+                                uri(SHORT), uri(Machine.current().redirect(inst.arg(0).uriValue(), false)),
+                                uri(LONG), uri(Machine.current().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
+                        docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> {
+                            Runtime rt = Runtime.getRuntime();
+                            long totalMemory = rt.totalMemory();
+                            long freeMemory = rt.freeMemory();
+                            long usedMemory = totalMemory - freeMemory;
+                            long maxMemory = rt.maxMemory();
+                            return rec(
+                                    uri("total_mem_jvm"), mathInstSet.normalizeData(real((double) totalMemory, MATH_BYTE_TID, null)),
+                                    uri("free_mem_jvm"), mathInstSet.normalizeData(real((double) freeMemory, MATH_BYTE_TID, null)),
+                                    uri("max_mem_mach"), mathInstSet.normalizeData(real((double) maxMemory, MATH_BYTE_TID, null)),
+                                    uri("used_mem_jvm"), mathInstSet.normalizeData(real((double) usedMemory, MATH_BYTE_TID, null)),
+                                    uri("free_jvm"), start_(real(1.0d - ((double) usedMemory / (double) totalMemory))).as_(T(MATH_PERCENT_TID)).apply(),
+                                    uri("free_mach"), start_(real(1.0d - ((double) usedMemory / (double) maxMemory))).as_(T(MATH_PERCENT_TID)).apply(),
+                                    uri("thread"), ThreadExecutor.instance().summary());
+                        }), "a summary of thread counts"),
                         docWrap(instC(SYS_INST_TID.extend("find_file").dom(ALL.maybe()).rng(LST_TID), rec(
                                         uri(NAME), STR_TYPE,
                                         uri(ROOT).maybe(), URI_TYPE,
@@ -235,7 +245,7 @@ public class sysInstSet extends AbstractInstSet {
                                     if (max < 0) max = -1;
                                     if (max != -1 && min > max)
                                         throw MTronException.of("read_file min=%d exceeds max=%d", min, max);
-                                    final Obj fileObj = Router.readFromSpace(file);
+                                    final Obj fileObj = Machine.readFromSpace(file);
                                     final int finalMin = min;
                                     if (fileObj.isStr()) {
                                         final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
@@ -260,7 +270,7 @@ public class sysInstSet extends AbstractInstSet {
                                     final String text = inst.arg(TEXT, 1).strValue();
                                     final int min = inst.arg(MIN, 2).intValue().intValue();
                                     final int max = inst.arg(MAX, 3).orElse(jnt(-1)).intValue().intValue();
-                                    final Obj fileObj = Router.readFromSpace(file);
+                                    final Obj fileObj = Machine.readFromSpace(file);
                                     if (fileObj.isStr()) {
                                         final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
 
@@ -271,7 +281,7 @@ public class sysInstSet extends AbstractInstSet {
                                         }
                                         startLines.add(min, text);
                                         final List<String> endLines = startLines.stream().filter(l -> !l.equals("<DELETE>")).toList();
-                                        Router.writeToSpace(file, str(String.join("\n", endLines)));
+                                        Machine.writeToSpace(file, str(String.join("\n", endLines)));
                                         return rec(STATUS, uri(SUCCESS),
                                                 OBJ, auto_from_(file).tryToInst(),
                                                 "start_line_count", jnt(startLines.size()),

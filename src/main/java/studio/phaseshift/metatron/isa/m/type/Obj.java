@@ -30,8 +30,9 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.*;
@@ -168,7 +169,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Type type() {
-        return this.isType() ? T(this.vid()) : T(this.tid()); // null == Router.global() || this.isInst() ? MType.of(this.tid()) : Router.global().read(this.tid()).orElse(MType.of(this.tid()));
+        return this.isType() ? T(this.vid()) : T(this.tid()); // null == Machine.current() || this.isInst() ? MType.of(this.tid()) : Machine.current().read(this.tid()).orElse(MType.of(this.tid()));
     }
 
     <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid);
@@ -359,7 +360,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
        /* else if (this.isType()) {
             if(null != this.vid()) {
-                final Obj temp = Router.readFromSpace(this.vid());
+                final Obj temp = Machine.readFromSpace(this.vid());
                 if (temp.isType()) {
                     return temp.tid();
                 }
@@ -834,18 +835,18 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default void delete() {
         if (null != this.vid())
-            Router.global().write(this.vid(), noobj());
+            Machine.current().write(this.vid(), noobj());
     }
 
     /**
      * Returns the current obj stored at this obj's vid, or {@code this} if no vid is set.
      */
     default Obj load() {
-        return null == this.vid() ? this : this.selfJVM(Router.readFromSpace(this.vid()).jvm());
+        return null == this.vid() ? this : this.selfJVM(Machine.readFromSpace(this.vid()).jvm());
     }
 
     default Obj save() {
-        return null == this.vid() ? this : Router.global().write(this.vid(), this);
+        return null == this.vid() ? this : Machine.current().write(this.vid(), this);
     }
 
     default boolean booleanCheck() {
@@ -911,7 +912,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * not, and fall back to the Obj walk ({@link Type#isRefinementOf(Type)}).
          */
         public static boolean inInstSet(final fURI tid) {
-            return null != tid && Router.loaded() && Router.global().getSpaceFor(tid) instanceof InstSet;
+            return null != tid && Machine.loaded() && Machine.current().getSpaceFor(tid) instanceof InstSet;
         }
 
         /**
@@ -922,10 +923,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * domain and therefore predicate-blind (and more lenient).
          */
         private static fURI vidToTid(final fURI vid) {
-            if (null == vid || !Router.loaded())
+            if (null == vid || !Machine.loaded())
                 return null;
             try {
-                final Space space = Router.global().getSpaceFor(vid);
+                final Space space = Machine.current().getSpaceFor(vid);
                 return space instanceof InstSet is ? is.vidToTid(vid) : null;
             } catch (final RuntimeException e) {
                 return null;
@@ -1117,12 +1118,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * Throws {@link MTronException} on failure. Does NOT trigger a space write.
          */
         public static void objTypeCheck(final Obj obj) {
-            if (Router.loaded() && null != obj.jvm() && !obj.isType() && !obj.isNoObj() && !obj.isCall() && !obj.isInstSet() && !ObjFactory.Helper.baseTID(obj).test(obj.type().baseTypeID().basePath()))
+            if (Machine.loaded() && null != obj.jvm() && !obj.isType() && !obj.isNoObj() && !obj.isCall() && !obj.isInstSet() && !ObjFactory.Helper.baseTID(obj).test(obj.type().baseTypeID().basePath()))
                 throw new TypeMismatchException(obj, obj.type(), "%s [%s] is not a %s", obj, obj.jvm().getClass().getSimpleName().toLowerCase(), obj.type());
             if (!obj.isType() && obj.tid().isGeneric())
                 throw new TypeMismatchException(obj, obj.type(), "%s value can not be typed generic %s::T", obj.jvm(), obj.tid());
             if (TypeCheck.type_pred.enabled()) {
-                if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
+                if (Machine.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {
                         final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
                         final int width = Math.max(Math.max(
@@ -1153,7 +1154,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             objTypeCheck(obj);
             // RO_TEST (read-only type-test mode): check only, skip the incidental space write
             if (!BootLoader.RO_TEST && null != obj.vid() && !obj.isType())
-                Router.writeToSpace(obj.vid(), obj);
+                Machine.writeToSpace(obj.vid(), obj);
         }
 
         public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
@@ -1180,8 +1181,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                                   final fURI vid) {
             if (null != tid) {
                 final fURI bigTID = tid.big();
-                if (!BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
-                    Obj type = Router.readFromSpace(bigTID);
+                if (!BASE_TYPES.contains(bigTID.basePath()) && Machine.loaded()) {
+                    Obj type = Machine.readFromSpace(bigTID);
                     if (!type.isNoObj() && type.isType()) {
 
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
@@ -1197,7 +1198,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
                             constructedObj.self(constructedObj.jvm(), bigTID, vid);
                             if (null != vid)
-                                Router.writeToSpace(vid, constructedObj);
+                                Machine.writeToSpace(vid, constructedObj);
                             return constructedObj;
                         }
                     }
@@ -1222,7 +1223,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             CLONE_DEPTH.set(depth);
             try {
                 if (!Objects.equals(tid, obj.tid())) {
-                    final Obj type = Router.readFromSpace(tid);
+                    final Obj type = Machine.readFromSpace(tid);
                     if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
                         final Obj clone = type.<Type>as().constructor().apply(obj);
                         if (clone.isFail())
@@ -1346,9 +1347,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         return objs(toEmit);
                     }),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)),
+                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Machine.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)),
                     instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> {
-                        final Obj resolved = Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
+                        final Obj resolved = Machine.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
                         return resolved.hasVID() ? resolved : resolved.selfVID(inst.arg(0).uriValue());
                     }),
                     docWrap(instC(AUTO_TO_INST_TID.dom(ALL.maybe()).rng(ALL), lst(ALL_TYPE), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),
@@ -1364,9 +1365,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
                         final fURI pattern = inst.arg(0).uriValue();
                         if (pattern.hasPattern()) {
-                            return objs(Router.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
+                            return objs(Machine.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
                         } else {
-                            final Obj resolved = Router.readFromSpace(pattern);
+                            final Obj resolved = Machine.readFromSpace(pattern);
                             return resolved.hasVID() ? resolved : resolved.selfVID(pattern);
                         }
                     }),
@@ -1422,11 +1423,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "true if lhs equals rhs", Map.of(jnt(0), "the rhs obj"), "an equality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} == \\tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),
                     docWrap(instC(NEQ_INST_TID.dom(A).rng(BOOL_TID), lst(T(A)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> !Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_TRUE)),
                             "any objs", "true if lhs does not equal rhs", Map.of(jnt(0), "the rhs obj"), "an inequality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} \\neq \tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),
-                    docWrap(instC(TO_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
+                    docWrap(instC(TO_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(URI_TID)), (lhs, inst) -> Machine.writeToSpace(inst.arg(0).uriValue(), lhs)),
                             "any obj", "writes the lhs obj to the arg uri", Map.of(jnt(0), "the uri to write to"), "associates the lhs obj to the arg uri"),
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
                     docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
-                                final Obj readObj = Router.readFromSpace(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
+                                final Obj readObj = Machine.readFromSpace(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
                                 return readObj.isType() ? readObj : readObj.clone().selfVID(null);
                             }), // TODO: only resolves when explicit mono args (not code args)
                             "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
@@ -1434,7 +1435,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "abc.*_      [-- obj at abc via dynamic arg generation --]",
                             "c.*ab${_}   [-- obj at abc via uri template parameter --]",
                             "from(abc)   [-- obj at abc non-sugar form             --]"),
-                    docWrap(instC(REF_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.writeToSpace(lhs.uriValue(), inst.arg(0))),
+                    docWrap(instC(REF_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Machine.writeToSpace(lhs.uriValue(), inst.arg(0))),
                             "a uri reference", "writes the arg obj to the lhs uri", Map.of(jnt(0), "an obj to be the referent of the uri"), "associates the arg obj to the lhs uri (inverse of /m/inst/to)"),
                     docWrap(instC(SOURCE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                                 final Str source = inst.arg(0).asStr();
@@ -1462,11 +1463,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     // compute in-memory (IMMUTABLE), then atomically write the result.
                     docWrap(instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> {
                                 if (lhs.hasVID() && !inst.arg(0).isPoly() && !inst.arg(0).isCall())
-                                    return Router.writeToSpace(lhs.vid(), inst.arg(0));
+                                    return Machine.writeToSpace(lhs.vid(), inst.arg(0));
                                 final Obj detached = lhs.clone().selfVID(null);
                                 final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
                                 if (lhs.hasVID())
-                                    Router.writeToSpace(lhs.vid(), result);
+                                    Machine.writeToSpace(lhs.vid(), result);
                                 return result;//.selfVID(lhs.vid());
                             }), "selectively mutate a poly component or an entire mono",
                             "@a >>= [b=>[c=>2]]      [-- [b=>[c=>2]]@a     --]",

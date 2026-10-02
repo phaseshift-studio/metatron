@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.SelectorWidget;
 
@@ -52,7 +52,7 @@ public class InstSelectorTool extends SelectorWidget<Inst, InstSelectorTool> {
         if (!code.codeValue().isEmpty()) {
             final Inst lastInst = code.codeValue().getLast();
             this.domType = lastInst.rng().tid();
-            final Obj instructionsObj = Router.global().read(M_ISA_INST_TID.extend("#").dom(domType));
+            final Obj instructionsObj = Machine.current().read(M_ISA_INST_TID.extend("#").dom(domType));
             instructionsObj.stream().forEach(obj -> {
                 if (obj.isInst()) {
                     this.items.add(obj.as());

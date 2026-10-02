@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.web.type.mcpEmulatorBuilder;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -71,7 +71,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
     @BeforeEach
     public void setupHomeSpace() {
         // Use the boot-time home space if registered; create a fresh one otherwise
-        // final Space existing = Router.global().getSpaceFor(f("home:test"));
+        // final Space existing = Machine.current().getSpaceFor(f("home:test"));
         // if (existing == null || existing.isNoObj()) {
         this.homeSpace = memSpace.of(
                 rec(uri(PATTERN), uri("home:#")),
@@ -82,7 +82,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
     @AfterEach
     public void teardownHomeSpace() {
         if (this.homeSpace != null) {
-            Router.global().removeSpace(this.homeSpace.vid());
+            Machine.current().removeSpace(this.homeSpace.vid());
             this.homeSpace.close();
             this.homeSpace = null;
         }
@@ -217,7 +217,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
         assertTrue(response.asRec().at(uri("error")).isNoObj(), "install should not error: " + response);
 
         // Verify the install response is well-formed (may fail if metatron HTTP not running, but must not crash)
-        LOG.info("installed mcpClient: %s", Router.readFromSpace(f("home:" + installUser).extend("tool/metatron")));
+        LOG.info("installed mcpClient: %s", Machine.readFromSpace(f("home:" + installUser).extend("tool/metatron")));
 
         // Verify tools_list sees the installed server
         final Obj listResult = this.mcp.handleMessage(toolsCall(14, "tools_list",

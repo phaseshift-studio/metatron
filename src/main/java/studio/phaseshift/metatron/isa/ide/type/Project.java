@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -91,7 +91,7 @@ public class Project extends MRec {
 
     public Project addSubscription(final fURI name, final Rec subscription) {
         this.at(SUB, this.at(SUB).orElse(rec()).at(name, subscription, MUTABLE), MUTABLE);
-        Router.writeToSpace(this.vid().extend("code/#").addQ(SUBQ), auto_from_(this.vid().extend("sub/auto_save/code")).tryToInst());
+        Machine.writeToSpace(this.vid().extend("code/#").addQ(SUBQ), auto_from_(this.vid().extend("sub/auto_save/code")).tryToInst());
         return this;
     }
 
@@ -116,14 +116,14 @@ public class Project extends MRec {
                     .map(f -> f(f.getPath()))
                     //.peek(f -> LOG.info("{{-X-&|0&y}}processing {{b}}%s{{^1}}", f))
                     .map(e -> rel(uri(e.name().replace(".java", "")), instLambda((lhs2, inst2) -> {
-                        final Obj javaSource = Router.readFromSpace(e.scheme(scheme));
+                        final Obj javaSource = Machine.readFromSpace(e.scheme(scheme));
                         final Rec ideJava = ObjJavaIDESerializer.parse(javaSource.strValue()).asRec().at(uri("location"), uri(e.scheme(scheme)), MUTABLE);
-                        final Lst codeLst = Router.readFromSpace(this.vid().extend(CODE)).orElse(lst());
+                        final Lst codeLst = Machine.readFromSpace(this.vid().extend(CODE)).orElse(lst());
                         final int c = (int) codeLst.count();
                         final fURI codeID = this.vid().extend(CODE).extend(c);
-                        Router.writeToSpace(this.vid().extend(CODE), codeLst.add(ideJava, MUTABLE));
+                        Machine.writeToSpace(this.vid().extend(CODE), codeLst.add(ideJava, MUTABLE));
                         //////////////////////////////////////////////////////////////////////////
-                        final Rec idx = Router.readFromSpace(this.vid().extend("idx")).orElse(rec());
+                        final Rec idx = Machine.readFromSpace(this.vid().extend("idx")).orElse(rec());
                         for (int cc = 0; cc < 1000; cc++) {
                             final fURI classSegment = f("classes").extend("+").extend(cc);
                             final Obj classStream = ideJava.at(classSegment);
@@ -153,12 +153,12 @@ public class Project extends MRec {
                                         idx.at(f(r.at(NAME).strValue()), members, MUTABLE);
                                     });
                         }
-                        return Router.writeToSpace(this.vid().extend("idx"), idx);
+                        return Machine.writeToSpace(this.vid().extend("idx"), idx);
                     }))).collect(new CommonUtil.RecCollector()), MUTABLE);
                                            /* project.at(CODE, lst(start_(lhs).repeat_(rshift_(), BOOL_FALSE, BOOL_TRUE).apply()
                                                     .stream()
                                                     .filter(e -> e.uriValue().toString().contains(".java"))
-                                                    .map(e -> Tuple.Pair.with(e, Router.readFromSpace(e.uriValue())))
+                                                    .map(e -> Tuple.Pair.with(e, Machine.readFromSpace(e.uriValue())))
                                                     .map(e -> Tuple.Pair.with(e.get0(), start_(e.get1()).as_(JAVA_TYPE).apply()))
                                                     .map(e -> (Obj) start_(e.get1()).as_(IDE_JAVA_TYPE).apply().asRec().at(uri("location"), e.get0(), MUTABLE))
                                                     .toList()), MUTABLE);*/

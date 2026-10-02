@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
@@ -150,8 +150,8 @@ public class Pane implements PaneNode, Stylable<Pane> {
     public void unsubscribe() {
         if (this.vid() == null)
             return;
-        Router.global().write(this.vid().extend(IN).addQ(SUBQ), noobj());
-        Router.global().write(this.vid().extend(OUT).addQ(SUBQ), noobj());
+        Machine.current().write(this.vid().extend(IN).addQ(SUBQ), noobj());
+        Machine.current().write(this.vid().extend(OUT).addQ(SUBQ), noobj());
     }
 
     public void subscribe() {
@@ -159,14 +159,14 @@ public class Pane implements PaneNode, Stylable<Pane> {
             log.warn("console has no vid. unable to support pane subscriptions.");
             return;
         }
-        Router.global().write(this.vid().extend(IN).addQ(SUBQ), rec(mutableMap(
+        Machine.current().write(this.vid().extend(IN).addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(this.vid().extend(IN)),
                 uri(CODE), instC(f("in_pane").dom(ALL).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     this.appendInput(lhs.asLst().at(1));
                     this.console.renderPanes();
                     return noobj();
                 })), SUBQ_SUB_TID, null));
-        Router.global().write(this.vid().extend(OUT).addQ(SUBQ), rec(mutableMap(
+        Machine.current().write(this.vid().extend(OUT).addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(this.vid().extend(OUT)),
                 uri(CODE), instC(f("out_pane").dom(ALL).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     this.appendResult(lhs.asLst().at(1));

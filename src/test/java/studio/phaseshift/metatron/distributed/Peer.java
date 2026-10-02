@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.distributed;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
@@ -50,7 +51,7 @@ public final class Peer {
     }
 
     /** this peer's connectable data-root prefix ({@code ws://localhost:<port>/n}) */
-    public String prefix() {
+    public fURI prefix() {
         return this.cluster.prefix(this.index);
     }
 

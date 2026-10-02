@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
 import java.io.File;
@@ -90,7 +90,7 @@ public class SqliteLLMSessionIntegrationTest extends AbstractLLMSessionIntegrati
     protected void cleanupSession() throws Exception {
         if (this.space != null) {
             try {
-                Router.global().removeSpace(this.space.vid());
+                Machine.current().removeSpace(this.space.vid());
             } catch (final Exception ignored) {
             }
             this.space.close();

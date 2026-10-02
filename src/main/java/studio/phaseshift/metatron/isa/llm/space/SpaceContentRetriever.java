@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,7 @@ import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.query.Query;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -96,7 +96,7 @@ public class SpaceContentRetriever implements ContentRetriever {
         LOG.debug("RAG retrieve called: query='%s', pattern=%s", query.text(), this.pattern);
 
         // 1. Read all objects from Space matching the pattern
-        final Obj spaceResult = Router.global().read(this.pattern);
+        final Obj spaceResult = Machine.current().read(this.pattern);
         if (spaceResult.isNoObj()) {
             LOG.debug("RAG: no objects found at pattern %s", this.pattern);
             return Collections.emptyList();

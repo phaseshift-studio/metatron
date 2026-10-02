@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
 
@@ -268,7 +268,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
                 paneWriter.accept(effectivePaneId(), formatPaneMessage(level, f, args));
             } else {
                 this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
-                final Obj roots = Router.readFromSpace(SYS.extend(LOGG).extend(ROOT));
+                final Obj roots = Machine.readFromSpace(SYS.extend(LOGG).extend(ROOT));
                 roots.stream().filter(Obj::isUri).forEach(root -> {
                     rec(mutableMap(
                             uri(TIME), mathInstSet.nowDatetime(),

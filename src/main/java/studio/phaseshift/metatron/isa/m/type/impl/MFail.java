@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -50,7 +50,7 @@ public class MFail extends MObj implements Fail {
     protected static Fail incrStackWrap(final Fail fail, final fURI pattern) {
         if (null != fail.vid() && !fail.isNoObj())
             return fail;
-        final Obj o = Router.writeToSpace(fail.vid(pattern));
+        final Obj o = Machine.writeToSpace(fail.vid(pattern));
         if (o.isFail())
             return o.as();
         else

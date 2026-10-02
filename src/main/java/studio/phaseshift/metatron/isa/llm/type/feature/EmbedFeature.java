@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Map;
@@ -139,7 +139,7 @@ public class EmbedFeature extends AbstractFeature {
                 uri(META), agent.service(MessageService.class)
                         .<Obj>map(m -> rec(SESSION, uri(m.sessionVID())))
                         .orElse(noobj())), VEC_EMBEDDING_TID, null);
-        final Obj complete = Router.writeToSpace(writeLocation, embedding);
+        final Obj complete = Machine.writeToSpace(writeLocation, embedding);
         result.put(EMBED, complete.hasVID() ? auto_from_(complete.vid()) : noobj());
     }
 

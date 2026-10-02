@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
@@ -165,7 +165,7 @@ public class InstSetDocGenerator {
                     if (!vid.equals("/m"))
                         InstSet.importInstSet(f(vid));
                     LOG.info("fetching: " + vid);
-                    final InstSet is = (InstSet) Router.readFromSpace(f(vid));
+                    final InstSet is = (InstSet) Machine.readFromSpace(f(vid));
                     LOG.info("  read " + vid + " type=" + is.getClass().getSimpleName() + " noObj=" + is.isNoObj());
 
                     final Meta meta = extractMeta(is, vid);
@@ -201,7 +201,7 @@ public class InstSetDocGenerator {
                     final List<Obj> constsToMove = new ArrayList<>();
                     for (final Obj c : consts) {
                         try {
-                            final Obj resolved = Router.readFromSpace(c.vid());
+                            final Obj resolved = Machine.readFromSpace(c.vid());
                             if (resolved != null && !resolved.isNoObj() && resolved.isType()) {
                                 types.add(resolved.asType());
                                 constsToMove.add(c);
@@ -260,8 +260,8 @@ public class InstSetDocGenerator {
                 new uiInstSet(), new vecInstSet(),
                 new dcmntInstSet(), new rdfInstSet()
         }) {
-            Router.global().addSpace(is);
-            Router.writeToSpace(is);
+            Machine.current().addSpace(is);
+            Machine.writeToSpace(is);
             is.setup();
         }
         // Re-register mInstSet types that were created as static fields
@@ -269,7 +269,7 @@ public class InstSetDocGenerator {
         // class loading at BootLoader.load line 339).
         // Without this, parentType() -> T(fURI) creates bare types
         // without predicates, breaking the refinement chain display.
-        Router.global().write(SPACE_TYPE.vid(), SPACE_TYPE);
+        Machine.current().write(SPACE_TYPE.vid(), SPACE_TYPE);
         TypeCheck.disable(TypeCheck.code_resolve);
     }
 
@@ -332,7 +332,7 @@ public class InstSetDocGenerator {
                 for (final Obj item : lst.jvm()) {
                     final String uri = item instanceof Str s ? s.jvm() : SER.write(item);
                     final String name = leafName(uri);
-                    final Obj typeObj = Router.readFromSpace(f(uri));
+                    final Obj typeObj = Machine.readFromSpace(f(uri));
                     spaces.add(new SpaceEntry(uri, name, typeObj, SER.write(typeObj)));
                 }
             }
@@ -350,7 +350,7 @@ public class InstSetDocGenerator {
     private static Rec fetchDoc(final fURI uri) {
         if (uri == null) return null;
         try {
-            final Obj docObj = Router.readFromSpace(uri.addQ("docq"));
+            final Obj docObj = Machine.readFromSpace(uri.addQ("docq"));
             if (docObj == null || docObj.isNoObj() || !(docObj instanceof Rec r)) return null;
             final String desc = fieldStr(r, "desc");
             if (desc == null || desc.isEmpty() || "no documentation available".equals(desc))
@@ -441,9 +441,9 @@ public class InstSetDocGenerator {
         final String descText = meta.desc() != null && !meta.desc().isEmpty() && !"null".equals(meta.desc())
                 ? meta.desc().replace("\n", " ").strip() : "";
         final String descHtml = descText.isEmpty() ? "" : """
-                        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
-                        %s</p>
-                        """.formatted(esc(descText));
+                                                          <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+                                                          %s</p>
+                                                          """.formatted(esc(descText));
 
         return """
                <div class="container-xxl py-4">

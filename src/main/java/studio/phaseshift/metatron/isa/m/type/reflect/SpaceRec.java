@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.reflect;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.ArrayList;
@@ -72,7 +72,7 @@ public abstract class SpaceRec<T extends SpaceRec<T>> extends MRec {
     protected Map<Obj, Obj> read() {
         if (null == this.vid()) return this.jvm();
         try {
-            final Obj fresh = Router.global().read(this.vid());
+            final Obj fresh = Machine.current().read(this.vid());
             return fresh.isRec() ? fresh.jvm() : this.jvm();
         } catch (final Exception e) {
             return this.jvm();   // space unavailable (boot, headless, store gone)
@@ -126,7 +126,9 @@ public abstract class SpaceRec<T extends SpaceRec<T>> extends MRec {
         return this.get(this.read(), key);
     }
 
-    /** A {@code str} under {@code key}, or "" when absent. */
+    /**
+     * A {@code str} under {@code key}, or "" when absent.
+     */
     protected String getStr(final Map<Obj, Obj> fields, final Obj key) {
         final Obj o = this.get(fields, key);
         return null != o && o.isStr() ? o.strValue() : "";
@@ -136,13 +138,17 @@ public abstract class SpaceRec<T extends SpaceRec<T>> extends MRec {
         return this.getStr(this.read(), key);
     }
 
-    /** A {@code bool} under {@code key}, or {@code fallback} when absent/not a bool. */
+    /**
+     * A {@code bool} under {@code key}, or {@code fallback} when absent/not a bool.
+     */
     protected boolean getBool(final Map<Obj, Obj> fields, final Obj key, final boolean fallback) {
         final Obj o = this.get(fields, key);
         return null != o && o.isBool() ? o.boolValue() : fallback;
     }
 
-    /** An {@code int} under {@code key}, or {@code fallback} when absent/not an int. */
+    /**
+     * An {@code int} under {@code key}, or {@code fallback} when absent/not an int.
+     */
     protected int getInt(final Map<Obj, Obj> fields, final Obj key, final int fallback) {
         final Obj o = this.get(fields, key);
         return null != o && o.isInt() ? o.asInt().intValue().intValue() : fallback;

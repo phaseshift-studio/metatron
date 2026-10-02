@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron;
 /// ///////////////////////////////////////////////
 
+import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -33,10 +35,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
-import studio.phaseshift.metatron.isa.mach.type.LogObj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
+import studio.phaseshift.metatron.isa.mach.type.*;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.EmojiTable;
@@ -49,6 +49,7 @@ import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -75,6 +76,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -103,7 +105,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static final int EXIT_RESET = 100;
     public static java.util.function.IntConsumer EXIT_HANDLER = System::exit;
     private static final GraphittyLogger LOG;
-    public static volatile Router ROUTER;
+    public static volatile Machine ROUTER;
     public static Rec ARGS;
     /**
      * Tracks the currently executing metatron thread on this Java thread.
@@ -488,9 +490,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     QCollection.mimeQ(),
                     QCollection.lockQ()));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
-            ROUTER = new BasicRouter(SYS_VID.extend("router"));
-            sysSpace.write(ROUTER.vid(), ROUTER);
-            Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
+            // minted from the template at /sys/mach, so the root has all five slots. Built by the
+            // pattern/vid constructor it had only pattern, primary, memory and network — an address space
+            // that could not execute, and whose /compiler and /processor were simply absent.
+            // The root's vid is `/` — the one address that is not inside any space, which is the honest
+            // description of a frame of reference. It is deliberately NOT written into /sys any more: a root
+            // stored inside the address space it defines is what forced the old /sys/router self-reference.
+            // `*` reaches it instead, through Memory's fallback to the machine's own rec.
+            ROUTER = BasicMachine.of(MACH_MACHINE_TID, f("/"));
+            Machine.current().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROUTER.vid());
             sysSpace.write("/sys/typer/stage", typer);
             sysSpace.write("/sys/tracer", tracer);
@@ -512,17 +520,17 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 final String input = scanner.nextLine();
                 return str(input);
             }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());*/
-            // Router.global().registerRedirect(f("stdout"), f("/sys/io/stdout"));
-            // Router.global().registerRedirect(f("stdin"), f("/sys/io/stdin"));
+            // Machine.current().registerRedirect(f("stdout"), f("/sys/io/stdout"));
+            // Machine.current().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
-            Router.global().addSpace(m);  // explicit registration after full construction
-            Router.writeToSpace(m);
+            Machine.current().addSpace(m);  // explicit registration after full construction
+            Machine.writeToSpace(m);
             m.setup();
             //
             final InstSet sys = new sysInstSet();
-            Router.global().addSpace(sys);
-            Router.writeToSpace(sys);
+            Machine.current().addSpace(sys);
+            Machine.writeToSpace(sys);
             sys.setup();
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
@@ -532,12 +540,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
             //
             final InstSet mach = new machInstSet();
-            Router.global().addSpace(mach);  // explicit registration after full construction
-            Router.writeToSpace(mach);
-            sysSpace.write("/sys/space/stack", Router.stack());
+            Machine.current().addSpace(mach);  // explicit registration after full construction
+            Machine.writeToSpace(mach);
+            sysSpace.write("/sys/space/stack", Memory.argStack());
             mach.setup();
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
-            Router.writeToSpace(f("boot/args"), args);
+            Machine.writeToSpace(f("boot/args"), args);
             ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK
             MFail.FAIL_STACK_PATTERN = args.at("fail_stack_pattern").orElse(uri(MFail.FAIL_STACK_PATTERN)).uriValue();
             // Establish the system root thread so boot-spawned threads
@@ -556,8 +564,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     }),
                     f("/sys/thread/main")), "this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure");
             systemThread.applyAsync();
-            Router.writeToSpace("/sys/thread/main", systemThread);
+            Machine.writeToSpace("/sys/thread/main", systemThread);
             BootLoader.CURRENT_THREAD.set(systemThread);
+            /// /// SET THE CLUSTER SINGLETON /// ///
+            // Installed HERE, not with the other /sys registries earlier in boot: at that point the space that
+            // serves /sys/* is not yet mounted, so a write is claimed by a catch-all whose writer is the no-op
+            // (k, v) -> v and vanishes WITHOUT A WORD. /sys/thread/main lands because it is written after the
+            // boot profile has been evaluated, so the cluster goes beside it.
+            Machine.writeToSpace(Network.CLUSTER_PATH, Machine.current().network().cluster());
+            LOG.info("{{c}}cluster{{X}} registered: %s", Machine.readFromSpace(Network.CLUSTER_PATH));
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
                 LOG.info("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
@@ -592,7 +607,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     LOG.error("unable to attach the default mcp stdio carrier: %s", null == e.getMessage() ? e.getClass().getName() : e.getMessage());
                 }
             }
-            final Obj log = Router.writeToSpace(LogObj.of(rec(args.at(LOGG).orElse(uri(TRACE.levelStr)), lst(uri(ALL))), SYS_VID.extend(LOGG)));
+            final Obj log = Machine.writeToSpace(LogObj.of(rec(args.at(LOGG).orElse(uri(TRACE.levelStr)), lst(uri(ALL))), SYS_VID.extend(LOGG)));
             LOG.info("logging now handled by %s", log);
             ///////////////////////////////////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
@@ -622,8 +637,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             SHUTDOWN_LATCH.countDown();  // release headless main-thread park (no-op if already 0)
             if (!ONE_SHOT)
                 LOG.none("\n");
-            if (Router.loaded())
-                Router.global().close();
+            if (Machine.loaded())
+                Machine.current().close();
             ROUTER = null;
             ARGS = null;
             ThreadExecutor.instance().shutdown();

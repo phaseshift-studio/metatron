@@ -23,8 +23,8 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
 
 import java.util.Map;
 

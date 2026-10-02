@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.List;
 
@@ -70,7 +70,7 @@ public class LatticeReadTest extends AbstractInstSetTest {
     @Test
     public void tAndSpaceReadAgree() {
         final Type viaT = T(f("imperial"));
-        final Obj viaRead = Router.readFromSpace(f("imperial"));
+        final Obj viaRead = Machine.readFromSpace(f("imperial"));
         LOG.warn("[SAME] via T(imperial)    = tid=" + viaT.tid() + " vid=" + viaT.vid());
         LOG.warn("[SAME] via space read     = " + (viaRead.isType() ?
                 "tid=" + viaRead.asType().tid() + " vid=" + viaRead.asType().vid() :
@@ -82,7 +82,7 @@ public class LatticeReadTest extends AbstractInstSetTest {
                     + " | T.pathIncludes(real)=" + viaT.pathIncludes(T(f("real")))
                     + " reg.pathIncludes(real)=" + reg.pathIncludes(T(f("real"))));
         }
-        Router.readFromSpace(f("plus")).stream()
+        Machine.readFromSpace(f("plus")).stream()
                 .filter(o -> o.isInst() && o.asInst().dom().vid().toString().contains("real"))
                 .forEach(o -> {
                     final Inst i = o.asInst();
@@ -96,7 +96,7 @@ public class LatticeReadTest extends AbstractInstSetTest {
      * the insts admitted by the family read {@code plus?dom=<dom>}
      */
     private static List<Inst> admitted(final fURI dom) {
-        final Obj result = Router.readFromSpace(f("plus").dom(dom));
+        final Obj result = Machine.readFromSpace(f("plus").dom(dom));
         return result.stream()
                 .map(o -> o.isInst() ? o : o.isRel() ? o.asRel().second() : o)
                 .filter(Obj::isInst)
@@ -191,7 +191,7 @@ public class LatticeReadTest extends AbstractInstSetTest {
 
     @Test
     public void unqualifiedFamilyUnchanged() {
-        final long n = Router.readFromSpace(f("plus")).stream().count();
+        final long n = Machine.readFromSpace(f("plus")).stream().count();
         assertTrue(n >= 13, "unqualified family must list the full set (9 core + 4 math), got " + n);
     }
 
