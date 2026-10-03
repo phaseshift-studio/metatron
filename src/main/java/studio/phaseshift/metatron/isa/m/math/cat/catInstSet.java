@@ -171,8 +171,8 @@ public class catInstSet extends AbstractInstSet {
                                             final CatLawTable.Entry entry = CatLawTable.lookup(inst.tid());
                                             final Map<Obj, Obj> block = new LinkedHashMap<>();
                                             block.put(uri(FORM), uri(Inst.Form.of(inst).name()));
-                                            block.put(uri(SRC), instLambda(inst.tid(), ALL, o -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst());
-                                            block.put(uri(TRGT), instLambda(inst.tid(), ALL, o -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst());
+                                            block.put(uri(SRC), auto_(instLambda(o -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst()));
+                                            block.put(uri(TRGT), auto_(instLambda(o -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst()));
                                             block.put(uri(ANALYSIS), auto_(instLambda(ALL, ALL, o -> {
                                                 final Map<Obj, Obj> analysis = new LinkedHashMap<>();
                                                 analysis.put(uri(FAMILY), instLambda(inst.tid(), ALL, o2 -> catInstSet.family(inst)).tryToInst());
@@ -211,11 +211,11 @@ public class catInstSet extends AbstractInstSet {
                                             final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                                             final Obj obj = object.at(OBJ);
                                             object.at(LAW, CoreMaker.typeLaws(obj.asType()), MUTABLE);
-                                            object.at(MORPHED_TO, auto_(instLambda(ALL, ALL, (ignore, i) -> {
+                                            object.at(MORPHED_TO, auto_(instLambda((ignore, i) -> {
                                                 final Obj insts = Machine.readFromSpace(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
                                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
                                             })).tryToInst(), MUTABLE);
-                                            object.at(MORPHED_FROM, auto_(instLambda(ALL, ALL, (o, i) -> {
+                                            object.at(MORPHED_FROM, auto_(instLambda((o, i) -> {
                                                 final Obj insts = Machine.readFromSpace(f("/m/inst/+")/*.dom(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())*/.rng(obj.vid())); // TODO: constrain to instset
                                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
                                             })).tryToInst(), MUTABLE);

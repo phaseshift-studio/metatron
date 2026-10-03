@@ -243,7 +243,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI path(final String path) {
-        return fURI.of(this.scheme(), this.host(), this.port(), List.of(path.split("/")), this.c(), this.poly(), this.qMap(), this.templates());
+        return this.path(Arrays.stream(path.split("/")).toList());
     }
 
     @Override

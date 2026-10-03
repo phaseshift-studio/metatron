@@ -231,9 +231,20 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
         final List<String> normalizedPath = new ArrayList<>();
         for (final String segment : path) {
             if (segment.contains("/")) {
+                // A segment may itself carry separators: a template parses `/users/${id}` as ONE segment. Splitting is
+                // needed, but a segment that BEGINS with `/` carries the path's OWN leading separator, so its empty
+                // first part must be dropped once the path is already absolute — otherwise the split contributes a
+                // SECOND empty segment and every authority-bearing expansion renders as `api.com//users`.
                 for (final String part : segment.split("/", -1)) {
                     normalizedPath.add(part);
                 }
+                // KNOWN CAUSE OF UriTest.testSelect/testWhere (6 rows): a template parses `/users/${id}` as ONE
+                // segment, so splitting it here contributes a SECOND empty leading segment and every
+                // authority-bearing expansion renders as `api.com//users`. Dropping that leading empty part fixes all
+                // 6 — but it must be conditional on the template form, because the fURITest template rows
+                // (`<http://api.com//${plus([d])}>`) DEPEND on the doubled form surviving the string round trip.
+                // Two naive conditions were tried and each regressed those 10 rows; the rule needs both cases in it.
+                // Trace evidence is in this task's history (bash-229): TMPL templatePath=[, /users/${>>id}].
             } else {
                 normalizedPath.add(segment);
             }

@@ -985,6 +985,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         // off until the second prepender is found. The seven existing prepend sites are AbstractfURI:86, 238, 479,
         // 617, 798 and fURI:147 — attribute it by instrumenting expandTemplate's normalizedPath against what
         // fURI.of receives, or by re-enabling this block and looking for the caller that already added the marker.
+        // DISABLED — see the note further up. Enabling this FIXES UriTest.testSelect/testWhere (5 of the 6 rows:
+        // the value and the string then agree, which matters because checkCodeParseApply compares VALUES) but the
+        // template rows double-prepend until the split rule above is made conditional on the template form. Off, so
+        // the tree stays at its known state: UriTest 6 failures, everything else green.
         final List<String> absolutePath = path;
         if (null != templates && !templates.isEmpty())
             return new SAPPCQTfURI(scheme, host, port, absolutePath, poly, coefficient, query, templates);
