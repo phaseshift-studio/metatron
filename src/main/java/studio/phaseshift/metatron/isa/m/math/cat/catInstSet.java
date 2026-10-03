@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -368,7 +369,7 @@ public class catInstSet extends AbstractInstSet {
         }
 
         private static Rec typeLawsUncached(final Type type) {
-            final fURI t = type.tid().basePath();
+            final fURI t = type.vid().basePath();
             if (t.equals(INT_TID)) {
                 // int: a ring — (add=+, mul=·, zero=0, one=1) and its constituent group/monoids
                 return rec(mutableMap(
@@ -497,6 +498,30 @@ public class catInstSet extends AbstractInstSet {
                         uri("mult_monoid"), rec(mutableMap(
                                         uri(OP), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
                                         uri(ID), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
+                                MONOID_THEORY_TID, null)));
+            }
+            if (t.equals(MACH_MACHINE_TID)) {
+                // machine: the frame system is a GROUPOID — the objects are machines (frames), the morphisms are the
+                // invertible URI extensions, composition is descent (push) and its inverse is ascent (pop). The
+                // extensions are the NAMES of the morphisms, so there are infinitely many: one per address. At any
+                // one object that endomorphism monoid is FREE on the extensions, and the machine stack is one
+                // particular such structure — the groupoid of frames. Its identity is `here` (`.`), matching uri::T
+                // below, so `push … pop` reduces to the identity exactly as `a/../` does.
+                //
+                // The morphisms act on the ADDRESS, which is why the operation is bound to the uri ring's `*`
+                // (path composition): push is vid·e and pop is vid·e⁻¹, and the strict-descendant requirement is
+                // what makes e invertible — an escaping extension is not in this groupoid at all.
+                return rec(mutableMap(
+                        uri("free_groupoid"), rec(mutableMap(
+                                        uri("objects"), uri(MACH_MACHINE_TID),
+                                        uri("morphisms"), uri(URI_TID),
+                                        uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
+                                        uri(ID), uri("."),
+                                        uri(INV), uri("..")),
+                                GROUP_THEORY_TID, null),
+                        uri("mult_monoid"), rec(mutableMap(
+                                        uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
+                                        uri(ID), uri(".")),
                                 MONOID_THEORY_TID, null)));
             }
             return rec0();

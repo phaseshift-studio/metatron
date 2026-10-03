@@ -115,6 +115,10 @@ public class mtron_wsHandler extends WebSocketRec {
         }));
 
     }
+
+    public Obj apply(final Obj obj) {
+        return this.sendRecv(obj);
+    }
 }
 
 

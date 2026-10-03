@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -251,7 +250,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     private Stream<Obj> admitted(final fURI pattern, final Type queriedDom, final Type queriedRng) {
         final Stream<Obj> insts = INST_TABLE.entrySet()
                 .stream()
-                .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
+                .filter(kv -> kv.getKey().bimatches(pattern.basePath().asNode()))
                 .flatMap(kv -> kv.getValue().stream())
                 .<Obj>map(i -> i)
                 // dom admission is a PATH relation, not a name match: a contract on nat's path

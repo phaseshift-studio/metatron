@@ -118,20 +118,20 @@ public abstract class AbstractfURI implements fURI {
     }
 
     /*
-     * The canonical (sentinel-free) form, computed AT MOST ONCE per uri.
+     * The canonical (dot-free) form, computed AT MOST ONCE per uri.
      *
      * A uri is compared and hashed far more often than it is created, and the canonical form is what equality
      * MEANS. resolve() used to be called from equals() (both sides, every comparison) and built a whole new fURI
-     * whenever a sentinel was present — inside the resolver's inner loop that is not merely slow, it hangs: see
+     * whenever a dot was present — inside the resolver's inner loop that is not merely slow, it hangs: see
      * target/hang-stack.txt, where ScoringResolver.checkArgs -> Type.isRootType -> Objects.equals -> fURI.equals
      * -> resolve -> hasSentinel spun for 472s of CPU with a SHALLOW stack (a loop, not recursion).
      *
      * Both fields are volatile and the computation is pure, so a race between threads recomputes the same value
      * instead of corrupting one. `canonical` is written LAST: a reader that sees it is guaranteed to see
-     * `sentinelFound` too, and resolve() can then return the cached instance without touching the path at all.
+     * `dotFound` too, and resolve() can then return the cached instance without touching the path at all.
      */
     private transient volatile fURI canonical;
-    private transient volatile boolean sentinelFound;
+    private transient volatile boolean dotFound;
 
     @Override
     public fURI resolve() {
@@ -139,32 +139,32 @@ public abstract class AbstractfURI implements fURI {
         if (null != cached)
             return cached;
         if (this.isEmpty()) {
-            this.sentinelFound = false;
+            this.dotFound = false;
             this.canonical = this;
             return this;
         }
-        final List<String> folded = foldSentinel(this.path());
-        // Return `this` not merely when no sentinel was SEEN but when the fold CHANGES NOTHING. A leading `..` is
+        final List<String> folded = foldDotSegments(this.path());
+        // Return `this` not merely when no dot was SEEN but when the fold CHANGES NOTHING. A leading `..` is
         // kept by the fold, so it survives with an identical path — and rebuilding an equal-but-fresh instance
         // there made resolve() non-idempotent (resolve(resolve(x)) != resolve(x) by identity) and cost an
         // allocation per call. Anything that reasons about whether a resolve changed the uri depends on this.
         final fURI canonical = (null == folded || folded.equals(this.path())) ? this : this.path(folded);
-        this.sentinelFound = (null != folded); // `..` present but kept still IS a sentinel
+        this.dotFound = (null != folded); // `..` present but kept still IS a dot
         this.canonical = canonical;
         return canonical;
     }
 
     @Override
-    public boolean hasSentinel() {
+    public boolean hasDotSegments() {
         this.resolve(); // answers both questions from the same pass, and caches it
-        return this.sentinelFound;
+        return this.dotFound;
     }
 
     /**
      * The folded segments, or null when nothing folds — i.e. when there is no `.` or `..` segment at all, which is
      * the common case and must stay allocation-free.
      */
-    private static List<String> foldSentinel(final List<String> path) {
+    private static List<String> foldDotSegments(final List<String> path) {
         List<String> folded = null;
         for (int i = 0; i < path.size(); i++) {
             final String seg = path.get(i);
@@ -175,7 +175,7 @@ public abstract class AbstractfURI implements fURI {
             if (seg.equals("..")) {
                 // materialize the prefix BEFORE deciding: a `..` must be able to pop a segment that precedes it,
                 // whether or not an earlier `.`/`..` had already started the fold. Getting this wrong is silent —
-                // the `..` is dropped and the path is returned unfolded, which reads as "the sentinel was ignored".
+                // the `..` is dropped and the path is returned unfolded, which reads as "the dot was ignored".
                 if (null == folded) folded = new ArrayList<>(path.subList(0, i));
                 if (!folded.isEmpty() && !folded.getLast().equals(".."))
                     folded.removeLast();

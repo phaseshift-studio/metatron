@@ -21,15 +21,12 @@ package studio.phaseshift.metatron.isa.mach.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.argFrames;
-import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
-import java.util.Optional;
-
 import java.util.Comparator;
 import java.util.Optional;
 
@@ -89,7 +86,9 @@ public interface Memory extends Machine.Component, Closeable {
      */
     ThreadLocal<argFrames> ARG_STACK = ThreadLocal.withInitial(argFrames::new);
 
-    /** this thread's arg stack — see {@link #ARG_STACK} for why it exists and why it is temporary */
+    /**
+     * this thread's arg stack — see {@link #ARG_STACK} for why it exists and why it is temporary
+     */
     static argFrames argStack() {
         return ARG_STACK.get();
     }
@@ -99,6 +98,12 @@ public interface Memory extends Machine.Component, Closeable {
      * The routing rule lives here and only here, so every level of memory routes identically.
      */
     default Obj read(final fURI vid) {
+        // "here" has no spelling in either aspect below: it is the zero displacement, so it names no entry in the
+        // frame chain and no path in the space index. Resolve it to the CURRENT FRAME's address (or the root's when
+        // no frame is live) and let the ordinary absolute path do the work — which is exactly the semantics wanted:
+        // inside a frame `.` is that frame's interior, at the root it is the root's.
+        if (vid.isId())
+            return this.readAbsolute(hereVID());
         return vid.isAbsolute() ? this.readAbsolute(vid) : this.stack().at(vid);
     }
 
@@ -123,6 +128,8 @@ public interface Memory extends Machine.Component, Closeable {
      * space that covers it. A frame writes what it introduced and nothing else.
      */
     default Obj write(final fURI vid, final Obj obj) {
+        if (vid.isId())
+            return this.writeAbsolute(hereVID(), obj);
         return vid.isAbsolute() ? this.writeAbsolute(vid, obj) : this.stack().at(vid, obj, MUTABLE);
     }
 
@@ -227,6 +234,15 @@ public interface Memory extends Machine.Component, Closeable {
      * The most specific space covering {@code vid} across the chain. Shared by every implementation, so the
      * resolution rule is stated once.
      */
+    /**
+     * The address of "here": the current frame's vid when a frame is live, else the root's. Reached through the
+     * frame stack rather than a fixed constant, which is what lets `.` mean the frame's interior inside a frame.
+     */
+    static fURI hereVID() {
+        final Machine.Frame frame = Machine.frame();
+        return (null == frame) ? Machine.current().vid() : frame.machine().vid();
+    }
+
     static <SPACE extends Space> SPACE mostSpecific(final Rec spaces, final fURI vid) {
         final Optional<SPACE> space = spaces.jvm().values().stream()
                 .map(Obj::<SPACE>as)

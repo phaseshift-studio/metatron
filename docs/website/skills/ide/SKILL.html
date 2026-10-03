@@ -459,7 +459,7 @@ asserted in the acceptance test).</p>
 an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
 maven build commands are attached to the <code>project::T</code> for each of access.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
-==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/350
+==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/354
 </code></pre>
 <p>Now that the project is stored in space, build commands can be added and the project can be built.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
@@ -483,9 +483,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[
     status=&gt;success,
-    runtime=&gt;millis::805.0000,
+    runtime=&gt;millis::795.0000,
     command=&gt;'mvn -f src/test/resources/scratch ...',
-    output=&gt;!*/sys/tmp/385854b0]
+    output=&gt;!*/sys/tmp/b8322a0e]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>

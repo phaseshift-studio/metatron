@@ -19,8 +19,6 @@
 package studio.phaseshift.metatron;
 /// ///////////////////////////////////////////////
 
-import studio.phaseshift.metatron.isa.mach.type.Network;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -35,7 +33,10 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
-import studio.phaseshift.metatron.isa.mach.type.*;
+import studio.phaseshift.metatron.isa.mach.type.LogObj;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Memory;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -105,7 +106,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static final int EXIT_RESET = 100;
     public static java.util.function.IntConsumer EXIT_HANDLER = System::exit;
     private static final GraphittyLogger LOG;
-    public static volatile Machine ROUTER;
+    public static volatile Machine ROOT_MACHINE;
     public static Rec ARGS;
     /**
      * Tracks the currently executing metatron thread on this Java thread.
@@ -497,9 +498,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // description of a frame of reference. It is deliberately NOT written into /sys any more: a root
             // stored inside the address space it defines is what forced the old /sys/router self-reference.
             // `*` reaches it instead, through Memory's fallback to the machine's own rec.
-            ROUTER = BasicMachine.of(MACH_MACHINE_TID, f("/"));
+            ROOT_MACHINE = BasicMachine.of(MACH_MACHINE_TID, f("/."));
             Machine.current().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
-            LOG.debug("router location: %s", ROUTER.vid());
+            LOG.debug("router location: %s", ROOT_MACHINE.vid());
             sysSpace.write("/sys/typer/stage", typer);
             sysSpace.write("/sys/tracer", tracer);
             sysSpace.write("/sys/rewriter", rewriter);
@@ -639,7 +640,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.none("\n");
             if (Machine.loaded())
                 Machine.current().close();
-            ROUTER = null;
+            ROOT_MACHINE = null;
             ARGS = null;
             ThreadExecutor.instance().shutdown();
             LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));

@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MType;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -175,12 +174,12 @@ public class TypeGraphTest extends AbstractMetatronTest {
         try {
             // a different router instance stands in for a re-boot / reload:
             // the stale registry must be dropped and the re-resolution forced
-            BootLoader.ROUTER = Machine.mach0();
+            BootLoader.ROOT_MACHINE = Machine.mach0();
             graph.memo(key, resolve);
             assertEquals(2, resolves.get(), "a new router instance must clear the memo: resolves=" + resolves.get());
         } finally {
-            BootLoader.ROUTER = saved;
+            BootLoader.ROOT_MACHINE = saved;
         }
-        assertNotNull(BootLoader.ROUTER);
+        assertNotNull(BootLoader.ROOT_MACHINE);
     }
 }

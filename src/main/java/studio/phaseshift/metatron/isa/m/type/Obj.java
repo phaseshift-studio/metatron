@@ -512,6 +512,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this instanceof StatefulMonad;
     }
 
+    default boolean isMachine() {
+        return this instanceof Machine;
+    }
+
     default Obj autoResolve(final Obj obj) {
         final fURI base = this.tid().basePath();
         return this.isInst() && (base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID) || this.asInst().isInitial()) ?
@@ -692,6 +696,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     default StatefulMonad asMonad() {
         try {
             return (StatefulMonad) this;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    default Machine asMachine() {
+        try {
+            return (Machine) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

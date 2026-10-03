@@ -255,4 +255,63 @@ public class MachineFrameTest extends AbstractMetatronTest {
         child.pop();
     }
 
+
+    /*
+     * apply(uri) is the frame algebra's single morphism application: the coefficient chooses the direction, so
+     * push/pop are one operation and its inverse rather than two operations.
+     */
+    @Test
+    public void testApplyDescendsOnAPositiveCoefficient() {
+        final Machine root = Machine.defaultMachine();
+        final Obj child = root.move(f("m1"));
+        assertEquals(root.vid().extend("m1"), child.<Machine>as().vid(), "a positive coefficient descends");
+        assertSame(child.<Machine>as(), Machine.frame().machine(), "and the frame belongs to the child");
+        assertEquals(root, child.<Machine>as().move(f("m1{-1}")).<Machine>as(), "{-1} on the same name ascends to the parent");
+        assertNull(Machine.frame(), "and leaves no frame behind");
+    }
+
+    @Test
+    public void testApplyInverseIsUndefinedForAStepNotTaken() {
+        final Machine root = Machine.defaultMachine();
+        assertTrue(root.move(f("nope{-1}")).isNoObj(),
+                "you cannot invert a step you did not take — undefined, not a silent mis-pop");
+        assertTrue(root.move(f(".{-1}")).isNoObj() || root == root.move(f(".")), "the identity pushes nothing");
+        assertEquals(root, root.move(f(".")), "`<.>` is the ring's identity and returns the receiver");
+    }
+
+
+    /*
+     * The perspective is a value carried BETWEEN machines, not the frame stack: it moves when a deref yields a
+     * machine and restores when the fragment ends. current() intentionally does not follow it.
+     */
+    @Test
+    public void testAPerspectiveMovesAndRestores() {
+        final Machine root = Machine.current();
+        assertEquals(Machine.root(), Machine.perspective(), "with nothing set, the perspective is the root");
+        final Machine child = root.push(studio.phaseshift.metatron.util.CommonUtil.mintShortUUID(root.vid(), false));
+        final Obj returned = Machine.withPerspective(child, () -> {
+            assertEquals(child, Machine.perspective(), "inside the fragment, the perspective is the other machine");
+            assertEquals(root, Machine.current(), "current() stays the root, so resolution is untouched");
+            return child;
+        });
+        assertEquals(child, returned, "the fragment's value comes back out");
+        assertEquals(root, Machine.perspective(), "and the perspective restores when the fragment ends");
+    }
+
+
+    /*
+     * The persistent overload: the perspective stays where it was put until something moves it again. No return
+     * pointer is handed out — you address your way home.
+     */
+    @Test
+    public void testAPerspectiveCanPersist() {
+        final Machine root = Machine.root();
+        final Machine child = root.push(studio.phaseshift.metatron.util.CommonUtil.mintShortUUID(root.vid(), false));
+        assertEquals(child, Machine.withPerspective(child), "the overload returns the machine it moved to");
+        assertEquals(child, Machine.perspective(), "and leaves the perspective there");
+        assertEquals(root, Machine.root(), "root() is still the root");
+        Machine.withPerspective(root);
+        assertEquals(root, Machine.perspective(), "only another call moves it — you name your way home");
+    }
+
 }

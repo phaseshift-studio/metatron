@@ -223,7 +223,26 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return this.test(other) || other.test(this);
     }
 
-    default boolean hasSentinel() {
+    /**
+     * True when this uri is the uri ring's IDENTITY — `<.>`, i.e. "here".
+     * <p>
+     * Note the NAME, because the obvious one is taken: `one()` and `isOne()` are the COEFFICIENT ring's unit
+     * (`one()` is `this.c(cInt.ONE())`, with `isNeg()`/`isMaybe()` beside it), so naming this `isOne()` makes one
+     * interface speak for two rings — and it collides at compile time, which is the lucky version of that mistake.
+     * The identity here is the uri ring's, and uri::T's law rec already declares it as `id`. `.` and the empty path denote the SAME
+     * displacement (a path is a displacement, and `.` displaces nothing), so both answer true, while the root's
+     * vid `[""]` does not: that is the absolute marker, a KIND marker, not a place. Resolving first is what makes
+     * `a/./b` and `./` answer correctly too; resolve() is memoized, so this is a field read after the first call.
+     */
+    default boolean isId() {
+        return this.resolve().path().isEmpty();
+    }
+
+    default fURI id() {
+        return f(".");
+    }
+
+    default boolean hasDotSegments() {
         for (final String segment : this.path()) {
             if (segment.equals(".") || segment.equals(".."))
                 return true;

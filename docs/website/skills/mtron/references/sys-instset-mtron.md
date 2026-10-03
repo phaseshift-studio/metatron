@@ -13,8 +13,8 @@ description: >
 
 # sys instruction set (`/m/sys`)
 
-`/sys` is the required system space — created at boot, it holds the system objs
-(router, typer, rewriter, environment, thread registry). The sys instset is its
+`/sys` is the required system space — created at boot, it holds the system objs (router, typer, rewriter, environment,
+thread registry). The sys instset is its
 instruction companion: a guarded `bash`, the blocking I/O primitives `sleep`,
 `stdout`, and `stdin`, the `sys_stat` thread summary, and a file family —
 `read_file`, `edit_file` — that operates on files mounted by a `fsspace::T`.
@@ -28,15 +28,15 @@ read them.
 
 ## instructions
 
-| inst       | dom → rng           | args                                       | what it does                                |
-|------------|---------------------|--------------------------------------------|---------------------------------------------|
-| `bash`     | `#{?} → lst[str]`   | `cmd`, `timeout?`                          | guarded shell (`bash -c`), stdout as lines  |
-| `sleep`    | `A{?} → A{?}`       | `time`                                     | pause the thread, pass lhs through          |
-| `stdout`   | `#{?} → #{?}`       | `obj`                                      | print the arg's jvm obj, pass lhs through   |
-| `stdin`    | `#{?} → str`        | —                                          | read one line from terminal input           |
-| `sys_stat` | `#{?} → rec`        | —                                          | the thread executor's own summary           |
-| `read_file`| `#{?} → lst`        | `file`, `min?`, `max?`                     | a file's lines, indexed, or the `min..max` slice |
-| `edit_file`| `#{?} → rec`        | `file`, `text`, `min`, `max?`              | insert at `min` (or replace `min..max`), and report |
+| inst        | dom → rng         | args                          | what it does                                        |
+|-------------|-------------------|-------------------------------|-----------------------------------------------------|
+| `bash`      | `#{?} → lst[str]` | `cmd`, `timeout?`             | guarded shell (`bash -c`), stdout as lines          |
+| `sleep`     | `A{?} → A{?}`     | `time`                        | pause the thread, pass lhs through                  |
+| `stdout`    | `#{?} → #{?}`     | `obj`                         | print the arg's jvm obj, pass lhs through           |
+| `stdin`     | `#{?} → str`      | —                             | read one line from terminal input                   |
+| `sys_stat`  | `#{?} → rec`      | —                             | the thread executor's own summary                   |
+| `read_file` | `#{?} → lst`      | `file`, `min?`, `max?`        | a file's lines, indexed, or the `min..max` slice    |
+| `edit_file` | `#{?} → rec`      | `file`, `text`, `min`, `max?` | insert at `min` (or replace `min..max`), and report |
 
 ## bash (`/m/sys/inst/bash`)
 
@@ -71,33 +71,33 @@ mtron> bash('ls')
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(16 more)]
+   ...(12 more)]
 mtron> bash(cmd=>'whoami')
-==>['ubuntu']
+==>['killswitch']
 mtron> bash('df -h')
 ==>[
-    'Filesystem      Size  Used Avail U...',
-    'overlay         916G  513G  356G  ...',
-    'tmpfs            64M     0   64M  ...',
-    'shm              64M     0   64M  ...',
-    '/dev/nvme0n1p2  916G  513G  356G  ...',
-    'tmpfs            31G     0   31G  ...',
-    'tmpfs            31G     0   31G  ...',
-   ...(3 more)]
+    'Filesystem             Size  Used ...',
+    'tmpfs                  6.1G  6.6M ...',
+    'efivarfs               128K   42K ...',
+    '/dev/nvme0n1p2         916G  518G ...',
+    'tmpfs                   31G  1.1M ...',
+    'tmpfs                  5.0M   20K ...',
+    'tmpfs                   31G     0 ...',
+   ...(4 more)]
 ```
 A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/78
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/614
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 5ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 5ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/80
+    [ProcBuilder<228>]]@/sys/fail/616
 ```
 ### batch
 
@@ -114,8 +114,8 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(16 more)]]
-==>['whoami'=>['ubuntu']]
+   ...(12 more)]]
+==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>[
     'AGENTS.md',
@@ -125,7 +125,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(17 more)]
+   ...(13 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -142,33 +142,15 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
       op=>start,
       rng=>lst,
       args=>[['ls','whoami']],
-      f=>'<j>',
-      form=>initial,
-      c_dom=>0,
-      c_rng=>1],
-     [   op=>select,
-      dom=>lst,
-      rng=>lst,
-      args=>[[id()=>bash(id())]],
-      f=>'<j>',
-      form=>mapper,
-      c_dom=>1,
-      ...(1 more)],
-     [
-      op=>rshift,
-      dom=>lst,
-      args=>[noobj],
-      f=>'<j>',
-      form=>standard,
-      c_dom=>1,
-      c_rng=>0],
-     [
-      op=>sum,
-      rng=><#>,
-      args=>[,],
-      form=>reducer,
-      c_dom=>0,
-      c_rng=>1]]]
+   ...
+mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()>>format
+==>"""
+    op      dom          rng      args                f    desc      c_dom  c_rng 
+    start   noobj{0}::T  lst::T   ['ls','whoami']     <j>  initial   {0}    {1}   
+    select  lst::T       lst::T   [id()=>bash(id())]  <j>  mapper    {1}    {1}   
+    rshift  lst::T       #{*}::T  noobj               <j>  standard  {1}    {*}   
+    sum     #{*}::T      #::T                         <?>  reducer   {*}    {1}   
+   """
 ```
 ### pipe over the results
 
@@ -185,7 +167,7 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-   ...(16 more)]
+   ...(12 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>[
     '  File: AGENTS.md',
@@ -210,7 +192,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::4096.0000,
     bB::6984.0000,
     bB::4096.0000,
-   ...(16 more)]
+   ...(12 more)]
 ```
 Unit values test against each other's units:
 
@@ -232,23 +214,24 @@ once rather than negotiated per call. Query parameters are metatron's way of
 annotating an inst at its tid; `?*` is the door, and these are the ones agents meet
 first.
 
-| q-param  | type            | semantics                                                |
-|----------|-----------------|----------------------------------------------------------|
-| `allow`  | `lst[str]`      | whitelist regexes, matched whole-command (`matches()`)   |
-| `reject` | `lst[str]`      | blacklist regexes, matched anywhere (`find()`)           |
-| `env`    | `rec[str=>str]` | environment variables injected into the process          |
-| `dir`    | `str`           | the process's working directory                           |
+| q-param  | type            | semantics                                              |
+|----------|-----------------|--------------------------------------------------------|
+| `allow`  | `lst[str]`      | whitelist regexes, matched whole-command (`matches()`) |
+| `reject` | `lst[str]`      | blacklist regexes, matched anywhere (`find()`)         |
+| `env`    | `rec[str=>str]` | environment variables injected into the process        |
+| `dir`    | `str`           | the process's working directory                        |
 
 Each guard fails before the process spawns, and the failure names the pattern that
 fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/82
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/618
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/84
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/620
 ```
-The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the process:
+The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
+process:
 
 ```mtron
 mtron> bash?allow=['ls .+']('ls AGENTS.md')
@@ -276,13 +259,20 @@ One read each: the environment, the thread count, and the executor's own summary
 
 ```mtron
 mtron> */sys/env/HOME
-==>'/work'
+==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>2
+==>22
 mtron> sys_stat()
 ==>[
-    run=>1,
-    stop=>0]
+    total_mem_jvm=>mB::448.0000,
+    free_mem_jvm=>mB::348.4609,
+    max_mem_mach=>gB::15.1563,
+    used_mem_jvm=>mB::99.5391,
+    free_jvm=>percent::0,
+    free_mach=>percent::0,
+    thread=>[
+     run=>0,
+     stop=>0]]
 ```
 # file system space (`fsspace::T`)
 
@@ -347,8 +337,11 @@ into its structural form. Where in doubt, `?docq` and `.explain()` say what an i
 is doing — the sugar is short precisely because it is legible once:
 
 ```mtron
-mtron> *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
-...
+mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
+==>fail::[parse error at line 1, col 1:
+     [MAX_OUTPUT 5] *<mfs:README.md?mimeq=tex...
+     ^
+     could not parse at '[']@/sys/fail/622
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ==>[
     space=>/sys/space,
@@ -360,7 +353,10 @@ mtron> *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag,
      inst_rng=>true,
      type_ctor=>true,
      obj_write=>true,
-   ...
+     code_resolve=>false],
+    header=>"""
+   _,.---._      _,.----.    ,-,--.
+   ..."""]
 ```
 ## walking the tree
 
@@ -368,7 +364,7 @@ Wildcards are space-side. `+` is one segment, `#` is the recursion:
 
 ```mtron
 mtron> *<mfs:src/main/java/+/>                  [-- the child of src/main/java --]
-==>mfs:src/main/java/studio=>mfs:src/main/java/studio
+==>mfs:/src/main/java/studio=>mfs:/src/main/java/studio
 mtron> *<mfs:docs/skills/mtron/+/>  [-- this doc's siblings, with their content --]
 ...
 ```
@@ -455,7 +451,7 @@ the shape; it is read here, never run:
 mtron> *<mfs:bin/metatron>
 ...
 mtron> *<mfs:bin/metatron>.tid()
-==>/sys/space/mfs/exec/metatron?rng=#{*}&dom=#{?}
+==>/sys/space/fs/mfs/exec/metatron?rng=#{*}&dom=#{?}
 ```
 ## taking the mounts down
 
@@ -522,8 +518,8 @@ between that walk and a hung machine:
 2. the **clone gauge** (128, in objClone) — the deep read fails with
    `clone depth limit exceeded` instead of a stack overflow;
 3. the **work budget** — a walk that spins flat, within the depth cap, is
-   caught by the per-expression frame-operation count
-   (`-Dmetatron.execution.workBudget` to raise it for a legitimately big read);
+   caught by the per-expression frame-operation count (`-Dmetatron.execution.workBudget` to raise it for a legitimately
+   big read);
 4. the **×N collapse** in the rendered trace — the repeated frames render as
    `… (×63 more — same frame repeated: …)`, so the loop reads as a loop.
 
@@ -537,6 +533,7 @@ text), and `objClone` (the gauge) — a new throw site belongs to this grammar.
 ## see also
 
 * [mtron type system](type-system-mtron.md) — vid/tid, coefficients, `.as(type::T)`.
-* [mtron language reference](language-reference-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`), `->` write.
+* [mtron language reference](language-reference-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`),
+  `->` write.
 * [web instruction set](web-instset-mtron.md) — the route tables an `fsspace` mount hangs behind.
 * [tble instruction set](tble-instset-mtron.md) — the same space protocol, on a database.

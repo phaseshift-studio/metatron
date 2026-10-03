@@ -410,7 +410,7 @@ categorical realization of types and insts as objects and morphisms</p>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[
+                        <pre><code>/m/math/cat::[
  q=&gt;[docq::[
  pattern=&gt;docq,
  pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
@@ -419,6 +419,9 @@ categorical realization of types and insts as objects and morphisms</p>
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  pattern=&gt;/m/math/cat/#,
  space=&gt;[super=&gt;!*/m/math],
+ rewrite=&gt;[
+  /m/math/cat/inst/rewrite/ring_theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/group_theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;}],
  type=&gt;[
   rec::T[?[
    obj=&gt;&lt;#&gt;::T,
@@ -461,10 +464,36 @@ categorical realization of types and insts as objects and morphisms</p>
    inv=&gt;inst::T]]@/m/math/cat/theory/group_theory,
   theory::T[?[
    op=&gt;inst::T,
-   id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/monoid_theory],
- rewrite=&gt;[
-  /m/math/cat/inst/rewrite/ring_theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/group_theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;}],
+   id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/monoid_theory,
+  theory::T[?[
+   add=&gt;inst::T,
+   mul=&gt;inst::T,
+   zero=&gt;&lt;#&gt;::T,
+   one=&gt;&lt;#&gt;::T,
+   inv=&gt;inst::T]]@/m/math/cat/theory/field_theory,
+  theory::T[?[
+   add=&gt;inst::T,
+   mul=&gt;inst::T,
+   zero=&gt;&lt;#&gt;::T,
+   one=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/rig_theory,
+  theory::T[?[
+   or=&gt;inst::T,
+   and=&gt;inst::T,
+   not=&gt;inst::T,
+   zero=&gt;&lt;#&gt;::T,
+   one=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/boolean_theory,
+  theory::T[?[
+   meet=&gt;inst::T,
+   join=&gt;inst::T,
+   bottom=&gt;&lt;#&gt;::T,
+   top=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/lattice_theory,
+  theory::T[?[
+   op=&gt;inst::T,
+   id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/semilattice_theory,
+  theory::T[?[
+   add=&gt;inst::T,
+   mul=&gt;inst::T,
+   zero=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/near_ring_theory],
  inst=&gt;[
   as?rng=morphism&amp;dom=#(category::T[?[
   obj=&gt;inst::T,
@@ -497,7 +526,7 @@ categorical realization of types and insts as objects and morphisms</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">8</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">2</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">14</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">2</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -519,14 +548,32 @@ categorical realization of types and insts as objects and morphisms</p>
 </a><a href="#__m__math__cat__category__object" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">object</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">theory</small></div><div class="d-flex flex-wrap"><a href="#__m__math__cat__theory__group_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">theory</small></div><div class="d-flex flex-wrap"><a href="#__m__math__cat__theory__boolean_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">boolean_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory__field_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">field_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory__group_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">group_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory__lattice_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">lattice_theory</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__cat__theory__monoid_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">monoid_theory</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory__near_ring_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">near_ring_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory__rig_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">rig_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__cat__theory__ring_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">ring_theory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__cat__theory__semilattice_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">semilattice_theory</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
@@ -541,8 +588,26 @@ categorical realization of types and insts as objects and morphisms</p>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">8</span></h3>
-    <div class="card mb-3" id="__m__math__cat__category">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">14</span></h3>
+    <div class="card mb-3" id="__m__math__cat__theory__boolean_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">boolean_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/boolean_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ or=&gt;inst::T,
+ and=&gt;inst::T,
+ not=&gt;inst::T,
+ zero=&gt;&lt;#&gt;::T,
+ one=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/boolean_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of Boolean algebras \(\langle B, \lor, \land, \lnot, 0, 1 \rangle\): a complemented distributive lattice, \(b \lor \lnot b = 1\) and \(b \land \lnot b = 0\)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__category">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">category::T</span>
@@ -559,10 +624,28 @@ categorical realization of types and insts as objects and morphisms</p>
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a categorical structure to be refined into an object or morphism</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}orbit" class="text-light">{?}orbit</a> <span class="text-light">=&gt;</span> <a href="#'the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)'" class="text-info">&#39;the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)&#39;</a>
-  <a href="#{?}instset" class="text-light">{?}instset</a> <span class="text-light">=&gt;</span> <a href="#"uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category's morphisms are generated"" class="text-info">&quot;uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category&#39;s morphisms are generated&quot;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}instset" class="text-light">{?}instset</a> <span class="text-light">=&gt;</span> <a href="#"uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category's morphisms are generated"" class="text-info">&quot;uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category&#39;s morphisms are generated&quot;</a>
+  <a href="#{?}orbit" class="text-light">{?}orbit</a> <span class="text-light">=&gt;</span> <a href="#'the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)'" class="text-info">&#39;the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)&#39;</a>
   <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)'" class="text-info">&#39;the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)&#39;</a>
 </pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory__field_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">field_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/field_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ add=&gt;inst::T,
+ mul=&gt;inst::T,
+ zero=&gt;&lt;#&gt;::T,
+ one=&gt;&lt;#&gt;::T,
+ inv=&gt;inst::T]]@/m/math/cat/theory/field_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__theory__group_theory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -579,6 +662,23 @@ categorical realization of types and insts as objects and morphisms</p>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory__lattice_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">lattice_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/lattice_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ meet=&gt;inst::T,
+ join=&gt;inst::T,
+ bottom=&gt;&lt;#&gt;::T,
+ top=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/lattice_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of lattices \(\langle L, \sqcap, \sqcup, \bot, \top \rangle\): every pair of elements has a meet and a join, bounded by \(\bot\) and \(\top\)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__law">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -631,16 +731,32 @@ categorical realization of types and insts as objects and morphisms</p>
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an inst as a categorical morphism incident to a source object (dom) and a target object (rng)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}analysis__contested" class="text-light">contested</a> <span class="text-light">=&gt;</span> <a href="#'the witness edges behind the ambiguous__incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)'" class="text-info">incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)&#39;</a>
-  <a href="#{?}analysis__position" class="text-light">position</a> <span class="text-light">=&gt;</span> <a href="#"the edge's place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)"" class="text-info">&quot;the edge&#39;s place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)&quot;</a>
-  <a href="#form" class="text-light">form</a> <span class="text-light">=&gt;</span> <a href="#'the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)'" class="text-info">&#39;the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)&#39;</a>
-  <a href="#{?}analysis__inverse" class="text-light">inverse</a> <span class="text-light">=&gt;</span> <a href="#'the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)'" class="text-info">&#39;the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)'" class="text-info">&#39;the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)&#39;</a>
   <a href="#{?}analysis__family" class="text-light">family</a> <span class="text-light">=&gt;</span> <a href="#'the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)'" class="text-info">&#39;the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)&#39;</a>
-  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)'" class="text-info">&#39;the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)&#39;</a>
-  <a href="#src" class="text-light">src</a> <span class="text-light">=&gt;</span> <a href="#'the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)'" class="text-info">&#39;the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)&#39;</a>
-  <a href="#{?}analysis__orbit" class="text-light">orbit</a> <span class="text-light">=&gt;</span> <a href="#"the reversible-core component of the morphism's dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)"" class="text-info">&quot;the reversible-core component of the morphism&#39;s dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)&quot;</a>
+  <a href="#{?}analysis__inverse" class="text-light">inverse</a> <span class="text-light">=&gt;</span> <a href="#'the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)'" class="text-info">&#39;the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)&#39;</a>
+  <a href="#form" class="text-light">form</a> <span class="text-light">=&gt;</span> <a href="#'the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)'" class="text-info">&#39;the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)&#39;</a>
+  <a href="#{?}analysis__position" class="text-light">position</a> <span class="text-light">=&gt;</span> <a href="#"the edge's place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)"" class="text-info">&quot;the edge&#39;s place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)&quot;</a>
+  <a href="#{?}analysis__contested" class="text-light">contested</a> <span class="text-light">=&gt;</span> <a href="#'the witness edges behind the ambiguous__incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)'" class="text-info">incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)&#39;</a>
   <a href="#trgt" class="text-light">trgt</a> <span class="text-light">=&gt;</span> <a href="#'the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)'" class="text-info">&#39;the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)&#39;</a>
+  <a href="#{?}analysis__orbit" class="text-light">orbit</a> <span class="text-light">=&gt;</span> <a href="#"the reversible-core component of the morphism's dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)"" class="text-info">&quot;the reversible-core component of the morphism&#39;s dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)&quot;</a>
+  <a href="#src" class="text-light">src</a> <span class="text-light">=&gt;</span> <a href="#'the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)'" class="text-info">&#39;the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)&#39;</a>
 </pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory__near_ring_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">near_ring_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/near_ring_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ add=&gt;inst::T,
+ mul=&gt;inst::T,
+ zero=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/near_ring_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of near-rings \(\langle N, +, \cdot, 0 \rangle\): \(+\) a group, \(\cdot\) a monoid, one-sided distributivity, no multiplicative \(1\) (reserved for barrier types)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__object">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -675,10 +791,27 @@ categorical realization of types and insts as objects and morphisms</p>
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a type as a categorical object incident to targeting morphisms and sourcing morphisms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
-  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
+  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
   <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
 </pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory__rig_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">rig_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/rig_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ add=&gt;inst::T,
+ mul=&gt;inst::T,
+ zero=&gt;&lt;#&gt;::T,
+ one=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/rig_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of rigs (semirings) \(\langle S, +, \cdot, 0, 1 \rangle\): an additive and a multiplicative monoid with \(\cdot\) distributive over \(+\), and no additive inverses</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__theory__ring_theory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -696,6 +829,21 @@ categorical realization of types and insts as objects and morphisms</p>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__theory__semilattice_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">semilattice_theory::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__cat__theory" class="instset-doc-small-code text-info code">/m/math/cat/theory::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/theory/semilattice_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[
+ op=&gt;inst::T,
+ id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/semilattice_theory</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[=&gt;]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the theory of semilattices \(\langle S, \sqcup, 0 \rangle\): an idempotent commutative monoid (a single meet or join side of a lattice)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__theory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

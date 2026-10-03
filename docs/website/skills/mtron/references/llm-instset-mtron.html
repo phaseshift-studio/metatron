@@ -394,10 +394,43 @@
     <div class="markdown-body">
 <h2>llm instruction set (<code>/m/llm</code>)</h2>
 <p>Three ideas carry the package.</p>
-<p><strong>An agent is a rec, not a class.</strong> <code>agent::T</code> holds a <code>model</code> and a bag of <code>feature</code>s; a model is a provider
-(ollama, openai, …) plus a model name; a feature is a stage spliced into the chat loop (<code>tool_feature</code>,
-<code>system_feature</code>, <code>cost_feature</code>, <code>compaction_feature</code>, …). <code>.chat()</code> runs the loop and <code>&gt;&gt;message</code> is the ledger
-it wrote.</p>
+<p><strong>An agent is a rec, not a class.</strong> <code>agent::T</code> is composed of a bag of <code>feature::T</code>s. A common feature like
+<code>chat_feature::T</code>
+references a <code>model::T</code> which is maintained by a provider (ollama, openai, …). A feature is a stage spliced into the
+chat loop (<code>tool_feature</code>,
+<code>system_feature</code>, <code>cost_feature</code>, <code>compaction_feature</code>, …), where inst <code>chat?chat_result&lt;=agent()</code> runs the loop.</p>
+<p>A simple chat bot is constructed as such:</p>
+<pre><code class="language-mtron">mtron&gt; memspace::[pattern =&gt; /usr/chatter/#,
+                  q       =&gt; [incrq::[=&gt;]]]@/sys/space/chatter
+mtron&gt; model::[provider=&gt; ollama,
+               protocol=&gt; ollama,
+               host    =&gt; &lt;http://localhost:11434&gt;,
+               llm     =&gt; &lt;qwen3.5:4b&gt;]@qwen3
+==&gt;model::[
+    skill=&gt;[completion,vision,tools,thinking],
+    size=&gt;gB::3.1572,
+    context=&gt;262144,
+    provider=&gt;ollama,
+    protocol=&gt;ollama,
+    host=&gt;http://localhost:11434,
+    llm=&gt;&lt;qwen3.5:4b&gt;]@qwen3
+</code></pre>
+<p>Create a workspace for the agent. Create a model for the agent to use for chatting. Create the agent by composing
+the workspace and a chat feature. Then:</p>
+<pre><code class="language-mtron">mtron&gt; [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
+==&gt;fail::[parse error at line 1, col 1:
+     [MAX_OUTPUT 10] @chatter.chat('what is t...
+     ^
+     could not parse at '[']@/sys/fail/538
+</code></pre>
+<p>The <code>/usr/chatter/#</code> space serves a the default location for features to store their various constructions.</p>
+<pre><code class="language-mtron">mtron&gt; */usr/chatter/chat_result/+
+mtron&gt; [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
+==&gt;fail::[parse error at line 1, col 1:
+     [MAX_OUTPUT 10] */usr/chatter/chat_resul...
+     ^
+     could not parse at '[']@/sys/fail/540
+</code></pre>
 <p><strong>A tool is an instruction.</strong> There is no tool registry to populate: anything callable <em>is</em> a tool, and <code>mTool</code>
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a <code>tool_feature</code> can
 be handed an instruction (<code>!*bash</code>), a skill, an MCP client or an <code>mcp_server</code> — one vocabulary throughout — and
@@ -543,8 +576,8 @@ tool_feature::[tool =&gt; [!*gremlin,/
                        !(map(json::&quot;&quot;&quot;{&quot;mcpServers&quot;:{&quot;codegraph&quot;:{&quot;command&quot;:&quot;codegraph&quot;,&quot;args&quot;:[&quot;&lt;--mcp&gt;&quot;]}}}&quot;&quot;&quot;).as(mcp_client::T)),/
                        mcp_client::[host=&gt;&lt;http://localhost:8777/mcp&gt;]]]
 </code></pre>
-<p><code>tool_feature</code>'s intake ladder is <code>mTool | mcp_client | mTool.tool(t)</code>: an <code>mcp_client</code> in that list contributes
-<strong>all of its tools</strong>, each keyed by the name the server advertised.</p>
+<p><code>tool_feature</code>'s intake ladder is <code>mTool | mcp_client | mTool.tool(t)</code>: an <code>mcp_client</code> in that list contributes <strong>all
+of its tools</strong>, each keyed by the name the server advertised.</p>
 <p>A client holds a live connection — and on http a server-side session — so a client that is never closed leaks
 one. <code>close()</code> releases it; <code>clone()</code> returns the same client rather than opening a second connection.</p>
 <h4>mcp server</h4>
@@ -578,8 +611,8 @@ not a pointer the server carries.</li>
 <h5>resources and prompts</h5>
 <ul>
 <li><strong>resources</strong> are the server's documents. A skill's markdown becomes resources keyed by relative path, each
-with <code>uri</code> / <code>name</code> / <code>description</code> and its text inline — except a document over 256 KB, which is exposed as a
-<strong><code>reference</code></strong> (a path to read) rather than inlined, so a listing stays small.</li>
+with <code>uri</code> / <code>name</code> / <code>description</code> and its text inline — except a document over 256 KB, which is exposed as a **
+<code>reference</code>** (a path to read) rather than inlined, so a listing stays small.</li>
 <li><strong>prompts</strong> are templated messages: a prompt entry resolves against <code>noobj()</code> and returns one <code>user</code> message.</li>
 </ul>
 <h5>the ledger server (<code>mcp_message</code>)</h5>
@@ -652,7 +685,16 @@ session an ephemeral island; mounting the same sqlite or database the live serve
 into the same world. The carrier takes no position — one line of boot data decides.</li>
 </ul>
 <p>A harness registers it like any other stdio server, which is the point:</p>
-<pre><code class="language-json">{&quot;mcpServers&quot;: {&quot;metatron&quot;: {&quot;command&quot;: &quot;bin/metatron&quot;, &quot;args&quot;: [&quot;--mcp&quot;]}}}
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;metatron&quot;: {
+      &quot;command&quot;: &quot;bin/metatron&quot;,
+      &quot;args&quot;: [
+        &quot;--mcp&quot;
+      ]
+    }
+  }
+}
 </code></pre>
 <h3>see also</h3>
 <ul>

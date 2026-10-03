@@ -292,7 +292,7 @@ public final class TypeGraph {
      * this on every lookup, so the lock would otherwise be acquired millions of times.
      */
     private void rebind() {
-        final Object router = BootLoader.ROUTER;
+        final Object router = BootLoader.ROOT_MACHINE;
         if (router != this.builtFor) {
             synchronized (this) {
                 if (router != this.builtFor) {

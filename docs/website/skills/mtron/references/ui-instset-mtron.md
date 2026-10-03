@@ -92,8 +92,8 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'an accordion obj',
      args=>[
-      {?}body=>'the body content of the accordion',
-      {?}title=>'the title of the accordion'],
+      {?}title=>'the title of the accordion',
+      {?}body=>'the body content of the accordion'],
      desc=>'[structural] an expandable/collaps...'],
     progress_table_widget=>docs::[
      obj=>widget::T[?[
@@ -109,9 +109,9 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'a table widget',
      args=>[
-      {?}header=>'a lst of obj table headers',
       {?}metadata=>'a lst of rows of data behind the d...',
-      {?}row=>'a lst of poly table rows'],
+      {?}row=>'a lst of poly table rows',
+      {?}header=>'a lst of obj table headers'],
      desc=>'[structural] a tabular data widget'],
     tree_widget=>docs::[
      obj=>widget::T[?[
@@ -124,12 +124,12 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'a tree widget',
      args=>[
+      {?}code=>'transform obj prior to insertion i...',
       root=>'the root uri to traverse from',
       {?}flatten=>'fold single-folder chains into one...',
       max=>'the max depth to traverse',
       {?}xref=>'xref=>[max=>N, code=><call>] cross...',
-      {?}expand=>'branch uris whose children are rea...',
-      {?}code=>'transform obj prior to insertion i...'],
+      {?}expand=>'branch uris whose children are rea...'],
      desc=>'[structural] the root uri space is...'],
     ...(9 more)]
 ```
