@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.BootLoader.ROUTER;
+import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
@@ -61,10 +61,111 @@ public interface Machine extends Space {
         return Helper.Machine0.single();
     }
 
-    static Machine current() {
-        return null == ROUTER ? mach0() : (Machine) ROUTER;
+    /**
+     * The machine ROOT — always, whatever perspective this thread is standing in. The bootstrap constant.
+     */
+    static Machine root() {
+        return null == ROOT_MACHINE ? mach0() : (Machine) ROOT_MACHINE;
     }
 
+    /**
+     * This thread's CURRENT machine — the one it is evaluating in, which is the root until a machine dereference
+     * moves it. Two names because they are two things: the root is a constant, the current machine is a perspective.
+     * Everything that resolves asks for the CURRENT machine, so a fragment teleported into another machine resolves
+     * against THAT machine — which is the point — while boot and anything that genuinely means the root call root().
+     * The perspective moves only when a deref yields a machine (withPerspective), never on an ordinary scope: moving
+     * it per scope is what broke resolution (measured: 210 failures + 836 errors).
+     */
+    /**
+     * The RESOLUTION AUTHORITY — the root, always, and deliberately NOT the perspective. Measured twice: answering
+     * with a frame's machine loses the spaces (210 failures + 836 errors), and answering with the perspective loses
+     * them again (1218 errors) — same signature both times, "no active space supports pattern /m/mach/machine".
+     * The reason is the same both times: apply(Code, Obj) runs constantly on machines that carry only their OWN
+     * memory — clones pushed as frames, component sub-machines — and those have no space index. A machine that
+     * EXECUTES code is not necessarily a machine that can RESOLVE it. Use perspective() for "where am I standing".
+     */
+    static Machine current() {
+        final Machine authority = AUTHORITY.get();
+        return null != authority ? authority : root();
+    }
+
+    /** Where this thread is standing: the root until a machine application or dereference moves it. */
+    static Machine perspective() {
+        final Machine machine = PERSPECTIVE.get();
+        return null != machine ? machine : root();
+    }
+
+    /**
+     * This thread's current PERSPECTIVE — the machine whose frame of reference it is evaluating in. Deliberately not
+     * the frame stack: frames scope BRACES (they nest and unwind per instruction), while the perspective moves only
+     * when a dereference yields a MACHINE and restores when the fragment that followed it ends. That separation is the
+     * whole point — the perspective is a value passed between machines, not a register resolution walks. `current()`
+     * still answers with the ROOT on purpose: making it frame-aware loses the spaces (measured: 210 failures + 836
+     * errors), because a frame is live for every scoped execution while a perspective moves only on a machine deref.
+     */
+    ThreadLocal<Machine> PERSPECTIVE = new ThreadLocal<>();
+
+    /**
+     * The machine whose SPACES answer for resolution right now — a reference, not a JVM constant, which is the whole
+     * point: "fall through to the root" would mean the root of whichever JVM this happens to be, and that is the wrong
+     * root the moment you are standing inside a machine on another one. So the authority is captured when you land:
+     * teleporting to a machine that can resolve makes THAT machine your root, and teleporting to one that cannot
+     * (a clone executing local code, a component sub-machine) leaves the authority exactly where it was.
+     */
+    ThreadLocal<Machine> AUTHORITY = new ThreadLocal<>();
+
+    /**
+     * Evaluate a fragment in another machine's frame of reference, restoring this thread's on the way out. This is the
+     * scoped half of the teleport: in at the dereference, out when the fragment that followed it ends — the same
+     * try/finally shape as a scoped block, but keyed on the MACHINE and triggered by a machine deref, never by an
+     * ordinary scope.
+     */
+    static Obj withPerspective(final Machine machine, final java.util.function.Supplier<Obj> fragment) {
+        final Machine previous = PERSPECTIVE.get();
+        final Machine previousAuthority = AUTHORITY.get();
+        PERSPECTIVE.set(machine);
+        try {
+            return fragment.get();
+        } finally {
+            if (null == previous)
+                PERSPECTIVE.remove();
+            else
+                PERSPECTIVE.set(previous);
+            if (null == previousAuthority)
+                AUTHORITY.remove();
+            else
+                AUTHORITY.set(previousAuthority);
+        }
+    }
+
+    /**
+     * Move this thread's perspective and LEAVE it there — no lambda, no automatic restore. The perspective does not
+     * change again until another call to either overload, which is the "name your way home" half of the model: you
+     * are not handed a return pointer, you address where you want to be (`*</.>` takes you back). Use the two-arg
+     * form when the move is scoped to one fragment; use this one when the move IS the statement.
+     */
+    static Machine withPerspective(final Machine machine) {
+        PERSPECTIVE.set(machine);
+        return machine;
+    }
+
+    /**
+     * You ARRIVED here — this machine was resolved from an address (`mach://`, `http://`, another JVM's space). What
+     * you land on becomes the authority as well: its root is your root while you stand there. This is the ONLY thing
+     * that moves the authority, which is why "whose root" never needs a JVM constant. Contrast withPerspective(),
+     * which is for EXECUTING in a machine (a frame, a clone): same JVM, same root, so the authority stays put.
+     */
+    static Machine arriveAt(final Machine machine) {
+        PERSPECTIVE.set(machine);
+        AUTHORITY.set(machine);
+        return machine;
+    }
+
+    /**
+     * Whether a machine can answer for itself: it has spaces of its own. A machine that EXECUTES code need not be one
+     * that can RESOLVE it — a clone pushed as a frame carries only its own memory — and asking this at teleport time
+     * rather than per read keeps the hot path a single ThreadLocal lookup.
+     */
     // ======================== the space funnel ========================
     // These belong on Machine; they delegate to Router only while Router still exists, so the bulk rename of
     // Machine.readFromSpace/writeToSpace to Machine.* is provably identical rather than a reimplementation.
@@ -72,7 +173,7 @@ public interface Machine extends Space {
 
     static Obj readFromSpace(final fURI vid) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst, "read " + vid),
-                () -> null == ROUTER ? noobj() : Machine.current().read(vid));
+                () -> null == ROOT_MACHINE ? noobj() : Machine.current().read(vid));
     }
 
     static Obj readFromSpace(final String vid) {
@@ -81,7 +182,7 @@ public interface Machine extends Space {
 
     static Obj writeToSpace(final fURI vid, final Obj obj) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "write " + vid),
-                () -> null == ROUTER ? noobj() : Machine.current().write(vid, obj));
+                () -> null == ROOT_MACHINE ? noobj() : Machine.current().write(vid, obj));
     }
 
     static Obj writeToSpace(final String vid, final Obj obj) {
@@ -121,7 +222,7 @@ public interface Machine extends Space {
     // Router; Router is gone and Space is the parent now, so they are declared here rather than borrowed.
 
     static boolean loaded() {
-        return null != ROUTER;
+        return null != ROOT_MACHINE;
     }
 
     default Rec spaces() {
@@ -197,11 +298,14 @@ public interface Machine extends Space {
         //
         // pop() is in a finally because a frame that is not released leaks its imports, its bindings and its
         // peers — and an exception is exactly when you least want that.
+        final Machine previous = Machine.current();
+        Machine.withPerspective(this);
         this.push();
         try {
             return this.processor().code(this.compiler().apply(code).asCode()).apply(start);
         } finally {
             this.pop();
+            Machine.withPerspective(previous);
         }
     }
 
@@ -295,6 +399,55 @@ public interface Machine extends Space {
     }
 
     /**
+     * The frame algebra's ONE morphism application, and the only frame operation mtron needs to see.
+     * <p>
+     * NOT named `apply`: `apply(Obj)` is the engine's code-application path and a uri IS an Obj, so an
+     * `apply(fURI)` overload silently captures every uri argument — including the ones that mean "apply this uri as
+     * code/inst" — and the damage surfaces far away as a cast failure (`argFrames cannot be cast to Inst`). The
+     * algebra's name belongs on the INST (in the machine's rec, `<./+>`); this method is its Java face.
+     * <p>
+     * A uri names a morphism and its coefficient names the direction, so push/pop are not two operations but one
+     * operation and its inverse — the groupoid of frames, where the extension IS the name:
+     * <pre>
+     *   apply(&lt;.&gt;)            -&gt; this          the ring's identity: the zero displacement pushes NO frame
+     *   apply(+1 u)         -&gt; Machine(here·u) descend; refused when u does not strictly extend here
+     *   apply({-1} u)       -&gt; the parent      ascend, IFF this step is the one that brought us here
+     *   apply({-1} u)       -&gt; noobj           otherwise: you cannot invert a step you did not take
+     *   apply({0} u)        -&gt; noobj           the zero morphism is the empty function
+     * </pre>
+     * The guard on the inverse is what makes this total over the morphisms: {@code ⟨u⟩⁻¹∘⟨u⟩ = 1} holds only when
+     * the frame standing here is the one {@code u} would have produced, so ascending is defined exactly when it
+     * undoes the step that was taken — otherwise it is undefined rather than a silent mis-pop.
+     */
+    default Obj move(final fURI extension) {
+        final Frame frame = FRAME.get();
+        final fURI here = (null == frame) ? this.vid() : frame.machine().vid();
+        if (null == extension || null == here)
+            return noobj();
+        if (extension.isId() || extension.c().isZero())
+            return extension.c().isZero() ? noobj() : this; // the identity pushes nothing; zero is the empty function
+        if (extension.c().isNeg()) {
+            // Ascend, but only the step that brought us here: this is ⟨u⟩⁻¹, defined iff ⟨u⟩ would have landed on
+            // this frame. Answered from the ADDRESS alone — `here` minus its last segment, recomposed with the name
+            // — deliberately, because a frame pushed from a machine that had no frame records parent == null, so
+            // demanding a parent frame would make the inverse undefined at the very first level.
+            // f(name) rather than asNode(): asNode() carries the {-1} coefficient into the product, and the question
+            // here is about the address this step would have produced.
+            if (null == frame || here.isId())
+                return noobj();
+            final fURI parentURI = here;
+            if (!parentURI.extend(extension.name()).resolve().equals(here))
+                return noobj();
+            final Frame ancestor = frameAt(parentURI);   // a live ancestor, when it was itself pushed
+            frame.machine().pop();
+            // the ancestor frame if there is one, else the machine that lives at that address — the root is
+            // registered in space even though it was never pushed, so both levels answer
+            return (null != ancestor) ? ancestor.machine() : readFromSpace(parentURI);
+        }
+        return this.push(extension);
+    }
+
+    /**
      * Push a CHILD frame whose vid strictly extends this machine's vid by {@code extension}, and return the CHILD.
      * <p>
      * The extension is a URI rather than a label because it is an EXPRESSION: a multi-segment, templated or
@@ -311,9 +464,13 @@ public interface Machine extends Space {
         // A machine with NO vid (test machines, and any rootless construct) has no address to extend, so the
         // extension becomes the child's address outright — and the descendant rule below does not apply, because
         // there is nothing to descend from. Only when there IS a parent address does a frame have to stay under it.
-        final fURI childVID = (null == parentVID) ? extension.resolve() : parentVID.mult(extension).resolve();
-        if (null != parentVID && !descendsFrom(childVID, parentVID))
-            throw MTronException.of("push(%s) does not descend from %s: a frame's address must strictly extend its parent's", extension, parentVID);
+        final fURI childVID = ((null == parentVID) ? extension.resolve() : parentVID.resolve().extend(extension.name()).resolve()).c(extension.c());
+        if (null != parentVID && !childVID.removeSubpath(parentVID.resolve()).asNode().pathString().equals(childVID.name()))
+            // print the RESOLVED forms, because the raw ones are what made this message hard to act on: the check
+            // compares resolved segment lists, so a raw `/.` and a raw `aaa` say nothing about which comparison
+            // failed. A frame's address must strictly extend its parent's, and now the message shows both sides.
+            throw MTronException.of("push(%s) does not descend from %s: resolved %s is not a strict descendant of %s",
+                    extension, parentVID, childVID, parentVID.resolve());
         final Machine clone = (Machine) this.clone(this.jvm(), this.tid(), childVID);
         // Why the 3-arg clone rather than clone().selfVID(childVID): AbstractSpace.self() PINS an already-set vid
         // (`null == this.vid() ? vid : this.vid()`), so on a clone — which already carries the parent's vid —
@@ -386,13 +543,13 @@ public interface Machine extends Space {
      * Discard the current frame and release what it opened. {@code close()} reaches only {@code current()}, so a
      * frame never releases what it inherited.
      */
-    default void pop() {
+    default Machine pop() {
         final Frame frame = FRAME.get();
-        if (null != frame) {
-            FRAME.set(frame.parent());
-            forget(frame); // the address is unreachable the moment the owner pops — before anything is released
-            frame.close();
-        }
+        if (null == frame) return this;
+        FRAME.set(frame.parent());     // ← the parent is right here already
+        forget(frame);
+        frame.close();
+        return FRAME.get() == null ? this : FRAME.get().machine();
     }
 
     static Frame frame() {
@@ -426,6 +583,10 @@ public interface Machine extends Space {
      * Obj runs a type check that resolves a type through the router and lands back in {@code read}.
      */
     default Memory resolutionMemory() {
+        // Resolution reads the frame's memory if it HAS one, else the machine's own. Do NOT extend this to a frame's
+        // ANCESTRY when it has none: measured, that breaks resolution system-wide (209 failures + 1450 errors, plus a
+        // StackOverflow in the unions), because a live frame is present for every scoped execution, not only when
+        // current() is frame-aware. Two attempts to make a live frame answer for itself have now failed here.
         final Memory frame = frameMemory();
         return null != frame ? frame : this.ownMemory();
     }

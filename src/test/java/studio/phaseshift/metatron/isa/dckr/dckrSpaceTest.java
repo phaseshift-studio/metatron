@@ -164,7 +164,7 @@ public class dckrSpaceTest extends AbstractSpaceTest {
             //        "[id => abc, repo_tags => 5, size => mB::142.0]                     % image::T       % true  % bad repo_tags ignored by maybe",
             "[id => abc, repo_tags => [nginx:latest], size => mB::142.0]        % resource::T    % true  % image is a resource",
             "[id => abc, repo_tags => [nginx:latest], size => mB::142.0]        % container::T   % false % image not a container",
-            "[id => abc, repo_tags => [nginx:latest], size => mB::142.0]        % compose::T     % false % image not compose",
+            "[id => abc, repo_tags => [nginx:latest], size => mB::142.0]        % d:compose::T     % false % image not compose",
             // container
             "[id => def, image => nginx, state => running, ports => [<8080:80>]] % container::T   % true  % container matches container",
             "[id => def, image => nginx, state => running, ports => [<8080:80>]] % resource::T    % true  % container is a resource",

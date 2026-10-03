@@ -393,8 +393,8 @@
     </div>
     <div class="markdown-body">
 <h2>sys instruction set (<code>/m/sys</code>)</h2>
-<p><code>/sys</code> is the required system space — created at boot, it holds the system objs
-(router, typer, rewriter, environment, thread registry). The sys instset is its
+<p><code>/sys</code> is the required system space — created at boot, it holds the system objs (router, typer, rewriter, environment,
+thread registry). The sys instset is its
 instruction companion: a guarded <code>bash</code>, the blocking I/O primitives <code>sleep</code>,
 <code>stdout</code>, and <code>stdin</code>, the <code>sys_stat</code> thread summary, and a file family —
 <code>read_file</code>, <code>edit_file</code> — that operates on files mounted by a <code>fsspace::T</code>.</p>
@@ -446,31 +446,31 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(16 more)]
+   ...(12 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
-==&gt;['ubuntu']
+==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;[
-    'Filesystem      Size  Used Avail U...',
-    'overlay         916G  513G  356G  ...',
-    'tmpfs            64M     0   64M  ...',
-    'shm              64M     0   64M  ...',
-    '/dev/nvme0n1p2  916G  513G  356G  ...',
-    'tmpfs            31G     0   31G  ...',
-    'tmpfs            31G     0   31G  ...',
-   ...(3 more)]
+    'Filesystem             Size  Used ...',
+    'tmpfs                  6.1G  6.6M ...',
+    'efivarfs               128K   42K ...',
+    '/dev/nvme0n1p2         916G  518G ...',
+    'tmpfs                   31G  1.1M ...',
+    'tmpfs                  5.0M   20K ...',
+    'tmpfs                   31G     0 ...',
+   ...(4 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/78
+==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/614
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 5ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 5ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/sys/fail/80
+    [ProcBuilder&lt;228&gt;]]@/sys/fail/616
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
@@ -484,8 +484,8 @@ the same <code>==</code> projection:</p>
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(16 more)]]
-==&gt;['whoami'=&gt;['ubuntu']]
+   ...(12 more)]]
+==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;[
     'AGENTS.md',
@@ -495,7 +495,7 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(17 more)]
+   ...(13 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -510,33 +510,15 @@ applied to each. The glyphs are the actions, and the sugar says so in plain sigh
       op=&gt;start,
       rng=&gt;lst,
       args=&gt;[['ls','whoami']],
-      f=&gt;'&lt;j&gt;',
-      form=&gt;initial,
-      c_dom=&gt;0,
-      c_rng=&gt;1],
-     [   op=&gt;select,
-      dom=&gt;lst,
-      rng=&gt;lst,
-      args=&gt;[[id()=&gt;bash(id())]],
-      f=&gt;'&lt;j&gt;',
-      form=&gt;mapper,
-      c_dom=&gt;1,
-      ...(1 more)],
-     [
-      op=&gt;rshift,
-      dom=&gt;lst,
-      args=&gt;[noobj],
-      f=&gt;'&lt;j&gt;',
-      form=&gt;standard,
-      c_dom=&gt;1,
-      c_rng=&gt;0],
-     [
-      op=&gt;sum,
-      rng=&gt;&lt;#&gt;,
-      args=&gt;[,],
-      form=&gt;reducer,
-      c_dom=&gt;0,
-      c_rng=&gt;1]]]
+   ...
+mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum().explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op      dom          rng      args                f    desc      c_dom  c_rng 
+    start   noobj{0}::T  lst::T   ['ls','whoami']     &lt;j&gt;  initial   {0}    {1}   
+    select  lst::T       lst::T   [id()=&gt;bash(id())]  &lt;j&gt;  mapper    {1}    {1}   
+    rshift  lst::T       #{*}::T  noobj               &lt;j&gt;  standard  {1}    {*}   
+    sum     #{*}::T      #::T                         &lt;?&gt;  reducer   {*}    {1}   
+   &quot;&quot;&quot;
 </code></pre>
 <h4>pipe over the results</h4>
 <p><code>&gt;&gt;</code> moves right along the data — one step per element; <code>${_}</code> binds the current one.
@@ -550,7 +532,7 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-   ...(16 more)]
+   ...(12 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;[
     '  File: AGENTS.md',
@@ -572,7 +554,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
     bB::4096.0000,
     bB::6984.0000,
     bB::4096.0000,
-   ...(16 more)]
+   ...(12 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -602,11 +584,12 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/82
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/618
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/84
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/620
 </code></pre>
-<p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the process:</p>
+<p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
+process:</p>
 <pre><code class="language-mtron">mtron&gt; bash?allow=['ls .+']('ls AGENTS.md')
 ==&gt;['AGENTS.md']
 mtron&gt; bash?env=[CI =&gt; 'docs']('echo CI=$CI')
@@ -624,13 +607,20 @@ no input to take, so it is shown rather than run:</p>
 <p>One read each: the environment, the thread count, and the executor's own summary —
 <code>sys_stat</code> answers with running vs stopped, no introspection ceremony:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
-==&gt;'/work'
+==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;2
+==&gt;22
 mtron&gt; sys_stat()
 ==&gt;[
-    run=&gt;1,
-    stop=&gt;0]
+    total_mem_jvm=&gt;mB::448.0000,
+    free_mem_jvm=&gt;mB::348.4609,
+    max_mem_mach=&gt;gB::15.1563,
+    used_mem_jvm=&gt;mB::99.5391,
+    free_jvm=&gt;percent::0,
+    free_mach=&gt;percent::0,
+    thread=&gt;[
+     run=&gt;0,
+     stop=&gt;0]]
 </code></pre>
 <h2>file system space (<code>fsspace::T</code>)</h2>
 <p>An <code>fsspace::T</code> mounts a directory into the metatron graph. A file's uri is
@@ -680,8 +670,11 @@ invitation to be parsed as code, and a <code>lines.txt</code> a note.</p>
 tag <em>is</em> the predicate validation — and, for <code>application/x-mtron</code>, parses the content
 into its structural form. Where in doubt, <code>?docq</code> and <code>.explain()</code> say what an inst
 is doing — the sugar is short precisely because it is legible once:</p>
-<pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
-...
+<pre><code class="language-mtron">mtron&gt; [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
+==&gt;fail::[parse error at line 1, col 1:
+     [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=tex...
+     ^
+     could not parse at '[']@/sys/fail/622
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
 ==&gt;[
     space=&gt;/sys/space,
@@ -693,12 +686,15 @@ is doing — the sugar is short precisely because it is legible once:</p>
      inst_rng=&gt;true,
      type_ctor=&gt;true,
      obj_write=&gt;true,
-   ...
+     code_resolve=&gt;false],
+    header=&gt;&quot;&quot;&quot;
+   _,.---._      _,.----.    ,-,--.
+   ...&quot;&quot;&quot;]
 </code></pre>
 <h3>walking the tree</h3>
 <p>Wildcards are space-side. <code>+</code> is one segment, <code>#</code> is the recursion:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/main/java/+/&gt;                  [-- the child of src/main/java --]
-==&gt;mfs:src/main/java/studio=&gt;mfs:src/main/java/studio
+==&gt;mfs:/src/main/java/studio=&gt;mfs:/src/main/java/studio
 mtron&gt; *&lt;mfs:docs/skills/mtron/+/&gt;  [-- this doc's siblings, with their content --]
 ...
 </code></pre>
@@ -769,7 +765,7 @@ the shape; it is read here, never run:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:bin/metatron&gt;
 ...
 mtron&gt; *&lt;mfs:bin/metatron&gt;.tid()
-==&gt;/sys/space/mfs/exec/metatron?rng=#{*}&amp;dom=#{?}
+==&gt;/sys/space/fs/mfs/exec/metatron?rng=#{*}&amp;dom=#{?}
 </code></pre>
 <h3>taking the mounts down</h3>
 <p>The doc leaves the graph as it found it — the two mounts it added are removed, and
@@ -822,8 +818,8 @@ between that walk and a hung machine:</p>
 <li>the <strong>clone gauge</strong> (128, in objClone) — the deep read fails with
 <code>clone depth limit exceeded</code> instead of a stack overflow;</li>
 <li>the <strong>work budget</strong> — a walk that spins flat, within the depth cap, is
-caught by the per-expression frame-operation count
-(<code>-Dmetatron.execution.workBudget</code> to raise it for a legitimately big read);</li>
+caught by the per-expression frame-operation count (<code>-Dmetatron.execution.workBudget</code> to raise it for a legitimately
+big read);</li>
 <li>the <strong>×N collapse</strong> in the rendered trace — the repeated frames render as
 <code>… (×63 more — same frame repeated: …)</code>, so the loop reads as a loop.</li>
 </ol>
@@ -835,7 +831,8 @@ text), and <code>objClone</code> (the gauge) — a new throw site belongs to thi
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, <code>.as(type::T)</code>.</li>
-<li><a href="language-reference-mtron.html">mtron language reference</a> — <code>&gt;&gt;</code>, the <code>?</code>-family filters, select (<code>==</code>), split (<code>-&lt;</code>), <code>-&gt;</code> write.</li>
+<li><a href="language-reference-mtron.html">mtron language reference</a> — <code>&gt;&gt;</code>, the <code>?</code>-family filters, select (<code>==</code>), split (<code>-&lt;</code>),
+<code>-&gt;</code> write.</li>
 <li><a href="web-instset-mtron.html">web instruction set</a> — the route tables an <code>fsspace</code> mount hangs behind.</li>
 <li><a href="tble-instset-mtron.html">tble instruction set</a> — the same space protocol, on a database.</li>
 </ul>

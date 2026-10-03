@@ -258,7 +258,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         return (OBJ) objs(arec.jvm().entrySet()
                                 .stream()
                                 .filter(kv -> kv.getKey().isUri())
-                                .filter(kv -> kv.getKey().uriValue().test(asNode.uriValue()))
+                                .filter(kv -> kv.getKey().uriValue().bimatches(asNode.uriValue()))
                                 .map(kv -> isBranch ? rel(
                                         kv.getKey(), autoToggle(arec, kv.getValue(), doAuto)) :
                                         autoToggle(arec, kv.getValue(), doAuto)));

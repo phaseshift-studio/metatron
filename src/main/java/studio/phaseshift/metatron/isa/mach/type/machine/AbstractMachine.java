@@ -489,7 +489,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
     public Obj read(final fURI vid) {
         if (null == vid || NOOBJ.equals(vid.basePath()) || vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
-        if (vid.equals(this.vid()))
+        if (vid.equals(this.vid()) || vid.equals(vid.id()))
             return this;
         // authority guard — mine resolves locally, a declared peer delegates, everything else falls through
         final Optional<Obj> foreign = this.dispatchForeign(vid, null);

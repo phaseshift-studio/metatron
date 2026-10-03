@@ -45,13 +45,13 @@ mtron> int::T.as(object::T)
      mult_monoid=>monoid_theory::[
       op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
       id=>1]],
-    morphed_to=>!inst?rng=#&dom=#(){<j>},
-    morphed_from=>!inst?rng=#&dom=#(){<j>}]
+    morphed_to=>!inst?rng=#{*}&dom=#{?}(){<j>},
+    morphed_from=>!inst?rng=#{*}&dom=#{?}(){<j>}]
 mtron> |plus?int<=int(int::T).as(morphism::T)
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=plus?rng=int&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=plus?rng=int&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>plus?rng=int&dom=int(int::T),
     law=>[
@@ -74,44 +74,44 @@ mtron> |plus?int<=int(int::T).as(morphism::T)
 mtron> int::T.as(object::T).morphed_to()
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=as?rng=bool&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=as?rng=bool&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=bool&dom=int(bool::T){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=as?rng=bytes&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=as?rng=bytes&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=bytes&dom=int(bytes::T){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=as?rng=real&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=as?rng=real&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=real&dom=int(real::T){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=as?rng=str&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=as?rng=str&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=str&dom=int(str::T){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=as?rng=uri&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=as?rng=uri&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=uri&dom=int(uri::T){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=as?rng=rec&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=as?rng=rec&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=rec&dom=int(rec::T){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=plus?rng=int&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=plus?rng=int&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>plus?rng=int&dom=int(int::T){<j>},
     law=>[
@@ -120,8 +120,8 @@ mtron> int::T.as(object::T).morphed_to()
      action]]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=mult?rng=int&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=mult?rng=int&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>mult?rng=int&dom=int(int::T){<j>},
     law=>[
@@ -130,46 +130,46 @@ mtron> int::T.as(object::T).morphed_to()
      action]]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=zero?rng=int&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=zero?rng=int&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>zero?rng=int&dom=int(){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=one?rng=int&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=one?rng=int&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>one?rng=int&dom=int(){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=neg?rng=int&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=neg?rng=int&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>neg?rng=int&dom=int(){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=div?rng=int&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=div?rng=int&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>div?rng=int&dom=int(int::T){<j>}]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=minus?rng=int&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=minus?rng=int&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>minus?rng=int&dom=int(int::T){<j>},
     law=>[action]]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=gt?rng=bool&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=gt?rng=bool&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>gt?rng=bool&dom=int(int::T){<j>},
     law=>[right_distributive]]
 ==>morphism::[
     form=>mapper,
-    src=>inst?rng=#&dom=gte?rng=bool&dom=int(<#>::T){<j>},
-    trgt=>inst?rng=#&dom=gte?rng=bool&dom=int(<#>::T){<j>},
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>gte?rng=bool&dom=int(int::T){<j>},
    ...

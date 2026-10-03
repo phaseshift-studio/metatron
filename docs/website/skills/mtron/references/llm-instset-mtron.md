@@ -12,11 +12,50 @@ description: >
 
 Three ideas carry the package.
 
-**An agent is a rec, not a class.** `agent::T` holds a `model` and a bag of `feature`s; a model is a provider
-(ollama, openai, …) plus a model name; a feature is a stage spliced into the chat loop (`tool_feature`,
-`system_feature`, `cost_feature`, `compaction_feature`, …). `.chat()` runs the loop and `>>message` is the ledger
-it wrote.
+**An agent is a rec, not a class.** `agent::T` is composed of a bag of `feature::T`s. A common feature like
+`chat_feature::T`
+references a `model::T` which is maintained by a provider (ollama, openai, …). A feature is a stage spliced into the
+chat loop (`tool_feature`,
+`system_feature`, `cost_feature`, `compaction_feature`, …), where inst `chat?chat_result<=agent()` runs the loop.
 
+A simple chat bot is constructed as such:
+
+```mtron
+mtron> memspace::[pattern => /usr/chatter/#,
+                  q       => [incrq::[=>]]]@/sys/space/chatter
+mtron> model::[provider=> ollama,
+               protocol=> ollama,
+               host    => <http://localhost:11434>,
+               llm     => <qwen3.5:4b>]@qwen3
+==>model::[
+    skill=>[completion,vision,tools,thinking],
+    size=>gB::3.1572,
+    context=>262144,
+    provider=>ollama,
+    protocol=>ollama,
+    host=>http://localhost:11434,
+    llm=><qwen3.5:4b>]@qwen3
+```
+Create a workspace for the agent. Create a model for the agent to use for chatting. Create the agent by composing
+the workspace and a chat feature. Then:
+
+```mtron
+mtron> [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
+==>fail::[parse error at line 1, col 1:
+     [MAX_OUTPUT 10] @chatter.chat('what is t...
+     ^
+     could not parse at '[']@/sys/fail/538
+```
+The `/usr/chatter/#` space serves a the default location for features to store their various constructions.
+
+```mtron
+mtron> */usr/chatter/chat_result/+
+mtron> [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
+==>fail::[parse error at line 1, col 1:
+     [MAX_OUTPUT 10] */usr/chatter/chat_resul...
+     ^
+     could not parse at '[']@/sys/fail/540
+```
 **A tool is an instruction.** There is no tool registry to populate: anything callable *is* a tool, and `mTool`
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a `tool_feature` can
 be handed an instruction (`!*bash`), a skill, an MCP client or an `mcp_server` — one vocabulary throughout — and
@@ -53,17 +92,17 @@ just defined:
 
 ## types
 
-| type             | vid                     | meaning                                                                |
-|------------------|-------------------------|------------------------------------------------------------------------|
-| `agent::T`       | `/m/llm/agent`          | a model + features; `.chat()` runs the loop                            |
-| `model::T`       | `/m/llm/model`          | a provider, a protocol, a host, an llm name                            |
-| `feature::T`     | `/m/llm/feature`        | a stage in the chat loop (`tool_feature`, `chat_feature`, …)           |
-| `tool::T`        | `/m/llm/tool`           | an instruction with a name, a description and an argument schema       |
-| `skill::T`       | `/m/llm/skill`          | a directory of markdown: front matter, instructions, tools, resources  |
-| `message::T`     | `/m/llm/message`        | one ledger record — `user`, `ai`, `system`, `thinking`, `tool_result`  |
-| `mcp_client::T`  | `/m/web/mcp/mcp_client` | a connection to an MCP server                                          |
-| `mcp_message::T` | `/m/llm/mcp/mcp_message`| the message-ledger server                                              |
-| `mcp_server::T`  | `/m/web/mcp/mcp_server` | a transport-agnostic MCP server                                        |
+| type             | vid                      | meaning                                                               |
+|------------------|--------------------------|-----------------------------------------------------------------------|
+| `agent::T`       | `/m/llm/agent`           | a model + features; `.chat()` runs the loop                           |
+| `model::T`       | `/m/llm/model`           | a provider, a protocol, a host, an llm name                           |
+| `feature::T`     | `/m/llm/feature`         | a stage in the chat loop (`tool_feature`, `chat_feature`, …)          |
+| `tool::T`        | `/m/llm/tool`            | an instruction with a name, a description and an argument schema      |
+| `skill::T`       | `/m/llm/skill`           | a directory of markdown: front matter, instructions, tools, resources |
+| `message::T`     | `/m/llm/message`         | one ledger record — `user`, `ai`, `system`, `thinking`, `tool_result` |
+| `mcp_client::T`  | `/m/web/mcp/mcp_client`  | a connection to an MCP server                                         |
+| `mcp_message::T` | `/m/llm/mcp/mcp_message` | the message-ledger server                                             |
+| `mcp_server::T`  | `/m/web/mcp/mcp_server`  | a transport-agnostic MCP server                                       |
 
 `mcp_client::T` is *declared* by `/m/web` — transport surfaces are its business — and *implemented* by
 `studio.phaseshift.metatron.isa.llm.type.mcp.mcpClient`, which is why this document, the llm one, is where a
@@ -81,15 +120,15 @@ websocket client does, hand it to stdio and a client that spawns a process does.
 An `mcp_client::T` is one connection — and it connects **eagerly**: the constructor calls `listTools()`, so by
 the time you hold the obj, `tool` is populated and `status` can answer a health check.
 
-| key         | type   | meaning                                                                                        |
-|-------------|--------|------------------------------------------------------------------------------------------------|
+| key         | type   | meaning                                                                                              |
+|-------------|--------|------------------------------------------------------------------------------------------------------|
 | `host`      | `uri`  | the endpoint; the **scheme picks the transport** (`http`/`https` → streamable-http, `ws`/`wss` → ws) |
-| `transport` | `uri`  | force a transport when the scheme is ambiguous (`streamable-http`)                             |
-| `command`   | `lst`  | **stdio**: the argv that spawns the server as a subprocess                                     |
-| `env`       | `rec`  | environment for a spawned stdio server (it becomes headers on http/ws)                         |
-| `headers`   | `rec`  | http/ws request headers                                                                        |
-| `tool`      | `rec`  | *populated*: tool name → `tool::T`, each carrying the `inst` to call                           |
-| `status`    | `bool` | *populated*: applying it runs a health check and answers true/false                            |
+| `transport` | `uri`  | force a transport when the scheme is ambiguous (`streamable-http`)                                   |
+| `command`   | `lst`  | **stdio**: the argv that spawns the server as a subprocess                                           |
+| `env`       | `rec`  | environment for a spawned stdio server (it becomes headers on http/ws)                               |
+| `headers`   | `rec`  | http/ws request headers                                                                              |
+| `tool`      | `rec`  | *populated*: tool name → `tool::T`, each carrying the `inst` to call                                 |
+| `status`    | `bool` | *populated*: applying it runs a health check and answers true/false                                  |
 
 ```mtron
 mcp_client::[host=>http://localhost:8777/mcp]@/usr/ai/mcp/a
@@ -193,8 +232,8 @@ tool_feature::[tool => [!*gremlin,/
                        mcp_client::[host=><http://localhost:8777/mcp>]]]
 ```
 
-`tool_feature`'s intake ladder is `mTool | mcp_client | mTool.tool(t)`: an `mcp_client` in that list contributes
-**all of its tools**, each keyed by the name the server advertised.
+`tool_feature`'s intake ladder is `mTool | mcp_client | mTool.tool(t)`: an `mcp_client` in that list contributes **all
+of its tools**, each keyed by the name the server advertised.
 
 A client holds a live connection — and on http a server-side session — so a client that is never closed leaks
 one. `close()` releases it; `clone()` returns the same client rather than opening a second connection.
@@ -237,8 +276,8 @@ A server can be built from a skill instead: its instructions become tools and it
 #### resources and prompts
 
 * **resources** are the server's documents. A skill's markdown becomes resources keyed by relative path, each
-  with `uri` / `name` / `description` and its text inline — except a document over 256 KB, which is exposed as a
-  **`reference`** (a path to read) rather than inlined, so a listing stays small.
+  with `uri` / `name` / `description` and its text inline — except a document over 256 KB, which is exposed as a **
+  `reference`** (a path to read) rather than inlined, so a listing stays small.
 * **prompts** are templated messages: a prompt entry resolves against `noobj()` and returns one `user` message.
 
 #### the ledger server (`mcp_message`)
@@ -264,11 +303,11 @@ m_llm_mcp_mcp_message_search_messages(root='/usr/doc/message', pattern='light', 
 
 #### the carriers
 
-| carrier     | vid                    | what it owns                                                                                            |
-|-------------|------------------------|---------------------------------------------------------------------------------------------------------|
-| `mcp_http`  | `/m/web/mcp/mcp_http`  | POST answers a request; **GET is the sse notification channel**; HEAD probes; DELETE ends a session       |
-| `mcp_ws`    | `/m/web/mcp/mcp_ws`    | one handler per connection; the socket is already bidirectional                                          |
-| `mcp_stdio` | `/m/web/mcp/mcp_stdio` | the process's own stdin/stdout; **fd 1 is the wire**                                                     |
+| carrier     | vid                    | what it owns                                                                                        |
+|-------------|------------------------|-----------------------------------------------------------------------------------------------------|
+| `mcp_http`  | `/m/web/mcp/mcp_http`  | POST answers a request; **GET is the sse notification channel**; HEAD probes; DELETE ends a session |
+| `mcp_ws`    | `/m/web/mcp/mcp_ws`    | one handler per connection; the socket is already bidirectional                                     |
+| `mcp_stdio` | `/m/web/mcp/mcp_stdio` | the process's own stdin/stdout; **fd 1 is the wire**                                                |
 
 `mcp_http` is Streamable HTTP: `initialize` opens a session (`Mcp-Session-Id`), a POST carries requests, and the
 GET half answers only when the client sends `Accept: text/event-stream` — anything else is a 405 rather than a
@@ -328,7 +367,16 @@ Three properties are worth stating because none of them is obvious:
 A harness registers it like any other stdio server, which is the point:
 
 ```json
-{"mcpServers": {"metatron": {"command": "bin/metatron", "args": ["--mcp"]}}}
+{
+  "mcpServers": {
+    "metatron": {
+      "command": "bin/metatron",
+      "args": [
+        "--mcp"
+      ]
+    }
+  }
+}
 ```
 
 ## see also
