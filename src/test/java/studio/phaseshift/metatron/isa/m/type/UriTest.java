@@ -324,7 +324,7 @@ public class UriTest extends AbstractMetatronTest {
             "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)?[path=>-<[>>0,>>1,>>2,>>3],q=>[debug=>?_,_=>?_]].as(uri::T)                % <http://api.local/v1/user/marko?auth=true&debug=true>",
             "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)?[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>none]].as(uri::T)       % noobj"
     }, delimiter = '%', quoteCharacter = '~')
-    public void testWhere(final String code, final String expected) {
+    public void testIsA(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }
