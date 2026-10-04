@@ -1404,7 +1404,7 @@ public class FloatingSurface {
         final fURI vid = obj.vid();
         if (null == vid) return false;
         try {
-            return Machine.authority().read(vid).isNoObj();
+            return Machine.root().read(vid).isNoObj();
         } catch (final Exception e) {
             return false;
         }

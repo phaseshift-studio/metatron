@@ -282,7 +282,7 @@ public class RewriteBuilder<S extends Space> {
         return map -> {
             // Extract fURI from the first instruction (FROM instruction)
             final fURI oldfURI = map.values().iterator().next().arg(0).asUri().uriValue();
-            final Space space = Machine.authority().getSpaceFor(oldfURI);
+            final Space space = Machine.root().getSpaceFor(oldfURI);
 
             // Check if this is the correct space type
             if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(map.values().stream().toList()))) {

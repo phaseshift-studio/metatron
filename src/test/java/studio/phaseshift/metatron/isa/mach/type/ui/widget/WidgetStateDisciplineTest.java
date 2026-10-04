@@ -155,7 +155,7 @@ public class WidgetStateDisciplineTest extends AbstractInstSetTest {
      */
     private static Set<String> declaredKeys(final String tid) {
         final Set<String> keys = new LinkedHashSet<>();
-        final Obj registered = Machine.authority().read(f(tid));
+        final Obj registered = Machine.root().read(f(tid));
         if (!registered.isType()) return keys;
         final Obj predicate = registered.asType().isPredicateObj();
         if (null == predicate || !predicate.isRec()) return keys;

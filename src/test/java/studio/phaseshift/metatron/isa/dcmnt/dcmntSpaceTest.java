@@ -1921,7 +1921,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
         final fURI memSpaceVid = f("/sys/space/mem/dcmnt_xspace_target");
         final memSpace targetSpace = memSpace.of(f("grph:#"), memSpaceVid);
-        Machine.authority().addSpace(targetSpace);
+        Machine.root().addSpace(targetSpace);
         try {
             // Write the cross-space target into memSpace
             Machine.writeToSpace(f("grph:vertices/42"),
@@ -1950,7 +1950,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
             LOG.info("cross-space auto_from round-trip test passed");
         } finally {
             space.close();
-            Machine.authority().removeSpace(targetSpace.vid());
+            Machine.root().removeSpace(targetSpace.vid());
             targetSpace.close();
             // Clean up collection so DBRef schema discovery doesn't break subsequent tests
             try (final MongoClient client = MongoClients.create(connectionString)) {

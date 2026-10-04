@@ -47,7 +47,7 @@ public class ListMonad extends MLst {
     @Override
     public Obj append(final Obj obj) {
         this.jvm().add(obj);
-        Machine.authority().stats().monadicStats().incrRunningMonads(1L);
+        Machine.root().stats().monadicStats().incrRunningMonads(1L);
         return this;
     }
 
@@ -60,7 +60,7 @@ public class ListMonad extends MLst {
     public Obj take() {
         if (this.jvm().isEmpty())
             return null;
-        Machine.authority().stats().monadicStats().incrRunningMonads(-1L);
+        Machine.root().stats().monadicStats().incrRunningMonads(-1L);
         return this.jvm().removeFirst();
     } // TODO: explore removeLast() as a way of simulating chained iterators
 

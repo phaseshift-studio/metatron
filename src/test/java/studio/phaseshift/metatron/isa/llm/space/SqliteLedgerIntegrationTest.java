@@ -24,9 +24,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.llm.type.feature.AbstractMessageFeature;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
 import java.io.File;
@@ -91,7 +91,7 @@ public class SqliteLedgerIntegrationTest extends AbstractMetatronTest {
     void closeStore() {
         if (null != this.space) {
             try {
-                Machine.authority().removeSpace(this.space.vid());
+                Machine.root().removeSpace(this.space.vid());
             } catch (final Exception ignored) {
                 // the space may already be gone
             }

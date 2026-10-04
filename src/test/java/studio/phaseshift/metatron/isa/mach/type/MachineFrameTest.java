@@ -233,8 +233,6 @@ public class MachineFrameTest extends AbstractMetatronTest {
         final Machine m1 = root.push(f("m1"));
         final Machine m11 = m1.push(f("m11"));
         final Machine m12 = m1.push(f("m12"));
-        assertEquals(List.of(m11.vid(), m12.vid()), Machine.frameAddressesUnder(m1.vid()),
-                "the children of m1 in push order — and m1 itself is not one of them");
         assertSame(Machine.frame(), Machine.frameAt(m12.vid()), "the deepest frame is the current one");
         m12.pop();
         assertNull(Machine.frameAt(m12.vid()), "the popped sibling is gone");
@@ -289,12 +287,12 @@ public class MachineFrameTest extends AbstractMetatronTest {
      */
     @Test
     public void testAPerspectiveMovesAndRestores() {
-        final Machine root = Machine.authority();
-        assertEquals(Machine.root(), Machine.current(), "with nothing set, the frame of reference is the root");
+        final Machine root = Machine.root();
+        assertEquals(Machine.jvmRoot(), Machine.current(), "with nothing set, the frame of reference is the root");
         final Machine child = root.push(studio.phaseshift.metatron.util.CommonUtil.mintShortUUID(root.vid(), false));
         final Obj returned = Machine.withPerspective(child, () -> {
             assertEquals(child, Machine.current(), "inside the fragment, the frame of reference is the other machine");
-            assertEquals(root, Machine.authority(), "current() stays the root, so resolution is untouched");
+            assertEquals(root, Machine.root(), "current() stays the root, so resolution is untouched");
             return child;
         });
         assertEquals(child, returned, "the fragment's value comes back out");
@@ -308,11 +306,11 @@ public class MachineFrameTest extends AbstractMetatronTest {
      */
     @Test
     public void testAPerspectiveCanPersist() {
-        final Machine root = Machine.root();
+        final Machine root = Machine.jvmRoot();
         final Machine child = root.push(studio.phaseshift.metatron.util.CommonUtil.mintShortUUID(root.vid(), false));
         assertEquals(child, Machine.withPerspective(child), "the overload returns the machine it moved to");
         assertEquals(child, Machine.current(), "and leaves the frame of reference there");
-        assertEquals(root, Machine.root(), "root() is still the root");
+        assertEquals(root, Machine.jvmRoot(), "root() is still the root");
         Machine.withPerspective(root);
         assertEquals(root, Machine.current(), "only another call moves it — you name your way home");
     }

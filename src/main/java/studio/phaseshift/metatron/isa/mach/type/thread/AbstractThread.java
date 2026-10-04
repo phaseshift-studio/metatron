@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -99,6 +100,22 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
             ThreadExecutor.instance().execute(this);
         }
         return this.future;
+    }
+
+    private Machine landedPerspective;
+
+    /**
+     * WHERE THIS THREAD ENDED. A frame of reference is per-thread, so work handed to a worker thread moves ITS
+     * perspective and the caller's is untouched -- correct in general, and invisible to a session (a console, a
+     * client) that persists between statements. The worker therefore PUBLISHES the machine it ended in, and a
+     * caller that represents a continuing session adopts it.
+     */
+    public Machine landedPerspective() {
+        return this.landedPerspective;
+    }
+
+    public void landedPerspective(final Machine machine) {
+        this.landedPerspective = machine;
     }
 
     public AbstractThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -317,7 +334,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
      */
     private static AbstractThread resolveYield(final Obj yieldObj) {
         if (yieldObj.isUri()) {
-            final Obj resolved = studio.phaseshift.metatron.isa.mach.type.Machine.authority().read(yieldObj.uriValue().qLess());
+            final Obj resolved = studio.phaseshift.metatron.isa.mach.type.Machine.root().read(yieldObj.uriValue().qLess());
             if (resolved instanceof AbstractThread t)
                 return t;
         } else if (yieldObj.isInst()) {

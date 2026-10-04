@@ -39,10 +39,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -151,7 +148,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
             LOG.warn("could not list collections");
             this.schemaInstset = createSchemaInstset(schemaVid, Set.of());
         }
-        Machine.authority().addSpace(this.schemaInstset);
+        Machine.root().addSpace(this.schemaInstset);
         this.schemaInstset.setup();
         this.at(uri(SCHEMA), this.schemaInstset, MUTABLE);
     }

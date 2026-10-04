@@ -40,9 +40,9 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.sql.*;
 import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -536,7 +536,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = readColumnWithMetadata(rs, col, metadata.tableName);
                 labeledValues.put(uri(col.name), value);
                 if (!value.isNoObj())
-                    Machine.authority().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
+                    Machine.root().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
             }
         }
         final fURI tid = storedTid != null ? storedTid : REC_TID;

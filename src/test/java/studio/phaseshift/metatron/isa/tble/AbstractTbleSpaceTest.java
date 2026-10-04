@@ -358,7 +358,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     protected tbleSpace createTestSpace() {
         // Evict the lazily-constructed parent space (SPACE_VID, pattern db:#) so it
         // doesn't block the fresh space from registering.
-        Machine.authority().removeSpace(SPACE_VID);
+        Machine.root().removeSpace(SPACE_VID);
         return tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("db:#"),
@@ -487,7 +487,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             assertTrue(row.isRec(), "should return a rec");
             assertEquals(expectedValue, row.asRec().at(uri(fieldName)), description);
         } finally {
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -528,7 +528,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             assertEquals(expectedValue, row.asRec().at(uri(field)),
                     "field " + field + " should be updated");
         } finally {
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -560,7 +560,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             assertEquals(str(expectedFieldValue), row.asRec().at(uri(fieldName)),
                     "Field " + fieldName + " should match");
         } finally {
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -610,7 +610,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             assertEquals(expectedValue, insertedRow.asRec().at(uri(verifyField)),
                     "Field " + verifyField + " should match");
         } finally {
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -661,7 +661,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             else
                 assertEquals(expectedReadValue, row.asRec().at(uri(field)), description);
         } finally {
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -741,7 +741,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             LOG.info("All comprehensive tests passed for {}!",
                     staticDbConfig.getDatabaseName());
         } finally {
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
         cleanupTestDatabase();
@@ -806,7 +806,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -853,7 +853,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
             // Restart: close space, re-open → FK must survive
             testSpace.close();
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
 
             final tbleSpace testSpace2 = tbleSpace.of(
                     rec(
@@ -874,7 +874,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                                 + catPtr.tid());
                 assertEquals(str("Books"), catPtr.asRec().at(uri("label")));
             } finally {
-                Machine.authority().removeSpace(testSpace2.vid());
+                Machine.root().removeSpace(testSpace2.vid());
                 testSpace2.close();
             }
         } finally {
@@ -884,7 +884,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                 LOG.warn("[ignored] %s", ex);
             }
             try {
-                Machine.authority().removeSpace(testSpace.vid());
+                Machine.root().removeSpace(testSpace.vid());
                 testSpace.close();
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
@@ -969,7 +969,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -991,7 +991,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
         // Target space: memSpace with pattern grph:#
         final memSpace targetSpace = memSpace.of(f("grph:#"), memSpaceVid);
-        Machine.authority().addSpace(targetSpace);
+        Machine.root().addSpace(targetSpace);
 
         final tbleSpace sourceSpace = tbleSpace.of(
                 rec(
@@ -1046,9 +1046,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(sourceSpace.vid());
+            Machine.root().removeSpace(sourceSpace.vid());
             sourceSpace.close();
-            Machine.authority().removeSpace(targetSpace.vid());
+            Machine.root().removeSpace(targetSpace.vid());
             targetSpace.close();
         }
     }
@@ -1132,7 +1132,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -1184,7 +1184,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -1716,7 +1716,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             LOG.info("multi-line SQL with comments test passed on {}",
                     staticDbConfig.getDatabaseName());
         } finally {
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -1905,7 +1905,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                 stmt.executeUpdate("DROP TABLE IF EXISTS intpk_items");
             }
         } finally {
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -1971,7 +1971,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2020,7 +2020,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
             LOG.info("kv_store tid round-trip OK: %s → %s", value, roundTripped);
         } finally {
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2122,7 +2122,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2197,7 +2197,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2243,7 +2243,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     "should have at least $table + 2 columns before restart, got: " + beforeCount);
 
         } finally {
-            Machine.authority().removeSpace(space1.vid());
+            Machine.root().removeSpace(space1.vid());
             space1.close();
         }
 
@@ -2303,7 +2303,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(space2.vid());
+            Machine.root().removeSpace(space2.vid());
             space2.close();
         }
     }
@@ -2356,7 +2356,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2449,7 +2449,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2513,7 +2513,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -2564,7 +2564,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -2620,7 +2620,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -2765,7 +2765,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
                     LOG.warn("[ignored] %s", ex);
                 }
             }
-            Machine.authority().removeSpace(testSpace.vid());
+            Machine.root().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -2804,7 +2804,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }
@@ -2900,7 +2900,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             } catch (final Exception ex) {
                 LOG.warn("[ignored] %s", ex);
             }
-            Machine.authority().removeSpace(space.vid());
+            Machine.root().removeSpace(space.vid());
             space.close();
         }
     }

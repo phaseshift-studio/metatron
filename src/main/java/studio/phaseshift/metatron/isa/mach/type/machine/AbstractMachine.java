@@ -534,6 +534,14 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
     }
 
     @Override
+    /**
+     * DELIBERATELY NOT SYNCHRONIZED. Serializing this did fix a measured lost sibling, but it puts a lock on EVERY
+     * write through a machine -- the hottest path there is -- and that lock can hold a thread that has nothing to do
+     * with the two writers being reconciled. The signature it produces is a hang that cannot be caught by a bounded
+     * wait, because the waiting thread never reaches its wait: it is blocked entering a write. Two attempts to
+     * serialize this pair of races (here, and again in the space's writer) both deadlocked, which says the fix
+     * belongs where the read-modify-write actually is, not on the callers.
+     */
     public Obj write(final fURI vid, final Obj obj) {
         if (null == vid) {
             LOG.warn("the provided write uri was null");

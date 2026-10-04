@@ -298,12 +298,15 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * resolution rule is stated once.
      */
     /**
-     * The address of "here": the current frame's vid when a frame is live, else the root's. Reached through the
-     * frame stack rather than a fixed constant, which is what lets `.` mean the frame's interior inside a frame.
+     * The address of "here": the live frame's vid, else where the thread stands. Reading it through the frame stack
+     * is what lets `.` mean the frame's interior inside a frame.
+     * <p>
+     * It must never re-enter resolution -- a ThreadLocal read and a vid read, nothing more -- because resolving a
+     * machine's own address while standing in that machine is a self-reference.
      */
     static fURI hereVID() {
         final Machine.Frame frame = Machine.frame();
-        return (null == frame) ? Machine.authority().vid() : frame.machine().vid();
+        return (null == frame) ? Machine.current().vid() : frame.machine().vid();
     }
 
     static <SPACE extends Space> SPACE mostSpecific(final Rec spaces, final fURI vid) {

@@ -285,15 +285,15 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     default fURI big() {
         if (!Machine.loaded())
             return this;
-        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Machine.authority().redirect(Singleton.f(p), true)).map(fURI::toString).toList()) : this;
-        return Machine.authority().redirect(temp, true);
+        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Machine.root().redirect(Singleton.f(p), true)).map(fURI::toString).toList()) : this;
+        return Machine.root().redirect(temp, true);
     }
 
     default fURI small() {
         if (!Machine.loaded())
             return this;
-        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Machine.authority().redirect(Singleton.f(p), false)).map(fURI::toString).toList()) : this;
-        return Machine.authority().redirect(temp, false);
+        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Machine.root().redirect(Singleton.f(p), false)).map(fURI::toString).toList()) : this;
+        return Machine.root().redirect(temp, false);
     }
 
     default boolean isEmpty() {

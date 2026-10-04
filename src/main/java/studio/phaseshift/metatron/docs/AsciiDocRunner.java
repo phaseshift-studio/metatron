@@ -45,14 +45,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -377,7 +370,7 @@ public class AsciiDocRunner {
                 new grphInstSet(), new llmInstSet(), new tbleInstSet(),
                 new dcmntInstSet(), new rdfInstSet()
         }) {
-            Machine.authority().addSpace(is);
+            Machine.root().addSpace(is);
             Machine.writeToSpace(is);
             is.setup();
         }

@@ -27,8 +27,8 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
@@ -39,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -69,7 +68,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
     @AfterEach
     public void teardownContentSpace() {
         if (this.contentSpace != null) {
-            Machine.authority().removeSpace(this.contentSpace.vid());
+            Machine.root().removeSpace(this.contentSpace.vid());
             this.contentSpace.close();
             this.contentSpace = null;
         }
@@ -165,7 +164,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         @AfterAll
         public void teardownContentSpace() {
             if (this.contentSpace != null) {
-                Machine.authority().removeSpace(this.contentSpace.vid());
+                Machine.root().removeSpace(this.contentSpace.vid());
                 this.contentSpace.close();
                 this.contentSpace = null;
             }

@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
 
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -60,7 +59,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         // Don't auto-register InstSets - they're registered via importInstSetStream AFTER full construction
         // This ensures docq and other post-super() setup is complete before registration
         if (Machine.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Machine) && !(this instanceof InstSet))
-            Machine.authority().addSpace(this);
+            Machine.root().addSpace(this);
     }
 
     @Override
@@ -166,7 +165,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     @Override
     public Obj parent() {
-        return null == this.parent ? this.at(uri(SUPER)).orElse(Machine.authority()) : this.parent;
+        return null == this.parent ? this.at(uri(SUPER)).orElse(Machine.root()) : this.parent;
     }
 
     @Override

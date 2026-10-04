@@ -94,7 +94,7 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
     public void teardownTestSpace() {
         this.mcp = null;
         if (this.testSpace != null) {
-            Machine.authority().removeSpace(this.testSpace.vid());
+            Machine.root().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }

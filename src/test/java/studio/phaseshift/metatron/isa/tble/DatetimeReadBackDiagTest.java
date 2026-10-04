@@ -20,10 +20,10 @@ package studio.phaseshift.metatron.isa.tble;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 
 import java.io.File;
 import java.sql.Connection;
@@ -103,7 +103,7 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
         final Rec rowBack = (Rec) Machine.readFromSpace(f("db:events/1")).selfVID(null);
         final Obj rowDt = rowBack.at(uri("created"));
         LOG.info("caseA row  read-back: {} tid={} class={}", rowDt, rowDt.tid(), rowDt.getClass().getSimpleName());
-        Machine.authority().removeSpace(spaceA.vid());
+        Machine.root().removeSpace(spaceA.vid());
         spaceA.close();
 
         // ── case B: pre-existing table with a native SQL TIMESTAMPe column ──
@@ -114,7 +114,7 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
             stmt.executeUpdate("INSERT INTO stamps (id, ts) VALUES (7, '2026-08-25 22:34:11.533')");
         }
         // force table discovery with a fresh space over the current db
-        Machine.authority().removeSpace(spaceB.vid());
+        Machine.root().removeSpace(spaceB.vid());
         spaceB.close();
         final tbleSpace spaceB2 = tbleSpace.of(
                 rec(
@@ -134,7 +134,7 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
         dump("caseB after write");
         final Obj bBack2 = Machine.readFromSpace(f("db:stamps/8/ts")).selfVID(null);
         LOG.info("caseB write-then-read: {} tid={} class={}", bBack2, bBack2.tid(), bBack2.getClass().getSimpleName());
-        Machine.authority().removeSpace(spaceB2.vid());
+        Machine.root().removeSpace(spaceB2.vid());
         spaceB2.close();
     }
 }

@@ -89,7 +89,7 @@ public class haosSpace extends mqttSpace {
             .constructor(instC(M_ISA_INST_TID.dom(ALL).rng(HAOS_SPACE_TID),
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
                         final Space space = haosSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
-                        Machine.authority().addSpace(space);
+                        Machine.root().addSpace(space);
                         return space;
                     })).create();
 

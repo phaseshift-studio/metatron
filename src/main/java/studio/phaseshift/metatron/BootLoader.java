@@ -499,7 +499,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // stored inside the address space it defines is what forced the old /sys/router self-reference.
             // `*` reaches it instead, through Memory's fallback to the machine's own rec.
             ROOT_MACHINE = BasicMachine.of(MACH_MACHINE_TID, f("/."));
-            Machine.authority().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
+            Machine.root().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROOT_MACHINE.vid());
             sysSpace.write("/sys/typer/stage", typer);
             sysSpace.write("/sys/tracer", tracer);
@@ -525,12 +525,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // Machine.authority().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
-            Machine.authority().addSpace(m);  // explicit registration after full construction
+            Machine.root().addSpace(m);  // explicit registration after full construction
             Machine.writeToSpace(m);
             m.setup();
             //
             final InstSet sys = new sysInstSet();
-            Machine.authority().addSpace(sys);
+            Machine.root().addSpace(sys);
             Machine.writeToSpace(sys);
             sys.setup();
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
@@ -541,7 +541,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
             //
             final InstSet mach = new machInstSet();
-            Machine.authority().addSpace(mach);  // explicit registration after full construction
+            Machine.root().addSpace(mach);  // explicit registration after full construction
             Machine.writeToSpace(mach);
             sysSpace.write("/sys/space/stack", Memory.argStack());
             mach.setup();
@@ -572,7 +572,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // serves /sys/* is not yet mounted, so a write is claimed by a catch-all whose writer is the no-op
             // (k, v) -> v and vanishes WITHOUT A WORD. /sys/thread/main lands because it is written after the
             // boot profile has been evaluated, so the cluster goes beside it.
-            Machine.writeToSpace(Network.CLUSTER_PATH, Machine.authority().network().cluster());
+            Machine.writeToSpace(Network.CLUSTER_PATH, Machine.root().network().cluster());
             LOG.info("{{c}}cluster{{X}} registered: %s", Machine.readFromSpace(Network.CLUSTER_PATH));
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
@@ -639,7 +639,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             if (!ONE_SHOT)
                 LOG.none("\n");
             if (Machine.loaded())
-                Machine.authority().close();
+                Machine.root().close();
             ROOT_MACHINE = null;
             ARGS = null;
             ThreadExecutor.instance().shutdown();

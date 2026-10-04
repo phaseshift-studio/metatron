@@ -346,7 +346,7 @@ public class mcpMessageServer {
      * no agent (the agent's root points at the agent — a different thing).
      */
     private static SpaceChatSessionStore storeAt(final fURI rootF, final fURI sessF) {
-        final Space space = Machine.authority().getSpaceFor(rootF);
+        final Space space = Machine.root().getSpaceFor(rootF);
         if (null == space)
             throw MTronException.of("no space serves the ledger root: %s", rootF);
         return new SpaceChatSessionStore(null, space, 1, 0, rootF);

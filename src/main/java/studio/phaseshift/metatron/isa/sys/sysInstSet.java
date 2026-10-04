@@ -194,8 +194,8 @@ public class sysInstSet extends AbstractInstSet {
                             return noobj();
                         }), "close the lhs — release its resources; a router exits the vm, and a noobj runs the boot loader teardown"),
                         docWrap(instC(SYS_INST_TID.extend("redirect").dom(ALL.maybe()).rng(f("rec[short=>uri,long=>uri]")), lst(URI_TYPE), (lhs, inst) -> rec(
-                                uri(SHORT), uri(Machine.authority().redirect(inst.arg(0).uriValue(), false)),
-                                uri(LONG), uri(Machine.authority().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
+                                uri(SHORT), uri(Machine.root().redirect(inst.arg(0).uriValue(), false)),
+                                uri(LONG), uri(Machine.root().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
                         docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> {
                             Runtime rt = Runtime.getRuntime();
                             long totalMemory = rt.totalMemory();

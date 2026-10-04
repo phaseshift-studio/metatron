@@ -22,8 +22,11 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -187,6 +190,26 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     }
 
     @Test
+    public void testSingleEntryRecHoldingAStructuredValueNests() {
+        // a ONE-entry rec whose one value is a poly was never nested: the count guard returned
+        // before any entry was examined, so [docq::[…]] — the machine's own q slot, and the rec
+        // the type-violation diff ends on — opened and closed around an inline wall.  its entry
+        // now takes an indented line of its own
+        final Obj longValue = rec(
+                "docq::[pattern=>docq,pre_read=>inst,obj=>memspace,inst=>instset]",
+                rec("pattern", str("docq"), "pre_read", str("inst"), "obj", str("memspace"), "inst", str("instset")));
+        final Obj outer = rec(Map.of(uri("k"), (Obj) longValue));
+        final String written = ObjmtronUISerializer.prettyPrint().write(outer);
+        LOG.debug("single-entry rec => %s", written);
+        assertTrue(written.startsWith("[\n k=>"),
+                String.format("the one entry must open on its own indented line: %s", written));
+        assertFalse(written.contains("[k=>"),
+                String.format("the entry must not ride the opening bracket: %s", written));
+        final int longest = java.util.Arrays.stream(written.split("\n")).mapToInt(String::length).max().orElse(0);
+        assertTrue(longest < 100, String.format("no line may run to the old wall width: %s", written));
+    }
+
+    @Test
     public void testNestedTypePredicateMaintainsDepth() {
         // the *mach shape: a rec whose value is a type whose own predicate is a multi-entry rec.
         // before the type path threaded depth, the inner predicate's entries came out at the same
@@ -205,5 +228,48 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertTrue(written.contains("\n child=>"), String.format("the outer entry must be at depth 1: %s", written));
         assertTrue(written.contains("\n  p0=>"), String.format("the nested type's predicate entries must be at depth 2: %s", written));
         assertFalse(written.contains("\n p0=>"), String.format("the nested predicate must not reset to depth 1: %s", written));
+    }
+
+    @Test
+    public void testDiagnosticInstanceNestsWithoutMarkup() {
+        // the diagnostic instance: what a fail message renders through.  A type whose predicate
+        // is a rec of type values nests onto indented lines, its predicate one level deeper, and
+        // - because the message is read in a log, a test, or another process - it carries no
+        // {{link}} or color markup
+        final Type inner = Type.Builder.build()
+                .tid(REC_TID)
+                .isaPredicate(rec(
+                        "p0", uri(f("/predicate/0")).type(),
+                        "p1", uri(f("/predicate/1")).type()))
+                .create();
+        final Obj outer = rec("child", inner, "other", str("leaf"));
+        final String written = ObjmtronUISerializer.diagnostic().write(outer);
+        LOG.debug("diagnostic nested type rec => %s", written);
+        assertTrue(written.contains("\n child=>"), String.format("a diagnostic nests like any nested poly: %s", written));
+        assertTrue(written.contains("\n  p0=>"), String.format("its nested predicate sits one level deeper: %s", written));
+        assertFalse(written.contains("{{"), String.format("a diagnostic carries no renderer markup: %s", written));
+    }
+
+    @Test
+    public void testTypeViolationDiffNests() {
+        // the diff a type violation reports is built by Poly.Helper and rendered into the fail
+        // message.  Its top level is one entry per failed slot and its values are the expected
+        // recs, so as toString() it ran on as a single line of nested parens.  Rendered through
+        // the diagnostic instance it walks one slot per indented line
+        final Obj actual = rec(
+                "instset", rec("pattern", uri(f("/m/#"))),
+                "processor", rec("state", str("run")));
+        final Obj expected = rec(
+                "instset", rec("pattern", uri(f("/m/#")).type(), "sugar", str("x").type()),
+                "processor", rec("state", str("run").type(), "result", str("y").type()));
+        final Obj diff = Poly.Helper.diffObjRecursion(actual, expected);
+        final String flat = diff.toString();
+        final String written = ObjmtronUISerializer.diagnostic().write(diff);
+        LOG.debug("type violation diff => %s", written);
+        assertFalse(flat.contains("\n"), String.format("the plain serializer stays one-line data: %s", flat));
+        assertTrue(written.split("\n").length > 2,
+                String.format("the diagnostic walks the diff across indented lines: %s", written));
+        assertTrue(written.contains("\n instset=>"), String.format("the failed slot owns its indented line: %s", written));
+        assertFalse(written.contains("{{"), String.format("no renderer markup in a fail message: %s", written));
     }
 }

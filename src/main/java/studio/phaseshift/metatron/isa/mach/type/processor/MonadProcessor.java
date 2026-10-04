@@ -47,4 +47,9 @@ public interface MonadProcessor extends Processor {
      * @return the collection of halted objects produced during execution
      */
     Obj halted();
+
+    default MonadProcessor insert(final Monad monad) {
+        this.running().append(monad.attach(this.code()));
+        return this;
+    }
 }

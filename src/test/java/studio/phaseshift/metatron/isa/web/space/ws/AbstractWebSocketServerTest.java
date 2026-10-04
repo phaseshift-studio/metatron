@@ -76,7 +76,7 @@ public abstract class AbstractWebSocketServerTest extends AbstractMetatronTest {
      * Look up the registered Type for this server from the Router.
      */
     protected Type serverType() {
-        return Machine.authority().read(server.vid()).type();
+        return Machine.root().read(server.vid()).type();
     }
 
     @BeforeEach
@@ -92,7 +92,7 @@ public abstract class AbstractWebSocketServerTest extends AbstractMetatronTest {
     @AfterEach
     public void teardownTestSpace() {
         if (this.testSpace != null) {
-            Machine.authority().removeSpace(this.testSpace.vid());
+            Machine.root().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }

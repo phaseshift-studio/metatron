@@ -44,13 +44,27 @@ A distributed data-oriented computing language and virtual machine built in Java
 ### Build Environment (this container)
 
 Builds normally run in docker (see **Docker Build Loop** below), where the toolchain lives inside the repo under
-`.build/` (git-ignored). On a full host — a writable `$HOME` with its own JDK and Maven — the host toolchain
-is used instead, and that is the case to check first when a build behaves oddly:
+`.build/` (git-ignored). That same toolchain — `.build/jdk` (Temurin 24) and the `.build/m2/repository` cache — also
+serves **this container** directly, so `./mvnw` works here as-is; on a **full host** a writable `$HOME` with its own
+JDK and Maven is used instead. Both cases are worth knowing, because a mismatch between them reads as a broken build:
 
-- **`./mvnw` (and a plain `mvn install`) is the stock Maven wrapper — do not assume it self-configures.** It does
-  *not* read `.build/m2/settings.xml`, so with no `~/.m2/settings.xml` the local repository is the default
-  `~/.m2/repository`. That is independent of the docker loop, which resolves into `.build/m2/repository` (see below);
-  the two caches do not overlap. It also uses the JDK from `JAVA_HOME` (else the `java` on `PATH`), which on a host is
+- **In this container `./mvnw` works — use it, don't work around it.** `$HOME/.mavenrc` (HOME is `/workspace` here)
+  points the wrapper at the repo's own toolchain: `JAVA_HOME=/workspace/.build/jdk` (Temurin 24) and
+  `MAVEN_OPTS=-Dmaven.repo.local=/workspace/.build/m2/repository` — the same cache the docker loop resolves into.
+  Verified 2026-10-04: `./mvnw -v` reports Temurin 24, `./mvnw -o -X validate` prints `Using local repository at
+  /workspace/.build/m2/repository`, and `./mvnw -o -q test-compile` exits 0.
+  A shell whose `HOME` is **not** `/workspace` breaks twice over: the launcher finds no `java` (nothing is on `PATH`)
+  and the wrapper tries to create `$HOME/.m2/wrapper`, which is the read-only `/home/node`. Three variables make the
+  wrapper independent of `HOME` — `JAVA_HOME`, `MAVEN_OPTS` (as above) and `MAVEN_USER_HOME=/workspace/.m2` — and the
+  container's compose exports all three; with only `.mavenrc`, prefix `HOME=/workspace` instead.
+  **Never hand-compile with `.build/jdk/bin/javac` and drive JUnit directly as a substitute for a build.** That
+  bypasses the pom — surefire's `argLine`, resource filtering, the test lifecycle — so a green hand-rolled run does
+  not mean the build passes. If the wrapper fails, fix the invocation (set the three variables, or `HOME=/workspace`)
+  and say so; do not silently substitute a different toolchain.
+- **On a full host** `./mvnw` is the stock Maven wrapper and does *not* self-configure: it does *not* read
+  `.build/m2/settings.xml`, so with no `~/.m2/settings.xml` the local repository is the default `~/.m2/repository`.
+  That is independent of the docker loop, which resolves into `.build/m2/repository` (see below); the two caches do
+  not overlap. It also uses the JDK from `JAVA_HOME` (else the `java` on `PATH`), which on a host is
   usually *not* the `.build/jdk` the launcher runs on — the compiled classes are that other JDK's output.
 - **`bin/metatron`** prefers an explicit `JAVA_HOME`, else `.build/jdk/bin/java` when present (Temurin 24, matching
   CI), else the `java` on `PATH`. It runs the dev loop from `target/classes` + the cached dependency classpath

@@ -700,6 +700,12 @@ the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p
      '1.plus(plus(1))    [-- 3 nested ap...',
      '1+(+1)             [-- 3 sugar nes...']]
 ==&gt;docs::[
+    obj=&gt;plus?rng=real&amp;dom=real(real::T){&lt;j&gt;},
+    dom=&gt;'a real',
+    rng=&gt;'the sum',
+    args=&gt;[0=&gt;'the rhs real'],
+    desc=&gt;'[mapper] a sum function \(f(x, y) ...']
+==&gt;docs::[
     obj=&gt;plus?rng=str&amp;dom=str(str::T){&lt;j&gt;},
     dom=&gt;'a prefix str',
     rng=&gt;'the concatenated str',

@@ -20,11 +20,10 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -39,9 +38,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -52,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * The {@code Machine.Component} half is the model — an ISA is one of the five things a Machine is made of, beside
  * its compiler, processor, network and memory. The {@code Space} half is an accident of how importing was
- * implemented: {@code importInstSetStream} does {@code Machine.authority().addSpace(isa)}, so an ISA had to be a
+ * implemented: {@code importInstSetStream} does {@code Machine.root().addSpace(isa)}, so an ISA had to be a
  * Space to be reachable. Frame-scoping imports removes that need, and this declaration is where the two
  * descriptions meet in the meantime.
  */
@@ -74,7 +70,7 @@ public interface InstSet extends Space, Machine.Component {
             .constructor(arg -> {
                 final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
                 };
-                Machine.authority().addSpace(isa);
+                Machine.root().addSpace(isa);
                 isa.setup();
                 return isa;
             }).create();
@@ -158,7 +154,7 @@ public interface InstSet extends Space, Machine.Component {
 
     static Stream<InstSet> importInstSetStream(final fURI vid, final fURI prefix) {
         if (null != prefix)
-            Machine.authority().registerPrefix(prefix, vid);
+            Machine.root().registerPrefix(prefix, vid);
         return loadInstSetProvider(vid)
                 .map(ServiceLoader.Provider::get)///  new
                 .peek(isa -> {
@@ -173,8 +169,8 @@ public interface InstSet extends Space, Machine.Component {
                     // different treatments: the library is registered by address, the overlay is reached through
                     // the accessor and the library by reference. Dropping this registration is what made TYPE
                     // LOOKUPS through the space index return noobj ("Type should be registered in Router at ...").
-                    Machine.authority().addSpace(isa);
-                    final Machine machine = Machine.authority();
+                    Machine.root().addSpace(isa);
+                    final Machine machine = Machine.root();
                     final InstSet own = machine.ownInstset();
                     if (own instanceof BasicInstSet) {
                         ((BasicInstSet) own).refer(isa);

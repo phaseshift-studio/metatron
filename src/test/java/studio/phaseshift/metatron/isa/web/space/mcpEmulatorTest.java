@@ -82,7 +82,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
     @AfterEach
     public void teardownHomeSpace() {
         if (this.homeSpace != null) {
-            Machine.authority().removeSpace(this.homeSpace.vid());
+            Machine.root().removeSpace(this.homeSpace.vid());
             this.homeSpace.close();
             this.homeSpace = null;
         }

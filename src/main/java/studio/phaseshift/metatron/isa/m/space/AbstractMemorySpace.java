@@ -95,6 +95,12 @@ public abstract class AbstractMemorySpace extends AbstractSpace<TopicTrie> {
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
+            // DELIBERATELY NOT SYNCHRONIZED. Serializing this looks right -- it is a read-modify-write on the trie --
+            // but it DEADLOCKS: a write holds the machine's lock and reaches into the space, while this writer can
+            // reach back for the machine (closing a replaced value, writing the space back at its own vid), so the
+            // two lock orders cross. Measured: it hung setup with no timeout firing anywhere, which is what a
+            // deadlock looks like from outside. Serializing the shared state has to happen at a level that does not
+            // span both -- or the trie's own map has to be concurrent -- but not here.
             if (pattern.hasPattern()) {
                 this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
             } else {
