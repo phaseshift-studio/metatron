@@ -175,7 +175,7 @@ public final class mcpMetatronBuilder {
                             toolTid("list_space").dom(ALL.maybe()).rng(ALL.maybe()),
                             lst(), (lhs, inst) -> {
                                 final Map<Obj, Obj> spaces = new LinkedHashMap<>();
-                                Machine.current().spaces().jvm().entrySet().forEach(kv -> {
+                                Machine.authority().spaces().jvm().entrySet().forEach(kv -> {
                                     spaces.put(kv.getKey(), uri(kv.getValue().<Space>as().pattern()));
                                 });
                                 return rec(spaces);
@@ -187,7 +187,7 @@ public final class mcpMetatronBuilder {
                     toolTid("router_info").dom(ALL.maybe()).rng(ALL.maybe()),
                     lst(), (lhs, inst) -> {
                         if (!Machine.loaded()) return str("router not loaded");
-                        final Machine router = Machine.current();
+                        final Machine router = Machine.authority();
                         return rec(
                                 uri("router_vid"), uri(router.vid()),
                                 uri("router_tid"), uri(router.tid()),
@@ -206,7 +206,7 @@ public final class mcpMetatronBuilder {
                                     pattern = pattern.dom(inst.arg(f(DOM), 1).uriValue());
                                 if (inst.args().has(RNG))
                                     pattern = pattern.rng(inst.arg(f(RNG), 2).uriValue());
-                                return lst(Machine.current().read(pattern.addQ(DOCQ))
+                                return lst(Machine.authority().read(pattern.addQ(DOCQ))
                                         .stream()
                                         .map(Obj::asRec)
                                         .filter(o -> o.at(OBJ).isInst())

@@ -71,7 +71,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
     @BeforeEach
     public void setupHomeSpace() {
         // Use the boot-time home space if registered; create a fresh one otherwise
-        // final Space existing = Machine.current().getSpaceFor(f("home:test"));
+        // final Space existing = Machine.authority().getSpaceFor(f("home:test"));
         // if (existing == null || existing.isNoObj()) {
         this.homeSpace = memSpace.of(
                 rec(uri(PATTERN), uri("home:#")),
@@ -82,7 +82,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
     @AfterEach
     public void teardownHomeSpace() {
         if (this.homeSpace != null) {
-            Machine.current().removeSpace(this.homeSpace.vid());
+            Machine.authority().removeSpace(this.homeSpace.vid());
             this.homeSpace.close();
             this.homeSpace = null;
         }

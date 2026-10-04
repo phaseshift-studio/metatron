@@ -834,7 +834,7 @@ public interface Type extends Obj {
         public Type create() {
             assert this.tid != null;
             //assert this.vid != null;
-            this.insts.forEach(inst -> Machine.current().write(inst.tid(), inst));
+            this.insts.forEach(inst -> Machine.authority().write(inst.tid(), inst));
             return T(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
         }
     }

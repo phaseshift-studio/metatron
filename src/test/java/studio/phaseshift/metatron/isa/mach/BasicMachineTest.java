@@ -52,7 +52,7 @@ public class BasicMachineTest extends AbstractMachineTest {
 
     @Test
     public void testCloseSpace() {
-        final Machine mach = Machine.current();
+        final Machine mach = Machine.authority();
         memSpace test = memSpace.of(f("/m/test/#"), f("/m/test")).as();
         Assertions.assertTrue(mach.hasSpaceFor(f("/m/test/a")));
         assertTrue(mach.hasSpaceFor(f("/m/test/a")));

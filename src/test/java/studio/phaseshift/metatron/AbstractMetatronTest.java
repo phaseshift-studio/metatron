@@ -301,7 +301,7 @@ public abstract class AbstractMetatronTest {
      */
     public static Obj getRouterStatistics(final GraphittyLogger LOG) {
         if (Machine.loaded()) {
-            return Machine.current().at(uri("stats"));
+            return Machine.authority().at(uri("stats"));
         }
         LOG.warn("router not loaded, cannot get stats");
         return noobj();

@@ -96,7 +96,7 @@ public class SpaceContentRetriever implements ContentRetriever {
         LOG.debug("RAG retrieve called: query='%s', pattern=%s", query.text(), this.pattern);
 
         // 1. Read all objects from Space matching the pattern
-        final Obj spaceResult = Machine.current().read(this.pattern);
+        final Obj spaceResult = Machine.authority().read(this.pattern);
         if (spaceResult.isNoObj()) {
             LOG.debug("RAG: no objects found at pattern %s", this.pattern);
             return Collections.emptyList();

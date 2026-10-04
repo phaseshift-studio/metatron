@@ -156,14 +156,14 @@ public class DistributedPeerTest extends AbstractMetatronTest {
 
     @Test
     public void testOwnershipAndPeerClassification() {
-        assertTrue(Machine.current().own(f("ws://localhost:" + selfPort + "/a/x")),
+        assertTrue(Machine.authority().own(f("ws://localhost:" + selfPort + "/a/x")),
                 "localhost:ourPort is the loopback alias of the wildcard host we bound");
-        assertFalse(Machine.current().own(remoteVid("/a")), "the peer's authority is not ours");
+        assertFalse(Machine.authority().own(remoteVid("/a")), "the peer's authority is not ours");
 
-        assertFalse(Machine.current().isPeer(f("ws://localhost:" + selfPort + "/a/x")),
+        assertFalse(Machine.authority().isPeer(f("ws://localhost:" + selfPort + "/a/x")),
                 "our own authority is ours, not a peer");
-        assertTrue(Machine.current().isPeer(remoteVid("/a")), "the declared peer is a peer");
-        assertFalse(Machine.current().isPeer(f("http://example.com/")),
+        assertTrue(Machine.authority().isPeer(remoteVid("/a")), "the declared peer is a peer");
+        assertFalse(Machine.authority().isPeer(f("http://example.com/")),
                 "a foreign authority that was never declared must not be treated as a metatron peer");
     }
 

@@ -42,13 +42,13 @@ public class BasicRouterTest extends AbstractRouterTest {
     @Test
     public void testCloseSpace() {
         memSpace test = memSpace.of(f("/m/test/#"), f("/m/test")).as();
-        Assertions.assertTrue(Machine.current().hasSpaceFor(f("/m/test/a")));
-        assertTrue(Machine.current().hasSpaceFor(f("/m/test/a")));
-        Machine.current().write("/m/test/a", jnt(10));
-        assertEquals(jnt(10), Machine.current().read("/m/test/a"));
-        assertTrue(Machine.current().hasSpaceFor(f("/m/test/a")));
-        Machine.current().write("/m/test/a", NoObj.noobj());
+        Assertions.assertTrue(Machine.authority().hasSpaceFor(f("/m/test/a")));
+        assertTrue(Machine.authority().hasSpaceFor(f("/m/test/a")));
+        Machine.authority().write("/m/test/a", jnt(10));
+        assertEquals(jnt(10), Machine.authority().read("/m/test/a"));
+        assertTrue(Machine.authority().hasSpaceFor(f("/m/test/a")));
+        Machine.authority().write("/m/test/a", NoObj.noobj());
         test.close();
-        assertFalse(Machine.current().hasSpaceFor(f("/test/a")));
+        assertFalse(Machine.authority().hasSpaceFor(f("/test/a")));
     }
 }

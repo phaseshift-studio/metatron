@@ -60,7 +60,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         // Don't auto-register InstSets - they're registered via importInstSetStream AFTER full construction
         // This ensures docq and other post-super() setup is complete before registration
         if (Machine.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Machine) && !(this instanceof InstSet))
-            Machine.current().addSpace(this);
+            Machine.authority().addSpace(this);
     }
 
     @Override
@@ -166,7 +166,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     @Override
     public Obj parent() {
-        return null == this.parent ? this.at(uri(SUPER)).orElse(Machine.current()) : this.parent;
+        return null == this.parent ? this.at(uri(SUPER)).orElse(Machine.authority()) : this.parent;
     }
 
     @Override

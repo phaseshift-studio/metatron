@@ -42,7 +42,7 @@
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-  import studio.phaseshift.metatron.isa.mach.type.Machine;
+ import studio.phaseshift.metatron.isa.mach.type.Machine;
  import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
  import studio.phaseshift.metatron.util.CommonUtil;
  import studio.phaseshift.metatron.util.IteratorUtil;
@@ -512,7 +512,7 @@
 
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
                  if (routed.hasScheme() && !routed.test(this.pattern())) {
-                     return new IdObj(routed, Machine.current().read(routed)).iterator();
+                     return new IdObj(routed, Machine.authority().read(routed)).iterator();
                  }
                  // Flat key-value namespace (reserved kv_store label, or unknown collection).
                  // Only for paths under this space's prefix; absolute cross-space paths
@@ -611,7 +611,7 @@
                  LOG.debug("unknown tp3 vid: %s", pattern);
                  final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
                  if (full.equals(pattern)) return readCollection(dp);
-                 return IdObj.of(full, Machine.current().read(full)).iterator();
+                 return IdObj.of(full, Machine.authority().read(full)).iterator();
              }
          };
      }

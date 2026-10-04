@@ -328,7 +328,7 @@ public interface Space extends Rec, Closeable {
         }
 
         private static Obj writeComplete(final Obj newObj, final Obj currentObj) {
-            //Machine.current().logger().info("write complete for %s: %s => %s", writePattern, currentObj, newObj);
+            //Machine.authority().logger().info("write complete for %s: %s => %s", writePattern, currentObj, newObj);
             if (newObj.isNoObj()) {
                 currentObj.stream().forEach(CommonUtil::close);
             }
@@ -395,8 +395,8 @@ public interface Space extends Rec, Closeable {
 
         public static void closeSpace(final Space space) {
             if (Machine.loaded()) {
-                // Machine.current().removeSpace(space.pattern());
-                Machine.current().removeSpace(space.vid());
+                // Machine.authority().removeSpace(space.pattern());
+                Machine.authority().removeSpace(space.vid());
                 // 
             }
         }

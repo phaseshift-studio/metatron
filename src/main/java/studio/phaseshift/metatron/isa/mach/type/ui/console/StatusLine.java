@@ -91,8 +91,8 @@ public class StatusLine implements Runnable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
-        final Real inBytes = mathInstSet.normalizeData(real((double) (Machine.current().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
-        final Real outBytes = mathInstSet.normalizeData(real((double) (Machine.current().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
+        final Real inBytes = mathInstSet.normalizeData(real((double) (Machine.authority().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
+        final Real outBytes = mathInstSet.normalizeData(real((double) (Machine.authority().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
         this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
         this.addWidget(f("in_bytes"), () -> " {{w}}\uD83D\uDCE5 {{%s}}%s::%.2f ".formatted(getForegroundColor(), inBytes.tid().name(), inBytes.realValue()));
         this.addWidget(f("out_bytes"), () -> "{{w}}\uD83D\uDCE4 {{%s}}%s::%.2f ".formatted(getForegroundColor(), outBytes.tid().name(), outBytes.realValue()));
@@ -100,11 +100,11 @@ public class StatusLine implements Runnable {
         this.addWidget(f("tokens"), () -> "\uD83E\uDD16 %s ".formatted(StatusLine.widgetData.at("tokens").orElse((Obj) jnt(0)).toCleanString()));
         this.addWidget(f("message"), () -> StatusLine.bannerMarkup(getForegroundColor(), getBackgroundColor()));
         
-        /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Machine.current().stats().monadicStats().runningMonads()));
-        this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Machine.current().stats().monadicStats().haltedMonads()));
-        this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Machine.current().stats().monadicStats().killedMonads()));
-        this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Machine.current().stats().monadicStats().barrierMonads()));
-        this.addWidget(f("ws"), () -> "{{w}}ws:{{w&[g]}}[%d]{{[%s]}} %s".formatted(Machine.current().stats().ioStats().connections(), this.getColor(), formatMessage(Machine.current().stats().ioStats().lastMessage())));*/
+        /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Machine.authority().stats().monadicStats().runningMonads()));
+        this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Machine.authority().stats().monadicStats().haltedMonads()));
+        this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Machine.authority().stats().monadicStats().killedMonads()));
+        this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Machine.authority().stats().monadicStats().barrierMonads()));
+        this.addWidget(f("ws"), () -> "{{w}}ws:{{w&[g]}}[%d]{{[%s]}} %s".formatted(Machine.authority().stats().ioStats().connections(), this.getColor(), formatMessage(Machine.authority().stats().ioStats().lastMessage())));*/
         Machine.writeToSpace(console.vid().extend(STATUS).addQ(SUBQ), instLambda((lhs, inst) -> {
             message(lhs.asRec().at(OBJ));
             return noobj();

@@ -23,10 +23,7 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.TypeGraph;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.*;
@@ -73,6 +70,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
 
     private Memory resolvedMemory = null;
     private Network resolvedNetwork = null;
+    private InstSet resolvedInstSet = null;
 
     /**
      * Resolve each slot template exactly once. The first resolution happens in the constructor, where the
@@ -95,6 +93,13 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         if (null == this.resolvedNetwork)
             this.resolvedNetwork = Machine.super.ownNetwork();
         return this.resolvedNetwork;
+    }
+
+    @Override
+    public InstSet ownInstset() {
+        if (null == this.resolvedInstSet)
+            this.resolvedInstSet = Machine.super.ownInstset();
+        return this.resolvedInstSet;
     }
 
     public AbstractMachine(final fURI vid) {
@@ -136,6 +141,13 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         // would leave the memory's own machine() answering mach0().
         this.ownMemory().parent(this);
         this.ownNetwork().parent(this);
+        // DO NOT mount the machine's own ISA overlay into the memory index. A BasicInstSet claims `/m/#` -- the SAME
+        // pattern the library space claims -- so mounting it creates a same-pattern collision and `mostSpecific`
+        // breaks the tie arbitrarily: writes land in the empty overlay while the library is what should answer.
+        // Measured: mInstSetTest went red with writes that did not read back. This is the collision
+        // AbstractMachine.addSpace's NOTE says should become an overlap check with a loud conflict.
+        // The facade reaches the ISA through the overlay's REFERENCES (which are spaces in their own right), not by
+        // making the overlay a sibling of the library.
         //LOG.info("local router at %s", this.vid.toUri());
     }
 
@@ -154,6 +166,8 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
             final BasicNetwork network = new BasicNetwork();
             jvm.put(uri(NETWORK), instLambda(ignore -> network));
         }
+        // No INSTSET seed is needed: BasicMachine declares the slot unbound, and ownInstset()'s cache turns that
+        // into ONE stable empty BasicInstSet per machine. A seed here would only add a second source of truth.
         return jvm;
     }
 
@@ -191,7 +205,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
     public Stats stats() {
         if (Machine.loaded())
             return this.iostats;
-        throw MTronException.of("router not loaded");
+        throw MTronException.of("machine not loaded");
     }
 
     public void unregisterRedirect(final fURI small, final fURI big) {

@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
- import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -167,7 +167,7 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeType(final Type type) {
-        String typeString = (Machine.loaded() ? Machine.current().redirect(type.tid(), false) : type.tid()) + "::T";
+        String typeString = (Machine.loaded() ? Machine.authority().redirect(type.tid(), false) : type.tid()) + "::T";
         if (type.hasPredicate())
             typeString += ("[" + type.predicate() + "]");
         if (type.hasConstructor()) {
@@ -182,13 +182,13 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     @Override
     public Obj read(final ByteBuffer data) throws MTronException {
-        //Machine.current().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
+        //Machine.authority().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
         return ObjmtronSerializer.parse(new String(data.array(), StandardCharsets.UTF_8));
     }
 
     @Override
     public Objs readObjs(final ByteBuffer data) throws MTronException {
-        //Machine.current().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
+        //Machine.authority().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
         return ObjmtronSerializer.parse(new String(data.array(), StandardCharsets.UTF_8));
     }
 }

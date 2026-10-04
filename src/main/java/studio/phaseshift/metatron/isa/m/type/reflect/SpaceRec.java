@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type.reflect;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
@@ -72,7 +71,7 @@ public abstract class SpaceRec<T extends SpaceRec<T>> extends MRec {
     protected Map<Obj, Obj> read() {
         if (null == this.vid()) return this.jvm();
         try {
-            final Obj fresh = Machine.current().read(this.vid());
+            final Obj fresh = Machine.authority().read(this.vid());
             return fresh.isRec() ? fresh.jvm() : this.jvm();
         } catch (final Exception e) {
             return this.jvm();   // space unavailable (boot, headless, store gone)

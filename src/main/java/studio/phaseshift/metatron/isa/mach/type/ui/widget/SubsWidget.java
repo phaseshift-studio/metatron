@@ -59,7 +59,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                 .applyStyle());
 
 
-        Machine.current().spaces().elements().filter(r -> !(r.second() instanceof InstSet)).forEach(r -> {
+        Machine.authority().spaces().elements().filter(r -> !(r.second() instanceof InstSet)).forEach(r -> {
             this.spaceTable.addRow(List.of(r.asRel().first().toString(), r.asRel().second().<Space>as().pattern()));
         });
 
@@ -74,16 +74,16 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                 .onSelect((s, r, c) -> {
                     try {
                         final fURI pattern = (fURI) this.spaceTable.entry(r - 2, 1);
-                        //  Machine.current().logger().none("{{>%s}}selected %s" + " ".repeat(10) + "{{<%s}}", this.spaceTable.width() + 2, pattern.toUri(), this.spaceTable.width() + 12);
-                        //final Space space = Machine.current().getSpace(pattern);
+                        //  Machine.authority().logger().none("{{>%s}}selected %s" + " ".repeat(10) + "{{<%s}}", this.spaceTable.width() + 2, pattern.toUri(), this.spaceTable.width() + 12);
+                        //final Space space = Machine.authority().getSpace(pattern);
                         this.subsTable.clear();
-                        // Obj subscriptions = Machine.current().read(pattern.query("sub"));
+                        // Obj subscriptions = Machine.authority().read(pattern.query("sub"));
                         this.subsTable.addRow(List.of("blah", "bleep", "bleep"));
                         // this.grid.currentFocus(1);
                         // subscriptions.stream().forEach(o ->{
                         //     this.subsTable.addRow(List.of(o.vid().toUri(), o.<PubSubQ.Subscription>as().target().toUri(), o.<PubSubQ.Subscription>as().call().toString()));
                         // });
-                        // Machine.current().logger().info("{{y}}%s{{X}}", this.grid.format());
+                        // Machine.authority().logger().info("{{y}}%s{{X}}", this.grid.format());
                         //System.out.println("subscriptions: " + subscriptions);
                       /*  final List<Widget<?>> cards = (List) subscriptions.stream().map(o -> o.<PubSubQ.Subscription>as())
                                 .map(o -> new Card(o.target().toString(),

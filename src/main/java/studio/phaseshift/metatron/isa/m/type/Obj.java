@@ -168,7 +168,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Type type() {
-        return this.isType() ? T(this.vid()) : T(this.tid()); // null == Machine.current() || this.isInst() ? MType.of(this.tid()) : Machine.current().read(this.tid()).orElse(MType.of(this.tid()));
+        return this.isType() ? T(this.vid()) : T(this.tid()); // null == Machine.authority() || this.isInst() ? MType.of(this.tid()) : Machine.authority().read(this.tid()).orElse(MType.of(this.tid()));
     }
 
     <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid);
@@ -846,7 +846,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default void delete() {
         if (null != this.vid())
-            Machine.current().write(this.vid(), noobj());
+            Machine.authority().write(this.vid(), noobj());
     }
 
     /**
@@ -857,7 +857,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Obj save() {
-        return null == this.vid() ? this : Machine.current().write(this.vid(), this);
+        return null == this.vid() ? this : Machine.authority().write(this.vid(), this);
     }
 
     default boolean booleanCheck() {
@@ -923,7 +923,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * not, and fall back to the Obj walk ({@link Type#isRefinementOf(Type)}).
          */
         public static boolean inInstSet(final fURI tid) {
-            return null != tid && Machine.loaded() && Machine.current().getSpaceFor(tid) instanceof InstSet;
+            return null != tid && Machine.loaded() && Machine.authority().getSpaceFor(tid) instanceof InstSet;
         }
 
         /**
@@ -937,7 +937,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (null == vid || !Machine.loaded())
                 return null;
             try {
-                final Space space = Machine.current().getSpaceFor(vid);
+                final Space space = Machine.authority().getSpaceFor(vid);
                 return space instanceof InstSet is ? is.vidToTid(vid) : null;
             } catch (final RuntimeException e) {
                 return null;
@@ -1261,57 +1261,68 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     final class ObjType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(NATIVE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
-                        final Str command = inst.arg(0).asStr();
-                        return MTronException.wrap(() ->
-                                ObjmtronSerializer.parseMulti(new String(
-                                        new ProcessExecutor().commandSplit(command.strValue())
-                                                .readOutput(true)
-                                                .execute()
-                                                .getOutput()
-                                                .getBytes())));
-                    }),
-                    instC(UNION_INST_TID.dom(A).rng(A.maybe()), lst(T(B), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe())), (lhs, inst) -> inst.args().lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()),
-                    instC(SERIALIZE_INST_TID.dom(A).rng(B), lst(T(OBJ_SERIAL_TID)), (lhs, inst) -> {
-                        final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);
-                        try {
-                            return MObjFactory.of().toObj(serialization);
-                        } catch (final Exception e) {
-                            inst.logger().warn("unable to serialize %s with %s: %s", lhs, inst.arg(0), e);
-                            return str(serialization.toString());
-                        }
-                    }),
-                    instC(FORK_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> {
-                        VirtualThread.virtual(inst.arg(0)).applyAsync(lhs);
-                        return lhs;
-                    }),
-                    instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()),
+                    docWrap(instC(NATIVE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                                final Str command = inst.arg(0).asStr();
+                                return MTronException.wrap(() ->
+                                        ObjmtronSerializer.parseMulti(new String(
+                                                new ProcessExecutor().commandSplit(command.strValue())
+                                                        .readOutput(true)
+                                                        .execute()
+                                                        .getOutput()
+                                                        .getBytes())));
+                            }),
+                            "any obj", "the objs parsed from the command output", Map.of(jnt(0), "the command to execute"), "a command execution function \\(f(x) \\nearrow x'\\): executes the arg command and parses its output as objs"),
+                    docWrap(instC(UNION_INST_TID.dom(A).rng(A.maybe()), lst(T(B), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe())), (lhs, inst) -> inst.args().lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj()), "any obj", "the lhs if any arg type matches, noobj otherwise", Map.of(), "a union type test function \\(f(x) \\nearrow \\{x \\mid \\emptyset\\}\\): maps the lhs if it matches any of the arg types"),
+                    docWrap(instC(SERIALIZE_INST_TID.dom(A).rng(B), lst(T(OBJ_SERIAL_TID)), (lhs, inst) -> {
+                                final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);
+                                try {
+                                    return MObjFactory.of().toObj(serialization);
+                                } catch (final Exception e) {
+                                    inst.logger().warn("unable to serialize %s with %s: %s", lhs, inst.arg(0), e);
+                                    return str(serialization.toString());
+                                }
+                            }),
+                            "any obj", "the serial form of the lhs obj", Map.of(jnt(0), "the serializer to apply to the lhs"), "a serialization function \\(f(x) \\nearrow x'\\): serializes the lhs obj with the arg serializer"),
+                    docWrap(instC(FORK_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> {
+                                VirtualThread.virtual(inst.arg(0)).applyAsync(lhs);
+                                return lhs;
+                            }),
+                            "any obj", "the lhs obj", Map.of(jnt(0), "the code to apply asynchronously to the lhs"), "a fork function \\(f(x) \\nearrow x\\): the arg code applied to the lhs in a virtual thread, immediately yielding the lhs"),
+                    docWrap(instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()), "any objs", "a window of the lhs objs", Map.of(jnt(0), "the starting offset", jnt(1), "the window length (defaults to 0)"), "a windowing function \\(f(x, i, n) \\nearrow x'\\): the objs starting at offset i for a span of n"),
                     docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(LST_TID.maybe()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))).collect(new CommonUtil.LstCollector())),
                             "maybe some objs", "maybe a lst sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
-                    instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
-                        Rel currentTransform = inst.arg(0).asRel();
-                        Obj currentObj = lhs;
-                        while (!currentTransform.isNoObj()) {
-                            currentObj = as_(currentTransform.first().asType()).apply(currentObj);
-                            final Obj nextTransform = currentTransform.second();
-                            if (nextTransform.isRel())
-                                currentTransform = nextTransform.asRel();
-                            else {
-                                return as_(nextTransform.asType()).apply(currentObj);
-                            }
-                        }
-                        throw MTronException.of("transformation path must be a chain rel of types: %s", inst.arg(0));
-                    }),
-                    instC(AS_INST_TID.dom(A).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
-                    instC(AS_INST_TID.dom(A).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(Str.Helper.cleanString(lhs), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)),
+                    docWrap(instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
+                                Rel currentTransform = inst.arg(0).asRel();
+                                Obj currentObj = lhs;
+                                while (!currentTransform.isNoObj()) {
+                                    currentObj = as_(currentTransform.first().asType()).apply(currentObj);
+                                    final Obj nextTransform = currentTransform.second();
+                                    if (nextTransform.isRel())
+                                        currentTransform = nextTransform.asRel();
+                                    else {
+                                        return as_(nextTransform.asType()).apply(currentObj);
+                                    }
+                                }
+                                throw MTronException.of("transformation path must be a chain rel of types: %s", inst.arg(0));
+                            }),
+                            "any obj", "the lhs obj after the conversion chain", Map.of(jnt(0), "a chain rel of the types to convert through"), "a conversion function \\(f(x) \\nearrow x'\\): applies successive as_ conversions following the chain of types in the arg"),
+                    docWrap(instC(AS_INST_TID.dom(A).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()), "any obj", "noobj", Map.of(), "a casting function \\(f(x) \\nearrow \\emptyset\\): casts the lhs obj to noobj"),
+                    docWrap(instC(AS_INST_TID.dom(A).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(Str.Helper.cleanString(lhs), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)), "any obj", "a clean str rendering of the lhs obj", Map.of(jnt(0), "the target type (str::T)"), "a string function \\(f(x) \\nearrow s\\): the lhs obj rendered as a clean str"),
                     docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
-                    instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(SPACE_TID.maybeSome()), lst(URI_TYPE, T(URI_TID.maybe())),
-                            (lhs, inst) -> MTronException.wrap(() ->
-                                    objs((Stream) InstSet.importInstSetStream(inst.arg(0).uriValue(), inst.arg(1).isNoObj() ? null : inst.arg(1).uriValue())))),
+                    docWrap(instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(SPACE_TID.maybeSome()), lst(URI_TYPE, T(URI_TID.maybe())),
+                                    (lhs, inst) -> MTronException.wrap(() ->
+                                            objs((Stream) InstSet.importInstSetStream(inst.arg(0).uriValue(), inst.arg(1).isNoObj() ? null : inst.arg(1).uriValue())))),
+                            "any obj", "the imported instset space", Map.of(
+                                    jnt(0), "the uri of the instset to import",
+                                    jnt(1).maybe(), "an optional namespace prefix to prevent short name collisions"),
+                            "an import function: registers the instset at the arg uri into the current space"),
                     docWrap(instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
-                            "any objs", "the deduplicated objs", Map.of(), "a deduplication function \\(f({c}X) \\to {1<=c}X\\)"),
-                    instC(BARRIER_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asLst().add(b))),
+                            "any objs", "the deduplicated objs", Map.of(),
+                            "a deduplication function \\(f({c}X) \\to {1<=c}X\\)"),
+                    docWrap(instC(BARRIER_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asLst().add(b))),
+                            "any objs", "the objs merged into the arg lst",
+                            Map.of(jnt(0), "the lst to merge into"), "a merging barrier function \\(f(X) \\nearrow x'\\)"),
                     docWrap(instC(BARRIER_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asRec().at(b.asRel().first(), b.asRel().second()))),
                             "any objs", "the objs as a rec", Map.of(jnt(0), "the rec to merge into"), "a rec merging function \\(f(X)\\to X\\)"),
                     docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
@@ -1320,49 +1331,63 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "the objs appended to the arg objs", Map.of(jnt(0), "the objs to append"), "an append function \\(f(X)\\to X\\)"),
                     docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.tid(inst.arg(0).asType().vid())),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to construct from the lhs"), "a type construction function \\(f(x)\\to x\\)"),
-                    instC(LOOP_INST_TID.dom(A).rng(INT_TID).q(MONAD_IN, "state/loop"), lst(), (lhs, inst) -> lhs),
-                    instC(PATH_INST_TID.dom(A).rng(LST_TID).q(MONAD_IN, "state/path"), lst(), (lhs, inst) -> lhs),
-                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD_IN, "+").q(MONAD_OUT, "+"), rec(
-                            uri(CODE), T(A.maybeSome()),
-                            uri(UNTIL).maybe(), BOOL_TYPE,
-                            uri(EMIT).maybe(), BOOL_TYPE), (lhs, inst) -> {
-                        final Obj repeatedApply = inst.arg(f(CODE), 0);
-                        final Obj untilPredicate = inst.arg(f(UNTIL), 1);
-                        final Obj emitPredicate = inst.arg(f(EMIT), 2);
-                        final List<Obj> toEmit = new ArrayList<>();
-                        final StatefulMonad monad = StatefulMonad.of(lhs);
-                        if (monad.isNoObj() || monad.obj().isNoObj()) {
-                            toEmit.add(monad.loopback(false).nextInst());
-                        } else {
-                            // fresh entry pushes a loop frame; a loopback continuation does not
-                            final boolean loopback = monad.isLoopback();
-                            final StatefulMonad m = monad.loopback(false);
-                            final StatefulMonad repeatMonad = loopback ? m : m.pushLoop();
-                            final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().asCode() : emitPredicate;
-                            final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
-                            if (emit)
-                                toEmit.add(repeatMonad.popLoop().nextInst());
-                            // wrap the predicate in a code so a single-inst until (is(gt(10))) goes
-                            // through the monad lens like the multi-inst form (loop().is(gt(3))) —
-                            // applied bare, is(gt(10)) receives the whole monad and never terminates.
-                            final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().asCode() : untilPredicate;
-                            if (untilCode.apply(repeatMonad).booleanCheck()) {
-                                if (!emit)
-                                    toEmit.add(repeatMonad.popLoop().nextInst());
-                            } else {
-                                final Obj codeResult = repeatedApply.apply(repeatMonad.obj());
-                                final StatefulMonad monadX = repeatMonad.obj(codeResult).incrLoop(1).loopback(true);
-                                toEmit.add(monadX);
-                            }
-                        }
-                        return objs(toEmit);
-                    }),
-                    instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Machine.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)),
-                    instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> {
-                        final Obj resolved = Machine.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
-                        return resolved.hasVID() ? resolved : resolved.selfVID(inst.arg(0).uriValue());
-                    }),
+                    docWrap(instC(LOOP_INST_TID.dom(A).rng(INT_TID).q(MONAD_IN, "state/loop"), lst(), (lhs, inst) -> lhs), "any obj", "the unchanged lhs obj", Map.of(), "a loop state function \\(f(x) \\nearrow x\\): the loop frame marker over the monad"),
+                    docWrap(instC(PATH_INST_TID.dom(A).rng(LST_TID).q(MONAD_IN, "state/path"), lst(), (lhs, inst) -> lhs), "any obj", "the unchanged lhs obj", Map.of(), "a path state function \\(f(x) \\nearrow x\\): the path frame marker over the monad"),
+                    docWrap(instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD_IN, "+").q(MONAD_OUT, "+"), rec(
+                                    uri(ESC).maybe().asUri(), T(A.maybeSome()),
+                                    uri(CODE), T(A.maybeSome()),
+                                    uri(UNTIL).maybe(), BOOL_TYPE,
+                                    uri(EMIT).maybe(), BOOL_TYPE), (lhs, inst) -> {
+                                final Obj escPredicate = inst.arg(f(ESC), 0);
+                                final Obj repeatedApply = inst.arg(f(CODE), 1);
+                                final Obj untilPredicate = inst.arg(f(UNTIL), 2);
+                                final Obj emitPredicate = inst.arg(f(EMIT), 3);
+                                final List<Obj> toEmit = new ArrayList<>();
+                                final StatefulMonad monad = StatefulMonad.of(lhs);
+                                if (escPredicate.apply(monad).booleanCheck()) {
+                                    toEmit.add(monad.loopback(false).nextInst());
+                                } else {
+                                    if (monad.isNoObj() || monad.obj().isNoObj()) {
+                                        toEmit.add(monad.loopback(false).nextInst());
+                                    } else {
+                                        // fresh entry pushes a loop frame; a loopback continuation does not
+                                        final boolean loopback = monad.isLoopback();
+                                        final StatefulMonad m = monad.loopback(false);
+                                        final StatefulMonad repeatMonad = loopback ? m : m.pushLoop();
+                                        final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().asCode() : emitPredicate;
+                                        final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
+                                        if (emit)
+                                            toEmit.add(repeatMonad.popLoop().nextInst());
+                                        // wrap the predicate in code so a single-inst until (is(gt(10))) goes
+                                        // through the monad lens like the multi-inst form (loop().is(gt(3))) —
+                                        // applied bare, is(gt(10)) receives the whole monad and never terminates.
+                                        final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().asCode() : untilPredicate;
+                                        if (untilCode.apply(repeatMonad).booleanCheck()) {
+                                            if (!emit)
+                                                toEmit.add(repeatMonad.popLoop().nextInst());
+                                        } else {
+                                            final Obj codeResult = repeatedApply.apply(repeatMonad.obj());
+                                            final StatefulMonad monadX = repeatMonad.obj(codeResult).incrLoop(1).loopback(true);
+                                            toEmit.add(monadX);
+                                        }
+                                    }
+                                }
+                                return objs(toEmit);
+                            }),
+                            "any obj", "the repeated application results",
+                            Map.of(
+                                    uri(ESC).maybe(), "the escape predicate",
+                                    uri(CODE), "the code to repeat",
+                                    uri(UNTIL).maybe(), "the exit predicate (true stops the loop)",
+                                    uri(EMIT).maybe(), "the emit predicate"),
+                            "a repetition function: loopback application of the code with escape/exit/emit predicates"),
+                    docWrap(instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)), "any obj", "the result of applying the arg to the lhs", Map.of(jnt(0), "the inst to apply to the lhs"), "an auto function \\(f(x) \\nearrow x'\\): the arg applied to the lhs (sugar'd !)"),
+                    docWrap(instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Machine.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)), "any obj", "the obj at the arg uri", Map.of(jnt(0), "the uri to dereference"), "an auto dereference function: reads the obj at the arg uri upon inst access (sugar'd !*)"),
+                    docWrap(instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> {
+                                final Obj resolved = Machine.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
+                                return resolved.hasVID() ? resolved : resolved.selfVID(inst.arg(0).uriValue());
+                            }),
+                            "any obj", "the obj at the arg uri", Map.of(jnt(0), "the uri to dereference"), "an auto dereference function: reads the obj at the arg uri upon inst access, preserving its spatial location (sugar'd !@)"),
                     docWrap(instC(AUTO_TO_INST_TID.dom(ALL.maybe()).rng(ALL), lst(ALL_TYPE), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),
                             "any obj", "the uri (if possible) that refers to the obj arg", Map.of(jnt(0), "the obj to reference"), "like !*(vid), except that the obj arg is converted to an !* reference (an inverse dereference) immediately upon inst access (no inst apply required)."),
                     docWrap(instC(CATCH_INST_TID.dom(A).rng(C.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> lhs.isFail() && !lhs.isCaughtFail() ? inst.arg(0).apply(lhs.asFail().caught()).c(c -> c.mult(lhs.c())) : lhs),
@@ -1373,15 +1398,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).reduce(noobj(), (a, b) -> noobj()).orElse(lhs))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
-                    instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
-                        final fURI pattern = inst.arg(0).uriValue();
-                        if (pattern.hasPattern()) {
-                            return objs(Machine.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
-                        } else {
-                            final Obj resolved = Machine.readFromSpace(pattern);
-                            return resolved.hasVID() ? resolved : resolved.selfVID(pattern);
-                        }
-                    }),
+                    docWrap(instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
+                                final fURI pattern = inst.arg(0).uriValue();
+                                if (pattern.hasPattern()) {
+                                    return objs(Machine.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
+                                } else {
+                                    final Obj resolved = Machine.readFromSpace(pattern);
+                                    return resolved.hasVID() ? resolved : resolved.selfVID(pattern);
+                                }
+                            }),
+                            "any obj", "the obj at the arg uri", Map.of(jnt(0), "the uri or uri pattern to read"), "a spatial read function: reads the obj at the arg uri, preserving its spatial location (sugar'd @)"),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),
                     // TODO: do we gut this and rely fully on the non-barried form?
@@ -1391,9 +1417,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "true if all objs are true", Map.of(), "logical \\(\\texttt{and}\\) function \\(f(X)\\to \\tt{true}\\) if all \\(X\\) are true"),
                     docWrap(instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_FALSE)).anyMatch(Obj::boolValue))),
                             "any objs", "true if any objs are true", Map.of(), "logical \\(\\texttt{or}\\) function \\(f(X)\\to \\tt{true}\\) if any \\(X\\) are true"),
-                    instC(APPLY_INST_TID.dom(INST_TID).rng(ALL_STAR), rec(uri(LHS).maybe().asUri(), T(ALL_STAR), uri(ARGS).maybe(), LST_TYPE.maybe()), (lhs, inst) -> (inst.args().count() == 1 ? lhs.asInst() : lhs.asInst().args(inst.arg(1).asPoly())).apply(inst.arg(0))),
+                    docWrap(instC(APPLY_INST_TID.dom(INST_TID).rng(ALL_STAR), rec(uri(LHS).maybe().asUri(), T(ALL_STAR), uri(ARGS).maybe(), LST_TYPE.maybe()), (lhs, inst) -> (inst.args().count() == 1 ? lhs.asInst() : lhs.asInst().args(inst.arg(1).asPoly())).apply(inst.arg(0))), "the lhs inst obj", "the result of the lhs inst application", Map.of(uri(LHS), "the obj to apply the lhs inst to", uri(ARGS), "the inst args (optional)"), "an apply function \\(f(x) \\nearrow x'\\): applies the lhs inst to the given obj with the given args"),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
-                    instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs).booleanCheck() ? lhs : noobj()),
+                    docWrap(instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs).booleanCheck() ? lhs : noobj()), "any obj", "the lhs if the arg predicate holds, noobj otherwise", Map.of(jnt(0), "the predicate to apply to the lhs"), "a filter function \\(f(x) \\nearrow \\{x \\mid \\emptyset\\}\\): the lhs mapped if the arg predicate passes"),
                     docWrap(instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                             "any obj", "the lhs obj", Map.of(jnt(0), "any obj applied by lhs obj"), "passes lhs obj through after applying itself to inst arg obj", "1.side(plus(2).to(x)) [-- 1 [x=>3] --]"),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
@@ -1411,12 +1437,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
                     docWrap(instC(SORTA_INST_TID.dom(ALL).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.testNominally(inst.arg(0)) ? lhs : noobj()),
                             "an obj to match taxonomically", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "checks whether the obj is nominally the arg type or a refinement of the arg type"),
-                    instC(MATCHES_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.test(inst.arg(0)))),
+                    docWrap(instC(MATCHES_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.test(inst.arg(0)))), "any obj", "whether the lhs matches the arg type", Map.of(jnt(0), "the type to match the lhs against"), "a matching function \\(f(x) \\nearrow b\\): structurally checks whether the lhs obj matches the arg type"),
                     docWrap(instC(BLOCK_INST_TID.dom(A.maybe()).rng(B.some()), lst(T(B.some())), (lhs, inst) -> inst.arg(0)),
                             "maybe an obj", "the arg without an applied lhs", Map.of(jnt(0), "the unapplied rhs"), "the lhs obj is halted and the arg is the rhs obj"),
-                    instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
-                    instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))),
-                    instC(BRANCH_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))),
+                    docWrap(instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))), "any obj", "the branch results as objs", Map.of(jnt(0), "the branches to split into"), "a split function \\(f(x) \\nearrow x'\\): the lhs applied through each branch (sugar'd -<[...]>-)"),
+                    docWrap(instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))), "any obj", "a lst of the branch results", Map.of(jnt(0), "the branches to split into"), "a branching function: the lhs applied through each branch, the results as a lst"),
+                    docWrap(instC(BRANCH_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))), "any obj", "the branch results as objs", Map.of(jnt(0), "the branches to apply to the lhs"), "a branching function: the lhs applied through each arg branch, the results as objs with their branch coefficients"),
                     docWrap(instC(CHOOSE_INST_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
                             "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching function f(x):g(a)->a',g(b)->b',..."),
                     /**
@@ -1427,10 +1453,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                      *                                             inst.arg(0).type().vid(),
                      *                                     inst.arg(0).vid())),
                      */
-                    instC(MERGE_INST_TID.dom(A.maybeSome()).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).elements()).toList())),
-                    instC(MERGE_INST_TID.dom(A.maybeSome()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> objs(Stream.concat(inst.args().elements(), lhs.elements()))),
-                    instC(MERGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream()))),
-                    instC(NOT_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(!inst.arg(0).booleanCheck())),
+                    docWrap(instC(MERGE_INST_TID.dom(A.maybeSome()).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).elements()).toList())), "any objs", "the lhs objs merged into the arg lst", Map.of(jnt(0), "the lst to merge into"), "a merging function: prepends the lhs objs to the arg lst (sugar'd >-)"),
+                    docWrap(instC(MERGE_INST_TID.dom(A.maybeSome()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> objs(Stream.concat(inst.args().elements(), lhs.elements()))), "objs", "the merged objs", Map.of(jnt(0), "the objs to merge with the lhs"), "a merging function: combines the arg objs with the lhs objs (sugar'd >-)"),
+                    docWrap(instC(MERGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream()))), "any objs", "the merged objs", Map.of(jnt(0), "the objs to merge with the lhs"), "a superposition function \\(f(X) \\nearrow x'\\): merges the lhs objs with the arg objs (sugar'd >-)"),
+                    docWrap(instC(NOT_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(!inst.arg(0).booleanCheck())), "any obj", "the negated truth value of the arg", Map.of(jnt(0), "the obj to negate"), "a negation function \\(f(x) \\nearrow x'\\): true if the arg obj is falsy"),
                     docWrap(instC(EQ_INST_TID.dom(A).rng(BOOL_TID), lst(T(A)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_FALSE)),
                             "any objs", "true if lhs equals rhs", Map.of(jnt(0), "the rhs obj"), "an equality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} == \\tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),
                     docWrap(instC(NEQ_INST_TID.dom(A).rng(BOOL_TID), lst(T(A)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> !Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_TRUE)),
@@ -1463,8 +1489,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
                             "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
-                    instC(THROW_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
-                    instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()),
+                    docWrap(instC(THROW_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))), "any obj", "a fail::T carrying the arg message", Map.of(jnt(0), "the failure message"), "a throwing function \\(f(x) \\nearrow \\emptyset\\): fails with the arg message"),
+                    docWrap(instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()), "any obj", "the parent of the lhs obj", Map.of(), "a parent function \\(f(x) \\nearrow x'\\): the parent link of the lhs obj"),
                     docWrap(instC(COUNT_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                             "any objs", "the count of objs", Map.of(), "counts the number of objs"),
                     docWrap(instC(SKIP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()), // tail
@@ -1486,62 +1512,65 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "@a >>= [b=>[c=>+3]]     [-- [b=>[c=>5]]@a     --]",
                             "@a >>= [b=>+[c=>4]]     [-- [b=>[c=>{5,4}]]@a --]",
                             "@a >>= [b=>[c=>sum()]]  [-- [b=>[c=>9]]@a     --]"),
-                    instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(EXPLANATION_TID), lst(), (lhs, inst) -> {
-                        // explain_rewrite handles normal case; bare explain() is a no-op
-                        return lhs;
-                    }),
+                    docWrap(instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(EXPLANATION_TID), lst(), (lhs, inst) -> {
+                                // explain_rewrite handles normal case; bare explain() is a no-op
+                                return lhs;
+                            }),
+                            "any obj", "an explanation::T analysis of the expression", Map.of(), "a structured explanation of the expression (an explanation::T with desc/per_inst/format)"),
                     docWrap(instC(PROFILE_INST_TID.dom(ALL.maybe()).rng(PROFILING_TID), lst(), (lhs, inst) -> {
                                 // profile_timing rewrite handles normal case; bare profile() is a no-op
                                 return lhs;
                             }), "generates a profiling::T analysis of the current expression",
                             "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()",
                             "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()>>format"),
-                    instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
-                            "type", rec(
-                                    "tid", rec(
-                                            "scheme", nullOrElse(lhs.tid().scheme(), NoObj::noobj, MUri::uri),
-                                            "authority", nullOrElse(lhs.tid().hasAuthority() ? lhs.tid() : null, NoObj::noobj, z -> rec(
-                                                    "host", nullOrElse(z.host(), NoObj::noobj, MUri::uri),
-                                                    "port", nullOrElse(z.port() == -1 ? null : (long) lhs.tid().port(), NoObj::noobj, MInt::jnt)
-                                            )),
-                                            "path", uri(lhs.tid().pathString()),
-                                            "poly", ((Optional) lhs.tid().polyParsed()).orElse(noobj()),
-                                            "c", rec(
-                                                    "min", jnt(lhs.tid().c().min()),
-                                                    "max", jnt(lhs.tid().c().max())),
-                                            "q", nullOrElse(lhs.tid().qMap() == null ? null : lhs.tid().qMap(), NoObj::noobj,
-                                                    q -> rec(q.entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))))),
-                                    "obj", rec(
-                                            "value", lhs.type(),
-                                            "params", nullOrElse(lhs.type().predicate() == null && lhs.type().constructor() == null ? null : lhs, NoObj::noobj, t -> rec(
-                                                    "predicate", nullOrElse(t.type().predicate(), NoObj::noobj, r -> r),
-                                                    "constructor", nullOrElse(t.type().constructor(), NoObj::noobj, r -> r))))),
-                            "value", rec(
-                                    "vid", nullOrElse(lhs.vid(), NoObj::noobj, fURI::toUri),
-                                    "obj", rec(
-                                            "value", MObjFactory.of().createOrFail(lhs.jvm()),
-                                            "jvm", rec(
-                                                    "class", uri(lhs.jvm().getClass().getCanonicalName()),
-                                                    "projection", lhs.jvm() instanceof Tuple ?
-                                                            rec(IteratorUtil.indexedStream(lhs.<Tuple>jvmAs().iterator()).map(p -> rel(jnt(p.get0()), MObjFactory.of().createOrFail(p.get1())))) :
-                                                            rec(jnt(0), MObjFactory.of().toObj(lhs.jvm()))))))),
+                    docWrap(instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
+                                    "type", rec(
+                                            "tid", rec(
+                                                    "scheme", nullOrElse(lhs.tid().scheme(), NoObj::noobj, MUri::uri),
+                                                    "authority", nullOrElse(lhs.tid().hasAuthority() ? lhs.tid() : null, NoObj::noobj, z -> rec(
+                                                            "host", nullOrElse(z.host(), NoObj::noobj, MUri::uri),
+                                                            "port", nullOrElse(z.port() == -1 ? null : (long) lhs.tid().port(), NoObj::noobj, MInt::jnt)
+                                                    )),
+                                                    "path", uri(lhs.tid().pathString()),
+                                                    "poly", ((Optional) lhs.tid().polyParsed()).orElse(noobj()),
+                                                    "c", rec(
+                                                            "min", jnt(lhs.tid().c().min()),
+                                                            "max", jnt(lhs.tid().c().max())),
+                                                    "q", nullOrElse(lhs.tid().qMap() == null ? null : lhs.tid().qMap(), NoObj::noobj,
+                                                            q -> rec(q.entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))))),
+                                            "obj", rec(
+                                                    "value", lhs.type(),
+                                                    "params", nullOrElse(lhs.type().predicate() == null && lhs.type().constructor() == null ? null : lhs, NoObj::noobj, t -> rec(
+                                                            "predicate", nullOrElse(t.type().predicate(), NoObj::noobj, r -> r),
+                                                            "constructor", nullOrElse(t.type().constructor(), NoObj::noobj, r -> r))))),
+                                    "value", rec(
+                                            "vid", nullOrElse(lhs.vid(), NoObj::noobj, fURI::toUri),
+                                            "obj", rec(
+                                                    "value", MObjFactory.of().createOrFail(lhs.jvm()),
+                                                    "jvm", rec(
+                                                            "class", uri(lhs.jvm().getClass().getCanonicalName()),
+                                                            "projection", lhs.jvm() instanceof Tuple ?
+                                                                    rec(IteratorUtil.indexedStream(lhs.<Tuple>jvmAs().iterator()).map(p -> rel(jnt(p.get0()), MObjFactory.of().createOrFail(p.get1())))) :
+                                                                    rec(jnt(0), MObjFactory.of().toObj(lhs.jvm()))))))),
+                            "any obj", "a rec describing the lhs obj structure", Map.of(), "a reify function \\(f(x) \\nearrow x'\\): describes the lhs obj as a rec of type/vid/jvm components"),
                     docWrap(instC(REDUCE_INST_TID.dom(A.maybeSome()).rng(A), lst(T(ALL.maybe())), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
                             "any objs", "the result of applying the arg inst to each obj", Map.of(jnt(0), "the inst to apply to each obj"), "a reduce function \\(f(X) \\to x\\)"),
-                    instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
-                        final Map<Obj, Obj> result = new LinkedHashMap<>();
-                        lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
-                            final Obj kk = kv.first().isObjCall() || kv.first().isInst()
-                                    ? kv.first().apply(e)
-                                    : (e.isRec() ? e.asRec().at(kv.first()) : e);
-                            if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
-                                result.compute(kk, (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), v.asLst().at(jnt(1)).append(e), MUTABLE));
-                        }));
-                        return result.entrySet().stream()
-                                .map(kv -> rel(
-                                        kv.getKey(),  // key
-                                        kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
-                                .collect(new CommonUtil.RecCollector());
-                    }),
+                    docWrap(instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                                final Map<Obj, Obj> result = new LinkedHashMap<>();
+                                lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
+                                    final Obj kk = kv.first().isObjCall() || kv.first().isInst()
+                                            ? kv.first().apply(e)
+                                            : (e.isRec() ? e.asRec().at(kv.first()) : e);
+                                    if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
+                                        result.compute(kk, (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), v.asLst().at(jnt(1)).append(e), MUTABLE));
+                                }));
+                                return result.entrySet().stream()
+                                        .map(kv -> rel(
+                                                kv.getKey(),  // key
+                                                kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
+                                        .collect(new CommonUtil.RecCollector());
+                            }),
+                            "any objs", "a rec of the grouped results", Map.of(jnt(0), "the grouping key rec, the value inst computing each group"), "a grouping function \\(f(X) \\nearrow x'\\): groups the objs by the key rec and computes each group (sugar'd %==)"),
                     docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0)),
                             "maybe an obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
                     docWrap(instC(PARSE_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> MIME.MIMEType.of(inst.arg(0).tid().toString(), MIME.MIMEType.APPLICATION_MTRON).serializer().inputBytes(inst.arg(0).strValue())),
@@ -1568,48 +1597,50 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "abc.swap(|mult(xyz))      [-- xyz/abc --]",
                             "|-<[_,_].swap(6)          [-- [6,6]   --]"),
                     //  "|-<[_,_].swap(||mult(_))  [-- [mult(_),mult(_)] --]"
-                    instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
-                        // DATETIME_TYPE is registry-driven (set during math instset setup)
-                        // and is null in a VM where the math set is not registered
-                        if (null != DATETIME_TYPE && lhs.isUri() && lhs.asUri().testNominally(DATETIME_TYPE))
-                            return datetimeRshift(lhs.asUri(), inst.arg(0));
-                        else if (lhs.isRec())
-                            return Rec.Helper.rshiftRec(lhs.asRec(), inst.arg(0));
-                        else if (lhs.isLst())
-                            return Lst.Helper.rshiftLst(lhs.asLst(), inst.arg(0));
-                        else if (lhs.isUri())
-                            return Uri.Helper.rshiftUri(lhs.asUri(), inst.arg(0));
-                        else if (lhs.isRel())
-                            return Rel.Helper.rshiftRel(lhs.asRel(), inst.arg(0));
-                        else if (lhs.isObjs())
-                            return objs(lhs.asObjs().stream().flatMap(o -> inst.apply(o).stream()));
-                        else return noobj();
-                    }),
-                    instC(LSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
-                        if (lhs.isRec()) {
-                            return Rec.Helper.lshiftRec(lhs.asRec(), inst.arg(0));
-                        } else if (lhs.isRel()) {
-                            return Rel.Helper.lshiftRel(lhs.asRel(), inst.arg(0));
-                        } else if (lhs.isUri()) {
-                            // uri << — pure uri arithmetic, no obj parent link: the uri
-                            // carries its own parent.  a/b/c << => a/b, a/b/c << 2 => a,
-                            // a/b/c/d << c/d => a/b (retract a matching postfix).
-                            final fURI u = lhs.uriValue();
-                            final Obj arg = inst.arg(0);
-                            if (arg.isNoObj())
-                                return uri(u.retract(1));
-                            if (arg.isInt())
-                                return uri(u.retract(arg.intValue().intValue()));
-                            if (arg.isUri()) {
-                                final fURI postfix = arg.uriValue();
-                                return u.hasPostfix(postfix.toString())
-                                        ? uri(u.retract(postfix.segmentLength())) : noobj();
-                            }
-                            return noobj();
-                        } else {
-                            return lhs.parent();
-                        }
-                    })));
+                    docWrap(instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
+                                // DATETIME_TYPE is registry-driven (set during math instset setup)
+                                // and is null in a VM where the math set is not registered
+                                if (null != DATETIME_TYPE && lhs.isUri() && lhs.asUri().testNominally(DATETIME_TYPE))
+                                    return datetimeRshift(lhs.asUri(), inst.arg(0));
+                                else if (lhs.isRec())
+                                    return Rec.Helper.rshiftRec(lhs.asRec(), inst.arg(0));
+                                else if (lhs.isLst())
+                                    return Lst.Helper.rshiftLst(lhs.asLst(), inst.arg(0));
+                                else if (lhs.isUri())
+                                    return Uri.Helper.rshiftUri(lhs.asUri(), inst.arg(0));
+                                else if (lhs.isRel())
+                                    return Rel.Helper.rshiftRel(lhs.asRel(), inst.arg(0));
+                                else if (lhs.isObjs())
+                                    return objs(lhs.asObjs().stream().flatMap(o -> inst.apply(o).stream()));
+                                else return noobj();
+                            }),
+                            "any obj", "the obj descended into from the lhs", Map.of(jnt(0), "the depth or path to descend by (default 1)"), "a shift function \\(f(x) \\nearrow x'\\): descends into the lhs obj (sugar'd >>)"),
+                    docWrap(instC(LSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
+                                if (lhs.isRec()) {
+                                    return Rec.Helper.lshiftRec(lhs.asRec(), inst.arg(0));
+                                } else if (lhs.isRel()) {
+                                    return Rel.Helper.lshiftRel(lhs.asRel(), inst.arg(0));
+                                } else if (lhs.isUri()) {
+                                    // uri << — pure uri arithmetic, no obj parent link: the uri
+                                    // carries its own parent.  a/b/c << => a/b, a/b/c << 2 => a,
+                                    // a/b/c/d << c/d => a/b (retract a matching postfix).
+                                    final fURI u = lhs.uriValue();
+                                    final Obj arg = inst.arg(0);
+                                    if (arg.isNoObj())
+                                        return uri(u.retract(1));
+                                    if (arg.isInt())
+                                        return uri(u.retract(arg.intValue().intValue()));
+                                    if (arg.isUri()) {
+                                        final fURI postfix = arg.uriValue();
+                                        return u.hasPostfix(postfix.toString())
+                                                ? uri(u.retract(postfix.segmentLength())) : noobj();
+                                    }
+                                    return noobj();
+                                } else {
+                                    return lhs.parent();
+                                }
+                            }),
+                            "any obj", "the obj ascended to from the lhs", Map.of(jnt(0), "the depth or path to ascend by (default 1)"), "a shift function \\(f(x) \\nearrow x'\\): ascends out of the lhs obj (sugar'd <<)")));
         }
     }
 

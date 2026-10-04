@@ -377,7 +377,7 @@ public class AsciiDocRunner {
                 new grphInstSet(), new llmInstSet(), new tbleInstSet(),
                 new dcmntInstSet(), new rdfInstSet()
         }) {
-            Machine.current().addSpace(is);
+            Machine.authority().addSpace(is);
             Machine.writeToSpace(is);
             is.setup();
         }

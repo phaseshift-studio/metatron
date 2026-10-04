@@ -91,7 +91,7 @@ public class SqliteLedgerIntegrationTest extends AbstractMetatronTest {
     void closeStore() {
         if (null != this.space) {
             try {
-                Machine.current().removeSpace(this.space.vid());
+                Machine.authority().removeSpace(this.space.vid());
             } catch (final Exception ignored) {
                 // the space may already be gone
             }

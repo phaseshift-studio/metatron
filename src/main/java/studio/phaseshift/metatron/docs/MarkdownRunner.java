@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
@@ -611,7 +610,7 @@ public class MarkdownRunner {
                 new dcmntInstSet(), new rdfInstSet(), new dckrInstSet(),
                 new uiInstSet()
         }) {
-            Machine.current().addSpace(is);
+            Machine.authority().addSpace(is);
             Machine.writeToSpace(is);
             is.setup();
         }

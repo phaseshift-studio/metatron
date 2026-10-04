@@ -59,7 +59,7 @@ public class EntityBuilder {
         this.writeFunction = null;
         this.readFunction = null;
         final fURI vidOrTid = TypeSpec.Helper.vidOrTid(this.getClass().getConstructors()[0].getParameterTypes()[0].getAnnotation(TypeSpec.class));
-        this.haosSpace = Machine.current().getSpaceFor(vidOrTid);
+        this.haosSpace = Machine.authority().getSpaceFor(vidOrTid);
         this.haosPrefix = f(Space.Helper.extractRewrite(this.haosSpace.jvm()).get1()).asNode();
         final Obj deviceType = Machine.readFromSpace(vidOrTid);
         assert device.test(deviceType);

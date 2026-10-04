@@ -67,7 +67,7 @@ public abstract class AbstractHTTPServerTest extends AbstractMetatronTest {
      * Look up the registered Type for this handler from the Router.
      */
     protected Type handlerType() {
-        return Machine.current().read(handler.vid()).type();
+        return Machine.authority().read(handler.vid()).type();
     }
 
     @BeforeEach
@@ -83,7 +83,7 @@ public abstract class AbstractHTTPServerTest extends AbstractMetatronTest {
     @AfterEach
     public void teardownTestSpace() {
         if (this.testSpace != null) {
-            Machine.current().removeSpace(this.testSpace.vid());
+            Machine.authority().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }

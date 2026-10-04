@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -51,7 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * The {@code Machine.Component} half is the model — an ISA is one of the five things a Machine is made of, beside
  * its compiler, processor, network and memory. The {@code Space} half is an accident of how importing was
- * implemented: {@code importInstSetStream} does {@code Machine.current().addSpace(isa)}, so an ISA had to be a
+ * implemented: {@code importInstSetStream} does {@code Machine.authority().addSpace(isa)}, so an ISA had to be a
  * Space to be reachable. Frame-scoping imports removes that need, and this declaration is where the two
  * descriptions meet in the meantime.
  */
@@ -73,7 +74,7 @@ public interface InstSet extends Space, Machine.Component {
             .constructor(arg -> {
                 final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
                 };
-                Machine.current().addSpace(isa);
+                Machine.authority().addSpace(isa);
                 isa.setup();
                 return isa;
             }).create();
@@ -157,10 +158,30 @@ public interface InstSet extends Space, Machine.Component {
 
     static Stream<InstSet> importInstSetStream(final fURI vid, final fURI prefix) {
         if (null != prefix)
-            Machine.current().registerPrefix(prefix, vid);
+            Machine.authority().registerPrefix(prefix, vid);
         return loadInstSetProvider(vid)
                 .map(ServiceLoader.Provider::get)///  new
-                .peek(isa -> Machine.current().addSpace(isa)) // add to router
+                .peek(isa -> {
+                    // An import is a REFERENCE into the n-ary union, not a registration that fills shared space. The
+                    // machine you are standing in gets its OWN BasicInstSet; the library is held by reference, so it
+                    // is shared by every machine that imports it and mutated by none of them. Reads consult that own
+                    // structure first, which is what lets a local write shadow the library's names -- and what makes
+                    // the machine's ISA an overlay over /m rather than /m itself.
+                    // THE LIBRARY IS A SPACE IN THE WORLD and must stay REGISTERED, while the machine's OVERLAY
+                    // is what must NOT be a sibling (its pattern collides with the library's -- measured: mounting
+                    // the overlay made mInstSetTest's writes fail to read back). Two different objects, two
+                    // different treatments: the library is registered by address, the overlay is reached through
+                    // the accessor and the library by reference. Dropping this registration is what made TYPE
+                    // LOOKUPS through the space index return noobj ("Type should be registered in Router at ...").
+                    Machine.authority().addSpace(isa);
+                    final Machine machine = Machine.authority();
+                    final InstSet own = machine.ownInstset();
+                    if (own instanceof BasicInstSet) {
+                        ((BasicInstSet) own).refer(isa);
+                    } else {
+                        ((BasicInstSet) machine.instset(new BasicInstSet()).ownInstset()).refer(isa);
+                    }
+                })
                 .peek(InstSet::setup); // setup
     }
 

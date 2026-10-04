@@ -47,7 +47,7 @@ public class GraphittyObjLogger extends GraphittyLogger {
             return true;
         else {
             if (!LOG_VID.isZero()) {
-                final Obj o = Machine.current().read(LOG_VID);
+                final Obj o = Machine.authority().read(LOG_VID);
                 if (o.isNoObj()) {
                     if (!BOOTING)
                         this.none("no space embedded logger found at %s\n", LOG_VID.toUri());

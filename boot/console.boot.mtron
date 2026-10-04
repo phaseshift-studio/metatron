@@ -3,8 +3,15 @@
 [== contacted, so this profile is safe to boot beside a live server. ==]
 [space  => /sys/space,
  log    => info,
- typer/stage  => [code_resolve => false]]
+ typer/stage  => [code_resolve => false]];
 [===============]
+header2 ->"""      {{r}}PhaseShift Studio Presents
+{{g}}  ___ ___  _  _ ___  ___  _    ___ 
+ / __/ _ \| \| / __|/ _ \| |  | __|
+| (_| (_) | .` \__{{b}} \ (_) | |__| _| 
+ \___\_{{y}}__/|_|\_|___/\___/|____|___|
+                    {{r}} a metatron bomb                               
+""".print(_).print('\n');
 print("{{y}}console boot{{X}} {{k}}— no ports bound, no external services{{X}}\n");
 [== mount instruction sets ==]
 import(/m/mach/io);
@@ -15,5 +22,5 @@ import(/m/math);
 memspace::[pattern => /usr/#,
               q => [subq::[=>],docq::[=>]]]@/sys/space/usr;
 [== the console ==]
-console::[header=>'console']@/usr/ui/console;
+console::[header=>!*header2]@/usr/ui/console;
 print("{{g}}console created{{X}} {{k}}— import(/m/llm) or any other inst set from the repl as needed{{X}}\n");

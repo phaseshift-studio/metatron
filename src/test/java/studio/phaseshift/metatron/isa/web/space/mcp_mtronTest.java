@@ -134,16 +134,16 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     @AfterAll
     public void teardownSpaces() {
         if (this.httpSpace != null) {
-            Machine.current().removeSpace(this.httpSpace.vid());
+            Machine.authority().removeSpace(this.httpSpace.vid());
             this.httpSpace.close();
             this.httpSpace = null;
         }
         if (this.wsSpace != null) {
-            Machine.current().removeSpace(this.wsSpace.vid());
+            Machine.authority().removeSpace(this.wsSpace.vid());
             this.wsSpace.close();
             this.wsSpace = null;
         }
-        Machine.current().removeSpace(WEB_ISA_TID);
+        Machine.authority().removeSpace(WEB_ISA_TID);
         if (this.httpClient != null) {
             this.httpClient.close();
             this.httpClient = null;

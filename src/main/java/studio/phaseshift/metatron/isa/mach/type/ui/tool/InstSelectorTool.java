@@ -52,7 +52,7 @@ public class InstSelectorTool extends SelectorWidget<Inst, InstSelectorTool> {
         if (!code.codeValue().isEmpty()) {
             final Inst lastInst = code.codeValue().getLast();
             this.domType = lastInst.rng().tid();
-            final Obj instructionsObj = Machine.current().read(M_ISA_INST_TID.extend("#").dom(domType));
+            final Obj instructionsObj = Machine.authority().read(M_ISA_INST_TID.extend("#").dom(domType));
             instructionsObj.stream().forEach(obj -> {
                 if (obj.isInst()) {
                     this.items.add(obj.as());

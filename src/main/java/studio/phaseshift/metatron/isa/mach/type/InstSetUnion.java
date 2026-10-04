@@ -36,7 +36,7 @@ import java.util.Set;
  * is visible for exactly as long as the frame that introduced it is on the stack.
  * <p>
  * Writes go to {@link #current()} only, which is what makes an import frame-local: today
- * {@code InstSet.importInstSetStream} does {@code Machine.current().addSpace(isa)} — the global router,
+ * {@code InstSet.importInstSetStream} does {@code Machine.authority().addSpace(isa)} — the global router,
  * unconditionally and permanently. {@link #close()} is inherited from {@link ComponentUnion} and releases only
  * what this frame owns, so popping a frame removes the names it introduced and leaves the parent's intact. An
  * ISA's close is not a no-op either: {@code AbstractInstSet.close()} unregisters the short-name redirects the ISA

@@ -56,10 +56,10 @@
  * );
  *
  * // Read a document
- * Obj user = Machine.current().read(f("mongo:users/507f1f77bcf86cd799439011"));
+ * Obj user = Machine.authority().read(f("mongo:users/507f1f77bcf86cd799439011"));
  *
  * // Access schema
- * Obj schema = Machine.current().read(f("mongo:schema/mydb"));
+ * Obj schema = Machine.authority().read(f("mongo:schema/mydb"));
  * </pre>
  *
  * <h2>Reference Resolution</h2>

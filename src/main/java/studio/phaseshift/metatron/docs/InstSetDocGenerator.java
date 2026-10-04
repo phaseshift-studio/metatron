@@ -260,7 +260,7 @@ public class InstSetDocGenerator {
                 new uiInstSet(), new vecInstSet(),
                 new dcmntInstSet(), new rdfInstSet()
         }) {
-            Machine.current().addSpace(is);
+            Machine.authority().addSpace(is);
             Machine.writeToSpace(is);
             is.setup();
         }
@@ -269,7 +269,7 @@ public class InstSetDocGenerator {
         // class loading at BootLoader.load line 339).
         // Without this, parentType() -> T(fURI) creates bare types
         // without predicates, breaking the refinement chain display.
-        Machine.current().write(SPACE_TYPE.vid(), SPACE_TYPE);
+        Machine.authority().write(SPACE_TYPE.vid(), SPACE_TYPE);
         TypeCheck.disable(TypeCheck.code_resolve);
     }
 

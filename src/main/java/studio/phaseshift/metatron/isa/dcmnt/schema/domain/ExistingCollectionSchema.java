@@ -418,7 +418,7 @@ public class ExistingCollectionSchema {
      * (no dot-notation nesting) are included in the type predicate; sub-document navigation
      * is handled at runtime by the dcmntSpace directReader.
      *
-     * <p>Register the returned instset via {@code Machine.current().addSpace(instset)} then
+     * <p>Register the returned instset via {@code Machine.authority().addSpace(instset)} then
      * call {@code instset.setup()}.
      *
      * @param schemaVID VID for the schema instset

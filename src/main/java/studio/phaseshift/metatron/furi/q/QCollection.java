@@ -445,7 +445,7 @@ public final class QCollection {
             if (inst.dom().isCode()) {
                 REWRITE_TABLE.put(inst.tid(), obj.asRec());
             } else {
-                Machine.current().registerRedirect(f(vid.name()), vid);
+                Machine.authority().registerRedirect(f(vid.name()), vid);
                 INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> Collections.synchronizedSet(new LinkedHashSet<>())).add(obj.asRec());
             }
             return obj;
@@ -519,7 +519,7 @@ public final class QCollection {
                         return Machine.readFromSpace(vidBig);
                     final Obj instDoc = INST_DOCS.read(vidBig.removeQ(DOCQ));
                     final Obj doc = instDoc.isNoObj() ?
-                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.current().read(vidBig.removeQ(DOCQ))))) :
+                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.authority().read(vidBig.removeQ(DOCQ))))) :
                             instDoc;
                     // dual-mode interface doc: a doc carrying 'build' (how to implement) alongside
                     // 'desc' (how to use).  The branch is implementation status: an interface inst's
@@ -527,7 +527,7 @@ public final class QCollection {
                     // write — so implemented iff the live inst is no longer the interface.  Unimplemented
                     // → surface the build docs; implemented → surface the use docs.
                     if (doc.isRec() && doc.asRec().has(DOC_BUILD)) {
-                        final Obj live = Machine.current().read(vidBig.removeQ(DOCQ));
+                        final Obj live = Machine.authority().read(vidBig.removeQ(DOCQ));
                         final boolean implemented = !live.isNoObj() && live.isInst() &&
                                 !live.<Inst>as().tid().basePath().equals(vidBig.removeQ(DOCQ));
                         if (!implemented)
@@ -796,7 +796,7 @@ public final class QCollection {
             return new Docs("nothing").c(cInt.ZERO()).as();
         }
         final Docs doc = Docs.doc(obj, domDesc, rngDesc, argDescription, description, examples);
-        final Space objSpace = Machine.current().getSpaceFor(objID);
+        final Space objSpace = Machine.authority().getSpaceFor(objID);
         final Optional<QProc> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<QProc>as).findAny();
         if (docq.isEmpty()) {
             if (objSpace.hasVID())// && !obj.tid().equals(NOOBJ_TID))
