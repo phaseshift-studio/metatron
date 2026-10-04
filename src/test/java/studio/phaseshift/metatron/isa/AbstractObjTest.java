@@ -40,6 +40,6 @@ public abstract class AbstractObjTest extends AbstractMetatronTest {
         final Obj retrievedF = mParser.m_obj().parse(retrieved).get();
         final Obj remainingF = mParser.m_obj().parse(remaining).get();
         assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.c()));
-        Machine.current().at(uri("primary"), uri("/m"));
+        Machine.authority().at(uri("primary"), uri("/m"));
     }
 }

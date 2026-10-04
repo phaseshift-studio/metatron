@@ -594,7 +594,7 @@ public class Agent extends MRec {
         this.at(INTERRUPT, noobj(), MUTABLE);
         if (this.first.getAndSet(false))
             this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
-        Machine.current().stats().ioStats().incrBytesSent(message.getBytes().length);
+        Machine.authority().stats().ioStats().incrBytesSent(message.getBytes().length);
     }
 
     /**
@@ -659,7 +659,7 @@ public class Agent extends MRec {
 
     private void onPartialResponse(final String s, final List<Obj> features, final CountDownLatch latch) {
         StatusLine.message(str("\uD83D\uDCAC on_partial_response"));
-        Machine.current().stats().ioStats().incrBytesRecv(s.getBytes().length);
+        Machine.authority().stats().ioStats().incrBytesRecv(s.getBytes().length);
         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
         if (this.isInterrupted())
             latch.countDown();
@@ -671,7 +671,7 @@ public class Agent extends MRec {
             latch.countDown();
             return;
         }
-        Machine.current().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
+        Machine.authority().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
         // thinking is the one stage this class does not dispatch: ThinkFeature owns it, seeds the
         // thought with the chunk, applies it, and cascades it through the other features
         this.feature(ThinkFeature.class)
@@ -701,7 +701,7 @@ public class Agent extends MRec {
                                     final long startNanos, final CountDownLatch latch) {
         StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
         final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
-        Machine.current().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
+        Machine.authority().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
         // Parse response format if requested
         final boolean formatted = !responseFormat.isNoObj();
         final Obj chatObj;

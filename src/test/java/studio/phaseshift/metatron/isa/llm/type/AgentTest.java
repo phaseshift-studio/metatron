@@ -504,7 +504,7 @@ public class AgentTest extends AbstractMetatronTest {
    /* public void teardownSQLite() {
         if (this.memSpace != null) {
             try {
-                Machine.current().removeSpace(this.memSpace.vid());
+                Machine.authority().removeSpace(this.memSpace.vid());
             } catch (Exception ignored) {
             }
             this.memSpace.close();

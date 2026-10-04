@@ -679,7 +679,7 @@ public class catInstSet extends AbstractInstSet {
         if (null != cached)
             return cached;
         final List<Inst> all = new ArrayList<>();
-        for (final Obj obj : Machine.current().spaces().values().toList()) {
+        for (final Obj obj : Machine.authority().spaces().values().toList()) {
             final Space space = obj.as();
             if (!(space instanceof InstSet instSet))
                 continue;

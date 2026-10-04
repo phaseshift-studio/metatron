@@ -225,7 +225,7 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
         this.existingCollectionSchema.initialize(this.database);
         final CollectionSchemaInstSet schemaInstset =
                 this.existingCollectionSchema.generateSchemaInstset(this.vid().extend(INSTSET));
-        Machine.current().addSpace(schemaInstset);
+        Machine.authority().addSpace(schemaInstset);
         schemaInstset.setup();
 
         // Wire schema instset into existingCollectionSchema so that collection

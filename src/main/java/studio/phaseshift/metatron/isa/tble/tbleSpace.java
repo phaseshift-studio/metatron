@@ -195,7 +195,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
             // always route to it (the expensive existing-table discovery stays lazy — the
             // placeholder's first read triggers it and swaps in the populated instset).
             this.schemaInstset = new SQLSchemaInstSet(this.vid().extend(INSTSET), List.of(), this);
-            Machine.current().addSpace(this.schemaInstset);
+            Machine.authority().addSpace(this.schemaInstset);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
@@ -301,7 +301,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
         // are the single source of truth — column types AND FK references are
         // embedded in the isaPredicate; no separate native schema needed.
         this.schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
-        Machine.current().addSpace(this.schemaInstset);
+        Machine.authority().addSpace(this.schemaInstset);
         this.schemaInstset.setup();
 
         // Wire schema into the space's own Rec so SchemaSpace.schema()

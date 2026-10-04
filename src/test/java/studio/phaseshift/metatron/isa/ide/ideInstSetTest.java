@@ -78,7 +78,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         final fsSpace space = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
                 uri(PATTERN), uri("isearch:#"),
                 uri(ROUTE), rec(uri("isearch:"), uri(SEARCH_ROOT.toString()))).vid(f("/sys/space/isearch")))).apply(noobj()).as();
-        Machine.current().addSpace(space);
+        Machine.authority().addSpace(space);
     }
 
     @AfterAll
@@ -207,7 +207,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         // drstynx.boot.mtron does import(/m/ide, ide) — the second arg is the namespace prefix used
         // to disambiguate short names across instsets. `ide:command` must resolve to the command inst
         // the same way the bare `command` redirect does (insts live under /m/ide/inst/).
-        Machine.current().registerPrefix(f("ide"), f("/m/ide"));
+        Machine.authority().registerPrefix(f("ide"), f("/m/ide"));
         final Obj viaPrefix = Machine.readFromSpace(f("ide:command"));
         assertTrue(viaPrefix.isInst(), "ide:command must resolve to the command inst — %s".formatted(viaPrefix));
         assertEquals(Machine.readFromSpace(IDE_COMMAND_TID), viaPrefix,
@@ -306,7 +306,7 @@ public class ideInstSetTest extends AbstractMetatronTest {
         final fsSpace repoSrc = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(
                 uri(PATTERN), uri("probe:#"),
                 uri(ROUTE), rec(uri("probe:"), uri(System.getProperty("user.dir")))).vid(f("/sys/space/repoProbe")))).apply(noobj()).as();
-        Machine.current().addSpace(repoSrc);
+        Machine.authority().addSpace(repoSrc);
 
         final String root = "src/test/resources/scratch";
         final String probeRoot = "probe:" + root;

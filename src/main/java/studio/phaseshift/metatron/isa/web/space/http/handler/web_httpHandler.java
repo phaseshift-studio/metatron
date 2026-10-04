@@ -123,7 +123,7 @@ public class web_httpHandler extends HttpRec {
                 // 2 — locateBaseObj: walk up the URI path to find a containing object, then navigate into it
                 boolean foundBase = false;
                 if (requestObj.isNoObj()) {
-                    final Space space = Machine.current().getSpaceFor(requestURI);
+                    final Space space = Machine.authority().getSpaceFor(requestURI);
                     if (space != null) {
                         final Space.IdObj baseObj = Space.Helper.locateBaseObj(space, requestURI, f(""));
                         // Only accept navigable base objects (rec/lst) — directories
@@ -149,7 +149,7 @@ public class web_httpHandler extends HttpRec {
                 //     Also applies when the path resolves to a directory (DIR_TID).
                 if (isNoobjOrDir(requestObj) && !foundBase) {
                     final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
-                    requestObj = Machine.current().read(requestURI.extend(defaultPage));
+                    requestObj = Machine.authority().read(requestURI.extend(defaultPage));
                 }
 
                 // 4 — 404 if still nothing (skip when a base document was found — see above)

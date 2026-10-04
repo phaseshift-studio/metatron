@@ -289,7 +289,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         }
 
         public static Rec stripNone(final Rec rec) {
-            rec.recValue().entrySet().removeIf(e -> e.getValue().isNone());
+            rec.recValue().entrySet().stream().filter(e -> e.getValue().isNone()).toList().forEach(e -> rec.jvm().remove(e.getKey()));
             return rec;
         }
 

@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicNetwork;
@@ -35,7 +36,6 @@ import java.util.*;
 import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
-import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -77,32 +77,39 @@ public interface Machine extends Space {
      * it per scope is what broke resolution (measured: 210 failures + 836 errors).
      */
     /**
-     * The RESOLUTION AUTHORITY — the root, always, and deliberately NOT the perspective. Measured twice: answering
-     * with a frame's machine loses the spaces (210 failures + 836 errors), and answering with the perspective loses
-     * them again (1218 errors) — same signature both times, "no active space supports pattern /m/mach/machine".
-     * The reason is the same both times: apply(Code, Obj) runs constantly on machines that carry only their OWN
-     * memory — clones pushed as frames, component sub-machines — and those have no space index. A machine that
-     * EXECUTES code is not necessarily a machine that can RESOLVE it. Use perspective() for "where am I standing".
+     * The outermost machine of the chain IN EFFECT -- "whose spaces answer here" when HERE may be another JVM.
+     * Locally that is {@link #root()}, which is why the two agree today (nothing calls {@link #arriveAt}, so the
+     * slot is unset and the fallback always wins). After a teleport it is the REMOTE machine's outermost one, which
+     * is the whole point: {@code root()} is this JVM's bootstrap constant and cannot name a machine in another JVM's
+     * chain, whereas the authority is a captured reference.
+     * <p>
+     * RESOLUTION MUST READ THIS, never {@link #current()}: a machine that EXECUTES code is not necessarily one that
+     * can RESOLVE it (a pushed clone carries only its own memory). Reading the frame of reference here produced
+     * 210F/836E and 1218E ("no active space supports pattern /m/mach/machine"). The rename that made {@code current}
+     * mean the frame of reference is what made that impossible rather than merely avoided.
+     * <p>
+     * It becomes DERIVED once {@code previous()} exists: the top of the chain is {@code current()} walked up via
+     * {@code previous()} until there is none, and this accessor is then that walk rather than a stored slot. The
+     * NAME is the durable part -- 172 callers depend on it and none of them change.
      */
-    static Machine current() {
+    static Machine authority() {
         final Machine authority = AUTHORITY.get();
         return null != authority ? authority : root();
     }
 
-    /** Where this thread is standing: the root until a machine application or dereference moves it. */
-    static Machine perspective() {
+    /**
+     * WHERE YOU STAND — this thread's frame of reference. A frame's machine, a teleported machine, or the root.
+     * <p>
+     * This is the name {@code current()} will take once the flip is finished; until then both exist, because
+     * {@code current()} is still read by the engine (Type/InstSet/Obj/CommonRewrites) and must keep meaning the
+     * resolution AUTHORITY. Reading this instead of authority() from the resolution path is what produced
+     * 210F/836E and 1218E -- a machine that EXECUTES code is not necessarily one that can RESOLVE it.
+     */
+    static Machine current() {
         final Machine machine = PERSPECTIVE.get();
         return null != machine ? machine : root();
     }
 
-    /**
-     * This thread's current PERSPECTIVE — the machine whose frame of reference it is evaluating in. Deliberately not
-     * the frame stack: frames scope BRACES (they nest and unwind per instruction), while the perspective moves only
-     * when a dereference yields a MACHINE and restores when the fragment that followed it ends. That separation is the
-     * whole point — the perspective is a value passed between machines, not a register resolution walks. `current()`
-     * still answers with the ROOT on purpose: making it frame-aware loses the spaces (measured: 210 failures + 836
-     * errors), because a frame is live for every scoped execution while a perspective moves only on a machine deref.
-     */
     ThreadLocal<Machine> PERSPECTIVE = new ThreadLocal<>();
 
     /**
@@ -170,10 +177,9 @@ public interface Machine extends Space {
     // These belong on Machine; they delegate to Router only while Router still exists, so the bulk rename of
     // Machine.readFromSpace/writeToSpace to Machine.* is provably identical rather than a reimplementation.
     // Inlining the bodies is a separate step, after which Router can go.
-
     static Obj readFromSpace(final fURI vid) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst, "read " + vid),
-                () -> null == ROOT_MACHINE ? noobj() : Machine.current().read(vid));
+                () -> null == ROOT_MACHINE ? noobj() : Machine.authority().read(vid));
     }
 
     static Obj readFromSpace(final String vid) {
@@ -182,7 +188,7 @@ public interface Machine extends Space {
 
     static Obj writeToSpace(final fURI vid, final Obj obj) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "write " + vid),
-                () -> null == ROOT_MACHINE ? noobj() : Machine.current().write(vid, obj));
+                () -> null == ROOT_MACHINE ? noobj() : Machine.authority().write(vid, obj));
     }
 
     static Obj writeToSpace(final String vid, final Obj obj) {
@@ -255,6 +261,41 @@ public interface Machine extends Space {
 
     void addSpace(final Space space);
 
+    /**
+     * Mount a space HERE — and the level IS the audience. A space mounted on a machine is visible to that machine
+     * and everything below it; mounted on a frame's machine it belongs to that frame alone. Promotion (widening the
+     * audience) is moving the mount point further out along {@code previous()}.
+     * <p>
+     * Two things this has to do that no existing call did:
+     * <ol>
+     *     <li><b>Undo the constructor's self-registration.</b> {@code AbstractSpace} registers itself into
+     *     {@code Machine.authority()}, so a freshly built space is visible from the root whether or not that was
+     *     asked for. {@code removeSpace} matches by PATTERN-TEST against the stored key — so remove by the key it
+     *     was actually stored under: the VID when the space has one, the pattern only when it is vid-less.</li>
+     *     <li><b>Register at the chosen level through the frame-aware memory.</b> If the receiver IS the machine of
+     *     the live frame, the frame's own union side is the only per-frame home ({@code MemoryUnion.addSpace}
+     *     routes to {@code this.current}). Otherwise the receiver's own memory: a machine-wide space.</li>
+     * </ol>
+     * Without (1) a mount leaks to the root; without (2) it lands in the machine's own slot, which {@code push()}'s
+     * clone SHARES with its enclosing machine — so it leaks to the parent and to every sibling. Both were measured.
+     */
+    default Machine mount(final Space space) {
+        if (null == space)
+            return this;
+        final fURI key = null == space.vid() ? space.pattern() : space.vid();
+        Machine.authority().removeSpace(key);
+        final Frame frame = Machine.frame();
+        final Memory where = (null != frame && frame.machine() == this) ? frame.memory() : this.memory();
+        where.addSpace(space);
+        // and clean the authority AFTER the add as well: a frame's union searches its INHERITED side, so a space that
+        // reached the shared level would still answer from the frame while being visible to everything else. Mounting
+        // ON the authority is the global mount, so that case is exempt -- there the authority copy IS the mount.
+        final Machine authority = Machine.authority();
+        if (this != authority)
+            authority.removeSpace(key);
+        return this;
+    }
+
     void removeSpace(final fURI vid);
 
     <SPACE extends Space> SPACE getSpace(final fURI pattern);
@@ -298,7 +339,7 @@ public interface Machine extends Space {
         //
         // pop() is in a finally because a frame that is not released leaks its imports, its bindings and its
         // peers — and an exception is exactly when you least want that.
-        final Machine previous = Machine.current();
+        final Machine previous = Machine.authority();
         Machine.withPerspective(this);
         this.push();
         try {
@@ -324,10 +365,17 @@ public interface Machine extends Space {
     default InstSet ownInstset() {
         final Obj proto = this.at(uri(INSTSET));
         if (proto.isNoObj())
-            return instset0();
-        final Obj resolved = proto.isCall() ? proto.apply() : proto;
-        // an unbound slot resolves to nothing, and "no ISA" is the empty ISA rather than a failure
-        return null == resolved || resolved.isNoObj() || !resolved.isInstSet() ? instset0() : resolved.as();
+            return new BasicInstSet();
+        // apply the slot's proto whenever it is an INST -- an instLambda is an Inst but isCall() is false for it,
+        // so `proto.isCall() ? proto.apply() : proto` never evaluated the seed and ownInstset() fell through to
+        // a throwaway on every call. Obj.apply() is the no-arg form that runs the lambda and yields the ISA.
+        final Obj resolved = (proto.isInst() || proto.isCall()) ? proto.apply() : proto;
+        // an unbound slot resolves to nothing, and "no ISA" is an EMPTY ISA rather than a failure — but it is this
+        // machine's own BasicInstSet, not the shared instset0(), so an import has somewhere private to land.
+        // instanceof, not isInstSet(): the mtron-type check rejected the seeded BasicInstSet and fell through to the
+        // throwaway, so every call returned a different object and a machine-level write had nowhere to persist.
+        // ownMemory() has always used instanceof Memory for exactly this reason — this mirrors it.
+        return null == resolved || resolved.isNoObj() || !(resolved instanceof InstSet) ? new BasicInstSet() : (InstSet) resolved;
     }
 
     /**
@@ -701,7 +749,11 @@ public interface Machine extends Space {
 
         InstSet instset() {
             if (null == this.instset)
-                this.instset = new InstSetUnion(this.inheritedInstset(), instset0());
+                // The frame's OWN side is a FRESH BasicInstSet, exactly as this frame's memory is a fresh BasicMemory
+                // and its network a fresh BasicNetwork. That is what makes a frame private: writes land in the
+                // frame's own level, never in the machine's slot and never in the library instset an import came
+                // from. Reading the machine's slot here instead would share one ISA across every frame.
+                this.instset = new InstSetUnion(this.inheritedInstset(), new BasicInstSet());
             return this.instset;
         }
 
@@ -817,7 +869,7 @@ public interface Machine extends Space {
 
         /**
          * The zero machine — {@code machine::T.zero()}: no spaces, no instset, no compiler, no
-         * processor, and no route table. It is the fallback {@link Machine#current()} serves before
+         * processor, and no route table. It is the fallback {@link Machine#authority()} serves before
          * boot.
          * <p>
          * It is deliberately inert: every mutator is a no-op, so nothing written against the zero

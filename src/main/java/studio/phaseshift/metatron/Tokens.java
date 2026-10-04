@@ -220,6 +220,7 @@ public final class Tokens {
     public static final String DIV = "div";
     public static final String QUOTE = "quote";
     public static final String CODE = "code";
+    public static final String ESC = "esc";
     public static final String LANG = "lang";
     public static final String START = "start";
     public static final String END = "end";

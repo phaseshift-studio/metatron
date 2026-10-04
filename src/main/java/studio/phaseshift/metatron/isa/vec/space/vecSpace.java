@@ -151,7 +151,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
             LOG.warn("could not list collections");
             this.schemaInstset = createSchemaInstset(schemaVid, Set.of());
         }
-        Machine.current().addSpace(this.schemaInstset);
+        Machine.authority().addSpace(this.schemaInstset);
         this.schemaInstset.setup();
         this.at(uri(SCHEMA), this.schemaInstset, MUTABLE);
     }

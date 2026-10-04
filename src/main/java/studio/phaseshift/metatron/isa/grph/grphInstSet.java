@@ -346,7 +346,7 @@ public class grphInstSet extends AbstractInstSet {
                                                                     || dp.hasField() || dp.hasExtension())
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final fURI furi = ref.uriValue();
-                                                            final studio.phaseshift.metatron.isa.Space space = Machine.current().getSpaceFor(furi);
+                                                            final studio.phaseshift.metatron.isa.Space space = Machine.authority().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final long count = "V".equals(dp.collection())
@@ -405,7 +405,7 @@ public class grphInstSet extends AbstractInstSet {
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final fURI furi = args.asLst().at(0).asUri().uriValue();
                                                             final String filterClause = args.asLst().at(1).asStr().jvm();
-                                                            final studio.phaseshift.metatron.isa.Space space = Machine.current().getSpaceFor(furi);
+                                                            final studio.phaseshift.metatron.isa.Space space = Machine.authority().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             //final DataPath dp = DataPath.withoutDB(furi);
@@ -441,7 +441,7 @@ public class grphInstSet extends AbstractInstSet {
                                                             final fURI furi = args.asLst().at(0).asUri().uriValue();
                                                             final String filterClause = args.asLst().at(1).asStr().jvm();
                                                             final long limit = takeInst.arg(0).asInt().jvm();
-                                                            final studio.phaseshift.metatron.isa.Space space = Machine.current().getSpaceFor(furi);
+                                                            final studio.phaseshift.metatron.isa.Space space = Machine.authority().getSpaceFor(furi);
                                                             if (!(space instanceof grphSpace gs))
                                                                 return matchList.stream().map(Obj::asInst).toList();
                                                             final DataPath dp = DataPath.withoutDB(furi);

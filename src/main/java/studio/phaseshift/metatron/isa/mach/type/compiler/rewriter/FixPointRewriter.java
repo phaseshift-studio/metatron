@@ -77,7 +77,7 @@ public class FixPointRewriter extends MRec implements Rewriter {
         int hash = c.hashCode();
         int done = this.at(MAX).orElse(jnt(2)).intValue().intValue();
         while (done != 0) {
-            Machine.current().spaces()
+            Machine.authority().spaces()
                     .elements()
                     .filter(r -> r.second() instanceof InstSet)
                     .flatMap(r -> r.second().<InstSet>as().rewrites().stream())

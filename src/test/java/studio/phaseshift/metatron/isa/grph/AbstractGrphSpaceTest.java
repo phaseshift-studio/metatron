@@ -121,7 +121,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
 
     @AfterAll
     public static void cleanupRewriteTestSpace() {
-        Machine.current().removeSpace(REWRITE_TEST_SPACE_URI);
+        Machine.authority().removeSpace(REWRITE_TEST_SPACE_URI);
     }
 
     // ========================================================================
@@ -163,7 +163,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
 
     @Override
     protected void dropDeducedCollection(final String collectionName) {
-        final Space space = Machine.current().getSpaceFor(f("/g"));
+        final Space space = Machine.authority().getSpaceFor(f("/g"));
         if (space instanceof grphSpace gs)
             gs.sjvm().V().hasLabel(collectionName).drop().iterate();
     }
@@ -185,7 +185,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
 
     @AfterAll
     public static void cleanupISAs() {
-        Machine.current().removeSpace(GRPH_ISA_TID);
+        Machine.authority().removeSpace(GRPH_ISA_TID);
     }
 
     /**
@@ -301,7 +301,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
      */
     @Test
     public void testEdgePropertyIsa() {
-        final grphSpace gs = (grphSpace) Machine.current().getSpaceFor(f("/g"));
+        final grphSpace gs = (grphSpace) Machine.authority().getSpaceFor(f("/g"));
         // Create alice and bob vertices (match constructor seeding pattern)
         final Vertex alice = gs.sjvm().addV("testVertex").property("name", "alice").next();
         final Vertex bob = gs.sjvm().addV("testVertex").property("name", "bob").next();
@@ -480,8 +480,8 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
                 AbstractMetatronTest.checkCodeParseApply(LOG, parts[0].trim(), parts[1].trim());
             }
         } finally {
-            Machine.current().removeSpace(f(hot.vid().toString()));
-            Machine.current().removeSpace(f(cold.vid().toString()));
+            Machine.authority().removeSpace(f(hot.vid().toString()));
+            Machine.authority().removeSpace(f(cold.vid().toString()));
         }
     }
 

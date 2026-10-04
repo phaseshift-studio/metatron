@@ -18,8 +18,31 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.QProc;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Stats;
+import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.Tuple;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import static studio.phaseshift.metatron.Tokens.QPROC;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.space.argFrames;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -65,7 +88,47 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Memory extends Machine.Component, Closeable {
+public interface Memory extends Space, Machine.Component, Closeable {
+
+    /**
+     * A Memory claims EVERYTHING it presents: its jurisdiction is the world of spaces it facades, so its pattern is
+     * ALL. This is what distinguishes it from the spaces it holds, each of which claims only its own subgraph.
+     */
+    @Override
+    default fURI pattern() {
+        return studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+    }
+
+    /** A Memory has no JVM context of its own; it borrows the one the machine runs in. */
+    @Override
+    default Object sjvm() {
+        return this.machine().sjvm();
+    }
+
+    /** The route table lives on the machine — {@code smallToBigRoutes}, surfaced as {@code route => [=>]}. */
+    @Override
+    default Map<Uri, Obj> routes() {
+        return this.machine().routes();
+    }
+
+    /** IO belongs to the machine, not to the window onto it. */
+    @Override
+    default Stats stats() {
+        // machine() never returns null: Machine.Component.machine() walks to the nearest Machine and falls back
+        // to mach0(), so delegation needs no null branch and no fallback instance.
+        return this.machine().stats();
+    }
+
+    /**
+     * Routing, delegated to the machine this memory belongs to — because that is where the route table lives
+     * ({@code smallToBigRoutes}, surfaced as the machine's {@code route => [=>]} rec). This is the Router statement
+     * in one method: a Memory IS a Space, and the one piece of space machinery it does not own, it borrows from the
+     * machine, which is what makes Memory the facade over the world of spaces rather than another space in it.
+     */
+    @Override
+    default fURI redirect(final fURI vid, final boolean big) {
+        return this.machine().redirect(vid, big);
+    }
 
     /**
      * The per-instruction <b>arg stack</b>, one per thread: the args of the instruction currently being applied,
@@ -240,7 +303,7 @@ public interface Memory extends Machine.Component, Closeable {
      */
     static fURI hereVID() {
         final Machine.Frame frame = Machine.frame();
-        return (null == frame) ? Machine.current().vid() : frame.machine().vid();
+        return (null == frame) ? Machine.authority().vid() : frame.machine().vid();
     }
 
     static <SPACE extends Space> SPACE mostSpecific(final Rec spaces, final fURI vid) {

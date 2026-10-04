@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * <p><b>Routing safety</b>: A VID in the
  * dcmntSpace's own data pattern (e.g. {@code mongo:schema/...}) would route back into
- * the space via {@code Machine.current().addSpace()} causing infinite recursion.
+ * the space via {@code Machine.authority().addSpace()} causing infinite recursion.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
