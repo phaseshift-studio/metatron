@@ -154,7 +154,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
     /**
      * Read the source-of-truth JVM for this object.  If the object has a
      * persistent address ({@link #vid()}), the latest state is fetched from
-     * the space via {@link Machine#authority() Machine.authority().read(vid())}.
+     * the space via {@link Machine#root() Machine.root().read(vid())}.
      * Otherwise the local construction-time JVM is returned.
      *
      * <p>Subclasses should call this before every rendering pass so that
@@ -163,7 +163,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
     protected final Map<Obj, Obj> jvmRead() {
         if (this.vid() == null) return this.jvm();
         try {
-            final Obj fresh = Machine.authority().read(this.vid());
+            final Obj fresh = Machine.root().read(this.vid());
             return fresh.isRec() ? fresh.jvm() : this.jvm();
         } catch (final Exception e) {
             return this.jvm(); // fallback: space unavailable
@@ -191,13 +191,13 @@ public class JRec<OBJECT> extends MObj implements Rec {
             return;
         }
         try {
-            final Obj current = Machine.authority().read(this.vid());
+            final Obj current = Machine.root().read(this.vid());
             final Map<Obj, Obj> merged = new LinkedHashMap<>(current.isRec() ? current.jvm() : this.jvm());
             merged.put(key, value);
-            Machine.authority().write(this.vid(), rec(merged, current.tid(), this.vid()));
+            Machine.root().write(this.vid(), rec(merged, current.tid(), this.vid()));
         } catch (final Exception e) {
             // Fallback: direct sub-path write
-            Machine.authority().write(this.vid().extend(key.uriValue()), value);
+            Machine.root().write(this.vid().extend(key.uriValue()), value);
         }
     }
 

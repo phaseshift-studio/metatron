@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type.processor;
 
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
@@ -31,6 +32,8 @@ public interface Monad<OBJ extends Obj> extends Obj {
     Inst inst();
 
     Obj obj();
+
+    Monad<OBJ> attach(final Code code);
 
 
     /// //////////////////////////////////////////////

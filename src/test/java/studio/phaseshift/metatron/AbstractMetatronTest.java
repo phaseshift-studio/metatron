@@ -85,7 +85,6 @@ public abstract class AbstractMetatronTest {
         BOOTED = false;
     }
 
-
     public static void checkMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
         final Obj a = ObjmtronSerializer.parse(lhs);
         final Obj b = ObjmtronSerializer.parse(rhs);
@@ -301,11 +300,10 @@ public abstract class AbstractMetatronTest {
      */
     public static Obj getRouterStatistics(final GraphittyLogger LOG) {
         if (Machine.loaded()) {
-            return Machine.authority().at(uri("stats"));
+            return Machine.root().at(uri("stats"));
         }
         LOG.warn("router not loaded, cannot get stats");
         return noobj();
     }
 
 }
-

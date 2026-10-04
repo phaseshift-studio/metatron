@@ -40,7 +40,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.concurrent.Executors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -78,7 +79,7 @@ public class mcpHttpHandlerSseTest extends AbstractMetatronTest {
             this.server = null;
         }
         if (this.testSpace != null) {
-            Machine.authority().removeSpace(this.testSpace.vid());
+            Machine.root().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }

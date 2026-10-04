@@ -347,6 +347,12 @@ mtron> *plus?docq
      '1.plus(plus(1))    [-- 3 nested ap...',
      '1+(+1)             [-- 3 sugar nes...']]
 ==>docs::[
+    obj=>plus?rng=real&dom=real(real::T){<j>},
+    dom=>'a real',
+    rng=>'the sum',
+    args=>[0=>'the rhs real'],
+    desc=>'[mapper] a sum function \(f(x, y) ...']
+==>docs::[
     obj=>plus?rng=str&dom=str(str::T){<j>},
     dom=>'a prefix str',
     rng=>'the concatenated str',

@@ -610,7 +610,7 @@ public class MarkdownRunner {
                 new dcmntInstSet(), new rdfInstSet(), new dckrInstSet(),
                 new uiInstSet()
         }) {
-            Machine.authority().addSpace(is);
+            Machine.root().addSpace(is);
             Machine.writeToSpace(is);
             is.setup();
         }

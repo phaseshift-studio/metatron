@@ -80,7 +80,7 @@ public class MemSpaceLLMSessionIntegrationTest extends AbstractLLMSessionIntegra
     protected void cleanupSession() throws Exception {
         if (this.space != null) {
             try {
-                Machine.authority().removeSpace(this.space.vid());
+                Machine.root().removeSpace(this.space.vid());
             } catch (final Exception ignored) {
             }
             this.space.close();

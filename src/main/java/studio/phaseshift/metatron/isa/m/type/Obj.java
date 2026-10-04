@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
@@ -38,6 +39,8 @@ import studio.phaseshift.metatron.util.*;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -48,6 +51,7 @@ import static java.lang.System.lineSeparator;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
@@ -60,6 +64,7 @@ import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -846,7 +851,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default void delete() {
         if (null != this.vid())
-            Machine.authority().write(this.vid(), noobj());
+            Machine.root().write(this.vid(), noobj());
     }
 
     /**
@@ -857,7 +862,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Obj save() {
-        return null == this.vid() ? this : Machine.authority().write(this.vid(), this);
+        return null == this.vid() ? this : Machine.root().write(this.vid(), this);
     }
 
     default boolean booleanCheck() {
@@ -923,7 +928,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * not, and fall back to the Obj walk ({@link Type#isRefinementOf(Type)}).
          */
         public static boolean inInstSet(final fURI tid) {
-            return null != tid && Machine.loaded() && Machine.authority().getSpaceFor(tid) instanceof InstSet;
+            return null != tid && Machine.loaded() && Machine.root().getSpaceFor(tid) instanceof InstSet;
         }
 
         /**
@@ -937,7 +942,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (null == vid || !Machine.loaded())
                 return null;
             try {
-                final Space space = Machine.authority().getSpaceFor(vid);
+                final Space space = Machine.root().getSpaceFor(vid);
                 return space instanceof InstSet is ? is.vidToTid(vid) : null;
             } catch (final RuntimeException e) {
                 return null;
@@ -1098,19 +1103,22 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
-            if (!(other instanceof Obj))
+            if (!(other instanceof Obj otherObj))
                 return false;
-            if (obj.isNoObj() && ((Obj) other).isNoObj())
+            if (obj.isNoObj() && otherObj.isNoObj())
                 return true;
-            if (!Objects.equals(obj.vid(), ((Obj) other).vid()))
+            if (!Objects.equals(obj.vid(), otherObj.vid()))
                 return false;
-            if (obj.isObjs() && ((Obj) other).isObjs()) {
+            if (obj.isObjs() && otherObj.isObjs()) {
                 final Set<Obj> objSet = new HashSet<>(obj.jvm());
-                final Set<Obj> otherSet = new HashSet<>(((Obj) other).jvm());
+                final Set<Obj> otherSet = new HashSet<>(otherObj.jvm());
                 return objSet.equals(otherSet);
             }
-            return Objects.equals(obj.tid(), ((Obj) other).tid()) &&
-                    Objects.equals(obj.jvm(), ((Obj) other).jvm());
+           /* if (obj.isObjs() || otherObj.isObjs()) {
+                return Objects.equals(objs(obj), objs(otherObj));
+            }*/
+            return Objects.equals(obj.tid(), otherObj.tid()) &&
+                    Objects.equals(obj.jvm(), otherObj.jvm());
         }
 
         public static boolean objcLessEquals(final Obj obj, final Object other) {
@@ -1136,16 +1144,30 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (TypeCheck.type_pred.enabled()) {
                 if (Machine.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {
-                        final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
+                        // the type and the walk that failed are the whole content of this message, and both are
+                        // deep structures.  Rendered through toString() each collapsed onto ONE line — the type
+                        // ran to ~600 columns and its diff to a run-on of nested parens — so the console showed a
+                        // wall that wrapped into something no reader could follow.  toString() is the PLAIN
+                        // serializer (legal mtron, deliberately one line); the diagnostic instance nests and
+                        // indents, and — this text travels to logs, tests and other processes — carries no link
+                        // or color markup.
+                        final String matchDiffString = ObjmtronUISerializer.diagnostic().write(Poly.Helper.diffTypeRecursion(obj, obj.type()));
+                        final String objTypeString = ObjmtronUISerializer.diagnostic().write(obj.type());
+                        final String objTidString = ObjmtronUISerializer.diagnostic().write(obj.tid(obj.baseTypeID()));
                         final int width = Math.max(Math.max(
                                 CommonUtil.width(matchDiffString),
-                                CommonUtil.width(obj.toString())), CommonUtil.width(obj.type().toString()));
+                                CommonUtil.width(objTypeString)), CommonUtil.width(objTidString));
+                        // the bracketed wrapper is what makes indent() reach the FIRST line too: indent() leaves
+                        // line one alone, so an unwrapped type would hang at column 0 while its every
+                        // continuation sat at column 2.
                         throw new TypeMismatchException(obj, obj.type(),
                                 "obj does not match %s::T\n%s\n%s\n%s\n%s\n%s",
                                 obj.tid(),
-                                indent(obj.tid(obj.baseTypeID()).toString(), 2),
+                                indent("[" + objTidString, 2),
                                 indent("X=>", 6),
-                                indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
+                                indent(objTypeString, 2),
+                                indent("-".repeat(width), 2),
+                                indent(matchDiffString + "]", 2));
                     } else {
                         // name the level that rejected the value, not just the leaf. A type's constraints are
                         // its whole predicate stack, so for a nested stack the leaf may be the very predicate
@@ -1320,15 +1342,35 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
                             "any objs", "the deduplicated objs", Map.of(),
                             "a deduplication function \\(f({c}X) \\to {1<=c}X\\)"),
-                    docWrap(instC(BARRIER_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asLst().add(b))),
-                            "any objs", "the objs merged into the arg lst",
-                            Map.of(jnt(0), "the lst to merge into"), "a merging barrier function \\(f(X) \\nearrow x'\\)"),
-                    docWrap(instC(BARRIER_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asRec().at(b.asRel().first(), b.asRel().second()))),
+                    docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> {
+                                try {
+                                    final fURI mailbox = inst.arg(0).uriValue();
+                                    final AtomicReference<Obj> result = new AtomicReference<>(lhs);
+                                    final CountDownLatch latch = new CountDownLatch(1);
+                                    // SUBSCRIBE FIRST. A subscription only sees writes made AFTER it is registered, so it must be in
+                                    // place before any peer can report -- otherwise a fast shard reports into the void.
+                                    Machine.writeToSpace(mailbox.addQ(SUBQ_PATTERN.toString()), rec(uri(CODE), instLambda(o -> {
+                                        result.set(result.get().append(o));
+                                        latch.countDown();
+                                        return noobj();
+                                    })));
+                                    // THEN READ, BEFORE WAITING. A peer may have reported before we subscribed, and that write is
+                                    // invisible to the subscription -- so reading first is what keeps the barrier from waiting
+                                    // forever. Waiting before reading inverts the whole point of subscribe-then-read.
+                                    final Obj already = Machine.readFromSpace(mailbox);
+                                    if (!already.isNoObj()) {
+                                        result.set(result.get().append(already));
+                                        latch.countDown();
+                                    }
+                                    latch.await();
+                                    return result.get();
+                                } catch (final Exception e) {
+                                    throw MTronException.of(e);
+                                }
+                            }),
                             "any objs", "the objs as a rec", Map.of(jnt(0), "the rec to merge into"), "a rec merging function \\(f(X)\\to X\\)"),
                     docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                             "any objs", "the objs as is", Map.of(), "a passthrough function \\(f(X) \\to \\parallel X \\)"),
-                    docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
-                            "any objs", "the objs appended to the arg objs", Map.of(jnt(0), "the objs to append"), "an append function \\(f(X)\\to X\\)"),
                     docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.tid(inst.arg(0).asType().vid())),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to construct from the lhs"), "a type construction function \\(f(x)\\to x\\)"),
                     docWrap(instC(LOOP_INST_TID.dom(A).rng(INT_TID).q(MONAD_IN, "state/loop"), lst(), (lhs, inst) -> lhs), "any obj", "the unchanged lhs obj", Map.of(), "a loop state function \\(f(x) \\nearrow x\\): the loop frame marker over the monad"),

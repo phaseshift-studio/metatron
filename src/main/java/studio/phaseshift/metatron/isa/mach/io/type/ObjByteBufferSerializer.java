@@ -167,7 +167,7 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeType(final Type type) {
-        String typeString = (Machine.loaded() ? Machine.authority().redirect(type.tid(), false) : type.tid()) + "::T";
+        String typeString = (Machine.loaded() ? Machine.root().redirect(type.tid(), false) : type.tid()) + "::T";
         if (type.hasPredicate())
             typeString += ("[" + type.predicate() + "]");
         if (type.hasConstructor()) {

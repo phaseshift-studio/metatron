@@ -23,30 +23,25 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-
-import studio.phaseshift.metatron.isa.m.type.Poly;
-
 import java.util.Arrays;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -54,7 +49,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_TREE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -69,7 +63,7 @@ public class TreeWidgetTest extends AbstractMetatronTest {
     static void setUp() {
         AbstractMetatronTest.begin();
         final memSpace space = memSpace.of(rec(uri(PATTERN), uri("local:#")), f("/sys/space/local"));
-        Machine.authority().addSpace(space);
+        Machine.root().addSpace(space);
         // Build a deterministic tree in memory
         Machine.writeToSpace(f("local:docs"), str("docs/"));
         Machine.writeToSpace(f("local:docs/index.adoc"), str("= docs"));

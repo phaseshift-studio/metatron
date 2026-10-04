@@ -115,7 +115,7 @@ public class CommonUtilTest extends AbstractMetatronTest {
                 uri(PATTERN), uri("local:#"),
                 uri(ROUTE), rec(uri("local:"), uri("/tmp/common_utils_test"))).vid(f("/sys/space/local")))).apply(noobj()).as();
         LOG.warn(space);
-        Machine.authority().addSpace(space);
+        Machine.root().addSpace(space);
         final List<CommonUtil.TreeEntry> nodes = new ArrayList<>();
         CommonUtil.treeConsumer(f("local:"), 3, nodes::add);
         LOG.warn(Machine.readFromSpace("local:#/"));

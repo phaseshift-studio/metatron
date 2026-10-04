@@ -106,7 +106,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 Machine.writeToSpace(c);
                             else {
                                 CONST_TABLE.put(c.vid(), c);
-                                Machine.authority().registerRedirect(f(c.vid().name()), c.vid());
+                                Machine.root().registerRedirect(f(c.vid().name()), c.vid());
                             }
                         });
             } else if (k.equals(uri(TYPE))) {
@@ -118,7 +118,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 Machine.writeToSpace(t);
                             else {
                                 TYPE_TABLE.put(t.vid(), t.as());
-                                Machine.authority().registerRedirect(f(t.vid().name()), t.vid());
+                                Machine.root().registerRedirect(f(t.vid().name()), t.vid());
                             }
                         });
             } else if (k.equals(uri(INST))) {
@@ -129,7 +129,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 Machine.writeToSpace(i.tid(), i);
                             else {
                                 INST_TABLE.computeIfAbsent(i.tid().basePath(), kk -> new LinkedHashSet<>()).add(i.as());
-                                Machine.authority().registerRedirect(f(i.tid().name()), i.tid().basePath());
+                                Machine.root().registerRedirect(f(i.tid().name()), i.tid().basePath());
                             }
                         });
             } else if (k.equals(uri(REWRITE))) {
@@ -145,7 +145,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 LOG.warn("unable to load sugar: %s", v);
             }
         });
-        Machine.authority().write(this.vid(), this);
+        Machine.root().write(this.vid(), this);
     }
 
     @Override
@@ -197,10 +197,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     @Override
     public void close() {
-        this.types().stream().filter(t -> t.vid() != null).filter(t -> t.vid().test(this.pattern())).forEach(t -> Machine.authority().unregisterRedirect(f(t.vid().name()), t.vid()));
-        this.consts().stream().filter(c -> c.vid() != null).filter(c -> c.vid().test(this.pattern())).forEach(c -> Machine.authority().unregisterRedirect(f(c.vid().name()), c.vid()));
-        this.insts().stream().filter(i -> i.tid().test(this.pattern())).forEach(i -> Machine.authority().unregisterRedirect(f(i.tid().name()), i.tid()));
-        this.rewrites().stream().filter(r -> r.tid().test(this.pattern())).forEach(r -> Machine.authority().unregisterRedirect(f(r.tid().name()), r.tid()));
+        this.types().stream().filter(t -> t.vid() != null).filter(t -> t.vid().test(this.pattern())).forEach(t -> Machine.root().unregisterRedirect(f(t.vid().name()), t.vid()));
+        this.consts().stream().filter(c -> c.vid() != null).filter(c -> c.vid().test(this.pattern())).forEach(c -> Machine.root().unregisterRedirect(f(c.vid().name()), c.vid()));
+        this.insts().stream().filter(i -> i.tid().test(this.pattern())).forEach(i -> Machine.root().unregisterRedirect(f(i.tid().name()), i.tid()));
+        this.rewrites().stream().filter(r -> r.tid().test(this.pattern())).forEach(r -> Machine.root().unregisterRedirect(f(r.tid().name()), r.tid()));
         super.close();
     }
 
@@ -301,7 +301,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 if (inst.dom().isCode()) {
                                     REWRITE_TABLE.put(inst.tid(), inst);
                                 } else {
-                                    Machine.authority().registerRedirect(f(vid.name()), vid);
+                                    Machine.root().registerRedirect(f(vid.name()), vid);
                                     INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(inst);
                                 }
                             } else if (obj.isType()) {

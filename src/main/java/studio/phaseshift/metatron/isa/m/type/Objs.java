@@ -67,7 +67,7 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
 
     @Override
     default Obj autoResolve(final Obj obj) {
-        return objs(this.stream().map(x -> x.autoResolve(obj)));
+        return objs(this.stream().map(x -> (null == x ? noobj() : x).autoResolve(obj)));
     }
 
     default Obj autoResolve() {

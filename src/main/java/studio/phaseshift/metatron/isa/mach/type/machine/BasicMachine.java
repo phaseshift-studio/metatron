@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
@@ -37,11 +36,9 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -112,9 +109,9 @@ public class BasicMachine extends AbstractMachine {
                 uri(NETWORK), instLambda(ignore -> network),
                 uri(INSTSET), instLambda(ignore -> null),
                 uri(COMPILER), instLambda(ignore -> DefaultCompiler.fixpointScoringCompiler()),
-                uri(PROCESSOR), instLambda(ignore -> SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null)),
-                uri("+").c(cInt.of(-1, 1)), instC(f("+").c(cInt.of(-1, 1)).dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(),
-                        (lhs, inst) -> lhs.asMachine().move(f(inst.tid().name()).c(inst.tid().c())))), tid, vid);
+                uri(PROCESSOR), instLambda(ignore -> SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null))), tid, vid);
+        // uri("+").c(cInt.of(-1, 1)), instC(f("+").c(cInt.of(-1, 1)).dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(),
+        //       (lhs, inst) -> lhs.asMachine().move(f(inst.tid().name()).c(inst.tid().c())))), tid, vid);
     }
 
     // ======================== hot slot reads ========================

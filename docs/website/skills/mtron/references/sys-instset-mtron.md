@@ -56,8 +56,8 @@ mtron> *bash?docq
     dom=>'maybe an obj',
     rng=>'a lst[str] of results',
     args=>[
-     cmd=>'the terminal command to evaluate (...',
-     {?}timeout=>'a real number denoting timeout of ...'],
+     {?}timeout=>'a real number denoting timeout of ...',
+     cmd=>'the terminal command to evaluate (...'],
     desc=>'evaluate bash command. *important*...',
     example=>["bash('ls')                        ..."]]
 ```
@@ -71,15 +71,15 @@ mtron> bash('ls')
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(12 more)]
+   ...(13 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>[
     'Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.6M ...',
+    'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  518G ...',
+    '/dev/nvme0n1p2         916G  520G ...',
     'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -91,10 +91,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/614
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 5ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 5ms:
+    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]@/sys/fail/616
@@ -114,7 +114,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(12 more)]]
+   ...(13 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>[
@@ -125,7 +125,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(13 more)]
+   ...(14 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -167,7 +167,7 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-   ...(12 more)]
+   ...(13 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>[
     '  File: AGENTS.md',
@@ -192,7 +192,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::4096.0000,
     bB::6984.0000,
     bB::4096.0000,
-   ...(12 more)]
+   ...(13 more)]
 ```
 Unit values test against each other's units:
 
@@ -264,10 +264,10 @@ mtron> */sys/thread/+.count()
 ==>22
 mtron> sys_stat()
 ==>[
-    total_mem_jvm=>mB::448.0000,
-    free_mem_jvm=>mB::348.4609,
+    total_mem_jvm=>mB::432.0000,
+    free_mem_jvm=>mB::252.2811,
     max_mem_mach=>gB::15.1563,
-    used_mem_jvm=>mB::99.5391,
+    used_mem_jvm=>mB::179.7189,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[

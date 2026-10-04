@@ -59,13 +59,12 @@
  import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
  import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TYPE;
  import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TYPE;
- import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+ import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TYPE;
+ import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
- import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
- import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
  /*
@@ -512,7 +511,7 @@
 
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
                  if (routed.hasScheme() && !routed.test(this.pattern())) {
-                     return new IdObj(routed, Machine.authority().read(routed)).iterator();
+                     return new IdObj(routed, Machine.root().read(routed)).iterator();
                  }
                  // Flat key-value namespace (reserved kv_store label, or unknown collection).
                  // Only for paths under this space's prefix; absolute cross-space paths
@@ -611,7 +610,7 @@
                  LOG.debug("unknown tp3 vid: %s", pattern);
                  final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
                  if (full.equals(pattern)) return readCollection(dp);
-                 return IdObj.of(full, Machine.authority().read(full)).iterator();
+                 return IdObj.of(full, Machine.root().read(full)).iterator();
              }
          };
      }

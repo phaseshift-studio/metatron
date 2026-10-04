@@ -182,7 +182,7 @@ public final class SoC {
                 .inst(miotInstSet.MIOT_INST_TID.extend("reboot").dom(MIOT_DEVICE_TID).rng(MIOT_DEVICE_TID), lst(),
                         (lhs, inst) -> {
                             final fURI toVID = miotInstSet.deduceVID(lhs, f("+").extend(lhs.tid().name()));
-                            Machine.authority().write(toVID.extend("status"), uri("offline"));
+                            Machine.root().write(toVID.extend("status"), uri("offline"));
                             return lhs;
                         })
                 .create(types, insts);

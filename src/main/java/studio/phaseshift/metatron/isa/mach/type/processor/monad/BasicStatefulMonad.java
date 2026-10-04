@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.processor.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.processor.Monad;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -47,6 +48,12 @@ public class BasicStatefulMonad extends AbstractStatefulMonad {
     }
 
     @Override
+    public Monad<Lst> attach(final Code code) {
+        this.jvm().lstValue().set(3, code);
+        return this;
+    }
+
+    @Override
     public Lst jvm() {
         return this.jvm;
     }
@@ -70,6 +77,14 @@ public class BasicStatefulMonad extends AbstractStatefulMonad {
 
     public static StatefulMonad statefulMonad(final Obj obj, final Inst inst, final Rec state, final Call code) {
         return new BasicStatefulMonad(lst(CommonUtil.arrayList(obj, inst, state, code)), MACH_BASIC_MONAD_TID, null);
+    }
+
+    public static StatefulMonad statefulMonad(final Obj obj, final fURI instVID, final Rec state) {
+        return new BasicStatefulMonad(lst(CommonUtil.arrayList(obj, Inst.Helper.idInst(instVID), state, noobj())), MACH_BASIC_MONAD_TID, null);
+    }
+
+    public static StatefulMonad statefulMonad(final Obj obj, final fURI instVID) {
+        return new BasicStatefulMonad(lst(CommonUtil.arrayList(obj, Inst.Helper.idInst(instVID), rec0(), noobj())), MACH_BASIC_MONAD_TID, null);
     }
 
     public static StatefulMonad statefulMonad(final Obj obj) {

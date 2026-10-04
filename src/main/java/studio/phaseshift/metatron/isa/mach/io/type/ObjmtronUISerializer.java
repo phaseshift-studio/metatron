@@ -80,6 +80,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <li>{@link #single()} — the console default (clipped, indented, linked, paged,
  *       pointer drawn as its address);</li>
  *   <li>{@link #linkBodies()} — the log style (pointer drawn as a linked body, no pager);</li>
+ *   <li>{@link #diagnostic()} — nested and indented, but stripped of everything only a
+ *       renderer can resolve (no link tags, no color, no pager), for text that travels
+ *       outside a console — a fail message, a log line, a test assertion.</li>
  * </ul>
  * and {@link #of(Rec, fURI)} builds one configured from a rec — the mtron
  * constructor's job.  Note what is <em>not</em> here: no legal-mtron guarantee — this
@@ -116,6 +119,15 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             uri(KEY_PAGER), BOOL_FALSE),
             OBJ_MTRON_SERIALIZER_TID, VID);
 
+    // A diagnostic is read where a renderer is NOT: a log file, a test assertion, a fail
+    // message that may travel to another process.  So it keeps the nesting (a run-on line is
+    // the thing a diagnostic cannot afford) and drops everything that only a renderer can
+    // resolve — no link tags, no color markup, no pager.
+    private static final ObjmtronUISerializer DIAGNOSTIC_INSTANCE = new ObjmtronUISerializer(mutableMap(
+            uri(KEY_COLOR), BOOL_FALSE,
+            uri(KEY_PAGER), BOOL_FALSE),
+            OBJ_MTRON_SERIALIZER_TID, VID);
+
     /**
      * The console instance: clipped, indented, linked, paged where a terminal is present,
      * pointer drawn as its address.
@@ -140,6 +152,16 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     public static ObjmtronUISerializer prettyPrint() {
         return PRETTY_PRINT_INSTANCE;
+    }
+
+    /**
+     * The diagnostic instance: nested and indented, but with none of the console view —
+     * no link tags, no color markup, no pager.  This is what a fail message renders
+     * through, because such a message is read in a log, a test, or another process,
+     * where a {@code {{link}}} tag is noise and a one-line wall is unreadable.
+     */
+    public static ObjmtronUISerializer diagnostic() {
+        return DIAGNOSTIC_INSTANCE;
     }
 
     /**
@@ -391,7 +413,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
         // uris where the serializer writes them.  Going around it left every vid -- and every type
         // named inside a refinement or a collection -- unclickable while plain uri values were fine
-        final fURI vid = Machine.loaded() ? Machine.authority().redirect(obj.vid(), false) : obj.vid();
+        final fURI vid = Machine.loaded() ? Machine.root().redirect(obj.vid(), false) : obj.vid();
         return sb.append("{{y}}@{{/y}}").append(this.writeUriExtension(vid.toUri(), "y", true));
     }
 
@@ -421,13 +443,22 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         if (!poly.isLst() && !poly.isRec())
             return false;
         final long count = poly.count();
-        if (count < 2) return false;
+        if (count < 1) return false;
+        // whether an entry carries structure is the whole test for a one- or two-entry poly: a
+        // rec's java form is its MAP, so a two-entry rec is ~two keys there and never trips the
+        // width test below, yet a value like a six-field type draws as a wall.
+        final boolean structured = poly.elements().anyMatch(this::carriesStructure);
+        if (count < 2) return structured;
         if (Graphitty.viewLength(poly.jvm().toString()) > NESTED_STRING_THRESHOLD)
             return true;
         // a rec whose entries hold values with structure — a type predicate rec (uri::T,
         // [inst::T], ...), chiefly — reads as a flat wall at full width; entries like these
         // get their own lines even when the entries themselves are short
-        return poly.elements().anyMatch(x -> x.isPoly() || x.isType() || x.isInst() || x.isCode());
+        return structured;
+    }
+
+    private boolean carriesStructure(final Obj obj) {
+        return obj.isPoly() || obj.isType() || obj.isInst() || obj.isCode();
     }
 
     // ── List generation (clipped, nested) ────────────────────────

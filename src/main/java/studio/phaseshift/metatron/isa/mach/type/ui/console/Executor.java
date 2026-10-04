@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static studio.phaseshift.metatron.Tokens.DEBUG;
-import static studio.phaseshift.metatron.Tokens.MACH;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -111,7 +110,13 @@ public final class Executor {
                 if (this.console.input.isNoObj()) {
                     // funnel compilation through the machine's compiler (compile-once); the already-
                     // resolved segment short-circuits, and the processor runs it without re-resolving.
-                    final Machine machine = Machine.accessMachine(this.console.vidOrTid().extend(MACH), Machine.defaultMachine());
+                    // WHERE THE THREAD STANDS. Not the console's vid: that RESOLVES (to the root's machine), so
+                    // accessMachine returns it and any fallback is dead code -- which is why seeding the fallback
+                    // with Machine.current() changed nothing. A prompt line must run in the frame of reference, or
+                    // a move cannot persist across lines: the console would keep asking where it started.
+                    // (The pane binding is the OUTPUT side -- console.getActivePane().machine(mach) below -- so
+                    // reading the perspective here does not steal it.)
+                    final Machine machine = Machine.current();
                     final Code compiled = machine.compiler().apply(resolvedResult).asCode();
                     final Processor mach = machine.processor().code(compiled);
                     final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
@@ -131,6 +136,14 @@ public final class Executor {
                         backgrounded = true;
                     } else {
                         computeResult.set(future.get());
+                        // THE SESSION ADOPTS WHERE THE WORK ENDED. The worker started where this thread stood and
+                        // published where it finished (ThreadExecutor carries the frame of reference both ways); a
+                        // prompt persists between statements, so it is the thing that must adopt it. Without this
+                        // the move is real but invisible here -- and with it, no console special-casing of results,
+                        // no auto_xxx hook: the boundary is the thread, and the session is this thread.
+                        if (mach instanceof studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread worker
+                                && null != worker.landedPerspective())
+                            Machine.withPerspective(worker.landedPerspective());
                     }
                 } else {
                     computeResult.set(this.console.input.apply(resolvedResult));

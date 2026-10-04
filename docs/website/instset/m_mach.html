@@ -622,8 +622,8 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> this VM&#39;s static view of its cluster (fields + methods)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#peer" class="text-light">peer</a> <span class="text-light">=&gt;</span> <a href="#'the declared roster — an auto pointer, never a stale copy'" class="text-info">&#39;the declared roster — an auto pointer, never a stale copy&#39;</a>
-  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health method: peer => status'" class="text-info">&#39;the health method: peer =&gt; status&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health method: peer => status'" class="text-info">&#39;the health method: peer =&gt; status&#39;</a>
+  <a href="#peer" class="text-light">peer</a> <span class="text-light">=&gt;</span> <a href="#'the declared roster — an auto pointer, never a stale copy'" class="text-info">&#39;the declared roster — an auto pointer, never a stale copy&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__compiler">
@@ -823,9 +823,9 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> one metatron instance the local instance knows about</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#'the inst that reaches it; absent when only known, not reachable'" class="text-info">&#39;the inst that reaches it; absent when only known, not reachable&#39;</a>
-  <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#"the peer's address, scheme and host:port"" class="text-info">&quot;the peer&#39;s address, scheme and host:port&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#"the peer's address, scheme and host:port"" class="text-info">&quot;the peer&#39;s address, scheme and host:port&quot;</a>
   <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the last health report computed for this peer'" class="text-info">&#39;the last health report computed for this peer&#39;</a>
+  <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#'the inst that reaches it; absent when only known, not reachable'" class="text-info">&#39;the inst that reaches it; absent when only known, not reachable&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor">
@@ -907,12 +907,12 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
-  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
   <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
   <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">

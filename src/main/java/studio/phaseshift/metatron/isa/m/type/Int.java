@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  */
 public interface Int extends Mono, Ring.O<Int> {
-    
+
     Int ZERO = jnt(0L);
     Int ONE = jnt(1L);
 
@@ -129,6 +129,11 @@ public interface Int extends Mono, Ring.O<Int> {
                             "1+(+1)             [-- 3 sugar nested form  --]"),
                     //    Map.of(uri(LAW), laws(Category.Law.commutative, Category.Law.right_distributive, Category.Law.action),      uri(INVERSE), uri(MINUS_INST_TID.dom(INT_TID).rng(INT_TID)))),
                     //docWrap(instC(PLUS_INST_TID.dom(INT_TID.some()).rng(INT_TID.some()), lst(T(INT_TID)), (lhs, inst) -> objs(lhs.elements().map(i -> i.jvm(i.intValue() + inst.arg(0).intValue())))), "the lhs int list", "the result of the addition", Map.of(INT_TYPE, "the int to add to each element of the lhs list"), "add the argument int to each element of the lhs int list"),
+                    docWrap(instC(MEAN_INST_TID.dom(INT_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> real(lhs.stream().mapToLong(Obj::intValue).average().orElse(0L))),  // TODO: don't we need c involved?
+                            "a stream of reals",
+                            "the mean of the lhs real stream",
+                            Map.of(), "the mean of a stream of reals", "{1.0,2.0,3.0}.mean() [-- 2.0 --]"),
+
                     docWrap(instC(GT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() > inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is greater than the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is greater than the argument int"),
                     //  Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(GTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() >= inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is greater than or equal to the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is greater than or equal to the argument int"),

@@ -314,7 +314,7 @@ public class SQLSchemaGenerator {
      * {@link studio.phaseshift.metatron.isa.AbstractInstSet} stores them locally in
      * {@code TYPE_TABLE} rather than routing them elsewhere.
      *
-     * <p>Register the returned instset via {@code Machine.authority().addSpace(instset)} —
+     * <p>Register the returned instset via {@code Machine.root().addSpace(instset)} —
      * safe because its VID is in {@code /m/}, not in the tbleSpace's data namespace.
      *
      * @param schemaVid VID for the schema instset, e.g. {@code f("/m/tble/space/schema/mydb")}

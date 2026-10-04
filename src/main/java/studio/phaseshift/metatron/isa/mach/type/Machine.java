@@ -43,15 +43,32 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 
 /**
- * Machine — the container that binds an ISA to its lowering and execution axes. A Machine IS-A
- * {@code Router}: it holds spaces, so a machine is a memory hierarchy — its own address space plus
- * the nested spaces of its instset, compiler and processor. The three members are held as rec
- * entries ({@code instset}, {@code compiler}, {@code processor}), which is exactly the shape of the
- * {@code machine::T} structural type.
+ * Machine: a SPACE OF SPACES -- the address space resolution happens in. Its members ({@code instset}, {@code memory},
+ * {@code network}, {@code compiler}, {@code processor}) are rec entries, the shape of {@code machine::T}; {@link Memory}
+ * is the facade over the world of spaces, while {@link Compiler} lowers code and {@link Processor} runs it and neither
+ * is an address space.
  * <p>
- * Execution is <em>not</em> on this axis: {@link Processor} (a thread) runs code and
- * {@link Compiler} (a rec) lowers it — they are siblings of {@code Machine}, not refinements. A
- * machine <em>contains</em> them.
+ * Three names, three questions: {@link #jvmRoot()} is this JVM's bootstrap; {@link #root()} is the top of the
+ * containment this thread is in, and is what resolution reads; {@link #current()} is where the thread stands.
+ * <p>
+ * This interface carries four roles, and the source is grouped in this order:
+ * <ol>
+ *     <li><b>identity and place</b> -- {@code jvmRoot}, {@code root}, {@code mach0}, {@code defaultMachine},
+ *     {@code descendsFrom}: where things are and who contains whom.</li>
+ *     <li><b>the perspective</b> -- {@code CURRENT} with {@code current()} and the two {@code withPerspective} forms.</li>
+ *     <li><b>the entry point</b> -- {@code readFromSpace}, {@code writeToSpace}, {@code loaded}.</li>
+ *     <li><b>the space contract and its index</b> -- {@code spaces}, {@code pattern}, {@code read}, {@code write},
+ *     {@code addSpace}, {@code removeSpace}, {@code getSpace}, {@code getSpaceFor}, {@code mount}, and the route
+ *     table's {@code register*}: three registries -- spaces, frames, routes.</li>
+ *     <li><b>execution</b> -- {@code apply}, {@code move}, {@code push}, {@code pop}.</li>
+ *     <li><b>components</b> -- {@code compiler}, {@code processor}, {@code instset}, {@code memory}, {@code network},
+ *     each in a frame-aware form and an {@code own*} slot form.</li>
+ *     <li><b>frames</b> -- {@code FRAME} (the cursor) and {@code FRAMES} (the address index), with {@code frameAt},
+ *     {@code frameRegister}, {@code forget}, and the non-allocating {@code *View} and
+ *     {@code inherited*} accessors.</li>
+ *     <li><b>reachability</b> -- {@code own}, {@code isPeer}, {@code selfAuthorities}.</li>
+ *     <li><b>inner types</b> -- {@code Frame}, {@code Machine0}, {@code Component}.</li>
+ * </ol>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -64,122 +81,81 @@ public interface Machine extends Space {
     /**
      * The machine ROOT — always, whatever perspective this thread is standing in. The bootstrap constant.
      */
-    static Machine root() {
+    // ======================== identity and place ========================
+    static Machine jvmRoot() {
         return null == ROOT_MACHINE ? mach0() : (Machine) ROOT_MACHINE;
     }
 
     /**
-     * This thread's CURRENT machine — the one it is evaluating in, which is the root until a machine dereference
-     * moves it. Two names because they are two things: the root is a constant, the current machine is a perspective.
-     * Everything that resolves asks for the CURRENT machine, so a fragment teleported into another machine resolves
-     * against THAT machine — which is the point — while boot and anything that genuinely means the root call root().
-     * The perspective moves only when a deref yields a machine (withPerspective), never on an ordinary scope: moving
-     * it per scope is what broke resolution (measured: 210 failures + 836 errors).
+     * The top of the containment this thread is in: the machine that owns its addresses and whose spaces answer.
+     * Resolution reads THIS, never {@link #current()} -- a machine that EXECUTES code need not be able to RESOLVE it.
      */
-    /**
-     * The outermost machine of the chain IN EFFECT -- "whose spaces answer here" when HERE may be another JVM.
-     * Locally that is {@link #root()}, which is why the two agree today (nothing calls {@link #arriveAt}, so the
-     * slot is unset and the fallback always wins). After a teleport it is the REMOTE machine's outermost one, which
-     * is the whole point: {@code root()} is this JVM's bootstrap constant and cannot name a machine in another JVM's
-     * chain, whereas the authority is a captured reference.
-     * <p>
-     * RESOLUTION MUST READ THIS, never {@link #current()}: a machine that EXECUTES code is not necessarily one that
-     * can RESOLVE it (a pushed clone carries only its own memory). Reading the frame of reference here produced
-     * 210F/836E and 1218E ("no active space supports pattern /m/mach/machine"). The rename that made {@code current}
-     * mean the frame of reference is what made that impossible rather than merely avoided.
-     * <p>
-     * It becomes DERIVED once {@code previous()} exists: the top of the chain is {@code current()} walked up via
-     * {@code previous()} until there is none, and this accessor is then that walk rather than a stored slot. The
-     * NAME is the durable part -- 172 callers depend on it and none of them change.
-     */
-    static Machine authority() {
-        final Machine authority = AUTHORITY.get();
-        return null != authority ? authority : root();
+    static Machine root() {
+        // THE TOP OF THE CONTAINMENT I AM IN -- the machine whose spaces answer, and the machine that grants the
+        // addresses. It is DERIVED, not stored: today every chain is rooted at this JVM's bootstrap, so this
+        // coincides with jvmRoot(). It stops coinciding the moment a caller ARRIVES somewhere else, and it becomes
+        // an actual walk up previous() then -- with nothing to store and nothing to go stale. There is deliberately
+        // No stored slot: a stored answer once let a landed-on machine masquerade as the outermost one.
+        return jvmRoot();
     }
 
     /**
-     * WHERE YOU STAND — this thread's frame of reference. A frame's machine, a teleported machine, or the root.
-     * <p>
-     * This is the name {@code current()} will take once the flip is finished; until then both exist, because
-     * {@code current()} is still read by the engine (Type/InstSet/Obj/CommonRewrites) and must keep meaning the
-     * resolution AUTHORITY. Reading this instead of authority() from the resolution path is what produced
-     * 210F/836E and 1218E -- a machine that EXECUTES code is not necessarily one that can RESOLVE it.
+     * Where this thread stands: the machine it is evaluating in, or {@link #root()} when nothing moved it.
+     * Moved by a machine dereference or {@link #withPerspective(Machine)}, never by an ordinary scope.
      */
     static Machine current() {
-        final Machine machine = PERSPECTIVE.get();
+        final Machine machine = CURRENT.get();
         return null != machine ? machine : root();
     }
 
-    ThreadLocal<Machine> PERSPECTIVE = new ThreadLocal<>();
+    /** The frame of reference, per thread. */
+    ThreadLocal<Machine> CURRENT = new ThreadLocal<>();
 
     /**
-     * The machine whose SPACES answer for resolution right now — a reference, not a JVM constant, which is the whole
-     * point: "fall through to the root" would mean the root of whichever JVM this happens to be, and that is the wrong
-     * root the moment you are standing inside a machine on another one. So the authority is captured when you land:
-     * teleporting to a machine that can resolve makes THAT machine your root, and teleporting to one that cannot
-     * (a clone executing local code, a component sub-machine) leaves the authority exactly where it was.
+     * The frame of reference, per thread: the machine this thread is evaluating in, or {@link #root()} when nothing
+     * moved it. A worker starts where its caller stood and publishes where it ended.
      */
-    ThreadLocal<Machine> AUTHORITY = new ThreadLocal<>();
 
     /**
-     * Evaluate a fragment in another machine's frame of reference, restoring this thread's on the way out. This is the
-     * scoped half of the teleport: in at the dereference, out when the fragment that followed it ends — the same
-     * try/finally shape as a scoped block, but keyed on the MACHINE and triggered by a machine deref, never by an
-     * ordinary scope.
+     * Evaluate a fragment in another machine's frame of reference, restoring this thread's on the way out.
+     * The scoped form: in at the dereference, out when the fragment that followed it ends.
      */
+    // ======================== the perspective ========================
     static Obj withPerspective(final Machine machine, final java.util.function.Supplier<Obj> fragment) {
-        final Machine previous = PERSPECTIVE.get();
-        final Machine previousAuthority = AUTHORITY.get();
-        PERSPECTIVE.set(machine);
+        final Machine previous = CURRENT.get();
+        CURRENT.set(machine);
         try {
             return fragment.get();
         } finally {
             if (null == previous)
-                PERSPECTIVE.remove();
+                CURRENT.remove();
             else
-                PERSPECTIVE.set(previous);
-            if (null == previousAuthority)
-                AUTHORITY.remove();
-            else
-                AUTHORITY.set(previousAuthority);
+                CURRENT.set(previous);
+
         }
     }
 
     /**
-     * Move this thread's perspective and LEAVE it there — no lambda, no automatic restore. The perspective does not
-     * change again until another call to either overload, which is the "name your way home" half of the model: you
-     * are not handed a return pointer, you address where you want to be (`*</.>` takes you back). Use the two-arg
-     * form when the move is scoped to one fragment; use this one when the move IS the statement.
+     * Move this thread's perspective and leave it there -- no lambda, no restore. Use this form when the move IS the
+     * statement; use the two-arg form when it is scoped to one fragment.
      */
     static Machine withPerspective(final Machine machine) {
-        PERSPECTIVE.set(machine);
+        CURRENT.set(machine);
         return machine;
     }
 
-    /**
-     * You ARRIVED here — this machine was resolved from an address (`mach://`, `http://`, another JVM's space). What
-     * you land on becomes the authority as well: its root is your root while you stand there. This is the ONLY thing
-     * that moves the authority, which is why "whose root" never needs a JVM constant. Contrast withPerspective(),
-     * which is for EXECUTING in a machine (a frame, a clone): same JVM, same root, so the authority stays put.
-     */
-    static Machine arriveAt(final Machine machine) {
-        PERSPECTIVE.set(machine);
-        AUTHORITY.set(machine);
-        return machine;
-    }
-
-    /**
-     * Whether a machine can answer for itself: it has spaces of its own. A machine that EXECUTES code need not be one
-     * that can RESOLVE it — a clone pushed as a frame carries only its own memory — and asking this at teleport time
-     * rather than per read keeps the hot path a single ThreadLocal lookup.
-     */
     // ======================== the space funnel ========================
-    // These belong on Machine; they delegate to Router only while Router still exists, so the bulk rename of
-    // Machine.readFromSpace/writeToSpace to Machine.* is provably identical rather than a reimplementation.
-    // Inlining the bodies is a separate step, after which Router can go.
+    // Reads and writes through root(), the machine whose spaces answer.
+    //
+    // WHY THE NAMES ARE readFromSpace/writeToSpace AND NOT read/write: Machine IS-A Space, so it already has
+    // instance read(fURI)/write(fURI, Obj), and a static of the same name cannot coexist with them -- same signature,
+    // same erasure. The longer names are that collision, not a preference; shortening them means either moving the
+    // statics onto another type or taking the instance methods away, and neither is worth doing before the facade
+    // work (memory() as the single read/write interface) settles which of the two is the entry point.
+    // ======================== the entry point ========================
     static Obj readFromSpace(final fURI vid) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst, "read " + vid),
-                () -> null == ROOT_MACHINE ? noobj() : Machine.authority().read(vid));
+                () -> null == ROOT_MACHINE ? noobj() : Machine.root().read(vid));
     }
 
     static Obj readFromSpace(final String vid) {
@@ -188,7 +164,7 @@ public interface Machine extends Space {
 
     static Obj writeToSpace(final fURI vid, final Obj obj) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "write " + vid),
-                () -> null == ROOT_MACHINE ? noobj() : Machine.authority().write(vid, obj));
+                () -> null == ROOT_MACHINE ? noobj() : Machine.root().write(vid, obj));
     }
 
     static Obj writeToSpace(final String vid, final Obj obj) {
@@ -200,37 +176,22 @@ public interface Machine extends Space {
     }
 
     /**
-     * The default machine — the {@code /sys/mach} constant bootstrapped by {@code machInstSet.setup()}.
-     * Falls back to {@link #mach0()} before the constant is loaded.
+     * The {@code /sys/mach} constant bootstrapped by {@code machInstSet.setup()}, falling back to {@link #mach0()}
+     * before the constant is loaded.
      */
     static Machine defaultMachine() {
         final Obj machine = Machine.readFromSpace(SYS.extend(MACH));
         return machine.isNoObj() ? mach0() : machine.as();
     }
 
-    static Machine accessMachine(final fURI uri, final Machine defaultMachine) {
-        fURI running = uri;
-        while (!running.isEmpty()) {
-            try {
-                final Obj machine = Machine.readFromSpace(running);
-                if (MACH_MACHINE_TID.extend(ALL).test(machine.tid()))
-                    return Rec.wrap(machine, BasicMachine.class);
-                running = running.retract(1);
-            } catch (final MTronException e) {
-                break; // TODO: allow no active space pass through
-            }
-        }
-        return defaultMachine;
-    }
-
-    // ======================== the address surface ========================
-    // A Machine IS the address space, so these are the machine's own contract. They used to be inherited from
-    // Router; Router is gone and Space is the parent now, so they are declared here rather than borrowed.
+        // ======================== the address surface ========================
+    // A Machine IS the address space, so these are the machine's own contract: declared here rather than inherited.
 
     static boolean loaded() {
         return null != ROOT_MACHINE;
     }
 
+    // ======================== the space contract and its index ========================
     default Rec spaces() {
         return this.at(uri(SPACE)).orElse(rec());
     }
@@ -262,35 +223,25 @@ public interface Machine extends Space {
     void addSpace(final Space space);
 
     /**
-     * Mount a space HERE — and the level IS the audience. A space mounted on a machine is visible to that machine
-     * and everything below it; mounted on a frame's machine it belongs to that frame alone. Promotion (widening the
-     * audience) is moving the mount point further out along {@code previous()}.
+     * Mount a space HERE, where the level IS the audience: on a machine it is visible to that machine and everything
+     * below; on a frame's machine it belongs to that frame alone.
      * <p>
-     * Two things this has to do that no existing call did:
-     * <ol>
-     *     <li><b>Undo the constructor's self-registration.</b> {@code AbstractSpace} registers itself into
-     *     {@code Machine.authority()}, so a freshly built space is visible from the root whether or not that was
-     *     asked for. {@code removeSpace} matches by PATTERN-TEST against the stored key — so remove by the key it
-     *     was actually stored under: the VID when the space has one, the pattern only when it is vid-less.</li>
-     *     <li><b>Register at the chosen level through the frame-aware memory.</b> If the receiver IS the machine of
-     *     the live frame, the frame's own union side is the only per-frame home ({@code MemoryUnion.addSpace}
-     *     routes to {@code this.current}). Otherwise the receiver's own memory: a machine-wide space.</li>
-     * </ol>
-     * Without (1) a mount leaks to the root; without (2) it lands in the machine's own slot, which {@code push()}'s
-     * clone SHARES with its enclosing machine — so it leaks to the parent and to every sibling. Both were measured.
+     * It must undo the constructor's self-registration -- removing by the key the space was STORED under, its vid when
+     * it has one -- and register at the chosen level through the frame-aware memory, or the mount leaks to the root or
+     * to every sibling.
      */
     default Machine mount(final Space space) {
         if (null == space)
             return this;
         final fURI key = null == space.vid() ? space.pattern() : space.vid();
-        Machine.authority().removeSpace(key);
+        Machine.root().removeSpace(key);
         final Frame frame = Machine.frame();
         final Memory where = (null != frame && frame.machine() == this) ? frame.memory() : this.memory();
         where.addSpace(space);
-        // and clean the authority AFTER the add as well: a frame's union searches its INHERITED side, so a space that
+        // and clean the root AFTER the add as well: a frame's union searches its INHERITED side, so a space that
         // reached the shared level would still answer from the frame while being visible to everything else. Mounting
-        // ON the authority is the global mount, so that case is exempt -- there the authority copy IS the mount.
-        final Machine authority = Machine.authority();
+        // ON the root is the global mount, so that case is exempt -- there the root copy IS the mount.
+        final Machine authority = Machine.root();
         if (this != authority)
             authority.removeSpace(key);
         return this;
@@ -318,16 +269,14 @@ public interface Machine extends Space {
     }
 
     @Override
+    // ======================== execution ========================
     default Obj apply(final Obj call) {
         return this.apply(call.asCode(), noobj());
     }
 
     /**
-     * The machine's single source of truth for code execution: compile once (rewrite → resolve →
-     * type) then run the compiled code against {@code start} on this machine's processor. The
-     * processor does not re-resolve — the compiled code short-circuits via its
-     * {@code isResolved(true)} gate, and runtime (element-type-dependent) resolution is memoized by
-     * the compiler's resolver.
+     * The machine's single source of truth for execution: compile once, then run the compiled code against
+     * {@code start}. The processor does not re-resolve; runtime resolution is memoized by the compiler's resolver.
      */
     default Obj apply(final Code code, final Obj start) {
         // The lexical frame. Everything this code application compiles and runs happens inside a frame of this
@@ -339,29 +288,26 @@ public interface Machine extends Space {
         //
         // pop() is in a finally because a frame that is not released leaks its imports, its bindings and its
         // peers — and an exception is exactly when you least want that.
-        final Machine previous = Machine.authority();
+        // APPLYING A MACHINE MOVES THE FRAME OF REFERENCE, AND LEAVES IT MOVED. You do not get a pointer back --
+        // you name your way home (`*<./>`), which is the whole model. The frame, by contrast, IS scoped: push/pop
+        // unwinds, because braces unwind.
+        //
+        // The frame unwinds here; the CURRENT does not. Applying a machine leaves you standing in it, and the
+        // root is containment -- it does not change when you move within it.
         Machine.withPerspective(this);
         this.push();
         try {
             return this.processor().code(this.compiler().apply(code).asCode()).apply(start);
         } finally {
             this.pop();
-            Machine.withPerspective(previous);
         }
     }
 
     /**
-     * @return the machine's instruction set (ISA), or {@code null} when none is bound
+     * The machine's own ISA slot, ignoring any frame, with its proto applied as the sibling accessors do.
+     * Applying is not optional: the slot holds a proto, so returning it raw hands back the lambda, not an ISA.
      */
-    /**
-     * The machine's own ISA slot, applying its proto construction exactly as {@link #compiler()} and
-     * {@link #processor()} do.
-     * <p>
-     * The application is not optional: the slot holds a <em>proto</em> — {@code BasicMachine.of} binds
-     * {@code instLambda(ignore -> null)} — so returning the slot's value directly hands back the lambda rather
-     * than an ISA, and any caller that casts it fails. This accessor had no callers until frames needed it, which
-     * is why the mismatch went unnoticed; the sibling accessors have always applied their protos.
-     */
+    // ======================== components ========================
     default InstSet ownInstset() {
         final Obj proto = this.at(uri(INSTSET));
         if (proto.isNoObj())
@@ -379,8 +325,8 @@ public interface Machine extends Space {
     }
 
     /**
-     * the ISA in effect for the <em>current frame</em>. With no frame pushed this is exactly the machine's own
-     * slot, so composition is introduced by {@link #push()} and nothing changes until it is used.
+     * The instruction set in effect for the current frame, or the machine's own slot when none is pushed.
+     * The ISA question, as {@link #memory()} is the binding question.
      */
     default InstSet instset() {
         final Frame frame = FRAME.get();
@@ -388,7 +334,9 @@ public interface Machine extends Space {
     }
 
     /**
-     * the memory in effect for the current frame — a relative-URI space
+     * The memory in effect for the current frame: the facade over the world of spaces, itself a {@link Space}, and the
+     * single interface for reading and writing addresses.
+     * Its level is the frame's when one is live, the machine's otherwise.
      */
     default Memory memory() {
         final Frame frame = FRAME.get();
@@ -410,31 +358,21 @@ public interface Machine extends Space {
     }
 
     /**
-     * The current thread's frame stack. Deliberately <b>not</b> initialised eagerly: until {@link #push()} is
-     * used there is no frame, and every component accessor falls straight through to the machine's own slot —
-     * which is what makes this inert until frames are actually pushed.
+     * This thread's frame stack, not initialised eagerly: until {@link #push()} is used there is no frame, and every
+     * component accessor falls through to the machine's own slot.
      */
+    // ======================== frames ========================
     ThreadLocal<Frame> FRAME = new ThreadLocal<>();
 
     /**
-     * The live frames of THIS thread — the owner — keyed by the frame's own address, which encodes its whole parent
-     * chain. This is the DOWNWARD link the frame stack cannot provide: {@code parent} walks up, and a
-     * {@code ThreadLocal<Frame>} holds only the cursor, so without this nothing could resolve an address at all.
-     * <p>
-     * Deliberately a plain ThreadLocal, never eagerly initialized and never touched on a read path, for the same
-     * reason FRAME is: materializing anything while resolving would recurse. A frame another thread pushed is
-     * simply not in this map — ownership is the visibility boundary, so no lock is needed and one thread's frames
-     * cannot appear in another's view.
+     * This thread's live frames, keyed by address -- the downward link {@link #FRAME} cannot provide, since the cursor
+     * only walks up. Ownership is the visibility boundary: another thread's frames are simply absent.
      */
     ThreadLocal<Map<fURI, Frame>> FRAMES = new ThreadLocal<>();
 
     /**
-     * Push a frame for this machine and make it current.
-     * <p>
-     * Returns {@code this} for fluency, and note what that implies: <b>the machine is not the frame</b>. Two
-     * pushes of the same machine would share one set of component views, so the pushed machine must belong to the
-     * frame. That is also why a frame's state cannot live on the machine — a machine is a value that may be
-     * evaluated by several threads at once, while the frame stack is per-thread.
+     * Push a frame for this machine and make it current, returning {@code this} for fluency.
+     * The machine is not the frame: two pushes of one machine would share a set of component views.
      */
     default Machine push() {
         // The convenience: a frame nobody named. mintShortUUID is called with retryIfCollision=FALSE because its
@@ -447,25 +385,8 @@ public interface Machine extends Space {
     }
 
     /**
-     * The frame algebra's ONE morphism application, and the only frame operation mtron needs to see.
-     * <p>
-     * NOT named `apply`: `apply(Obj)` is the engine's code-application path and a uri IS an Obj, so an
-     * `apply(fURI)` overload silently captures every uri argument — including the ones that mean "apply this uri as
-     * code/inst" — and the damage surfaces far away as a cast failure (`argFrames cannot be cast to Inst`). The
-     * algebra's name belongs on the INST (in the machine's rec, `<./+>`); this method is its Java face.
-     * <p>
-     * A uri names a morphism and its coefficient names the direction, so push/pop are not two operations but one
-     * operation and its inverse — the groupoid of frames, where the extension IS the name:
-     * <pre>
-     *   apply(&lt;.&gt;)            -&gt; this          the ring's identity: the zero displacement pushes NO frame
-     *   apply(+1 u)         -&gt; Machine(here·u) descend; refused when u does not strictly extend here
-     *   apply({-1} u)       -&gt; the parent      ascend, IFF this step is the one that brought us here
-     *   apply({-1} u)       -&gt; noobj           otherwise: you cannot invert a step you did not take
-     *   apply({0} u)        -&gt; noobj           the zero morphism is the empty function
-     * </pre>
-     * The guard on the inverse is what makes this total over the morphisms: {@code ⟨u⟩⁻¹∘⟨u⟩ = 1} holds only when
-     * the frame standing here is the one {@code u} would have produced, so ascending is defined exactly when it
-     * undoes the step that was taken — otherwise it is undefined rather than a silent mis-pop.
+     * Apply the frame algebra's one morphism: a uri names the step and its coefficient the direction, so push and pop
+     * are one operation and its inverse. Ascending is defined only when it undoes the step that brought us here.
      */
     default Obj move(final fURI extension) {
         final Frame frame = FRAME.get();
@@ -496,16 +417,8 @@ public interface Machine extends Space {
     }
 
     /**
-     * Push a CHILD frame whose vid strictly extends this machine's vid by {@code extension}, and return the CHILD.
-     * <p>
-     * The extension is a URI rather than a label because it is an EXPRESSION: a multi-segment, templated or
-     * composed extension all work through the same path arithmetic. Composition is {@code mult}, and since a `..`
-     * segment is arithmetic, `..`, `../..` and an absolute `/other/path` all collapse into the single violation
-     * below rather than aliasing a sibling or an ancestor.
-     * <p>
-     * The child is minted with {@code clone().selfVID(...)} — a clone whose vid is then set — which mints the
-     * address WITHOUT writing it back to space. {@code vid(...)} would additionally write to space, and that cost
-     * is only worth paying when the frame must be referenceable from outside by address.
+     * Push a child frame whose vid strictly extends this machine's by {@code extension}, and return the child.
+     * The extension is a uri because it is an expression: multi-segment, templated and composed steps all work.
      */
     default Machine push(final fURI extension) {
         final fURI parentVID = this.vid();
@@ -535,8 +448,7 @@ public interface Machine extends Space {
     }
 
     /**
-     * The strict-descendant test, shared by push() and by the children enumeration so the two cannot disagree about
-     * what "under" means: the child's path must have the parent's as a PREFIX and be strictly longer.
+     * The strict-descendant test: the child's path must have the parent's as a prefix and be strictly longer.
      */
     static boolean descendsFrom(final fURI child, final fURI parent) {
         if (null == child || null == parent)
@@ -555,19 +467,7 @@ public interface Machine extends Space {
         return (null == live || null == vid) ? null : live.get(vid);
     }
 
-    /**
-     * The addresses of the live frames strictly UNDER parentVID — zero or more, which is why Frame.next() is
-     * {@code {*}} and not {@code {?}}: a leaf and a freshly pushed frame are both honest zeros. Addresses only; no
-     * component is touched, so enumerating the tree never materializes it (a ComponentUnion's own next() would).
-     */
-    static List<fURI> frameAddressesUnder(final fURI parentVID) {
-        final Map<fURI, Frame> live = FRAMES.get();
-        if (null == live || null == parentVID)
-            return List.of();
-        return live.keySet().stream().filter(vid -> descendsFrom(vid, parentVID)).toList();
-    }
-
-    private static void frameRegister(final fURI vid, final Frame frame) {
+        private static void frameRegister(final fURI vid, final Frame frame) {
         if (null == vid)
             return; // an addressable frame is one with an address; an unaddressed one is honestly unregistered
         Map<fURI, Frame> live = FRAMES.get();
@@ -605,12 +505,8 @@ public interface Machine extends Space {
     }
 
     /**
-     * The current frame's memory <b>if it has already been materialized</b>, else null. Never allocates.
-     * <p>
-     * This exists because the read path must not allocate. Constructing an Obj runs its type check, the type
-     * check resolves a type through {@code Machine.readFromSpace}, and that lands back in {@code read} — so a
-     * lookup that materialized a frame would recurse until the stack died. Resolution therefore takes the frame's
-     * memory only when a frame already has one, which today means only after something wrote.
+     * The current frame's memory if it has already been materialized, else null -- and it must never allocate:
+     * constructing an Obj resolves a type through a read, so materializing here would recurse.
      */
     static Memory frameMemory() {
         final Frame frame = FRAME.get();
@@ -626,15 +522,14 @@ public interface Machine extends Space {
     }
 
     /**
-     * The memory resolution reads through: the frame's if it already has one, else the machine's own. It never
-     * materializes a frame — a lookup that did would allocate a component on the read path, and constructing an
-     * Obj runs a type check that resolves a type through the router and lands back in {@code read}.
+     * The memory resolution reads through: the frame's if it already has one, else the machine's own.
+     * It never materializes a frame, because a read that allocated would recurse.
      */
     default Memory resolutionMemory() {
         // Resolution reads the frame's memory if it HAS one, else the machine's own. Do NOT extend this to a frame's
-        // ANCESTRY when it has none: measured, that breaks resolution system-wide (209 failures + 1450 errors, plus a
+        // ANCESTRY when it has none: that breaks resolution system-wide (plus a
         // StackOverflow in the unions), because a live frame is present for every scoped execution, not only when
-        // current() is frame-aware. Two attempts to make a live frame answer for itself have now failed here.
+        // current() is frame-aware.
         final Memory frame = frameMemory();
         return null != frame ? frame : this.ownMemory();
     }
@@ -648,10 +543,10 @@ public interface Machine extends Space {
     }
 
     /**
-     * Reachability questions are answered by the network, and {@code Machine} only routes them to the one in
-     * effect. Without these the {@code Router} defaults would answer instead, and they know nothing about the
-     * roster or the index.
+     * Whether this machine answers for the address. Reachability belongs to the network; this routes to the one in
+     * effect rather than to a default that knows nothing of the roster or the index.
      */
+    // ======================== reachability ========================
     default boolean own(final fURI vid) {
         return this.resolutionNetwork().own(vid);
     }
@@ -661,13 +556,9 @@ public interface Machine extends Space {
     }
 
     /**
-     * The authorities this machine owns — the {@code host} of every mounted space that declares one. Declared
-     * configuration, never derived from traffic: a URI must not be able to make itself a peer.
-     * <p>
-     * It lives here rather than on {@link Network} because it is derived from the memory's index, and it reads
-     * through {@link #resolutionMemory()} so that asking it allocates nothing on the read path. It is recomputed
-     * rather than cached: with a frame-scoped index there is no longer one answer per router, and ownership is
-     * per-frame — a machine that mounts a space naming a host owns that authority for its frame's lifetime.
+     * The hosts this machine owns: the {@code host} of every mounted space that declares one -- declared
+     * configuration, never derived from traffic, so a uri cannot make itself a peer.
+     * Recomputed per frame rather than cached.
      */
     default Set<String> selfAuthorities() {
         final Set<String> authorities = new LinkedHashSet<>();
@@ -702,14 +593,11 @@ public interface Machine extends Space {
         return resolved instanceof Network ? (Network) resolved : new BasicNetwork();
     }
 
-    /**
-     * One frame of reference: the machine it belongs to, plus the component views it has materialized.
-     * <p>
-     * A view is created <b>on first access and then cached</b>, and the caching is not an optimisation — forming
-     * a fresh union per access would mean two calls in the same frame wrote into two different {@code current()}s,
-     * so a write followed by a read would silently miss it. A frame that never touches a component still
-     * allocates nothing for it.
-     */
+        /**
+         * One frame: the machine it belongs to, plus the component views it has materialized.
+         * Views are cached on first access, and a frame that touches none allocates nothing.
+         */
+    // ======================== inner types ========================
     final class Frame {
 
         private final Machine machine;
@@ -797,9 +685,8 @@ public interface Machine extends Space {
         }
 
         /**
-         * Order matters: reachability is revoked before the spaces it was used to reach, so no peer can read a
-         * space that is midway through closing. A read of a gone address then fails loudly — which is the whole
-         * point of the lease — instead of resolving into a half-closed space.
+         * Revoke reachability before the spaces it was used to reach, so no peer can read a space that is midway
+         * through closing: a read of a gone address fails loudly instead of resolving into a half-closed space.
          */
         private void close() {
             CommonUtil.close(this.instset);
@@ -808,9 +695,7 @@ public interface Machine extends Space {
         }
     }
 
-    /**
-     * @return this machine with the given instruction set bound
-     */
+        /** @return this machine with the given instruction set bound */
     default Machine instset(final InstSet instset) {
         CommonUtil.close(this.atDirect(uri(INSTSET)));
         return this.at(uri(INSTSET), instset, MUTABLE).as();
@@ -821,9 +706,7 @@ public interface Machine extends Space {
         return this.at(uri(INSTSET), instsetReference, MUTABLE).as();
     }
 
-    /**
-     * @return the machine's compiler, or {@code null} when none is bound
-     */
+        /** @return the machine's compiler, creating one if the slot is unbound */
     default Compiler compiler() {
         final Obj protoCompiler = this.atDirect(COMPILER).orThrow(MTronException.of("machine has no compiler: %s", this.type().vid()));
         if (protoCompiler.isCall())
@@ -831,9 +714,7 @@ public interface Machine extends Space {
         return protoCompiler.as();
     }
 
-    /**
-     * @return this machine with the given compiler bound
-     */
+        /** @return this machine with the given compiler bound */
     default Machine compiler(final Compiler compiler) {
         return this.at(uri(COMPILER), compiler, MUTABLE).as();
     }
@@ -844,9 +725,7 @@ public interface Machine extends Space {
     }
 
 
-    /**
-     * @return the machine's processor, or {@code null} when none is bound
-     */
+        /** @return the machine's processor, creating one if the slot is unbound */
     default Processor processor() {
         final Obj protoProcessor = this.atDirect(PROCESSOR).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
         if (protoProcessor.isCall())
@@ -854,9 +733,7 @@ public interface Machine extends Space {
         return protoProcessor.clone().as();
     }
 
-    /**
-     * @return this machine with the given processor bound
-     */
+        /** @return this machine with the given processor bound */
     default Machine processor(final Processor processor) {
         return this.at(uri(PROCESSOR), processor, MUTABLE).as();
     }
@@ -867,26 +744,13 @@ public interface Machine extends Space {
 
     class Helper {
 
-        /**
-         * The zero machine — {@code machine::T.zero()}: no spaces, no instset, no compiler, no
-         * processor, and no route table. It is the fallback {@link Machine#authority()} serves before
-         * boot.
-         * <p>
-         * It is deliberately inert: every mutator is a no-op, so nothing written against the zero
-         * can reach the live router, and — unlike a machine built by {@code BasicMachine.of}, which carries the
-         * {@code +/#} stack space and real registration — constructing it has no side effects. It
-         * satisfies {@link Machine}, so the zero of addressing is also
-         * the zero of execution.
-         */
+            /**
+             * The zero machine: no spaces, components or route table, and every mutator a no-op, so nothing written
+             * against it can reach a live machine. It is the fallback {@link Machine#root()} serves before boot, and
+             * constructing it has no side effects.
+             */
         public static final class Machine0 extends MRec implements Machine {
             private static final Machine0 INSTANCE = new Machine0();
-
-            /**
-             * The machine's identity rendering — {@code machine::[pattern=>#]@/vid}.
-             */
-            public static String routerToString(final Machine machine) {
-                return machine.tid() + "::[pattern=>#]@" + machine.vid();
-            }
 
             public static Machine0 single() {
                 return INSTANCE;

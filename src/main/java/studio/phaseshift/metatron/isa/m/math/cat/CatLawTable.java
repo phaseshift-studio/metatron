@@ -68,6 +68,7 @@ public final class CatLawTable {
         entry(GTE_INST_TID.dom(INT_TID).rng(BOOL_TID), null, right_distributive);
         entry(LT_INST_TID.dom(INT_TID).rng(BOOL_TID), null, right_distributive);
         entry(LTE_INST_TID.dom(INT_TID).rng(BOOL_TID), null, right_distributive);
+        entry(MEAN_INST_TID.dom(INT_TID.maybeSome()).rng(REAL_TID), null, magmadic, commutative);
         entry(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), null, monoidic, commutative, right_distributive);
         entry(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), null, monoidic, commutative, right_distributive);
         // TODO: real, str, rec, bool, bytes, uri, lst — their declared process laws

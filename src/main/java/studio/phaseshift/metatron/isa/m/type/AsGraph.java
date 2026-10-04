@@ -48,6 +48,6 @@ public class AsGraph {
     }
 
     public void refillCache() {
-        Machine.authority().memory().read(AS_INST_TID).stream().filter(Obj::isInst).map(Obj::asInst).forEach(this::addAs);
+        Machine.root().memory().read(AS_INST_TID).stream().filter(Obj::isInst).map(Obj::asInst).forEach(this::addAs);
     }
 }

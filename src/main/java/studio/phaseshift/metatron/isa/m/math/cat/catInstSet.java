@@ -171,6 +171,7 @@ public class catInstSet extends AbstractInstSet {
                                             final Inst inst = objInstRec.at(OBJ).asInst();
                                             final CatLawTable.Entry entry = CatLawTable.lookup(inst.tid());
                                             final Map<Obj, Obj> block = new LinkedHashMap<>();
+                                            block.put(uri(NAME), uri(inst.tid().name()));
                                             block.put(uri(FORM), uri(Inst.Form.of(inst).name()));
                                             block.put(uri(SRC), auto_(instLambda(o -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst()));
                                             block.put(uri(TRGT), auto_(instLambda(o -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst()));
@@ -575,6 +576,10 @@ public class catInstSet extends AbstractInstSet {
          */
         right_distributive,
         /**
+         * a non-associative binary op with an identity element
+         */
+        magmadic,
+        /**
          * an associative binary op with an identity element
          */
         monoidic,
@@ -679,7 +684,7 @@ public class catInstSet extends AbstractInstSet {
         if (null != cached)
             return cached;
         final List<Inst> all = new ArrayList<>();
-        for (final Obj obj : Machine.authority().spaces().values().toList()) {
+        for (final Obj obj : Machine.root().spaces().values().toList()) {
             final Space space = obj.as();
             if (!(space instanceof InstSet instSet))
                 continue;

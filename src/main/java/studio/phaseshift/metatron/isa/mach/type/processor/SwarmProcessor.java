@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
-import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.processor.monad.ListMonad;
 import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
@@ -305,7 +305,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                     && !"profile_compute".equals(name) && !"explain_compute".equals(name))
                 LOG.warn("processor %s evaluating a %d-instruction code sequence: %s [parent:%s]", this.vid(), submittedInsts.size(), submitted, this.parent());
         }
-        Machine.authority().stats().monadicStats().resetMonads();
+        Machine.root().stats().monadicStats().resetMonads();
         final Code code = this.resolve(this.at(START)).code();
         if (this.running().c().isZero()) {
             final Obj start = this.at(START);
@@ -348,7 +348,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                             if (null == barrier)
                                 throw MTronException.of("barrier should exist: %s", n.inst());
                             barrier.obj().append(n.obj());
-                            Machine.authority().stats().monadicStats().incrBarrierMonads(1L);
+                            Machine.root().stats().monadicStats().incrBarrierMonads(1L);
                         } else {
                             this.running().append(n);
                         }
@@ -356,7 +356,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                         if (n.halted()) {
                             LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
                             n.obj().iterator().forEachRemaining(no -> {
-                                Machine.authority().stats().monadicStats().incrHaltedMonads(1L);
+                                Machine.root().stats().monadicStats().incrHaltedMonads(1L);
                                 // this.halted().append(no); // TODO: make configurable (lazy result or aggregate result)
                                 this.onHalt.accept(no);
                             });
@@ -370,7 +370,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                         LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
                         this.running().append(n);
                     } else {
-                        Machine.authority().stats().monadicStats().incrKilledMonads(1L);
+                        Machine.root().stats().monadicStats().incrKilledMonads(1L);
                         LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                     }
                 });
@@ -395,14 +395,14 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                             throw MTronException.of("barrier should exist: %s", nextInst);
                         nextBarrier.obj().append(result);
                     } else if (nextInst.isBatching()) {
-                        Machine.authority().stats().monadicStats().incrBarrierMonads(-1L);
+                        Machine.root().stats().monadicStats().incrBarrierMonads(-1L);
                         this.running().append(statefulMonad(result, nextInst, noobjRec(), code));
-                        Machine.authority().stats().monadicStats().incrRunningMonads(1L);
+                        Machine.root().stats().monadicStats().incrRunningMonads(1L);
                     } else {
                         LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
                             final StatefulMonad n = statefulMonad(o, nextInst, noobjRec(), code);
-                            Machine.authority().stats().monadicStats().incrBarrierMonads(-1L);
+                            Machine.root().stats().monadicStats().incrBarrierMonads(-1L);
                             LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
                             this.running().append(n);
                         });

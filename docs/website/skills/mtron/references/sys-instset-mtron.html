@@ -432,8 +432,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     dom=&gt;'maybe an obj',
     rng=&gt;'a lst[str] of results',
     args=&gt;[
-     cmd=&gt;'the terminal command to evaluate (...',
-     {?}timeout=&gt;'a real number denoting timeout of ...'],
+     {?}timeout=&gt;'a real number denoting timeout of ...',
+     cmd=&gt;'the terminal command to evaluate (...'],
     desc=&gt;'evaluate bash command. *important*...',
     example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -446,15 +446,15 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(12 more)]
+   ...(13 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;[
     'Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.6M ...',
+    'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  518G ...',
+    '/dev/nvme0n1p2         916G  520G ...',
     'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -464,10 +464,10 @@ mtron&gt; bash('df -h')
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
 ==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/614
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 5ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 5ms:
+    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder&lt;228&gt;]]@/sys/fail/616
@@ -484,7 +484,7 @@ the same <code>==</code> projection:</p>
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(12 more)]]
+   ...(13 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;[
@@ -495,7 +495,7 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'conf',
     'CONTRIBUTING.md',
     'dist',
-   ...(13 more)]
+   ...(14 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -532,7 +532,7 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-   ...(12 more)]
+   ...(13 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;[
     '  File: AGENTS.md',
@@ -554,7 +554,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
     bB::4096.0000,
     bB::6984.0000,
     bB::4096.0000,
-   ...(12 more)]
+   ...(13 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -612,10 +612,10 @@ mtron&gt; */sys/thread/+.count()
 ==&gt;22
 mtron&gt; sys_stat()
 ==&gt;[
-    total_mem_jvm=&gt;mB::448.0000,
-    free_mem_jvm=&gt;mB::348.4609,
+    total_mem_jvm=&gt;mB::432.0000,
+    free_mem_jvm=&gt;mB::252.2811,
     max_mem_mach=&gt;gB::15.1563,
-    used_mem_jvm=&gt;mB::99.5391,
+    used_mem_jvm=&gt;mB::179.7189,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[

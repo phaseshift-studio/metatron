@@ -59,7 +59,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                 .applyStyle());
 
 
-        Machine.authority().spaces().elements().filter(r -> !(r.second() instanceof InstSet)).forEach(r -> {
+        Machine.root().spaces().elements().filter(r -> !(r.second() instanceof InstSet)).forEach(r -> {
             this.spaceTable.addRow(List.of(r.asRel().first().toString(), r.asRel().second().<Space>as().pattern()));
         });
 

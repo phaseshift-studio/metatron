@@ -54,7 +54,7 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
             this.space.setup();
             if (this.space.vid() == null)
                 LOG.warn("provided space has no vid and thus can not be shutdown automatically");
-            Machine.authority().addSpace(this.space);
+            Machine.root().addSpace(this.space);
         }
     }
 
@@ -63,7 +63,7 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
         if (null != this.space) {
             assertDoesNotThrow(this.space::close);
             if (null != this.space.vid())
-                Machine.authority().removeSpace(this.space.vid());
+                Machine.root().removeSpace(this.space.vid());
             this.space = null;
         }
     }

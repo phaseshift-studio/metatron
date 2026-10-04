@@ -43,7 +43,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -856,7 +855,7 @@ public class tbleInstSet extends AbstractInstSet {
                 final long limitValue = takeInst.arg(0).asInt().jvm();
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = Machine.authority().getSpaceFor(oldfURI);
+                final Space space = Machine.root().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space))
                     return matchedInsts.stream().map(Obj::asInst).toList();
