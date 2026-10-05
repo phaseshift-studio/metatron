@@ -92,6 +92,21 @@ public class machInstSet extends AbstractInstSet {
      */
     public static final String MACH_HOME = "a";
 
+    /**
+     * WHERE DISTRIBUTED STATE LIVES. Never under /sys: that is the local instance's bookkeeping, and a mailbox or an
+     * inbox is written by one machine and read by another, so it must live where a shared subspace can cover it.
+     * /sys/peer stays where it is for the same reason -- the roster IS local bookkeeping, this machine's view of who
+     * is in the cluster.
+     */
+    /**
+     * WHERE DISTRIBUTED STATE LIVES, and it is a PLAIN NAMESPACE -- no scheme, no host, nothing that says what
+     * answers it. A root that named its backend would put the transport into the rewrite, which is the one thing
+     * this design cannot afford: the rewrite mints {@code /usr/compute/<home>/barrier/<peer>} and must not know or
+     * care whether a local memory space, a syncing subspace or a remote peer answers it. What varies between
+     * deployments is the SPACE MOUNTED OVER IT, never the address.
+     */
+    public static final fURI COMPUTE = f("/usr/compute");
+
     /** the box a machine listens on for code to execute */
     public static final fURI MACH_RECV_INST_TID = MACH_INST_TID.extend("recv");
 
@@ -521,7 +536,7 @@ public class machInstSet extends AbstractInstSet {
                                     // peer, so declaring a cluster is writing a key per machine -- and it is the same
                                     // rec the run leaves its reports in, so the topology IS the mailbox set rather than
                                     // something kept beside it. Adding a peer is adding a key.
-                                    final Obj roster = Machine.readFromSpace(SYS.extend(PEER));
+                                    final Obj roster = Machine.readFromSpace(COMPUTE);
                                     final Obj home = roster.isRec() ? roster.asRec().at(uri(MACH_HOME)) : noobj();
                                     final Obj boxes = home.isRec() ? home.asRec().at(uri(BARRIER)) : noobj();
                                     if (!boxes.isRec() || boxes.asRec().jvm().isEmpty())
@@ -591,7 +606,7 @@ public class machInstSet extends AbstractInstSet {
                                     final int machines = peers.size() + 1;
                                     final int per = data.isEmpty() ? 0
                                             : Math.max(1, (data.size() + machines - 1) / machines);
-                                    final fURI homeBoxes = SYS.extend(PEER).extend(MACH_HOME).extend("barrier");
+                                    final fURI homeBoxes = COMPUTE.extend(MACH_HOME).extend("barrier");
                                     for (int p = 0; p < peers.size(); p++) {
                                         final fURI peer = peers.get(p);
                                         final List<Inst> worker = new ArrayList<>(insts.size() + 2);
@@ -602,7 +617,7 @@ public class machInstSet extends AbstractInstSet {
                                         // reports to THE HOME'S MAILBOX FOR IT -- the one the home's gather waits on
                                         worker.add(instB(TO_INST_TID, lst(uri(homeBoxes.extend(peer.name())))));
                                         // and the code is shipped to the PEER'S OWN INBOX, which is named by the peer
-                                        Machine.writeToSpace(SYS.extend(PEER).extend(peer.name()).extend("recv"),
+                                        Machine.writeToSpace(COMPUTE.extend(peer.name()).extend("recv"),
                                                 MCode.of(worker));
                                     }
                                     final List<Inst> out = new ArrayList<>(insts.size() + peers.size());
@@ -634,7 +649,7 @@ public class machInstSet extends AbstractInstSet {
                                             // the roster. Single-JVM construction: 'a' is this machine's name.
                                             for (final fURI peer : peers)
                                                 out.add(instB(BARRIER_INST_TID, lst(uri(
-                                                        SYS.extend(PEER).extend(MACH_HOME).extend("barrier").extend(peer.name())))));
+                                                        COMPUTE.extend(MACH_HOME).extend("barrier").extend(peer.name())))));
                                             inserted = true;
                                         }
                                         out.add(inst);

@@ -29,12 +29,36 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BARRIER_INST_TID;
+import org.junit.jupiter.api.BeforeAll;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.QPROC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class machInstSetTest extends AbstractInstSetTest {
 
+    /**
+     * THE SUITE SUPPLIES ITS BACKING. Memory here because it needs nothing installed; a space with an external
+     * dependency supplies that instead, and this class names no space at all.
+     */
+    @BeforeAll
+    public static void registerCompute() {
+        AbstractMachineTest.registerComputeSpace(() -> memSpace.of(rec(
+                uri(PATTERN), uri("/usr/compute/#"),
+                uri(QPROC), lst(QCollection.subq())), AbstractMachineTest.COMPUTE_VID));
+    }
+
+    /**
+     * This class tests the ISA, not a machine, so it does not inherit AbstractMachineTest -- but the rewrite it is
+     * asserting against mints into compute:, and SOMETHING has to cover that namespace. That is the point of
+     * distributed state living in a user namespace rather than under /sys: a suite says where the state lives.
+     */
     public machInstSetTest() {
         super(machInstSet::new);
     }
@@ -54,11 +78,11 @@ public class machInstSetTest extends AbstractInstSetTest {
             // no peers: nothing to gather from, so the reducer is left exactly as written
             "{1,2,3}.plus(1).plus(2).sum()           %  (none)  %  (none)                                      %  sum",
             // one peer: a gather for it, immediately before the reducer
-            "{1,2,3}.plus(1).plus(2).sum()           %  b       %  /sys/peer/a/barrier/b                       %  sum",
+            "{1,2,3}.plus(1).plus(2).sum()           %  b       %  /usr/compute/a/barrier/b                       %  sum",
             // two peers: one gather each, in a stable order
-            "{1,2,3}.plus(1).plus(2).sum()           %  b,c     %  /sys/peer/a/barrier/b;/sys/peer/a/barrier/c %  sum",
+            "{1,2,3}.plus(1).plus(2).sum()           %  b,c     %  /usr/compute/a/barrier/b;/usr/compute/a/barrier/c %  sum",
             // a reducer that is NOT last: the gathers precede it and the trailing work stays after it
-            "{1,2,3}.plus(1).plus(2).sum().plus(10)  %  b       %  /sys/peer/a/barrier/b                       %  plus",
+            "{1,2,3}.plus(1).plus(2).sum().plus(10)  %  b       %  /usr/compute/a/barrier/b                       %  plus",
     }, delimiter = '%')
     public void testTheRewriteShape(final String code, final String peers, final String mailboxes, final String endsWith) {
         if (peers.startsWith("("))

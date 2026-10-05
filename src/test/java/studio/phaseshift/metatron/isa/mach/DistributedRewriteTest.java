@@ -2,12 +2,18 @@ package studio.phaseshift.metatron.isa.mach;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.QPROC;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.Tokens.ROUTE;
 
 /**
  * THE DISTRIBUTION REWRITE, end to end: a user writes a monoidic reduction the way a user writes it -- no barriers,
@@ -34,15 +40,21 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
  *       home -- rows with the same mailboxes and different results, which is the boundary made visible</li>
  * </ul>
  */
-public class DistributedRewriteTest extends AbstractMachineTest {
+public class DistributedRewriteTest extends AbstractMultiServerSingleSpaceTest {
 
     public DistributedRewriteTest() {
-        super(mInstSet::new);
+        super(f("/sys/space/compute"));
     }
 
+    /**
+     * THE SUITE SUPPLIES ITS BACKING. Memory here because it needs nothing installed; a space with an external
+     * dependency supplies that instead, and this class names no space at all.
+     */
     @Override
-    protected Machine newMachine() {
-        return BasicMachine.of(MACH_MACHINE_TID, null);
+    protected java.util.function.Supplier<Space> computeSpace() {
+        return () -> memSpace.of(rec(
+                uri(PATTERN), uri("/usr/compute/#"),
+                uri(QPROC), lst(QCollection.subq())), nextComputeVID());
     }
 
     @ParameterizedTest
@@ -70,6 +82,6 @@ public class DistributedRewriteTest extends AbstractMachineTest {
         // no cluster declared here: the row's expectation names one barrier per peer, so the row states its own
         // topology -- add a key to the rec and the machine count goes up. checkDistributedCode is inherited, along
         // with the contract tests that assert the plumbing these rows then exercise.
-        checkDistributedCode(LOG, code, result, ObjmtronSerializer.parse(state).asRec());
+        AbstractMachineTest.checkDistributedCode(LOG, code, result, ObjmtronSerializer.parse(state).asRec());
     }
 }
