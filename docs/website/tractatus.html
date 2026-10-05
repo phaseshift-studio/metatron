@@ -814,13 +814,11 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |&lt;1&gt;?int&lt;=#{?}(){1}@&lt;1&gt;   [-- 1 --]
 ==&gt;1
 mtron&gt; &lt;1&gt;()                     [-- 2 --]
+==&gt;1
 mtron&gt; 10.&lt;1&gt;()                  [-- 3 --]
-==&gt;fail::[unable to determine inst function:
-   	10          =&gt; 1?dom=int()@&lt;1&gt;   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/378
+==&gt;1
 mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
-==&gt;fail::[args do not match inst args: expected /m/lst (got [1?dom=int()])]@/sys/fail/382</code></pre>
+==&gt;13</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -858,7 +856,8 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
-==&gt;created=&gt;edge::T[?[weight=&gt;real::T]]@created
+==&gt;created=&gt;edge::T[?[
+    weight=&gt;real::T]]@created
 ==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;
 ==&gt;boot/args=&gt;[
     log=&gt;info,
@@ -876,14 +875,15 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
     item=&gt;'book',
     total=&gt;15.0000,
     seller=&gt;!*g:V/4]@&lt;1/x&gt;
-==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(fail::[unable to determine inst function:]@/sys/fail/384){&lt;j&gt;}@&lt;/sys/space/cold/instset/1&gt;
+==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(1){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;v5/lang=&gt;java
 ==&gt;animals=&gt;rec::T[?[
     __mtron_tid=&gt;str::T,
     name=&gt;str::T,
     age=&gt;int::T,
     {?}shelter=&gt;rec::T]]@animals
-==&gt;v1/outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}]
+==&gt;v1/outE_=&gt;[
+    knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}]
 ==&gt;v2/name=&gt;'vadas'
 ==&gt;v1/created=&gt;[
     weight=&gt;0.2000,
@@ -892,32 +892,39 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 ==&gt;software=&gt;vrtx::T[?[
     name=&gt;str::T,
     lang=&gt;str::T]]@software
-==&gt;v4=&gt;[name=&gt;'lop']
+==&gt;v4=&gt;[
+    name=&gt;'lop']
 ==&gt;v1=&gt;[
     name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    outE_=&gt;[
+     knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
     created=&gt;[
      weight=&gt;0.2000,
      inV_=&gt;!*v3,
      outV_=&gt;!*v1]]
-==&gt;v6/out_=&gt;[created=&gt;!*v4]
+==&gt;v6/out_=&gt;[
+    created=&gt;!*v4]
 ==&gt;v1/name=&gt;'marko'
-==&gt;knows=&gt;edge::T[?[weight=&gt;real::T]]@knows
+==&gt;knows=&gt;edge::T[?[
+    weight=&gt;real::T]]@knows
 ==&gt;boot/file=&gt;/home/killswitch/software/metatron/boot/docs.mtron
 ==&gt;&lt;1/x/item&gt;=&gt;'book'
 ==&gt;v6=&gt;[
     name=&gt;'peter',
     age=&gt;35,
-    out_=&gt;[created=&gt;!*v4]]
-==&gt;v2=&gt;[name=&gt;'vadas']
+    out_=&gt;[
+     created=&gt;!*v4]]
+==&gt;v2=&gt;[
+    name=&gt;'vadas']
 ==&gt;v4/name=&gt;'lop'
 ==&gt;animal=&gt;rec::T[?[
     name=&gt;str::T,
     age=&gt;int::T]]@animal
 ==&gt;v1/age=&gt;29
 ==&gt;boot/args/log=&gt;info
-==&gt;v3=&gt;[name=&gt;'josh']
+==&gt;v3=&gt;[
+    name=&gt;'josh']
 ==&gt;equipment=&gt;rec::T[?[
     model=&gt;uri::T,
     year=&gt;int::T]]@equipment
@@ -1298,7 +1305,7 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
 mtron&gt; 10.is_divisible(2)
 ==&gt;true
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[inst apply failure: 'abc' [value] unable to convert str::T (at /m/inst/mod@1)]@/sys/fail/402</code></pre>
+==&gt;fail::[inst apply failure: 'abc' [value] unable to convert str::T (at /m/inst/mod@1)]@/sys/fail/406</code></pre>
 </div>
 </div>
 </div>
@@ -1352,7 +1359,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/404
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/408
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 mtron&gt; *trpl     ​3​</code></pre>
 </div>
@@ -1521,7 +1528,8 @@ That is, given <code>rec</code> relations,</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [a=&gt;1,b=&gt;noobj,noobj=&gt;3]
-==&gt;[a=&gt;1]</code></pre>
+==&gt;[
+    a=&gt;1]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1534,8 +1542,10 @@ That is, given <code>rec</code> relations,</p>
 ==&gt;2
 mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
                     is(gte(2)) =&gt; plus(3)])
-==&gt;[1=&gt;10]
-==&gt;[2=&gt;5]
+==&gt;[
+    1=&gt;10]
+==&gt;[
+    2=&gt;5]
 mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
                     is(gte(2)) =&gt; plus(3)]).rshift()     ​2​
 ==&gt;10
@@ -1579,8 +1589,10 @@ mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]
-==&gt;[1=&gt;10]
-==&gt;[2=&gt;5]
+==&gt;[
+    1=&gt;10]
+==&gt;[
+    2=&gt;5]
 mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]&gt;&gt;
 ==&gt;10
 ==&gt;5</code></pre>
@@ -1660,11 +1672,16 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <p>mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 &#8658; "${<em>} greater than 2",
                      ?&gt;5 &#8658; "${</em>} greater than 5",
                      _   &#8658; "${_} is something."]
-=&#8658;[1&#8658;'1 is something.']
-=&#8658;[2&#8658;'2 is something.']
-=&#8658;[3&#8658;{'3 greater than 2','3 is something.'}]
-=&#8658;[4&#8658;{'4 greater than 2','4 is something.'}]
-=&#8658;[5&#8658;{'5 greater than 2','5 is something.'}]</p>
+=&#8658;[
+    1&#8658;'1 is something.']
+=&#8658;[
+    2&#8658;'2 is something.']
+=&#8658;[
+    3&#8658;{'3 greater than 2','3 is something.'}]
+=&#8658;[
+    4&#8658;{'4 greater than 2','4 is something.'}]
+=&#8658;[
+    5&#8658;{'5 greater than 2','5 is something.'}]</p>
 </div>
 </div>
 </div>
@@ -1704,12 +1721,12 @@ mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
                    pattern  =&gt; &lt;http://#&gt;,
                    route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                 /       =&gt; &lt;&gt;]]@/sys/space/web/http
-==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/472
+==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/476
    	while parsing: httpspace::[host     =&gt; http://localhost:8777,
    q        =&gt; [mimeq::[=&gt;]],
    pattern  =&gt; &lt;http://#&gt;,
    route    =&gt; [/mcp     =&gt; mcp_mtron_http,
-   /       =&gt; &lt;&gt;]]@/sys/space/web/http]@/sys/fail/474
+   /       =&gt; &lt;&gt;]]@/sys/space/web/http]@/sys/fail/478
 mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
                  pattern  =&gt; &lt;ws://#&gt;,
                  q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -1876,7 +1893,7 @@ The purpose of breaking up the example into two expression is to highlight the O
      *http://localhost:11434/api/tags/+.&gt;&gt;.
             =?=[size=&gt;as(real::T).as(bB::...
                                           ^
-     could not parse at '.']@/sys/fail/476</code></pre>
+     could not parse at '.']@/sys/fail/480</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2160,7 +2177,7 @@ mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*eval],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/478
+==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/482
 ----
 
 [source,mtron]
@@ -2205,7 +2222,8 @@ mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
       inst=>inst?rng=#{*}&dom=#{?}(memory_vid=>'the vid of the memory to read'){<j>},
       name=>m_web_mcp_mcp_mtron_read_memory,
       desc=>'(experimental) returns the result ...',
-      arg=>[memory_vid=>'the vid of the memory to read']],
+      arg=>[
+       memory_vid=>'the vid of the memory to read']],
      m_web_mcp_mcp_mtron_eval_mtron=>tool::[
       inst=>inst?rng=#{*}&dom=#{?}(code=>'mtron code to evaluate',native=>'return result in native mtron format'){<j>},
       name=>m_web_mcp_mcp_mtron_eval_mtron,
@@ -2243,7 +2261,7 @@ mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/480
+==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/484
 ----
 
 Given that an `mcp_client::T` is an index of `insts`.
@@ -2314,7 +2332,7 @@ mtron> *ollama:+.
               think    => print(_),
               response => [to=>to(/usr/ai/response)]]].
         to(aix)
-==>fail::[lhs range does not match inst domain: fail::T => lst{*}::T [take?rng=lst{*}&dom=lst{*}(1){<j>}@<4>]]@/sys/fail/510
+==>fail::[lhs range does not match inst domain: fail::T => lst{*}::T [take?rng=lst{*}&dom=lst{*}(1){<j>}@<4>]]@/sys/fail/514
 ----
 
 <1> create a `lst` to server as the an ordered sequence of chat interactions.
@@ -2671,7 +2689,7 @@ Note the use of the tools provided to the agent.
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b)     ​1​
-==&gt;fail::[inst apply failure: 1 [int::T] unable to convert uri::T (at /m/inst/plus@1)]@/sys/fail/90
+==&gt;fail::[inst apply failure: 1 [int::T] unable to convert uri::T (at /m/inst/plus@1)]@/sys/fail/98
 mtron&gt; */sys/fail/+     ​2​
 mtron&gt; */sys/fail/+.catch(_)     ​3​
 mtron&gt; */sys/fail     ​4​</code></pre>
@@ -2855,11 +2873,17 @@ mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​6​
     age=&gt;7]
 mtron&gt; chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
 ==&gt;fail::[obj does not match chicken::T
-     [name=&gt;'punky',age=&gt;'four']
+     [[
+      name=&gt;'punky',
+      age=&gt;'four']
          X=&gt;
-     animal::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken
-     ----------------------------------------------------------------------
-     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]
+     animal::T[?[
+      name=&gt;str::T,
+      age=&gt;int::T]]@chicken
+     -------------------------------------
+     [
+      name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
+      age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]]
    	while parsing: chicken::[name=&gt;'punky',age=&gt;'four']]@/sys/fail/696</code></pre>
 </div>
 </div>
@@ -2933,11 +2957,18 @@ mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
     age=&gt;7]
 mtron&gt; chicken::[name=&gt;'punky',age=&gt;444]     ​8​
 ==&gt;fail::[obj does not match chicken::T
-     [name=&gt;'punky',age=&gt;444]
+     [[
+      name=&gt;'punky',
+      age=&gt;444]
          X=&gt;
-     animal::T[?[name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age]]@chicken
-     -------------------------------------------------------------------------------------------------
-     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T,age=&gt;(==&gt;age)=&gt;444=&gt;==&gt;int::T]
+     animal::T[?[
+      name=&gt;str::T,
+      age=&gt;nat::T[is(lt(120))]@age]]@chicken
+     ---------------------------------------
+     [
+      name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
+      age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T,
+      age=&gt;(==&gt;age)=&gt;444=&gt;==&gt;int::T]]
    	while parsing: chicken::[name=&gt;'punky',age=&gt;444]]@/sys/fail/702</code></pre>
 </div>
 </div>
@@ -3014,7 +3045,8 @@ mtron&gt; *select?&lt;=str&amp;docq     ​2​
     obj=&gt;select?rng=lst&amp;dom=str(str::T){&lt;j&gt;},
     dom=&gt;'a str to split by regex',
     rng=&gt;'the regex capture groups (or full ...',
-    args=&gt;[0=&gt;'regex'],
+    args=&gt;[
+     0=&gt;'regex'],
     desc=&gt;'[mapper] split the lhs str by rege...',
     example=&gt;[
      "'abc.cde'.regex('[^.]+') [-- ['abc...",
@@ -3184,9 +3216,9 @@ mtron&gt; nat::-2     ​4​
 mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)     ​6​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/720
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/724
 mtron&gt; nat::2 * -1     ​7​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat (at /m/inst/mult@1)]@/sys/fail/722</code></pre>
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat (at /m/inst/mult@1)]@/sys/fail/726</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3213,7 +3245,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{r}}E{{c}}t{{r}}a{{b}}t{{g}}R{{r}}O{{m}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}m{{b}}e{{c}}t{{r}}a{{y}}t{{y}}r{{b}}O{{c}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3308,7 +3340,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 ==&gt;0x6d65746174726f6e
 mtron&gt; bytes::'48656c6c6f'     ​2​
 ==&gt;fail::['48656c6c6f' [string] is not a bytes::T
-   	while parsing: bytes::'48656c6c6f']@/sys/fail/724</code></pre>
+   	while parsing: bytes::'48656c6c6f']@/sys/fail/730</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4196,7 +4228,7 @@ mtron&gt; memspace::[
 ==&gt;console::[=&gt;]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​
-==&gt;fail::[unable to locate inst-f noobj::T =&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')]@/sys/fail/80</code></pre>
+==&gt;fail::[unable to locate inst-f noobj::T =&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')]@/sys/fail/88</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4309,7 +4341,7 @@ together. Via the colocation of two objs within the confines of a <code>poly</co
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     ​2​
 ==&gt;1
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     ​3​
-==&gt;fail::[inst apply failure: unable to parse ${g to a furi: ${g (at /m/inst/rshift@4)]@/sys/fail/536</code></pre>
+==&gt;fail::[inst apply failure: unable to parse ${g to a furi: ${g (at /m/inst/rshift@4)]@/sys/fail/540</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4556,21 +4588,24 @@ a/b/c -&gt; [x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]
 mtron&gt; a/b/c -&gt; [x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]     ​2​
 ==&gt;[
     x,
-    [y=&gt;[
-    z=&gt;2,
-    zz=&gt;!*g]]]
+    [
+     y=&gt;[
+      z=&gt;2,
+      zz=&gt;!*g]]]
 mtron&gt; *a/b/c     ​3​
 ==&gt;[
     x,
-    [y=&gt;[
-    z=&gt;2,
-    zz=&gt;!*g]]]
+    [
+     y=&gt;[
+      z=&gt;2,
+      zz=&gt;!*g]]]
 mtron&gt; *a/b/c/0     ​4​
 ==&gt;x
 mtron&gt; *a/b/c/1     ​5​
-==&gt;[y=&gt;[
-    z=&gt;2,
-    zz=&gt;!*g]]
+==&gt;[
+    y=&gt;[
+     z=&gt;2,
+     zz=&gt;!*g]]
 mtron&gt; *a/b/c/1/y     ​6​
 ==&gt;[
     z=&gt;2,
@@ -4760,12 +4795,17 @@ a──c──⮞2</code></pre>
 <td class="tableblock halign-left valign-middle"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;1,c=&gt;2]]
-==&gt;[a=&gt;[
-    b=&gt;1,
-    c=&gt;2]]
+==&gt;[
+    a=&gt;[
+     b=&gt;1,
+     c=&gt;2]]
 mtron&gt; x1 -&gt; {[a=&gt;[b=&gt;1]],[a=&gt;[c=&gt;2]]}
-==&gt;[a=&gt;[b=&gt;1]]
-==&gt;[a=&gt;[c=&gt;2]]</code></pre>
+==&gt;[
+    a=&gt;[
+     b=&gt;1]]
+==&gt;[
+    a=&gt;[
+     c=&gt;2]]</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -4860,12 +4900,21 @@ a \cdot \; &amp; ( b                 &amp; + \;\; &amp; c )                   \c
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; {[a=&gt;[b=&gt;[d=&gt;1]]],[a=&gt;[c=&gt;[d=&gt;2]]]}
-==&gt;[a=&gt;[b=&gt;[d=&gt;1]]]
-==&gt;[a=&gt;[c=&gt;[d=&gt;2]]]
+==&gt;[
+    a=&gt;[
+     b=&gt;[
+      d=&gt;1]]]
+==&gt;[
+    a=&gt;[
+     c=&gt;[
+      d=&gt;2]]]
 mtron&gt; x1 -&gt; [a=&gt;[b=&gt;[d=&gt;1],c=&gt;[d=&gt;2]]]
-==&gt;[a=&gt;[
-    b=&gt;[d=&gt;1],
-    c=&gt;[d=&gt;2]]]
+==&gt;[
+    a=&gt;[
+     b=&gt;[
+      d=&gt;1],
+     c=&gt;[
+      d=&gt;2]]]
 mtron&gt; x2 -&gt; [a=&gt;[b=&gt;!*d,[c=&gt;!*d]]];d-&gt;{1,2};
 ==&gt;1
 ==&gt;2
@@ -5160,7 +5209,9 @@ Given this rule, the following metatron <code>rec</code></p>
       c=&gt;3,
       d=&gt;4,
       f=&gt;5]],
-    g=&gt;[b=&gt;[c=&gt;6]]]</code></pre>
+    g=&gt;[
+     b=&gt;[
+      c=&gt;6]]]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5195,7 +5246,8 @@ mtron> x1 -> [a/b => [c=>1,d=>2],
     a/e/c=>3,
     a/e/d=>4,
     a/e/f=>5,
-    g/b=>[c=>6]]
+    g/b=>[
+     c=>6]]
 mtron> x2 -> [a/b/c => 1,
               a/b/d => 2,
               a/e/c => 3,
@@ -5239,32 +5291,33 @@ mtron> -->
 ==>fail::[parse error at line 1, col 1:
      -->
      ^
-     could not parse at '-']@/sys/fail/794
+     could not parse at '-']@/sys/fail/800
 mtron> ++++
 mtron> [discrete]
 ==>[discrete]
 mtron> [[sec-navigating-the-reference-structure]]
-==>[[sec-navigating-the-reference-structure]]
+==>[
+    [sec-navigating-the-reference-structure]]
 mtron> === Navigating the Reference Structure
 ==>fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/796
+     could not parse at '=']@/sys/fail/802
 mtron> Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
 ==>fail::[parse error at line 1, col 9:
      Metatron is address-first: `a` answers the *addr...
              ^
-     could not parse at ' ']@/sys/fail/798
+     could not parse at ' ']@/sys/fail/804
 mtron> The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
 ==>fail::[parse error at line 1, col 4:
      The uri is the reference; the obj is the re...
         ^
-     could not parse at ' ']@/sys/fail/800
+     could not parse at ' ']@/sys/fail/806
 mtron> The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
 ==>fail::[parse error at line 1, col 4:
      The address space is first-class, obj-free ...
         ^
-     could not parse at ' ']@/sys/fail/802
+     could not parse at ' ']@/sys/fail/808
 mtron> [mtron]
 ==>[mtron]
 ----
@@ -5449,21 +5502,24 @@ mtron> g     -> 'ping'     ​1​
 mtron> a/b/c -> [x,[y=>[z=>2,zz=>!*g]]]     ​2​
 ==>[
     x,
-    [y=>[
-    z=>2,
-    zz=>!*g]]]
+    [
+     y=>[
+      z=>2,
+      zz=>!*g]]]
 mtron> *a/b/c     ​3​
 ==>[
     x,
-    [y=>[
-    z=>2,
-    zz=>!*g]]]
+    [
+     y=>[
+      z=>2,
+      zz=>!*g]]]
 mtron> *a/b/c/0     ​4​
 ==>x
 mtron> *a/b/c/1     ​5​
-==>[y=>[
-    z=>2,
-    zz=>!*g]]
+==>[
+    y=>[
+     z=>2,
+     zz=>!*g]]
 mtron> *a/b/c/1/y     ​6​
 ==>[
     z=>2,
@@ -5596,12 +5652,17 @@ a──c──⮞2
 [source,mtron]
 ----
 mtron> x0 -> [a=>[b=>1,c=>2]]
-==>[a=>[
-    b=>1,
-    c=>2]]
+==>[
+    a=>[
+     b=>1,
+     c=>2]]
 mtron> x1 -> {[a=>[b=>1]],[a=>[c=>2]]}
-==>[a=>[b=>1]]
-==>[a=>[c=>2]]
+==>[
+    a=>[
+     b=>1]]
+==>[
+    a=>[
+     c=>2]]
 ----
 
 🧱
@@ -5688,12 +5749,21 @@ Finally, the programmatic expression below captures the equivalent aforementione
 [source,mtron]
 ----
 mtron> x0 -> {[a=>[b=>[d=>1]]],[a=>[c=>[d=>2]]]}
-==>[a=>[b=>[d=>1]]]
-==>[a=>[c=>[d=>2]]]
+==>[
+    a=>[
+     b=>[
+      d=>1]]]
+==>[
+    a=>[
+     c=>[
+      d=>2]]]
 mtron> x1 -> [a=>[b=>[d=>1],c=>[d=>2]]]
-==>[a=>[
-    b=>[d=>1],
-    c=>[d=>2]]]
+==>[
+    a=>[
+     b=>[
+      d=>1],
+     c=>[
+      d=>2]]]
 mtron> x2 -> [a=>[b=>!*d,[c=>!*d]]];d->{1,2};
 ==>1
 ==>2
@@ -5929,7 +5999,9 @@ mtron> x0 -> [a=>[b=>[c=>1,d=>2],
       c=>3,
       d=>4,
       f=>5]],
-    g=>[b=>[c=>6]]]
+    g=>[
+     b=>[
+      c=>6]]]
 ----
 
 ...
@@ -5965,7 +6037,8 @@ mtron> x0 -> [a=>[b=>[c=>1,d=>2],
     a/e/c=&gt;3,
     a/e/d=&gt;4,
     a/e/f=&gt;5,
-    g/b=&gt;[c=&gt;6]]
+    g/b=&gt;[
+     c=&gt;6]]
 mtron&gt; x2 -&gt; [a/b/c =&gt; 1,
               a/b/d =&gt; 2,
               a/e/c =&gt; 3,
@@ -6009,32 +6082,33 @@ mtron&gt; --&gt;
 ==&gt;fail::[parse error at line 1, col 1:
      --&gt;
      ^
-     could not parse at '-']@/sys/fail/794
+     could not parse at '-']@/sys/fail/800
 mtron&gt; ++++
 mtron&gt; [discrete]
 ==&gt;[discrete]
 mtron&gt; [[sec-navigating-the-reference-structure]]
-==&gt;[[sec-navigating-the-reference-structure]]
+==&gt;[
+    [sec-navigating-the-reference-structure]]
 mtron&gt; === Navigating the Reference Structure
 ==&gt;fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/796
+     could not parse at '=']@/sys/fail/802
 mtron&gt; Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
 ==&gt;fail::[parse error at line 1, col 9:
      Metatron is address-first: `a` answers the *addr...
              ^
-     could not parse at ' ']@/sys/fail/798
+     could not parse at ' ']@/sys/fail/804
 mtron&gt; The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
 ==&gt;fail::[parse error at line 1, col 4:
      The uri is the reference; the obj is the re...
         ^
-     could not parse at ' ']@/sys/fail/800
+     could not parse at ' ']@/sys/fail/806
 mtron&gt; The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
 ==&gt;fail::[parse error at line 1, col 4:
      The address space is first-class, obj-free ...
         ^
-     could not parse at ' ']@/sys/fail/802
+     could not parse at ' ']@/sys/fail/808
 mtron&gt; [mtron]
 ==&gt;[mtron]</code></pre>
 </div>
@@ -6252,21 +6326,24 @@ a/b/c &#8594; [x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]
 mtron&gt; a/b/c &#8594; [x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]     ​2​
 =&#8658;[
     x,
-    [y&#8658;[
-    z&#8658;2,
-    zz&#8658;!*g]]]
+    [
+     y&#8658;[
+      z&#8658;2,
+      zz&#8658;!*g]]]
 mtron&gt; *a/b/c     ​3​
 =&#8658;[
     x,
-    [y&#8658;[
-    z&#8658;2,
-    zz&#8658;!*g]]]
+    [
+     y&#8658;[
+      z&#8658;2,
+      zz&#8658;!*g]]]
 mtron&gt; *a/b/c/0     ​4​
 =&#8658;x
 mtron&gt; *a/b/c/1     ​5​
-=&#8658;[y&#8658;[
-    z&#8658;2,
-    zz&#8658;!*g]]
+=&#8658;[
+    y&#8658;[
+     z&#8658;2,
+     zz&#8658;!*g]]
 mtron&gt; *a/b/c/1/y     ​6​
 =&#8658;[
     z&#8658;2,
@@ -6427,12 +6504,17 @@ On the other hand, the additive union of the uris is an **independent relationsh
 </div>
 <div class="paragraph">
 <p>mtron&gt; x0 &#8594; [a&#8658;[b&#8658;1,c&#8658;2]]
-=&#8658;[a&#8658;[
-    b&#8658;1,
-    c&#8658;2]]
+=&#8658;[
+    a&#8658;[
+     b&#8658;1,
+     c&#8658;2]]
 mtron&gt; x1 &#8594; {[a&#8658;[b&#8658;1]],[a&#8658;[c&#8658;2]]}
-=&#8658;[a&#8658;[b&#8658;1]]
-=&#8658;[a&#8658;[c&#8658;2]]</p>
+=&#8658;[
+    a&#8658;[
+     b&#8658;1]]
+=&#8658;[
+    a&#8658;[
+     c&#8658;2]]</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6528,12 +6610,21 @@ Finally, the programmatic expression below captures the equivalent aforementione
 </div>
 <div class="paragraph">
 <p>mtron&gt; x0 &#8594; {[a&#8658;[b&#8658;[d&#8658;1]]],[a&#8658;[c&#8658;[d&#8658;2]]]}
-=&#8658;[a&#8658;[b&#8658;[d&#8658;1]]]
-=&#8658;[a&#8658;[c&#8658;[d&#8658;2]]]
+=&#8658;[
+    a&#8658;[
+     b&#8658;[
+      d&#8658;1]]]
+=&#8658;[
+    a&#8658;[
+     c&#8658;[
+      d&#8658;2]]]
 mtron&gt; x1 &#8594; [a&#8658;[b&#8658;[d&#8658;1],c&#8658;[d&#8658;2]]]
-=&#8658;[a&#8658;[
-    b&#8658;[d&#8658;1],
-    c&#8658;[d&#8658;2]]]
+=&#8658;[
+    a&#8658;[
+     b&#8658;[
+      d&#8658;1],
+     c&#8658;[
+      d&#8658;2]]]
 mtron&gt; x2 &#8594; [a&#8658;[b&#8658;!*d,[c&#8658;!*d]]];d&#8594;{1,2};
 =&#8658;1
 =&#8658;2
@@ -6800,7 +6891,9 @@ Given this rule, the following metatron `rec`
       c&#8658;3,
       d&#8658;4,
       f&#8658;5]],
-    g&#8658;[b&#8658;[c&#8658;6]]]</p>
+    g&#8658;[
+     b&#8658;[
+      c&#8658;6]]]</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6837,7 +6930,8 @@ Common left side variables amongst summed components can be factored to the left
     a/e/c&#8658;3,
     a/e/d&#8658;4,
     a/e/f&#8658;5,
-    g/b&#8658;[c&#8658;6]]
+    g/b&#8658;[
+     c&#8658;6]]
 mtron&gt; x2 &#8594; [a/b/c &#8658; 1,
               a/b/d &#8658; 2,
               a/e/c &#8658; 3,
@@ -6884,32 +6978,33 @@ mtron&gt; -&#8594;
 =&#8658;fail::[parse error at line 1, col 1:
      -&#8594;
      ^
-     could not parse at '-']@/sys/fail/794
+     could not parse at '-']@/sys/fail/800
 mtron&gt; 
 mtron&gt; [discrete]
 =&#8658;[discrete]
 mtron&gt; <a id="sec-navigating-the-reference-structure"></a>
-=&#8658;<a id="sec-navigating-the-reference-structure"></a>
+=&#8658;[
+    [sec-navigating-the-reference-structure]]
 mtron&gt; === Navigating the Reference Structure
 =&#8658;fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/796
+     could not parse at '=']@/sys/fail/802
 mtron&gt; Metatron is address-first: <code>a</code> answers the <strong>address</strong>, <code><strong>a</code> answers the *value</strong>.
 =&#8658;fail::[parse error at line 1, col 9:
      Metatron is address-first: <code>a</code> answers the *addr&#8230;&#8203;
              ^
-     could not parse at ' ']@/sys/fail/798
+     could not parse at ' ']@/sys/fail/804
 mtron&gt; The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
 =&#8658;fail::[parse error at line 1, col 4:
      The uri is the reference; the obj is the re&#8230;&#8203;
         ^
-     could not parse at ' ']@/sys/fail/800
+     could not parse at ' ']@/sys/fail/806
 mtron&gt; The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
 =&#8658;fail::[parse error at line 1, col 4:
      The address space is first-class, obj-free &#8230;&#8203;
         ^
-     could not parse at ' ']@/sys/fail/802
+     could not parse at ' ']@/sys/fail/808
 mtron&gt; [mtron]
 =&#8658;[mtron]</p>
 </div>
@@ -7046,7 +7141,8 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
     obj=&gt;as?rng=bytes&amp;dom=inst(bytes::T){&lt;j&gt;},
     dom=&gt;'/m/inst',
     rng=&gt;'/m/bytes',
-    args=&gt;[0=&gt;'/m/bytes'],
+    args=&gt;[
+     0=&gt;'/m/bytes'],
     desc=&gt;'&lt;no description&gt;']
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;"{obj=as?rng=bytes&amp;dom=inst(bytes::T){&lt;j&gt;}, dom='/m/inst', rng='/m/bytes', args=[0=&gt;'/m/bytes'], desc='&lt;no description&gt;'}"</code></pre>
@@ -7096,14 +7192,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
 ==&gt;'tmpfs                    6355856       6624   6349232   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  544602896 366354928  60% /'
+==&gt;'/dev/nvme0n1p2         959786032  545625760 365332064  60% /'
 ==&gt;'tmpfs                   31779272       1056  31778216   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        260   6355592   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        248   6355604   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1348611884 572596660  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1346186360 575022184  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;articles
@@ -7126,7 +7222,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[MaCHINe FAiled][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/132</code></pre>
+==&gt;fail::[macHINe failed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/144</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7314,7 +7410,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:322/41/24/930?tz=-0600
+==&gt;datetime:://2026.10:503/15/36/999?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7327,18 +7423,18 @@ mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;{hour,minu
 ==&gt;9
 ==&gt;{3}0
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host     ​7​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/512
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/host?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/516
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port     ​8​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/514
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/port?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/518
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;path&gt;&gt;0     ​9​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/516
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:25/09/00/00/000/path?tz=-0500&gt; (at /m/inst/rshift@1)]@/sys/fail/520
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;+1]&gt;&gt;port     ​10​
-==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt; (at /m/inst/rshift@2)]@/sys/fail/518
+==&gt;fail::[inst apply failure: no active space supports pattern &lt;//2024.12:26/09/00/00/000/port?tz=-0500&gt; (at /m/inst/rshift@2)]@/sys/fail/522
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]     ​11​
 ==&gt;fail::[parse error at line 1, col 37:
      &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]
                                          ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/520
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/524
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']].as(datetime::T)     ​12​
 ==&gt;datetime:://2024.12:25/09/00/00/000?tz=+0000
 mtron&gt; '2026-08-01T23:37:33-06:00'.as(datetime::T)&gt;&gt;year     ​13​
@@ -7503,12 +7599,14 @@ the demarcation of metatron path collections.</p>
            &lt;gremlin.graph&gt; =&gt; &lt;org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph&gt;]
          ]@&lt;/sys/space/grph/modern&gt;;     ​1​
 mtron&gt; *g:+     ​2​
-==&gt;edge::T[?[weight=&gt;real::T]]@created
+==&gt;edge::T[?[
+    weight=&gt;real::T]]@created
 ==&gt;V::T
 ==&gt;vrtx::T[?[
     name=&gt;str::T,
     age=&gt;int::T]]@person
-==&gt;edge::T[?[weight=&gt;real::T]]@knows
+==&gt;edge::T[?[
+    weight=&gt;real::T]]@knows
 ==&gt;E::T
 ==&gt;vrtx::T[?[
     name=&gt;str::T,
@@ -7615,11 +7713,15 @@ The same traversals expressed using both forms:</p>
     name=&gt;marko,
     age=&gt;29]
 mtron&gt; *g:V/1/OUT     ​2​
-==&gt;created::[weight=&gt;0.4000]@g:E/9
-==&gt;knows::[weight=&gt;0.5000]@g:E/7
-==&gt;knows::[weight=&gt;1.0000]@g:E/8
+==&gt;created::[
+    weight=&gt;0.4000]@g:E/9
+==&gt;knows::[
+    weight=&gt;0.5000]@g:E/7
+==&gt;knows::[
+    weight=&gt;1.0000]@g:E/8
 mtron&gt; *g:V/1/OUT/created     ​3​
-==&gt;created::[weight=&gt;0.4000]
+==&gt;created::[
+    weight=&gt;0.4000]
 mtron&gt; *g:V/1/OUT/created/IN     ​4​
 ==&gt;software::[
     lang=&gt;java,
@@ -7641,17 +7743,17 @@ mtron&gt; *g:E/7/IN/name     ​7​
     name=&gt;marko,
     age=&gt;29]
 mtron&gt; *g:V/1.outE()     ​2​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/138
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/150
 mtron&gt; *g:V/1.outE(created)     ​3​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/140
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/152
 mtron&gt; *g:V/1.out(created)     ​4​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/142
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/154
 mtron&gt; *g:V/1.out(knows)&gt;&gt;name     ​5​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/144
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/156
 mtron&gt; *g:V/1.out(knows).count()     ​6​
-==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; rec{*}::T@elmt [count?rng=int&amp;dom=elmt{*}(){&lt;j&gt;}@&lt;2&gt;]]@/sys/fail/148
+==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; rec{*}::T@elmt [count?rng=int&amp;dom=elmt{*}(){&lt;j&gt;}@&lt;2&gt;]]@/sys/fail/160
 mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
-==&gt;fail::[lhs range does not match inst domain: edge::T[?[weight=&gt;real::T]]@knows =&gt; elmt::T[?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge [inV?rng=vrtx&amp;dom=edge(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/162</code></pre>
+==&gt;fail::[lhs range does not match inst domain: edge::T[?[weight=&gt;real::T]]@knows =&gt; elmt::T[?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx],IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge{*}::T],{?}IN=&gt;[uri::T=&gt;edge{*}::T]]]@vrtx]]]@edge [inV?rng=vrtx&amp;dom=edge(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/174</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7849,24 +7951,25 @@ mtron&gt; *g:V/+.=?=[address/+/city =&gt; 'santa fe']     ​3​
 ==&gt;fail::[parse error at line 1, col 8:
      *g:V/+.=?=[address/+/city =&gt; 'santa fe']
             ^
-     could not parse at '=']@/sys/fail/164
+     could not parse at '=']@/sys/fail/176
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
-==&gt;[address/+/city/=&gt;{address/home/city=&gt;fail::[parse error at line 1, col 6:
+==&gt;[
+    address/+/city/=&gt;{address/home/city=&gt;fail::[parse error at line 1, col 6:
      santa fe
           ^
-     could not parse at ' ']@/sys/fail/186,address/work/city=&gt;nomansland}]
+     could not parse at ' ']@/sys/fail/198,address/work/city=&gt;nomansland}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city     ​6​
 ==&gt;fail{8}::[parse error at line 1, col 6:
      santa fe
           ^
-     could not parse at ' ']@/sys/fail/274
+     could not parse at ' ']@/sys/fail/286
 ==&gt;{7}nomansland
 mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
 ==&gt;fail::[parse error at line 1, col 6:
      santa fe
           ^
-     could not parse at ' ']@/sys/fail/312
+     could not parse at ' ']@/sys/fail/324
 ==&gt;nomansland</code></pre>
 </div>
 </div>
@@ -7930,12 +8033,12 @@ mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
 ==&gt;fail::[parse error at line 1, col 8:
      *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]
             ^
-     could not parse at '=']@/sys/fail/314
+     could not parse at '=']@/sys/fail/326
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
 ==&gt;fail::[parse error at line 1, col 8:
      *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;addre...
             ^
-     could not parse at '=']@/sys/fail/316</code></pre>
+     could not parse at '=']@/sys/fail/328</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8046,9 +8149,9 @@ mtron&gt; *acme:customers/357     ​2​
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
 ==&gt;consulted::[=&gt;]@g:E/29
 mtron&gt; *g:V/1.out(consulted)     ​4​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/318
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/330
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/320</code></pre>
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/332</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8093,13 +8196,13 @@ These expressions highlight the nested structural pattern matching and data mani
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.out(consulted)-&lt;[
          name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
          address =&gt;==[city=&gt;_,country=&gt;_]]
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/322
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/334
 mtron&gt; *g:V/1.out(consulted)
          &gt;&gt;salesRepEmployeeNumber
          &gt;&gt;reportsTo.-&lt;[
            name  =&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
            job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/324</code></pre>
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/336</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8254,11 +8357,21 @@ mtron&gt; *g:V/1/OUT/te:hot/a/item     ​2​
 ==&gt;'laptop'
 mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
 ==&gt;fail::[asRec onto a fail: inst apply failure: obj does not match person::T
-     [age=&gt;27,name=&gt;vadas]
+     [[
+      age=&gt;27,
+      name=&gt;vadas]
          X=&gt;
-     vrtx::T[?[name=&gt;uri::T,age=&gt;int::T,city=&gt;str::T]]@person
-     --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     [name=&gt;(==&gt;name)=&gt;vadas=&gt;==&gt;uri::T,age=&gt;(==&gt;age)=&gt;27=&gt;==&gt;int::T,noobj=&gt;(X=&gt;city)=&gt;noobj=&gt;X=&gt;str::T,noobj=&gt;(==&gt;{?}OUT)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T],noobj=&gt;(==&gt;{?}IN)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T]] (at /m/inst/auto_from)]@/sys/fail/330
+     vrtx::T[?[
+      name=&gt;uri::T,
+      age=&gt;int::T,
+      city=&gt;str::T]]@person
+     ----------------------------------------------------
+     [
+      name=&gt;(==&gt;name)=&gt;vadas=&gt;==&gt;uri::T,
+      age=&gt;(==&gt;age)=&gt;27=&gt;==&gt;int::T,
+      noobj=&gt;(X=&gt;city)=&gt;noobj=&gt;X=&gt;str::T,
+      noobj=&gt;(==&gt;{?}OUT)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T],
+      noobj=&gt;(==&gt;{?}IN)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T]]] (at /m/inst/auto_from)]@/sys/fail/342
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0000
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
@@ -8269,15 +8382,15 @@ mtron&gt; *g:V/1/OUT/knows.count()     ​5​
 <div class="title">traversing a distributed edge set (instruction-call syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.outE(te:hot).count()     ​1​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/344
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/356
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/354
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/366
 mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/364
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/376
 mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/374
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/386
 mtron&gt; *g:V/1.outE(knows).count()     ​5​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/376</code></pre>
+==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/sys/fail/388</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -8375,7 +8488,8 @@ mtron&gt; v4 -&gt; [,]
 mtron&gt; v5 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v6 -&gt; [!*v4]
-==&gt;[!*v4]
+==&gt;[
+    !*v4]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
@@ -8458,13 +8572,15 @@ Again, the code and diagram below exemplify this form.</p>
 mtron&gt; v2 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v3 -&gt; [created=&gt;{!*v4, !*v5}]
-==&gt;[created=&gt;{!*v4,!*v5}]
+==&gt;[
+    created=&gt;{!*v4,!*v5}]
 mtron&gt; v4 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v5 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v6 -&gt; [created=&gt;{!*v4}]
-==&gt;[created=&gt;!*v4]
+==&gt;[
+    created=&gt;!*v4]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
@@ -8473,7 +8589,8 @@ mtron&gt; *v1     ​2​
     created=&gt;!*v4]
 mtron&gt; *v1.&gt;&gt;knows     ​3​
 ==&gt;[,]
-==&gt;[created=&gt;{!*v4,!*v5}]
+==&gt;[
+    created=&gt;{!*v4,!*v5}]
 mtron&gt; *v1.&gt;&gt;knows.&gt;&gt;created     ​4​
 ==&gt;{2}[,]</code></pre>
 </div>
@@ -8530,7 +8647,8 @@ mtron&gt; v3 -&gt; [name=&gt;'josh',age=&gt;32,
 ==&gt;[
     name=&gt;'josh',
     age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+    out_=&gt;[
+     created=&gt;{!*v4,!*v5}]]
 mtron&gt; v4 -&gt; [name=&gt;'lop',lang=&gt;java]
 ==&gt;[
     name=&gt;'lop',
@@ -8544,7 +8662,8 @@ mtron&gt; v6 -&gt; [name=&gt;'peter',age=&gt;35,
 ==&gt;[
     name=&gt;'peter',
     age=&gt;35,
-    out_=&gt;[created=&gt;!*v4]]
+    out_=&gt;[
+     created=&gt;!*v4]]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
@@ -8561,7 +8680,8 @@ mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows     ​3​
 ==&gt;[
     name=&gt;'josh',
     age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+    out_=&gt;[
+     created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created     ​4​
 ==&gt;[
     name=&gt;'lop',
@@ -8579,7 +8699,8 @@ mtron&gt; *v1.&gt;&gt;out_/knows     ​3​
 ==&gt;[
     name=&gt;'josh',
     age=&gt;32,
-    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+    out_=&gt;[
+     created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created     ​4​
 ==&gt;[
     name=&gt;'lop',
@@ -8661,31 +8782,38 @@ For the sake of brevity, only vertex 1 and its incident edges will be developed 
 ==&gt;[
     name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    outE_=&gt;[
+     knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
     created=&gt;[
      weight=&gt;0.2000,
      inV_=&gt;!*v3,
      outV_=&gt;!*v1]]
 mtron&gt; v2 -&gt; [name=&gt;'vadas']
-==&gt;[name=&gt;'vadas']
+==&gt;[
+    name=&gt;'vadas']
 mtron&gt; v3 -&gt; [name=&gt;'josh']
-==&gt;[name=&gt;'josh']
+==&gt;[
+    name=&gt;'josh']
 mtron&gt; v4 -&gt; [name=&gt;'lop']
-==&gt;[name=&gt;'lop']
+==&gt;[
+    name=&gt;'lop']
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
 ==&gt;[
     name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    outE_=&gt;[
+     knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
     created=&gt;[
      weight=&gt;0.2000,
      inV_=&gt;!*v3,
      outV_=&gt;!*v1]]
 mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;inV_     ​3​
-==&gt;[name=&gt;'vadas']
-==&gt;[name=&gt;'lop']
+==&gt;[
+    name=&gt;'vadas']
+==&gt;[
+    name=&gt;'lop']
 mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;created.&gt;&gt;inV_     ​4​</code></pre>
 </div>
 </div></div></td>
@@ -8723,7 +8851,8 @@ mtron&gt; *v1     ​2​
 ==&gt;[
     name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    outE_=&gt;[
+     knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
     created=&gt;[
      weight=&gt;0.2000,
      inV_=&gt;!*v3,
@@ -9192,7 +9321,8 @@ core::[code=&gt;expensive_computation]            [-- &lt;3&gt; --]</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/executor/run
 ==&gt;[,]
 mtron&gt; */sys/thread/executor/stop
-==&gt;[!*/sys/thread/main]
+==&gt;[
+    !*/sys/thread/main]
 mtron&gt; */sys/thread/executor/stop/+/source
 mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
 </div>
@@ -9208,17 +9338,17 @@ mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
 mtron&gt; virtual::[code  =&gt; @ab + 'B',
                  loop  =&gt; second::1.0,
                  state =&gt; pause]@/sys/thread/b     ​3​
-==&gt;fail::[unable to construct virtual::T: fail::[inst apply failure: virtual::'BB'@/sys/thread/b [string] is not a thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual (at /m/inst/plus)]@/sys/fail/624
+==&gt;fail::[unable to construct virtual::T: fail::[inst apply failure: virtual::'BB'@/sys/thread/b [string] is not a thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual (at /m/inst/plus)]@/sys/fail/628
    	while parsing: virtual::[code  =&gt; @ab + 'B',
                     loop  =&gt; second::1.0,
-                    state =&gt; pause]@/sys/thread/b]@/sys/fail/626
+                    state =&gt; pause]@/sys/thread/b]@/sys/fail/630
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
                  yield =&gt; !*/sys/thread/b]@/sys/thread/a     ​4​
-==&gt;fail::[unable to construct virtual::T: fail::[inst apply failure: virtual::'BA'@/sys/thread/b [string] is not a thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual (at /m/inst/plus)]@/sys/fail/628
+==&gt;fail::[unable to construct virtual::T: fail::[inst apply failure: virtual::'BA'@/sys/thread/b [string] is not a thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual (at /m/inst/plus)]@/sys/fail/632
    	while parsing: virtual::[code  =&gt; @ab + 'A',
    loop  =&gt; second::1.0,
-   yield =&gt; !*/sys/thread/b]@/sys/thread/a]@/sys/fail/630
+   yield =&gt; !*/sys/thread/b]@/sys/thread/a]@/sys/fail/634
 mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
 ==&gt;virtual::[ code=&gt;at(ab).plus('B'),
     loop=&gt;second::1.0000,
@@ -9228,7 +9358,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0000,
      state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime:://2026.10:322/41/29/086?tz=-0600,
+    time=&gt;datetime:://2026.10:503/15/41/204?tz=-0600,
     runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
     ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
@@ -9314,7 +9444,7 @@ mtron&gt; */sys/thread/example/state     ​5​</code></pre>
 ==&gt;core::[
     code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
     state=&gt;stop,
-    time=&gt;datetime:://2026.10:322/41/10/934?tz=-0600,
+    time=&gt;datetime:://2026.10:503/15/20/971?tz=-0600,
     runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[
@@ -9322,7 +9452,7 @@ mtron&gt; */sys/thread/main?docq
      code=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
      start=&gt;noobj,
      state=&gt;stop,
-     time=&gt;datetime:://2026.10:322/41/10/934?tz=-0600,
+     time=&gt;datetime:://2026.10:503/15/20/971?tz=-0600,
      runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
      result=&gt;noobj]@/sys/thread/main,
     desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -9382,7 +9512,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs]
        ]@/sys/space/web/http
-==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/880
+==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/884
    	while parsing: httpspace::[
    host     =&gt; http://localhost:8777,
    pattern  =&gt; http://#,
@@ -9390,7 +9520,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
    route    =&gt; [/        =&gt; &lt;&gt;,
    /mcp     =&gt; mcp_mtron_http,
    /docs    =&gt; target/docs]
-   ]@/sys/space/web/http]@/sys/fail/882</code></pre>
+   ]@/sys/space/web/http]@/sys/fail/886</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -9421,78 +9551,82 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
 
 
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​3​
-==&gt;[html=&gt;[
-    head=&gt;[
-     title=&gt;'PhaseShift Studio',
-     out=&gt;[
-      [
-       tag=&gt;link,
-       href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-       rel=&gt;'stylesheet'],
-      [
-       tag=&gt;link,
-       href=&gt;&lt;css/metatron.css&gt;,
-       rel=&gt;'stylesheet']]],
-    body=&gt;[
-     out=&gt;[
-      [tag=&gt;p],
-      [
-       tag=&gt;h1,
-       style=&gt;'padding-left:125px;color:var(--pri...',
-       text=&gt;'PhaseShift Studio'],
-      [
-       tag=&gt;img,
-       style=&gt;'padding-left:100px',
-       src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-       width=&gt;'500px'],
-      [
-       tag=&gt;script,
-       type=&gt;'module',
-       src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,
-       integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZ...',
-       data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
-       crossorigin=&gt;'anonymous']],
-     style=&gt;'background-color: black;']]]
+==&gt;[
+    html=&gt;[
+     head=&gt;[
+      title=&gt;'PhaseShift Studio',
+      out=&gt;[
+       [
+        tag=&gt;link,
+        href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+        rel=&gt;'stylesheet'],
+       [
+        tag=&gt;link,
+        href=&gt;&lt;css/metatron.css&gt;,
+        rel=&gt;'stylesheet']]],
+     body=&gt;[
+      out=&gt;[
+       [
+        tag=&gt;p],
+       [
+        tag=&gt;h1,
+        style=&gt;'padding-left:125px;color:var(--pri...',
+        text=&gt;'PhaseShift Studio'],
+       [
+        tag=&gt;img,
+        style=&gt;'padding-left:100px',
+        src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+        width=&gt;'500px'],
+       [
+        tag=&gt;script,
+        type=&gt;'module',
+        src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,
+        integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZ...',
+        data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
+        crossorigin=&gt;'anonymous']],
+      style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)/html/head/title     ​4​
 ==&gt;fail::[parse error at line 1, col 51:
      ...haseshift.studio/splash.html&gt;.as(rec::T)/html/head/title
                                                 ^
-     incomplete — binary operator '/' needs a right operand (e.g. 1 + 2)]@/sys/fail/888
+     incomplete — binary operator '/' needs a right operand (e.g. 1 + 2)]@/sys/fail/894
 mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;     ​5​
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from)]@/sys/fail/890
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from)]@/sys/fail/896
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
-==&gt;[html=&gt;[
-    head=&gt;[
-     title=&gt;'PhaseShift Studio',
-     out=&gt;[
-      [
-       tag=&gt;link,
-       href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-       rel=&gt;'stylesheet'],
-      [
-       tag=&gt;link,
-       href=&gt;&lt;css/metatron.css&gt;,
-       rel=&gt;'stylesheet']]],
-    body=&gt;[
-     out=&gt;[
-      [tag=&gt;p],
-      [
-       tag=&gt;h1,
-       style=&gt;'padding-left:125px;color:var(--pri...',
-       text=&gt;'PhaseShift Studio'],
-      [
-       tag=&gt;img,
-       style=&gt;'padding-left:100px',
-       src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-       width=&gt;'500px'],
-      [
-       tag=&gt;script,
-       type=&gt;'module',
-       src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,
-       integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZ...',
-       data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
-       crossorigin=&gt;'anonymous']],
-     style=&gt;'background-color: black;']]]</code></pre>
+==&gt;[
+    html=&gt;[
+     head=&gt;[
+      title=&gt;'PhaseShift Studio',
+      out=&gt;[
+       [
+        tag=&gt;link,
+        href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+        rel=&gt;'stylesheet'],
+       [
+        tag=&gt;link,
+        href=&gt;&lt;css/metatron.css&gt;,
+        rel=&gt;'stylesheet']]],
+     body=&gt;[
+      out=&gt;[
+       [
+        tag=&gt;p],
+       [
+        tag=&gt;h1,
+        style=&gt;'padding-left:125px;color:var(--pri...',
+        text=&gt;'PhaseShift Studio'],
+       [
+        tag=&gt;img,
+        style=&gt;'padding-left:100px',
+        src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+        width=&gt;'500px'],
+       [
+        tag=&gt;script,
+        type=&gt;'module',
+        src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495&gt;,
+        integrity=&gt;'sha512-iIg7k2xntmwu6/uSb5tpc/hySgZ...',
+        data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
+        crossorigin=&gt;'anonymous']],
+      style=&gt;'background-color: black;']]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9543,13 +9677,13 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
 
 
 mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;     ​3​
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from)]@/sys/fail/892
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from)]@/sys/fail/898
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
-==&gt;[models=&gt;[
-    [
-    name=&gt;&lt;qwen3.5:4b&gt;,
-    model=&gt;&lt;qwen3.5:4b&gt;,
-    modified_at=&gt;&lt;2026-10-02T01:56:52.3384474-06:00&gt;,
+==&gt;[
+    models=&gt;[
+     [
+     name=&gt;&lt;qwen3.5:4b&gt;,
+     model=&gt;&lt;qwen3.5:4b&gt;,
    ...</code></pre>
 </div>
 </div>
@@ -9607,7 +9741,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             host    =&gt; &lt;http://localhost:11434&gt;,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
          .chat('are you there?')
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from@0)]@/sys/fail/894</code></pre>
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from@0)]@/sys/fail/900</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9645,7 +9779,8 @@ Note that <code>localhost</code> can be set to any hostname or IP address that i
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsclient::[host=&gt;&lt;ws://localhost:8555/mtron&gt;]@/usr/ui/console/remote     ​1​
-==&gt;wsclient::[host=&gt;ws://localhost:8555/mtron]@/usr/ui/console/remote</code></pre>
+==&gt;wsclient::[
+    host=&gt;ws://localhost:8555/mtron]@/usr/ui/console/remote</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9851,14 +9986,15 @@ the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</
 mtron&gt; chicken   -&gt; animal::T@chicken     ​2​
 mtron&gt; equipment -&gt; rec::T[?[model=&gt;uri::T, year=&gt;int::T]]@equipment     ​3​
 mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset     ​4​
-==&gt;farmset::[type=&gt;[
-    rec::T[?[
-     name=&gt;str::T,
-     age=&gt;int::T]]@animal,
-    rec::T[?[
-     model=&gt;uri::T,
-     year=&gt;int::T]]@equipment,
-    animal::T@chicken]]@/m/dcmnt/schema/farmset</code></pre>
+==&gt;farmset::[
+    type=&gt;[
+     rec::T[?[
+      name=&gt;str::T,
+      age=&gt;int::T]]@animal,
+     rec::T[?[
+      model=&gt;uri::T,
+      year=&gt;int::T]]@equipment,
+     animal::T@chicken]]@/m/dcmnt/schema/farmset</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9902,7 +10038,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals]] at root; got str::T]@/sys/fail/86
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals]] at root; got str::T]@/sys/fail/94
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[
     name=&gt;'trill',
@@ -9991,7 +10127,8 @@ mtron&gt; loc:barns/1 -&gt; [label=&gt;'old_red_barn',capacity=&gt;12]     ​2�
     label=&gt;'old_red_barn',
     capacity=&gt;12]
 mtron&gt; farm:animals/1 &gt;&gt;= [shelter=&gt;!*loc:barns/1]     ​3​
-==&gt;[shelter=&gt;!*loc:barns/1]
+==&gt;[
+    shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/1     ​4​
 ==&gt;chicken::[
     name=&gt;'trill',
@@ -10291,22 +10428,30 @@ mtron&gt; *lite:kv/single
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:kv/nest -&gt; [a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
-==&gt;[a=&gt;[b=&gt;[
-    c=&gt;2,
-    d=&gt;!*lite:kv/nest]]]
+==&gt;[
+    a=&gt;[
+     b=&gt;[
+      c=&gt;2,
+      d=&gt;!*lite:kv/nest]]]
 mtron&gt; *lite:kv/nest
-==&gt;[a=&gt;[b=&gt;[
-    c=&gt;2,
-    d=&gt;!*lite:kv/nest]]]
+==&gt;[
+    a=&gt;[
+     b=&gt;[
+      c=&gt;2,
+      d=&gt;!*lite:kv/nest]]]
 mtron&gt; *lite:kv/nest/a/b/+
-==&gt;[a=&gt;[b=&gt;[
-    c=&gt;2,
-    d=&gt;!*lite:kv/nest]]]
+==&gt;[
+    a=&gt;[
+     b=&gt;[
+      c=&gt;2,
+      d=&gt;!*lite:kv/nest]]]
 ==&gt;2
 mtron&gt; *lite:kv/nest/a/b/d
-==&gt;[a=&gt;[b=&gt;[
-    c=&gt;2,
-    d=&gt;!*lite:kv/nest]]]</code></pre>
+==&gt;[
+    a=&gt;[
+     b=&gt;[
+      c=&gt;2,
+      d=&gt;!*lite:kv/nest]]]</code></pre>
 </div>
 </div>
 </div>
@@ -10340,13 +10485,16 @@ code''' └────────────────┘ └────�
 ==&gt;fail::[parse error at line 1, col 16:
      *lite:person/+.=?=[age=&gt;?&lt;30]
                     ^
-     could not parse at '=']@/sys/fail/604
+     could not parse at '=']@/sys/fail/608
 mtron&gt; *lite:person/+/name.count()     ​2​
 ==&gt;3
 mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
-==&gt;[name=&gt;'alex']
-==&gt;[name=&gt;'grant']
-==&gt;[name=&gt;'marko']</code></pre>
+==&gt;[
+    name=&gt;'alex']
+==&gt;[
+    name=&gt;'grant']
+==&gt;[
+    name=&gt;'marko']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10441,7 +10589,7 @@ mtron&gt; *lite:score/+.=?=[player=&gt;'marko']     ​4​
 ==&gt;fail::[parse error at line 1, col 15:
      *lite:score/+.=?=[player=&gt;'marko']
                    ^
-     could not parse at '=']@/sys/fail/622
+     could not parse at '=']@/sys/fail/626
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;[
     name=&gt;'marko',
@@ -10855,7 +11003,9 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
     &lt;2nd_place_medal&gt;=&gt;'🥈',
     &lt;3rd_place_medal&gt;=&gt;'🥉',
     ...(1848 more)]
-==&gt;/m/mach/log::[level=&gt;[info=&gt;[&lt;#&gt;]]]@/sys/log
+==&gt;/m/mach/log::[
+    level=&gt;[
+     info=&gt;[&lt;#&gt;]]]@/sys/log
 ==&gt;[
     name=&gt;'local',
     peer=&gt;!*/sys/peer,
@@ -10866,22 +11016,26 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
     type_pred=&gt;true,
     obj_write=&gt;true,
     inst_dom=&gt;true]@/sys/typer
-==&gt;tracer::[stack=&gt;[
-    mtron_stack=&gt;false,
-    java_stack=&gt;false]]
+==&gt;tracer::[
+    stack=&gt;[
+     mtron_stack=&gt;false,
+     java_stack=&gt;false]]
 ==&gt;machine::[ pattern=&gt;&lt;#&gt;,
-    q=&gt;[docq::[
-    pattern=&gt;docq,
-    pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
-    pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+    q=&gt;[
+     docq::[
+      pattern=&gt;docq,
+      pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+      pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+      obj=&gt;memspace::[
+       pattern=&gt;&lt;#&gt;],
+      inst=&gt;instset::[
+       pattern=&gt;&lt;#&gt;]]],
     memory=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
     network=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
     instset=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
     compiler=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
     processor=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-    ...(2 more)]@/sys/mach
+    ...(1 more)]@/sys/mach
 ==&gt;"""use /sys/tmp as a temporary location for objs.
    note that /sys/tmp can be automatically garbage collected at any time.
    """</code></pre>

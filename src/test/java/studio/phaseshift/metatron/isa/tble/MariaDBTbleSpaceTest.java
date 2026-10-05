@@ -22,7 +22,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
-import studio.phaseshift.metatron.SkipRegexTest;
 
 /**
  * Test suite for tbleSpace using MariaDB via TestContainers.
@@ -30,14 +29,14 @@ import studio.phaseshift.metatron.SkipRegexTest;
  * <p>
  * This test class extends AbstractTbleSpaceTest which contains all the actual test logic.
  * The only responsibility of this class is to set up and tear down the MariaDB container.
+ * <p>
+ * Nothing is skipped: the cross-ref rows (M33/M34) are fixed by column widening in
+ * {@code ExistingTableSchema}, and the rshift-through-a-list rows by the ancestor match in
+ * {@code fURIAwareIndexedSchema.readMqttPattern}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@SkipRegexTest(value = {
-        @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M33", "M34", "M37"}),
-        @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine", params = "rshift/x/y.>>.>>")
-})
 public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
 
     /**

@@ -106,7 +106,8 @@ Objs can carry a **vid** (address URI) via `@`:
 
 ```mtron
 mtron> [a=>1]@a                 [-- rec anchored at uri myVid --]
-==>[a=>1]@a
+==>[
+    a=>1]@a
 mtron> [1,2,3,4]@b              [-- lst anchored at *a --]
 ==>[1,2,3,4]@b
 mtron> *a + [b=>2]
@@ -114,7 +115,8 @@ mtron> *a + [b=>2]
     a=>1,
     b=>2]
 mtron> *a
-==>[a=>1]
+==>[
+    a=>1]
 mtron> @b + [5,6]
 ==>[1,2,3,4,5,6]@b
 mtron> *b
@@ -302,7 +304,7 @@ mtron> posint::2                    [-- posint::2  (admitted: the predicate lets
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/462
+   	while parsing: posint::-1]@/sys/fail/466
 ```
 ---
 
@@ -342,12 +344,16 @@ mtron> [a=>1,b=>2,c=>3]==[_=>_]                                   [-- syntax sug
     b=>2,
     c=>3]
 mtron> [a=>1,b=>2,c=>3]==[a=>_]                                   [-- [a=>1] --]
-==>[a=>1]
+==>[
+    a=>1]
 mtron> [a=>1,b=>2,c=>3]==[a=>+10]                                 [-- [a=>11] --]
-==>[a=>11]
+==>[
+    a=>11]
 mtron> {[a=>1],[a=>2],[a=>3]}==[a=>?>=2.+10]                      [-- {[a=>12],[a=>13]} --]
-==>[a=>12]
-==>[a=>13]
+==>[
+    a=>12]
+==>[
+    a=>13]
 mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
 ==>[1,7,3]
 ```
@@ -358,11 +364,15 @@ not. A rec predicate matches structurally — the value's field is checked again
 
 ```mtron
 mtron> {[a=>1],[a=>2],[a=>3]}?[a=>is(gt(1))]   [-- {[a=>2],[a=>3]}  (the rec predicate matches each rec's a-field) --]
-==>[a=>2]
-==>[a=>3]
+==>[
+    a=>2]
+==>[
+    a=>3]
 mtron> {[a=>1],[a=>2],[a=>3]}?[a=>is(lt(3))]   [-- {[a=>1],[a=>2]}  (the same shape admits the low fields) --]
-==>[a=>1]
-==>[a=>2]
+==>[
+    a=>1]
+==>[
+    a=>2]
 ```
 **`where()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
 fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
@@ -384,13 +394,14 @@ mtron> {1,2,3}.group([_=>+10])                [-- [1=>11, 2=>12, 3=>13] --]
     2=>12,
     3=>13]
 mtron> [a=>1,b=>2,c=>3].group([_=>_])          [-- [[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]] --]
-==>[[
+==>[
+    [
     a=>1,
     b=>2,
     c=>3]=>[
-    a=>1,
-    b=>2,
-    c=>3]]
+     a=>1,
+     b=>2,
+     c=>3]]
 ```
 ---
 
@@ -452,13 +463,16 @@ Traverse into structures:
 ```mtron
 mtron> [1,2,[a=>3],4]<<2                  [-- [[a=>3],4] --]
 mtron> [1,2,[a=>3],4]>>2                  [-- [1,2] --]
-==>[a=>3]
+==>[
+    a=>3]
 mtron> [1,2,[a=>3],4]>>(-2)               [-- [a=>3] (negative indicies) --]
-==>[a=>3]
+==>[
+    a=>3]
 mtron> [1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4} (selectors are uris) --]
 ==>1
 ==>2
-==>[a=>3]
+==>[
+    a=>3]
 ==>4
 ```
 ### On records
@@ -471,9 +485,12 @@ mtron> [a=>1,b=>2,c=>[d=>3]].dom()        [-- {a,b,c}           (extract keys) -
 mtron> [a=>1,b=>2,c=>[d=>3]].rng()        [-- {1,2,[d=>3]}      (extract values) --]
 ==>1
 ==>2
-==>[d=>3]
+==>[
+    d=>3]
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c      [-- [d=>[e=>3]]       (access by key) --]
-==>[d=>[e=>3]]
+==>[
+    d=>[
+     e=>3]]
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c/d/e  [-- 3                 (walk nested structure) --]
 ==>3
 ```
@@ -528,7 +545,8 @@ mtron> @xyz/c/d>>=10                           [-- write 10 to path --]
 mtron> [1,2]@a >>= [_,+4]                      [-- [1,6]@a  (second element +4) --]
 ==>[1,6]
 mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
-==>[a=>1]
+==>[
+    a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
 ==>[
     name=>'Micky Mouse',
@@ -554,9 +572,11 @@ Lazy cross-reference via the Router:
 
 ```mtron
 mtron> [company=>!*db:companies/101]     [-- auto_from — resolved on access --]
-==>[company=>!*db:companies/101]
+==>[
+    company=>!*db:companies/101]
 mtron> [company=>!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
-==>[company=>!@db:companies/101]
+==>[
+    company=>!@db:companies/101]
 ```
 `!*` is sugar for `auto_from(uri)`. When you `.at(company)` on the record, the Router resolves `db:companies/101` and
 returns the target Obj.
@@ -650,7 +670,8 @@ mtron> int{?}::10                     [-- optional coefficient {0,1} --]
 
 ```mtron
 mtron> [a=>1,b=>2,c=>3]==[a=>_]     [-- select with pattern match --]
-==>[a=>1]
+==>[
+    a=>1]
 mtron> [a=>1,b=>2,c=>3]==[a=>is(gt(1))]  [-- select with filter --]
 ```
 ---

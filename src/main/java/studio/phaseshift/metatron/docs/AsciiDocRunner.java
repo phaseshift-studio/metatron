@@ -23,21 +23,9 @@ import org.asciidoctor.Options;
 import org.asciidoctor.SafeMode;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.TypeCheck;
-import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
-import studio.phaseshift.metatron.isa.iot.iotInstSet;
-import studio.phaseshift.metatron.isa.llm.llmInstSet;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.rdf.rdfInstSet;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
-import studio.phaseshift.metatron.isa.tble.tbleInstSet;
-import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -48,9 +36,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * CLI tool that processes AsciiDoc files containing mtron code blocks.
@@ -203,12 +188,12 @@ public class AsciiDocRunner {
         ////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////
 
-        if (singleBoot) bootVM(boot);
+        if (singleBoot) DocsUtil.bootVM(boot);
         final long buildStart = System.nanoTime();
         for (final Path file : adocFiles) {
             // ── Bootstrap metatron VM ────────────────────────────────────────
             // Fresh VM per file by default; with --single-boot the VM was booted once above.
-            if (!singleBoot) bootVM(boot);
+            if (!singleBoot) DocsUtil.bootVM(boot);
             // ── Copy adoc files and preprocess ──────────────────────
 
             LOG.info(Graphitty.sillyPrint("\n\nprocessing " + file.getFileName() + "...\n\n", true, true));
@@ -218,11 +203,11 @@ public class AsciiDocRunner {
             content = new LegendDocPreprocessor().process(content);   // inject legend + anchors
             content = new MtronPreprocessor(MtronPreprocessor.ADOC_HEADER).process(content);    // evaluate [mtron] blocks
             Files.writeString(outFile, content.stripTrailing());
-            LOG.info("  processed " + file.getFileName() + " (" + elapsedMs(t0) + "ms)");
+            LOG.info("  processed " + file.getFileName() + " (" + DocsUtil.elapsedMs(t0) + "ms)");
             ThreadExecutor.instance().shutdownNow();
             //BootLoader.close();
         }
-        LOG.info("processing complete — " + adocFiles.size() + " files, " + elapsedMs(buildStart) + "ms (singleBoot="
+        LOG.info("processing complete — " + adocFiles.size() + " files, " + DocsUtil.elapsedMs(buildStart) + "ms (singleBoot="
                 + singleBoot + ", reverse=" + reverse + ")");
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -348,35 +333,6 @@ public class AsciiDocRunner {
             }
         }
         return needed;
-    }
-
-    /**
-     * Elapsed milliseconds since {@code startNanos}.
-     */
-    private static long elapsedMs(final long startNanos) {
-        return (System.nanoTime() - startNanos) / 1_000_000;
-    }
-
-    /**
-     * Boot the metatron VM and register the instruction sets used by the adoc docs.
-     * This is the per-file cost that {@code --single-boot} amortizes to once.
-     */
-    private static void bootVM(final String boot) {
-        BootLoader.BOOTING = true;
-        BootLoader.TESTING = true;
-        BootLoader.load(MRec.rec(uri(LOGG), uri(INFO), uri(BOOT), uri(boot)));
-        for (final InstSet is : new InstSet[]{
-                new mathInstSet(), new webInstSet(), new iotInstSet(),
-                new grphInstSet(), new llmInstSet(), new tbleInstSet(),
-                new dcmntInstSet(), new rdfInstSet()
-        }) {
-            Machine.root().addSpace(is);
-            Machine.writeToSpace(is);
-            is.setup();
-        }
-        // hardcode type checker in support of runtime inst resolution
-        TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.code_resolve);
     }
 
     /**

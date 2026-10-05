@@ -462,7 +462,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime:://2026.10:322/42/15/465?tz=-0600
+==&gt;datetime:://2026.10:503/16/30/183?tz=-0600
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -542,7 +542,8 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)?[port=&gt;25]
     c=&gt;[
      min=&gt;1,
      max=&gt;1],
-    q=&gt;[tz=&gt;'-0500']]
+    q=&gt;[
+     tz=&gt;'-0500']]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)?[port=&gt;26]
 mtron&gt; [-- rec update: change timezone --]
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']]&gt;&gt;q&gt;&gt;tz
@@ -615,16 +616,16 @@ mtron&gt; nanos::1000000.0.as(millis::T).matches(millis::T)
 <p>Time units require a real-backed value — an int-backed time is a type violation:</p>
 <pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day
-   	while parsing: day::2.as(millis::T)]@/sys/fail/606
+   	while parsing: day::2.as(millis::T)]@/sys/fail/610
 mtron&gt; hour::2.as(minute::T)        [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour
-   	while parsing: hour::2.as(minute::T)]@/sys/fail/608
+   	while parsing: hour::2.as(minute::T)]@/sys/fail/612
 mtron&gt; nanos::2.as(millis::T)       [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=nanos&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@nanos
-   	while parsing: nanos::2.as(millis::T)]@/sys/fail/610
+   	while parsing: nanos::2.as(millis::T)]@/sys/fail/614
 mtron&gt; micros::2.as(millis::T)      [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=micros&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@micros
-   	while parsing: micros::2.as(millis::T)]@/sys/fail/612
+   	while parsing: micros::2.as(millis::T)]@/sys/fail/616
 </code></pre>
 <h5>relational operators</h5>
 <p><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>lte</code>, and <code>gte</code> auto-convert across units before comparing:</p>

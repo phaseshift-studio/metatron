@@ -869,12 +869,79 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         };
     }
 
+    /**
+     * Whether {@code value} cannot be represented in {@code column}'s SQL type, so the column has to
+     * be widened to TEXT before the write.
+     * <p>
+     * Only the cases that would otherwise lose data <em>silently</em> are widened: a strictly-typed
+     * engine coerces an unrepresentable value rather than rejecting it (MySQL stores 0 for a URI
+     * written into an INTEGER column, which is exactly how M33/M34 of {@code AbstractSpaceTest}
+     * failed on every provider). A non-numeric <em>str</em> into a numeric column is deliberately NOT
+     * widened — {@link #validateColumnWrite} fails that write loudly today, and trading a clear error
+     * for a silent TEXT column would be the worse outcome.
+     * <p>
+     * Two exclusions for the same reason: an {@code auto_from} FK pointer stores the referenced PK
+     * value, so the numeric column is right for it; and a {@code datetime::T} URI belongs in its
+     * TIMESTAMP/DATE/TIME column, which {@code writeParameter} formats for it.
+     */
+    private static boolean needsTextColumn(final ColumnMetadata column, final Obj value) {
+        if (!column.isNumeric() && column.sqlType != Types.BOOLEAN && column.sqlType != Types.BIT)
+            return false;
+        if (value.isAutoFrom())
+            return false;
+        if (value.isUri() && "datetime".equals(value.tid().name()))
+            return false;
+        return value.isUri() || value.isPoly();
+    }
+
+    /**
+     * ALTER {@code column} to TEXT so it can hold {@code value}, then refresh the cached metadata and
+     * the persisted logical type.
+     * <p>
+     * The counterpart of {@link #addColumnOnTheFly} for a <em>type</em> change rather than a missing
+     * column: the first write decides a column's type (see {@link #createTableFromRecord}), and a
+     * later write of a different shape must widen the column instead of being coerced away.
+     *
+     * @return the column metadata to bind with — the original one when nothing had to change
+     */
+    private ColumnMetadata widenColumnToText(final Connection conn, final TableMetadata metadata,
+                                             final ColumnMetadata column, final Obj value) throws SQLException {
+        final String backend = this.space instanceof tbleSpace tble && tble.backend() != null
+                ? tble.backend().toLowerCase() : "";
+        if (backend.contains(tbleSpace.SQLITE)) {
+            // SQLite is dynamically typed: an INTEGER column has INTEGER *affinity*, and stores a
+            // text value unchanged. There is nothing to alter.
+            this.space.logger().debug("column %s.%s keeps %s affinity for a %s value (sqlite)",
+                    metadata.tableName, column.name, column.typeName(), value.tid());
+            return column;
+        }
+
+        final String ddl = backend.contains(tbleSpace.POSTGRESQL)
+                ? String.format("ALTER TABLE %s ALTER COLUMN %s TYPE TEXT USING %s::text",
+                q(metadata.tableName), q(column.name), q(column.name))
+                : String.format("ALTER TABLE %s MODIFY COLUMN %s TEXT",
+                q(metadata.tableName), q(column.name));
+        this.space.logger().info("widening {{b}}%s.%s{{X}} from %s to TEXT for a {{y}}%s{{X}} value",
+                metadata.tableName, column.name, column.typeName(), value.tid());
+        try (final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(ddl);
+        }
+
+        final ColumnMetadata widened = new ColumnMetadata(column.name, Types.VARCHAR, "TEXT");
+        metadata.columns.replaceAll(c -> c.name.equalsIgnoreCase(column.name) ? widened : c);
+        trackLogicalType(conn, metadata, column.name, value, Types.VARCHAR);
+        this.space.onTableChanged(metadata.tableName);
+        return widened;
+    }
+
     private int writeField(final Connection conn, final TableMetadata metadata, final String rowId,
                            final String fieldName, final Obj value) throws SQLException {
-        final ColumnMetadata column = metadata.columns.stream()
+        ColumnMetadata column = metadata.columns.stream()
                 .filter(c -> c.name.equalsIgnoreCase(fieldName))
                 .findFirst()
                 .orElseThrow(() -> new SQLException("column not found: " + fieldName));
+        if (needsTextColumn(column, value))
+            column = widenColumnToText(conn, metadata, column, value);
 
         final String pkColumn = metadata.primaryKeys.getFirst();
         final String sql = String.format("UPDATE %s SET %s = ? WHERE %s = ?",
@@ -1006,8 +1073,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         for (final Map.Entry<String, Obj> entry : changed.entrySet()) {
             final String colName = entry.getKey();
             final Obj value = entry.getValue();
-            final ColumnMetadata column = metadata.columns.stream()
+            ColumnMetadata column = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(colName)).findFirst().orElseThrow();
+            if (needsTextColumn(column, value))
+                column = widenColumnToText(conn, metadata, column, value);
             trackLogicalType(conn, metadata, column.name, value, column.sqlType);
             setClauses.add(q(column.name) + " = ?");
             values.add(Tuple.Pair.with(value, column));
@@ -1125,8 +1194,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             if (fieldName.equalsIgnoreCase(pkColumn)) continue;
             if (TID_COLUMN.equalsIgnoreCase(fieldName)) continue;
 
-            final ColumnMetadata column = metadata.columns.stream()
+            ColumnMetadata column = metadata.columns.stream()
                     .filter(c -> c.name.equalsIgnoreCase(fieldName)).findFirst().orElse(null);
+            if (column != null && needsTextColumn(column, entry.getValue()))
+                column = widenColumnToText(conn, metadata, column, entry.getValue());
 
             if (column != null) {
                 trackLogicalType(conn, metadata, column.name, entry.getValue(), column.sqlType);

@@ -22,7 +22,8 @@ mtron> """
 ==>[
     type=>streamable-http,
     url=><http://127.0.0.1:64342/stream>,
-    headers=>[IJ_MCP_SERVER_PROJECT_PATH=>/m/inst/thread(/software/metatron)]]
+    headers=>[
+     IJ_MCP_SERVER_PROJECT_PATH=>/m/inst/thread(/software/metatron)]]
 ```
 If the snippet provided has an `mcpServer` outer wrapping, then do:
 
@@ -40,7 +41,8 @@ mtron> """
 ==>[
     type=>streamable-http,
     url=><http://127.0.0.1:64342/stream>,
-    headers=>[IJ_MCP_SERVER_PROJECT_PATH=>/m/inst/thread(/software/metatron)]]
+    headers=>[
+     IJ_MCP_SERVER_PROJECT_PATH=>/m/inst/thread(/software/metatron)]]
 ```
 Moreover, if the `mcpServer` snippet has multiple inner servers endpoints defined, to load all of them, do:
 
@@ -53,12 +55,12 @@ mtron> {"mcpServers": {
             "intellij": {
    ...
      ^
-     unclosed '{' — missing '}'?]@/sys/fail/370
+     unclosed '{' — missing '}'?]@/sys/fail/374
 mtron> }}
 ==>fail::[parse error at line 1, col 1:
      }}
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/372
+     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/376
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -90,7 +92,8 @@ mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
       inst=>inst?rng=#{*}&dom=#{?}(memory_vid=>'the vid of the memory to read'){<j>},
       name=>m_web_mcp_mcp_mtron_read_memory,
       desc=>'(experimental) returns the result ...',
-      arg=>[memory_vid=>'the vid of the memory to read']],
+      arg=>[
+       memory_vid=>'the vid of the memory to read']],
      m_web_mcp_mcp_mtron_eval_mtron=>tool::[
       inst=>inst?rng=#{*}&dom=#{?}(code=>'mtron code to evaluate',native=>'return result in native mtron format'){<j>},
       name=>m_web_mcp_mcp_mtron_eval_mtron,
@@ -136,7 +139,8 @@ mtron> *a>>tool
      inst=>inst?rng=#{*}&dom=#{?}(memory_vid=>'the vid of the memory to read'){<j>},
      name=>m_web_mcp_mcp_mtron_read_memory,
      desc=>'(experimental) returns the result ...',
-     arg=>[memory_vid=>'the vid of the memory to read']],
+     arg=>[
+      memory_vid=>'the vid of the memory to read']],
     m_web_mcp_mcp_mtron_eval_mtron=>tool::[
      inst=>inst?rng=#{*}&dom=#{?}(code=>'mtron code to evaluate',native=>'return result in native mtron format'){<j>},
      name=>m_web_mcp_mcp_mtron_eval_mtron,
@@ -173,7 +177,7 @@ mtron> *a>>tool
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/374
+==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/378
 mtron> [-- => 3 --]
 ```
 ### WebSocket

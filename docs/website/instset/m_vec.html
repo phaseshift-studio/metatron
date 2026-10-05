@@ -410,13 +410,17 @@
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/vec/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
- pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
+ q=&gt;[
+  docq::[
+   pattern=&gt;docq,
+   pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+   pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+   obj=&gt;memspace::[
+    pattern=&gt;&lt;#&gt;],
+   inst=&gt;instset::[
+    pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[
+  super=&gt;!*/m],
  const=&gt;[imaginary::NaN@/m/vec/imaginary],
  inst=&gt;[
   sqrt?rng=real&amp;dom=real(){&lt;j&gt;},
@@ -434,7 +438,9 @@
   space::T[?[
    host=&gt;uri::T,
    driver=&gt;uri::T,
-   config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?rng=vecspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/vec/space/vecspace]]@/m/vec</code></pre>
+   config=&gt;[
+    embed=&gt;[
+     uri::T=&gt;&lt;#&gt;::T]]]][ctor?rng=vecspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/vec/space/vecspace]]@/m/vec</code></pre>
                     </div>
                 </div>
             </div>
@@ -557,14 +563,16 @@
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T,config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?rng=vecspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@vecspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[
- pattern=&gt;uri::T,
- {?}pre_write=&gt;inst::T,
- {?}post_write=&gt;inst::T,
- {?}qless_write=&gt;inst::T,
- {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[
+  rec::T[?[
+   pattern=&gt;uri::T,
+   {?}pre_write=&gt;inst::T,
+   {?}post_write=&gt;inst::T,
+   {?}qless_write=&gt;inst::T,
+   {?}pre_read=&gt;inst::T,
+   {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[
+  uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     
 </div>

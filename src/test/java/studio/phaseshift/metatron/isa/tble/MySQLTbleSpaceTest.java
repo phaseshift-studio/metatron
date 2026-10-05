@@ -23,10 +23,30 @@ import org.junit.jupiter.api.*;
 /**
  * Test suite for tbleSpace with MySQL database using TestContainers.
  * Extends AbstractTbleSpaceTest to inherit all common database tests.
+ * <p>
+ * The M33/M34 cross-ref rows used to be skipped here (as they were in {@code MariaDBTbleSpaceTest}):
+ * the table is created from the first record, so {@code sqlTypeForMono} typed {@code ca} INTEGER from
+ * the initial {@code 0}, and the merge path then bound a {@code !*uri} cross-ref into that INTEGER
+ * column — silently coerced, losing the value. {@code ExistingTableSchema} now widens a column to
+ * TEXT when the value cannot be represented in it
+ * ({@code needsTextColumn} / {@code widenColumnToText}).
+ * <p>
+ * The {@code testRshiftUriGraphSpine} rows were skipped for a different reason: a second {@code >>}
+ * into a <em>list</em> value ({@code kv/test/rshift/x/y} holding {@code [z=>1,zz=>[2,3]]}) returned
+ * {@code noobj} while PostgreSQL ran it green. That value lives in ONE row and Java-level
+ * {@code unrollPoly} decomposes it — which needs the parent row back from the read.
+ * {@code TypedKeyValueSchema} returns every row for a pattern read, so PostgreSQL always got it;
+ * {@code fURIAwareIndexedSchema.readMqttPattern} matched on generated segment columns, which a parent
+ * row cannot satisfy for a deeper path. It now also matches ancestors of the concrete prefix.
+ * <p>
+ * Nothing is skipped here any more, matching {@code PostgreSQLTbleSpaceTest}.
+ * <p>
+ * Container startup — a separate, genuinely MySQL-specific defect, where the first of MySQL's two
+ * "ready for connections" lines returned before the port was accepting — is fixed in
+ * {@link MySQLDatabaseConfig}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled("testcontainers not working for mysql")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MySQLTbleSpaceTest extends AbstractTbleSpaceTest {
 

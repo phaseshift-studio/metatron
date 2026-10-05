@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type;
+package studio.phaseshift.metatron.isa.sys;
 
 import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.core.Appender;

@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -75,7 +76,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       per the instance's {@code pointer} key ({@code address} — the default — or
  *       {@code body}).
  * </ul>
- * The two access points are the ready-made instances:
+ * The ready-made instances are:
  * <ul>
  *   <li>{@link #single()} — the console default (clipped, indented, linked, paged,
  *       pointer drawn as its address);</li>
@@ -83,6 +84,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <li>{@link #diagnostic()} — nested and indented, but stripped of everything only a
  *       renderer can resolve (no link tags, no color, no pager), for text that travels
  *       outside a console — a fail message, a log line, a test assertion.</li>
+ *   <li>{@link #unlinked()} — colored and indented like the console, but with no link tags,
+ *       for a log line that renders an obj without a hyperlink no reader can click.</li>
  * </ul>
  * and {@link #of(Rec, fURI)} builds one configured from a rec — the mtron
  * constructor's job.  Note what is <em>not</em> here: no legal-mtron guarantee — this
@@ -128,6 +131,14 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             uri(KEY_PAGER), BOOL_FALSE),
             OBJ_MTRON_SERIALIZER_TID, VID);
 
+    // A log line renders objs with this: colored and indented like the console, but with no
+    // {{link}} tags — a link in a log line is a uri a reader cannot click, so the uri is drawn
+    // as its colored text, not as a hyperlink the renderer can never resolve.
+    private static final ObjmtronUISerializer UNLINKED_INSTANCE = new ObjmtronUISerializer(mutableMap(
+            uri(KEY_COLOR), BOOL_TRUE,
+            uri(KEY_PAGER), BOOL_FALSE),
+            OBJ_MTRON_SERIALIZER_TID, VID);
+
     /**
      * The console instance: clipped, indented, linked, paged where a terminal is present,
      * pointer drawn as its address.
@@ -162,6 +173,16 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      */
     public static ObjmtronUISerializer diagnostic() {
         return DIAGNOSTIC_INSTANCE;
+    }
+
+    /**
+     * The unlinked instance: colored and indented like the console, but a uri is drawn as
+     * its colored text, never as a {@code {{link}}} target.  A log line renders objs
+     * through this — a link there is a uri no reader can click, so the link markup would be
+     * noise.  Unlike {@link #diagnostic()}, color stays on.
+     */
+    public static ObjmtronUISerializer unlinked() {
+        return UNLINKED_INSTANCE;
     }
 
     /**

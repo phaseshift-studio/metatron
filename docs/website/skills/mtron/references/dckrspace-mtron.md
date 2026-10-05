@@ -331,7 +331,8 @@ mtron> *mydb:people/+/name                                      [-- all names   
 ==>'marko'
 ==>'metis'
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
-==>[name=>'stynx']
+==>[
+    name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]
 ==>explanation::[
     format=>!inst?rng=str&dom=#{?}(){<j>},
@@ -350,7 +351,9 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
       op=>select,
       dom=><#>,
       rng=><#>,
-      args=>[[name=>id()]],
+      args=>[
+       [
+        name=>id()]],
       form=>mapper,
       c_dom=>1,
       c_rng=>1]]]
@@ -362,14 +365,15 @@ mtron> *mydb:people/+.count().explain()                         [-- sql rewrite 
     desc=>[
      rng=>int,
      insts=>1],
-    per_inst=>[[
-    op=>sql_count,
-    rng=>int,
-    args=>[people/+],
-    f=>'<j>',
-    form=>initial,
-    c_dom=>0,
-    c_rng=>1]]]
+    per_inst=>[
+     [
+      op=>sql_count,
+      rng=>int,
+      args=>[people/+],
+      f=>'<j>',
+      form=>initial,
+      c_dom=>0,
+      c_rng=>1]]]
 ```
 ### Step 5: The container sees the same data
 

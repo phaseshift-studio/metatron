@@ -22,8 +22,11 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.compiler.DefaultCompiler;
 import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
@@ -38,43 +41,29 @@ import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Comparator;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -107,7 +96,9 @@ public class machInstSet extends AbstractInstSet {
      */
     public static final fURI COMPUTE = f("/usr/compute");
 
-    /** the box a machine listens on for code to execute */
+    /**
+     * the box a machine listens on for code to execute
+     */
     public static final fURI MACH_RECV_INST_TID = MACH_INST_TID.extend("recv");
 
     /**
@@ -131,30 +122,6 @@ public class machInstSet extends AbstractInstSet {
      */
     public static final fURI MACH_REWRITE_TID = MACH_INST_TID.extend(REWRITE);
     public static final fURI GATHER_INST_TID = MACH_INST_TID.extend("gather");
-
-    /**
-     * Barrier state, keyed by the gather's vid: the peers a barrier is still waiting on. Keyed by vid rather than
-     * held in the instance so it is correct whether the gather is shared or minted per site.
-     */
-    private static final Map<fURI, Set<fURI>> GATHER_PENDING = new ConcurrentHashMap<>();
-
-    /**
-     * A peer's monad has arrived for this barrier. Called by the arrival path -- or directly, which is how the
-     * barrier can be exercised on one machine with no socket at all. When the last peer reports, the barrier's
-     * gather stops waiting and its lhs flows on to the following reducer.
-     */
-    public static void gatherReport(final fURI barrierVID, final fURI peer) {
-        final Set<fURI> expected = GATHER_PENDING.get(barrierVID);
-        if (null != expected)
-            expected.remove(peer);
-    }
-
-    /**
-     * Whether this barrier is still waiting on anyone -- for tests and for the health path.
-     */
-    public static Set<fURI> gatherPending(final fURI barrierVID) {
-        return GATHER_PENDING.getOrDefault(barrierVID, Set.of());
-    }
 
     public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread");
     public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_THREAD_TID.extend("virtual");
@@ -428,79 +395,6 @@ public class machInstSet extends AbstractInstSet {
                             thread.applyAsync(lhs);
                             return thread;
                         }),
-                        instC(GATHER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(CLUSTER_TYPE, URI_TYPE), (lhs, inst) -> {
-                            // THE BARRIER IS THE INSTRUCTION. It waits until it has heard from every machine in the
-                            // cluster's declared roster, then passes its lhs on -- the reducer that FOLLOWS the
-                            // gather reduces what the barrier held, so the barrier itself never changes the type.
-                            //
-                            // Peers come from the cluster's `peer` rec, which is declared as an auto pointer and
-                            // never a stale copy -- so they are read in place rather than snapshotted into a local
-                            // list (a snapshot can never be drained, and a barrier that cannot be drained cannot
-                            // complete).
-                            //
-                            // State is keyed by the barrier's VID, not held in the instance, so it stays correct
-                            // whether the inst is shared or minted per site. The rewriter mints one per site, which
-                            // is what would let the state move onto the instance later.
-                            //
-                            // The local machine is its own contributor: it reaches this gather by flowing into it,
-                            // so it is seeded as already-reported rather than waited for.
-                            try {
-                              /*  final Set<fURI> expected = GATHER_PENDING.computeIfAbsent(inst.vid(), vid -> {
-                                    final Set<fURI> peers = ConcurrentHashMap.newKeySet();
-                                    // elements() is what is INSIDE the lst -- stream() walks a coefficient
-                                    // (yielding the lst itself as one element), not a list's members.
-                                /*    inst.arg(0).asRec().at(PEER).asLst().elements()
-                                            .map(Obj::uriValue)
-                                            //.filter(peer -> !peer.equals(Machine.root().vid()))
-                                            .forEach(peers::add);
-                                    return peers;
-                                });*/
-                                                                LOG.warn("HERE");
-                                final fURI mailbox = inst.arg(1).uriValue().extend("barrier").extend("b");
-                                // The roster is the count: every peer reports but the local machine, which reaches this gather by
-                                // flowing in as lhs, so it is already accounted for in result.
-                                final long roster = inst.arg(0).asRec().at(PEER).asLst().elements().count();
-                                final AtomicReference<Obj> result = new AtomicReference<>(lhs);
-                                final CountDownLatch latch = new CountDownLatch((int) Math.max(1, roster - 1));
-                                // SUBSCRIBE FIRST. A subscription only sees writes made AFTER it is registered, so it must be in
-                                // place before any peer can report -- otherwise a fast shard reports into the void.
-                                Machine.writeToSpace(mailbox.addQ(SUBQ_PATTERN.toString()), rec(uri(CODE), instLambda(o -> {
-                                    result.set(result.get().append(o));
-                                    latch.countDown();
-                                    return noobj();
-                                })));
-                                // THEN READ. A peer may have reported before we subscribed, and that write is invisible to the
-                                // subscription -- reading what has accumulated closes the subscribe/write race, and keeps the
-                                // barrier correct however late the home arrives or however often a shard retries.
-                                final Obj already = Machine.readFromSpace(mailbox);
-                                if (!already.isNoObj())
-                                    already.stream().forEach(o -> {
-                                        result.set(result.get().append(o));
-                                        latch.countDown();
-                                    });
-                                latch.await();
-                                return result.get();
-                            } catch (final Exception e) {
-                                e.printStackTrace();
-                                throw MTronException.of(e);
-                            }
-                        }),
-                        // A MACHINE'S INBOX FOR CODE. Subscribe at the box and apply whatever lands there -- this is
-                        // the other half of the distribution rewrite, which ships each shard's form to its recv box
-                        // with a plain space write. The subscription record is the shape the barrier already uses: a
-                        // rec whose code field is the handler, so ?subq delivers the arriving obj to it.
-                        //
-                        // The arriving code runs HERE, on this machine's processor and in this machine's frame of
-                        // reference, which is what makes the addresses it carries resolve against the right world.
-                        //
-                        // The start is noobj for now: in a single VM the shard's own data is the START the processor
-                        // already holds, and wiring that through is the next step.
-                        instC(MACH_RECV_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> {
-                            final fURI box = inst.arg(0).uriValue();
-                            Machine.writeToSpace(box.addQ(SUBQ_PATTERN.toString()),
-                                    rec(uri(CODE), instLambda(code -> code.apply(noobj()))));
-                            return lhs;
-                        }),
                         instC(MACH_INST_TID.extend("mount").dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(MACH_MACHINE_TYPE), (lhs, inst) -> {
                             return lhs.asMachine().mount(inst.arg(0).asMachine());
                         }),
@@ -524,138 +418,138 @@ public class machInstSet extends AbstractInstSet {
                         // the processor already parks and accumulates into it. So this rule does not create a
                         // rendezvous -- it marks where the rendezvous must be WIDENED to the machine's peers.
                         docWrap(InstSet.Helper.rewriter(MACH_REWRITE_TID.extend("sum_gather"),
-                                code -> {
-                                    // NO PEERS, NO DISTRIBUTION. The peers are the declared roster IN SPACE
-                                    // (/sys/peer): one entry per authority this machine may rely on. Space is the
-                                    // mechanism already proven (the barrier mailbox), so the topology is read from
-                                    // it -- the transport layer can arrive later without moving the peer source.
-                                    // With an empty roster there is nothing to gather FROM, and the rule must not
-                                    // fire at all: measured, an inserted gather changes WHEN a coefficient is
-                                    // complete, which turns a surviving coefficient into a premature reduction.
-                                    // THE PEER COUNT IS THE BARRIER COUNT. The home's branch lists one barrier per
-                                    // peer, so declaring a cluster is writing a key per machine -- and it is the same
-                                    // rec the run leaves its reports in, so the topology IS the mailbox set rather than
-                                    // something kept beside it. Adding a peer is adding a key.
-                                    final Obj roster = Machine.readFromSpace(COMPUTE);
-                                    final Obj home = roster.isRec() ? roster.asRec().at(uri(MACH_HOME)) : noobj();
-                                    final Obj boxes = home.isRec() ? home.asRec().at(uri(BARRIER)) : noobj();
-                                    if (!boxes.isRec() || boxes.asRec().jvm().isEmpty())
-                                        return code;
-                                    final List<Inst> insts = code.insts();
-                                    if (insts.stream().noneMatch(i -> i.tid().basePath().equals(SUM_INST_TID)))
-                                        return code;
-                                    // A WORKER FORM IS TERMINAL. It computes locally and reports, so distributing it
-                                    // again would put a gather in front of its OWN reduction and have it wait for a
-                                    // report only it could send -- a deadlock, and one that only shows on the shard
-                                    // (the home is immune because its compiled form already has a gather before the
-                                    // reducer, which is what the idempotence check below tests). A shipped worker ends
-                                    // by reporting to a mailbox, and that is what marks it.
-                                    final Inst last = insts.getLast();
-                                    if (last.tid().basePath().equals(TO_INST_TID)
-                                            && last.arg(0).toString().contains("/barrier/"))
-                                        return code;
-                                    // IDEMPOTENT, and this is load-bearing: FixPointRewriter re-runs every rule
-                                    // until the code stops changing, so an unguarded insert adds a gather on each
-                                    // pass. A gather already sitting immediately before the reducer means this
-                                    // rule has fired.
-                                    for (int i = 1; i < insts.size(); i++)
-                                        if (insts.get(i).tid().basePath().equals(SUM_INST_TID)
-                                                && insts.get(i - 1).tid().basePath().equals(BARRIER_INST_TID))
-                                            return code;
-                                    // the declared peers, in a stable order so the compiled form is reproducible
-                                    // the barriers ARE the peers, so there is no home to filter out of them: the home
-                                    // is the branch they hang under, not one of them
-                                    final List<fURI> peers = boxes.asRec().jvm().keySet().stream()
-                                            .filter(Obj::isUri)
-                                            .map(Obj::uriValue)
-                                            .sorted(Comparator.comparing(fURI::toString))
-                                            .toList();
-                                    // ---- THE WORKER FORM, shipped to each peer's recv box ----
-                                    // The shard's code is the SAME prefix (it computes on its own data), then its own
-                                    // local reduction, then a report to THE MAILBOX THE HOME WAITS ON. The mailbox is
-                                    // minted from the identical expression the barriers above use, so the home's
-                                    // barrier(...) and the worker's to(...) cannot drift -- hand-writing both ends is
-                                    // what broke before.
-                                    //
-                                    // Shipping it is a SPACE WRITE, the mechanism already proven, and in a multi-JVM
-                                    // deployment the same write simply lands in a tbleSpace (Postgres) instead of
-                                    // memory: the mailbox stays a space, only its type changes.
-                                    final int sumAt = java.util.stream.IntStream.range(0, insts.size())
-                                            .filter(i -> insts.get(i).tid().basePath().equals(SUM_INST_TID))
-                                            .findFirst().orElse(-1);
-                                    if (sumAt < 0)
-                                        return code;
-                                    // THE DATA IS DISTRIBUTED TOO. start(...) carries it and is isInitial -- which is
-                                    // what makes each machine mint its own monads from it. So the start is SLICED
-                                    // across the machines and each form carries its own slice: the shard needs no
-                                    // start handed to it from outside, it arrives with its own data.
-                                    final int startAt = java.util.stream.IntStream.range(0, insts.size())
-                                            .filter(i -> insts.get(i).tid().basePath().equals(START_INST_TID))
-                                            .findFirst().orElse(-1);
-                                    // elements() is a lst's MEMBERS; stream() is a coefficient's. The start's arg can
-                                    // be either shape, and getting it wrong is silent -- stream() on a lst yields the
-                                    // lst itself as one element, which would slice the data into a single piece.
-                                    final List<Obj> data;
-                                    if (startAt < 0)
-                                        data = List.of();
-                                    else {
-                                        final Obj raw = insts.get(startAt).arg(0);
-                                        data = raw.isLst() ? raw.asLst().elements().toList() : raw.stream().toList();
-                                    }
-                                    // a contiguous slice per machine, the home taking the first
-                                    final int machines = peers.size() + 1;
-                                    final int per = data.isEmpty() ? 0
-                                            : Math.max(1, (data.size() + machines - 1) / machines);
-                                    final fURI homeBoxes = COMPUTE.extend(MACH_HOME).extend("barrier");
-                                    for (int p = 0; p < peers.size(); p++) {
-                                        final fURI peer = peers.get(p);
-                                        final List<Inst> worker = new ArrayList<>(insts.size() + 2);
-                                        if (startAt >= 0)
-                                            worker.add(instB(START_INST_TID, lst(objs(sliceOf(data, p + 1, machines, per)))));
-                                        worker.addAll(insts.subList(startAt + 1, sumAt));
-                                        worker.add(insts.get(sumAt));   // its own partial: for a monoid, a partial is a whole
-                                        // reports to THE HOME'S MAILBOX FOR IT -- the one the home's gather waits on
-                                        worker.add(instB(TO_INST_TID, lst(uri(homeBoxes.extend(peer.name())))));
-                                        // and the code is shipped to the PEER'S OWN INBOX, which is named by the peer
-                                        Machine.writeToSpace(COMPUTE.extend(peer.name()).extend("recv"),
-                                                MCode.of(worker));
-                                    }
-                                    final List<Inst> out = new ArrayList<>(insts.size() + peers.size());
-                                    boolean inserted = false;
-                                    for (int at = 0; at < insts.size(); at++) {
-                                        final Inst inst = insts.get(at);
-                                        if (at == startAt) {
-                                            // the home keeps its own slice of the data, in place of the whole
-                                            out.add(instB(START_INST_TID, lst(objs(sliceOf(data, 0, machines, per)))));
-                                            continue;
-                                        }
-                                        if (!inserted && inst.tid().basePath().equals(SUM_INST_TID)) {
-                                            // ONE barrier(uri) PER PEER, which is what barrier(uri::T) is for: each
-                                            // waits on that peer's mailbox, and consecutive gathers chain (the loop
-                                            // appends one gather's result into the next), so the peer partials land
-                                            // in the same place the local coefficient does and the reducer sees one
-                                            // complete coefficient.
+                                        code -> {
+                                            // NO PEERS, NO DISTRIBUTION. The peers are the declared roster IN SPACE
+                                            // (/sys/peer): one entry per authority this machine may rely on. Space is the
+                                            // mechanism already proven (the barrier mailbox), so the topology is read from
+                                            // it -- the transport layer can arrive later without moving the peer source.
+                                            // With an empty roster there is nothing to gather FROM, and the rule must not
+                                            // fire at all: measured, an inserted gather changes WHEN a coefficient is
+                                            // complete, which turns a surviving coefficient into a premature reduction.
+                                            // THE PEER COUNT IS THE BARRIER COUNT. The home's branch lists one barrier per
+                                            // peer, so declaring a cluster is writing a key per machine -- and it is the same
+                                            // rec the run leaves its reports in, so the topology IS the mailbox set rather than
+                                            // something kept beside it. Adding a peer is adding a key.
+                                            final Obj roster = Machine.readFromSpace(COMPUTE);
+                                            final Obj home = roster.isRec() ? roster.asRec().at(uri(MACH_HOME)) : noobj();
+                                            final Obj boxes = home.isRec() ? home.asRec().at(uri(BARRIER)) : noobj();
+                                            if (!boxes.isRec() || boxes.asRec().jvm().isEmpty())
+                                                return code;
+                                            final List<Inst> insts = code.insts();
+                                            if (insts.stream().noneMatch(i -> i.tid().basePath().equals(SUM_INST_TID)))
+                                                return code;
+                                            // A WORKER FORM IS TERMINAL. It computes locally and reports, so distributing it
+                                            // again would put a gather in front of its OWN reduction and have it wait for a
+                                            // report only it could send -- a deadlock, and one that only shows on the shard
+                                            // (the home is immune because its compiled form already has a gather before the
+                                            // reducer, which is what the idempotence check below tests). A shipped worker ends
+                                            // by reporting to a mailbox, and that is what marks it.
+                                            final Inst last = insts.getLast();
+                                            if (last.tid().basePath().equals(TO_INST_TID)
+                                                    && last.arg(0).toString().contains("/barrier/"))
+                                                return code;
+                                            // IDEMPOTENT, and this is load-bearing: FixPointRewriter re-runs every rule
+                                            // until the code stops changing, so an unguarded insert adds a gather on each
+                                            // pass. A gather already sitting immediately before the reducer means this
+                                            // rule has fired.
+                                            for (int i = 1; i < insts.size(); i++)
+                                                if (insts.get(i).tid().basePath().equals(SUM_INST_TID)
+                                                        && insts.get(i - 1).tid().basePath().equals(BARRIER_INST_TID))
+                                                    return code;
+                                            // the declared peers, in a stable order so the compiled form is reproducible
+                                            // the barriers ARE the peers, so there is no home to filter out of them: the home
+                                            // is the branch they hang under, not one of them
+                                            final List<fURI> peers = boxes.asRec().jvm().keySet().stream()
+                                                    .filter(Obj::isUri)
+                                                    .map(Obj::uriValue)
+                                                    .sorted(Comparator.comparing(fURI::toString))
+                                                    .toList();
+                                            // ---- THE WORKER FORM, shipped to each peer's recv box ----
+                                            // The shard's code is the SAME prefix (it computes on its own data), then its own
+                                            // local reduction, then a report to THE MAILBOX THE HOME WAITS ON. The mailbox is
+                                            // minted from the identical expression the barriers above use, so the home's
+                                            // barrier(...) and the worker's to(...) cannot drift -- hand-writing both ends is
+                                            // what broke before.
                                             //
-                                            // The address is minted HERE, once, from the peer's roster entry and the
-                                            // reducer's own vid -- so the shard's shipped to(<same address>) cannot
-                                            // drift from what this barrier waits on. That drift is exactly the bug we
-                                            // hit writing these addresses by hand.
-                                            // THE MAILBOX IS A SPACE PATH, not the peer's transport key: a
-                                            // barrier writes and reads a SPACE address (it subscribes at the mailbox and
-                                            // reads what has accumulated), so an authority like ws://localhost:8555
-                                            // resolves to nothing and the barrier would wait on a mailbox no write can
-                                            // reach. /sys/peer is already a real space -- the roster lives in it -- so
-                                            // the mailboxes live under it, one per peer, named by the peer's place in
-                                            // the roster. Single-JVM construction: 'a' is this machine's name.
-                                            for (final fURI peer : peers)
-                                                out.add(instB(BARRIER_INST_TID, lst(uri(
-                                                        COMPUTE.extend(MACH_HOME).extend("barrier").extend(peer.name())))));
-                                            inserted = true;
-                                        }
-                                        out.add(inst);
-                                    }
-                                    return inserted ? code.selfJVM(out).asCode() : code;
-                                }),
+                                            // Shipping it is a SPACE WRITE, the mechanism already proven, and in a multi-JVM
+                                            // deployment the same write simply lands in a tbleSpace (Postgres) instead of
+                                            // memory: the mailbox stays a space, only its type changes.
+                                            final int sumAt = java.util.stream.IntStream.range(0, insts.size())
+                                                    .filter(i -> insts.get(i).tid().basePath().equals(SUM_INST_TID))
+                                                    .findFirst().orElse(-1);
+                                            if (sumAt < 0)
+                                                return code;
+                                            // THE DATA IS DISTRIBUTED TOO. start(...) carries it and is isInitial -- which is
+                                            // what makes each machine mint its own monads from it. So the start is SLICED
+                                            // across the machines and each form carries its own slice: the shard needs no
+                                            // start handed to it from outside, it arrives with its own data.
+                                            final int startAt = java.util.stream.IntStream.range(0, insts.size())
+                                                    .filter(i -> insts.get(i).tid().basePath().equals(START_INST_TID))
+                                                    .findFirst().orElse(-1);
+                                            // elements() is a lst's MEMBERS; stream() is a coefficient's. The start's arg can
+                                            // be either shape, and getting it wrong is silent -- stream() on a lst yields the
+                                            // lst itself as one element, which would slice the data into a single piece.
+                                            final List<Obj> data;
+                                            if (startAt < 0)
+                                                data = List.of();
+                                            else {
+                                                final Obj raw = insts.get(startAt).arg(0);
+                                                data = raw.isLst() ? raw.asLst().elements().toList() : raw.stream().toList();
+                                            }
+                                            // a contiguous slice per machine, the home taking the first
+                                            final int machines = peers.size() + 1;
+                                            final int per = data.isEmpty() ? 0
+                                                    : Math.max(1, (data.size() + machines - 1) / machines);
+                                            final fURI homeBoxes = COMPUTE.extend(MACH_HOME).extend("barrier");
+                                            for (int p = 0; p < peers.size(); p++) {
+                                                final fURI peer = peers.get(p);
+                                                final List<Inst> worker = new ArrayList<>(insts.size() + 2);
+                                                if (startAt >= 0)
+                                                    worker.add(instB(START_INST_TID, lst(objs(sliceOf(data, p + 1, machines, per)))));
+                                                worker.addAll(insts.subList(startAt + 1, sumAt));
+                                                worker.add(insts.get(sumAt));   // its own partial: for a monoid, a partial is a whole
+                                                // reports to THE HOME'S MAILBOX FOR IT -- the one the home's gather waits on
+                                                worker.add(instB(TO_INST_TID, lst(uri(homeBoxes.extend(peer.name())))));
+                                                // and the code is shipped to the PEER'S OWN INBOX, which is named by the peer
+                                                Machine.writeToSpace(COMPUTE.extend(peer.name()).extend("recv"),
+                                                        MCode.of(worker));
+                                            }
+                                            final List<Inst> out = new ArrayList<>(insts.size() + peers.size());
+                                            boolean inserted = false;
+                                            for (int at = 0; at < insts.size(); at++) {
+                                                final Inst inst = insts.get(at);
+                                                if (at == startAt) {
+                                                    // the home keeps its own slice of the data, in place of the whole
+                                                    out.add(instB(START_INST_TID, lst(objs(sliceOf(data, 0, machines, per)))));
+                                                    continue;
+                                                }
+                                                if (!inserted && inst.tid().basePath().equals(SUM_INST_TID)) {
+                                                    // ONE barrier(uri) PER PEER, which is what barrier(uri::T) is for: each
+                                                    // waits on that peer's mailbox, and consecutive gathers chain (the loop
+                                                    // appends one gather's result into the next), so the peer partials land
+                                                    // in the same place the local coefficient does and the reducer sees one
+                                                    // complete coefficient.
+                                                    //
+                                                    // The address is minted HERE, once, from the peer's roster entry and the
+                                                    // reducer's own vid -- so the shard's shipped to(<same address>) cannot
+                                                    // drift from what this barrier waits on. That drift is exactly the bug we
+                                                    // hit writing these addresses by hand.
+                                                    // THE MAILBOX IS A SPACE PATH, not the peer's transport key: a
+                                                    // barrier writes and reads a SPACE address (it subscribes at the mailbox and
+                                                    // reads what has accumulated), so an authority like ws://localhost:8555
+                                                    // resolves to nothing and the barrier would wait on a mailbox no write can
+                                                    // reach. /sys/peer is already a real space -- the roster lives in it -- so
+                                                    // the mailboxes live under it, one per peer, named by the peer's place in
+                                                    // the roster. Single-JVM construction: 'a' is this machine's name.
+                                                    for (final fURI peer : peers)
+                                                        out.add(instB(BARRIER_INST_TID, lst(uri(
+                                                                COMPUTE.extend(MACH_HOME).extend("barrier").extend(peer.name())))));
+                                                    inserted = true;
+                                                }
+                                                out.add(inst);
+                                            }
+                                            return inserted ? code.selfJVM(out).asCode() : code;
+                                        }),
                                 "gives a monoidic reducer its gather point: \\(\\mathrm{sum} \\leadsto \\mathrm{barrier} \\cdot \\mathrm{sum}\\)"))));
         docWrap(this, "the reflective instruction set of metatron featuring process, monad, and code introspection");
         super.setup();

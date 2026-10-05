@@ -412,13 +412,17 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/sys/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
- pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
+ q=&gt;[
+  docq::[
+   pattern=&gt;docq,
+   pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+   pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+   obj=&gt;memspace::[
+    pattern=&gt;&lt;#&gt;],
+   inst=&gt;instset::[
+    pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[
+  super=&gt;!*/m],
  inst=&gt;[
   as?rng=bytes&amp;dom=uri(bytes::T){&lt;j&gt;},
   as?rng=image&amp;dom=bytes(image::T,else(1.0)){&lt;j&gt;},
@@ -432,8 +436,15 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
   sleep?rng=A{?}&amp;dom=A{?}(real::T@/m/math/time){&lt;j&gt;},
   stdout?rng=#{?}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
   stdin?rng=str&amp;dom=#{?}(){&lt;j&gt;}],
+ const=&gt;[
+  thread_executor::[
+   stop=&gt;[,],
+   run=&gt;[
+    !*/sys/thread/main]]@/sys/thread/executor],
  type=&gt;[
-  space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/fsspace,
+  space::T[?[
+   {?}script=&gt;[
+    uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/fsspace,
   space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/serialspace,
   rec::T[?[
    level=&gt;union(info,trace,warn,error,debug),
@@ -441,10 +452,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
    message=&gt;str::T]]@/m/sys/log_entry,
   uri::T[][ctor?rng=dir&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/dir,
   uri::T[][ctor?rng=file&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/file,
-  file::T@/m/sys/file/image],
- const=&gt;[thread_executor::[
- stop=&gt;[,],
- run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre>
+  file::T@/m/dckr/image]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -552,7 +560,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
         </span>
         <small class="text-muted code">/m/sys/file/image</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">file::T@/m/sys/file/image</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">file::T@/m/dckr/image</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> a file reference that decodes to an image renderable as ascii art</p>
@@ -584,14 +592,16 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@fsspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[
- pattern=&gt;uri::T,
- {?}pre_write=&gt;inst::T,
- {?}post_write=&gt;inst::T,
- {?}qless_write=&gt;inst::T,
- {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[
+  rec::T[?[
+   pattern=&gt;uri::T,
+   {?}pre_write=&gt;inst::T,
+   {?}post_write=&gt;inst::T,
+   {?}qless_write=&gt;inst::T,
+   {?}pre_read=&gt;inst::T,
+   {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[
+  uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the fsspace — a java file system (default: the local disk) exposed as a metatron space</p>
@@ -604,14 +614,16 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@serialspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[
- pattern=&gt;uri::T,
- {?}pre_write=&gt;inst::T,
- {?}post_write=&gt;inst::T,
- {?}qless_write=&gt;inst::T,
- {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[
+  rec::T[?[
+   pattern=&gt;uri::T,
+   {?}pre_write=&gt;inst::T,
+   {?}post_write=&gt;inst::T,
+   {?}qless_write=&gt;inst::T,
+   {?}pre_read=&gt;inst::T,
+   {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[
+  uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the serial space — serial port / terminal i/o exposed as a metatron space</p>
@@ -636,10 +648,10 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a lst[str] of results" class="text-success">a lst[str] of results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
-  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::20.0).
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}timeout" class="text-light">{?}timeout</a> <span class="text-light">=&gt;</span> <a href="#"""a real number denoting timeout of the process (default: second::20.0).
 """" class="text-info">&quot;&quot;&quot;a real number denoting timeout of the process (default: second::20.0).
 &quot;&quot;&quot;</a>
+  <a href="#cmd" class="text-light">cmd</a> <span class="text-light">=&gt;</span> <a href="#"the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)"" class="text-info">&quot;the terminal command to evaluate (uses bash(&#39;-c&#39;,${cmd}) behind the scenes)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -683,9 +695,9 @@ if both min and max are provided, then those lines are removed and the text is i
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
-  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
-  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
+  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=#{?}">
@@ -704,10 +716,10 @@ if both min and max are provided, then those lines are removed and the text is i
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a lst of all files whose path matches str regex" class="text-success">a lst of all files whose path matches str regex</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
-  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
-  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
   <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
+  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
+  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=#{?}">
@@ -729,8 +741,8 @@ if only a min is provided, then the file is read from that line till the end.
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
   <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}">

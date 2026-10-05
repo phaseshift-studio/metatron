@@ -459,7 +459,7 @@ asserted in the acceptance test).</p>
 an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
 maven build commands are attached to the <code>project::T</code> for each of access.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
-==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/354
+==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/358
 </code></pre>
 <p>Now that the project is stored in space, build commands can be added and the project can be built.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
@@ -483,9 +483,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[
     status=&gt;success,
-    runtime=&gt;millis::722.0000,
+    runtime=&gt;millis::1230.0000,
     command=&gt;'mvn -f src/test/resources/scratch ...',
-    output=&gt;!*/sys/tmp/b6fb7528]
+    output=&gt;!*/sys/tmp/6618affb]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -516,15 +516,17 @@ In this way, edits to the subscription code entries will automatically take hold
 <p>The file name serves as the key and a lambda <code>inst</code> serves as a lazy constructor of an <code>ide:java::T</code>. Calling the file
 name pulls the raw <code>src</code> into both <code>code</code> and <code>idx</code>.</p>
 <pre><code class="language-mtron">mtron&gt; /dev/scratch/src/Echo()
-==&gt;[Echo=&gt;[
-    field=&gt;[
-     PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
-     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
-    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
-    comment=&gt;[=&gt;],
-    method=&gt;[
-     speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
-     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
+==&gt;[
+    Echo=&gt;[
+     field=&gt;[
+      PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+      name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+     constructor=&gt;[
+      Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+     comment=&gt;[=&gt;],
+     method=&gt;[
+      speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+      name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
 mtron&gt; */dev/scratch/code/0
 ==&gt;java::[
     package=&gt;'package com.example.scratch;',
@@ -532,32 +534,33 @@ mtron&gt; */dev/scratch/code/0
    
    /**
    ...&quot;&quot;&quot;,
-    classes=&gt;[Echo=&gt;[[
-    kind=&gt;class_declaration,
-    name=&gt;'Echo',
-    header=&gt;'public class Echo {',
-    members=&gt;[
-     [PREFIX=&gt;[
-    kind=&gt;field,
-    text=&gt;&quot;&quot;&quot;
+    classes=&gt;[
+     Echo=&gt;[
+      [
+       kind=&gt;class_declaration,
+       name=&gt;'Echo',
+       header=&gt;'public class Echo {',
+       members=&gt;[
+        [
+         PREFIX=&gt;[
+          kind=&gt;field,
+          text=&gt;&quot;&quot;&quot;
    
        public static final String P...&quot;&quot;&quot;,
-    name=&gt;'PREFIX']],
-     [name=&gt;[
-    kind=&gt;field,
-    text=&gt;&quot;&quot;&quot;
+          name=&gt;'PREFIX']],
+        [
+         name=&gt;[
+          kind=&gt;field,
+          text=&gt;&quot;&quot;&quot;
    
-       private final String name;&quot;&quot;&quot;,
-    name=&gt;'name']],
-     [Echo=&gt;[
-    kind=&gt;constructor,
    ...
 mtron&gt; */dev/scratch/idx/Echo
 ==&gt;[
     field=&gt;[
      PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
      name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
-    constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+    constructor=&gt;[
+     Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
     comment=&gt;[=&gt;],
     method=&gt;[
      speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
@@ -742,7 +745,9 @@ with it, then save (<code>code/N.to</code>).</p>
       op=&gt;update,
       dom=&gt;&lt;#&gt;,
       rng=&gt;&lt;#&gt;,
-      args=&gt;[[body=&gt;split('
+      args=&gt;[
+       [
+        body=&gt;split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?rng=str&amp;dom=str{*}('
    ')]],
       form=&gt;mapper,

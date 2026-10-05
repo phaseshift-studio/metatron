@@ -221,12 +221,34 @@ public class fURIAwareIndexedSchema implements TableSchema {
             whereClause.append("seg").append(segmentIndex).append(" IS NULL");
         }
 
+        // Ancestor rows. A pattern read can descend PAST the row that holds the value: the KV store
+        // keeps a whole poly at its parent URI (kv/test/a holds [x=>1,y=>2]), so kv/test/a/x has no
+        // row of its own. The '+' branch above documents that Java-level unrollPoly decomposes that
+        // parent — which requires the parent row to come back from THIS query. The segment equality
+        // cannot return it, because the parent has no segment for the deeper path, so match ancestors
+        // of the concrete (non-wildcard) prefix explicitly. TypedKeyValueSchema returns every row for
+        // a pattern read and therefore never needed this; without it a nested value (a lst inside the
+        // stored rec) reads back as noobj on MySQL/MariaDB while working on PostgreSQL.
+        // The OR defeats the seg indexes — the price of correctness for a key-value table.
+        // The prefix test is spelled with LENGTH/SUBSTRING rather than CONCAT so it also holds on
+        // SQLite, which fURIAwareIndexedSchemaTest runs this class against.
+        final String concretePrefix = pattern.retractPattern().toString();
         final String sql = "SELECT furi, obj FROM " + TABLE_NAME +
-                (whereClause.length() > 0 ? " WHERE " + whereClause : "") + ";";
+                (whereClause.length() > 0
+                        ? " WHERE (" + whereClause + ")"
+                        + " OR (LENGTH(furi) < LENGTH(?)"
+                        + " AND SUBSTRING(?, 1, LENGTH(furi)) = furi"
+                        + " AND SUBSTRING(?, LENGTH(furi) + 1, 1) = '/')"
+                        : "") + ";";
 
         final PreparedStatement stmt = conn.prepareStatement(sql);
         for (int i = 0; i < params.size(); i++) {
             stmt.setString(i + 1, params.get(i));
+        }
+        if (whereClause.length() > 0) {
+            stmt.setString(params.size() + 1, concretePrefix);
+            stmt.setString(params.size() + 2, concretePrefix);
+            stmt.setString(params.size() + 3, concretePrefix);
         }
 
         final ResultSet rs = stmt.executeQuery();

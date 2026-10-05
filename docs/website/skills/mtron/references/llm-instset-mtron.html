@@ -421,7 +421,7 @@ the workspace and a chat feature. Then:</p>
 ==&gt;fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 10] @chatter.chat('what is t...
      ^
-     could not parse at '[']@/sys/fail/538
+     could not parse at '[']@/sys/fail/542
 </code></pre>
 <p>The <code>/usr/chatter/#</code> space serves a the default location for features to store their various constructions.</p>
 <pre><code class="language-mtron">mtron&gt; */usr/chatter/chat_result/+
@@ -429,7 +429,7 @@ mtron&gt; [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
 ==&gt;fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 10] */usr/chatter/chat_resul...
      ^
-     could not parse at '[']@/sys/fail/540
+     could not parse at '[']@/sys/fail/544
 </code></pre>
 <p><strong>A tool is an instruction.</strong> There is no tool registry to populate: anything callable <em>is</em> a tool, and <code>mTool</code>
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a <code>tool_feature</code> can
@@ -448,7 +448,9 @@ live carrier the way a boot file does, at <code>http://localhost:8777</code> and
 mtron&gt; import(/m/web,web)
 mtron&gt; [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/basic_server
-==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/basic_server
+==&gt;mcp_server::[
+    tool=&gt;[
+     m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/basic_server
 </code></pre>
 <p>What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
 per server, <code>mcp_mtron</code> for the metatron-native tools, <code>mcp_message</code> for the ledger, and <code>/basic</code> for the server
@@ -585,9 +587,12 @@ one. <code>close()</code> releases it; <code>clone()</code> returns the same cli
 transport-agnostic: mount it, and the carrier supplies the bytes.</p>
 <p>Because a tool is an instruction, a server is a <strong>selection over instructions</strong>, and that selection is boot data:</p>
 <pre><code class="language-mtron">mtron&gt; mcp_server::[tool =&gt; [!*eval, !*eval]]@/sys/space/mcp/two_say
-==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/two_say
+==&gt;mcp_server::[
+    tool=&gt;[
+     m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/two_say
 mtron&gt; */sys/space/mcp/two_say&gt;&gt;tool     [-- one entry: a collection is keyed by the instruction --]
-==&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]
+==&gt;[
+    m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]
 </code></pre>
 <p>Three rules follow, and the third is the one that surprises people:</p>
 <ul>

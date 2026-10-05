@@ -48,16 +48,14 @@ mtron> int::T.as(object::T)
     morphed_to=>!inst?rng=#{*}&dom=#{?}(){<j>},
     morphed_from=>!inst?rng=#{*}&dom=#{?}(){<j>}]
 mtron> |plus?int<=int(int::T).as(morphism::T)
-==>morphism::[
+==>morphism::[ name=>plus,
     form=>mapper,
+    class=>[endo],
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>plus?rng=int&dom=int(int::T),
-    law=>[
-     commutative,
-     right_distributive,
-     action]]
+    ...(1 more)]
 ```
 ## the two blocks
 
@@ -73,105 +71,105 @@ mtron> |plus?int<=int(int::T).as(morphism::T)
 ```mtron
 mtron> int::T.as(object::T).morphed_to()
 ==>morphism::[
+    name=>as,
     form=>mapper,
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=bool&dom=int(bool::T){<j>}]
 ==>morphism::[
+    name=>as,
     form=>mapper,
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=bytes&dom=int(bytes::T){<j>}]
 ==>morphism::[
+    name=>as,
     form=>mapper,
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=real&dom=int(real::T){<j>}]
 ==>morphism::[
+    name=>as,
     form=>mapper,
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=str&dom=int(str::T){<j>}]
 ==>morphism::[
+    name=>as,
     form=>mapper,
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=uri&dom=int(uri::T){<j>}]
 ==>morphism::[
+    name=>as,
     form=>mapper,
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>as?rng=rec&dom=int(rec::T){<j>}]
-==>morphism::[
+==>morphism::[ name=>plus,
     form=>mapper,
+    class=>[endo],
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>plus?rng=int&dom=int(int::T){<j>},
-    law=>[
-     commutative,
-     right_distributive,
-     action]]
-==>morphism::[
+    ...(1 more)]
+==>morphism::[ name=>mult,
     form=>mapper,
+    class=>[endo],
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>mult?rng=int&dom=int(int::T){<j>},
-    law=>[
-     commutative,
-     right_distributive,
-     action]]
-==>morphism::[
+    ...(1 more)]
+==>morphism::[ name=>zero,
     form=>mapper,
+    class=>[endo],
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>zero?rng=int&dom=int(){<j>}]
-==>morphism::[
+    obj=>zero?rng=int&dom=int(){<j>},
+    ...(1 more)]
+==>morphism::[ name=>one,
     form=>mapper,
+    class=>[endo],
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>one?rng=int&dom=int(){<j>}]
-==>morphism::[
+    obj=>one?rng=int&dom=int(){<j>},
+    ...(1 more)]
+==>morphism::[ name=>neg,
     form=>mapper,
+    class=>[
+     endo,
+     iso,
+     auto,
+     section,
+     retraction,
+     mono,
+     epi],
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>neg?rng=int&dom=int(){<j>}]
+    obj=>neg?rng=int&dom=int(){<j>},
+    ...(1 more)]
 ==>morphism::[
+    name=>div,
     form=>mapper,
+    class=>[endo],
     src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
     analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
     obj=>div?rng=int&dom=int(int::T){<j>}]
-==>morphism::[
+==>morphism::[ name=>minus,
     form=>mapper,
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>minus?rng=int&dom=int(int::T){<j>},
-    law=>[action]]
-==>morphism::[
-    form=>mapper,
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>gt?rng=bool&dom=int(int::T){<j>},
-    law=>[right_distributive]]
-==>morphism::[
-    form=>mapper,
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>gte?rng=bool&dom=int(int::T){<j>},
+    class=>[endo],
    ...
 ```
 ### the morphism block — `morphism::T` (an edge)
@@ -179,6 +177,7 @@ mtron> int::T.as(object::T).morphed_to()
 | field      | what it is                                                                   |
 |------------|------------------------------------------------------------------------------|
 | `form`     | the n-tid coefficient shape (`mapper`, `filter`, `reducer`, `flatmapper`, …) |
+| `class`    | the set-theoretic class (`endo`, `iso`, `auto`, `mono`, `epi`, `section`, `retraction`) — conservative |
 | `src`      | the source object (the morphism's dom)                                       |
 | `trgt`     | the target object (the morphism's rng)                                       |
 | `law`      | the declared **process** laws the morphism obeys (see *laws*)                |
@@ -239,7 +238,7 @@ instance. `algebraic_theory::T` is the nominal super-type grouping them:
 
 ## process laws — `morphism::T>>law`
 
-The morphism's `law` field is a set of **process** law labels served from `CatLawTable` (the `declared ∩ process`
+The morphism's `law` field is a set of **process** law labels served from `mInstSetLawTable` (the `declared ∩ process`
 cell):
 
 ```mtron

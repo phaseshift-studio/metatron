@@ -18,18 +18,20 @@ types, and *endpoint* types that provide the server logic. The two spaces of `/m
 mtron> dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
 mtron> [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
-==>mcp_server::[tool=>[m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]]@/sys/space/mcp/web_basic
+==>mcp_server::[
+    tool=>[
+     m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]]@/sys/space/mcp/web_basic
 mtron> httpspace::[pattern=> http://#,
                    host   => http://localhost:8777,
                    route  => [/mcp    => mcp_mtron,
                               /docker => docker:,
                               /usr    => /usr]]@/sys/space/web/http
-==>fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net<-2>] (at /m/inst/ctor) [Net<-2>]]@/sys/fail/692
+==>fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net<-2>] (at /m/inst/ctor) [Net<-2>]]@/sys/fail/696
    	while parsing: httpspace::[pattern=> http://#,
    host   => http://localhost:8777,
    route  => [/mcp    => mcp_mtron,
    /docker => docker:,
-   /usr    => /usr]]@/sys/space/web/http]@/sys/fail/694
+   /usr    => /usr]]@/sys/space/web/http]@/sys/fail/698
 mtron> [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 mtron> [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron> wsspace::[pattern=> ws:#,
@@ -42,11 +44,11 @@ obj and which encoding. Below is metatron accessing this document.
 
 ```mtron
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>
-==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from)]@/sys/fail/696
+==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from)]@/sys/fail/700
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T)
-==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from@0)]@/sys/fail/698
+==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from@0)]@/sys/fail/702
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
-==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from@0)]@/sys/fail/704
+==>fail::[inst apply failure: no active space supports pattern <http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md> (at /m/inst/from@0)]@/sys/fail/708
 ```
 ## the space these examples use
 
@@ -170,11 +172,11 @@ mtron> */usr/person/1                                              [-- straight 
     name=>'marko',
     age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==>fail::[inst apply failure: no active space supports pattern http://localhost:8777/usr/person/1 (at /m/inst/from)]@/sys/fail/728
+==>fail::[inst apply failure: no active space supports pattern http://localhost:8777/usr/person/1 (at /m/inst/from)]@/sys/fail/732
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==>fail::[inst apply failure: no active space supports pattern http://localhost:8777/usr/person/1?mimeq=application/json (at /m/inst/from)]@/sys/fail/730
+==>fail::[inst apply failure: no active space supports pattern http://localhost:8777/usr/person/1?mimeq=application/json (at /m/inst/from)]@/sys/fail/734
 mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==>fail::[inst apply failure: no active space supports pattern http://localhost:8777/usr/person/1?mimeq=text/plain (at /m/inst/from)]@/sys/fail/732
+==>fail::[inst apply failure: no active space supports pattern http://localhost:8777/usr/person/1?mimeq=text/plain (at /m/inst/from)]@/sys/fail/736
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

@@ -79,7 +79,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/354
+==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/sys/fail/358
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -105,9 +105,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[
     status=>success,
-    runtime=>millis::722.0000,
+    runtime=>millis::1230.0000,
     command=>'mvn -f src/test/resources/scratch ...',
-    output=>!*/sys/tmp/b6fb7528]
+    output=>!*/sys/tmp/6618affb]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -146,15 +146,17 @@ name pulls the raw `src` into both `code` and `idx`.
 
 ```mtron
 mtron> /dev/scratch/src/Echo()
-==>[Echo=>[
-    field=>[
-     PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
-     name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
-    constructor=>[Echo=>!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
-    comment=>[=>],
-    method=>[
-     speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
-     name=>!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
+==>[
+    Echo=>[
+     field=>[
+      PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+      name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+     constructor=>[
+      Echo=>!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+     comment=>[=>],
+     method=>[
+      speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+      name=>!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
 mtron> */dev/scratch/code/0
 ==>java::[
     package=>'package com.example.scratch;',
@@ -162,32 +164,33 @@ mtron> */dev/scratch/code/0
    
    /**
    ...""",
-    classes=>[Echo=>[[
-    kind=>class_declaration,
-    name=>'Echo',
-    header=>'public class Echo {',
-    members=>[
-     [PREFIX=>[
-    kind=>field,
-    text=>"""
+    classes=>[
+     Echo=>[
+      [
+       kind=>class_declaration,
+       name=>'Echo',
+       header=>'public class Echo {',
+       members=>[
+        [
+         PREFIX=>[
+          kind=>field,
+          text=>"""
    
        public static final String P...""",
-    name=>'PREFIX']],
-     [name=>[
-    kind=>field,
-    text=>"""
+          name=>'PREFIX']],
+        [
+         name=>[
+          kind=>field,
+          text=>"""
    
-       private final String name;""",
-    name=>'name']],
-     [Echo=>[
-    kind=>constructor,
    ...
 mtron> */dev/scratch/idx/Echo
 ==>[
     field=>[
      PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
      name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
-    constructor=>[Echo=>!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
+    constructor=>[
+     Echo=>!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
     comment=>[=>],
     method=>[
      speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
@@ -385,7 +388,9 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
       op=>update,
       dom=><#>,
       rng=><#>,
-      args=>[[body=>split('
+      args=>[
+       [
+        body=>split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?rng=str&dom=str{*}('
    ')]],
       form=>mapper,
