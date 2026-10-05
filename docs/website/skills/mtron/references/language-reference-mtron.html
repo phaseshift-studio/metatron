@@ -476,7 +476,8 @@ mtron&gt; name=&gt;'marko'=&gt;age=&gt;29.&gt;&gt;.&gt;&gt;.&gt;&gt;
 </code></pre>
 <p>Objs can carry a <strong>vid</strong> (address URI) via <code>@</code>:</p>
 <pre><code class="language-mtron">mtron&gt; [a=&gt;1]@a                 [-- rec anchored at uri myVid --]
-==&gt;[a=&gt;1]@a
+==&gt;[
+    a=&gt;1]@a
 mtron&gt; [1,2,3,4]@b              [-- lst anchored at *a --]
 ==&gt;[1,2,3,4]@b
 mtron&gt; *a + [b=&gt;2]
@@ -484,7 +485,8 @@ mtron&gt; *a + [b=&gt;2]
     a=&gt;1,
     b=&gt;2]
 mtron&gt; *a
-==&gt;[a=&gt;1]
+==&gt;[
+    a=&gt;1]
 mtron&gt; @b + [5,6]
 ==&gt;[1,2,3,4,5,6]@b
 mtron&gt; *b
@@ -639,7 +641,7 @@ mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate l
 ==&gt;posint::2
 mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==&gt;fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/462
+   	while parsing: posint::-1]@/sys/fail/466
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -674,12 +676,16 @@ mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[_=&gt;_]                                  
     b=&gt;2,
     c=&gt;3]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;_]                                   [-- [a=&gt;1] --]
-==&gt;[a=&gt;1]
+==&gt;[
+    a=&gt;1]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;+10]                                 [-- [a=&gt;11] --]
-==&gt;[a=&gt;11]
+==&gt;[
+    a=&gt;11]
 mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}==[a=&gt;?&gt;=2.+10]                      [-- {[a=&gt;12],[a=&gt;13]} --]
-==&gt;[a=&gt;12]
-==&gt;[a=&gt;13]
+==&gt;[
+    a=&gt;12]
+==&gt;[
+    a=&gt;13]
 mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
 ==&gt;[1,7,3]
 </code></pre>
@@ -687,11 +693,15 @@ mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3]
 <p><code>lhs ? predicate</code> is the filter: it keeps the lhs when the predicate admits it and yields <code>noobj</code> when it does
 not. A rec predicate matches structurally — the value's field is checked against the field's type:</p>
 <pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}?[a=&gt;is(gt(1))]   [-- {[a=&gt;2],[a=&gt;3]}  (the rec predicate matches each rec's a-field) --]
-==&gt;[a=&gt;2]
-==&gt;[a=&gt;3]
+==&gt;[
+    a=&gt;2]
+==&gt;[
+    a=&gt;3]
 mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}?[a=&gt;is(lt(3))]   [-- {[a=&gt;1],[a=&gt;2]}  (the same shape admits the low fields) --]
-==&gt;[a=&gt;1]
-==&gt;[a=&gt;2]
+==&gt;[
+    a=&gt;1]
+==&gt;[
+    a=&gt;2]
 </code></pre>
 <p><strong><code>where()</code> is for uris, not values.</strong> Its live row is <code>where?uri&lt;=uri(rec)</code>: the arg is a profile over the uri's
 fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
@@ -708,13 +718,14 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?where([host=&gt;2024.12, po
     2=&gt;12,
     3=&gt;13]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].group([_=&gt;_])          [-- [[a=&gt;1,b=&gt;2,c=&gt;3]=&gt;[a=&gt;1,b=&gt;2,c=&gt;3]] --]
-==&gt;[[
+==&gt;[
+    [
     a=&gt;1,
     b=&gt;2,
     c=&gt;3]=&gt;[
-    a=&gt;1,
-    b=&gt;2,
-    c=&gt;3]]
+     a=&gt;1,
+     b=&gt;2,
+     c=&gt;3]]
 </code></pre>
 <hr />
 <h3>10. Merging &amp; Splitting</h3>
@@ -761,13 +772,16 @@ mtron&gt; {1,2}-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]&gt;&gt;    [-- 1=&gt;3, 2=&g
 <h4>On lst</h4>
 <pre><code class="language-mtron">mtron&gt; [1,2,[a=&gt;3],4]&lt;&lt;2                  [-- [[a=&gt;3],4] --]
 mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;2                  [-- [1,2] --]
-==&gt;[a=&gt;3]
+==&gt;[
+    a=&gt;3]
 mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;(-2)               [-- [a=&gt;3] (negative indicies) --]
-==&gt;[a=&gt;3]
+==&gt;[
+    a=&gt;3]
 mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;+                  [-- {1,2,[a=&gt;3],4} (selectors are uris) --]
 ==&gt;1
 ==&gt;2
-==&gt;[a=&gt;3]
+==&gt;[
+    a=&gt;3]
 ==&gt;4
 </code></pre>
 <h4>On records</h4>
@@ -778,9 +792,12 @@ mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;+                  [-- {1,2,[a=&gt;3],4} (sel
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;3]].rng()        [-- {1,2,[d=&gt;3]}      (extract values) --]
 ==&gt;1
 ==&gt;2
-==&gt;[d=&gt;3]
+==&gt;[
+    d=&gt;3]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c      [-- [d=&gt;[e=&gt;3]]       (access by key) --]
-==&gt;[d=&gt;[e=&gt;3]]
+==&gt;[
+    d=&gt;[
+     e=&gt;3]]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c/d/e  [-- 3                 (walk nested structure) --]
 ==&gt;3
 </code></pre>
@@ -822,7 +839,8 @@ mtron&gt; @xyz/c/d&gt;&gt;=10                           [-- write 10 to path --]
 mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second element +4) --]
 ==&gt;[1,6]
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
-==&gt;[a=&gt;1]
+==&gt;[
+    a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
 ==&gt;[
     name=&gt;'Micky Mouse',
@@ -842,9 +860,11 @@ mtron&gt; *a/b/c&gt;&gt;= +10      [-- evaluates but discards the result --]
 <h3>15. Auto-references (<code>!*</code>, <code>!@</code>)</h3>
 <p>Lazy cross-reference via the Router:</p>
 <pre><code class="language-mtron">mtron&gt; [company=&gt;!*db:companies/101]     [-- auto_from — resolved on access --]
-==&gt;[company=&gt;!*db:companies/101]
+==&gt;[
+    company=&gt;!*db:companies/101]
 mtron&gt; [company=&gt;!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
-==&gt;[company=&gt;!@db:companies/101]
+==&gt;[
+    company=&gt;!@db:companies/101]
 </code></pre>
 <p><code>!*</code> is sugar for <code>auto_from(uri)</code>. When you <code>.at(company)</code> on the record, the Router resolves <code>db:companies/101</code> and
 returns the target Obj.</p>
@@ -913,7 +933,8 @@ mtron&gt; int{?}::10                     [-- optional coefficient {0,1} --]
 </code></pre>
 <p><code>==</code></p>
 <pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;_]     [-- select with pattern match --]
-==&gt;[a=&gt;1]
+==&gt;[
+    a=&gt;1]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;is(gt(1))]  [-- select with filter --]
 </code></pre>
 <hr />

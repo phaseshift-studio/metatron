@@ -450,15 +450,17 @@ mtron&gt; */m/mach/ui/widget/tree_widget        [-- root and max required; code/
 its own example. It is the fastest way to answer &quot;what can I put in this thing&quot;, and it is generated from
 the same declarations the type checker uses:</p>
 <pre><code class="language-mtron">mtron&gt; */m/mach/ui/widget?docq
-==&gt;docs::[ obj=&gt;rec::T[?[{?}style=&gt;rec::T[?[ {?}border=&gt;str::T,
-    {?}background=&gt;str::T,
-    {?}foreground=&gt;str::T,
-    {?}divider=&gt;str::T,
-    {?}headerDivider=&gt;str::T,
-    {?}pointer=&gt;str::T,
-    {?}leftMargin=&gt;int::T,
-    ...(12 more)]][ctor?rng=style&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/style]]@/m/mach/ui/widget,
-    args=&gt;[{?}style=&gt;'the style specification for the wi...'],
+==&gt;docs::[ obj=&gt;rec::T[?[
+     {?}style=&gt;rec::T[?[   {?}border=&gt;str::T,
+      {?}background=&gt;str::T,
+      {?}foreground=&gt;str::T,
+      {?}divider=&gt;str::T,
+      {?}headerDivider=&gt;str::T,
+      {?}pointer=&gt;str::T,
+      {?}leftMargin=&gt;int::T,
+      ...(12 more)]][ctor?rng=style&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/style]]@/m/mach/ui/widget,
+    args=&gt;[
+     {?}style=&gt;'the style specification for the wi...'],
     desc=&gt;'[structural] the base widget type',
     accordion_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -485,8 +487,8 @@ the same declarations the type checker uses:</p>
      rng=&gt;'a table widget',
      args=&gt;[
       {?}metadata=&gt;'a lst of rows of data behind the d...',
-      {?}header=&gt;'a lst of obj table headers',
-      {?}row=&gt;'a lst of poly table rows'],
+      {?}row=&gt;'a lst of poly table rows',
+      {?}header=&gt;'a lst of obj table headers'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -499,11 +501,11 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
      args=&gt;[
-      {?}code=&gt;'transform obj prior to insertion i...',
-      {?}expand=&gt;'branch uris whose children are rea...',
-      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
-      max=&gt;'the max depth to traverse',
       {?}flatten=&gt;'fold single-folder chains into one...',
+      max=&gt;'the max depth to traverse',
+      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
+      {?}expand=&gt;'branch uris whose children are rea...',
+      {?}code=&gt;'transform obj prior to insertion i...',
       root=&gt;'the root uri to traverse from'],
      desc=&gt;'[structural] the root uri space is...'],
     ...(9 more)]
@@ -569,7 +571,8 @@ console is showing:</p>
     title=&gt;'note',
     body=&gt;'alpha
    beta',
-    style=&gt;style::[border=&gt;'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]@/usr/uidoc/panel
+    style=&gt;style::[
+     border=&gt;'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]@/usr/uidoc/panel
 mtron&gt; */usr/uidoc/panel/title
 ==&gt;'note'
 mtron&gt; */usr/uidoc/panel/body
@@ -581,9 +584,11 @@ mtron&gt; */usr/uidoc/panel/body
     title=&gt;'note',
     body=&gt;'alpha
    beta',
-    style=&gt;style::[border=&gt;'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]
+    style=&gt;style::[
+     border=&gt;'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]
 mtron&gt; */usr/uidoc/panel/style
-==&gt;style::[border=&gt;'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']
+==&gt;style::[
+    border=&gt;'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']
 </code></pre>
 <h3>rendering a widget inline</h3>
 <p>A widget renders wherever a <code>str::T</code> fits, by casting it through the widget's own <code>as?str&lt;=widget</code> inst:</p>

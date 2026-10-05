@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.StatusLine;
@@ -199,8 +200,8 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     private static String toStringOrNull(final Object o) {
-        if (o instanceof Obj)
-            return Highlighter.format(o);
+        if (o instanceof Obj obj)
+            return renderObj(obj);
         if (o instanceof Throwable t) {
             final StackTraceElement[] trace = t.getStackTrace();
             if (trace != null && trace.length > 0) {
@@ -210,6 +211,16 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
             }
         }
         return null == o ? "null" : o.toString();
+    }
+
+    /**
+     * Render an obj for a log line: the unlinked serializer (so the line carries no
+     * {@code {{link}}} tags), then the shared highlighter — so the mtron nanorc syntax
+     * coloring the serializer alone does not do still applies.  This is the same path
+     * {@link Highlighter#format(Object)} took, minus the link tags.
+     */
+    private static String renderObj(final Obj obj) {
+        return Highlighter.single().highlight(ObjmtronUISerializer.unlinked().write(obj));
     }
 
     private String toSourceString() {
@@ -227,7 +238,8 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         final Object[] args2 = args.length == 0 ? new Object[0] :
                 Stream.of(args)
                         .map(x -> isLambda(x) ? ((Supplier<?>) x).get() : x)
-                        .map(x -> x instanceof Obj || x instanceof String ? Highlighter.format(x) : x)
+                        .map(x -> x instanceof Obj obj ? renderObj(obj)
+                                : x instanceof String ? Highlighter.format(x) : x)
                         .toArray();
         final String message = safeFormat(toStringOrNull(f), args2);
         return metadata ?

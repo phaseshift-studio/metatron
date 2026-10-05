@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.isa.mach.type.ui.graphitty;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.sys.LogObj;
 
 import static org.slf4j.event.Level.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;

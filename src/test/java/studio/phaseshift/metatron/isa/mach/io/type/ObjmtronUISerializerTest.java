@@ -251,6 +251,32 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     }
 
     @Test
+    public void testUnlinkedInstanceColorsWithoutLinks() {
+        // the unlinked instance: what a log line renders an obj through.  Like the diagnostic it
+        // carries no {{link}} tags, but unlike the diagnostic its color stays on — a uri is drawn
+        // as its colored text, not as a hyperlink no reader can click.
+        final Obj obj = ObjmtronSerializer.parse("uri::/a/b/c").apply();
+        final String written = ObjmtronUISerializer.unlinked().write(obj);
+        LOG.debug("unlinked uri => %s", written);
+        assertFalse(written.contains("{{link}}"), written);
+        assertFalse(written.contains("{{/link}}"), written);
+        assertTrue(written.contains("/a/b/c"), written);
+        assertTrue(written.contains("{{b}}"), String.format("the uri's color markup must remain: %s", written));
+        assertTrue(written.contains("{{/b}}"), written);
+    }
+
+    @Test
+    public void testUnlinkedInstanceNestsLikeTheConsole() {
+        // indentation is a display feature independent of linking: a nested poly still breaks
+        // across indented lines when the instance drops the link tags
+        final Obj obj = ObjmtronSerializer.parse("rec::[a=>[b=>[c=>42]]]").apply();
+        final String written = ObjmtronUISerializer.unlinked().write(obj);
+        LOG.debug("unlinked nested rec => %s", written);
+        assertTrue(written.contains("\n"), String.format("a nested poly should indent: %s", written));
+        assertFalse(written.contains("{{link}}"), written);
+    }
+
+    @Test
     public void testTypeViolationDiffNests() {
         // the diff a type violation reports is built by Poly.Helper and rendered into the fail
         // message.  Its top level is one entry per failed slot and its values are the expected

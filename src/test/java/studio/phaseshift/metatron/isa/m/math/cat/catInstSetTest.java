@@ -49,7 +49,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 public class catInstSetTest extends AbstractInstSetTest {
 
     public catInstSetTest() {
@@ -125,11 +124,13 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     @Test
+    @Disabled
     public void testFamilyCountsTheSiblingRegistrations() {
         checkEquality(LOG, jnt(catInstSet.family(plus()).lstValue().size()), jnt(13), true);
     }
 
     @Test
+    @Disabled
     public void testCastSubgraphAuditAndImplicitCasts() {
         // the as-graph audit + implicit-cast manifestation, harvested from AsGraphTest
         final Set<catInstSet.Finding> findings = catInstSet.check();
@@ -152,6 +153,7 @@ public class catInstSetTest extends AbstractInstSetTest {
      * overlap, so AMBIGUOUS is the semantically right answer for each pair — the question this test
      * pins down is whether the label is reached for the right reason.
      */
+    @Disabled
     @ParameterizedTest
     @TestData(value = {
             "rec::T[?[age=>int::T]]@/m/type_test/creature",
@@ -222,28 +224,28 @@ public class catInstSetTest extends AbstractInstSetTest {
             // position
             //  "|plus?int<=int(int::T).as(morphism::T)>>analysis>>position % [incomparable,retract]",
     }, delimiter = '%')
+    @Disabled
     void testMorphisms(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
     }
 
     /**
-     * The structural laws (the theory recs: ring/group/monoid) — not wired yet, {@code CoreMaker} /
+     * The structural laws (the theory recs: ring/group/monoid) — not wired yet, {@code mInstSetLawTable.typeLaws} /
      * {@code catWrap(Type, …)} is still a no-op.
      */
     @ParameterizedTest
-    @Disabled("object laws (the theory recs) are not wired")
     @CsvSource(value = {
-            "int::T.as(object::T)>>law>>ring % [add=>plus?int<=int,mul=>mult?int<=int,zero=>zero?int<=int,one=>one?int<=int]",
+            "|int::T.as(object::T)>>law>>ring_theory % [add=>plus?int<=int,mul=>mult?int<=int,zero=>zero?int<=int,one=>one?int<=int]",
     }, delimiter = '%')
+    @Disabled
     void testObjectLaws(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
     }
 
     /**
-     * The process laws — the {@code declared ∩ process} cell, served from {@link CatLawTable}.
+     * The process laws — the {@code declared ∩ process} cell, served from {@link mInstSetLawTable}.
      */
     @ParameterizedTest
-    @Disabled("stack overflows")
     @CsvSource(value = {
             // "*plus?int<=int.take(1).as(morphism::T)>>law   % [commutative,right_distributive,action]",
             //"|mult?int<=int(int::T).as(morphism::T)>>law     % [commutative,right_distributive,action]",
@@ -254,6 +256,24 @@ public class catInstSetTest extends AbstractInstSetTest {
             "|prod?int<=int{*}().as(morphism::T)>>law        % [monoidic,commutative,right_distributive]",
     }, delimiter = '%')
     void testMorphismLaws(final String expr, final String expected) {
+        checkCodeParseApply(LOG, expr, expected);
+    }
+
+    /**
+     * The set-theoretic class — the {@code class} cell, computed conservatively from the declared laws
+     * (an involution is its own inverse, hence iso; an iso is both a section and a retraction, hence mono
+     * and epi; a proper non-split mono/epi is not yet detected).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "|neg?int<=int(int::T).as(morphism::T)>>class   % [endo,iso,auto,section,retraction,mono,epi]",
+            "|plus?int<=int(int::T).as(morphism::T)>>class  % [endo]",
+            "|div?int<=int(int::T).as(morphism::T)>>class   % [endo]",
+            "|gt?bool<=int(int::T).as(morphism::T)>>class   % noobj",
+            "|mean?real<=int{*}().as(morphism::T)>>class    % noobj",
+    }, delimiter = '%')
+    @Disabled
+    void testMorphismClass(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
     }
 
@@ -296,6 +316,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.plus(2).plus(0)  % start(5).plus(2)  % 7",
             "-5.mult(1)         % start(-5)         % -5",
     }, delimiter = '%')
+    @Disabled
     public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
         final Code firstStage = ObjmtronSerializer.parse(code);
         final Call secondStage = ObjmtronSerializer.parse(expected);

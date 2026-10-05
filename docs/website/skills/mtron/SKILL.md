@@ -62,7 +62,8 @@ mtron> /a/x/y   -> 2
 mtron> /a/x/y/z -> 3
 ==>3
 mtron> /a/b     -> [q=>r]
-==>[q=>r]
+==>[
+    q=>r]
 mtron> /a/b/c   -> |plus(2)
 mtron> /a/b/d   -> 'm'
 ==>'m'
@@ -81,10 +82,12 @@ mtron> */a/b
 ==>[
     q=>r,
     c=>plus(2),
-    d=>[e=>[1.0000,0xa5,true]]]
+    d=>[
+     e=>[1.0000,0xa5,true]]]
 mtron> */a/b/c
 mtron> */a/b/d
-==>[e=>[1.0000,0xa5,true]]
+==>[
+    e=>[1.0000,0xa5,true]]
 ```
 Of particular significance is the result of `*/a/b`: polys (`lst`, `rec`, `rel`)
 maintain an internal uri scheme that interacts with the outer space's uri scheme. That interplay recurs throughout
@@ -294,7 +297,8 @@ mtron> {1,2,3}.is(gt(1))
 ==>2
 ==>3
 mtron> [a=>1,b=>2,c=>3]==[a=>+10]
-==>[a=>11]
+==>[
+    a=>11]
 mtron> {1,2,3,4}.reduce(|plus(0))
 ==>10
 mtron> {1,2,3,4}.sum()             [-- shorthand for the above --]
@@ -339,7 +343,8 @@ mtron> *plus?docq
     obj=>plus?rng=int&dom=int(int::T){<j>},
     dom=>'the lhs int',
     rng=>'the result of the addition',
-    args=>[int::T=>'the int to add to the lhs'],
+    args=>[
+     int::T=>'the int to add to the lhs'],
     desc=>'[mapper] add the argument int to t...',
     example=>[
      '1.plus(2)          [-- 3          ...',
@@ -350,41 +355,47 @@ mtron> *plus?docq
     obj=>plus?rng=real&dom=real(real::T){<j>},
     dom=>'a real',
     rng=>'the sum',
-    args=>[0=>'the rhs real'],
+    args=>[
+     0=>'the rhs real'],
     desc=>'[mapper] a sum function \(f(x, y) ...']
 ==>docs::[
     obj=>plus?rng=str&dom=str(str::T){<j>},
     dom=>'a prefix str',
     rng=>'the concatenated str',
-    args=>[0=>'a postfix str'],
+    args=>[
+     0=>'a postfix str'],
     desc=>'[mapper] concatenate two str::T va...',
     example=>['"a" + "b" [-- "ab" --]']]
 ==>docs::[
     obj=>plus?rng=time&dom=time(real::T@/m/math/time){<j>},
     dom=>'/m/math/time',
     rng=>'/m/math/time',
-    args=>[0=>'/m/real'],
+    args=>[
+     0=>'/m/real'],
     desc=>'[mapper] add two durations of the ...',
     example=>['millis::1500.0 + millis::500.0   [...']]
 ==>docs::[
     obj=>plus?rng=metric&dom=metric(real::T@/m/math/metric){<j>},
     dom=>'/m/math/metric',
     rng=>'/m/math/metric',
-    args=>[0=>'/m/real'],
+    args=>[
+     0=>'/m/real'],
     desc=>'[mapper] add two distances of the ...',
     example=>['meter::1500.0 + meter::500.0   [--...']]
 ==>docs::[
     obj=>plus?rng=imperial&dom=imperial(real::T@/m/math/imperial){<j>},
     dom=>'/m/math/imperial',
     rng=>'/m/math/imperial',
-    args=>[0=>'/m/real'],
+    args=>[
+     0=>'/m/real'],
     desc=>'[mapper] add two distances of the ...',
     example=>['foot::12.0 + foot::36.0   [-- foot...']]
 ==>docs::[
     obj=>plus?rng=datetime&dom=datetime(real::T@/m/math/time){<j>},
     dom=>'/m/math/datetime',
     rng=>'/m/math/datetime',
-    args=>[0=>'/m/real'],
+    args=>[
+     0=>'/m/real'],
     desc=>'[mapper] shift a datetime forward ...',
     example=>['<//2026.08:09/14/30/00/000?tz=+000...']]
 mtron> *plus?str<=str&docq
@@ -392,7 +403,8 @@ mtron> *plus?str<=str&docq
     obj=>plus?rng=str&dom=str(str::T){<j>},
     dom=>'a prefix str',
     rng=>'the concatenated str',
-    args=>[0=>'a postfix str'],
+    args=>[
+     0=>'a postfix str'],
     desc=>'[mapper] concatenate two str::T va...',
     example=>['"a" + "b" [-- "ab" --]']]
 mtron> *select?<=str&docq
@@ -400,7 +412,8 @@ mtron> *select?<=str&docq
     obj=>select?rng=lst&dom=str(str::T){<j>},
     dom=>'a str to split by regex',
     rng=>'the regex capture groups (or full ...',
-    args=>[0=>'regex'],
+    args=>[
+     0=>'regex'],
     desc=>'[mapper] split the lhs str by rege...',
     example=>[
      "'abc.cde'.regex('[^.]+') [-- ['abc...",

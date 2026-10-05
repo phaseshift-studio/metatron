@@ -197,7 +197,6 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
      * SQLite-specific test.
      */
     @Test
-    @Disabled
     public void testPolyUnrollingExistingTable() throws Exception {
         // Create test database with users table
         try (final Connection conn = staticDbConfig.getConnection();
@@ -302,7 +301,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
      */
     @Test
     @Disabled
-    public void testPolyUnrollingNestedRecords() throws Exception {
+    public void testPolyUnrollingNestedRecords() {
         // Store a nested Record
         final Obj nestedRecord = rec(
                 uri(USER), rec(

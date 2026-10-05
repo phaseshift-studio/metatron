@@ -35,7 +35,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -46,6 +45,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.tool.ExplainTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.InstSelectorTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.fURISelectorTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
+import studio.phaseshift.metatron.isa.sys.LogObj;
 
 import java.io.PrintStream;
 import java.nio.file.Paths;

@@ -18,7 +18,7 @@ mtron> ... [-- larger agent definition --]
 ==>fail::[parse error at line 1, col 2:
      ... 
       ^
-     could not parse at '.']@/sys/fail/362
+     could not parse at '.']@/sys/fail/366
 mtron> feature=>[
         tool_feature::[tool=>[!*eval]]
         ... [-- other features attached to agent --]
@@ -26,12 +26,12 @@ mtron> feature=>[
      feature=>[
            tool_feature::[tool=>[!*eval...
             ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/364
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/368
 mtron> ]
 ==>fail::[parse error at line 1, col 1:
      ]
      ^
-     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/366
+     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/370
 ```
 ## References
 

@@ -65,7 +65,6 @@ public class MySQLDatabaseConfig implements DatabaseConfig {
         String url = "jdbc:mysql://" + mysqlContainer.getHost() + ":" + mysqlContainer.getMappedPort(3306) +
                      "/" + DB_NAME + "?allowPublicKeyRetrieval=true&useSSL=false";
         final Connection conn = DriverManager.getConnection(url, DB_USER, DB_PASS);
-        Wait.forListeningPorts(mysqlContainer.getMappedPort(3306));
         return conn;
     }
 
@@ -78,7 +77,18 @@ public class MySQLDatabaseConfig implements DatabaseConfig {
                 .withEnv("MYSQL_PASSWORD", DB_PASS)
                 .withEnv("MYSQL_ROOT_PASSWORD", "root")
                 .withCommand("--default-authentication-plugin=mysql_native_password")
-                .waitingFor(Wait.forLogMessage(".*ready for connections.*", 1))
+                // Wait on the *mapped* port, not on a log line. MySQL 8 logs
+                // "ready for connections" twice: once from the initialisation
+                // server it runs before the real one, and again when the real
+                // server is up. Matching the first occurrence (count = 1)
+                // therefore returns while only the init server has printed it,
+                // well before the published port accepts connections — and
+                // getConnection() below then fails with "Communications link
+                // failure / Connection refused". Waiting on the mapped port also
+                // proves the host override actually routes, which matters under
+                // Docker-outside-of-Docker where the container is published on
+                // the host rather than on 127.0.0.1.
+                .waitingFor(Wait.forListeningPorts(3306))
                 .withStartupTimeout(java.time.Duration.ofMinutes(3));
 
         mysqlContainer.start();

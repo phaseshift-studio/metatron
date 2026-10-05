@@ -645,7 +645,8 @@ mtron&gt; *mydb:people/+/name                                      [-- all names
 ==&gt;'marko'
 ==&gt;'metis'
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
-==&gt;[name=&gt;'stynx']
+==&gt;[
+    name=&gt;'stynx']
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
 ==&gt;explanation::[
     format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
@@ -664,7 +665,9 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
       op=&gt;select,
       dom=&gt;&lt;#&gt;,
       rng=&gt;&lt;#&gt;,
-      args=&gt;[[name=&gt;id()]],
+      args=&gt;[
+       [
+        name=&gt;id()]],
       form=&gt;mapper,
       c_dom=&gt;1,
       c_rng=&gt;1]]]
@@ -676,14 +679,15 @@ mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewri
     desc=&gt;[
      rng=&gt;int,
      insts=&gt;1],
-    per_inst=&gt;[[
-    op=&gt;sql_count,
-    rng=&gt;int,
-    args=&gt;[people/+],
-    f=&gt;'&lt;j&gt;',
-    form=&gt;initial,
-    c_dom=&gt;0,
-    c_rng=&gt;1]]]
+    per_inst=&gt;[
+     [
+      op=&gt;sql_count,
+      rng=&gt;int,
+      args=&gt;[people/+],
+      f=&gt;'&lt;j&gt;',
+      form=&gt;initial,
+      c_dom=&gt;0,
+      c_rng=&gt;1]]]
 </code></pre>
 <h4>Step 5: The container sees the same data</h4>
 <p>The Docker container has the database mounted at <code>/data/mydb.sqlite</code>. Any process inside the container can read and

@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.LogObj;
+import studio.phaseshift.metatron.isa.sys.LogObj;
 import studio.phaseshift.metatron.isa.tble.space.ExistingTableSchema.ColumnMetadata;
 
 import static org.junit.jupiter.api.Assertions.*;

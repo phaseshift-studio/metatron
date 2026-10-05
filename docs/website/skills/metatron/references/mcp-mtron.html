@@ -407,7 +407,8 @@
 ==&gt;[
     type=&gt;streamable-http,
     url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-    headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;/m/inst/thread(/software/metatron)]]
+    headers=&gt;[
+     IJ_MCP_SERVER_PROJECT_PATH=&gt;/m/inst/thread(/software/metatron)]]
 </code></pre>
 <p>If the snippet provided has an <code>mcpServer</code> outer wrapping, then do:</p>
 <pre><code class="language-mtron">mtron&gt; &quot;&quot;&quot;
@@ -423,7 +424,8 @@
 ==&gt;[
     type=&gt;streamable-http,
     url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-    headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;/m/inst/thread(/software/metatron)]]
+    headers=&gt;[
+     IJ_MCP_SERVER_PROJECT_PATH=&gt;/m/inst/thread(/software/metatron)]]
 </code></pre>
 <p>Moreover, if the <code>mcpServer</code> snippet has multiple inner servers endpoints defined, to load all of them, do:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
@@ -434,12 +436,12 @@
             &quot;intellij&quot;: {
    ...
      ^
-     unclosed '{' — missing '}'?]@/sys/fail/370
+     unclosed '{' — missing '}'?]@/sys/fail/374
 mtron&gt; }}
 ==&gt;fail::[parse error at line 1, col 1:
      }}
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/372
+     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/376
 </code></pre>
 <p>For <code>STDIO</code> transport MCP servers, the same process works:</p>
 <pre><code>mcp_client::[command=&gt;[&lt;/home/killswitch/.local/bin/codegraph&gt;,'serve', '--mcp']]@codegraph;
@@ -466,7 +468,8 @@ mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
       inst=&gt;inst?rng=#{*}&amp;dom=#{?}(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
       name=&gt;m_web_mcp_mcp_mtron_read_memory,
       desc=&gt;'(experimental) returns the result ...',
-      arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
+      arg=&gt;[
+       memory_vid=&gt;'the vid of the memory to read']],
      m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
       inst=&gt;inst?rng=#{*}&amp;dom=#{?}(code=&gt;'mtron code to evaluate',native=&gt;'return result in native mtron format'){&lt;j&gt;},
       name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
@@ -512,7 +515,8 @@ mtron&gt; *a&gt;&gt;tool
      inst=&gt;inst?rng=#{*}&amp;dom=#{?}(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
      name=&gt;m_web_mcp_mcp_mtron_read_memory,
      desc=&gt;'(experimental) returns the result ...',
-     arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
+     arg=&gt;[
+      memory_vid=&gt;'the vid of the memory to read']],
     m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
      inst=&gt;inst?rng=#{*}&amp;dom=#{?}(code=&gt;'mtron code to evaluate',native=&gt;'return result in native mtron format'){&lt;j&gt;},
      name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
@@ -549,7 +553,7 @@ mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate inst-f noobj::T =&gt; a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/374
+==&gt;fail::[unable to locate inst-f noobj::T =&gt; a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/378
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>

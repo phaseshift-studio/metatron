@@ -75,15 +75,17 @@ the same declarations the type checker uses:
 
 ```mtron
 mtron> */m/mach/ui/widget?docq
-==>docs::[ obj=>rec::T[?[{?}style=>rec::T[?[ {?}border=>str::T,
-    {?}background=>str::T,
-    {?}foreground=>str::T,
-    {?}divider=>str::T,
-    {?}headerDivider=>str::T,
-    {?}pointer=>str::T,
-    {?}leftMargin=>int::T,
-    ...(12 more)]][ctor?rng=style&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/style]]@/m/mach/ui/widget,
-    args=>[{?}style=>'the style specification for the wi...'],
+==>docs::[ obj=>rec::T[?[
+     {?}style=>rec::T[?[   {?}border=>str::T,
+      {?}background=>str::T,
+      {?}foreground=>str::T,
+      {?}divider=>str::T,
+      {?}headerDivider=>str::T,
+      {?}pointer=>str::T,
+      {?}leftMargin=>int::T,
+      ...(12 more)]][ctor?rng=style&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/style]]@/m/mach/ui/widget,
+    args=>[
+     {?}style=>'the style specification for the wi...'],
     desc=>'[structural] the base widget type',
     accordion_widget=>docs::[
      obj=>widget::T[?[
@@ -110,8 +112,8 @@ mtron> */m/mach/ui/widget?docq
      rng=>'a table widget',
      args=>[
       {?}metadata=>'a lst of rows of data behind the d...',
-      {?}header=>'a lst of obj table headers',
-      {?}row=>'a lst of poly table rows'],
+      {?}row=>'a lst of poly table rows',
+      {?}header=>'a lst of obj table headers'],
      desc=>'[structural] a tabular data widget'],
     tree_widget=>docs::[
      obj=>widget::T[?[
@@ -124,11 +126,11 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'a tree widget',
      args=>[
-      {?}code=>'transform obj prior to insertion i...',
-      {?}expand=>'branch uris whose children are rea...',
-      {?}xref=>'xref=>[max=>N, code=><call>] cross...',
-      max=>'the max depth to traverse',
       {?}flatten=>'fold single-folder chains into one...',
+      max=>'the max depth to traverse',
+      {?}xref=>'xref=>[max=>N, code=><call>] cross...',
+      {?}expand=>'branch uris whose children are rea...',
+      {?}code=>'transform obj prior to insertion i...',
       root=>'the root uri to traverse from'],
      desc=>'[structural] the root uri space is...'],
     ...(9 more)]
@@ -195,7 +197,8 @@ mtron> panel_widget::[title=>'note',body=>"alpha\nbeta"]@/usr/uidoc/panel
     title=>'note',
     body=>'alpha
    beta',
-    style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]@/usr/uidoc/panel
+    style=>style::[
+     border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]@/usr/uidoc/panel
 mtron> */usr/uidoc/panel/title
 ==>'note'
 mtron> */usr/uidoc/panel/body
@@ -209,9 +212,11 @@ mtron> @/usr/uidoc/panel >>= [style=>[anchor=>top_left,width=>20,foreground=>'']
     title=>'note',
     body=>'alpha
    beta',
-    style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]
+    style=>style::[
+     border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]
 mtron> */usr/uidoc/panel/style
-==>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']
+==>style::[
+    border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']
 ```
 ## rendering a widget inline
 

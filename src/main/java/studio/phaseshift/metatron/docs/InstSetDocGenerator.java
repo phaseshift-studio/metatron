@@ -19,26 +19,13 @@
 package studio.phaseshift.metatron.docs;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
-import studio.phaseshift.metatron.isa.iot.iotInstSet;
-import studio.phaseshift.metatron.isa.llm.llmInstSet;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
-import studio.phaseshift.metatron.isa.rdf.rdfInstSet;
-import studio.phaseshift.metatron.isa.tble.tbleInstSet;
-import studio.phaseshift.metatron.isa.vec.vecInstSet;
-import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,8 +37,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.Tokens.BOOT;
-import static studio.phaseshift.metatron.Tokens.LOGG;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 
@@ -251,26 +236,13 @@ public class InstSetDocGenerator {
     }
 
     private static void boot(final String bootFile) {
-        BootLoader.BOOTING = true;
-        BootLoader.TESTING = true;
-        BootLoader.load(MRec.rec(MUri.uri(LOGG), MUri.uri("info"), MUri.uri(BOOT), MUri.uri(bootFile)));
-        for (final InstSet is : new InstSet[]{
-                new mathInstSet(), new webInstSet(), new iotInstSet(),
-                new grphInstSet(), new llmInstSet(), new tbleInstSet(),
-                new uiInstSet(), new vecInstSet(),
-                new dcmntInstSet(), new rdfInstSet()
-        }) {
-            Machine.root().addSpace(is);
-            Machine.writeToSpace(is);
-            is.setup();
-        }
+        DocsUtil.bootVM(bootFile);
         // Re-register mInstSet types that were created as static fields
         // before the Router was initialized (ServiceLoader triggers early
-        // class loading at BootLoader.load line 339).
-        // Without this, parentType() -> T(fURI) creates bare types
-        // without predicates, breaking the refinement chain display.
+        // class loading at BootLoader.load).  Without this, parentType() ->
+        // T(fURI) creates bare types without predicates, breaking the
+        // refinement chain display.
         Machine.root().write(SPACE_TYPE.vid(), SPACE_TYPE);
-        TypeCheck.disable(TypeCheck.code_resolve);
     }
 
     // ========================================================================
@@ -331,7 +303,7 @@ public class InstSetDocGenerator {
             if (result instanceof Lst lst) {
                 for (final Obj item : lst.jvm()) {
                     final String uri = item instanceof Str s ? s.jvm() : SER.write(item);
-                    final String name = leafName(uri);
+                    final String name = DocsUtil.leafName(uri);
                     final Obj typeObj = Machine.readFromSpace(f(uri));
                     spaces.add(new SpaceEntry(uri, name, typeObj, SER.write(typeObj)));
                 }
@@ -386,7 +358,7 @@ public class InstSetDocGenerator {
                                        final boolean websiteTemplate, final String depth,
                                        final int buildNumber) {
         if (websiteTemplate) {
-            final String header = SiteChrome.header(depth, esc(meta.name()) + " - metatron Instruction Set",
+            final String header = SiteChrome.header(depth, DocsUtil.esc(meta.name()) + " - metatron Instruction Set",
                     "    <link rel=\"stylesheet\" href=\"" + depth + "/css/instset_doc.css\">");
             final String footer = SiteChrome.footer(depth);
             if (!header.isEmpty() && !footer.isEmpty()) {
@@ -412,7 +384,7 @@ public class InstSetDocGenerator {
                    <script>hljs.highlightAll();</script>
                </body>
                </html>
-               """.formatted(esc(meta.name()), depth, depth,
+               """.formatted(DocsUtil.esc(meta.name()), depth, depth,
                 bodyContent(meta, types, insts, rewrites, spaces, consts, buildNumber), depth, depth);
     }
 
@@ -443,7 +415,7 @@ public class InstSetDocGenerator {
         final String descHtml = descText.isEmpty() ? "" : """
                                                           <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
                                                           %s</p>
-                                                          """.formatted(esc(descText));
+                                                          """.formatted(DocsUtil.esc(descText));
 
         return """
                <div class="container-xxl py-4">
@@ -475,7 +447,7 @@ public class InstSetDocGenerator {
                        </div>
                    </div>
                </div>"""
-                .formatted(esc(parentPath), esc(meta.name()), descHtml.toString(), esc(meta.full()));
+                .formatted(DocsUtil.esc(parentPath), DocsUtil.esc(meta.name()), descHtml.toString(), DocsUtil.esc(meta.full()));
     }
 
     // ── Section: Navigation pills ──────────────────────────────────────
@@ -575,7 +547,7 @@ public class InstSetDocGenerator {
                style="min-width:180px;font-size:0.8rem;">
                    <span class="code" style="font-size:1.2rem;">%s</span>
                    <span class="pill-label badge %s ms-2">%s</span>
-               </a>""".formatted(href, esc(name), badgeClass, letter);
+               </a>""".formatted(href, DocsUtil.esc(name), badgeClass, letter);
     }
 
     private static void tocFlatGroup(final StringBuilder sb, final String title, final String badgeClass,
@@ -653,14 +625,14 @@ public class InstSetDocGenerator {
                 "padding-right:0.6rem;flex-shrink:0;\"";
         if (parts.length <= 1 || (parts.length == 1 && parts[0].isEmpty())) {
             return "<div " + colStyle + "><small class=\"micro-label fw-bold text-secondary\" " +
-                    "style=\"font-family:monospace;\">" + esc(branch) + "</small></div>";
+                    "style=\"font-family:monospace;\">" + DocsUtil.esc(branch) + "</small></div>";
         }
         final String parent = String.join("/", java.util.Arrays.copyOf(parts, parts.length - 1));
-        final String terminal = esc(parts[parts.length - 1]);
+        final String terminal = DocsUtil.esc(parts[parts.length - 1]);
         return "<div " + colStyle + " style=\"min-width:6rem;max-width:6rem;text-align:right;" +
                 "padding-right:0.6rem;flex-shrink:0;line-height:1.25;\" class=\"micro-label\">" +
                 "<div style=\"font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;\">" +
-                esc(parent) + "&thinsp;/</div>" +
+                DocsUtil.esc(parent) + "&thinsp;/</div>" +
                 "<div><small class=\"mini-label fw-bold text-secondary\" style=\"font-family:monospace;\">" +
                 terminal + "</small></div></div>";
     }
@@ -680,7 +652,7 @@ public class InstSetDocGenerator {
             final String defn = SER.write(c);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                    + esc(defn) + "</code></pre></div>" : "";
+                    + DocsUtil.esc(defn) + "</code></pre></div>" : "";
             final Rec doc = fetchDocByVid(c);
             cards.append("""
                          <div class="card mb-3" id="%s">
@@ -690,7 +662,7 @@ public class InstSetDocGenerator {
                              </div>
                              %s
                              %s
-                         </div>""".formatted(gid, esc(name), esc(uri), defnBlock, renderDoc(doc, gid, instsetVid)));
+                         </div>""".formatted(gid, DocsUtil.esc(name), DocsUtil.esc(uri), defnBlock, renderDoc(doc, gid, instsetVid)));
         }
         return """
                <div class="container-xxl mb-4" id="consts">
@@ -715,7 +687,7 @@ public class InstSetDocGenerator {
             final String defn = SER.write(t);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                    + esc(defn) + "</code></pre></div>" : "";
+                    + DocsUtil.esc(defn) + "</code></pre></div>" : "";
             final String inheritedFields = renderInheritedFields(t, instsetVid);
             final Rec doc = fetchDocByVid(t);
             cards.append("""
@@ -730,7 +702,7 @@ public class InstSetDocGenerator {
                              %s
                              %s
                              %s
-                         </div>""".formatted(gid, esc(name), refines, esc(uri),
+                         </div>""".formatted(gid, DocsUtil.esc(name), refines, DocsUtil.esc(uri),
                     defnBlock, inheritedFields, renderDoc(doc, gid, instsetVid)));
         }
         return """
@@ -779,7 +751,7 @@ public class InstSetDocGenerator {
             if (!predStr.isEmpty()) {
                 sb.append("<tr>")
                         .append("<td class=\"field-label\">predicate</td>")
-                        .append("<td><pre class=\"mb-0\"><code class=\"language-mtron\">").append(esc(predStr)).append("</code></pre></td>")
+                        .append("<td><pre class=\"mb-0\"><code class=\"language-mtron\">").append(DocsUtil.esc(predStr)).append("</code></pre></td>")
                         .append("</tr>");
             }
         }
@@ -790,7 +762,7 @@ public class InstSetDocGenerator {
             if (!ctorStr.isEmpty()) {
                 sb.append("<tr>")
                         .append("<td class=\"field-label\">constructor</td>")
-                        .append("<td><pre class=\"mb-0\"><code class=\"language-mtron\">").append(esc(ctorStr)).append("</code></pre></td>")
+                        .append("<td><pre class=\"mb-0\"><code class=\"language-mtron\">").append(DocsUtil.esc(ctorStr)).append("</code></pre></td>")
                         .append("</tr>");
             }
         }
@@ -823,15 +795,15 @@ public class InstSetDocGenerator {
             if (!ancestorInstset.isEmpty() && !ancestorInstset.equals(instsetVid)) {
                 final String target = vidToFilename(ancestorInstset) + "#" + ancAnchor;
                 label = "<a href=\"" + target + "\" class=\"code inherited-link\">"
-                        + esc(ancestorName) + "::T</a>";
+                        + DocsUtil.esc(ancestorName) + "::T</a>";
             } else {
                 label = "<a href=\"#" + ancAnchor + "\" class=\"code inherited-link\">"
-                        + esc(ancestorName) + "::T</a>";
+                        + DocsUtil.esc(ancestorName) + "::T</a>";
             }
 
             final String predStr = predicateToCompactStr(ancestor);
             final String fieldsHtml = !predStr.isEmpty()
-                    ? " <code class=\"language-mtron inherited-code\" style=\"white-space:pre-wrap\">" + esc(predStr) + "</code>"
+                    ? " <code class=\"language-mtron inherited-code\" style=\"white-space:pre-wrap\">" + DocsUtil.esc(predStr) + "</code>"
                     : " <span class=\"text-muted fst-italic inherited-code\">(no additional requirements)</span>";
 
             sb.append("<div class=\"mb-1 inherited-row\">")
@@ -876,11 +848,11 @@ public class InstSetDocGenerator {
             final String target = vidToFilename(superInstset) + "#" + anchor;
             return "<span class=\"ms-2 text-muted instset-doc-small-code\">refines " +
                     "<a href=\"" + target + "\" class=\"instset-doc-small-code text-info code\">" +
-                    esc(superShort) + "::T</a></span>";
+                    DocsUtil.esc(superShort) + "::T</a></span>";
         }
         return "<span class=\"ms-2 text-muted instset-doc-small-code\">refines " +
                 "<a href=\"#" + anchor + "\" class=\"instset-doc-small-code text-info code\">" +
-                esc(superShort) + "::T</a></span>";
+                DocsUtil.esc(superShort) + "::T</a></span>";
     }
 
     // ── Section: Instructions ──────────────────────────────────────────
@@ -956,7 +928,7 @@ public class InstSetDocGenerator {
                              </div>
                              <div class="card-body p-2">%s</div>
                              %s
-                         </div>""".formatted(gid, esc(name), typeSig, esc(vidStr),
+                         </div>""".formatted(gid, DocsUtil.esc(name), typeSig, DocsUtil.esc(vidStr),
                     sigs.toString(), renderMultiDoc(uniqueDocs, gid, instsetVid)));
         }
 
@@ -1006,7 +978,7 @@ public class InstSetDocGenerator {
                              </div>
                              %s
                              %s
-                         </div>""".formatted(gid, esc(name), typeSig, esc(uri), sigBlock, renderDoc(doc, gid, instsetVid)));
+                         </div>""".formatted(gid, DocsUtil.esc(name), typeSig, DocsUtil.esc(uri), sigBlock, renderDoc(doc, gid, instsetVid)));
         }
         return """
                <div class="container-xxl mb-4" id="rewrites">
@@ -1024,7 +996,7 @@ public class InstSetDocGenerator {
             final String gid = vidToAnchor(sp.vid());
             final String spec = sp.typeSpec() != null && !sp.typeSpec().isEmpty()
                     ? "<div class=\"mt-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                    + esc(sp.typeSpec()) + "</code></pre></div>" : "";
+                    + DocsUtil.esc(sp.typeSpec()) + "</code></pre></div>" : "";
             final Type spaceType = sp.obj() != null && sp.obj().isType()
                     ? sp.obj().asType()
                     : sp.obj() != null ? sp.obj().type().asType() : null;
@@ -1044,7 +1016,7 @@ public class InstSetDocGenerator {
                              %s
                              %s
                              %s
-                         </div>""".formatted(gid, vidToFilename(sp.vid()), esc(sp.name()), esc(sp.vid()),
+                         </div>""".formatted(gid, vidToFilename(sp.vid()), DocsUtil.esc(sp.name()), DocsUtil.esc(sp.vid()),
                     spec, inheritedFields, renderDoc(doc, gid, instsetVid)));
         }
         return """
@@ -1127,7 +1099,7 @@ public class InstSetDocGenerator {
             parts.append("""
                          <div class="card-body border-top py-2">
                              <p class="mb-0 text-light">%1$s %2$s</p>
-                         </div>""".formatted(specChips(desc), esc(specRest(desc))));
+                         </div>""".formatted(specChips(desc), DocsUtil.esc(specRest(desc))));
         }
 
         // Signature (dom/rng) + args
@@ -1172,7 +1144,7 @@ public class InstSetDocGenerator {
         final Obj exObj = doc.at("example");
         if (exObj instanceof Lst lst && !lst.jvm().isEmpty()) {
             final String examples = lst.jvm().stream()
-                    .map(e -> esc(e instanceof Str s ? s.jvm() : SER.write(e)))
+                    .map(e -> DocsUtil.esc(e instanceof Str s ? s.jvm() : SER.write(e)))
                     .collect(Collectors.joining("\n"));
             parts.append("""
                          <div class="card-body border-top py-2">
@@ -1255,7 +1227,7 @@ public class InstSetDocGenerator {
 
         // Only linkify actual type references (start with /)
         if (!full.startsWith("/")) {
-            return "<span class=\"code " + cssClass + "\">" + esc(full) + "</span>";
+            return "<span class=\"code " + cssClass + "\">" + DocsUtil.esc(full) + "</span>";
         }
 
         String shortName = full.substring(full.lastIndexOf('/') + 1);
@@ -1277,7 +1249,7 @@ public class InstSetDocGenerator {
 
         if (clessName.equals(clessName.toUpperCase())) {
             return "<a href=\"#\" data-bs-toggle=\"tooltip\" title=\"" + cardinality + "generic " + tooltip
-                    + "\" class=\"code " + cssClass + "\">" + esc(shortName) + "</a>";
+                    + "\" class=\"code " + cssClass + "\">" + DocsUtil.esc(shortName) + "</a>";
         }
 
         final String typeInstset = extractInstset(full);
@@ -1290,7 +1262,7 @@ public class InstSetDocGenerator {
         }
 
         return "<a href=\"" + target + "\" data-bs-toggle=\"tooltip\" title=\""
-                + cardinality + tooltip + "\" class=\"code " + cssClass + "\">" + esc(shortName) + "</a>";
+                + cardinality + tooltip + "\" class=\"code " + cssClass + "\">" + DocsUtil.esc(shortName) + "</a>";
     }
 
     /**
@@ -1328,7 +1300,7 @@ public class InstSetDocGenerator {
         for (int i = 0; i < metas.size(); i++) {
             final Meta meta = metas.get(i);
             final String filename = vidToFilename(meta.vid());
-            final String iconName = iconName(leafName(meta.vid()));
+            final String iconName = iconName(DocsUtil.leafName(meta.vid()));
             final String iconPath = depth + "/images/icons/space/" + iconName + "-icon.svg";
 
             // Fallback to a generated description if none is present
@@ -1366,7 +1338,7 @@ public class InstSetDocGenerator {
                                      </div>
                                  </div>
                              </a>
-                         </div>""".formatted(filename, iconPath, esc(meta.vid()), esc(desc),
+                         </div>""".formatted(filename, iconPath, DocsUtil.esc(meta.vid()), DocsUtil.esc(desc),
                     nConsts, nTypes, nSpaces, nInsts, nRewrites));
         }
 
@@ -1425,7 +1397,7 @@ public class InstSetDocGenerator {
      * Generate a short description for an instruction set from its URI.
      */
     private static String autoDescription(final String vid) {
-        final String name = leafName(vid);
+        final String name = DocsUtil.leafName(vid);
         return switch (name) {
             case "m" -> "the core instruction set containing base types and fundamental operations";
             case "sys" -> "system-level utilities, environment variables, and boot configuration";
@@ -1520,17 +1492,6 @@ public class InstSetDocGenerator {
     }
 
     /**
-     * Leaf name from a URI path: /m/mach/console → console (before ? or &).
-     */
-    private static String leafName(final String uri) {
-        final String leaf = uri.substring(uri.lastIndexOf('/') + 1);
-        final int q = leaf.indexOf('?');
-        final int a = leaf.indexOf('&');
-        final int cut = (q >= 0 && a >= 0) ? Math.min(q, a) : q >= 0 ? q : a;
-        return cut >= 0 ? leaf.substring(0, cut) : leaf;
-    }
-
-    /**
      * Convert a VID to a filename: /m/mach → _m_mach.html
      */
     static String vidToFilename(final String vid) {
@@ -1555,7 +1516,7 @@ public class InstSetDocGenerator {
         final String shortName = full.substring(full.lastIndexOf('/') + 1);
         if (shortName.equals(shortName.toUpperCase())) {
             // generic type placeholder — not linkable
-            return "<span class=\"" + cssClass + "\">" + esc(shortName) + "</span>";
+            return "<span class=\"" + cssClass + "\">" + DocsUtil.esc(shortName) + "</span>";
         }
         final String instset = extractInstset(full);
         final String anchor = vidToAnchor(full);
@@ -1565,7 +1526,7 @@ public class InstSetDocGenerator {
         } else {
             target = "#" + anchor;
         }
-        return "<a href=\"" + target + "\" class=\"" + cssClass + "\">" + esc(shortName) + "</a>";
+        return "<a href=\"" + target + "\" class=\"" + cssClass + "\">" + DocsUtil.esc(shortName) + "</a>";
     }
 
     /**
@@ -1581,12 +1542,6 @@ public class InstSetDocGenerator {
         final String math = html.contains("\\(") || html.contains("\\[") ? " mathjax_process" : "";
         return "<pre class=\"mb-0 text-bright" + math
                 + "\" style=\"font-family:monospace;font-size:0.8em;\">" + html + "</pre>";
-    }
-
-    private static String esc(final String s) {
-        if (s == null) return "";
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                .replace("\"", "&quot;").replace("'", "&#39;");
     }
 
 }

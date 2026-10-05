@@ -412,16 +412,22 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/iot/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
- pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
+ q=&gt;[
+  docq::[
+   pattern=&gt;docq,
+   pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+   pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+   obj=&gt;memspace::[
+    pattern=&gt;&lt;#&gt;],
+   inst=&gt;instset::[
+    pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[
+  super=&gt;!*/m],
  type=&gt;[
-  space::T[?[host=&gt;uri::T]][inst?rng=mqttspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/iot/space/mqttspace,
-  mqttspace::T[][inst?rng=haos&amp;dom=#(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/iot/haos/space/haos]]@/m/iot</code></pre>
+  space::T[?[
+   host=&gt;uri::T]][inst?rng=mqttspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/iot/space/mqttspace,
+  mqttspace::T[][inst?rng=haos&amp;dom=#(isa([
+  pattern=&gt;uri::T])){&lt;j&gt;}]@/m/iot/haos/space/haos]]@/m/iot</code></pre>
                     </div>
                 </div>
             </div>
@@ -458,17 +464,21 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
         </span>
         <small class="text-muted code">/m/iot/haos/space/haos</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqttspace::T[][inst?rng=haos&amp;dom=#(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/iot/haos/space/haos</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__space__mqttspace" class="code inherited-link">mqttspace::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[host=&gt;uri::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqttspace::T[][inst?rng=haos&amp;dom=#(isa([
+  pattern=&gt;uri::T])){&lt;j&gt;}]@/m/iot/haos/space/haos</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__space__mqttspace" class="code inherited-link">mqttspace::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ host=&gt;uri::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[
- pattern=&gt;uri::T,
- {?}pre_write=&gt;inst::T,
- {?}post_write=&gt;inst::T,
- {?}qless_write=&gt;inst::T,
- {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[
+  rec::T[?[
+   pattern=&gt;uri::T,
+   {?}pre_write=&gt;inst::T,
+   {?}post_write=&gt;inst::T,
+   {?}qless_write=&gt;inst::T,
+   {?}pre_read=&gt;inst::T,
+   {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[
+  uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     
 </div>
@@ -482,14 +492,16 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][inst?rng=mqttspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mqttspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[
- pattern=&gt;uri::T,
- {?}pre_write=&gt;inst::T,
- {?}post_write=&gt;inst::T,
- {?}qless_write=&gt;inst::T,
- {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[
+  rec::T[?[
+   pattern=&gt;uri::T,
+   {?}pre_write=&gt;inst::T,
+   {?}post_write=&gt;inst::T,
+   {?}qless_write=&gt;inst::T,
+   {?}pre_read=&gt;inst::T,
+   {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[
+  uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     
 </div>

@@ -50,6 +50,7 @@ int::T.as(object::T).morphed_to()
 | field      | what it is                                                                   |
 |------------|------------------------------------------------------------------------------|
 | `form`     | the n-tid coefficient shape (`mapper`, `filter`, `reducer`, `flatmapper`, …) |
+| `class`    | the set-theoretic class (`endo`, `iso`, `auto`, `mono`, `epi`, `section`, `retraction`) — conservative |
 | `src`      | the source object (the morphism's dom)                                       |
 | `trgt`     | the target object (the morphism's rng)                                       |
 | `law`      | the declared **process** laws the morphism obeys (see *laws*)                |
@@ -110,7 +111,7 @@ instance. `algebraic_theory::T` is the nominal super-type grouping them:
 
 ## process laws — `morphism::T>>law`
 
-The morphism's `law` field is a set of **process** law labels served from `CatLawTable` (the `declared ∩ process`
+The morphism's `law` field is a set of **process** law labels served from `mInstSetLawTable` (the `declared ∩ process`
 cell):
 
 ```mtron_pre

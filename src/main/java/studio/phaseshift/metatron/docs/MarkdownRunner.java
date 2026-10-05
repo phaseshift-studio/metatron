@@ -19,24 +19,10 @@
 package studio.phaseshift.metatron.docs;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.TypeCheck;
-import studio.phaseshift.metatron.isa.dckr.dckrInstSet;
-import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
-import studio.phaseshift.metatron.isa.iot.iotInstSet;
-import studio.phaseshift.metatron.isa.llm.llmInstSet;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
-import studio.phaseshift.metatron.isa.rdf.rdfInstSet;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
-import studio.phaseshift.metatron.isa.tble.tbleInstSet;
 import studio.phaseshift.metatron.isa.web.parser.HTMLMarkdownSerializer;
-import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -46,9 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * CLI tool that pre-processes a skill directory's markdown files, evaluating
@@ -164,7 +147,7 @@ public class MarkdownRunner {
         if (reverse) Collections.reverse(files);
         LOG.info("processing " + files.size() + " files (singleBoot=" + singleBoot
                 + ", reverse=" + reverse + ", html=" + html + ")");
-        if (singleBoot) bootVM(boot);
+        if (singleBoot) DocsUtil.bootVM(boot);
         final long buildStart = System.nanoTime();
 
         ////////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +156,7 @@ public class MarkdownRunner {
         for (final Path file : files) {
             // ── Bootstrap metatron VM ────────────────────────────────────
             // Fresh VM per file by default; with --single-boot the VM was booted once above.
-            if (!singleBoot) bootVM(boot);
+            if (!singleBoot) DocsUtil.bootVM(boot);
 
             final Path rel = rel(skillDir, file);
             LOG.info(Graphitty.sillyPrint("\n\nprocessing " + rel + "...\n\n", true, true));
@@ -187,11 +170,11 @@ public class MarkdownRunner {
             // block at all) still has to pick up its own frontmatter and prose edits,
             // and a new such doc still has to reach the website tree.
             if (isCurrent(target, processed)) {
-                LOG.info("  unchanged " + rel + " (" + elapsedMs(t0) + "ms)");
+                LOG.info("  unchanged " + rel + " (" + DocsUtil.elapsedMs(t0) + "ms)");
             } else {
                 Files.createDirectories(target.getParent());
                 Files.writeString(target, processed.stripTrailing());
-                LOG.info("  processed " + rel + " (" + elapsedMs(t0) + "ms)");
+                LOG.info("  processed " + rel + " (" + DocsUtil.elapsedMs(t0) + "ms)");
             }
             ThreadExecutor.instance().shutdownNow();
         }
@@ -206,16 +189,16 @@ public class MarkdownRunner {
             final Path articlesDir = articlesContainer(out);
             if (skillsDir != null) {
                 renderSiteHtml(skillsDir);
-                LOG.info("html rendered into " + skillsDir + " (" + elapsedMs(t1) + "ms)");
+                LOG.info("html rendered into " + skillsDir + " (" + DocsUtil.elapsedMs(t1) + "ms)");
             } else if (articlesDir != null) {
                 renderArticleHtml(articlesDir);
-                LOG.info("html rendered into " + articlesDir + " (" + elapsedMs(t1) + "ms)");
+                LOG.info("html rendered into " + articlesDir + " (" + DocsUtil.elapsedMs(t1) + "ms)");
             } else {
                 LOG.info("--html skipped: output " + out + " is not under a website skills or articles tree");
             }
         }
 
-        LOG.info("done — " + files.size() + " files, " + elapsedMs(buildStart) + "ms total (singleBoot="
+        LOG.info("done — " + files.size() + " files, " + DocsUtil.elapsedMs(buildStart) + "ms total (singleBoot="
                 + singleBoot + ", reverse=" + reverse + ", html=" + html + ")");
         BootLoader.close();
         System.exit(0);
@@ -307,12 +290,12 @@ public class MarkdownRunner {
      * when the output changed (idempotent, so a clean build writes nothing).
      */
     private static boolean renderSiteFile(final Path mdFile, final Path websiteRoot) throws IOException {
-        final FrontMatter fm = split(Files.readString(mdFile, StandardCharsets.UTF_8));
+        final DocsUtil.FrontMatter fm = DocsUtil.split(Files.readString(mdFile, StandardCharsets.UTF_8));
 
         final String mdName = mdFile.getFileName().toString();
         final Path htmlFile = mdFile.resolveSibling(mdName.substring(0, mdName.length() - ".md".length()) + ".html");
 
-        final String depth = depth(websiteRoot, htmlFile);
+        final String depth = DocsUtil.depth(websiteRoot, htmlFile);
         final String header = SiteChrome.header(depth, fm.name() + " · PhaseShift Studio", "");
         final String footer = SiteChrome.footer(depth);
 
@@ -403,12 +386,12 @@ public class MarkdownRunner {
      * true only when the output changed (idempotent, like the skills pass).
      */
     private static boolean renderArticleFile(final Path mdFile, final Path websiteRoot) throws IOException {
-        final FrontMatter fm = split(Files.readString(mdFile, StandardCharsets.UTF_8));
+        final DocsUtil.FrontMatter fm = DocsUtil.split(Files.readString(mdFile, StandardCharsets.UTF_8));
 
         final String mdName = mdFile.getFileName().toString();
         final Path htmlFile = mdFile.resolveSibling(mdName.substring(0, mdName.length() - ".md".length()) + ".html");
 
-        final String depth = depth(websiteRoot, htmlFile);
+        final String depth = DocsUtil.depth(websiteRoot, htmlFile);
         final String header = SiteChrome.header(depth, fm.name() + " · PhaseShift Studio", articleExtraHead(depth));
         final String footer = SiteChrome.footer(depth);
 
@@ -455,168 +438,6 @@ public class MarkdownRunner {
      */
     static boolean isCurrent(final Path target, final String processed) throws IOException {
         return Files.exists(target) && processed.stripTrailing().equals(Files.readString(target));
-    }
-
-    /**
-     * Split the YAML frontmatter from the markdown body and surface the
-     * {@code name} and {@code description} fields for the page chrome.
-     */
-    static FrontMatter split(final String md) {
-        if (!md.startsWith("---")) {
-            return new FrontMatter("", "", md);
-        }
-        final int close = md.indexOf("\n---", 3);
-        if (close < 0) {
-            return new FrontMatter("", "", md);
-        }
-        final String front = md.substring(3, close);
-        final String body = md.substring(close + 4).stripLeading();
-        return new FrontMatter(extract(front, "name"), extract(front, "description"), body);
-    }
-
-    /**
-     * Best-effort extraction of one frontmatter field, honoring every form the
-     * skill docs actually use. A value owns the lines indented deeper than its
-     * key, so a wrapped <b>plain scalar</b> ({@code description:} on its own line,
-     * prose indented under it) folds those lines with spaces, while the block
-     * styles keep their own shape: {@code key: |} is literal — line breaks are
-     * kept — and {@code key: >} folds them, one break becoming a space and a blank
-     * line a break. Both block styles tolerate the {@code -} / {@code +} chomping
-     * and explicit-indent indicators, and trailing breaks are dropped because
-     * every consumer here renders the value as prose.
-     *
-     * <p>A key matches only when its colon ends the name ({@code name:} never
-     * matches {@code namespace:}).
-     */
-    static String extract(final String front, final String key) {
-        final String[] lines = front.split("\n", -1);
-        for (int i = 0; i < lines.length; i++) {
-            final String raw = lines[i];
-            final String line = raw.strip();
-            final String prefix = key + ":";
-            if (!line.startsWith(prefix)) continue;
-            if (line.length() > prefix.length() && !Character.isWhitespace(line.charAt(prefix.length()))) continue;
-            final String header = line.substring(prefix.length()).strip();
-            final int indent = indentOf(raw);
-            return header.startsWith("|") || header.startsWith(">")
-                    ? block(lines, i, indent, header)
-                    : plain(lines, i, indent, header);
-        }
-        return "";
-    }
-
-    /**
-     * A plain scalar: its header text plus any deeper-indented lines it wraps
-     * onto, folded back into one line.
-     */
-    private static String plain(final String[] lines, final int keyLine, final int indent, final String header) {
-        final List<String> parts = new ArrayList<>();
-        if (!header.isEmpty()) parts.add(header);
-        for (int j = keyLine + 1; j < lines.length; j++) {
-            final String line = lines[j].strip();
-            if (line.isEmpty() || indentOf(lines[j]) <= indent) break;
-            parts.add(line);
-        }
-        return String.join(" ", parts);
-    }
-
-    /**
-     * A {@code |} (literal) or {@code >} (folded) block scalar, ending at the first
-     * line indented no deeper than the key.
-     */
-    private static String block(final String[] lines, final int keyLine, final int indent, final String header) {
-        final int explicit = header.chars().filter(Character::isDigit).findFirst().orElse('0') - '0';
-        final List<String> body = new ArrayList<>();
-        int base = explicit > 0 ? indent + explicit : -1;
-        for (int j = keyLine + 1; j < lines.length; j++) {
-            final String raw = lines[j];
-            if (raw.isBlank()) {
-                body.add("");
-                continue;
-            }
-            if (indentOf(raw) <= indent) break;
-            final String stripped = raw.stripTrailing();
-            if (base < 0) base = indentOf(raw);
-            body.add(stripped.substring(Math.min(base, stripped.length())));
-        }
-        while (!body.isEmpty() && body.getLast().isBlank()) body.removeLast();
-        return header.startsWith("|") ? String.join("\n", body) : fold(body);
-    }
-
-    /**
-     * YAML folded style: the break between two lines becomes a space, and each
-     * blank line becomes a break.
-     */
-    private static String fold(final List<String> body) {
-        final StringBuilder folded = new StringBuilder();
-        int breaks = 0;
-        for (final String line : body) {
-            if (line.isEmpty()) {
-                breaks++;
-                continue;
-            }
-            if (!folded.isEmpty()) folded.append(breaks == 0 ? " " : "\n".repeat(breaks));
-            folded.append(line);
-            breaks = 0;
-        }
-        return folded.toString();
-    }
-
-    /**
-     * Column of the first non-whitespace character. A blank line answers
-     * {@link Integer#MAX_VALUE} so it never ends a block.
-     */
-    private static int indentOf(final String line) {
-        if (line.isBlank()) return Integer.MAX_VALUE;
-        int i = 0;
-        while (i < line.length() && Character.isWhitespace(line.charAt(i))) i++;
-        return i;
-    }
-
-    /**
-     * Relative path ({@code ../..}) from the output file's directory up to the
-     * website root, so the shared header/footer assets resolve at any depth.
-     */
-    private static String depth(final Path websiteRoot, final Path htmlFile) {
-        final Path rel = websiteRoot.relativize(htmlFile);
-        final int segments = rel.getParent() == null ? 0 : rel.getParent().getNameCount();
-        return String.join("/", Collections.nCopies(segments, ".."));
-    }
-
-    /**
-     * A parsed skill document: name, description, and the frontmatter-free body.
-     */
-    record FrontMatter(String name, String description, String body) {
-    }
-
-    /**
-     * Elapsed milliseconds since {@code startNanos}.
-     */
-    private static long elapsedMs(final long startNanos) {
-        return (System.nanoTime() - startNanos) / 1_000_000;
-    }
-
-    /**
-     * Boot the metatron VM and register the instruction sets used by skill docs.
-     * This is the per-file cost that {@code --single-boot} amortizes to once.
-     */
-    private static void bootVM(final String boot) {
-        BootLoader.BOOTING = true;
-        BootLoader.TESTING = true;
-        BootLoader.load(MRec.rec(uri(LOGG), uri(INFO), uri(BOOT), uri(boot)));
-        for (final InstSet is : new InstSet[]{
-                new mathInstSet(), new webInstSet(), new iotInstSet(),
-                new grphInstSet(), new llmInstSet(), new tbleInstSet(),
-                new dcmntInstSet(), new rdfInstSet(), new dckrInstSet(),
-                new uiInstSet()
-        }) {
-            Machine.root().addSpace(is);
-            Machine.writeToSpace(is);
-            is.setup();
-        }
-        // hardcode type checker in support of runtime inst resolution
-        TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.code_resolve);
     }
 
     /**

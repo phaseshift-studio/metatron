@@ -412,13 +412,17 @@ large language model think and reason within the metatron</p>
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/llm/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
- pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
+ q=&gt;[
+  docq::[
+   pattern=&gt;docq,
+   pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+   pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+   obj=&gt;memspace::[
+    pattern=&gt;&lt;#&gt;],
+   inst=&gt;instset::[
+    pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[
+  super=&gt;!*/m],
  type=&gt;[
   rec::T[?[
    {?}provider=&gt;uri::T,
@@ -451,17 +455,23 @@ large language model think and reason within the metatron</p>
    time=&gt;!*/m/math/time]]@/m/llm/iteration,
   rec::T[?[
    name=&gt;str::T,
-   {?}concept=&gt;{?}[concept::T],
-   {?}message=&gt;{?}[message::T]]]@/m/llm/concept,
+   {?}concept=&gt;{?}[
+    concept::T],
+   {?}message=&gt;{?}[
+    message::T]]]@/m/llm/concept,
   rec::T[?[
    text=&gt;str::T,
    {?}status=&gt;isa(union(open,run,block,close)).else(open),
    {?}time=&gt;isa(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime).else(datetime_now()),
-   {?}concept=&gt;[rec::T[?[
- name=&gt;str::T,
- {?}concept=&gt;{?}[concept::T],
- {?}message=&gt;{?}[message::T]]]@/m/llm/concept],
-   {?}message=&gt;[message::T],
+   {?}concept=&gt;[
+    rec::T[?[
+     name=&gt;str::T,
+     {?}concept=&gt;{?}[
+      concept::T],
+     {?}message=&gt;{?}[
+      message::T]]]@/m/llm/concept],
+   {?}message=&gt;[
+    message::T],
    {?}reference=&gt;lst::T]]@/m/llm/todo,
   rec::T[?[
    {?}in=&gt;isa(int::T).else(0),
@@ -475,17 +485,22 @@ large language model think and reason within the metatron</p>
   rec::T[?[
    text=&gt;str::T,
    kind=&gt;union(decision,problem,solution,observation),
-   {?}source=&gt;[&lt;#&gt;::T],
-   {?}concept=&gt;[&lt;#&gt;::T],
+   {?}source=&gt;[
+    &lt;#&gt;::T],
+   {?}concept=&gt;[
+    &lt;#&gt;::T],
    {?}tier=&gt;isa(int::T[inst(inst(0))]@nat).else(1)]]@/m/llm/claim,
   rec::T[?[
    title=&gt;str::T,
    desc=&gt;str::T,
    status=&gt;union(open,in_progress,resolved,abandoned),
-   {?}source=&gt;[&lt;#&gt;::T],
-   {?}claim=&gt;[&lt;#&gt;::T],
+   {?}source=&gt;[
+    &lt;#&gt;::T],
+   {?}claim=&gt;[
+    &lt;#&gt;::T],
    {?}time=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime]]@/m/llm/loose_end,
-  message::T[?[text=&gt;str::T]]@/m/llm/message/system,
+  message::T[?[
+   text=&gt;str::T]]@/m/llm/message/system,
   rec::T[?[
    tag=&gt;str::T,
    key=&gt;str::T,
@@ -498,14 +513,15 @@ large language model think and reason within the metatron</p>
    {?}chat=&gt;&lt;#&gt;::T,
    time=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime,
    runtime=&gt;!*/m/math/time,
-   {?}watermark=&gt;[rec::T[?[
- tag=&gt;str::T,
- key=&gt;str::T,
- {?}body=&gt;str::T,
- {?}obj=&gt;&lt;#&gt;::T,
- {?}error=&gt;fail::T,
- {?}index=&gt;int::T,
- {?}stage=&gt;uri::T]]@/m/llm/watermark],
+   {?}watermark=&gt;[
+    rec::T[?[
+     tag=&gt;str::T,
+     key=&gt;str::T,
+     {?}body=&gt;str::T,
+     {?}obj=&gt;&lt;#&gt;::T,
+     {?}error=&gt;fail::T,
+     {?}index=&gt;int::T,
+     {?}stage=&gt;uri::T]]@/m/llm/watermark],
    {?}error=&gt;fail::T]]@/m/llm/chat_result,
   message::T[?[
    {?}name=&gt;str::T,
@@ -518,33 +534,38 @@ large language model think and reason within the metatron</p>
    {?}contents=&gt;str::T]]@/m/llm/message/tool_request,
   message::T[?[
    {?}text=&gt;str::T,
-   {?}tool_requests=&gt;[message::T[?[
- name=&gt;uri::T,
- {?}args=&gt;str::T,
- text=&gt;str::T,
- {?}contents=&gt;str::T]]@/m/llm/message/tool_request]]]@/m/llm/message/ai,
+   {?}tool_requests=&gt;[
+    message::T[?[
+     name=&gt;uri::T,
+     {?}args=&gt;str::T,
+     text=&gt;str::T,
+     {?}contents=&gt;str::T]]@/m/llm/message/tool_request]]]@/m/llm/message/ai,
   message::T[?[
    name=&gt;uri::T,
    text=&gt;str::T,
    {?}chat=&gt;&lt;#&gt;::T,
    {?}id=&gt;str::T]]@/m/llm/message/tool_result,
-  message::T[?[text=&gt;str::T]]@/m/llm/message/thinking,
+  message::T[?[
+   text=&gt;str::T]]@/m/llm/message/thinking,
   message::T[?[
    text=&gt;str::T,
    {?}in=&gt;int::T,
    {?}out=&gt;int::T,
    {?}compression=&gt;real::T]]@/m/llm/message/compaction,
-  rec::T[?[{?}session=&gt;uri::T]]@/m/llm/message,
+  rec::T[?[
+   {?}session=&gt;uri::T]]@/m/llm/message,
   rec::T[?[
    name=&gt;uri::T,
    desc=&gt;str::T,
    {?}content=&gt;str::T,
-   {?}resource=&gt;[[
- uri=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}desc=&gt;str::T,
- text=&gt;str::T]],
-   {?}tool=&gt;[&lt;#&gt;::T]]]@/m/llm/skill,
+   {?}resource=&gt;[
+    [
+     uri=&gt;uri::T,
+     {?}name=&gt;str::T,
+     {?}desc=&gt;str::T,
+     text=&gt;str::T]],
+   {?}tool=&gt;[
+    &lt;#&gt;::T]]]@/m/llm/skill,
   rec::T[?[
    {?}root=&gt;uri::T,
    {?}to=&gt;&lt;#&gt;::T,
@@ -581,26 +602,29 @@ large language model think and reason within the metatron</p>
     {?}complete=&gt;&lt;#&gt;::T],
    {?}format=&gt;&lt;#&gt;::T]][ctor?rng=chat_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/chat_feature,
   feature::T[][ctor?rng=summarize_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/summarize_feature,
-  feature::T[?[session=&gt;uri::T]][ctor?rng=token_message_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/token_message_feature,
-  feature::T[?[session=&gt;uri::T]][ctor?rng=window_message_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/window_message_feature,
+  feature::T[?[
+   session=&gt;uri::T]][ctor?rng=token_message_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/token_message_feature,
+  feature::T[?[
+   session=&gt;uri::T]][ctor?rng=window_message_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/window_message_feature,
   feature::T[][ctor?rng=persisted_frame_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/persisted_frame_feature,
   feature::T[][ctor?rng=transient_frame_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/transient_frame_feature,
   feature::T[?[
    {?}tool=&gt;lst::T,
    {?}max=&gt;isa(int::T).else(-1)]][ctor?rng=tool_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/tool_feature,
-  feature::T[?[{?}model=&gt;rec::T[?[
- {?}provider=&gt;uri::T,
- host=&gt;uri::T,
- protocol=&gt;uri::T,
- llm=&gt;uri::T,
- {?}api_key=&gt;str::T,
- {?}timeout=&gt;!*/m/math/time,
- {?}size=&gt;!*/m/math/datasize,
- {?}quant=&gt;int::T,
- {?}context=&gt;int::T,
- {?}cost=&gt;{?}[
-  in=&gt;!*/m/math/currency,
-  out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/model]][ctor?rng=embed_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/embed_feature,
+  feature::T[?[
+   {?}model=&gt;rec::T[?[
+    {?}provider=&gt;uri::T,
+    host=&gt;uri::T,
+    protocol=&gt;uri::T,
+    llm=&gt;uri::T,
+    {?}api_key=&gt;str::T,
+    {?}timeout=&gt;!*/m/math/time,
+    {?}size=&gt;!*/m/math/datasize,
+    {?}quant=&gt;int::T,
+    {?}context=&gt;int::T,
+    {?}cost=&gt;{?}[
+     in=&gt;!*/m/math/currency,
+     out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/model]][ctor?rng=embed_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/embed_feature,
   feature::T[][ctor?rng=skill_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/skill_feature,
   feature::T[][ctor?rng=system_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/system_feature,
   feature::T[][ctor?rng=think_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/think_feature,
@@ -608,10 +632,13 @@ large language model think and reason within the metatron</p>
   feature::T[][ctor?rng=tagging_concept_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/tagging_concept_feature,
   feature::T[][ctor?rng=agent_concept_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/agent_concept_feature,
   feature::T[][ctor?rng=lucene_concept_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/lucene_concept_feature,
-  feature::T[?[rate=&gt;[
- in=&gt;!*/m/math/currency,
- out=&gt;!*/m/math/currency]]][ctor?rng=cost_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/cost_feature,
-  feature::T[?[{?}stage=&gt;{?}[union(on_agent_ctor,on_before_chat,on_partial_response,on_partial_thinking,on_partial_tool_call,on_tool_executed,on_tool_result,on_complete_response,on_error)=&gt;lst::T]]][ctor?rng=lambda_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/lambda_feature,
+  feature::T[?[
+   rate=&gt;[
+    in=&gt;!*/m/math/currency,
+    out=&gt;!*/m/math/currency]]][ctor?rng=cost_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/cost_feature,
+  feature::T[?[
+   {?}stage=&gt;{?}[
+    union(on_agent_ctor,on_before_chat,on_partial_response,on_partial_thinking,on_partial_tool_call,on_tool_executed,on_tool_result,on_complete_response,on_error)=&gt;lst::T]]][ctor?rng=lambda_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/lambda_feature,
   feature::T[][ctor?rng=todo_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/todo_feature,
   feature::T[?[
    {?}model=&gt;rec::T[?[
@@ -643,7 +670,8 @@ large language model think and reason within the metatron</p>
   user=&gt;uri::T,
   algorithm=&gt;rec::T]]@/m/llm/session)],
   mcp_server::T[?[
-   {?}tool=&gt;{?}[uri::T=&gt;inst::T],
+   {?}tool=&gt;{?}[
+    uri::T=&gt;inst::T],
    {?}resource=&gt;&lt;#&gt;::T,
    {?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_message&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/mcp/mcp_message],
  inst=&gt;[
@@ -674,22 +702,26 @@ large language model think and reason within the metatron</p>
   name=&gt;uri::T,
   desc=&gt;str::T,
   {?}content=&gt;str::T,
-  {?}resource=&gt;[[
- uri=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}desc=&gt;str::T,
- text=&gt;str::T]],
-  {?}tool=&gt;[&lt;#&gt;::T]]]@/m/llm/skill){&lt;j&gt;},
+  {?}resource=&gt;[
+   [
+    uri=&gt;uri::T,
+    {?}name=&gt;str::T,
+    {?}desc=&gt;str::T,
+    text=&gt;str::T]],
+  {?}tool=&gt;[
+   &lt;#&gt;::T]]]@/m/llm/skill){&lt;j&gt;},
   as?rng=skill&amp;dom=agent(rec::T[?[
   name=&gt;uri::T,
   desc=&gt;str::T,
   {?}content=&gt;str::T,
-  {?}resource=&gt;[[
- uri=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}desc=&gt;str::T,
- text=&gt;str::T]],
-  {?}tool=&gt;[&lt;#&gt;::T]]]@/m/llm/skill){&lt;j&gt;},
+  {?}resource=&gt;[
+   [
+    uri=&gt;uri::T,
+    {?}name=&gt;str::T,
+    {?}desc=&gt;str::T,
+    text=&gt;str::T]],
+  {?}tool=&gt;[
+   &lt;#&gt;::T]]]@/m/llm/skill){&lt;j&gt;},
   chat?rng=chat_result&amp;dom=agent(str::T){&lt;j&gt;},
   embed?rng=vec&amp;dom=model(&lt;#&gt;::T){&lt;j&gt;},
   interrupt?rng=noobj{0}&amp;dom=agent(){&lt;j&gt;},
@@ -890,8 +922,8 @@ large language model think and reason within the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
-  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__agent_concept_feature">
@@ -929,12 +961,14 @@ large language model think and reason within the metatron</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[
  {?}text=&gt;str::T,
- {?}tool_requests=&gt;[message::T[?[
- name=&gt;uri::T,
- {?}args=&gt;str::T,
- text=&gt;str::T,
- {?}contents=&gt;str::T]]@/m/llm/message/tool_request]]]@/m/llm/message/ai</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
+ {?}tool_requests=&gt;[
+  message::T[?[
+   name=&gt;uri::T,
+   {?}args=&gt;str::T,
+   text=&gt;str::T,
+   {?}contents=&gt;str::T]]@/m/llm/message/tool_request]]]@/m/llm/message/ai</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an ai/assistant message</p>
 </div><div class="card-body py-2">
@@ -1023,14 +1057,15 @@ large language model think and reason within the metatron</p>
  {?}chat=&gt;&lt;#&gt;::T,
  time=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime,
  runtime=&gt;!*/m/math/time,
- {?}watermark=&gt;[rec::T[?[
- tag=&gt;str::T,
- key=&gt;str::T,
- {?}body=&gt;str::T,
- {?}obj=&gt;&lt;#&gt;::T,
- {?}error=&gt;fail::T,
- {?}index=&gt;int::T,
- {?}stage=&gt;uri::T]]@/m/llm/watermark],
+ {?}watermark=&gt;[
+  rec::T[?[
+   tag=&gt;str::T,
+   key=&gt;str::T,
+   {?}body=&gt;str::T,
+   {?}obj=&gt;&lt;#&gt;::T,
+   {?}error=&gt;fail::T,
+   {?}index=&gt;int::T,
+   {?}stage=&gt;uri::T]]@/m/llm/watermark],
  {?}error=&gt;fail::T]]@/m/llm/chat_result</code></pre></div>
     
     <div class="card-body border-top py-2">
@@ -1055,8 +1090,10 @@ large language model think and reason within the metatron</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
  text=&gt;str::T,
  kind=&gt;union(decision,problem,solution,observation),
- {?}source=&gt;[&lt;#&gt;::T],
- {?}concept=&gt;[&lt;#&gt;::T],
+ {?}source=&gt;[
+  &lt;#&gt;::T],
+ {?}concept=&gt;[
+  &lt;#&gt;::T],
  {?}tier=&gt;isa(int::T[inst(inst(0))]@nat).else(1)]]@/m/llm/claim</code></pre></div>
     
     <div class="card-body border-top py-2">
@@ -1086,14 +1123,15 @@ large language model think and reason within the metatron</p>
  {?}in=&gt;int::T,
  {?}out=&gt;int::T,
  {?}compression=&gt;real::T]]@/m/llm/message/compaction</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a compaction represents a stop point for message retrieval and provides a summary of all previous messages</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
   <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'total tokens generated (the summary estimate)'" class="text-info">&#39;total tokens generated (the summary estimate)&#39;</a>
-  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
+  <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the summary of all previous messages and compactions'" class="text-info">&#39;the summary of all previous messages and compactions&#39;</a>
 </pre>
 </div>
@@ -1153,16 +1191,18 @@ large language model think and reason within the metatron</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
  name=&gt;str::T,
- {?}concept=&gt;{?}[concept::T],
- {?}message=&gt;{?}[message::T]]]@/m/llm/concept</code></pre></div>
+ {?}concept=&gt;{?}[
+  concept::T],
+ {?}message=&gt;{?}[
+  message::T]]]@/m/llm/concept</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a concept related to other concepts and messages.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related concepts'" class="text-info">&#39;a lst of related concepts&#39;</a>
-  <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related messages'" class="text-info">&#39;a lst of related messages&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related messages'" class="text-info">&#39;a lst of related messages&#39;</a>
+  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related concepts'" class="text-info">&#39;a lst of related concepts&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'the concept name'" class="text-info">&#39;the concept name&#39;</a>
 </pre>
 </div>
@@ -1174,9 +1214,10 @@ large language model think and reason within the metatron</p>
         </span>
         <small class="text-muted code">/m/llm/feature/cost_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[rate=&gt;[
- in=&gt;!*/m/math/currency,
- out=&gt;!*/m/math/currency]]][ctor?rng=cost_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/cost_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
+ rate=&gt;[
+  in=&gt;!*/m/math/currency,
+  out=&gt;!*/m/math/currency]]][ctor?rng=cost_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/cost_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
@@ -1209,19 +1250,20 @@ large language model think and reason within the metatron</p>
         </span>
         <small class="text-muted code">/m/llm/feature/embed_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}model=&gt;rec::T[?[
- {?}provider=&gt;uri::T,
- host=&gt;uri::T,
- protocol=&gt;uri::T,
- llm=&gt;uri::T,
- {?}api_key=&gt;str::T,
- {?}timeout=&gt;!*/m/math/time,
- {?}size=&gt;!*/m/math/datasize,
- {?}quant=&gt;int::T,
- {?}context=&gt;int::T,
- {?}cost=&gt;{?}[
-  in=&gt;!*/m/math/currency,
-  out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/model]][ctor?rng=embed_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/embed_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
+ {?}model=&gt;rec::T[?[
+  {?}provider=&gt;uri::T,
+  host=&gt;uri::T,
+  protocol=&gt;uri::T,
+  llm=&gt;uri::T,
+  {?}api_key=&gt;str::T,
+  {?}timeout=&gt;!*/m/math/time,
+  {?}size=&gt;!*/m/math/datasize,
+  {?}quant=&gt;int::T,
+  {?}context=&gt;int::T,
+  {?}cost=&gt;{?}[
+   in=&gt;!*/m/math/currency,
+   out=&gt;!*/m/math/currency]]][ctor?rng=model&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/model]][ctor?rng=embed_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/embed_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
@@ -1314,7 +1356,9 @@ large language model think and reason within the metatron</p>
         </span>
         <small class="text-muted code">/m/llm/feature/lambda_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}stage=&gt;{?}[union(on_agent_ctor,on_before_chat,on_partial_response,on_partial_thinking,on_partial_tool_call,on_tool_executed,on_tool_result,on_complete_response,on_error)=&gt;lst::T]]][ctor?rng=lambda_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/lambda_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
+ {?}stage=&gt;{?}[
+  union(on_agent_ctor,on_before_chat,on_partial_response,on_partial_thinking,on_partial_tool_call,on_tool_executed,on_tool_result,on_complete_response,on_error)=&gt;lst::T]]][ctor?rng=lambda_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/lambda_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
@@ -1386,8 +1430,10 @@ large language model think and reason within the metatron</p>
  title=&gt;str::T,
  desc=&gt;str::T,
  status=&gt;union(open,in_progress,resolved,abandoned),
- {?}source=&gt;[&lt;#&gt;::T],
- {?}claim=&gt;[&lt;#&gt;::T],
+ {?}source=&gt;[
+  &lt;#&gt;::T],
+ {?}claim=&gt;[
+  &lt;#&gt;::T],
  {?}time=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime]]@/m/llm/loose_end</code></pre></div>
     
     <div class="card-body border-top py-2">
@@ -1439,11 +1485,13 @@ large language model think and reason within the metatron</p>
         <small class="text-muted code">/m/llm/mcp/mcp_message</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_server::T[?[
- {?}tool=&gt;{?}[uri::T=&gt;inst::T],
+ {?}tool=&gt;{?}[
+  uri::T=&gt;inst::T],
  {?}resource=&gt;&lt;#&gt;::T,
  {?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_message&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/mcp/mcp_message</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web.html#__m__web__mcp__mcp_server" class="code inherited-link">mcp_server::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
- {?}tool=&gt;{?}[uri::T=&gt;inst::T],
+ {?}tool=&gt;{?}[
+  uri::T=&gt;inst::T],
  {?}resource=&gt;&lt;#&gt;::T,
  {?}prompt=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web.html#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@/m/web/http,protocol::T@/m/web/ws,protocol::T@/m/web/mcp,http::T@/m/web/http/rest,protocol::T@/m/web/mtron,protocol::T@/m/web/stream)</code></div></div>
     
@@ -1455,7 +1503,8 @@ large language model think and reason within the metatron</p>
         </span>
         <small class="text-muted code">/m/llm/message</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}session=&gt;uri::T]]@/m/llm/message</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
+ {?}session=&gt;uri::T]]@/m/llm/message</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> polymorphic chat message — one of system, user, ai, tool_result, thinking, or compaction; discriminated by _tid column</p>
@@ -1511,14 +1560,14 @@ large language model think and reason within the metatron</p>
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
   <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
-  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
-  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
-  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
-  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
   <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
+  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+  <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1602,12 +1651,14 @@ large language model think and reason within the metatron</p>
  name=&gt;uri::T,
  desc=&gt;str::T,
  {?}content=&gt;str::T,
- {?}resource=&gt;[[
- uri=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}desc=&gt;str::T,
- text=&gt;str::T]],
- {?}tool=&gt;[&lt;#&gt;::T]]]@/m/llm/skill</code></pre></div>
+ {?}resource=&gt;[
+  [
+   uri=&gt;uri::T,
+   {?}name=&gt;str::T,
+   {?}desc=&gt;str::T,
+   text=&gt;str::T]],
+ {?}tool=&gt;[
+  &lt;#&gt;::T]]]@/m/llm/skill</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a skill.md specification to augment llm with specialized abilities</p>
@@ -1682,8 +1733,10 @@ large language model think and reason within the metatron</p>
         </span>
         <small class="text-muted code">/m/llm/message/system</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/message/system</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[
+ text=&gt;str::T]]@/m/llm/message/system</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a system message provides behavioral and response-style instructions to the model</p>
 </div><div class="card-body py-2">
@@ -1774,8 +1827,10 @@ large language model think and reason within the metatron</p>
         </span>
         <small class="text-muted code">/m/llm/message/thinking</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/llm/message/thinking</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[
+ text=&gt;str::T]]@/m/llm/message/thinking</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window</p>
 </div><div class="card-body py-2">
@@ -1795,11 +1850,15 @@ large language model think and reason within the metatron</p>
  text=&gt;str::T,
  {?}status=&gt;isa(union(open,run,block,close)).else(open),
  {?}time=&gt;isa(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@datetime).else(datetime_now()),
- {?}concept=&gt;[rec::T[?[
- name=&gt;str::T,
- {?}concept=&gt;{?}[concept::T],
- {?}message=&gt;{?}[message::T]]]@/m/llm/concept],
- {?}message=&gt;[message::T],
+ {?}concept=&gt;[
+  rec::T[?[
+   name=&gt;str::T,
+   {?}concept=&gt;{?}[
+    concept::T],
+   {?}message=&gt;{?}[
+    message::T]]]@/m/llm/concept],
+ {?}message=&gt;[
+  message::T],
  {?}reference=&gt;lst::T]]@/m/llm/todo</code></pre></div>
     
     <div class="card-body border-top py-2">
@@ -1809,12 +1868,12 @@ reference to artifacts in metatron can be attached.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'concepts associated with todo'" class="text-info">&#39;concepts associated with todo&#39;</a>
-  <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'messages associated with todo'" class="text-info">&#39;messages associated with todo&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'datetime of todo creation (default: datetime_now())'" class="text-info">&#39;datetime of todo creation (default: datetime_now())&#39;</a>
   <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'current status of todo (default: open)'" class="text-info">&#39;current status of todo (default: open)&#39;</a>
-  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'datetime of todo creation (default: datetime_now())'" class="text-info">&#39;datetime of todo creation (default: datetime_now())&#39;</a>
-  <a href="#{?}reference" class="text-light">{?}reference</a> <span class="text-light">=&gt;</span> <a href="#'artifacts associated with todo'" class="text-info">&#39;artifacts associated with todo&#39;</a>
+  <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'messages associated with todo'" class="text-info">&#39;messages associated with todo&#39;</a>
+  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'concepts associated with todo'" class="text-info">&#39;concepts associated with todo&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the todo information'" class="text-info">&#39;the todo information&#39;</a>
+  <a href="#{?}reference" class="text-light">{?}reference</a> <span class="text-light">=&gt;</span> <a href="#'artifacts associated with todo'" class="text-info">&#39;artifacts associated with todo&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1867,10 +1926,10 @@ reference to artifacts in metatron can be attached.
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a single-line token-usage bar — the tailor-made caller of the general ui stack bar: the est categories as colored sections (smallest first, largest last, an empty one skipped) against the context window (max), with in over max as the percent and the window sized behind the bar</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}est" class="text-light">{?}est</a> <span class="text-light">=&gt;</span> <a href="#'the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]'" class="text-info">&#39;the estimated composition of the window: [system=&gt;int, ai=&gt;int, user=&gt;int, tool=&gt;int]&#39;</a>
-  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'actual output tokens of the chat (counted for the record, not drawn)'" class="text-info">&#39;actual output tokens of the chat (counted for the record, not drawn)&#39;</a>
-  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'actual input tokens of the chat'" class="text-info">&#39;actual input tokens of the chat&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'actual output tokens of the chat (counted for the record, not drawn)'" class="text-info">&#39;actual output tokens of the chat (counted for the record, not drawn)&#39;</a>
+  <a href="#{?}est" class="text-light">{?}est</a> <span class="text-light">=&gt;</span> <a href="#'the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]'" class="text-info">&#39;the estimated composition of the window: [system=&gt;int, ai=&gt;int, user=&gt;int, tool=&gt;int]&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#"the context window's size in tokens — the bar's window: the sections are its share, in__max the percent, the rest the unused tail"" class="text-info">max the percent, the rest the unused tail&quot;</a>
+  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'actual input tokens of the chat'" class="text-info">&#39;actual input tokens of the chat&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1884,7 +1943,8 @@ reference to artifacts in metatron can be attached.
         </span>
         <small class="text-muted code">/m/llm/feature/token_message_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;uri::T]][ctor?rng=token_message_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/token_message_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
+ session=&gt;uri::T]][ctor?rng=token_message_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/token_message_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
@@ -1920,10 +1980,10 @@ reference to artifacts in metatron can be attached.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a tool specification" class="text-info">a tool specification</a> <span class="text-light">=&gt;</span> ?</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
-  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
+  <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__tool_feature">
@@ -1966,7 +2026,8 @@ reference to artifacts in metatron can be attached.
  {?}args=&gt;str::T,
  text=&gt;str::T,
  {?}contents=&gt;str::T]]@/m/llm/message/tool_request</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a tool execution request — nested inside an ai message&#39;s tool_requests list</p>
 </div><div class="card-body py-2">
@@ -1990,7 +2051,8 @@ reference to artifacts in metatron can be attached.
  text=&gt;str::T,
  {?}chat=&gt;&lt;#&gt;::T,
  {?}id=&gt;str::T]]@/m/llm/message/tool_result</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a tool execution result message</p>
 </div><div class="card-body py-2">
@@ -2038,7 +2100,8 @@ reference to artifacts in metatron can be attached.
  {?}name=&gt;str::T,
  {?}text=&gt;str::T,
  {?}contents=&gt;&lt;#&gt;::T]]@/m/llm/message/user</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a user message</p>
 </div><div class="card-body py-2">
@@ -2086,7 +2149,8 @@ reference to artifacts in metatron can be attached.
         </span>
         <small class="text-muted code">/m/llm/feature/window_message_feature</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;uri::T]][ctor?rng=window_message_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/window_message_feature</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[
+ session=&gt;uri::T]][ctor?rng=window_message_feature&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/llm/feature/window_message_feature</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,

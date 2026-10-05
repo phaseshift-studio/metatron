@@ -161,7 +161,7 @@ public class MarkdownRunnerTest {
             "'namespace: x\ndescription: yes'%description%yes%a sibling key still matches",
     }, delimiter = '%')
     public void testFrontmatterScalarForms(final String front, final String key, final String expected, final String desc) {
-        assertEquals(expected, MarkdownRunner.extract(front, key), desc);
+        assertEquals(expected, DocsUtil.extract(front, key), desc);
     }
 
     /**

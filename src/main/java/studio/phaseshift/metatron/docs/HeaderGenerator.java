@@ -131,7 +131,7 @@ public class HeaderGenerator {
                     .toList();
             for (final String name : names) {
                 final String vid = "/" + name.replaceFirst("\\.html$", "").replace("_", "/");
-                final String icon = iconName(leafName(vid));
+                final String icon = iconName(DocsUtil.leafName(vid));
                 if (!Files.isRegularFile(iconsDir.resolve(icon + "-icon.svg"))) continue;
                 instsets.add(new InstSet(vid, name, icon));
             }
@@ -279,13 +279,6 @@ public class HeaderGenerator {
                     .append(skillName).append(subdir).append(file).append(linkSuffix).append("\">")
                     .append(file).append("</a>\n");
         }
-    }
-
-    /**
-     * Leaf name from a vid path: {@code /m/web} → {@code web}.
-     */
-    private static String leafName(final String vid) {
-        return vid.substring(vid.lastIndexOf('/') + 1);
     }
 
     /**

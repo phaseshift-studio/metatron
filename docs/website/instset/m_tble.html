@@ -412,18 +412,26 @@ relational tables, typed rows, and SQL rewrites within the metatron</p>
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/tble/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
- pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- const=&gt;[[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/web/helper],
- type=&gt;[space::T[?[
- host=&gt;uri::T,
- driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
- inst=&gt;[sql?rng=rec{*}&amp;dom=tblespace(str::T){&lt;j&gt;}],
+ q=&gt;[
+  docq::[
+   pattern=&gt;docq,
+   pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+   pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+   obj=&gt;memspace::[
+    pattern=&gt;&lt;#&gt;],
+   inst=&gt;instset::[
+    pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[
+  super=&gt;!*/m],
+ const=&gt;[
+  [
+   llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/web/helper],
+ type=&gt;[
+  space::T[?[
+   host=&gt;uri::T,
+   driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
+ inst=&gt;[
+  sql?rng=rec{*}&amp;dom=tblespace(str::T){&lt;j&gt;}],
  rewrite=&gt;[
   /m/tble/inst/rewrite/sql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
   /m/tble/inst/rewrite/sql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},
@@ -539,7 +547,8 @@ relational tables, typed rows, and SQL rewrites within the metatron</p>
         <span class="code text-secondary fw-bold">helper</span>
         <small class="text-muted code">/m/tble/helper</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/web/helper</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[
+ llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/web/helper</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> a collection of tble related utilities</p>
 </div>
@@ -554,14 +563,16 @@ relational tables, typed rows, and SQL rewrites within the metatron</p>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@tblespace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[
- pattern=&gt;uri::T,
- {?}pre_write=&gt;inst::T,
- {?}post_write=&gt;inst::T,
- {?}qless_write=&gt;inst::T,
- {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[
+  rec::T[?[
+   pattern=&gt;uri::T,
+   {?}pre_write=&gt;inst::T,
+   {?}post_write=&gt;inst::T,
+   {?}qless_write=&gt;inst::T,
+   {?}pre_read=&gt;inst::T,
+   {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[
+  uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a metatron realization of a relational database</p>

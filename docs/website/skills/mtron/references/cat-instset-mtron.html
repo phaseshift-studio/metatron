@@ -424,16 +424,14 @@ instruction from being evaluated.</p>
     morphed_to=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
     morphed_from=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}]
 mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
-==&gt;morphism::[
+==&gt;morphism::[ name=&gt;plus,
     form=&gt;mapper,
+    class=&gt;[endo],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;plus?rng=int&amp;dom=int(int::T),
-    law=&gt;[
-     commutative,
-     right_distributive,
-     action]]
+    ...(1 more)]
 </code></pre>
 <h3>the two blocks</h3>
 <h4>the object block — <code>object::T</code> (a vertex)</h4>
@@ -450,105 +448,105 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
 </table>
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T).morphed_to()
 ==&gt;morphism::[
+    name=&gt;as,
     form=&gt;mapper,
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;as?rng=bool&amp;dom=int(bool::T){&lt;j&gt;}]
 ==&gt;morphism::[
+    name=&gt;as,
     form=&gt;mapper,
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;as?rng=bytes&amp;dom=int(bytes::T){&lt;j&gt;}]
 ==&gt;morphism::[
+    name=&gt;as,
     form=&gt;mapper,
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;as?rng=real&amp;dom=int(real::T){&lt;j&gt;}]
 ==&gt;morphism::[
+    name=&gt;as,
     form=&gt;mapper,
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;as?rng=str&amp;dom=int(str::T){&lt;j&gt;}]
 ==&gt;morphism::[
+    name=&gt;as,
     form=&gt;mapper,
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;as?rng=uri&amp;dom=int(uri::T){&lt;j&gt;}]
 ==&gt;morphism::[
+    name=&gt;as,
     form=&gt;mapper,
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;as?rng=rec&amp;dom=int(rec::T){&lt;j&gt;}]
-==&gt;morphism::[
+==&gt;morphism::[ name=&gt;plus,
     form=&gt;mapper,
+    class=&gt;[endo],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;plus?rng=int&amp;dom=int(int::T){&lt;j&gt;},
-    law=&gt;[
-     commutative,
-     right_distributive,
-     action]]
-==&gt;morphism::[
+    ...(1 more)]
+==&gt;morphism::[ name=&gt;mult,
     form=&gt;mapper,
+    class=&gt;[endo],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;mult?rng=int&amp;dom=int(int::T){&lt;j&gt;},
-    law=&gt;[
-     commutative,
-     right_distributive,
-     action]]
-==&gt;morphism::[
+    ...(1 more)]
+==&gt;morphism::[ name=&gt;zero,
     form=&gt;mapper,
+    class=&gt;[endo],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;zero?rng=int&amp;dom=int(){&lt;j&gt;}]
-==&gt;morphism::[
+    obj=&gt;zero?rng=int&amp;dom=int(){&lt;j&gt;},
+    ...(1 more)]
+==&gt;morphism::[ name=&gt;one,
     form=&gt;mapper,
+    class=&gt;[endo],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;one?rng=int&amp;dom=int(){&lt;j&gt;}]
-==&gt;morphism::[
+    obj=&gt;one?rng=int&amp;dom=int(){&lt;j&gt;},
+    ...(1 more)]
+==&gt;morphism::[ name=&gt;neg,
     form=&gt;mapper,
+    class=&gt;[
+     endo,
+     iso,
+     auto,
+     section,
+     retraction,
+     mono,
+     epi],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;neg?rng=int&amp;dom=int(){&lt;j&gt;}]
+    obj=&gt;neg?rng=int&amp;dom=int(){&lt;j&gt;},
+    ...(1 more)]
 ==&gt;morphism::[
+    name=&gt;div,
     form=&gt;mapper,
+    class=&gt;[endo],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;div?rng=int&amp;dom=int(int::T){&lt;j&gt;}]
-==&gt;morphism::[
+==&gt;morphism::[ name=&gt;minus,
     form=&gt;mapper,
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;minus?rng=int&amp;dom=int(int::T){&lt;j&gt;},
-    law=&gt;[action]]
-==&gt;morphism::[
-    form=&gt;mapper,
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;gt?rng=bool&amp;dom=int(int::T){&lt;j&gt;},
-    law=&gt;[right_distributive]]
-==&gt;morphism::[
-    form=&gt;mapper,
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;gte?rng=bool&amp;dom=int(int::T){&lt;j&gt;},
+    class=&gt;[endo],
    ...
 </code></pre>
 <h4>the morphism block — <code>morphism::T</code> (an edge)</h4>
@@ -558,6 +556,7 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
 </thead>
 <tbody>
 <tr><td><code>form</code></td><td>the n-tid coefficient shape (<code>mapper</code>, <code>filter</code>, <code>reducer</code>, <code>flatmapper</code>, …)</td></tr>
+<tr><td><code>class</code></td><td>the set-theoretic class (<code>endo</code>, <code>iso</code>, <code>auto</code>, <code>mono</code>, <code>epi</code>, <code>section</code>, <code>retraction</code>) — conservative</td></tr>
 <tr><td><code>src</code></td><td>the source object (the morphism's dom)</td></tr>
 <tr><td><code>trgt</code></td><td>the target object (the morphism's rng)</td></tr>
 <tr><td><code>law</code></td><td>the declared <strong>process</strong> laws the morphism obeys (see <em>laws</em>)</td></tr>
@@ -624,7 +623,7 @@ instance. <code>algebraic_theory::T</code> is the nominal super-type grouping th
 </tbody>
 </table>
 <h3>process laws — <code>morphism::T&gt;&gt;law</code></h3>
-<p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>CatLawTable</code> (the <code>declared ∩ process</code>
+<p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>mInstSetLawTable</code> (the <code>declared ∩ process</code>
 cell):</p>
 <pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;law
 ==&gt;[

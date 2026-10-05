@@ -412,34 +412,52 @@ from vertex to vertex, the edge of the metatron is traversed</p>
                     <div class="accordion-body">
                         <pre><code>instset::[
  pattern=&gt;/m/grph/#,
- q=&gt;[docq::[
- pattern=&gt;docq,
- pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
- pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space=&gt;[super=&gt;!*/m],
- constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
+ q=&gt;[
+  docq::[
+   pattern=&gt;docq,
+   pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+   pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+   obj=&gt;memspace::[
+    pattern=&gt;&lt;#&gt;],
+   inst=&gt;instset::[
+    pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[
+  super=&gt;!*/m],
+ constq=&gt;[
+  /m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
  type=&gt;[
   rec::T@/m/grph/elmt,
   elmt::T[?[
-   {?}OUT=&gt;[uri::T=&gt;edge::T],
-   {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx,
+   {?}OUT=&gt;[
+    uri::T=&gt;edge::T],
+   {?}IN=&gt;[
+    uri::T=&gt;edge::T]]]@/m/grph/vrtx,
   elmt::T[?[
-   OUT=&gt;[uri::T=&gt;elmt::T[?[
- {?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
-   IN=&gt;[uri::T=&gt;elmt::T[?[
- {?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge,
+   OUT=&gt;[
+    uri::T=&gt;elmt::T[?[
+     {?}OUT=&gt;[
+      uri::T=&gt;edge::T],
+     {?}IN=&gt;[
+      uri::T=&gt;edge::T]]]@/m/grph/vrtx],
+   IN=&gt;[
+    uri::T=&gt;elmt::T[?[
+     {?}OUT=&gt;[
+      uri::T=&gt;edge::T],
+     {?}IN=&gt;[
+      uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge,
   space::T[?[
    {?}schema=&gt;rec::T[?[
     {?}pattern=&gt;uri::T,
-    {?}const=&gt;[&lt;#&gt;::T],
-    {?}type=&gt;{?}[&lt;#&gt;::T],
-    {?}inst=&gt;{?}[inst::T],
-    {?}rewrite=&gt;{?}[inst::T],
-    {?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/instset,
+    {?}const=&gt;[
+     &lt;#&gt;::T],
+    {?}type=&gt;{?}[
+     &lt;#&gt;::T],
+    {?}inst=&gt;{?}[
+     inst::T],
+    {?}rewrite=&gt;{?}[
+     inst::T],
+    {?}sugar=&gt;{?}[
+     lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/instset,
    {?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/grph/space/grphspace,
   modern::T],
  inst=&gt;[
@@ -576,12 +594,18 @@ from vertex to vertex, the edge of the metatron is traversed</p>
         <small class="text-muted code">/m/grph/edge</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[
- OUT=&gt;[uri::T=&gt;elmt::T[?[
- {?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
- IN=&gt;[uri::T=&gt;elmt::T[?[
- {?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge</code></pre></div>
+ OUT=&gt;[
+  uri::T=&gt;elmt::T[?[
+   {?}OUT=&gt;[
+    uri::T=&gt;edge::T],
+   {?}IN=&gt;[
+    uri::T=&gt;edge::T]]]@/m/grph/vrtx],
+ IN=&gt;[
+  uri::T=&gt;elmt::T[?[
+   {?}OUT=&gt;[
+    uri::T=&gt;edge::T],
+   {?}IN=&gt;[
+    uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a directed key/value attributed binary edge</p>
@@ -621,8 +645,10 @@ from vertex to vertex, the edge of the metatron is traversed</p>
         <small class="text-muted code">/m/grph/vrtx</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[
- {?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx</code></pre></div>
+ {?}OUT=&gt;[
+  uri::T=&gt;edge::T],
+ {?}IN=&gt;[
+  uri::T=&gt;edge::T]]]@/m/grph/vrtx</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a key/value attributed vertex</p>
@@ -638,14 +664,16 @@ from vertex to vertex, the edge of the metatron is traversed</p>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@grphspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[
- pattern=&gt;uri::T,
- {?}pre_write=&gt;inst::T,
- {?}post_write=&gt;inst::T,
- {?}qless_write=&gt;inst::T,
- {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[
+  rec::T[?[
+   pattern=&gt;uri::T,
+   {?}pre_write=&gt;inst::T,
+   {?}post_write=&gt;inst::T,
+   {?}qless_write=&gt;inst::T,
+   {?}pre_read=&gt;inst::T,
+   {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[
+  uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a space for graph traversal</p>
