@@ -448,3 +448,85 @@ pre code.hljs {
     color: #b6b2c2;
     border-color: rgba(182, 178, 194, 0.55);
 }
+
+/* ==========================================================================
+   Algebraic law / theory chips — the category badges.
+   law = the process laws a morphism obeys; theory = the algebraic structures
+   an object models. Same pill as .spec-chip, distinct hues.
+   ========================================================================== */
+.law-chip,
+.theory-chip {
+    display: inline-block;
+    padding: 0.08rem 0.55rem;
+    margin: 0 0.35rem;
+    border-radius: 999px;
+    border: 1px solid;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    vertical-align: 0.08em;
+    white-space: nowrap;
+    background: rgba(25, 28, 36, 0.85);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.55), inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.law-chip {
+    color: #7fd4d8;
+    border-color: rgba(127, 212, 216, 0.55);
+}
+
+.theory-chip {
+    color: #e0a35c;
+    border-color: rgba(224, 163, 92, 0.6);
+}
+
+/* tooltip for theory chips — kept in the DOM (hidden via opacity/visibility,
+   NOT display:none) so MathJax typesets the description's \(…\) math on load */
+.theory-chip {
+    position: relative;
+    cursor: help;
+}
+.theory-chip .chip-tip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1080;
+    width: max-content;
+    max-width: 460px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: #1b1e27;
+    border: 1px solid rgba(224, 163, 92, 0.55);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #d8d4e4;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, visibility 0.12s ease;
+}
+.theory-chip:hover .chip-tip {
+    opacity: 1;
+    visibility: visible;
+}
+.theory-chip .chip-tip-name {
+    display: block;
+    font-weight: 700;
+    color: #e0a35c;
+    margin-bottom: 0.2rem;
+}
+.theory-chip .chip-tip-desc {
+    display: block;
+}
+.theory-chip .chip-tip-roles {
+    display: block;
+    margin-top: 0.3rem;
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #7fd4d8;
+}

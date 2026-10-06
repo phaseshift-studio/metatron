@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
@@ -33,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.Law.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.MONOID_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.RIG_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.RING_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -63,6 +64,7 @@ public final class mInstSetLawTable extends LawTable {
     public static final mInstSetLawTable INSTANCE = new mInstSetLawTable();
 
     private mInstSetLawTable() {
+        super(M_ISA_TID);
         loadInt();
         loadReal();
         loadStr();
@@ -167,15 +169,12 @@ public final class mInstSetLawTable extends LawTable {
                             MONOID_THEORY_TID, null)));
         }
         if (t.equals(URI_TID)) {
-            // uri: monoids under concatenation (both PLUS and MULT concatenate), identity "."
+            // uri: a monoid under extension (mult), identity the empty uri <>; branch (plus) is a commutative
+            // semigroup with no identity — a/b + <> = {a/b,<>}, never a/b, so there is no zero object, only a one.
             return rec(mutableMap(
-                    uri("plus_concat_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                    uri(ID), uri(".")),
-                            MONOID_THEORY_TID, null),
-                    uri("mult_concat_monoid"), rec(mutableMap(
+                    uri("mult_monoid"), rec(mutableMap(
                                     uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                    uri(ID), uri(".")),
+                                    uri(ID), uri("")),
                             MONOID_THEORY_TID, null)));
         }
         if (t.equals(BYTES_TID)) {
@@ -237,8 +236,10 @@ public final class mInstSetLawTable extends LawTable {
         entry(AS_INST_TID.dom(INT_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(INT_TID));
         entry(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), MINUS_INST_TID.dom(INT_TID).rng(INT_TID), commutative, right_distributive, action);
         entry(MULT_INST_TID.dom(INT_TID).rng(INT_TID), DIV_INST_TID.dom(INT_TID).rng(INT_TID), commutative, right_distributive, action);
-        entry(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), PLUS_INST_TID.dom(INT_TID).rng(INT_TID), action);
-        entry(DIV_INST_TID.dom(INT_TID).rng(INT_TID), MULT_INST_TID.dom(INT_TID).rng(INT_TID));
+        entry(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), PLUS_INST_TID.dom(INT_TID).rng(INT_TID),
+                new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())),
+                action);
+        entry(DIV_INST_TID.dom(INT_TID).rng(INT_TID), MULT_INST_TID.dom(INT_TID).rng(INT_TID), action);
         entry(NEG_INST_TID.dom(INT_TID).rng(INT_TID), NEG_INST_TID.dom(INT_TID).rng(INT_TID), involution);
         entry(ZERO_INST_TID.dom(INT_TID).rng(INT_TID), null, absorbing, idempotent);
         entry(ONE_INST_TID.dom(INT_TID).rng(INT_TID), null, idempotent);
@@ -255,8 +256,12 @@ public final class mInstSetLawTable extends LawTable {
         entry(AS_INST_TID.dom(REAL_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(REAL_TID));
         entry(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID), MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), commutative, right_distributive, action);
         entry(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID), DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), commutative, right_distributive, action);
-        entry(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID), action);
-        entry(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), MULT_INST_TID.dom(REAL_TID).rng(REAL_TID));
+        entry(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID),
+                new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())),
+                action);
+        entry(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), MULT_INST_TID.dom(REAL_TID).rng(REAL_TID),
+                new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())),
+                right_distributive, action);
         entry(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID), NEG_INST_TID.dom(REAL_TID).rng(REAL_TID), involution);
         entry(INV_INST_TID.dom(REAL_TID).rng(REAL_TID), INV_INST_TID.dom(REAL_TID).rng(REAL_TID), involution);
         entry(GT_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, right_distributive);
@@ -305,7 +310,7 @@ public final class mInstSetLawTable extends LawTable {
         entry(AS_INST_TID.dom(URI_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(URI_TID));
         entry(AS_INST_TID.dom(URI_TID).rng(REC_TID), AS_INST_TID.dom(REC_TID).rng(URI_TID));
         entry(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), involution);
-        entry(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), null, monoidic);
+        entry(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), null, commutative);
         entry(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), null, monoidic);
         entry(SUM_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), null, monoidic);
         entry(PROD_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), null, monoidic);

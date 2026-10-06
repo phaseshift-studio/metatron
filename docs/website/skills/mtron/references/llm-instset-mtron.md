@@ -29,7 +29,7 @@ mtron> model::[provider=> ollama,
                llm     => <qwen3.5:4b>]@qwen3
 ==>model::[
     skill=>[completion,vision,tools,thinking],
-    size=>gB::3.1572,
+    size=>gB::3.1571,
     context=>262144,
     provider=>ollama,
     protocol=>ollama,
@@ -44,7 +44,7 @@ mtron> [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
 ==>fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 10] @chatter.chat('what is t...
      ^
-     could not parse at '[']@/sys/fail/542
+     could not parse at '[']@/sys/fail/564
 ```
 The `/usr/chatter/#` space serves a the default location for features to store their various constructions.
 
@@ -54,7 +54,7 @@ mtron> [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
 ==>fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 10] */usr/chatter/chat_resul...
      ^
-     could not parse at '[']@/sys/fail/544
+     could not parse at '[']@/sys/fail/566
 ```
 **A tool is an instruction.** There is no tool registry to populate: anything callable *is* a tool, and `mTool`
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a `tool_feature` can

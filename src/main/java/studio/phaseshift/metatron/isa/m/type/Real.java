@@ -47,6 +47,10 @@ public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
     Real ZERO = real(0.0d);
     Real ONE = real(1.0d);
 
+    public static Real real0() {
+        return real(0.0, REAL_TID.zero(), null);
+    }
+
     @Override
     Real clone(final Object jvm, final fURI tid, final fURI vid);
 

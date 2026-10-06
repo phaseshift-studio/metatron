@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -37,7 +36,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -136,6 +136,9 @@ public class catInstSet extends AbstractInstSet {
 
     public void setup() {
         this.selfTID(CAT_ISA_TID);
+        // self-register the per-instset law tables before any object/morphism resolves laws through the router
+        mInstSetLawTable.INSTANCE.getClass();
+        mathInstSetLawTable.INSTANCE.getClass();
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(PATTERN), uri(CAT_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
@@ -171,7 +174,8 @@ public class catInstSet extends AbstractInstSet {
                                                 uri(TRGT).maybe(), T(OBJECT_TID),
                                                 uri(ANALYSIS).maybe(), T(REC_TID),
                                                 uri(LAW).maybe(), lst(LAW_TYPE.c(cInt.SOME())),
-                                                uri(CLASS).maybe(), lst(CLASS_TYPE.c(cInt.SOME()))))
+                                                uri(CLASS).maybe(), lst(CLASS_TYPE.c(cInt.SOME())),
+                                                uri(DERIVATION).maybe(), rec(uri(LHS), CODE_TYPE, uri(RHS), CODE_TYPE)))
                                         .constructor(arg -> {
                                             final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
                                             final Inst inst = objInstRec.at(OBJ).asInst();
@@ -197,10 +201,12 @@ public class catInstSet extends AbstractInstSet {
                                             block.putAll(objInstRec.jvm());
                                             if (null != entry && !entry.laws().isEmpty())
                                                 block.put(uri(LAW), entry.laws());
+                                            if (null != entry && null != entry.derivation())
+                                                block.put(uri(DERIVATION), rec(uri(LHS), entry.derivation().lhs(), uri(RHS), entry.derivation().rhs()));
                                             return rec(block).clone().selfTID(MORPHISM_TID);
                                         })
                                         .create(),
-                                Map.of(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (^{\\ast}, 1),\\; \\mathrm{flatmapper} = (1, ^{+}),\\; \\ldots\\)",
+                                mutableMap(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (^{\\ast}, 1),\\; \\mathrm{flatmapper} = (1, ^{+}),\\; \\ldots\\)",
                                         uri(SRC), "the source object the morphism leaves: \\(\\mathrm{src}(f) = \\mathrm{dom}(f)\\)",
                                         uri(TRGT), "the target object the morphism enters: \\(\\mathrm{trgt}(f) = \\mathrm{rng}(f)\\)",
                                         uri("analysis/position").maybe(), "the edge's place among its siblings: \\(\\mathrm{position}(f) \\subseteq \\{\\mathrm{duplicate}, \\mathrm{ambiguous}, \\mathrm{incomparable}, \\mathrm{coupling}, \\mathrm{isochain}, \\mathrm{retract}\\}\\)",
@@ -209,7 +215,8 @@ public class catInstSet extends AbstractInstSet {
                                         uri("analysis/family").maybe(), "the same-name siblings: \\(\\mathrm{family}(f) = \\{g : \\mathrm{op}(g) = \\mathrm{op}(f)\\}\\)",
                                         uri("analysis/inverse").maybe(), "the opposing edge \\(f^{-1}\\) with \\(f \\cdot f^{-1} = 1\\)",
                                         uri(LAW), "the declared process laws \\(\\mathcal{L}\\) the morphism obeys, e.g. \\(\\mathrm{commutative}: f(x,y) = f(y,x)\\)",
-                                        uri(CLASS), "the set-theoretic class of the morphism: \\(\\mathrm{class}(f) \\subseteq \\{\\mathrm{endo}, \\mathrm{iso}, \\mathrm{auto}, \\mathrm{mono}, \\mathrm{epi}, \\mathrm{section}, \\mathrm{retraction}\\}\\)"),
+                                        uri(CLASS), "the set-theoretic class of the morphism: \\(\\mathrm{class}(f) \\subseteq \\{\\mathrm{endo}, \\mathrm{iso}, \\mathrm{auto}, \\mathrm{mono}, \\mathrm{epi}, \\mathrm{section}, \\mathrm{retraction}\\}\\)",
+                                        uri(DERIVATION), "the declared derivation of the morphism: \\(\\mathrm{lhs}\\) the derived instruction and \\(\\mathrm{rhs}\\) its primitive composition, e.g. \\(a / b \\mapsto a \\cdot b^{-1}\\)"),
                                 "an inst as a categorical morphism incident to a source object (dom) and a target object (rng)"),
                         docWrap(OBJECT_TYPE = Type.Builder.build()
                                         .tid(CATEGORY_TID)
@@ -222,7 +229,7 @@ public class catInstSet extends AbstractInstSet {
                                         .constructor(arg -> {
                                             final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                                             final Obj obj = object.at(OBJ);
-                                            object.at(LAW, mInstSetLawTable.INSTANCE.typeLaws(obj.asType()), MUTABLE);
+                                            object.at(LAW, LawTable.typeLawsOf(obj.asType()), MUTABLE);
                                             object.at(MORPHED_TO, auto_(instLambda((ignore, i) -> {
                                                 final Obj insts = Machine.readFromSpace(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
                                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
@@ -337,8 +344,18 @@ public class catInstSet extends AbstractInstSet {
                             if (c.insts().stream().noneMatch(i -> i.tid().basePath().equals(NEG_INST_TID) || i.tid().basePath().equals(INV_INST_TID)))
                                 return c;
                             return code(collapseInvolutions(c.insts(), TheoryHelper.invInst(carrier(c))));
-                        })
-                ))));
+                        }))
+                       /* instC(catInstSet.CAT_ISA_TID.extend(INST).extend(REWRITE).extend("derivation_contraction").dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) -> {
+                            final Code c = lhs.asCode();
+                            final List<Derivation> derivations = LawTable.derivations();
+                            if (derivations.isEmpty())
+                                return c;
+                            List<Inst> out = c.insts();
+                            for (final Derivation d : derivations)
+                                out = contract(out, d);
+                            return code(out);
+                        })*/
+                )));
         docWrap(this, "categorical realization of types and insts as objects and morphisms");
         super.setup();
     }
@@ -368,6 +385,63 @@ public class catInstSet extends AbstractInstSet {
                 result.add(insts.get(i++));
         }
         return result;
+    }
+
+    /**
+     * Match a generic pattern against a source, binding the generic fURIs ({@code A}, {@code B}, …) as they are
+     * met. A generic uri matches anything (binding it); an inst matches by tid and recurses into its args.
+     */
+    private static boolean matchGenerics(final Obj pattern, final Obj source, final Map<fURI, Obj> bindings) {
+        if (pattern.isUri() && pattern.uriValue().isGeneric()) {
+            final fURI key = pattern.uriValue();
+            final Obj prior = bindings.get(key);
+            if (null == prior) {
+                bindings.put(key, source);
+                return true;
+            }
+            return prior.equals(source);
+        }
+        if (pattern.isInst() && source.isInst()) {
+            final Inst p = pattern.asInst();
+            final Inst s = source.asInst();
+            if (!s.tid().test(p.tid()))
+                return false;
+            if (p.args().count() != s.args().count())
+                return false;
+            for (int i = 0; i < p.args().count(); i++)
+                if (!matchGenerics(p.arg(i), s.arg(i), bindings))
+                    return false;
+            return true;
+        }
+        if (pattern.isCode() && source.isCode()) {
+            final List<Inst> ps = pattern.asCode().insts();
+            final List<Inst> ss = source.asCode().insts();
+            if (ps.size() != ss.size())
+                return false;
+            for (int i = 0; i < ps.size(); i++)
+                if (!matchGenerics(ps.get(i), ss.get(i), bindings))
+                    return false;
+            return true;
+        }
+        return source.test(pattern);
+    }
+
+    /**
+     * Contract the primitive composition of a derivation back to its derived instruction — {@code mult·inv ↦ div}.
+     */
+    private static List<Inst> contract(final List<Inst> insts, final Derivation d) {
+        final List<Inst> out = new ArrayList<>();
+        for (final Inst inst : insts) {
+            final Map<fURI, Obj> bindings = new HashMap<>();
+            final Inst rhs = d.rhs().insts().getLast();
+            if (matchGenerics(rhs, inst, bindings)) {
+                final Inst lhs = d.lhs().insts().getLast();
+                out.add((Inst) Inst.Helper.substituteGenerics(lhs, bindings));
+            } else {
+                out.add(inst);
+            }
+        }
+        return out;
     }
 
     /**

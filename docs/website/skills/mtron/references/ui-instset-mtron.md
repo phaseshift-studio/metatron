@@ -111,8 +111,8 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'a table widget',
      args=>[
-      {?}metadata=>'a lst of rows of data behind the d...',
       {?}row=>'a lst of poly table rows',
+      {?}metadata=>'a lst of rows of data behind the d...',
       {?}header=>'a lst of obj table headers'],
      desc=>'[structural] a tabular data widget'],
     tree_widget=>docs::[
@@ -126,11 +126,11 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'a tree widget',
      args=>[
-      {?}flatten=>'fold single-folder chains into one...',
-      max=>'the max depth to traverse',
-      {?}xref=>'xref=>[max=>N, code=><call>] cross...',
-      {?}expand=>'branch uris whose children are rea...',
       {?}code=>'transform obj prior to insertion i...',
+      {?}expand=>'branch uris whose children are rea...',
+      {?}xref=>'xref=>[max=>N, code=><call>] cross...',
+      max=>'the max depth to traverse',
+      {?}flatten=>'fold single-folder chains into one...',
       root=>'the root uri to traverse from'],
      desc=>'[structural] the root uri space is...'],
     ...(9 more)]

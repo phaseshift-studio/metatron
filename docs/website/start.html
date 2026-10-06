@@ -594,6 +594,8 @@ For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it wi
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">import(/m/web);
 memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
+==&gt;fail::[unable to construct memspace::T: fail::[inst apply failure: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null (at /m/inst/ctor) [mcpClient&lt;163&gt;]][Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null [mcpClient&lt;163&gt;]]@/sys/fail/612
+   	while parsing: memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr]@/sys/fail/614
 memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
 fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
 httpspace::[pattern =&gt;http://#,
@@ -623,7 +625,7 @@ A machine can be thought of as an executing process.</p>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1 + 2
 ==&gt;3
 mtron&gt; ab * xyz * mn?i=1&amp;j=2
-==&gt;ab/xyz/mn?i=1&amp;j=2
+==&gt;ab/xyz/mn
 mtron&gt; 1-&lt;[_,+ 2,* 5]&gt;-.sum()
 ==&gt;9
 mtron&gt; {1,2,3}-&lt;|[?&gt;1 =&gt; +20, _ =&gt; * -1]&gt;&gt;

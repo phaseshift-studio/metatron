@@ -235,11 +235,13 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     // ── URI writer ───────────────────────────────────────────────
 
     private static String wrapUri(final fURI furi) {
+        if (furi.isEmpty()) return "<>";
         final String uriString = furi.toString();
         final char startChar = uriString.isEmpty() ? ' ' : uriString.charAt(0);
         final boolean wrap =
                 uriString.isEmpty() ||
                         furi.hasTemplates() ||
+                        furi.hasBranches() ||
                         CommonUtil.isInt(uriString.substring(0, 1)) ||
                         uriString.contains(" ") ||
                         startChar == 'T' ||

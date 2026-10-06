@@ -348,6 +348,7 @@ public final class Tokens {
     public static final String SELECT = "select";
     public static final String DOC = "doc";
     public static final String LHS = "lhs";
+    public static final String RHS = "rhs";
     public static final String AGENT = "agent";
     public static final String GGUF_KEY = "gguf";
     public static final String QUANT = "quant";
@@ -363,6 +364,7 @@ public final class Tokens {
     public static final String ORBIT = "orbit";
     public static final String LAW = "law";
     public static final String INVERSE = "inverse";
+    public static final String DERIVATION = "derivation";
     public static final String FROM = "from";
     public static final String PROB = "prob";
     public static final String FIELD = "field";

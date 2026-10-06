@@ -18,8 +18,10 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.algebra.Ring;
+import studio.phaseshift.metatron.algebra.MultMonoid;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.form.AbstractfURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -48,10 +50,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
+public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
+
+    Uri ONE = uri("");
 
     static Uri uri0() {
-        return uri("").zero();
+        return (Uri) uri("").c(cInt.ZERO());
     }
 
     @Override
@@ -105,28 +109,35 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
 
     @Override
     default Uri one() {
-        return this.jvm().one().toUri();
+        return ONE;
     }
 
     @Override
     default Uri mult(final Uri rhs) {
-        return this.jvm(this.uriValue().mult(rhs.uriValue()));
+        final List<String> path = new ArrayList<>(this.uriValue().path());
+        path.addAll(rhs.uriValue().path());
+        return this.jvm(this.uriValue().path(path)).c(c -> c.mult(rhs.c())).asUri();
     }
 
-
-    @Override
-    default Uri zero() {
-        return this.jvm().zero().toUri();
-    }
-
-    @Override
     default Uri plus(final Uri rhs) {
-        return this.jvm(this.uriValue().plus(rhs.uriValue()));
+        if (this.uriValue().equals(rhs.uriValue()))
+            return this.c(c -> c.plus(rhs.c())).asUri();
+        return this.jvm(this.uriValue().path(AbstractfURI.mergePaths(this.uriValue().isEmpty() ? List.of("") : this.uriValue().path(), rhs.uriValue().isEmpty() ? List.of("") : rhs.uriValue().path(), cInt.C_ONE, cInt.C_ONE)));
     }
 
-    @Override
-    default Uri neg() {
-        return this.jvm(this.uriValue().neg());
+    /**
+     * Carries a rhs uri's tid coefficient onto its first path segment as a {@code {n}atom} marker, so the mult/plus
+     * concatenation keeps the multiplicity in the path ({@code a/b * {4}e} → {@code a/b/{4}e}). A one coefficient is
+     * left alone.
+     */
+    private static fURI coefficientPrefix(final Uri rhs) {
+        final fURI f = rhs.uriValue();
+        final cInt c = rhs.tid().c();
+        if (c.isOne() || f.path().isEmpty())
+            return f;
+        final java.util.List<String> path = new java.util.ArrayList<>(f.path());
+        path.set(0, "{" + c + "}" + path.get(0));
+        return fURI.of(f.scheme(), f.host(), f.port(), path, cInt.ONE(), f.poly(), f.qMap(), f.templates());
     }
 
     @Override
@@ -383,8 +394,9 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     //  instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().pretract(inst.arg(0).intValue().intValue()))),
                     instC(NAME_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> uri(lhs.uriValue().name())),
                     instC(MINUS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().toString().replace(inst.arg(0).uriValue().toString(), ""))),
-                    instC(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().plus(inst.arg(0).uriValue()))),
-                    instC(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().mult(inst.arg(0).uriValue()))),
+                    docWrap(instC(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.asUri().plus(inst.arg(0).asUri())), "a uri", "the branch union", Map.of(jnt(0), "the rhs uri"), "a branch function \\(f(x, y) \\nearrow x \\sqcup y\\): the union of the lhs and rhs uri paths"),
+                    docWrap(instC(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.asUri().mult(inst.arg(0).asUri())), "a uri", "the path extension", Map.of(jnt(0), "the rhs uri"), "a product function \\(f(x, y) \\nearrow xy\\): concatenates the rhs uri path onto the lhs uri path"),
+                    docWrap(instC(ONE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asUri().one()), "a uri", "the uri one", Map.of(), "a one function: the uri one (<>)"),
                     instC(SUM_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()), uri(NOOBJ)),
                     instC(PROD_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))), uri("")),
                   /*  instC(URI_SCHEME_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().scheme())),

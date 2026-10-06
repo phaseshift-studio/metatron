@@ -254,6 +254,25 @@ public class HighlighterTest extends AbstractMetatronTest {
     }
 
     /**
+     * A "continuous line" glyph must not wipe the whole line's color.  jline's {@code toAnsi()}
+     * maps box-drawing glyphs to VT100 alternate-charset or ASCII, so each glyph is masked out of
+     * the colored pass and spliced back verbatim — the rest of the line is still syntax-highlighted
+     * (the mtron nanorc colors everything blue by default) and the glyph itself survives rather
+     * than becoming a hyphen or a pipe.
+     */
+    @ParameterizedTest
+    @CsvSource({
+            "┌", "┐", "└", "┘", "│", "─", "┬", "┴", "├", "┤",
+    })
+    void testBoxDrawingGlyphKeepsTheLineColored(final String glyph) {
+        final String rendered = Highlighter.format("uri::/a/b/c" + glyph);
+        assertTrue(rendered.contains(glyph),
+                "the box-drawing glyph survives, not mangled to ASCII: " + rendered.replace("\u001B", "\\e"));
+        assertTrue(rendered.contains("\u001B["),
+                "the mtron syntax is still highlighted, not all white: " + rendered.replace("\u001B", "\\e"));
+    }
+
+    /**
      * The standard console result path (not split mode) writes the serialized result
      * through Graphitty directly, not through the reader's mtron highlighter — a fence
      * must stay colorized after the serialization round-trip.

@@ -444,7 +444,7 @@ mtron&gt; /a/b/c   -&gt; |plus(2)
 mtron&gt; /a/b/d   -&gt; 'm'
 ==&gt;'m'
 mtron&gt; /a/b/d/e -&gt; [1.0,0xa5,true]
-==&gt;[1.0000,0xa5,true]
+==&gt;[1.,0xa5,true]
 </code></pre>
 <p>To retrieve stored objs, dereference their uris. The uri is the <strong>reference</strong>, the obj is the <strong>referent</strong> and the
 process of moving from one to the other is called <strong>dereferencing</strong> (also known as <strong>resolving</strong>).</p>
@@ -457,11 +457,11 @@ mtron&gt; */a/b
     q=&gt;r,
     c=&gt;plus(2),
     d=&gt;[
-     e=&gt;[1.0000,0xa5,true]]]
+     e=&gt;[1.,0xa5,true]]]
 mtron&gt; */a/b/c
 mtron&gt; */a/b/d
 ==&gt;[
-    e=&gt;[1.0000,0xa5,true]]
+    e=&gt;[1.,0xa5,true]]
 </code></pre>
 <p>Of particular significance is the result of <code>*/a/b</code>: polys (<code>lst</code>, <code>rec</code>, <code>rel</code>)
 maintain an internal uri scheme that interacts with the outer space's uri scheme. That interplay recurs throughout
@@ -720,6 +720,13 @@ the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p
     desc=&gt;'[mapper] concatenate two str::T va...',
     example=&gt;['&quot;a&quot; + &quot;b&quot; [-- &quot;ab&quot; --]']]
 ==&gt;docs::[
+    obj=&gt;plus?rng=uri{?}&amp;dom=uri(uri::T){&lt;j&gt;},
+    dom=&gt;'a uri',
+    rng=&gt;'the branch union',
+    args=&gt;[
+     0=&gt;'the rhs uri'],
+    desc=&gt;'[filter] a branch function \(f(x, ...']
+==&gt;docs::[
     obj=&gt;plus?rng=time&amp;dom=time(real::T@/m/math/time){&lt;j&gt;},
     dom=&gt;'/m/math/time',
     rng=&gt;'/m/math/time',
@@ -743,6 +750,14 @@ the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p
      0=&gt;'/m/real'],
     desc=&gt;'[mapper] add two distances of the ...',
     example=&gt;['foot::12.0 + foot::36.0   [-- foot...']]
+==&gt;docs::[
+    obj=&gt;plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
+    dom=&gt;'a complex number \(z = a + bi\)',
+    rng=&gt;'the complex sum \(z + w\)',
+    args=&gt;[
+     lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx=&gt;'the complex addend \(w = c + di\)'],
+    desc=&gt;'[mapper] complex addition: \((a+bi...',
+    example=&gt;['cmplx::[1.0,2.0] + cmplx::[3.0,4.0...']]
 ==&gt;docs::[
     obj=&gt;plus?rng=datetime&amp;dom=datetime(real::T@/m/math/time){&lt;j&gt;},
     dom=&gt;'/m/math/datetime',

@@ -59,14 +59,20 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Int.int0;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Real.real0;
+import static studio.phaseshift.metatron.isa.m.type.Rel.rel0;
+import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.uri0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -286,10 +292,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         // (rec ⇝ bad_person::T is a re-tag), but NOT with a constructed/predicated subtype
         // (uri ⇝ file::T is a parse). testNominally strips coefficients.
         if (lhsType.isBaseType())
-            return (rhsType.isBaseType() || rhsType.isNominal()) && lhsType.baseTypeID().test(rhsType.baseTypeID());
+            return (rhsType.isBaseType() || rhsType.isNominal())
+                    && lhsType.baseTypeID().test(rhsType.baseTypeID())
+                    && Type.Helper.polysCompatible(this, rhsType); // NOMINAL-POLY
         while (true) {
             if (lhsType.vid().test(rhsType.vid()))
-                return true;
+                return Type.Helper.polysCompatible(this, rhsType); // NOMINAL-POLY
             if (lhsType.isBaseType())
                 break;
             lhsType = lhsType.parentType();
@@ -602,7 +610,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Int asInt() {
         try {
-            return (Int) this;
+            return this.isNoObj() ? int0() : (Int) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -610,7 +618,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Real asReal() {
         try {
-            return (Real) this;
+            return this.isNoObj() ? real0() : (Real) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -618,7 +626,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Str asStr() {
         try {
-            return (Str) this;
+            return this.isNoObj() ? str0() : (Str) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -626,7 +634,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Uri asUri() {
         try {
-            return (Uri) this;
+            return this.isNoObj() ? uri0() : (Uri) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -638,7 +646,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         if (this instanceof Fail fail)
             throw MTronException.of("asRec onto a fail: %s", fail.message());
         try {
-            return (Rec) this;
+            return this.isNoObj() ? rec0() : (Rec) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -646,7 +654,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Lst asLst() {
         try {
-            return (Lst) this;
+            return this.isNoObj() ? lst0() : (Lst) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -654,7 +662,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Rel asRel() {
         try {
-            return (Rel) this;
+            return this.isNoObj() ? rel0() : (Rel) this;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -993,8 +1001,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID);
             if (rhs.isNoObj())
                 return lhs.c().isZeroable();
-            if (rhs.isType() && rhs.asType().isNominal())
+            if (rhs.isType() && rhs.asType().isNominal()) {
                 return lhs.testNominally(rhs);
+            }
             //if (!lhs.baseTypeID().test(rhs.baseTypeID()))
             //    return false;
             // if (!lhs.isObjCall() && rhs.isType() && rhs.asType().isNominal() &&
@@ -1166,7 +1175,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 indent("[" + objTidString, 2),
                                 indent("X=>", 6),
                                 indent(objTypeString, 2),
-                                indent("-".repeat(width), 2),
+                                indent("─".repeat(width), 2),
                                 indent(matchDiffString + "]", 2));
                     } else {
                         // name the level that rejected the value, not just the leaf. A type's constraints are

@@ -23,15 +23,24 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.furi.fURI;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.algebra.Form.MULT_MONOID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class UriTest extends AbstractMetatronTest {
+public class UriTest extends AbstractAlgebraTest<Uri> {
+
+    public UriTest() {
+        super(uri(f("/a/b")), Set.of(MULT_MONOID));
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -57,9 +66,24 @@ public class UriTest extends AbstractMetatronTest {
             "<http://webpage.com>.type()                                  | start(uri::T[])",
             "\"http://webpage.com\".type()                                | start(str::T[])",
             //"a/b.plus(c/d)                                              | {a/b,c/d}",
-            "a/b.plus(noobj)                                              | a/b",
+            // "a/b.plus(noobj)                                              | a/b",
+            "a/b/c.plus(a/c/c)                                            | a/{b,c}/c",
+            "a/{b,d}/c.plus(a/c/c)                                        | a/{b,c,d}/{2}c",
+            "a/{b,d}/c.plus(a/e/c)                                        | a/{b,d,e}/{2}c",
+            "a/{b,d,e}/c.plus(a/f/c)                                      | a/{b,d,e,f}/{3}c",
+            "a/{x,y,z}/p/q.plus(a/w/p/q)                                  | a/{w,x,y,z}/{3}p/{3}q",
+            "a/{m,n}/c/d.plus(a/o/c/d)                                    | a/{m,n,o}/{2}c/{2}d",
+            "a/b/c/d.plus(a/e/c/d)                                        | a/{b,e}/c/d",
+            "a/c/c.plus(a/{b,d}/c)                                        | a/{b,c,d}/{2}c",
+            //   "a/b/c{2,3}.plus(a/d/c{-3,-2})                                | a/{{2,3}b,{-3,-2}d}/c",
+            //  "a/b/c{2}.plus(a/d/c{3})                                      | a/{{2}b,{3}d}/c",
+            //  "a/{b,d}/c{2}.plus(a/e/c{3})                                  | a/{{2}b,{2}d,{3}e}/{2}c",
+            //  "a/e/c{2}.plus(a/{b,d}/c{3})                                  | a/{{3}b,{3}d,{2}e}/{2}c",
+            "a/b/c/d.plus(a/e/f/g)                                        | a/{b/c/d,e/f/g}",
+            "<a/{b,d}/c>.mult(d/e).plus(a/c/c/d/e)                         | a/{b,c,d}/{2}c/{2}d/{2}e",
             "a/b.mult(c/d)                                                | a/b/c/d",
             "a/b.mult(noobj)                                              | noobj",
+            "a/b.one()                                                    | <>",
             "a.mult(<../b>)                                               | b",
             "a.mult(<../b/c>)                                             | b/c",
             "a.mult(<../../b>)                                            | <../b>"
@@ -327,4 +351,48 @@ public class UriTest extends AbstractMetatronTest {
     public void testIsA(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+
+
+
+   /* @ParameterizedTest
+    @CsvSource(value = {
+            "<{a}> + <>                     % <{a,}>", // {,a} == {a,}
+            "<{a}> + <{b}>                  % <{a,b}>",
+            "<{a,b}> * c                    % <{a,b}/c>",
+            "<{a,b}/c> * <>                 % <{a,b}/c>",
+            "<> * <{a,b}/c>                 % <{a,b}/c>",
+            "<a/b/{{2}c,d}> * {4}e          % {4}<a/b/{{2}c,d}/e>",
+            "<a/b/{{2}c,d}> * {?}e          % {?}<a/b/{{2}c,d}/e>",
+            "<a/b/{c,d}> * {10}<>           % {10}<a/b/{c,d}>",
+            "{2}a/b/c + <> + <>             % {2}<{{2}a/b/c,<>}>",
+            "<> + <> + <>                   % {3}<>",
+            "<> + <>                        % {2}<>",
+            "</a/{b,c}/d> + </a/{2}d/d>     % </a/{b,c,{2}d}/{2}d>",
+            "/a + /a + /a                   % {3}/a",
+            "/a + /a + a/                   % <{{2}/a,a/}>",
+            "</a/{b,c}/d> * </a/b/d>        % </a/{b,c}/d//a/b/d>",
+            "<{a,b}/c> + <e/c/f>            %  <{{a,b}/c,e/c/f}>"
+           /* "</a/{b,c,d,e,f}/{d,d}>         % |a|{b,c,d,e,f}|{d,d}",
+            "<{a,b}/c>                      % {a,b}|c",
+            "<{a,b,c}>                      % {a,b,c}",
+            "<a/{b,c}>                      % a|{b,c}",
+            "<a/{b,c{*}}>                   % a|{b,c{*}}",
+            // "<a/{b,c{0,1}}>                 % a|{b,c{?}}",
+            "<a/{b,c}/d>                    % a|{b,c}|d",
+            "<a/{b{?},c}/d>                 % a|{b{?},c}|d",
+            "<a/{b{?},c}/{1,5}d>            % a|{b{?},c}|{1,5}d",
+            "<a/{/b,/c}/d>                  % a|{/b,/c}|d",
+            "<{/a,/b}/c>                    % |{a,b}|c",
+            "<{/a,/b,/c}>                   % |{a,b,c}",
+            "</a/{b,c}>                     % |a|{b,c}",
+            "/a/{b,c}                       % |a|{b,c}",
+            "a/{{b,d},c}/c/d/e              % a|{{b,d},c}|c|d|e",
+            "<{0}a/{{0}b,{0}d,{0}c}/c/d/e>  % {0}a|{{0}b,{0}d,{0}c}|c|d|e",
+            "a/{b,c,d}/{2}c/{2}d/{2}e       % a|{b,c,d}|{2}c|{2}d|{2}e",
+            "a/{b/c,d/e}/f                  % a|{b/c,d/e}|f",*/
+  /*  }, delimiter = '%')
+    void testBasicAlgebra(final String code, final String expected) {
+        LOG.warn("parsing: %s %s\n1: %s\n2: %s", code, expected, ObjmtronSerializer.parse(code), ObjmtronSerializer.parse(expected));
+        checkCodeParseApply(LOG, code, expected);
+    }*/
 }

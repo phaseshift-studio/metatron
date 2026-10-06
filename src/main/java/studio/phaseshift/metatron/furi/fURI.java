@@ -375,6 +375,28 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return this.path().isEmpty() ? Tokens.EMPTY : this.path().getLast();
     }
 
+    /**
+     * Expands any branch segments ({@code {c,d}}, {@code {{2}c,d}}) in this path into the full set of paths they
+     * denote — the cartesian product over the branches. A path with no branches has exactly one entry: itself.
+     * {@code a/b/{c,d}} yields {@code [["a","b","c"],["a","b","d"]]}; {@code a/b/{{2}c,d}} yields three.
+     * Branch elements are canonicalized (sorted by atom), so {@code {c,d}} and {@code {d,c}} expand identically.
+     */
+    default List<List<String>> branchedPaths() {
+        return Helper.branchedPaths(this.path());
+    }
+
+    /**
+     * Flattens this uri into the stream of paths its branch structure denotes. A non-branching uri is its own single
+     * element; a branching uri yields one fURI per path — {@code a/{b,c}/d/{e,f}} → {@code a/b/d/e, a/b/d/f, a/c/d/e,
+     * a/c/d/f} — each carrying this uri's scheme, host, port, coefficient, poly, query and templates.
+     */
+    default Stream<fURI> flatten() {
+        final List<List<String>> paths = this.branchedPaths();
+        if (paths.size() <= 1)
+            return Stream.of(this);
+        return paths.stream().map(path -> fURI.of(this.scheme(), this.host(), this.port(), path, this.c(), this.poly(), this.qMap(), this.templates()));
+    }
+
     boolean test(final fURI lhs);
 
     fURI extend(final String segment);
@@ -688,6 +710,16 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return !this.isBranch();
     }
 
+    /**
+     * A furi has branches when some path segment is a {@code {…}} branch (or a coefficient-marked atom). Such a uri
+     * must be {@code < >}-quoted to be re-readable, since a bare token leading with {@code {…}} is a stream, not a uri.
+     *
+     * @return whether the path carries a branch segment
+     */
+    default boolean hasBranches() {
+        return this.path().stream().anyMatch(segment -> segment.startsWith("{"));
+    }
+
     fURI asAbsolute();
 
     fURI asRelative();
@@ -773,11 +805,123 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     /// ////////////////////////////////////////////////
 
+    /**
+     * Branch-expansion helpers backing {@link #branchedPaths()}. A branch segment is the string {@code {…}} already
+     * carried in {@link #path()}; these methods re-read it as a stream of path segments.
+     */
+    final class Helper {
+        private Helper() {
+        }
+
+        static List<List<String>> branchedPaths(final List<String> path) {
+            final List<List<String>> paths = new ArrayList<>();
+            paths.add(new ArrayList<>());
+            for (final String segment : path) {
+                final List<String> branches = branch(segment);
+                final List<List<String>> next = new ArrayList<>(paths.size() * branches.size());
+                for (final List<String> prefix : paths)
+                    for (final String branch : branches) {
+                        final List<String> extended = new ArrayList<>(prefix);
+                        extended.addAll(splitSubPath(branch));
+                        next.add(extended);
+                    }
+                paths.clear();
+                paths.addAll(next);
+            }
+            return paths;
+        }
+
+        private static List<String> branch(final String segment) {
+            if (segment.length() < 2 || segment.charAt(0) != '{' || segment.charAt(segment.length() - 1) != '}')
+                return List.of(absorb(segment));
+            final List<String> elements = new ArrayList<>(splitBranch(segment.substring(1, segment.length() - 1)));
+            elements.sort(Comparator.comparing(Helper::atom));
+            final List<String> expanded = new ArrayList<>();
+            for (final String element : elements)
+                expanded.addAll(expandElement(element));
+            return expanded;
+        }
+
+        private static List<String> splitBranch(final String inner) {
+            final List<String> elements = new ArrayList<>();
+            int depth = 0;
+            final StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < inner.length(); i++) {
+                final char ch = inner.charAt(i);
+                if (ch == '{')
+                    depth++;
+                else if (ch == '}')
+                    depth--;
+                if (ch == ',' && 0 == depth) {
+                    elements.add(sb.toString());
+                    sb.setLength(0);
+                } else
+                    sb.append(ch);
+            }
+            elements.add(sb.toString());
+            return elements;
+        }
+
+        private static String atom(final String element) {
+            if (element.length() > 1 && element.charAt(0) == '{') {
+                final int close = element.indexOf('}');
+                return close > 0 ? element.substring(close + 1) : element;
+            }
+            return element;
+        }
+
+        /**
+         * A coefficient-marked segment ({@code {2}c}) records the 2-fold branch that carried a shared suffix; the
+         * branch structure already accounts for that multiplicity, so the coefficient is absorbed on expansion — the
+         * segment reads as its bare atom {@code c}. In-branch elements ({@code {{2}c,d}}) are the other direction and
+         * DO expand to {@code n} copies (see {@link #expandElement(String)}).
+         */
+        private static String absorb(final String segment) {
+            if (segment.length() > 1 && segment.charAt(0) == '{') {
+                final int close = segment.indexOf('}');
+                if (close > 0)
+                    return segment.substring(close + 1);
+            }
+            return segment;
+        }
+
+        private static List<String> expandElement(final String element) {
+            if (element.length() > 1 && element.charAt(0) == '{') {
+                final int close = element.indexOf('}');
+                if (close > 0) {
+                    final String atom = element.substring(close + 1);
+                    final cInt c = cInt.of(element.substring(1, close));
+                    final Long min = c.min();
+                    final Long max = c.max();
+                    if (null != min && min.equals(max) && min >= 0) {
+                        final int n = min.intValue();
+                        final List<String> copies = new ArrayList<>(n);
+                        for (int i = 0; i < n; i++)
+                            copies.add(atom);
+                        return copies;
+                    }
+                    return List.of(atom);
+                }
+            }
+            return List.of(element);
+        }
+
+        /**
+         * A branch element may be a sub-path ({@code b/c}); it splits into its own segments when the path is built —
+         * the {@code /} is a separator there, not part of the atom.
+         */
+        private static List<String> splitSubPath(final String subPath) {
+            return new ArrayList<>(Arrays.asList(subPath.split("/")));
+        }
+    }
+
     class Singleton {
         public static final Pattern MERGE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
         public static final Pattern POLY_PATTERN = Pattern.compile(
                 "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,])");
-        public static final Pattern FURI_PATTERN = Pattern.compile(
+        // OLD FURI_PATTERN (pre-branch): the path excluded `{`, so a trailing `{...}` was always the coefficient.
+        // Kept for reference; replaced below by the branch-aware pattern that admits `{c,d}` segments in the path.
+        /*public static final Pattern FURI_PATTERN = Pattern.compile(
                 "((?<scheme>[^:/.]+):)?" +
                         "(//((?<host>[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
                         "(?<path>[^?\\[{&]+)?" +
@@ -786,7 +930,23 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                         "(\\?" +
                         "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
                         "&?" +
-                        "(?<query>[^&=]+(?:=(?:\\[[^\\]]*\\]|[^&=]+))?(&[^&=]+(?:=(?:\\[[^\\]]*\\]|[^&=]+))?)*)?)?");
+                        "(?<query>[^&=]+(?:=(?:\\[[^\\]]*\\]|[^&=]+))?(&[^&=]+(?:=(?:\\[[^\\]]*\\]|[^&=]+))?)*)?)?");*/
+
+        // A coefficient body is exactly one cInt (see m_furi_coefficient / cInt.of): a signed exact or range, or a
+        // shorthand. The path now allows `{...}` branch segments (with one level of nesting for `{{2}c,d}`), but a
+        // `{...}` whose body IS a cInt is the trailing coefficient, not a branch — the negative lookahead makes the
+        // coefficient win at the end, so `a/b/{c,d}` is path `a/b/{c,d}` while `a/b/c{2}` is path `a/b/c` + coeff `{2}`.
+        private static final String COEFFICIENT_BODY = "-?\\d+,-?\\d+|,-?\\d+|-?\\d+,|,|-?\\d+|\\*\\*|-\\*|-\\?|\\?\\?|\\*|\\+|\\?|-";
+        public static final Pattern FURI_PATTERN = Pattern.compile(
+                "((?<scheme>[^:/.]+):)?" +
+                        "(//((?<host>[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
+                        "(?<path>(?:[^?\\[{&]|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
+                        "(\\[(?<poly>[^]]+)])?" +
+                        "(\\{(?<coefficient>" + COEFFICIENT_BODY + ")})?" +
+                        "(\\?" +
+                        "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
+                        "&?" +
+                        "(?<query>[^&=]+(?:=(?:\\[[^]]*]|[^&=]+))?(&[^&=]+(?:=(?:\\[[^]]*]|[^&=]+))?)*)?)?");
         // Template-aware pattern: allows ${...} in scheme, host, port, path, query components
         // Key differences from FURI_PATTERN:
         // - scheme: allows ${...} via alternation
@@ -840,7 +1000,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             final String portStr = matcher.group(PORT);
             final int port = portStr == null ? -1 : (hasTemplates && portStr.contains("${") ? -1 : Integer.parseInt(portStr));
             final String pathStr = matcher.group(PATH);
-            final List<String> path = null == pathStr ? List.of() : (hasTemplates && pathStr.contains("${")) ? List.of(pathStr) : new ArrayList<>(Arrays.asList(pathStr.split("/")));
+            final List<String> path = null == pathStr ? List.of() : (hasTemplates && pathStr.contains("${")) ? List.of(pathStr) : splitPath(pathStr);
             if (null != pathStr) {
                 if (pathStr.endsWith("/"))
                     path.add("");
@@ -882,6 +1042,95 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                     null;
 
             return fURI.of(scheme, host, port, path, coefficient, poly, query, templates);
+        }
+
+        /**
+         * Splits a path string on {@code /} at depth zero only — a {@code /} inside a {@code {…}} branch (a sub-path
+         * element, e.g. {@code {b/c,d/e}}) or inside {@code ${…}} stays part of its segment. The naive
+         * {@code String.split("/")} would slice a branch like {@code {b/c,d/e}} into {@code ["{b", "c,d", "e}"]}.
+         * Each branch segment is then normalized as a set: a singleton collapses to its atom, and a leading {@code /}
+         * on an element is a separator (hoisting into a leading empty segment when it leads the branch).
+         */
+        private static List<String> splitPath(final String pathStr) {
+            final List<String> raw = new ArrayList<>();
+            int depth = 0;
+            final StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < pathStr.length(); i++) {
+                final char ch = pathStr.charAt(i);
+                if ('{' == ch)
+                    depth++;
+                else if ('}' == ch)
+                    depth = Math.max(0, depth - 1);
+                if ('/' == ch && 0 == depth) {
+                    raw.add(sb.toString());
+                    sb.setLength(0);
+                } else
+                    sb.append(ch);
+            }
+            // mimic String.split("/"): a trailing empty segment (a final `/`) is dropped — f(String) re-adds it when
+            // the path string actually ends with `/`.
+            if (sb.length() > 0 || raw.isEmpty())
+                raw.add(sb.toString());
+
+            final List<String> segments = new ArrayList<>();
+            for (int i = 0; i < raw.size(); i++)
+                segments.addAll(normalizeBranch(raw.get(i), 0 == i));
+            return segments;
+        }
+
+        /**
+         * Normalizes one segment as a set of paths: a non-branch segment is itself. A branch segment ({@code {…}})
+         * collapses a singleton ({@code {a}} → {@code a}). Only the leading branch ({@code leading}) strips a leading
+         * {@code /} from its elements — there it is the absolute marker, hoisted into a leading empty segment
+         * ({@code <{/a,/b}/c>} → {@code ["", {a,b}, c]}); a non-leading branch keeps its atoms verbatim
+         * ({@code a/{/b,/c}/d} → {@code [a, {/b,/c}, d]}).
+         */
+        private static List<String> normalizeBranch(final String segment, final boolean leading) {
+            if (segment.length() < 2 || segment.charAt(0) != '{' || segment.charAt(segment.length() - 1) != '}')
+                return List.of(segment);
+            final List<String> elements = splitBranchElements(segment.substring(1, segment.length() - 1));
+            boolean absolute = false;
+            final List<String> atoms = new ArrayList<>(elements.size());
+            for (int i = 0; i < elements.size(); i++) {
+                final String element = elements.get(i);
+                if (leading && element.startsWith("/")) {
+                    if (0 == i)
+                        absolute = true;
+                    atoms.add(element.substring(1));
+                } else
+                    atoms.add(element);
+            }
+            if (1 == atoms.size())
+                return absolute ? List.of("", atoms.get(0)) : List.of(atoms.get(0));
+            final List<String> normalized = new ArrayList<>();
+            if (absolute)
+                normalized.add("");
+            normalized.add("{" + String.join(",", atoms) + "}");
+            return normalized;
+        }
+
+        /**
+         * Splits a branch body on top-level {@code ,} (respecting nested {@code {…}}), mirroring
+         * {@link Helper#splitBranch(String)}.
+         */
+        private static List<String> splitBranchElements(final String inner) {
+            final List<String> elements = new ArrayList<>();
+            int depth = 0;
+            final StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < inner.length(); i++) {
+                final char ch = inner.charAt(i);
+                if ('{' == ch)
+                    depth++;
+                else if ('}' == ch)
+                    depth = Math.max(0, depth - 1);
+                if (',' == ch && 0 == depth) {
+                    elements.add(sb.toString());
+                    sb.setLength(0);
+                } else
+                    sb.append(ch);
+            }
+            elements.add(sb.toString());
+            return elements;
         }
 
         static Map<String, String> parseQuery(final String query) {
@@ -988,44 +1237,23 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                    final List<String> poly,
                    final Map<String, String> query,
                    final List<Tuple.Pair<Component, String>> templates) {
-        // An AUTHORITY IMPLIES an ABSOLUTE path, enforced HERE, once, so every construction agrees.
-        // Rendering alone is not enough: a relative path on an authority-bearing uri renders correctly (see
-        // AbstractfURI.toString) but is a DIFFERENT VALUE from the same address parsed from that string — and
-        // equality, hashing and the string round-trip all compare values, not renderings. That mismatch is exactly
-        // what UriTest.testSelect/testWhere caught once the rendering was fixed: identical strings, unequal uris.
-        // This is the general form of a fix that had been applied at three call sites — Uri.expandTemplate,
-        // buildDatetimeUri, and the rec round trip — because the call sites are where it was noticed, not where the
-        // rule belongs. A hostless relative uri is untouched, since there is no authority to separate from.
-        // DISABLED, and the experiment is recorded because it is half the answer. Enforcing "an authority implies an
-        // absolute path" here DOES fix UriTest.testSelect/testWhere — all 6 gluing failures (`:443api/v2`) go green,
-        // because the value and the string then agree. But it breaks 18 rows of UriTest.testTemplateExpansion with a
-        // DOUBLE slash (`api.com//users`), i.e. the template path ends up with two empty leading segments: something
-        // in the expansion already makes it absolute, so this normalisation lands on top of that. Net worse, so it is
-        // off until the second prepender is found. The seven existing prepend sites are AbstractfURI:86, 238, 479,
-        // 617, 798 and fURI:147 — attribute it by instrumenting expandTemplate's normalizedPath against what
-        // fURI.of receives, or by re-enabling this block and looking for the caller that already added the marker.
-        // DISABLED — see the note further up. Enabling this FIXES UriTest.testSelect/testWhere (5 of the 6 rows:
-        // the value and the string then agree, which matters because checkCodeParseApply compares VALUES) but the
-        // template rows double-prepend until the split rule above is made conditional on the template form. Off, so
-        // the tree stays at its known state: UriTest 6 failures, everything else green.
-        final List<String> absolutePath = path;
         if (null != templates && !templates.isEmpty())
-            return new SAPPCQTfURI(scheme, host, port, absolutePath, poly, coefficient, query, templates);
+            return new SAPPCQTfURI(scheme, host, port, path, poly, coefficient, query, templates);
         if (null != poly && !poly.isEmpty())
-            return new SAPPCQfURI(scheme, host, port, absolutePath, poly, coefficient, query);
+            return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
         if (null != coefficient && !coefficient.isOne()) {
             if (!query.isEmpty()) {
                 if (null != poly && !poly.isEmpty())
-                    return new SAPPCQfURI(scheme, host, port, absolutePath, poly, coefficient, query);
+                    return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
                 else
-                    return new SAPXCQfURI(scheme, host, port, absolutePath, coefficient, query);
+                    return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
             } else {
                 if (null == scheme && null == host)
                     return new XXPXCXfURI(path, coefficient);
                 else if (null == host)
                     return new SXPXCXfURI(scheme, path, coefficient);
                 else
-                    return new SAPXCXfURI(scheme, host, port, absolutePath, coefficient);
+                    return new SAPXCXfURI(scheme, host, port, path, coefficient);
             }
         } else {
             if (query.isEmpty()) {
@@ -1033,12 +1261,12 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                     if (null == host)
                         return new SXPXXXfURI(scheme, path);
                     else
-                        return new SAPXXXfURI(scheme, host, port, absolutePath);
+                        return new SAPXXXfURI(scheme, host, port, path);
                 } else {
-                    return host == null ? new XXPXXXfURI(path) : new SAPXXXfURI(null, host, port, absolutePath);
+                    return host == null ? new XXPXXXfURI(path) : new SAPXXXfURI(null, host, port, path);
                 }
             } else {
-                return new SAPXCQfURI(scheme, host, port, absolutePath, coefficient, query);
+                return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
             }
         }
     }

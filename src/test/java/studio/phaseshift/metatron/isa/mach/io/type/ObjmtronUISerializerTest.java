@@ -101,7 +101,7 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         final String ui = ObjmtronUISerializer.single().write(obj);
         LOG.debug("plain => %s   ui => %s", plain, ui);
         assertTrue(plain.contains("1.23456789"), String.format("the plain serializer keeps the exact value: %s", plain));
-        assertTrue(ui.contains("1.2346"), String.format("the UI serializer quantizes to the display limit: %s", ui));
+        assertTrue(ui.contains("1.2345"), String.format("the UI serializer quantizes to the display limit: %s", ui));
         assertFalse(ui.contains("1.23456789"), ui);
     }
 

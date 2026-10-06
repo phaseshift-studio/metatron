@@ -56,6 +56,35 @@ public class mathInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            // addition / subtraction / multiplication / division
+            "cmplx::[1.0,2.0] + cmplx::[-1.0,3.0]                  % cmplx::[0.0,5.0]",
+            "cmplx::[1.0,2.0] - cmplx::[3.0,4.0]                   % cmplx::[-2.0,-2.0]",
+            "cmplx::[1.0,2.0] * cmplx::[3.0,4.0]                   % cmplx::[-5.0,10.0]",
+            "cmplx::[1.0,2.0] / cmplx::[1.0,1.0]                   % cmplx::[1.5,0.5]",
+            // unary
+            "cmplx::[1.0,2.0].neg()                                % cmplx::[-1.0,-2.0]",
+            "cmplx::[1.0,1.0].inv()                                % cmplx::[0.5,-0.5]",
+            "cmplx::[1.0,2.0].conjugate()                          % cmplx::[1.0,-2.0]",
+            "cmplx::[3.0,4.0].abs()                                % 5.0",
+            "cmplx::[1.0,1.0].arg()                                % 0.7853981633974483",
+            // zero / one
+            "cmplx::[1.0,2.0].zero()                               % cmplx::[0.0,0.0]",
+            "cmplx::[1.0,2.0].one()                                % cmplx::[1.0,0.0]",
+            // ring_theory_unit_removal — plus(zero) / mult(one) collapse to the operand
+            "cmplx::[1.0,2.0] + cmplx::[0.0,0.0]                   % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0] * cmplx::[1.0,0.0]                   % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0].plus(cmphx::[0.0,0.0])               % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0].mult(cmphx::[1.0,0.0])               % cmplx::[1.0,2.0]",
+            // group_theory_involution — neg().neg() collapses to identity
+            "cmplx::[1.0,2.0].neg().neg()                          % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0].neg().neg().plus(cmphx::[3.0,4.0])   % cmplx::[4.0,6.0]",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testComplex(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             // int to byte units
             "1024.0.as(kB::T)                                                                    % kB::1024.0",
 

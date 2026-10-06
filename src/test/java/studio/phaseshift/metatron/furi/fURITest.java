@@ -796,7 +796,7 @@ public class fURITest extends AbstractMetatronTest {
             "a{1,1}               | a{-1}                       | a{0}",
             "a/b{23}              | a/b                         | a/b{24}",
             "a{-1}                | a{-2}                       | a{-3}",
-            "a/b/c{2,3}           | a/d/c{-3,-2}                | #{-1,1}",
+            "a/b/c{2,3}           | a/d/c{-3,-2}                | a/{{2,3}b,{-3,-2}d}/c",
             "a{0}                 | a{0}                        | a{0}",
             "a{,10}               | a{-10,}                     | a{0}",
             "a{1,10}              | a{-10,-1}                   | a{-9,9}",
@@ -1606,4 +1606,74 @@ public class fURITest extends AbstractMetatronTest {
 
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/{c,d}            % a/b/c|a/b/d",
+            "a/b/{{2}c,d}         % a/b/c|a/b/c|a/b/d",
+            "a/b/{d,c}            % a/b/c|a/b/d",
+            "a/b/c                % a/b/c",
+            "a/{c,d}/e            % a/c/e|a/d/e",
+            "a/b/{c,d}/{{2}e,f}   % a/b/c/e|a/b/c/e|a/b/c/f|a/b/d/e|a/b/d/e|a/b/d/f",
+            "a/{b,c,d}/{2}c/{2}d/{2}e % a/b/c/d/e|a/c/c/d/e|a/d/c/d/e",
+            "a/{m,n,o}/{2}c/{2}d   % a/m/c/d|a/n/c/d|a/o/c/d",
+            "a/{{2}b,{3}d}/c       % a/b/c|a/b/c|a/d/c|a/d/c|a/d/c",
+            "a/{{2,3}b,{-3,-2}d}/c % a/b/c|a/d/c",
+            "a/{{2}b,{2}d,{3}e}/{2}c % a/b/c|a/b/c|a/d/c|a/d/c|a/e/c|a/e/c|a/e/c",
+            "a/{b/c,d/e}/f       % a/b/c/f|a/d/e/f",
+            "a/{b/c/d,e/f/g}     % a/b/c/d|a/e/f/g",
+            "<{a,b}/c>            % a/c|b/c",
+    }, delimiter = '%')
+    void testBranchedPaths(final String path, final String expected) {
+        final fURI furi = f(path);
+        final List<String> actual = furi.branchedPaths().stream().map(p -> String.join("/", p)).toList();
+        assertEquals(Arrays.asList(expected.split("\\|")), actual);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/{b,c}/d/{e,f}     % a/b/d/e|a/b/d/f|a/c/d/e|a/c/d/f",
+            "a/b/c                % a/b/c",
+            "a/{b,c,d}/{2}c       % a/b/c|a/c/c|a/d/c",
+            "a/{b/c,d/e}/f        % a/b/c/f|a/d/e/f",
+            "<{a,b}/c>            % a/c|b/c",
+    }, delimiter = '%')
+    void testFlatten(final String path, final String expected) {
+        final List<String> actual = f(path).flatten().map(fURI::toString).toList();
+        assertEquals(Arrays.asList(expected.split("\\|")), actual);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<{a}>                          % a",
+            "<{a,b}>                        % {a,b}",
+            "<{a,b}/c>                      % {a,b}|c",
+            "<a/b/{c,d}>                      % a|b|{c,d}",
+            "<a/b/{{2}c,d}>                   % a|b|{{2}c,d}",
+            "<a/b/{c,d}>                      % a|b|{c,d}",
+            "a/b/c                          % a|b|c",
+            "</a/{b,c}/d>                     % |a|{b,c}|d",
+            "</a/{b,c}/d>                   % |a|{b,c}|d",
+            "</a/{b,c,d,e,f}/{d,d}>         % |a|{b,c,d,e,f}|{d,d}",
+            "<{a,b}/c>                      % {a,b}|c",
+            "<{a,b,c}>                      % {a,b,c}",
+            "<a/{b,c}>                      % a|{b,c}",
+            "<a/{b,c{*}}>                   % a|{b,c{*}}",
+            // "<a/{b,c{0,1}}>                 % a|{b,c{?}}",
+            "<a/{b,c}/d>                    % a|{b,c}|d",
+            "<a/{{?}b,c}/d>                 % a|{{?}b,c}|d",
+            "<a/{{?}b,c}/{1,5}d>            % a|{{?}b,c}|{1,5}d",
+            "<a/{/b,/c}/d>                  % a|{/b,/c}|d",
+            "<{/a,/b}/c>                    % |{a,b}|c",
+            "<{/a,/b,/c}>                   % |{a,b,c}",
+            "</a/{b,c}>                     % |a|{b,c}",
+            "</a/{b,c}>                       % |a|{b,c}",
+            "<a/{{b,d},c}/c/d/e>              % a|{{b,d},c}|c|d|e",
+            "<{0}a/{{0}b,{0}d,{0}c}/c/d/e>  % {0}a|{{0}b,{0}d,{0}c}|c|d|e",
+            "<a/{b,c,d}/{2}c/{2}d/{2}e>       % a|{b,c,d}|{2}c|{2}d|{2}e",
+            "<a/{b/c,d/e}/f>                  % a|{b/c,d/e}|f",
+    }, delimiter = '%')
+    void testBranchedPathParsing(final String furi, final String segments) {
+        assertEquals(f(furi), idem(furi));
+        assertEquals(Arrays.asList(segments.split("\\|")), idem(furi).path());
+    }
 }

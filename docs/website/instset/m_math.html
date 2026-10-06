@@ -426,6 +426,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
  type=&gt;[
   int::T[?is(gte(0)).is(lte(100))][ctor?rng=percent&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/percent,
   int::T[inst(inst(0))]@/m/math/nat,
+  lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx,
   real::T@/m/math/datasize,
   uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime,
   datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/bB,
@@ -462,6 +463,17 @@ the collection of mathematical instructions, algebraic and numeric data types, a
   plus?rng=metric&amp;dom=metric(real::T@/m/math/metric){&lt;j&gt;},
   plus?rng=imperial&amp;dom=imperial(real::T@/m/math/imperial){&lt;j&gt;},
   as?rng=time&amp;dom=time(real::T@/m/math/time){&lt;j&gt;},
+  plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
+  mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
+  minus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
+  conjugate?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
+  div?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
+  neg?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
+  inv?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
+  zero?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
+  one?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
+  abs?rng=real&amp;dom=cmplx(){&lt;j&gt;},
+  arg?rng=real&amp;dom=cmplx(){&lt;j&gt;},
   plus?rng=datetime&amp;dom=datetime(real::T@/m/math/time){&lt;j&gt;},
   minus?rng=datetime&amp;dom=datetime(real::T@/m/math/time){&lt;j&gt;},
   minus?rng=time&amp;dom=datetime(uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime){&lt;j&gt;},
@@ -491,8 +503,8 @@ the collection of mathematical instructions, algebraic and numeric data types, a
   floor?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
   round?rng=int&amp;dom=#{?}(real::T){&lt;j&gt;}],
  const=&gt;[
-  2.71828182845904500@/m/math/e?constq,
-  3.14159265358979300@/m/math/pi?constq]]@/m/math</code></pre>
+  2.7182@/m/math/e?constq,
+  3.1415@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
             </div>
@@ -500,7 +512,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">32</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">18</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">33</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">21</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -516,7 +528,10 @@ the collection of mathematical instructions, algebraic and numeric data types, a
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#__m__math__currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#__m__math__cmplx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">cmplx</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__math__currency" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">currency</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__datasize" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -615,8 +630,11 @@ the collection of mathematical instructions, algebraic and numeric data types, a
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__math__inst__abs?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">abs</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__math__inst__arg?rng=__m__real&dom=__m__math__cmplx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">arg</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__math__inst__atan?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">atan</span>
@@ -626,6 +644,9 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__math__inst__ceil?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">ceil</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__math__inst__conjugate?rng=__m__math__cmplx&dom=__m__math__cmplx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">conjugate</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__math__inst__cos?rng=__m__real&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">cos</span>
@@ -670,18 +691,18 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         <span class="code text-secondary fw-bold">e</span>
         <small class="text-muted code">/m/math/e?constq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">2.71828182845904500@/m/math/e?constq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">2.7182@/m/math/e?constq</code></pre></div>
     
 </div><div class="card mb-3" id="__m__math__pi?constq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">pi</span>
         <small class="text-muted code">/m/math/pi?constq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">3.14159265358979300@/m/math/pi?constq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">3.1415@/m/math/pi?constq</code></pre></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">32</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">33</span></h3>
     <div class="card mb-3" id="__m__math__datasize__bB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -707,6 +728,19 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a centimeter of distance (10 millimeters)</p>
+</div>
+</div><div class="card mb-3" id="__m__math__cmplx">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">cmplx::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst[__m__real,__m__real]" class="instset-doc-small-code text-info code">/m/lst[/m/real,/m/real]::T</a></span><span class="theory-chip theory-field">field<span class="chip-tip"><span class="chip-tip-name">field</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0), inv = inv</span></span></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0), inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0)</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0)</span></span></span>
+        </span>
+        <small class="text-muted code">/m/math/cmplx</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a complex number contains a real and imaginary component \(\mathbb{C}\)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__currency">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -998,14 +1032,14 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">nat::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-roles">op = plus, id = 0</span></span></span><span class="theory-chip theory-rig">rig<span class="chip-tip"><span class="chip-tip-name">rig</span><span class="chip-tip-roles">add = plus, mul = mult, zero = 0, one = 1</span></span></span>
         </span>
         <small class="text-muted code">/m/math/nat</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[inst(inst(0))]@/m/math/nat</code></pre></div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a positive integer greater than 0</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a positive integer greater than 0 \(\mathbb{N}\)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__datasize__pB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1024,7 +1058,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">percent::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-roles">op = plus, id = 0</span></span></span><span class="theory-chip theory-rig">rig<span class="chip-tip"><span class="chip-tip-name">rig</span><span class="chip-tip-roles">add = plus, mul = mult, zero = 0, one = 1</span></span></span>
         </span>
         <small class="text-muted code">/m/math/percent</small>
     </div>
@@ -1100,27 +1134,45 @@ the collection of mathematical instructions, algebraic and numeric data types, a
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">18</span></h3>
-    <div class="card mb-3" id="__m__math__inst__abs?rng=__m__real&dom=#{?}">
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">21</span></h3>
+    <div class="card mb-3" id="__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">abs</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__cmplx" data-bs-toggle="tooltip" title="domain" class="code text-info">cmplx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
-        <small class="text-muted code">/m/math/inst/abs?rng=/m/real&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/math/inst/abs?rng=/m/real&amp;dom=/m/math/cmplx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__abs?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__abs?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0-tab').click();document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?rng=real&dom=cmplx(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0-tab').click();document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?rng=real&dom=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> the absolute value of a real</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex modulus: \(|a+bi|=\sqrt{a^2+b^2}\)
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__real" class="text-success">real</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the modulus \(|z|\)" class="text-success">the modulus \(|z|\)</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">abs(-3.14)   [-- 3.14 --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[3.0,4.0].abs()   [-- 5.0 --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__math__inst__arg?rng=__m__real&dom=__m__math__cmplx">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">arg</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__cmplx" data-bs-toggle="tooltip" title="domain" class="code text-info">cmplx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+        </span>
+        <small class="text-muted code">/m/math/inst/arg?rng=/m/real&amp;dom=/m/math/cmplx</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__arg?rng=__m__real&dom=__m__math__cmplx-doc-0-tab').click();document.getElementById('__m__math__inst__arg?rng=__m__real&dom=__m__math__cmplx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">arg?rng=real&dom=cmplx(){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex argument (phase): \(\arg(a+bi)=\mathrm{atan2}(b,a)\)
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the argument \(\arg(z)\)" class="text-success">the argument \(\arg(z)\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,1.0].arg()   [-- 0.7853981633974483 --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__math__inst__atan?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1184,6 +1236,25 @@ the collection of mathematical instructions, algebraic and numeric data types, a
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">ceil(2.1)   [-- 3.0 --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__math__inst__conjugate?rng=__m__math__cmplx&dom=__m__math__cmplx">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">conjugate</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__cmplx" data-bs-toggle="tooltip" title="domain" class="code text-info">cmplx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__math__cmplx" data-bs-toggle="tooltip" title="range" class="code text-success">cmplx</a></span></span>
+        </span>
+        <small class="text-muted code">/m/math/inst/conjugate?rng=/m/math/cmplx&amp;dom=/m/math/cmplx</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__conjugate?rng=__m__math__cmplx&dom=__m__math__cmplx-doc-0-tab').click();document.getElementById('__m__math__inst__conjugate?rng=__m__math__cmplx&dom=__m__math__cmplx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">conjugate?rng=cmplx&dom=cmplx(){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex conjugation: \(\overline{a+bi}=a-bi\) — negates the imaginary component
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex conjugate \(\overline{z}\)" class="text-success">the complex conjugate \(\overline{z}\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0].conjugate()   [-- cmplx::[1.0,-2.0] --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__math__inst__cos?rng=__m__real&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">

@@ -25,12 +25,16 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -56,19 +60,41 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public abstract class LawTable {
 
     /**
-     * A process-law row: the declared laws, and the operation's inverse (null when none).
+     * A process-law row: the declared laws, the operation's inverse (null when none), and its derivation
+     * (null when primitive — not definable as a composition of other instructions).
      */
-    public record Entry(Lst laws, fURI inverse) {
+    public record Entry(Lst laws, fURI inverse, Derivation derivation) {
     }
 
     private final Map<fURI, Entry> table = new HashMap<>();
     private final Map<fURI, Rec> typeLawsCache = new ConcurrentHashMap<>();
 
     /**
+     * The registered tables, keyed by their instset tid — {@link #typeLawsOf(Type)} dispatches a type to the
+     * table of the instset that owns it (longest-prefix wins, so {@code /m/math/nat} routes to {@code /m/math}
+     * rather than {@code /m}).
+     */
+    private static final Map<fURI, LawTable> TABLES = new LinkedHashMap<>();
+
+    /**
+     * Self-register this table under the instset whose types and insts it declares laws for.
+     */
+    protected LawTable(final fURI instsetTid) {
+        TABLES.put(instsetTid, this);
+    }
+
+    /**
      * Register an inst's declared process laws and inverse.
      */
     protected final void entry(final fURI inst, final fURI inverse, final Law... declared) {
-        this.table.put(inst, new Entry(laws(declared), inverse));
+        this.table.put(inst, new Entry(laws(declared), inverse, null));
+    }
+
+    /**
+     * Register an inst's declared process laws, inverse, and derivation.
+     */
+    protected final void entry(final fURI inst, final fURI inverse, final Derivation derivation, final Law... declared) {
+        this.table.put(inst, new Entry(laws(declared), inverse, derivation));
     }
 
     /**
@@ -83,6 +109,36 @@ public abstract class LawTable {
      */
     public final Rec typeLaws(final Type type) {
         return this.typeLawsCache.computeIfAbsent(type.tid().basePath(), k -> this.typeLawsUncached(type));
+    }
+
+    /**
+     * The structural theories of the type, resolved from the law table of the instset that owns the type — the
+     * dispatcher that lets several sibling law tables share the category without one knowing the others.
+     */
+    public static Rec typeLawsOf(final Type type) {
+        final String vid = type.vid().basePath().toString();
+        LawTable owner = null;
+        int best = -1;
+        for (final Map.Entry<fURI, LawTable> e : TABLES.entrySet()) {
+            final String prefix = e.getKey().toString();
+            if ((vid.equals(prefix) || vid.startsWith(prefix + "/")) && prefix.length() > best) {
+                owner = e.getValue();
+                best = prefix.length();
+            }
+        }
+        return null == owner ? rec0() : owner.typeLaws(type);
+    }
+
+    /**
+     * All registered derivations across every table — the composition rules (lhs ↦ rhs) a rewrite can apply.
+     */
+    public static List<Derivation> derivations() {
+        final List<Derivation> out = new ArrayList<>();
+        for (final LawTable table : TABLES.values())
+            for (final Entry entry : table.table.values())
+                if (null != entry.derivation())
+                    out.add(entry.derivation());
+        return out;
     }
 
     /**
