@@ -221,6 +221,18 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.MULT_INST_TID, lst(obj)));
     }
 
+    public F div_(final Obj obj) {
+        return this.addInst(instB(mInstSet.DIV_INST_TID, lst(obj)));
+    }
+
+    public F inv_() {
+        return this.addInst(instB(mInstSet.INV_INST_TID, lst()));
+    }
+
+    public F neg_() {
+        return this.addInst(instB(mInstSet.NEG_INST_TID, lst()));
+    }
+
     public F pow_(final Obj obj) {
         return this.addInst(instB(mInstSet.POW_INST_TID, lst(obj)));
     }
@@ -623,6 +635,18 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F mult_(final Obj obj) {
             return new mFluent<F>().mult_(obj);
+        }
+
+        public static <F extends mFluent<F>> F div_(final Obj obj) {
+            return new mFluent<F>().div_(obj);
+        }
+
+        public static <F extends mFluent<F>> F inv_() {
+            return new mFluent<F>().inv_();
+        }
+
+        public static <F extends mFluent<F>> F neg_() {
+            return new mFluent<F>().neg_();
         }
 
         public static <F extends mFluent<F>> F pow_(final Obj obj) {

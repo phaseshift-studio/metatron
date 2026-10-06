@@ -47,6 +47,10 @@ public interface Int extends Mono, Ring.O<Int> {
     Int ZERO = jnt(0L);
     Int ONE = jnt(1L);
 
+    public static Int int0() {
+        return jnt(0, INT_TID.zero(), null);
+    }
+
     @Override
     Int clone(final Object jvm, final fURI tid, final fURI vid);
 

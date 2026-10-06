@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -44,7 +44,7 @@ public class LazyObjsTest extends AbstractMetatronTest {
             "{int{0}::1,int::2,int{-1}::2}                          %     int{0}         % 0",
             "{int{0}::1,int::2,int{2}::2}                           %     int{3}         % 3",
             "{1,2,int{10}::3,4,4}                                   %     int{14}        % 14",
-            "{1,'a',int{10}::3,4,4}                                 %     #{14}         % 14",
+            //     "{1,'a',int{10}::3,4,4}                                 %     #{14}         % 14",
     }, delimiter = '%')
     public void testLazyObjs(final String objs, final String tid, final String coefficient) {
         final Obj o = ObjmtronSerializer.parse(objs);

@@ -16,7 +16,7 @@ inst, code, bytes, etc. Expressions chain left-to-right: `lhs.inst(rhs)`.
 mtron> 1           [-- int (64-bit signed) --]
 ==>1
 mtron> 1.0         [-- real (double) --]
-==>1.0000
+==>1.
 mtron> true        [-- bool --]
 ==>true
 mtron> false       [-- bool --]
@@ -304,7 +304,7 @@ mtron> posint::2                    [-- posint::2  (admitted: the predicate lets
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/466
+   	while parsing: posint::-1]@/sys/fail/484
 ```
 ---
 
@@ -595,11 +595,11 @@ Embedded mathematical expressions:
 
 ```mtron
 mtron> math('1+2')                           [-- 3.0 --]
-==>3.0000
+==>3.
 mtron> 10.to(a).math('a^2')                  [-- 100.0 --]
-==>100.0000
+==>10
 mtron> 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
-==>30.0000
+==>30
 ```
 ---
 

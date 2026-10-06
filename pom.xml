@@ -73,7 +73,7 @@
         <tinkerpop.version>3.8.2</tinkerpop.version>
         <jlama.version>0.8.4</jlama.version>
         <gson.version>2.14.0</gson.version>
-        <petitparser.version>2.4.0</petitparser.version>
+        <petitparser.version>2.5.0</petitparser.version>
         <jline.version>3.30.17</jline.version>
         <rdf4j.version>6.0.0</rdf4j.version>
         <logback.version>1.6.4</logback.version>
@@ -411,7 +411,7 @@
         </dependency>
         <!-- PARSING -->
         <dependency>
-            <groupId>com.github.petitparser</groupId>
+            <groupId>com.github.petitparser.java-petitparser</groupId>
             <artifactId>petitparser-core</artifactId>
             <version>${petitparser.version}</version>
         </dependency>
@@ -1002,6 +1002,8 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.6.0</version>
                     <configuration>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                        <printSummary>true</printSummary>
                         <parallel>classesAndMethods</parallel>
                         <threadCount>6</threadCount>
                         <forkCount>6</forkCount>

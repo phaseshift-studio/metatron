@@ -547,21 +547,100 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI plus(final fURI other) {
+        if (other.isEmpty())
+            return this;
+        if (this.isEmpty())
+            return other;
+        if (this.isZero())
+            return other;
         if (other.isZero())
             return this;
         if (Objects.equals(this.scheme(), other.scheme()) &&
                 Objects.equals(this.host(), other.host()) &&
-                Objects.equals(this.port(), other.port()) &&
-                Objects.equals(this.path(), other.path())) {
+                Objects.equals(this.port(), other.port())) {
             final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
             newQ.putAll(other.qMap());
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c().plus(other.c()), this.poly(), newQ, this.templates());
+            final boolean samePath = Objects.equals(this.path(), other.path());
+            final List<String> path = samePath ? this.path() : mergePaths(this.path(), other.path(), this.c(), other.c());
+            // same path → two copies, so the multiplicity is the coefficient sum; a factored branch already encodes
+            // the union in the `{…}` segment (per-element operand coefficients moved into it), so its coefficient stays one.
+            final cInt coefficient = samePath ? this.c().plus(other.c()) : cInt.ONE();
+            return fURI.of(this.scheme(), this.host(), this.port(), path, coefficient, this.poly(), newQ, this.templates());
         } else {
             final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
             newQ.putAll(other.qMap());
             return fURI.of(null, null, -1, List.of("#"), this.c().plus(other.c()), this.poly(), newQ, this.templates());
             // throw MTronException.of("unable to add %s to %s", other, this);
         }
+    }
+
+    /**
+     * Factored path union. The longest common prefix and suffix are factored out, and the divergent middles are
+     * collapsed into one flat branch — a middle that is itself a {@code {…}} branch is flattened into its elements, so
+     * {@code a/{b,d}/c + a/c/c} → {@code a/{b,c,d}/c}. Two coefficient moves happen here: an operand's coefficient is
+     * carried onto its branch element (so {@code a/b/c{2,3} + a/d/c{-3,-2}} → {@code a/{{2,3}b,{-3,-2}d}/c}), and when
+     * a middle is a branch of cardinality {@code n} the shared suffix it carried is marked {@code {n}} per segment (the
+     * 2-fold vs 1-fold encoding). The result is always exactly the same set of paths.
+     */
+    public static List<String> mergePaths(final List<String> lhs, final List<String> rhs, final cInt lhsCoefficient, final cInt rhsCoefficient) {
+        int i = 0;
+        while (i < lhs.size() && i < rhs.size() && lhs.get(i).equals(rhs.get(i)))
+            i++;
+        int j = 0;
+        while (j < lhs.size() - i && j < rhs.size() - i && lhs.get(lhs.size() - 1 - j).equals(rhs.get(rhs.size() - 1 - j)))
+            j++;
+
+        final List<String> lhsMiddle = new ArrayList<>(lhs.subList(i, lhs.size() - j));
+        final List<String> rhsMiddle = new ArrayList<>(rhs.subList(i, rhs.size() - j));
+        final List<String> elements = new ArrayList<>();
+        for (final String element : flatten(lhsMiddle))
+            elements.add(coefficientMark(lhsCoefficient, element));
+        for (final String element : flatten(rhsMiddle))
+            elements.add(coefficientMark(rhsCoefficient, element));
+        elements.sort(Comparator.comparing((String e) -> atom(e).isEmpty()).thenComparing(AbstractfURI::atom));
+
+        final int coefficient = Math.max(branchCardinality(lhsMiddle), branchCardinality(rhsMiddle));
+
+        final List<String> merged = new ArrayList<>(lhs.subList(0, i));
+        merged.add("{" + String.join(",", elements) + "}");
+        for (final String segment : lhs.subList(lhs.size() - j, lhs.size()))
+            merged.add(coefficient > 1 ? "{" + coefficient + "}" + segment : segment);
+        return merged;
+    }
+
+    /**
+     * Prefixes an element with its operand coefficient when it is not the multiplicative identity — {@code {2,3}b};
+     * the identity leaves the atom bare.
+     */
+    private static String coefficientMark(final cInt coefficient, final String element) {
+        return coefficient.equals(cInt.ONE()) ? element : "{" + coefficient + "}" + element;
+    }
+
+    /**
+     * The atom of a branch element, stripping a leading {@code {cInt}} so sorting compares atoms, not the coefficient.
+     */
+    private static String atom(final String element) {
+        if (element.length() > 1 && element.charAt(0) == '{') {
+            final int close = element.indexOf('}');
+            return close > 0 ? element.substring(close + 1) : element;
+        }
+        return element;
+    }
+
+    private static List<String> flatten(final List<String> middle) {
+        if (1 == middle.size() && isBranch(middle.get(0)))
+            return Arrays.asList(middle.get(0).substring(1, middle.get(0).length() - 1).split(","));
+        return List.of(String.join("/", middle));
+    }
+
+    private static boolean isBranch(final String segment) {
+        return segment.length() > 1 && segment.charAt(0) == '{' && segment.charAt(segment.length() - 1) == '}';
+    }
+
+    private static int branchCardinality(final List<String> middle) {
+        if (1 == middle.size() && isBranch(middle.get(0)))
+            return middle.get(0).substring(1, middle.get(0).length() - 1).split(",").length;
+        return 1;
     }
 
     @Override

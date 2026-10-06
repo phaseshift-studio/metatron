@@ -565,8 +565,11 @@ public interface Inst extends Call {
         }
 
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {
+            return bindGenerics(lhs, apiInst, userInst, new HashMap<>());
+        }
+
+        public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst, final Map<fURI, fURI> generics) {
             final GraphittyLogger LOG = Graphitty.log(lhs);
-            final Map<fURI, fURI> generics = new HashMap<>();
             Inst apiInstTemp = apiInst;
             if (apiInstTemp.dom().tid().one().isGeneric() && !lhs.isNoObj() && lhs.type().c().within(apiInstTemp.dom().c())) {
                 generics.put(apiInstTemp.dom().tid().one(), lhs.type().tid().one());
@@ -632,6 +635,32 @@ public interface Inst extends Call {
             }
             LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, apiInstTemp, apiInst);
             return apiInstTemp;
+        }
+
+        /**
+         * Substitute the generic fURIs ({@code A}…{@code G}) in {@code obj} with their bound values. A generic is an
+         * all-caps fURI carried as a uri value ({@code uri(A)}); a bound generic resolves to its value, while anything
+         * else passes through untouched. Nested insts (and their lst/rec args) and codes are walked, so a binding
+         * reaches a nested arg like {@code inv(<B>)} inside {@code mult(...)}.
+         */
+        public static Obj substituteGenerics(final Obj obj, final Map<fURI, Obj> bindings) {
+            if (obj.isUri() && obj.uriValue().isGeneric() && bindings.containsKey(obj.uriValue()))
+                return bindings.get(obj.uriValue());
+            if (obj.isInst()) {
+                final Inst inst = obj.asInst();
+                final Poly<?, ?> args = inst.args();
+                if (args.isLst())
+                    return inst.args(lst(args.lstValue().stream().map(a -> substituteGenerics(a, bindings)).toList()));
+                if (args.isRec()) {
+                    final Map<Obj, Obj> newArgs = new LinkedHashMap<>();
+                    args.recValue().forEach((k, v) -> newArgs.put(k, substituteGenerics(v, bindings)));
+                    return inst.args(rec(newArgs));
+                }
+                return inst;
+            }
+            if (obj.isCode())
+                return code(obj.asCode().insts().stream().map(i -> (Inst) substituteGenerics(i, bindings)).toList());
+            return obj;
         }
 
         private static fURI apiOrUser(final fURI apiInstTid, final fURI userInstTid, final Map<fURI, fURI> bindings) {

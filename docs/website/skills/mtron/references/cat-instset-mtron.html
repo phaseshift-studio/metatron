@@ -388,7 +388,7 @@
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">cat-instset</h1>
-        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form) or its declared process laws (law), or when wiring the algebraic theories (ring / group / monoid).</small><br/>
+        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form), set-theoretic class (class), or declared process laws (law), or when wiring the algebraic theories (ring / field / rig / group / monoid / boolean / lattice).</small><br/>
         <a href="cat-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>cat-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -440,7 +440,7 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
 <tr><th>field</th><th>what it is</th></tr>
 </thead>
 <tbody>
-<tr><td><code>obj</code></td><td>the type itself — the down-elevator to the vertex's source type</td></tr>
+<tr><td><code>obj</code></td><td>the type this object wraps (the vertex itself)</td></tr>
 <tr><td><code>morphed_to</code></td><td>the morphisms <strong>sourced from</strong> this object (the outgoing edges)</td></tr>
 <tr><td><code>morphed_from</code></td><td>the morphisms <strong>targeted at</strong> this object (the incoming edges)</td></tr>
 <tr><td><code>law</code></td><td>the structural theories this object models (see <em>theories</em>)</td></tr>
@@ -536,14 +536,14 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
     obj=&gt;neg?rng=int&amp;dom=int(){&lt;j&gt;},
     ...(1 more)]
-==&gt;morphism::[
-    name=&gt;div,
+==&gt;morphism::[ name=&gt;div,
     form=&gt;mapper,
     class=&gt;[endo],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;div?rng=int&amp;dom=int(int::T){&lt;j&gt;}]
+    obj=&gt;div?rng=int&amp;dom=int(int::T){&lt;j&gt;},
+    ...(1 more)]
 ==&gt;morphism::[ name=&gt;minus,
     form=&gt;mapper,
     class=&gt;[endo],
@@ -556,10 +556,10 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
 </thead>
 <tbody>
 <tr><td><code>form</code></td><td>the n-tid coefficient shape (<code>mapper</code>, <code>filter</code>, <code>reducer</code>, <code>flatmapper</code>, …)</td></tr>
-<tr><td><code>class</code></td><td>the set-theoretic class (<code>endo</code>, <code>iso</code>, <code>auto</code>, <code>mono</code>, <code>epi</code>, <code>section</code>, <code>retraction</code>) — conservative</td></tr>
+<tr><td><code>class</code></td><td>the set-theoretic class (<code>endo</code>, <code>iso</code>, <code>auto</code>, <code>mono</code>, <code>epi</code>, <code>section</code>, <code>retraction</code>)</td></tr>
 <tr><td><code>src</code></td><td>the source object (the morphism's dom)</td></tr>
 <tr><td><code>trgt</code></td><td>the target object (the morphism's rng)</td></tr>
-<tr><td><code>law</code></td><td>the declared <strong>process</strong> laws the morphism obeys (see <em>laws</em>)</td></tr>
+<tr><td><code>law</code></td><td>the declared <strong>process</strong> laws the morphism obeys (see <em>process laws</em>)</td></tr>
 <tr><td><code>analysis</code></td><td>a lazy sub-block of whole-graph stats — see below</td></tr>
 </tbody>
 </table>
@@ -574,8 +574,8 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
 <tr><td>a morphism</td><td><code>src</code></td><td><code>trgt</code></td></tr>
 </tbody>
 </table>
-<p><code>morphed_to(A)</code> is <code>{ f : src(f) = A }</code>; <code>morphed_from(A)</code> is <code>{ f : trgt(f) = A }</code>. Composing them round-trips —
-from an object to its edges and back, or from an edge to its endpoints and back.</p>
+<p><code>morphed_to(A)</code> is \(\{ f \mid \mathrm{src}(f) = A \}\); <code>morphed_from(A)</code> is \(\{ f \mid \mathrm{trgt}(f) = A \}\).
+Composing them round-trips — from an object to its edges and back, or from an edge to its endpoints and back.</p>
 <h3>the <code>analysis</code> sub-block</h3>
 <p><code>analysis</code> is one lazy <code>auto()</code> — it stays a single <code>{&lt;j&gt;}</code> marker at level 1 until you <code>&gt;&gt;analysis</code>, so the
 morphism block reads small. Inside it, each stat is itself lazy:</p>
@@ -584,11 +584,11 @@ morphism block reads small. Inside it, each stat is itself lazy:</p>
 <tr><th>field</th><th>what it is</th></tr>
 </thead>
 <tbody>
-<tr><td><code>family</code></td><td>the same-name siblings: <code>{ g : op(g) = op(f) }</code> — every registration of the same operator</td></tr>
+<tr><td><code>family</code></td><td>the same-name siblings: \(\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}\) — every registration of the same operator</td></tr>
 <tr><td><code>contested</code></td><td>the witness edges behind the <code>ambiguous</code> / <code>incomparable</code> labels — the competing siblings</td></tr>
 <tr><td><code>orbit</code></td><td>the reversible-core component of the dom — everything reachable by a chain of opposing edges</td></tr>
 <tr><td><code>position</code></td><td>the edge's place among its siblings (a subset of the six kinds below)</td></tr>
-<tr><td><code>inverse</code></td><td>the opposing edge <code>f^{-1}</code> with <code>f · f^{-1} = 1</code> (only when a declared inverse exists)</td></tr>
+<tr><td><code>inverse</code></td><td>the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\) (only when a declared inverse exists)</td></tr>
 </tbody>
 </table>
 <h3>the six edge kinds</h3>
@@ -609,32 +609,80 @@ morphism block reads small. Inside it, each stat is itself lazy:</p>
 <p><code>orbit</code> is the transitive closure of <code>coupling</code> — the connected component of the <em>reversible core</em> (the subgraph of
 edges that have an opposing edge). It is a reachability class, coarser than isomorphism (which needs the round trip
 to be idempotent → <code>retract</code>) and finer than raw incidence.</p>
+<h3>the class axis</h3>
+<p><code>class</code> classifies a morphism set-theoretically — whether it is self-mapping, invertible, or split. Only the sound
+implications are computed; a proper (non-split) mono/epi awaits composition, which is not wired yet:</p>
+<table>
+<thead>
+<tr><th>class</th><th>what it asserts</th></tr>
+</thead>
+<tbody>
+<tr><td><code>endo</code></td><td>self-mapping — \(\mathrm{dom}(f) = \mathrm{rng}(f)\)</td></tr>
+<tr><td><code>auto</code></td><td>an invertible endomorphism — <code>endo</code> and <code>iso</code></td></tr>
+<tr><td><code>iso</code></td><td>invertible — currently a self-inverse (involution)</td></tr>
+<tr><td><code>mono</code></td><td>left-cancellable — \(f \cdot g = f \cdot h \Rightarrow g = h\) (here: a split monomorphism)</td></tr>
+<tr><td><code>epi</code></td><td>right-cancellable — \(g \cdot f = h \cdot f \Rightarrow g = h\) (here: a split epimorphism)</td></tr>
+<tr><td><code>section</code></td><td>split mono — \(f\) has a left inverse</td></tr>
+<tr><td><code>retraction</code></td><td>split epi — \(f\) has a right inverse</td></tr>
+</tbody>
+</table>
 <h3>the algebraic theories — laws of structure</h3>
 <p>An object can model several algebraic structures; <code>object::T&gt;&gt;law</code> is a rec keyed by the name you give each
 instance. <code>algebraic_theory::T</code> is the nominal super-type grouping them:</p>
 <table>
 <thead>
-<tr><th>type</th><th>roles (field → op-tid)</th><th>what it asserts</th></tr>
+<tr><th>type</th><th>roles (fields)</th><th>what it asserts</th></tr>
 </thead>
 <tbody>
-<tr><td><code>ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td><code>+</code> an abelian group, <code>·</code> a monoid, <code>a(b+c) = ab+ac</code></td></tr>
-<tr><td><code>group_theory</code></td><td><code>op</code>, <code>id</code>, <code>inv</code></td><td><code>g · g^{-1} = g^{-1} · g = 1</code></td></tr>
-<tr><td><code>monoid_theory</code></td><td><code>op</code>, <code>id</code></td><td><code>m · 1 = 1 · m = m</code> and associativity</td></tr>
+<tr><td><code>ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td>\(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, \(a \cdot (b + c) = a \cdot b + a \cdot c\)</td></tr>
+<tr><td><code>field_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code>, <code>inv</code></td><td>\(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</td></tr>
+<tr><td><code>rig_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td>\(\langle S, +, \cdot, 0, 1 \rangle\): additive and multiplicative monoids, \(\cdot\) distributive over \(+\), no additive inverses</td></tr>
+<tr><td><code>group_theory</code></td><td><code>op</code>, <code>id</code>, <code>inv</code></td><td>\(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</td></tr>
+<tr><td><code>monoid_theory</code></td><td><code>op</code>, <code>id</code></td><td>\(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</td></tr>
+<tr><td><code>boolean_theory</code></td><td><code>or</code>, <code>and</code>, <code>not</code>, <code>zero</code>, <code>one</code></td><td>\(\langle B, \lor, \land, \lnot, 0, 1 \rangle\): a complemented distributive lattice, \(b \lor \lnot b = 1\) and \(b \land \lnot b = 0\)</td></tr>
+<tr><td><code>lattice_theory</code></td><td><code>meet</code>, <code>join</code>, <code>bottom</code>, <code>top</code></td><td>\(\langle L, \sqcap, \sqcup, \bot, \top \rangle\): every pair of elements has a meet and a join, bounded by \(\bot\) and \(\top\)</td></tr>
+<tr><td><code>semilattice_theory</code></td><td><code>op</code>, <code>id</code></td><td>\(\langle S, \sqcup, 0 \rangle\): an idempotent commutative monoid (one side of a lattice)</td></tr>
+<tr><td><code>near_ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code></td><td>\(\langle N, +, \cdot, 0 \rangle\): \(+\) a group, \(\cdot\) a monoid, one-sided distributivity, no multiplicative \(1\)</td></tr>
 </tbody>
 </table>
 <h3>process laws — <code>morphism::T&gt;&gt;law</code></h3>
-<p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>mInstSetLawTable</code> (the <code>declared ∩ process</code>
-cell):</p>
+<p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>mInstSetLawTable</code> (the declared process
+laws):</p>
 <pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;law
 ==&gt;[
     commutative,
     right_distributive,
     action]
 </code></pre>
-<p>Examples: <code>commutative</code> (<code>f(x,y) = f(y,x)</code>), <code>right_distributive</code>, <code>action</code>, <code>monoidic</code>, <code>involution</code>, <code>absorbing</code>,
-<code>idempotent</code>. A law has a <em>provenance</em> tier (<code>syntactic</code> — derived from the n-tid, <code>declared</code> — proved once per
-family, <code>semantic</code> — apply-and-test) and a <em>kind</em> (<code>structure</code> → the object theories, <code>process</code> → these morphism
-labels).</p>
+<table>
+<thead>
+<tr><th>law</th><th>what it asserts</th></tr>
+</thead>
+<tbody>
+<tr><td><code>commutative</code></td><td>\(a \cdot b = b \cdot a\)</td></tr>
+<tr><td><code>left_distributive</code></td><td>\(a \cdot (b + c) = a \cdot b + a \cdot c\)</td></tr>
+<tr><td><code>right_distributive</code></td><td>\((a + b) \cdot c = a \cdot c + b \cdot c\)</td></tr>
+<tr><td><code>monoidic</code></td><td>an associative binary op with an identity</td></tr>
+<tr><td><code>magmadic</code></td><td>a non-associative binary op with an identity</td></tr>
+<tr><td><code>unit</code></td><td>an identity element — \(e \cdot x = x \cdot e = x\)</td></tr>
+<tr><td><code>absorbing</code></td><td>an annihilator — \(a \cdot x = a\) for every \(x\)</td></tr>
+<tr><td><code>action</code></td><td>a monoid/group acting on a carrier — \(f(gh)x = f(g)f(h)x\)</td></tr>
+<tr><td><code>involution</code></td><td>self-inverse — \(f(f(x)) = x\) (period two)</td></tr>
+<tr><td><code>idempotent</code></td><td>\(f(f(x)) = f(x)\)</td></tr>
+<tr><td><code>nilpotent</code></td><td>some power is zero — \(f^n = 0\)</td></tr>
+<tr><td><code>floatable</code></td><td>the coefficient commutes through the stream ring's parallel/serial structure</td></tr>
+<tr><td><code>blocked</code></td><td>cannot float past a barrier — a reduce anchors the coefficient</td></tr>
+<tr><td><code>partial</code></td><td>pass-through-or-drop \(\{0,1\}\) — the optional (maybe) lift of a value</td></tr>
+<tr><td><code>kleene</code></td><td>the reflexive-transitive iterate \(a^{*}\) — a Kleene closure</td></tr>
+<tr><td><code>prime</code></td><td>atomic — no nontrivial factorization</td></tr>
+<tr><td><code>zero_divisor</code></td><td>a nonzero \(a\) with \(a \cdot b = 0\) for some nonzero \(b\)</td></tr>
+<tr><td><code>cyclic</code></td><td>generated by one element — every value is a power of a single generator</td></tr>
+<tr><td><code>poset</code></td><td>the carrier is partially ordered — these insts are its comparisons</td></tr>
+</tbody>
+</table>
+<p>A law is either <strong>structural</strong> (one of the object theories above) or <strong>process</strong> (these morphism labels). The former
+provenance axis (syntactic / declared / semantic) is dropped: the table serves the declared process laws, and the
+rest are derived from the n-tid or computed on demand.</p>
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>

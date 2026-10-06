@@ -988,22 +988,37 @@ public class mParser {
         return m_furi(FULL_FURI_CHARS, false, true, false);
     }
 
-    private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
-        // Content parser: matches words, template expressions ${...}, or furi characters
-        // m_furi_template() is tried first to capture ${...} as atomic units
-        final Parser contentParser = seq(word().or(m_furi_template()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)))).plus().flatten();
-        return seq(of('-').not(), contentParser,
+    private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query, final boolean allowLeadingBranch) {
+        final Parser element = word().or(m_furi_template()).or(m_furi_branch_literal()).or(m_furi_coefficient_marked_atom()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)));
+        final Parser first = allowLeadingBranch ? m_furi_leading_coefficient_marked_atom().or(element) : element;
+        final Parser contentParser = seq(first, element.star()).flatten();
+        final Parser leadingBraceGuard = allowLeadingBranch ? of("") : of('{').not();
+        return seq(of('-').not(), leadingBraceGuard, contentParser,
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 1)).poly(pick(t, 2)).c(cInt.of((String) pick(t, 3))).qString(pick(t, 4)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 2)).poly(pick(t, 3)).c(cInt.of((String) pick(t, 4))).qString(pick(t, 5)));
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
         return choice(
                 of("{0}").trim().map(t -> NOOBJ),
-                seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query), of('>')).pick(1),
                 seq(of("<>").trim()).map(x -> empty()),
-                m_furi_internal(furiCharacterSet, polynomial, coefficient, query));
+                seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query, true), of('>')).pick(1),
+                m_furi_bare(furiCharacterSet, polynomial, coefficient, query));
+    }
+
+    /**
+     * A bare uri may lead with a coefficient — {@code {4}e} is the uri {@code e} with coefficient {@code {4}}
+     * ({@code uri{4}::e}), not a stream. Parse the coefficient first, then the flat uri, and attach the coefficient.
+     * A leading {@code {…}} that is NOT a coefficient (a branch) is rejected — it is a stream (objs), not a uri.
+     */
+    private static Parser m_furi_bare(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
+        return seq(opt(m_furi_coefficient(), null), m_furi_internal(furiCharacterSet, polynomial, coefficient, query, false))
+                .map(t -> {
+                    final String c = pick(t, 0);
+                    final fURI f = pick(t, 1);
+                    return null == c ? f : f.c(cInt.of(c));
+                });
     }
 
     public static Parser m_furi_poly_type() {
@@ -1012,6 +1027,56 @@ public class mParser {
                         .separatedBy(of(',').trim()),
                 of(']').trim())
                 .map(t -> ((List) (pick(t, 1))).stream().filter(c -> !c.equals(',')).map(Object::toString).toList());
+    }
+
+    /**
+     * Parses a branch segment — {@code {c,d}} or {@code {{2}c,d}} — the value-level stream ({@code +}, branching)
+     * and the type-level union ({@code /m/{str,int}::T}). Mirrors {@link #m_furi_poly_type()}, which is the same
+     * element list over {@code [ ]} (the poly, {@code ·}, extension); this one is {@code { }} and carries no
+     * {@code =>} pair (branches are lst-like, not rec-like). The coefficient parser runs first, so {@code {2}c}
+     * is a coefficient-marked atom and {@code c} is a plain atom.
+     */
+    public static Parser m_furi_branch() {
+        return seq(of('{').trim(),
+                seq(opt(m_furi_coefficient(), cInt.ONE()), m_furi(REDUCED_FURI_CHARS, false, true, false)).flatten()
+                        .separatedBy(of(',').trim()),
+                of('}').trim())
+                .map(t -> ((List) (pick(t, 1))).stream().filter(c -> !c.equals(',')).map(Object::toString).toList());
+    }
+
+    /**
+     * Parses a branch segment as its raw string — {@code {c,d}} or {@code {{2}c,d}} — for the path content, so it is
+     * re-read by {@code f(...)}/the regex. A {@code {cInt}} is NOT a branch: the negative lookahead defers it to
+     * {@link #m_furi_coefficient()} (so {@code a/b/c{2}} keeps {@code {2}} as the coefficient, not a segment).
+     * Handles one level of nesting (a coefficient inside a branch).
+     */
+    public static Parser m_furi_branch_literal() {
+        final Parser nested = seq(of('{'), noneOf("}").star(), of('}')).flatten();
+        final Parser body = nested.or(noneOf("}")).star().flatten();
+        return seq(m_furi_coefficient().not(), of('{'), body, of('}'))
+                .map(t -> "{" + pick(t, 2) + "}");
+    }
+
+    /**
+     * Parses a coefficient-marked atom — {@code /{2}c} — a path segment that carries a multiplicity on the atom. The
+     * leading {@code /} is mandatory, so the marker is only read at a segment boundary: {@code a/b/c{2}} ends in the
+     * coefficient {@code {2}} (it follows the atom {@code c}, not a slash), while {@code a/b/{2}c} is the segment
+     * {@code {2}c}. This is the coefficient-in-branch encoding: the {@code {2}} records the 2-fold branch that carried
+     * the shared suffix.
+     */
+    private static Parser m_furi_coefficient_marked_atom() {
+        return seq(of("/"), m_furi_coefficient(), word().or(m_furi_template()))
+                .map(t -> "/" + "{" + pick(t, 1) + "}" + pick(t, 2));
+    }
+
+    /**
+     * A leading coefficient-marked atom — {@code {0}a} — valid only at the very start of a {@code < >}-quoted uri
+     * (there is no preceding slash to mark the segment boundary; the quote itself does). Mirrors
+     * {@link #m_furi_coefficient_marked_atom()} without the mandatory slash.
+     */
+    private static Parser m_furi_leading_coefficient_marked_atom() {
+        return seq(m_furi_coefficient(), word().or(m_furi_template()))
+                .map(t -> "{" + pick(t, 0) + "}" + pick(t, 1));
     }
 
     public static Parser m_furi_coefficient() {

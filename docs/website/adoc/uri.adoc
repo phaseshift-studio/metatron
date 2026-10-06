@@ -360,6 +360,34 @@ For example, some data can be "hot in cache" in order to satisfy demand, while s
 The fundamental mathematics and the subsequent algorithmic embodiment in metatron enables the symbolic manipulation of referentially consistent structural partitions. **Ring-theoretic references** make this possible.
 
 [discrete]
+===== The Type-Level Ring: `[]` and `{}`
+
+The reference ring is usually stated over *values* — `[a=>{b,c}]` against its `{...}`-branched form — but the same
+two operators are the components of the *type* itself, carried in the `uri`/`tid`:
+
+* `[]` — the list — is `·` (extension). A list *extends* by position: `lst[{2}str]` is two `str` slots addressed
+  as `…/0`, `…/1`, which is exactly latexmath:[x \cdot y = x/y].
+* `{}` — the stream — is `+` (branching). A stream *branches*: `str{3}` is three `str`s, which is exactly
+  latexmath:[x + y = \{x,y\}].
+
+A type such as `lst[{2}str{3}]::T{2}` is therefore a *term* in the uri ring:
+
+[source,mtron]
+----
+lst[{2}str{3}]::T{2}   ≡   ((str+str+str) · (str+str+str))  +  ((str+str+str) · (str+str+str))
+----
+
+where `·` gives the _rank_ (how many slots extend) and `+` gives the _extent_ (how many branches), alternating
+through the nesting. The value `[{'a','b','c'},{'d','e','f'}]` is an instance of that term and obeys the same laws:
+the outer `[]` extends (rank), the inner `{}` branches (extent). `{}` never nests because addition flattens —
+latexmath:[a+(b+c) = a+b+c] — while `[]` nests because multiplication extends. Hence the single invariant: no
+`{{ }}` — a stream binds to a list slot, never to another stream.
+
+The point is that `[]` and `{}` are not merely *nominal* markers on a type: they are the value-level `·` and `+`
+lifted to the type level. A type and its instances obey the *identical* algebra, so distributivity
+latexmath:[a \cdot (b+c) = a \cdot b + a \cdot c] holds for both.
+
+[discrete]
 ==== Isomorphic != Identical
 
 A _matrix_ is an latexmath:[n \times m] data structure composed of latexmath:[n] vectors/row, each with latexmath:[m] elements/columns.
@@ -469,6 +497,20 @@ The above example demonstrates what is possible with referentially consistent st
 The platonic matrix latexmath:[m] was embedded in a space using 3 different representations: _entry-wise_, _row-wise_, and _row-column wise_.
 Next, each embedding was read: an _element read_, a _row read_ and a _column read_.
 The expression used to read from each of the three embeddings is the same (typographically verbatim) and so is the result (algebraically isomorphic).
+
+Why does the same read return the same result from all three embeddings? Because each embedding is a different
+_factorization_ of the same ring term. In the uri ring, `·` is extension and `+` is branching, with distributivity
+latexmath:[a \cdot (b+c) = a \cdot b + a \cdot c]:
+
+* _entry-wise_ is the fully branched form — every element is a separate `+` leaf: latexmath:[m/0/0 + m/0/1 + \ldots].
+* _row-wise_ factors the row `·` out of each row's `+`: latexmath:[m/0 \cdot (0+1+2+3)].
+* _row-column-wise_ factors the whole matrix into one `·` tree:
+  latexmath:[m \cdot (\,(0 \cdot 1 \cdot 2 \cdot 3) + (4 \cdot 5 \cdot 6 \cdot 7) + \ldots\,)].
+
+Distributivity moves `·` past `+` (or vice versa), so the three embeddings are the *same term* rearranged — hence
+`*m/0/+` (a row) or `*m/+/0` (a column) resolves to the same value in all three. The time/space tables differ only
+because each factorization chooses a different *physical* layout; the *logical* term — and so every reference into
+it — is unchanged.
 
 .Amortized Costs in Terms of Time
 [%header,width=50%,cols="l1,c1,c1,c1",role="small center"]

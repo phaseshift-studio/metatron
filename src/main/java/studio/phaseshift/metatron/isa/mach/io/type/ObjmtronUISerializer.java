@@ -56,9 +56,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * This is the one that renders for whoever is looking — the console, a log line, a test,
  * another UI — where the console is only one of them:
  * <ul>
- *   <li><b>clipping</b> — recs, lsts, str, bytes, fail and real are clipped to a readable
+ *   <li><b>clipping</b> — recs, lsts, str, bytes, uri and fail are clipped to a readable
  *       size.  Every limit is a key in the instance's own rec: {@code clip->rec},
- *       {@code clip->lst}, {@code clip->str}, {@code clip->uri}, {@code clip->real},
+ *       {@code clip->lst}, {@code clip->str}, {@code clip->uri},
  *       {@code clip->bytes}, {@code clip->fail} (each an int), so a call site tunes the
  *       display without touching the class;</li>
  *   <li><b>indentation</b> — a nested poly longer than {@link #NESTED_STRING_THRESHOLD}
@@ -228,7 +228,6 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                 "lst", jnt(10),
                 "str", jnt(60),
                 "uri", jnt(Integer.MAX_VALUE),
-                "real", jnt(4),
                 "bytes", jnt(60),
                 "fail", jnt(60)
         );
@@ -240,7 +239,6 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                 "lst", jnt(Integer.MAX_VALUE),
                 "str", jnt(Integer.MAX_VALUE),
                 "uri", jnt(Integer.MAX_VALUE),
-                "real", jnt(Integer.MAX_VALUE),
                 "bytes", jnt(Integer.MAX_VALUE),
                 "fail", jnt(Integer.MAX_VALUE)
         );
@@ -288,10 +286,6 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     private int clipUri() {
         return this.clipVal("uri", Integer.MAX_VALUE);
-    }
-
-    private int clipReal() {
-        return this.clipVal("real", 4);
     }
 
     private int clipFail() {
@@ -356,17 +350,18 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     // ── Real writer ──────────────────────────────────────────────
-    // the display quantizes reals to clip->real decimals (the console shows 1.2346, not
-    // 1.23456789); the plain serializer keeps the exact double, because it is data.
+    // lossless + compact: a real writes its shortest round-trippable form (the exact
+    // double with superfluous trailing zeros dropped) and keeps a trailing .0 on whole
+    // numbers, so it never quantizes and never reads back as an int.
 
     @Override
     public String writeReal(final Real real) {
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, real, true);
-        // 17 is the most decimal digits a double can distinguish; a clip setting beyond it
-        // carries no information, and one near Integer.MAX_VALUE (the noClip "no clipping"
-        // setting) asks the formatter for a ~2^31-character buffer and OOMs the JVM.
-        sb.append(String.format("%." + Math.min(this.clipReal(), 17) + "f", real.jvm()));
+        // lossless + compact: Double.toString is the shortest round-trippable form and
+        // keeps a trailing .0 on whole numbers, so a real (1.0) never reads back as an int (1)
+        final String ds = Double.toString(real.jvm());
+        sb.append(ds.substring(0, Math.min(ds.indexOf(".") + 5, ds.length() - ds.indexOf("."))));
         this.handleVID(sb, real);
         return postWrite(sb.toString());
     }

@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -72,7 +72,7 @@ public class InstParseTest extends AbstractMetatronTest {
             "int{4}::10.plus(mult(20))% int{4}::210",
             // "int{4}::10.plus(mult?int{+}<=int{+}(20))% int{4}::210", // todo: doesn't work because of the forced domain/range on mult
             "\"abc\".plus(\"def\")% \"abcdef\"",
-            "abc{0,2}.plus(abc{23})% abc{23,25}",
+            "uri{0,2}::abc.plus?uri{*}<=(uri::abc)% uri{0,4}::abc",
             "[a,b,c].plus([d,e,f])% [a,b,c,d,e,f]",
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
@@ -118,7 +118,7 @@ public class InstParseTest extends AbstractMetatronTest {
             "[1,2,3]_/sum()\\_                            % [6]",
     }, delimiter = '%')
     public void testSumInst(final String expression, final String expectedResult) {
-        assertEquals(ObjmtronSerializer.parse(expectedResult),ObjmtronSerializer.parse(expression).apply());
+        assertEquals(ObjmtronSerializer.parse(expectedResult), ObjmtronSerializer.parse(expression).apply());
     }
 
 }

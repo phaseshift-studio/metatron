@@ -499,6 +499,21 @@ public class Highlighter implements org.jline.reader.Highlighter {
             if (!insideBlock)
                 ranges.add(new int[]{m.start(), m.end()});
         }
+        // Continuous-line glyphs (see isBoxDrawing) are masked exactly like the rules: toAnsi() maps
+        // them to VT100 alternate-charset codepoints or ASCII, so they are blanked out of the colored
+        // pass and spliced back verbatim.  A run of them is one span; a glyph already inside a
+        // {{syntax:…}} block is covered by that block's span and left alone.
+        int boxStart = -1;
+        for (int i = 0; i < str.length(); i++) {
+            final boolean box = isBoxDrawing(str.charAt(i));
+            if (box && !inSpan(blocks, i)) {
+                if (boxStart < 0) boxStart = i;
+            } else if (boxStart >= 0) {
+                ranges.add(new int[]{boxStart, i});
+                boxStart = -1;
+            }
+        }
+        if (boxStart >= 0) ranges.add(new int[]{boxStart, str.length()});
         ranges.sort((x, y) -> Integer.compare(x[0], y[0]));
         final StringBuilder masked = new StringBuilder(str.length());
         final java.util.List<int[]> spans = new java.util.ArrayList<>();   // visible start, width, source start
@@ -585,18 +600,17 @@ public class Highlighter implements org.jline.reader.Highlighter {
                 return this.highlight(this.serializer.write((Obj) object));
             } else {
                 final String str = object.toString();
-                if (containsBoxDrawing(str))
-                    return this.preserveBoxDrawing(str);
                 if (null == this.graphitty)
                     return this.highlight(null, str).toAnsi();
                 if (Graphitty.hasFence(str))
                     return this.graphitty.writeToString(str);   // a fence is graphitty's to interpret
-                if (this.GRAPHITTY_PATTERN.matcher(str).find())
-                    // Markup AND color wanted: color the line in one pass with the rules masked, then
-                    // put them back and let graphitty resolve them.  Coloring each fragment between
-                    // rules on its own loses the color in the AttributedString round-trip, and letting
-                    // graphitty draw the raw text skips coloring altogether -- which is how a result
-                    // row came out white with nothing in it but link spans.
+                if (this.GRAPHITTY_PATTERN.matcher(str).find() || containsBoxDrawing(str))
+                    // Markup AND color wanted (or a box-drawing glyph toAnsi() would mangle): color the
+                    // line in one pass with the rules and glyphs masked, then put them back and let
+                    // graphitty resolve them.  Coloring each fragment between rules on its own loses the
+                    // color in the AttributedString round-trip, and letting graphitty draw the raw text
+                    // skips coloring altogether -- which is how a result row came out white with nothing
+                    // in it but link spans, and a box-drawing glyph once wiped the whole line's color.
                     return this.graphitty.writeToString(this.colorMarkupMasked(str));
                 return this.highlight(null, str).toAnsi();
             }
@@ -605,26 +619,27 @@ public class Highlighter implements org.jline.reader.Highlighter {
         }
     }
 
+    /** Whether index {@code i} falls inside any of {@code spans} (half-open {@code [start, end)}). */
+    private static boolean inSpan(final java.util.List<int[]> spans, final int i) {
+        for (final int[] s : spans)
+            if (i >= s[0] && i < s[1]) return true;
+        return false;
+    }
+
     /**
-     * JLine's {@link AttributedString#toAnsi()} maps box-drawing glyphs
-     * (U+2500–U+257F) to VT100 alternate-charset codepoints or ASCII
-     * ({@code ├ ─ │} → {@code + - |}) depending on terminal capabilities,
-     * mangling pre-formatted content such as tree widgets.  Such content is
-     * already terminal-ready UTF-8 — return it verbatim (expanding any
-     * Graphitty markup) rather than passing it through the ANSI converter.
+     * True for a "continuous line" glyph — a character of the Unicode Box Drawing block
+     * (U+2500–U+257F): the light/heavy/double lines, corners and junctions
+     * ({@code ┌ ┐ └ ┘ │ ─ ┬ ┴ ├ ┤} and their rounded/dashed/double variants).
+     * {@code AttributedString#toAnsi()} rewrites these to VT100 alternate-charset codepoints or
+     * ASCII, so they are masked out of the colored pass and spliced back verbatim rather than mangled.
      */
-    private String preserveBoxDrawing(final String string) {
-        return null != this.graphitty
-                && (this.GRAPHITTY_PATTERN.matcher(string).find() || Graphitty.hasFence(string))
-                ? this.graphitty.writeToString(string)
-                : string;
+    private static boolean isBoxDrawing(final char c) {
+        return c >= 0x2500 && c <= 0x257F;
     }
 
     private static boolean containsBoxDrawing(final String string) {
-        for (int i = 0; i < string.length(); i++) {
-            final char c = string.charAt(i);
-            if (c >= 0x2500 && c <= 0x257F) return true;
-        }
+        for (int i = 0; i < string.length(); i++)
+            if (isBoxDrawing(string.charAt(i))) return true;
         return false;
     }
 

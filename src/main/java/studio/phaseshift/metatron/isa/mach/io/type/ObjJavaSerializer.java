@@ -89,29 +89,83 @@ public class ObjJavaSerializer extends AbstractObjSerializer<String> {
             if (is == null) {
                 throw MTronException.of("tree-sitter native library not found on classpath: " + libName);
             }
-
-            // Extract to a temp file
-            final Path tmpDir = Files.createTempDirectory("metatron-treesitter");
-            final Path tmpLib = tmpDir.resolve(libName);
-            Files.copy(is, tmpLib, StandardCopyOption.REPLACE_EXISTING);
-
-            // Patch the musl NEEDED entry → glibc (best-effort; patchelf may not exist)
-            try {
-                new ProcessBuilder(
-                        "patchelf", "--replace-needed",
-                        "libc.musl-x86_64.so.1", "libc.so.6",
-                        tmpLib.toString())
-                        .inheritIO()
-                        .start()
-                        .waitFor();
-                tmpLib.toFile().deleteOnExit();
-            } catch (final Exception e) {
-                // patchelf not available — try loading as-is (may work on musl hosts)
-                Graphitty.log(ObjJavaSerializer.single()).error("patchelf failed, trying unpatched tree-sitter .so: %s" + e);
-            }
+            final Path tmpLib = extractShared(is.readAllBytes(), libName);
             System.load(tmpLib.toAbsolutePath().toString());
         } catch (final Exception e) {
             Graphitty.log(ObjJavaSerializer.class).error("failed to load tree-sitter native library", e);
+        }
+    }
+
+    /**
+     * Unpack the tree-sitter library into a directory every JVM of this deployment shares.
+     * <p>
+     * The directory name comes from the library's own bytes, so a second JVM finds the file already
+     * published and copies nothing. That matters more than it looks: the library is ~79 MB, surefire
+     * forks one JVM per test class (six by default here), and this used to call
+     * {@code Files.createTempDirectory} — so every fork unpacked its OWN copy under
+     * {@code java.io.tmpdir} and nothing ever removed the directory. Against the container's 512 MB
+     * {@code /tmp} tmpfs, one suite run filled the filesystem, after which no JVM could create its
+     * shared-memory file and the entire test suite refused to start. It also wasted ~470 MB per run
+     * anywhere else.
+     *
+     * @param bytes   the library, straight off the classpath
+     * @param libName the file name to publish it under
+     * @return the shared copy — freshly written, or the one another JVM already published
+     */
+    private static Path extractShared(final byte[] bytes, final String libName) throws java.io.IOException {
+        final Path dir = Files.createDirectories(
+                Path.of(System.getProperty("java.io.tmpdir"), "metatron-treesitter-" + fingerprint(bytes)));
+        final Path lib = dir.resolve(libName);
+        if (Files.exists(lib) && Files.size(lib) == bytes.length)
+            return lib;   // already unpacked (and patched) by another JVM of this run
+        // Unpack and patch a PRIVATE copy, then publish it with one atomic move: a fork that found a
+        // half-written or half-patched library would fail in a way that looks like a broken JAR.
+        final Path staging = Files.createTempFile(dir, libName + ".", ".part");
+        try {
+            Files.write(staging, bytes);
+            patchMuslNeededEntry(staging);
+            try {
+                Files.move(staging, lib, StandardCopyOption.ATOMIC_MOVE);
+            } catch (final java.nio.file.FileAlreadyExistsException race) {
+                // another JVM published an equivalent copy first — keep theirs
+            } catch (final java.nio.file.AtomicMoveNotSupportedException noAtomicMove) {
+                Files.move(staging, lib, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(staging);
+        }
+        return lib;
+    }
+
+    /**
+     * Re-point the library's musl {@code NEEDED} entry at glibc. Best-effort: {@code patchelf} is not
+     * installed everywhere, and on a musl host the library loads unpatched anyway.
+     */
+    private static void patchMuslNeededEntry(final Path lib) {
+        try {
+            new ProcessBuilder(
+                    "patchelf", "--replace-needed",
+                    "libc.musl-x86_64.so.1", "libc.so.6",
+                    lib.toString())
+                    .inheritIO()
+                    .start()
+                    .waitFor();
+        } catch (final Exception e) {
+            Graphitty.log(ObjJavaSerializer.single())
+                    .error("patchelf unavailable — loading unpatched tree-sitter .so: %s", e);
+        }
+    }
+
+    /** A stable short digest of the library bytes, so every JVM agrees on one extraction directory. */
+    private static String fingerprint(final byte[] bytes) {
+        try {
+            final byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes);
+            final StringBuilder hex = new StringBuilder();
+            for (int i = 0; i < 6; i++)
+                hex.append(String.format("%02x", digest[i]));
+            return hex.toString();
+        } catch (final java.security.NoSuchAlgorithmException e) {
+            return Integer.toHexString(bytes.length);   // SHA-256 always exists; length is a safe fallback
         }
     }
 

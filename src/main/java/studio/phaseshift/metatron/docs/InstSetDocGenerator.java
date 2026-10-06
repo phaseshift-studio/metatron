@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.docs;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
@@ -37,6 +38,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 
@@ -237,6 +239,9 @@ public class InstSetDocGenerator {
 
     private static void boot(final String bootFile) {
         DocsUtil.bootVM(bootFile);
+        // the category lift — as(object::T) / as(morphism::T) — lives in catInstSet;
+        // import it up front so every type/inst rendered below can be lifted.
+        InstSet.importInstSet(f("/m/math/cat"));
         // Re-register mInstSet types that were created as static fields
         // before the Router was initialized (ServiceLoader triggers early
         // class loading at BootLoader.load).  Without this, parentType() ->
@@ -673,6 +678,113 @@ public class InstSetDocGenerator {
 
     // ── Section: Types ─────────────────────────────────────────────────
 
+    // ── Category badges (algebraic law / theory chips) ─────────────────
+
+    /**
+     * Render the algebraic theories a type models — via the {@code as(object::T)}
+     * lift — as theory chips. Distinct theories ({@code ring}, {@code group}, …)
+     * are deduped; each chip carries a hover tooltip with its docq description and
+     * declared roles. An unmodeled type yields nothing.
+     */
+    private static String theoryChips(final Type t) {
+        final Obj object = catInstSet.OBJECT_TYPE.constructor().apply(t);
+        if (!(object instanceof Rec r)) return "";
+        final Obj law = r.at(LAW);
+        if (!(law instanceof Rec lawRec) || lawRec.jvm().isEmpty()) return "";
+        final Map<String, Rec> theories = new TreeMap<>();
+        for (final Obj value : lawRec.jvm().values())
+            if (value instanceof Rec instance)
+                theories.putIfAbsent(instance.tid().name().replace("_theory", ""), instance);
+        final StringBuilder chips = new StringBuilder();
+        for (final Map.Entry<String, Rec> e : theories.entrySet())
+            chips.append(theoryChip(e.getKey(), e.getValue()));
+        return chips.toString();
+    }
+
+    /**
+     * Render one theory badge with a hover tooltip: the theory name, its
+     * {@code ?docq} description, and the role names the theory declares
+     * ({@code add}/{@code mul}/{@code zero}/{@code one}, {@code op}/{@code id}/{@code inv}, …).
+     * The tooltip content is rendered as DOM (a nested {@code .chip-tip} kept in the
+     * page, hidden via opacity rather than {@code display:none}) so the site's MathJax
+     * typesets the description's {@code \(…\)} math on load — a {@code title} attribute
+     * would show the raw LaTeX unrendered. The role values for this particular type
+     * live on the instance rec (the {@code as(object::T)} law block).
+     */
+    private static String theoryChip(final String name, final Rec instance) {
+        final StringBuilder tip = new StringBuilder();
+        tip.append("<span class=\"chip-tip-name\">").append(DocsUtil.esc(name)).append("</span>");
+        final Rec doc = fetchDoc(instance.tid());
+        if (doc != null) {
+            final String desc = fieldStr(doc, "desc");
+            if (desc != null && !desc.isEmpty())
+                tip.append("<span class=\"chip-tip-desc\">").append(DocsUtil.esc(specRest(desc))).append("</span>");
+        }
+        final String roles = instance.jvm().entrySet().stream()
+                .map(e -> e.getKey().uriValue().name() + " = " + roleValue(e.getValue()))
+                .collect(Collectors.joining(", "));
+        if (!roles.isEmpty())
+            tip.append("<span class=\"chip-tip-roles\">").append(DocsUtil.esc(roles)).append("</span>");
+        return "<span class=\"theory-chip theory-" + name + "\">" + DocsUtil.esc(name)
+                + "<span class=\"chip-tip\">" + tip + "</span></span>";
+    }
+
+    /**
+     * The display form of a role value off the {@code as(object::T)} law block: an
+     * op role (an auto pointer to an inst) dereferences to the inst's name
+     * ({@code plus}, {@code neg}, {@code inv}), an identity/element role to its
+     * literal ({@code 0}, {@code 1}, {@code ""}).
+     */
+    private static String roleValue(final Obj value) {
+        final Obj deref = value.dereference();
+        return deref.isInst() ? deref.tid().name() : cleanLiteral(deref);
+    }
+
+    /**
+     * A compact literal for the tooltip: reals drop the serializer's full precision
+     * ({@code 0.0} → {@code 0}), and a complex value — a pair of reals — renders as
+     * {@code (real, imag)} rather than a verbose full-precision list.
+     */
+    private static String cleanLiteral(final Obj value) {
+        if (value instanceof Real)
+            return cleanReal(value.realValue());
+        if (value instanceof Lst lst && lst.jvm().size() == 2
+                && lst.jvm().get(0) instanceof Real && lst.jvm().get(1) instanceof Real)
+            return "(" + cleanReal(lst.jvm().get(0).realValue()) + ", " + cleanReal(lst.jvm().get(1).realValue()) + ")";
+        return SER.write(value);
+    }
+
+    private static String cleanReal(final double d) {
+        // up to 4 decimals, trailing zeros trimmed, but at least one decimal kept —
+        // so a real (1.0) is never rendered as an int (1)
+        String s = String.format(Locale.ROOT, "%.4f", d);
+        s = s.replaceAll("0+$", "");
+        return s.endsWith(".") ? s + "0" : s;
+    }
+
+    /**
+     * Render the process laws an inst obeys — via the {@code as(morphism::T)} lift —
+     * as law chips. An inst with no declared laws yields nothing.
+     */
+    private static String lawChips(final Inst inst) {
+        final Obj morphism = catInstSet.MORPHISM_TYPE.constructor().apply(inst);
+        if (!(morphism instanceof Rec r)) return "";
+        final Obj law = r.at(LAW);
+        if (!(law instanceof Lst lawLst) || lawLst.jvm().isEmpty()) return "";
+        final Set<String> names = new TreeSet<>();
+        for (final Obj label : lawLst.jvm())
+            names.add(label.uriValue().name());
+        final StringBuilder chips = new StringBuilder();
+        for (final String name : names)
+            chips.append(chip("law", name));
+        return chips.toString();
+    }
+
+    private static String chip(final String kind, final String name) {
+        return "<span class=\"" + kind + "-chip " + kind + "-" + name + "\" title=\"" + name + "\">"
+                + DocsUtil.esc(name) + "</span>";
+    }
+
     private static String sectionTypes(final String instsetVid, final Set<Type> types) {
         if (types.isEmpty()) return "";
         final StringBuilder cards = new StringBuilder();
@@ -683,7 +795,7 @@ public class InstSetDocGenerator {
             final String name = t.vid() != null ? t.vid().name() : "";
             final String uri = t.vid() != null ? t.vid().toString() : "";
             final String gid = vidToAnchor(uri);
-            final String refines = superTypeRefines(t, instsetVid);
+            final String refines = superTypeRefines(t, instsetVid) + theoryChips(t);
             final String defn = SER.write(t);
             final String defnBlock = !defn.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
@@ -914,7 +1026,7 @@ public class InstSetDocGenerator {
                             """.formatted(tabId, tabId, sig));
             }
 
-            final String typeSig = typeSignatureHtml(instsetVid, group.get(0));
+            final String typeSig = typeSignatureHtml(instsetVid, group.get(0)) + lawChips(group.get(0));
             final String vidStr = group.get(0).tid() != null ? group.get(0).tid().toString() : "";
             cards.append("""
                          <div class="card mb-3" id="%s">

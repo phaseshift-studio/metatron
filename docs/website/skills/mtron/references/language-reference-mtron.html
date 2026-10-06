@@ -400,7 +400,7 @@ inst, code, bytes, etc. Expressions chain left-to-right: <code>lhs.inst(rhs)</co
 <pre><code class="language-mtron">mtron&gt; 1           [-- int (64-bit signed) --]
 ==&gt;1
 mtron&gt; 1.0         [-- real (double) --]
-==&gt;1.0000
+==&gt;1.
 mtron&gt; true        [-- bool --]
 ==&gt;true
 mtron&gt; false       [-- bool --]
@@ -641,7 +641,7 @@ mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate l
 ==&gt;posint::2
 mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==&gt;fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/466
+   	while parsing: posint::-1]@/sys/fail/484
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -876,11 +876,11 @@ mtron&gt; *a&gt;&gt;x/x            [-- reads a field after resolving the auto-re
 <h3>16. Math Instruction</h3>
 <p>Embedded mathematical expressions:</p>
 <pre><code class="language-mtron">mtron&gt; math('1+2')                           [-- 3.0 --]
-==&gt;3.0000
+==&gt;3.
 mtron&gt; 10.to(a).math('a^2')                  [-- 100.0 --]
-==&gt;100.0000
+==&gt;10
 mtron&gt; 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
-==&gt;30.0000
+==&gt;30
 </code></pre>
 <hr />
 <h3>17. URI Path Operations</h3>

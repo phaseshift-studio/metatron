@@ -267,6 +267,35 @@ public interface Type extends Obj {
         return result;
     }
 
+    /**
+     * NOMINAL-POLY — back out: remove this method (and {@link Type.Helper#polysCompatible(Obj, Type)} plus
+     * its four call sites) to revert to pure vid/base nominal checking, then mirror tid polys as a predicate
+     * instead.
+     * <p>
+     * The tid polys of this type and its ancestors, leaf-first — the structural refinements that are part
+     * of the name ({@code cmplx = lst[real,real]@cmplx}). Distinct from {@link #predicateStack()}: those are
+     * the jvm predicates, these are the tid's poly refinements. A poly is shared by a type and its parent
+     * (parentType() is T(tid())), so the same poly is collected once.
+     */
+    default List<Poly<?, ?>> refinesPolys() {
+        final List<Poly<?, ?>> result = new ArrayList<>();
+        final Set<String> seenType = new HashSet<>();
+        final Set<String> seenPoly = new HashSet<>();
+        Type type = this;
+        int hops = 0;
+        while (!type.isRootType() && hops++ < 256) {
+            if (!seenType.add(System.identityHashCode(type) + "@" + type.tid() + ":" + type.vid()))
+                break;
+            if (type.tid().hasPoly()) {
+                final String polyKey = type.tid().poly().toString();
+                if (seenPoly.add(polyKey))
+                    type.tid().polyParsed().ifPresent(result::add);
+            }
+            type = type.parentType();
+        }
+        return result;
+    }
+
     default Type parentType() {
         if (this.isRootType())
             return this;
@@ -576,13 +605,13 @@ public interface Type extends Obj {
             if (!obj.baseTypeID().test(type.baseTypeID()))
                 return false;
             if (objType.isBaseType() && objType.vid().test(type.baseTypeID()))
-                return true;
+                return polysCompatible(obj, type); // NOMINAL-POLY
             while (true) {
                 // LOG.warn("checking %s is a %s",objType, type);
                 if (objType.isRootType())
                     return false;
                 if (objType.vid().test(nominalVID))
-                    return true;
+                    return polysCompatible(obj, type); // NOMINAL-POLY
                 if (objType.isBaseType())
                     return false;
                 // final Type temp = objType.parentType();
@@ -590,6 +619,21 @@ public interface Type extends Obj {
                 //       return false;
                 objType = objType.parentType();
             }
+        }
+
+        /**
+         * NOMINAL-POLY — back out: remove this method (and {@link #refinesPolys()} plus its four call sites)
+         * to revert to pure vid/base nominal checking, then mirror tid polys as a predicate instead.
+         * <p>
+         * The tid polys are part of the name — {@code cmplx[real,real]} — so a nominal vid match must also
+         * accept the poly refinements. Tests the value itself against each poly (the same check the structural
+         * path does), since a base value's shape lives in its elements, not its tid.
+         */
+        public static boolean polysCompatible(final Obj value, final Type type) {
+            for (final Poly<?, ?> poly : type.refinesPolys())
+                if (!value.test(poly))
+                    return false;
+            return true;
         }
 
         public static Obj typePredicateObj(final Type type) {
