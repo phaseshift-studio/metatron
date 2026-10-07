@@ -71,7 +71,7 @@ public abstract class SpaceRec<T extends SpaceRec<T>> extends MRec {
     protected Map<Obj, Obj> read() {
         if (null == this.vid()) return this.jvm();
         try {
-            final Obj fresh = Machine.root().read(this.vid());
+            final Obj fresh = Machine.root().memory().read(this.vid());
             return fresh.isRec() ? fresh.jvm() : this.jvm();
         } catch (final Exception e) {
             return this.jvm();   // space unavailable (boot, headless, store gone)

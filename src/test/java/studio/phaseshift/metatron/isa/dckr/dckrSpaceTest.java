@@ -324,12 +324,12 @@ public class dckrSpaceTest extends AbstractSpaceTest {
                 uri("image"), str("nginx:alpine"),
                 uri("ports"), lst(str("0:80")),
                 uri("environment"), rec(uri("NGINX_HOST"), str("example.com")));
-        Machine.writeToSpace(f("dtest:container/" + name), runConfig);
+        Machine.write(f("dtest:container/" + name), runConfig);
 
         final Obj inspected = space.read(f("dtest:container/" + name));
         assertFalse(inspected.isNoObj());
 
-        Machine.writeToSpace(f("dtest:container/" + name),
+        Machine.write(f("dtest:container/" + name),
                 noobj());
     }
 

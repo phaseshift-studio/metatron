@@ -73,7 +73,7 @@ public class TokenMessageFeatureTest extends AbstractFeatureTest {
     public static void seedSessionPolicy() {
         // the free onBeforeChat tests run without a chat, so the session policy
         // row must already stand in this class's test memSpace
-        Machine.writeToSpace(SESSION_VID, AbstractMessageFeature.createSession("tokmsg", "default", "token_window", 50));
+        Machine.write(SESSION_VID, AbstractMessageFeature.createSession("tokmsg", "default", "token_window", 50));
     }
 
     @Override

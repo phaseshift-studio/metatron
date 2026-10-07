@@ -180,7 +180,7 @@ public abstract class AbstractMultiServerSingleSpaceTest extends AbstractMetatro
     public void testEachPeerIsShippedACodeCarryingItsOwnData() {
         AbstractMachineTest.declarePeers("b");
         gathersOf("{1,2,3}.plus(1).plus(2).sum()");   // compiling is what ships the worker forms
-        final Code worker = Machine.readFromSpace(COMPUTE_ROOT.extend("b").extend("recv")).asCode();
+        final Code worker = Machine.read(COMPUTE_ROOT.extend("b").extend("recv")).asCode();
         assertEquals(START_INST_TID, worker.insts().getFirst().tid().basePath(),
                 "the shard's data arrives IN its code, as an isInitial start, so it mints its own monads");
         assertEquals(TO_INST_TID, worker.insts().getLast().tid().basePath(),

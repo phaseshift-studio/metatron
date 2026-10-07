@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -44,7 +45,7 @@ public class MType extends MObj implements Type {
     private MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid, final boolean register) {
         super(jvm, tid.big(), null == vid ? null : vid.big());
         if (register && Machine.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
-            Machine.root().write(this.vid(), this);
+            Machine.root().memory().write(this.vid(), this);
         }
     }
 
@@ -66,8 +67,11 @@ public class MType extends MObj implements Type {
      * written or the router rebinds -- see {@link TypeGraph}.
      */
     public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
+        if (null == BootLoader.ROOT_MACHINE)
+            // class-init phase, before a machine exists to hold a graph: resolve directly (no memo)
+            return T0(tid, vid, predicate, constructor);
         final TypeGraph.Key key = new TypeGraph.Key(tid, vid, predicate, constructor);
-        return TypeGraph.global().memo(key, () -> T0(tid, vid, predicate, constructor));
+        return Machine.current().memory().typeGraph().memo(key, () -> T0(tid, vid, predicate, constructor));
     }
 
     private static Type T0(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
@@ -80,7 +84,7 @@ public class MType extends MObj implements Type {
         if (!checkID.poly().isEmpty() && !checkID.basePath().equals(Tokens.REL_TID) && !checkID.basePath().equals(Tokens.LST_TID) && !checkID.basePath().equals(REC_TID))
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
         if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
-            Obj obj = Machine.readFromSpace(checkID);
+            Obj obj = Machine.read(checkID);
             obj = obj.selfTID(obj.tid().c(checkID.c()));
             if (obj.isType()) {
                 if (checkID.c().equals(obj.c()) &&

@@ -473,7 +473,7 @@ public interface Type extends Obj {
 
             // 7. Assemble the LCD type (clear any prior registration to avoid stale cache)
             if (Machine.loaded()) {
-                Machine.writeToSpace(lcdVID, noobj());
+                Machine.write(lcdVID, noobj());
             }
             return T(Tuple.Pair.with(combinedPred, null), commonTID.big(), lcdVID.big()).c(lcdC).asType();
         }
@@ -878,7 +878,7 @@ public interface Type extends Obj {
         public Type create() {
             assert this.tid != null;
             //assert this.vid != null;
-            this.insts.forEach(inst -> Machine.root().write(inst.tid(), inst));
+            this.insts.forEach(inst -> Machine.root().memory().write(inst.tid(), inst));
             return T(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
         }
     }

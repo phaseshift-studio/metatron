@@ -372,7 +372,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
        /* else if (this.isType()) {
             if(null != this.vid()) {
-                final Obj temp = Machine.readFromSpace(this.vid());
+                final Obj temp = Machine.read(this.vid());
                 if (temp.isType()) {
                     return temp.tid();
                 }
@@ -534,7 +534,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this.isInst() && (base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID) || this.asInst().isInitial()) ?
                 this.apply(obj).c(c -> obj.isNoObj() ? c : c.mult(obj.c())) :
                 this;
-        //   return Obj.Helper.getAutoPointer(this).map(Router::readFromSpace).orElse(this);
+        //   return Obj.Helper.getAutoPointer(this).map(Router::read).orElse(this);
     }
 
     default Obj dereference() {
@@ -859,18 +859,18 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default void delete() {
         if (null != this.vid())
-            Machine.root().write(this.vid(), noobj());
+            Machine.root().memory().write(this.vid(), noobj());
     }
 
     /**
      * Returns the current obj stored at this obj's vid, or {@code this} if no vid is set.
      */
     default Obj load() {
-        return null == this.vid() ? this : this.selfJVM(Machine.readFromSpace(this.vid()).jvm());
+        return null == this.vid() ? this : this.selfJVM(Machine.read(this.vid()).jvm());
     }
 
     default Obj save() {
-        return null == this.vid() ? this : Machine.root().write(this.vid(), this);
+        return null == this.vid() ? this : Machine.root().memory().write(this.vid(), this);
     }
 
     default boolean booleanCheck() {
@@ -1196,7 +1196,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             objTypeCheck(obj);
             // RO_TEST (read-only type-test mode): check only, skip the incidental space write
             if (!BootLoader.RO_TEST && null != obj.vid() && !obj.isType())
-                Machine.writeToSpace(obj.vid(), obj);
+                Machine.write(obj.vid(), obj);
         }
 
         public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
@@ -1224,7 +1224,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (null != tid) {
                 final fURI bigTID = tid.big();
                 if (!BASE_TYPES.contains(bigTID.basePath()) && Machine.loaded()) {
-                    Obj type = Machine.readFromSpace(bigTID);
+                    Obj type = Machine.read(bigTID);
                     if (!type.isNoObj() && type.isType()) {
 
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
@@ -1240,7 +1240,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 throw MTronException.of("unable to construct %s::T: %s", tid, constructedObj);
                             constructedObj.self(constructedObj.jvm(), bigTID, vid);
                             if (null != vid)
-                                Machine.writeToSpace(vid, constructedObj);
+                                Machine.write(vid, constructedObj);
                             return constructedObj;
                         }
                     }
@@ -1265,7 +1265,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             CLONE_DEPTH.set(depth);
             try {
                 if (!Objects.equals(tid, obj.tid())) {
-                    final Obj type = Machine.readFromSpace(tid);
+                    final Obj type = Machine.read(tid);
                     if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
                         final Obj clone = type.<Type>as().constructor().apply(obj);
                         if (clone.isFail())
@@ -1358,7 +1358,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     final CountDownLatch latch = new CountDownLatch(1);
                                     // SUBSCRIBE FIRST. A subscription only sees writes made AFTER it is registered, so it must be in
                                     // place before any peer can report -- otherwise a fast shard reports into the void.
-                                    Machine.writeToSpace(mailbox.addQ(SUBQ_PATTERN.toString()), rec(uri(CODE), instLambda(o -> {
+                                    Machine.write(mailbox.addQ(SUBQ_PATTERN.toString()), rec(uri(CODE), instLambda(o -> {
                                         result.set(result.get().append(o));
                                         latch.countDown();
                                         return noobj();
@@ -1366,7 +1366,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     // THEN READ, BEFORE WAITING. A peer may have reported before we subscribed, and that write is
                                     // invisible to the subscription -- so reading first is what keeps the barrier from waiting
                                     // forever. Waiting before reading inverts the whole point of subscribe-then-read.
-                                    final Obj already = Machine.readFromSpace(mailbox);
+                                    final Obj already = Machine.read(mailbox);
                                     if (!already.isNoObj()) {
                                         result.set(result.get().append(already));
                                         latch.countDown();
@@ -1433,9 +1433,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     uri(EMIT).maybe(), "the emit predicate"),
                             "a repetition function: loopback application of the code with escape/exit/emit predicates"),
                     docWrap(instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)), "any obj", "the result of applying the arg to the lhs", Map.of(jnt(0), "the inst to apply to the lhs"), "an auto function \\(f(x) \\nearrow x'\\): the arg applied to the lhs (sugar'd !)"),
-                    docWrap(instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Machine.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)), "any obj", "the obj at the arg uri", Map.of(jnt(0), "the uri to dereference"), "an auto dereference function: reads the obj at the arg uri upon inst access (sugar'd !*)"),
+                    docWrap(instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> Machine.read(inst.arg(0).uriValue()).autoResolve(lhs).vid(null)), "any obj", "the obj at the arg uri", Map.of(jnt(0), "the uri to dereference"), "an auto dereference function: reads the obj at the arg uri upon inst access (sugar'd !*)"),
                     docWrap(instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> {
-                                final Obj resolved = Machine.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
+                                final Obj resolved = Machine.read(inst.arg(0).uriValue()).autoResolve(lhs);
                                 return resolved.hasVID() ? resolved : resolved.selfVID(inst.arg(0).uriValue());
                             }),
                             "any obj", "the obj at the arg uri", Map.of(jnt(0), "the uri to dereference"), "an auto dereference function: reads the obj at the arg uri upon inst access, preserving its spatial location (sugar'd !@)"),
@@ -1452,9 +1452,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
                                 final fURI pattern = inst.arg(0).uriValue();
                                 if (pattern.hasPattern()) {
-                                    return objs(Machine.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
+                                    return objs(Machine.read(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
                                 } else {
-                                    final Obj resolved = Machine.readFromSpace(pattern);
+                                    final Obj resolved = Machine.read(pattern);
                                     return resolved.hasVID() ? resolved : resolved.selfVID(pattern);
                                 }
                             }),
@@ -1493,7 +1493,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "maybe an obj", "the arg without an applied lhs", Map.of(jnt(0), "the unapplied rhs"), "the lhs obj is halted and the arg is the rhs obj"),
                     docWrap(instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))), "any obj", "the branch results as objs", Map.of(jnt(0), "the branches to split into"), "a split function \\(f(x) \\nearrow x'\\): the lhs applied through each branch (sugar'd -<[...]>-)"),
                     docWrap(instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))), "any obj", "a lst of the branch results", Map.of(jnt(0), "the branches to split into"), "a branching function: the lhs applied through each branch, the results as a lst"),
-                    docWrap(instC(BRANCH_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))), "any obj", "the branch results as objs", Map.of(jnt(0), "the branches to apply to the lhs"), "a branching function: the lhs applied through each arg branch, the results as objs with their branch coefficients"),
+                    docWrap(instC(BRANCH_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))))), "any obj", "the branch results as objs", Map.of(jnt(0), "the branches to apply to the lhs"), "a branching function: the lhs applied through each arg branch, the results as objs with their branch coefficients"),
                     docWrap(instC(CHOOSE_INST_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
                             "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching function f(x):g(a)->a',g(b)->b',..."),
                     /**
@@ -1512,11 +1512,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any objs", "true if lhs equals rhs", Map.of(jnt(0), "the rhs obj"), "an equality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} == \\tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),
                     docWrap(instC(NEQ_INST_TID.dom(A).rng(BOOL_TID), lst(T(A)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> !Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_TRUE)),
                             "any objs", "true if lhs does not equal rhs", Map.of(jnt(0), "the rhs obj"), "an inequality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} \\neq \tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),
-                    docWrap(instC(TO_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(URI_TID)), (lhs, inst) -> Machine.writeToSpace(inst.arg(0).uriValue(), lhs)),
+                    docWrap(instC(TO_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(URI_TID)), (lhs, inst) -> Machine.write(inst.arg(0).uriValue(), lhs)),
                             "any obj", "writes the lhs obj to the arg uri", Map.of(jnt(0), "the uri to write to"), "associates the lhs obj to the arg uri"),
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
                     docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
-                                final Obj readObj = Machine.readFromSpace(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
+                                final Obj readObj = Machine.read(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
                                 return readObj.isType() ? readObj : readObj.clone().selfVID(null);
                             }), // TODO: only resolves when explicit mono args (not code args)
                             "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
@@ -1524,7 +1524,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "abc.*_      [-- obj at abc via dynamic arg generation --]",
                             "c.*ab${_}   [-- obj at abc via uri template parameter --]",
                             "from(abc)   [-- obj at abc non-sugar form             --]"),
-                    docWrap(instC(REF_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Machine.writeToSpace(lhs.uriValue(), inst.arg(0))),
+                    docWrap(instC(REF_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Machine.write(lhs.uriValue(), inst.arg(0))),
                             "a uri reference", "writes the arg obj to the lhs uri", Map.of(jnt(0), "an obj to be the referent of the uri"), "associates the arg obj to the lhs uri (inverse of /m/inst/to)"),
                     docWrap(instC(SOURCE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                                 final Str source = inst.arg(0).asStr();
@@ -1552,11 +1552,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     // compute in-memory (IMMUTABLE), then atomically write the result.
                     docWrap(instC(UPDATE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> {
                                 if (lhs.hasVID() && !inst.arg(0).isPoly() && !inst.arg(0).isCall())
-                                    return Machine.writeToSpace(lhs.vid(), inst.arg(0));
+                                    return Machine.write(lhs.vid(), inst.arg(0));
                                 final Obj detached = lhs.clone().selfVID(null);
                                 final Obj result = Poly.Helper.updateRecursion(detached, inst.arg(0), IMMUTABLE);
                                 if (lhs.hasVID())
-                                    Machine.writeToSpace(lhs.vid(), result);
+                                    Machine.write(lhs.vid(), result);
                                 return result;//.selfVID(lhs.vid());
                             }), "selectively mutate a poly component or an entire mono",
                             "@a >>= [b=>[c=>2]]      [-- [b=>[c=>2]]@a     --]",

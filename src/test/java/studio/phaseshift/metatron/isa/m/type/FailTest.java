@@ -199,15 +199,15 @@ public class FailTest extends AbstractObjTest {
         final Fail f = fail("transient");
         final fURI vid = f.vid();
         assertNotNull(vid, "an uncaught fail is registered in the fail space");
-        assertFalse(Machine.readFromSpace(vid).isNoObj(), "the fail is present before catching");
+        assertFalse(Machine.read(vid).isNoObj(), "the fail is present before catching");
 
         final Fail caught = f.caughtTransient();
         assertTrue(caught.isCaughtFail(), "caughtTransient wraps as caught");
         assertFalse(caught.isFail(), "a caught fail reports isFail() == false");
-        assertFalse(Machine.readFromSpace(vid).isNoObj(), "caughtTransient must not delete the fail from its space");
+        assertFalse(Machine.read(vid).isNoObj(), "caughtTransient must not delete the fail from its space");
 
         f.caught();
-        assertTrue(Machine.readFromSpace(vid).isNoObj(), "caught() does delete the fail from its space");
+        assertTrue(Machine.read(vid).isNoObj(), "caught() does delete the fail from its space");
     }
 
     @Test

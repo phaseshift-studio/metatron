@@ -83,7 +83,7 @@ public class PersistedFrameFeatureTest extends AbstractMetatronTest {
         assertTrue(popped.isComplete(), "popped frame is complete");
         assertNull(frame.current(), "stack empty after pop");
 
-        final Obj persisted = Machine.readFromSpace(frameURI);
+        final Obj persisted = Machine.read(frameURI);
         assertTrue(persisted.isRec(), "frame persisted after pop");
         assertTrue(persisted.asRec().at(uri(STATE)).isUri(), "frame marked complete");
     }

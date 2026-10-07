@@ -138,7 +138,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                         try {
                             LOG.debug("received %s => %s", p.getTopic(), topic);
                             StatusLine.message(str("%s => %s".formatted(topic, new String(p.getPayloadAsBytes()))));
-                            Machine.root().stats().ioStats().incrBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
+                            Machine.root().memory().stats().ioStats().incrBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
                             final Obj obj;
                             if (p.getPayload().isPresent()) {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
@@ -233,7 +233,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                             LOG.error("mqtt client error (reconnecting)", t);
                             this.sjvm = this.createConnection(this.jvm(), false);
                         } else
-                            Machine.root().stats().ioStats().incrBytesSent(payload.length);
+                            Machine.root().memory().stats().ioStats().incrBytesSent(payload.length);
                     }).get();
             // Write directly to cache so local readers see the data immediately,
             // without waiting for the MQTT subscriber callback to fire on a Netty thread.

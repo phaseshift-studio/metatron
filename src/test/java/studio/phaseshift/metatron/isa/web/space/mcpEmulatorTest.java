@@ -217,7 +217,7 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
         assertTrue(response.asRec().at(uri("error")).isNoObj(), "install should not error: " + response);
 
         // Verify the install response is well-formed (may fail if metatron HTTP not running, but must not crash)
-        LOG.info("installed mcpClient: %s", Machine.readFromSpace(f("home:" + installUser).extend("tool/metatron")));
+        LOG.info("installed mcpClient: %s", Machine.read(f("home:" + installUser).extend("tool/metatron")));
 
         // Verify tools_list sees the installed server
         final Obj listResult = this.mcp.handleMessage(toolsCall(14, "tools_list",

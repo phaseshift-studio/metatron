@@ -299,7 +299,7 @@ public class CompactionFeature extends AbstractFeature {
         // 1. collect this session's messages from the ledger, oldest -> newest
         LOG.status(DEBUG, "\uD83D\uDCE9 gathering messages for compaction");
         final fURI messagesLocation = agentHome.extend(MESSAGE).extend("+/");
-        final List<Rel> messages = Machine.readFromSpace(messagesLocation)
+        final List<Rel> messages = Machine.read(messagesLocation)
                 .stream()
                 .map(Obj::asRel)
                 .filter(pair -> !pair.second().tid().equals(LLM_TOOL_RESULT_MESSAGE_TYPE.vid()))
@@ -322,7 +322,7 @@ public class CompactionFeature extends AbstractFeature {
                 .collect(Collectors.joining("\n-----\n"));
         // 3. the summarizer model (agent home model when not given) and prompt
         final mModel model = modelArg.isNoObj()
-                ? mModel.model(Machine.readFromSpace(agentHome.extend(MODEL)).asRec())
+                ? mModel.model(Machine.read(agentHome.extend(MODEL)).asRec())
                 : mModel.model(modelArg.asRec());
         final String prompt = promptArg.isNoObj() ? COMPACT_PROMPT : promptArg.strValue();
         // 4. distill via a mini-task

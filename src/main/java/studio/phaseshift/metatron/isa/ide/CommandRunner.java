@@ -100,7 +100,7 @@ public final class CommandRunner {
         // !* auto_from deref) materializes the str{*} line-stream, keeping the result rec compact
         if (!lines.isEmpty()) {
             final fURI outputURI = CommonUtil.mintShortUUID(f("/sys/tmp"), true);
-            Machine.writeToSpace(outputURI, objs(lines));
+            Machine.write(outputURI, objs(lines));
             map.put(uri("output"), auto_from_(outputURI).tryToInst());
         }
         if (!fails.isEmpty()) map.put(uri(ERROR), lst(fails));

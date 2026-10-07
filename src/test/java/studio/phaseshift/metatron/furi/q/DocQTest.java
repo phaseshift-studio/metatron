@@ -60,8 +60,8 @@ public class DocQTest extends AbstractMetatronTest {
 
     @Test
     public void testDocStructure() {
-        final Inst inst = Machine.readFromSpace(AND_INST_TID).asInst();
-        final Docs doc = new Docs(Machine.readFromSpace(AND_INST_TID.addQ(DOCQ)).asRec());
+        final Inst inst = Machine.read(AND_INST_TID).asInst();
+        final Docs doc = new Docs(Machine.read(AND_INST_TID.addQ(DOCQ)).asRec());
         LOG.warn(doc);
         assertTrue(doc.test(DOCS_TYPE));
         assertTrue(doc.description().contains("\\("), "and() documentation has latex formatting in its description");
@@ -72,8 +72,8 @@ public class DocQTest extends AbstractMetatronTest {
     @Test
     public void testNoDocumentation() {
         final fURI dummyURI = f("/m/inst/NoTAInsT");
-        final Inst inst = Machine.readFromSpace(dummyURI).asInst();
-        final Docs doc = new Docs(Machine.readFromSpace(dummyURI.addQ(DOCQ)).asRec());
+        final Inst inst = Machine.read(dummyURI).asInst();
+        final Docs doc = new Docs(Machine.read(dummyURI.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCS_TYPE));
         assertEquals(NO_DOCS.at(DESC).strValue(), doc.description());
         assertTrue(inst.isNoObj());
@@ -82,19 +82,19 @@ public class DocQTest extends AbstractMetatronTest {
     @Test
     public void testWritingDocumentation() {
         final fURI newURI = f("/m/some_obj");
-        Machine.root().write(newURI, str("some obj"));
-        Docs doc = new Docs(Machine.readFromSpace(newURI.addQ(DOCQ)).asRec());
+        Machine.root().memory().write(newURI, str("some obj"));
+        Docs doc = new Docs(Machine.read(newURI.addQ(DOCQ)).asRec());
         assertEquals(NO_DOCS.at(DESC).strValue(), doc.description());
         /// //
-        Machine.root().write(newURI.addQ(DOCQ), str("some obj"));
-        doc = new Docs(Machine.readFromSpace(newURI.addQ(DOCQ)).asRec());
+        Machine.root().memory().write(newURI.addQ(DOCQ), str("some obj"));
+        doc = new Docs(Machine.read(newURI.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCS_TYPE));
         assertEquals("some obj", doc.description());
         assertEquals("some obj", doc.at(DESC).strValue());
         /// //
         final fURI newURI2 = f("/m/some_obj_2");
         docWrap(str("some obj 2", STR_TID, newURI2), "a test str", "aa", "bb");
-        doc = new Docs(Machine.readFromSpace(newURI2.addQ(DOCQ)).asRec());
+        doc = new Docs(Machine.read(newURI2.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCS_TYPE));
         assertEquals("a test str", doc.description());
         assertTrue(doc.examples().contains("aa"));
@@ -113,16 +113,16 @@ public class DocQTest extends AbstractMetatronTest {
                 str("a lonely string"),
                 lst(jnt(1), jnt(2), real(12.3), str("hola")),
                 rec(uri("a"), uri("b"), uri("c"), jnt(23)))) {
-            final Obj writeResult = Machine.root().write(baseURI.extend("test" + obj.tid().name()), obj);
+            final Obj writeResult = Machine.root().memory().write(baseURI.extend("test" + obj.tid().name()), obj);
             assertEquals(obj, writeResult);
-            final Obj docWriteResult = Machine.root().write(baseURI.extend("test" + obj.tid().name()).q("docq", null), Docs.doc(obj, null, null, null, "a obj that is a " + obj.tid().name()));
+            final Obj docWriteResult = Machine.root().memory().write(baseURI.extend("test" + obj.tid().name()).q("docq", null), Docs.doc(obj, null, null, null, "a obj that is a " + obj.tid().name()));
             LOG.debug("\n write result: %s \n write doc result: %s", writeResult, docWriteResult);
             assertEquals(DOCS_TID, docWriteResult.tid());
             assertEquals("a obj that is a " + obj.tid().name(), new Docs(docWriteResult.asRec()).description());
-            final Obj readResult = Machine.root().read(baseURI.extend("test" + obj.tid().name()));
+            final Obj readResult = Machine.root().memory().read(baseURI.extend("test" + obj.tid().name()));
             assertEquals(writeResult, readResult);
             assertEquals(obj, readResult);
-            final Obj docReadResult = Machine.root().read(baseURI.extend("test" + obj.tid().name()).q("docq", null));
+            final Obj docReadResult = Machine.root().memory().read(baseURI.extend("test" + obj.tid().name()).q("docq", null));
             LOG.debug("\n read result: %s \n read doc result: %s", readResult, docReadResult);
             assertEquals(DOCS_TID, docReadResult.tid());
             assertEquals(docWriteResult, docReadResult);

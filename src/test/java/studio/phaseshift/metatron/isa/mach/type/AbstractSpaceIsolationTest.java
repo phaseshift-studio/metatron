@@ -40,8 +40,7 @@ public abstract class AbstractSpaceIsolationTest extends AbstractMetatronTest {
 
     @AfterEach
     public void unwind() {
-        while (null != Machine.frame())
-            Machine.frame().machine().pop();
+        Machine.current(Machine.root());
     }
 
     /** The Space in effect at this machine — frame-aware, so a live frame's own level answers. */
@@ -111,7 +110,7 @@ public abstract class AbstractSpaceIsolationTest extends AbstractMetatronTest {
             // thread stands. Asking a component view for it is a category error (a memory's `.` and an ISA's
             // `/m/.` are not the same question), so this one assertion reads through the machine itself -- valid
             // for every instance of this base.
-            final Obj here = child.read(f("."));
+            final Obj here = child.memory().read(f("."));
             assertEquals(false, here.isNoObj(), "`.` resolves inside a frame");
             assertEquals(child.vid(), here.vid(), "and it names THIS frame's machine, not the enclosing one");
         } finally {

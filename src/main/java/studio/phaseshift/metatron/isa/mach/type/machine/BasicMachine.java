@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
@@ -34,7 +33,6 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -88,7 +86,6 @@ public class BasicMachine extends AbstractMachine {
      */
     private static BasicMemory rootMemory() {
         final BasicMemory memory = new BasicMemory();
-        memory.spaces().jvm().put(uri("+/#"), new stackSpace(f("+/#")));
         return memory;
     }
 
@@ -99,6 +96,7 @@ public class BasicMachine extends AbstractMachine {
         // from inside `read` — the recursion that already bit MachineFrameTest once.
         final BasicMemory memory = rootMemory();
         final BasicNetwork network = new BasicNetwork();
+        final BasicInstSet instset = new BasicInstSet();
         return new BasicMachine(mutableMap(
                 // a machine owns an address space: the pattern makes it the catch-all, and the index must be a
                 // live mutable rec from the start. `Rec.orElse` eagerly evaluates its fallback, so an absent
@@ -107,7 +105,7 @@ public class BasicMachine extends AbstractMachine {
                 uri(QPROC), lst(QCollection.docQ()),
                 uri(MEMORY), instLambda(ignore -> memory),
                 uri(NETWORK), instLambda(ignore -> network),
-                uri(INSTSET), instLambda(ignore -> null),
+                uri(INSTSET), instLambda(ignore -> instset),
                 uri(COMPILER), instLambda(ignore -> DefaultCompiler.fixpointScoringCompiler()),
                 uri(PROCESSOR), instLambda(ignore -> SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null))), tid, vid);
         // uri("+").c(cInt.of(-1, 1)), instC(f("+").c(cInt.of(-1, 1)).dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(),
@@ -168,8 +166,4 @@ public class BasicMachine extends AbstractMachine {
         this.cachedCompiler = null;
         return super.compiler(templateCompiler);
     }
-
-    // No tid() override: it used to hard-return MACH_MACHINE_TID, which made the reported tid disagree with
-    // the stored one for every construction path but of(). The stored tid is the truth — /sys/mach is built
-    // with MACH_MACHINE_TID, and the root with the router tid, exactly as before.
 }

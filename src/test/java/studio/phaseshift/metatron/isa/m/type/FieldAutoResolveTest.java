@@ -74,7 +74,7 @@ public class FieldAutoResolveTest extends AbstractMetatronTest {
             "[status=>!inst?(){42}]     % 42",
     }, delimiter = '%')
     void testAutoWrappedFieldIsInvokedAsAMethod(final String recSource, final String expected) {
-        Machine.writeToSpace(f(FIELD), eval(recSource));
+        Machine.write(f(FIELD), eval(recSource));
         assertEquals(expected, String.valueOf(eval("*" + FIELD + ".status()")),
                 "invoking a self-evaluating field should evaluate it");
     }
@@ -84,7 +84,7 @@ public class FieldAutoResolveTest extends AbstractMetatronTest {
      */
     @Test
     public void testAutoWrappedFieldAlsoResolvesOnAPathRead() {
-        Machine.writeToSpace(f(FIELD), eval("[status=>!inst?(){42}]"));
+        Machine.write(f(FIELD), eval("[status=>!inst?(){42}]"));
         assertEquals("42", String.valueOf(eval("*" + FIELD + "/status")),
                 "an auto-wrapped field should resolve on a path read");
     }
@@ -95,7 +95,7 @@ public class FieldAutoResolveTest extends AbstractMetatronTest {
      */
     @Test
     public void testAutoWrappedFieldReceivesItsLhsAsThis() {
-        Machine.writeToSpace(f(FIELD), eval("[n=>5,f=>!inst?(){ _>>n }]"));
+        Machine.write(f(FIELD), eval("[n=>5,f=>!inst?(){ _>>n }]"));
         assertEquals("5", String.valueOf(eval("*" + FIELD + ".f()")),
                 "the auto wrap applies the lhs, so the body can read its container");
     }
@@ -105,7 +105,7 @@ public class FieldAutoResolveTest extends AbstractMetatronTest {
      */
     @Test
     public void testPlainInstFieldIsAValueNotAMethod() {
-        Machine.writeToSpace(f(FIELD), eval("[status=>inst?(){42}]"));
+        Machine.write(f(FIELD), eval("[status=>inst?(){42}]"));
         final Obj read = eval("*" + FIELD + "/status");
         assertTrue(read.isInst(), "a plain inst field must come back unevaluated, got " + read);
         assertNotEquals("42", String.valueOf(read), "a plain inst field must not have been applied on access");

@@ -114,10 +114,10 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         final Map<Obj, Obj> boxes = new LinkedHashMap<>();
         if (expectedBoxes.isRec())
             expectedBoxes.asRec().jvm().keySet().forEach(key -> boxes.put(key, rec(mutableMap())));
-        Machine.writeToSpace(COMPUTE_ROOT, rec(mutableMap(
+        Machine.write(COMPUTE_ROOT, rec(mutableMap(
                 uri(MACH_HOME), rec(mutableMap(uri(BARRIER), rec(boxes))))));
 
-        final Obj roster = Machine.readFromSpace(COMPUTE_ROOT);
+        final Obj roster = Machine.read(COMPUTE_ROOT);
         final Obj homeBranch = roster.isRec() ? roster.asRec().at(uri(MACH_HOME)) : noobj();
         final Obj declaredBoxes = homeBranch.isRec() ? homeBranch.asRec().at(uri(BARRIER)) : noobj();
         final List<fURI> declared = declaredBoxes.isRec()
@@ -141,7 +141,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
                 // A THREAD THAT DIES IS SILENT, and a shard that dies without reporting leaves the home waiting on a
                 // mailbox nothing will fill -- a hang with no output, the worst failure to debug.
                 try {
-                    final Obj shipped = Machine.readFromSpace(COMPUTE_ROOT.extend(peer.name()).extend("recv"));
+                    final Obj shipped = Machine.read(COMPUTE_ROOT.extend(peer.name()).extend("recv"));
                     LOG.debug("checkDistributedCode: shard %s running %s", peer.name(), shipped);
                     shipped.asCode().apply(noobj());
                     LOG.debug("checkDistributedCode: shard %s reported", peer.name());
@@ -183,7 +183,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         }
         for (final fURI peer : declared)
             LOG.debug("checkDistributedCode: mailbox for %s holds %s", peer.name(),
-                    Machine.readFromSpace(COMPUTE_ROOT.extend(MACH_HOME).extend(BARRIER).extend(peer.name())));
+                    Machine.read(COMPUTE_ROOT.extend(MACH_HOME).extend(BARRIER).extend(peer.name())));
 
         final FutureObj<Obj> future = processor.applyAsync(noobj());
 
@@ -194,7 +194,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
             halted = future.get(30, TimeUnit.SECONDS);
         } catch (final Exception e) {
             LOG.warn("checkDistributedCode: the home never finished (%s); %s holds %s",
-                    e, COMPUTE_ROOT, Machine.readFromSpace(COMPUTE_ROOT));
+                    e, COMPUTE_ROOT, Machine.read(COMPUTE_ROOT));
             throw MTronException.of(e);
         }
         LOG.debug("checkDistributedCode: home halted with %s", halted);
@@ -203,13 +203,13 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         // WHAT THE COMPUTATION LEFT BEHIND: the peers, their barriers, and the barrier data at the end. Logged
         // before the assertion so a row's expectation can be written from what actually happened rather than
         // guessed -- and so a failure shows the real rec beside the expected one.
-        LOG.debug("checkDistributedCode: %s holds %s", COMPUTE_ROOT, Machine.readFromSpace(COMPUTE_ROOT));
+        LOG.debug("checkDistributedCode: %s holds %s", COMPUTE_ROOT, Machine.read(COMPUTE_ROOT));
 
         // ASSERTED BEFORE CLEANUP, because cleanup is what erases the evidence. The comparison is against the
         // RECONSTRUCTED rec: a read recurses into what was written underneath and rebuilds the tree, so a branch is
         // taken OUT OF that rec rather than re-read as a path -- reading /usr/compute/a on its own resolves an address,
         // not the branch that the reconstruction of /usr/compute already contains.
-        final Obj reconstructed = Machine.readFromSpace(COMPUTE_ROOT);
+        final Obj reconstructed = Machine.read(COMPUTE_ROOT);
         state.jvm().forEach((key, expected) -> {
             // a branch named with no value pins that it must EXIST, nothing about what it holds -- which is how a
             // case avoids pinning a peer's inbox, where the shipped worker's code sits and no CSV row can write it
@@ -223,7 +223,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         // that reaches the space's own lifecycle -- measured twice, as the connection closing underneath the next
         // write. An empty barrier branch is enough to stand the rule down, because the rewrite's guard is "no peers
         // declared" and an empty rec IS that. Overwrite the state, never delete it from a space that must survive.
-        Machine.writeToSpace(COMPUTE_ROOT.extend(MACH_HOME).extend(BARRIER), rec(CommonUtil.mutableMap()));
+        Machine.write(COMPUTE_ROOT.extend(MACH_HOME).extend(BARRIER), rec(CommonUtil.mutableMap()));
     }
 
     // ======================== the distribution plumbing ========================
@@ -279,7 +279,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         final Map<Obj, Obj> boxes = new LinkedHashMap<>();
         for (final String peer : peers)
             boxes.put(uri(peer), rec(mutableMap()));
-        Machine.writeToSpace(COMPUTE_ROOT, rec(mutableMap(
+        Machine.write(COMPUTE_ROOT, rec(mutableMap(
                 uri(MACH_HOME), rec(mutableMap(uri(BARRIER), rec(boxes))))));
     }
 
@@ -287,7 +287,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
      * clear the cluster, so a suite cannot leave a VM looking clustered for the next one
      */
     protected static void clearPeers() {
-        Machine.writeToSpace(COMPUTE_ROOT, noobj());
+        Machine.write(COMPUTE_ROOT, noobj());
     }
 
     // ======================== eager round-trip ========================

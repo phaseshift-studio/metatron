@@ -35,7 +35,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  */
 public class MFail extends MObj implements Fail {
 
-    public static fURI FAIL_STACK_PATTERN = f("/sys/fail/_?incrq");
+    /** The per-machine fail stack: a fail lands under the machine it executes in. */
+    public static fURI failStackPattern() {
+        return Machine.current().vid().extend("fail").extend("_").addQ("incrq");
+    }
 
     /**
      * The JVM is the Java {@link Throwable} that carries the message and stack trace.
@@ -50,7 +53,8 @@ public class MFail extends MObj implements Fail {
     protected static Fail incrStackWrap(final Fail fail, final fURI pattern) {
         if (null != fail.vid() && !fail.isNoObj())
             return fail;
-        final Obj o = Machine.writeToSpace(fail.vid(pattern));
+        // final Obj o = Machine.write(fail.vid(pattern));
+        final Obj o = fail;
         if (o.isFail())
             return o.as();
         else
@@ -109,7 +113,7 @@ public class MFail extends MObj implements Fail {
         final MTronException mte = MTronException.of(message, args);
         final MFail mfail = new MFail(mte, FAIL_TID, null);
         ensureFailRefs(mte);
-        return incrStackWrap(mfail, FAIL_STACK_PATTERN);
+        return incrStackWrap(mfail, failStackPattern());
     }
 
     /**
@@ -120,7 +124,7 @@ public class MFail extends MObj implements Fail {
         final MTronException mte = MTronException.of(t);
         final MFail mfail = new MFail(mte, FAIL_TID, null);
         ensureFailRefs(mte);
-        return incrStackWrap(mfail, FAIL_STACK_PATTERN);
+        return incrStackWrap(mfail, failStackPattern());
     }
 
     /**
@@ -153,7 +157,7 @@ public class MFail extends MObj implements Fail {
             if (jvm instanceof MTronException)
                 ensureFailRefs(jvm);
         }
-        return incrStackWrap(new MFail(jvm, FAIL_TID, null), FAIL_STACK_PATTERN);
+        return incrStackWrap(new MFail(jvm, FAIL_TID, null), failStackPattern());
     }
 
     /**

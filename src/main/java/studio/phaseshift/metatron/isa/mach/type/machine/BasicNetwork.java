@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashSet;
@@ -53,39 +53,6 @@ public class BasicNetwork extends MRec implements Network {
 
     public BasicNetwork(final Map<Obj, Obj> jvm) {
         super(jvm, MACH_NETWORK_TID, null);
-    }
-
-    @Override
-    public Obj transportOf(final String authority) {
-        final Obj declared = this.declared(authority);
-        if (!declared.isNoObj())
-            return declared;
-        // TODO (roster as projection): /sys/peer is still the store, and a roster is the frame-scoped layer above
-        // it. Once peers are dialed into a frame this fallback goes away and /sys/peer becomes how peers discover
-        // each other rather than where they are kept.
-        final Obj roster = Machine.readFromSpace(Network.Helper.peerRosterPath());
-        if (!roster.isRec())
-            return noobj();
-        return roster.asRec().jvm().entrySet().stream()
-                .filter(e -> e.getKey().isUri() && null != e.getKey().uriValue().authority())
-                .filter(e -> Network.Helper.sameAuthority(e.getKey().uriValue().authority(), authority))
-                .map(Map.Entry::getValue)
-                .filter(v -> !v.isNoObj())
-                .findFirst()
-                .orElse(noobj());
-    }
-
-    /**
-     * what this roster declares, and nothing else
-     */
-    private Obj declared(final String authority) {
-        return this.jvm().entrySet().stream()
-                .filter(e -> e.getKey().isUri() && null != e.getKey().uriValue().authority())
-                .filter(e -> Network.Helper.sameAuthority(e.getKey().uriValue().authority(), authority))
-                .map(Map.Entry::getValue)
-                .filter(v -> !v.isNoObj())
-                .findFirst()
-                .orElse(noobj());
     }
 
     /**

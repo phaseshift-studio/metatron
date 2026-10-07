@@ -38,7 +38,7 @@ public class fURISelectorTool extends SelectorWidget<fURI, fURISelectorTool> {
         super(originalBufferText, List.of("furi", "", "furi"));
 
         if (!originalBufferText.isEmpty()) {
-            final Obj rels = Machine.readFromSpace(f(originalBufferText.substring(1) + "+/"));
+            final Obj rels = Machine.read(f(originalBufferText.substring(1) + "+/"));
             rels.stream().forEach(rel -> {
                 if (rel.isRel()) {
                     this.items.add(rel.asRel().first().uriValue());

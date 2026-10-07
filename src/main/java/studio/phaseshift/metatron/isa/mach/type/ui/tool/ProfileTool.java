@@ -51,7 +51,7 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
             boolean inDom = i.dom().c().lte(rng);
             rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));
             first = false;
-            boolean found = !Machine.root().read(i.tid().basePath()).isNoObj();
+            boolean found = !Machine.root().memory().read(i.tid().basePath()).isNoObj();
             this.instTable.addRow(List.of(
                     (found ? "{{b}}" : "{{r}}") + i.tid().name() + (i.tid().c().isOne() ? "" : ("{" + i.tid().c() + "}")),
                     i.dom().vid().small() + "::T",

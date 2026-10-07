@@ -22,34 +22,54 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.TypeGraph;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.Map;
+import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.SPACE;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MEMORY_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * BasicMemory — one level of a machine's memory: its own relative bindings, and the spaces it holds.
+ * BasicMemory — one level of a machine's memory: its own relative bindings, the spaces it holds,
+ * and the namespace (short-name route table + prefix table).
  * <p>
- * It is a {@link MRec} and holds <b>no state in Java fields</b>, for the same reason {@link BasicMachine} does
- * not: everything has to be reachable from mtron. The relative bindings <em>are</em> this rec, and the absolute
- * index is the {@code space} entry inside it — so {@code >>space} reaches the index from the language, and no
- * part of memory hides behind an accessor the language cannot call.
- * <p>
- * The two projections therefore come from one rec: {@link #stack()} is this memory itself (it is the relative
- * rec), and {@link #spaces()} is the {@code space} entry within it.
+ * It is a {@link MRec} and holds <b>no state in Java fields</b> apart from the namespace tables, for the
+ * same reason {@link BasicMachine} does not: everything has to be reachable from mtron. The relative
+ * bindings <em>are</em> this rec, and the absolute index is the {@code space} entry inside it — so
+ * {@code >>space} reaches the index from the language, and no part of memory hides behind an accessor the
+ * language cannot call.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class BasicMemory extends MRec implements Memory {
+
+    private final GraphittyLogger LOG = Graphitty.log(this);
+
+    // ======================== the namespace ========================
+    private final ObjectMap<fURI, Set<fURI>> smallToBigRoutes = new ObjectMap<>();
+    private final ObjectMap<fURI, fURI> bigToSmallRoutes = new ObjectMap<>();
+    private final ObjectMap<fURI, fURI> prefixToVID = new ObjectMap<>();
+    private fURI primary = M_ISA_TID;
+
+    /**
+     * The absolute index — one stable rec for the lifetime of this memory. It is a Java field, never re-derived
+     * from the rec's own bindings: {@code Rec.at(key, value, MUTABLE)} (the relative write path) rebuilds the
+     * memory's backing map on every write, so an index stored as a rec entry would be orphaned by the next
+     * relative write. A field cannot be orphaned that way, which is what makes {@code addSpace}'s put stick.
+     */
+    private final Rec spaces = rec(mutableMap());
+    private final TypeGraph typeGraph = new TypeGraph();
 
     public BasicMemory() {
         this(mutableMap(), null);
@@ -61,10 +81,8 @@ public class BasicMemory extends MRec implements Memory {
      */
     public BasicMemory(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, MACH_MEMORY_TID, vid);
-        // The index is created here, at construction, and never lazily: `spaces()` is reached from `findSpace`,
-        // which is on the read path, and allocating an Obj there re-enters type resolution and `read` itself.
-        // Anything the read path touches has to already exist.
-        this.spaces();
+        // The index rec is reflected into the bindings too (`>>space` reads it), so register it once here.
+        this.jvm().put(uri(SPACE), this.spaces);
     }
 
     // ======================== hot slot read ========================
@@ -84,26 +102,17 @@ public class BasicMemory extends MRec implements Memory {
     // ======================== the two projections ========================
 
     /**
-     * The relative projection is this memory: the bindings <em>are</em> the rec.
-     */
-    @Override
-    public Rec stack() {
-        return this;
-    }
-
-    /**
-     * This level's index. Created on first access rather than defaulted to a throwaway — {@code Obj.orElse}
-     * evaluates its fallback eagerly, so a missing index would swallow every space registered into it, silently,
-     * which is exactly the failure a space index must never have.
+     * This level's index. A single stable object — a Java field — so the spaces registered into it are never
+     * orphaned by a relative write rebuilding the memory's backing map.
      */
     @Override
     public Rec spaces() {
-        final Obj spaces = this.jvm().getOrDefault(uri(SPACE), noobj());
-        if (spaces.isRec())
-            return spaces.asRec();
-        final Rec fresh = rec(mutableMap());
-        this.jvm().put(uri(SPACE), fresh);
-        return fresh;
+        return this.spaces;
+    }
+
+    @Override
+    public TypeGraph typeGraph() {
+        return this.typeGraph;
     }
 
     // ======================== index maintenance ========================
@@ -161,4 +170,109 @@ public class BasicMemory extends MRec implements Memory {
                 .map(Obj::<Space>as)
                 .anyMatch(s -> vid.test(s.pattern()));
     }
+
+    // ======================== the namespace: short names + prefixes ========================
+
+    @Override
+    public void unregisterRedirect(final fURI small, final fURI big) {
+        if (big.isRelative())
+            return;
+        this.smallToBigRoutes.computeRaw(small, (k, v) -> {
+            if (null != v) {
+                v.removeIf(x -> x.equals(big.basePath()));
+                if (v.isEmpty())
+                    return null;
+                return v;
+            }
+            return null;
+        });
+        this.bigToSmallRoutes.remove(uri(big));
+    }
+
+    @Override
+    public void registerRedirect(final fURI small, final fURI big) {
+        if (big.isRelative())
+            return;
+        this.smallToBigRoutes.computeRaw(small, (k, v) -> {
+            if (null == v) {
+                final Set<fURI> set = Collections.synchronizedSet(new TreeSet<>(Comparator.comparingInt(fURI::pathLength)));
+                set.add(big.basePath());
+                return set;
+            } else {
+                if (!v.contains(big.basePath()) && !this.hasRegisteredPrefix(big) && v.stream().noneMatch(this::hasRegisteredPrefix))
+                    LOG.warn("multiple redirects for {{b}}%s{{X}}: {{b}}%s {{g}}+ {{b}}%s{{X}} (consider prefixing import)", small, big, v.toString().replace("[", "").replaceAll("]", ""));
+                v.add(big.basePath());
+                return v;
+            }
+        });
+        this.bigToSmallRoutes.putRaw(big, small);
+    }
+
+    private boolean hasRegisteredPrefix(final fURI target) {
+        for (final Obj value : this.prefixToVID.values()) {
+            if (target.hasPrefix((fURI) value.jvm()))
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public fURI redirect(final fURI furi, final boolean external) {
+        if (!furi.hasPoly() && furi.isGeneric())
+            return furi;
+        fURI temp;
+        if (external) {
+            final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
+            if (set.isEmpty()) {
+                temp = this.getSpaceFor(furi).redirect(furi, true);
+            } else if (set.size() > 1) {
+                final Optional<fURI> preferred = set.stream().filter(f -> f.hasPrefix(this.primary.toString())).findFirst();
+                temp = preferred.orElse(set.iterator().next());
+            } else {
+                temp = set.iterator().next();
+            }
+        } else {
+            temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
+        }
+        temp = furi.hasPoly() ? temp.poly(furi.poly().stream().map(x -> this.redirect(f(x), external)).map(fURI::toString).toList()) : temp;
+        temp = temp.c(furi.c()).q(furi.qMap());
+        temp = furi.hasDom() ? temp.dom(this.redirect(furi.dom(), external)) : temp;
+        temp = furi.hasRng() ? temp.rng(this.redirect(furi.rng(), external)) : temp;
+        return temp;
+    }
+
+    @Override
+    public void registerPrefix(final fURI prefix, final fURI vid) {
+        final fURI existing = this.prefixToVID.getRaw(prefix);
+        if (existing != null && !Objects.equals(vid, existing))
+            throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
+        this.prefixToVID.putRaw(prefix, vid);
+        this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
+        LOG.info("prefix {{b}}%s {{g}}=> {{b}}%s{{X}} registered", prefix, vid);
+    }
+
+    @Override
+    public fURI alignPrefix(final fURI vid) {
+        final fURI readableVID = vid.one();
+        if (readableVID.hasScheme()) {
+            final fURI prefixed = this.prefixToVID.getRaw(f(readableVID.scheme()));
+            if (null != prefixed) {
+                final fURI suffix = readableVID.scheme(null);
+                final Set<fURI> routes = this.smallToBigRoutes.getOrDefaultRaw(suffix.basePath(), Set.of());
+                final Optional<fURI> target = routes.stream()
+                        .filter(r -> r.hasPrefix(prefixed.toString()))
+                        .findFirst();
+                if (target.isPresent())
+                    return target.get().c(suffix.c()).q(suffix.qMap());
+                return prefixed.extend(suffix);
+            }
+        }
+        return readableVID;
+    }
+
+    /**
+     public Memory clone() {
+     return this;
+     }
+     **/
 }

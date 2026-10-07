@@ -147,7 +147,7 @@ public class CompactionFeatureTest extends AbstractMetatronTest {
                 U(), A("c3"), T("c3"));
         CompactionFeature.writeCompaction(Agent.agent(rec(mutableMap(uri(ROOT), uri(agentHome), uri(SESSION), uri(sessionVID)))), messages, "digest", "summary");
 
-        final List<Rel> ledger = Machine.readFromSpace(agentHome.extend(MESSAGE).extend("+/")).stream()
+        final List<Rel> ledger = Machine.read(agentHome.extend(MESSAGE).extend("+/")).stream()
                 .map(Obj::asRel)
                 .sorted(Comparator.comparing(p -> Integer.parseInt(p.first().uriValue().name())))
                 .toList();
@@ -168,7 +168,7 @@ public class CompactionFeatureTest extends AbstractMetatronTest {
         // beginning" invariant
         final List<Rel> messages = msgs(U(), S(), THINK(), A("c1"), T("c1"));
         CompactionFeature.writeCompaction(Agent.agent(rec(mutableMap(uri(ROOT), uri(agentHome), uri(SESSION), uri(sessionVID)))), messages, "digest", "summary");
-        final List<Rel> ledger = Machine.readFromSpace(agentHome.extend(MESSAGE).extend("+/")).stream()
+        final List<Rel> ledger = Machine.read(agentHome.extend(MESSAGE).extend("+/")).stream()
                 .map(Obj::asRel)
                 .sorted(Comparator.comparing(p -> Integer.parseInt(p.first().uriValue().name())))
                 .toList();

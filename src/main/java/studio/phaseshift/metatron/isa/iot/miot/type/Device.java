@@ -55,9 +55,9 @@ public final class Device {
                 .constructor(lhs -> {
                     final fURI toVID = miotInstSet.deduceVID(lhs, f("+").extend(lhs.tid().name()));
                     if (toVID != null) {
-                        final Obj sub = Machine.readFromSpace(toVID.extend("status").q("sub"));
+                        final Obj sub = Machine.read(toVID.extend("status").q("sub"));
                         if (sub.isNoObj())
-                            Machine.writeToSpace(toVID.extend("status").q("sub"), print_(uri(toVID), str(" {{g}}status{{X}}: {{y}}"), get_(uri("" + 1))));
+                            Machine.write(toVID.extend("status").q("sub"), print_(uri(toVID), str(" {{g}}status{{X}}: {{y}}"), get_(uri("" + 1))));
                     }
                     return lhs;
                 })
@@ -66,7 +66,7 @@ public final class Device {
                             final fURI toVID = miotInstSet.deduceVID(lhs, f("+").extend(lhs.tid().name()));
                             if (null != toVID) {
                                 lhs.asRec().at(inst.arg(0).tid().name(), inst.arg(0), Poly.MUTABLE);
-                                Machine.root().write(toVID.extend(inst.arg(0).tid().name()), inst.arg(0));
+                                Machine.root().memory().write(toVID.extend(inst.arg(0).tid().name()), inst.arg(0));
                             }
                             return lhs;
                         }).create(types, insts);

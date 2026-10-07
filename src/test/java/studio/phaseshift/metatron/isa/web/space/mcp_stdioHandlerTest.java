@@ -70,7 +70,7 @@ public class mcp_stdioHandlerTest extends AbstractMcpHandlerTest {
      */
     @Override
     protected mcpServer createMcpServer() {
-        return new mcpServer(mutableMap(uri(TOOL), lst(Machine.readFromSpace(f("eval")))),
+        return new mcpServer(mutableMap(uri(TOOL), lst(Machine.read(f("eval")))),
                 MCP_SERVER_TID, createTestVid());
     }
 

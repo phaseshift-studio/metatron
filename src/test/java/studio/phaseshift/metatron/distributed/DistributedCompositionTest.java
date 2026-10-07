@@ -78,8 +78,8 @@ public class DistributedCompositionTest extends AbstractMetatronTest {
      */
     @Test
     public void testReferenceIsReferentiallyIdenticalToNesting() {
-        Machine.writeToSpace(f(INLINE), eval("[a=>[b=>'the-value']]"));
-        Machine.writeToSpace(f(COMPOSED), eval("[a=>!*<" + cluster.prefix(1).extend("x") + ">]"));
+        Machine.write(f(INLINE), eval("[a=>[b=>'the-value']]"));
+        Machine.write(f(COMPOSED), eval("[a=>!*<" + cluster.prefix(1).extend("x") + ">]"));
 
         final Obj nested = eval("*" + INLINE + "/a/b");
         final Obj composed = eval("*" + COMPOSED + "/a/b");
@@ -93,10 +93,10 @@ public class DistributedCompositionTest extends AbstractMetatronTest {
      */
     @Test
     public void testComposedFieldIsServedByThePeer() {
-        Machine.writeToSpace(f(COMPOSED), eval("[a=>!*<" + cluster.prefix(1).extend("x") + ">]"));
+        Machine.write(f(COMPOSED), eval("[a=>!*<" + cluster.prefix(1).extend("x") + ">]"));
         assertEquals("'the-value'", String.valueOf(eval("*" + COMPOSED + "/a/b")));
         // the peer's own namespace is not in the local store, so this can only have come across the wire
-        assertThrows(Exception.class, () -> Machine.readFromSpace(f(cluster.root() + "/x/b")),
+        assertThrows(Exception.class, () -> Machine.read(f(cluster.root() + "/x/b")),
                 "the peer's namespace must not leak into the local store");
     }
 
@@ -107,7 +107,7 @@ public class DistributedCompositionTest extends AbstractMetatronTest {
      */
     @Test
     public void testComposedFieldIsLiveNotASnapshot() {
-        Machine.writeToSpace(f(COMPOSED), eval("[a=>!*<" + cluster.prefix(1).extend("live") + ">]"));
+        Machine.write(f(COMPOSED), eval("[a=>!*<" + cluster.prefix(1).extend("live") + ">]"));
         cluster.send(1, "[v=>'first'].to(" + cluster.root() + "/live)");
         assertEquals("'first'", String.valueOf(eval("*" + COMPOSED + "/a/v")),
                 "the composition should resolve to what the peer holds now");

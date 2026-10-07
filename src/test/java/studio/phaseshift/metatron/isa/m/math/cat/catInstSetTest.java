@@ -62,11 +62,11 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     private static Inst plus() {
-        return Machine.readFromSpace(f("/m/inst/plus").rng(f("/m/int")).dom(f("/m/int"))).as();
+        return Machine.read(f("/m/inst/plus").rng(f("/m/int")).dom(f("/m/int"))).as();
     }
 
     private static Inst asUriInt() {
-        return Machine.readFromSpace(f("/m/inst/as").rng(f("/m/uri")).dom(f("/m/int"))).as();
+        return Machine.read(f("/m/inst/as").rng(f("/m/uri")).dom(f("/m/int"))).as();
     }
 
     @Test

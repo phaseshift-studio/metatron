@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -590,11 +590,11 @@ public class TypeTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {
         try {
-            Machine.writeToSpace(tid, noobj());
+            Machine.write(tid, noobj());
             Obj type = ObjmtronSerializer.parse(typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim());
             LAST_TYPE_DEF = typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim();
-            Machine.writeToSpace(tid, type);
-            // assertEquals(type, Machine.readFromSpace(tid));
+            Machine.write(tid, type);
+            // assertEquals(type, Machine.read(tid));
             LOG.debug("testing %s %s %s", instance, shouldSucceed ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", type);
             try {
                 Obj inst = ObjmtronSerializer.parse(instance.trim()).apply();
@@ -613,7 +613,7 @@ public class TypeTest extends AbstractMetatronTest {
             }
             assertTrue(type.isType());
         } finally {
-            Machine.writeToSpace(tid, noobj());
+            Machine.write(tid, noobj());
         }
     }
 
@@ -769,11 +769,11 @@ public class TypeTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @TestData(value = {
-            "being    -> rec::T[?[age=>int::T]]",
-            "person   -> being::T[?[name=>str::T]]",
-            "mortal   -> person::T[?[age=>?<120]]",
-            "immortal -> being::T[?[alias=>str{2,3}::T]]",
-            "team     -> rec::T[?[flag=>?str::T.-<('')>-.count().?=2, member=>being{+}::T]]"})
+            "being    -> rec::T[?[age=>int::T]]@being",
+            "person   -> being::T[?[name=>str{?}::T]]@person",
+            "mortal   -> person::T[?[age=>?<120]]@mortal",
+            "immortal -> being::T[?[alias=>str{2,3}::T]]@immoratal",
+            "team     -> rec::T[?[flag=>?str::T.-<('')>-.count().?=2, member=>being{+}::T]]@team"})
     @CsvSource(value = {
             "[age=>2]                                                            % rec::T                % true",
             "[age=>2]                                                            % lst::T                % false",
@@ -817,7 +817,7 @@ public class TypeTest extends AbstractMetatronTest {
             final Obj typeObj = ObjmtronSerializer.parse(type);
             if (matches) {
                 try {
-                    assertTrue(instanceObj.test(typeObj), "%s is not a %s".formatted(instanceObj, typeObj));
+                    assertTrue(instanceObj.test(typeObj), "%s is not a %s but a %s".formatted(instanceObj, typeObj, instanceObj.type()));
                     instanceObj.as(typeObj.asType());
                 } catch (Exception e) {
                     fail(e);

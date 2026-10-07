@@ -61,7 +61,7 @@ public abstract class AbstractRouterTest extends AbstractMetatronTest {
     public void testPrefix(final String small, final String big) {
         final fURI s = f(small);
         final fURI b = f(big);
-        assertEquals(Machine.readFromSpace(b), Machine.readFromSpace(s));
+        assertEquals(Machine.read(b), Machine.read(s));
         LOG.debug("testing %s prefix %s is %s", s, b, b);
     }
 

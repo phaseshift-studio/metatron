@@ -134,13 +134,13 @@ public class ScoringResolver extends MRec implements Resolver, InstSelector {
             final Optional<fURI> fromOrAt = Inst.Helper.isFromOrAtInstToUri(userInst);
             if (fromOrAt.isPresent()) {
                 if (!fromOrAt.get().hasPattern()) {
-                    final Obj fromOrAtObj = Machine.readFromSpace(fromOrAt.get());
+                    final Obj fromOrAtObj = Machine.read(fromOrAt.get());
                     if (!fromOrAtObj.isNothing() && !fromOrAtObj.isCall()) {
                         userInst.logger().debug("fast from/at() resolution: %s", fromOrAt.get());
-                        return Inst.Helper.bindQ(lhs, userInst, Machine.readFromSpace(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome())));
+                        return Inst.Helper.bindQ(lhs, userInst, Machine.read(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome())));
                     }
                 }
-                return Inst.Helper.bindQ(lhs, userInst, Machine.readFromSpace(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome())));
+                return Inst.Helper.bindQ(lhs, userInst, Machine.read(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome())));
             }
         }
         // a cast names its target type in its own argument, and the general path rebinds the resolved contract's
@@ -149,7 +149,7 @@ public class ScoringResolver extends MRec implements Resolver, InstSelector {
         // contract un-rebound, so it serves only calls that name no type; a cast falls through and is resolved,
         // scored and rebound by the general path.
         if (userInst.tid().big().test(AS_INST_TID) && !userInst.args().elements().anyMatch(Obj::isType)) {
-            final List<Obj> result = Machine.readFromSpace(AS_INST_TID
+            final List<Obj> result = Machine.read(AS_INST_TID
                     .dom(Obj.Helper.specificTypeId(userInst.hasDom() ? userInst.dom() : lhs))
                     .rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
             if (!result.isEmpty()) {
@@ -166,7 +166,7 @@ public class ScoringResolver extends MRec implements Resolver, InstSelector {
                 return Inst.Helper.bindQ(lhs, userInst, fetched.asInst());
         }
         final long t0 = System.nanoTime();
-        final Obj fetched = Machine.readFromSpace(basePath);
+        final Obj fetched = Machine.read(basePath);
         T_RESOLVE.addAndGet(System.nanoTime() - t0);
         return Inst.Helper.bindQ(lhs, userInst, resolve(lhs, userInst, fetched.stream()));
     }
@@ -239,7 +239,7 @@ public class ScoringResolver extends MRec implements Resolver, InstSelector {
 
         // Multiple candidates: score by specificity and select best
         return viable.stream()
-                .filter(apiInst -> apiInst.dom().isGeneric() || !apiInst.dom().isNominal() || Obj.Helper.specificType(lhs).test(apiInst.dom()))
+                .filter(apiInst -> apiInst.dom().isGeneric() || !apiInst.dom().isNominal() || Obj.Helper.specificType(lhs).testByID(apiInst.dom()))
                 .map(apiInst -> {
                     final long t0 = System.nanoTime();
                     final int score = scoreSpecificity(lhs, userInst, apiInst);

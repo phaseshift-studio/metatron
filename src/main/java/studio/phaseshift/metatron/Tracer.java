@@ -71,13 +71,13 @@ public enum Tracer {
     public static void enable(final Tracer... stages) {
         ACTIVE_TRACERS.addAll(List.of(stages));
         for (final Tracer stage : stages)
-            Machine.writeToSpace(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_TRUE);
+            Machine.write(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_TRUE);
     }
 
     public static void disable(final Tracer... stages) {
         List.of(stages).forEach(ACTIVE_TRACERS::remove);
         for (final Tracer stage : stages)
-            Machine.writeToSpace(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_FALSE);
+            Machine.write(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_FALSE);
     }
 
     public static Set<Tracer> getEnabled() {

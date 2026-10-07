@@ -37,8 +37,7 @@ public abstract class AbstractMachineSpaceMirrorTest extends AbstractMetatronTes
 
     @AfterEach
     public void unwind() {
-        while (null != Machine.frame())
-            Machine.frame().machine().pop();
+        Machine.current(Machine.root());
     }
 
     /** Mount on {@code machine} a space that claims {@code pattern} and holds {@code address => marker}. */

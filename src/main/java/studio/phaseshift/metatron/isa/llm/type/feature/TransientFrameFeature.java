@@ -45,6 +45,6 @@ public final class TransientFrameFeature extends AbstractFrameFeature {
     protected void onPopped(final Frame frame, final fURI frameURI) {
         // transient — clear the frame once it stops being top (an ephemeral call stack)
         if (null != frameURI && !frameURI.isEmpty())
-            Machine.writeToSpace(frameURI, noobj());
+            Machine.write(frameURI, noobj());
     }
 }

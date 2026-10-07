@@ -134,7 +134,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
         // The rec structure from Jsoup.parse() may differ slightly from the old
         // round-tripped HTML path; we verify the key text nodes are reachable.
         final String src = "local:web/index.html?mimeq=application/x-mtron";
-        final Rec base = Machine.readFromSpace(src).asRec();
+        final Rec base = Machine.read(src).asRec();
         assertNotNull(base, "index.html rec should not be null");
         assertFalse(base.at(f("html")).isNoObj(), "rec should have html key");
         // Verify the text content is somewhere in the rec tree
@@ -146,7 +146,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
     @Test
     public void testJsonResourceFields() {
         // Read from fsSpace with ?mimeq=application/x-mtron to get rec::T
-        final Rec base = Machine.readFromSpace("local:web/test.json?mimeq=application/x-mtron").asRec();
+        final Rec base = Machine.read("local:web/test.json?mimeq=application/x-mtron").asRec();
         assertNotNull(base, "test.json should be a rec");
         assertEquals((Obj) ObjmtronSerializer.parse("world"), base.at(f("hello")), "hello");
         assertEquals((Obj) ObjmtronSerializer.parse("42"), base.at(f("number")), "number");
@@ -181,32 +181,32 @@ public class httpSpaceTest extends AbstractSpaceTest {
     @Test
     public void testIndexHTMLRedirect() {
         // Default read returns typed html::"..."
-        final Obj idx = Machine.readFromSpace(BASE_URL + "/index.html");
+        final Obj idx = Machine.read(BASE_URL + "/index.html");
         assertNotEquals(noobj(), idx);
         assertTrue(idx.test(HTML_TYPE), "should be html::T");
         assertTrue(idx.isStr(), "html::T refines str::T");
         assertEquals(HTML_TID, idx.tid().basePath(), "TID should be HTML_TID");
 
-        final Obj root = Machine.readFromSpace(BASE_URL + "/");
+        final Obj root = Machine.read(BASE_URL + "/");
         assertNotEquals(noobj(), root);
 
-        final Obj bare = Machine.readFromSpace(BASE_URL);
+        final Obj bare = Machine.read(BASE_URL);
         assertNotEquals(noobj(), bare);
     }
 
     @Test
     public void testServerSideRecursion() {
         // Default httpSpace read returns typed html::"..."
-        assertNotEquals(noobj(), Machine.readFromSpace(BASE_URL + "/#/"));
-        assertNotEquals(noobj(), Machine.readFromSpace(BASE_URL + "/index.html"));
-        assertTrue(Machine.readFromSpace(BASE_URL + "/index.html").test(HTML_TYPE));
-        assertEquals(HTML_TID, Machine.readFromSpace(BASE_URL + "/index.html").tid().basePath());
-        assertEquals(HTML_TID, Machine.readFromSpace(BASE_URL).tid().basePath());
-        assertTrue(Machine.readFromSpace(BASE_URL).test(HTML_TYPE));
+        assertNotEquals(noobj(), Machine.read(BASE_URL + "/#/"));
+        assertNotEquals(noobj(), Machine.read(BASE_URL + "/index.html"));
+        assertTrue(Machine.read(BASE_URL + "/index.html").test(HTML_TYPE));
+        assertEquals(HTML_TID, Machine.read(BASE_URL + "/index.html").tid().basePath());
+        assertEquals(HTML_TID, Machine.read(BASE_URL).tid().basePath());
+        assertTrue(Machine.read(BASE_URL).test(HTML_TYPE));
 
         // Server-side recursion: use fsSpace directly with ?mimeq=application/x-mtron
         // to get rec::T DOM tree and verify text nodes are reachable
-        final Rec idxMRec = Machine.readFromSpace("local:web/index.html?mimeq=application/x-mtron").asRec();
+        final Rec idxMRec = Machine.read("local:web/index.html?mimeq=application/x-mtron").asRec();
         assertNotNull(idxMRec);
         final String idxStr = idxMRec.toString();
         assertTrue(idxStr.contains("a1.b1.c1.text"), "rec should contain a1.b1.c1.text");
@@ -215,7 +215,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
 
     @Test
     public void testFsSpaceDirectRead() {
-        final Obj direct = Machine.readFromSpace("local:web/test.txt");
+        final Obj direct = Machine.read("local:web/test.txt");
         assertNotEquals(noobj(), direct, "direct fsSpace read should not be noobj");
         assertTrue(direct.isStr(), "test.txt should be a string, got: " + direct.tid());
     }
@@ -267,7 +267,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
     @Test
     public void testFsSpaceDirectReadTypedStr() {
         // .html files default to typed html::T (str refinement)
-        final Obj direct = Machine.readFromSpace("local:web/index.html");
+        final Obj direct = Machine.read("local:web/index.html");
         assertNotEquals(noobj(), direct, "direct fsSpace read should not be noobj");
         assertTrue(direct.isStr(), "html should be a str, got: " + direct.tid());
         assertTrue(direct.test(HTML_TYPE), "should be html::T");

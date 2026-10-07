@@ -142,7 +142,7 @@ public interface Feature extends Rec {
     }
 
     default <R extends Obj> R getRootObj(final Agent agent) {
-        return Machine.readFromSpace(this.getRoot(agent)).as();
+        return Machine.read(this.getRoot(agent)).as();
     }
 
     default fURI getRoot(final Agent agent) {

@@ -62,42 +62,6 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 public interface Network extends Machine.Component, Closeable {
 
     /**
-     * True when this machine owns {@code vid}'s authority, alias-awarely — a server declared as
-     * {@code 0.0.0.0:8555} owns {@code localhost:8555} ({@link Helper#sameAuthority}).
-     * <p>
-     * It asks the machine, because "which addresses are mine" is derived from the spaces mounted in its memory,
-     * and the machine is where the index is. Being a question about reachability, it is asked here.
-     */
-    default boolean own(final fURI vid) {
-        final String authority = null == vid ? null : vid.authority();
-        if (null == authority)
-            return false;
-        for (final String self : this.machine().selfAuthorities())
-            if (Helper.sameAuthority(self, authority))
-                return true;
-        return false;
-    }
-
-    /**
-     * True when {@code vid}'s authority is a declared peer: not ours, and named in the roster. Membership is
-     * declared configuration — nothing becomes a peer merely by being addressed.
-     */
-    default boolean isPeer(final fURI vid) {
-        if (null == vid || !vid.hasHost() || null == vid.authority() || this.own(vid))
-            return false;
-        return !this.transportOf(vid.authority()).isNoObj();
-    }
-
-    /**
-     * The declared transport for {@code authority}, or {@code noobj} when it is not a peer.
-     * <p>
-     * Looked up over raw keys rather than through {@code Rec.at}: a roster key is an authority-only URI, and
-     * {@code at} treats URI keys as path navigation. That difference is easy to miss and its failure is quiet —
-     * a peer that resolves to nothing and falls through to the local wildcard-host space <em>appears to work</em>.
-     */
-    Obj transportOf(final String authority);
-
-    /**
      * The authorities this level declares. Membership is configuration, never traffic: a URI must not be able to
      * make itself a peer merely by being addressed.
      */
@@ -166,7 +130,7 @@ public interface Network extends Machine.Component, Closeable {
      */
     default Obj status(final Obj lhs) {
         final Obj field = lhs.isRec() ? lhs.asRec().at(uri(PEER)) : noobj();
-        final Obj roster = field.isRec() ? field : Machine.readFromSpace(Helper.peerRosterPath());
+        final Obj roster = field.isRec() ? field : Machine.read(Helper.peerRosterPath());
         if (!roster.isRec())
             return noobj(); // nothing declared: an empty cluster, not an error
         return objs(roster.asRec().jvm().entrySet().stream()

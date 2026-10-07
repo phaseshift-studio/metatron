@@ -149,7 +149,7 @@ public class ToolRequestResultPairingTest extends AbstractMetatronTest {
      * Every ledger entry of the scenario, oldest → newest (append order).
      */
     private static List<Rec> ledger(final String scenario) {
-        return Machine.readFromSpace(agentRoot(scenario).extend(MESSAGE).extend("+/"))
+        return Machine.read(agentRoot(scenario).extend(MESSAGE).extend("+/"))
                 .stream()
                 .map(Obj::asRel)
                 .sorted(Comparator.comparing(rel -> Integer.parseInt(rel.first().uriValue().name())))

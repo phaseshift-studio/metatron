@@ -117,7 +117,7 @@ public class Generator {
                 .headerDivider("{{b}}" + Border.continuous.leftSide())
                 .applyStyle();
         spaceTypes.forEach(s -> {
-            spaceTable.addRow(List.of("[ ]", s.vid().name(), Machine.readFromSpace(s.vid().addQ(DOCQ_PATTERN.toString())).orElse(rec()).at(DESC)));
+            spaceTable.addRow(List.of("[ ]", s.vid().name(), Machine.read(s.vid().addQ(DOCQ_PATTERN.toString())).orElse(rec()).at(DESC)));
         });
         System.out.println(spaceTypes);
         LOG.none(spaceTable.format());

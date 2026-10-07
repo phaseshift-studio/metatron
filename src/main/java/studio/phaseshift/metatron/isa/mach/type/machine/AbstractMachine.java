@@ -19,12 +19,14 @@
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
-import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -56,17 +58,12 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> implements Machine {
+public abstract class AbstractMachine extends MRec implements Machine {
 
     public static final Uri PRIMARY = uri("primary");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(ALL.maybeSome(), ALL.maybe(), ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     protected final Stats iostats = new MStats();
-
-    private final ObjectMap<fURI, Set<fURI>> smallToBigRoutes = new ObjectMap<>();
-    private final ObjectMap<fURI, fURI> bigToSmallRoutes = new ObjectMap<>();
-    private final ObjectMap<fURI, fURI> prefixToVID = new ObjectMap<>();
-    private fURI primary = M_ISA_TID;
 
     private Memory resolvedMemory = null;
     private Network resolvedNetwork = null;
@@ -75,30 +72,30 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
     /**
      * Resolve each slot template exactly once. The first resolution happens in the constructor, where the
      * components are parented, so by the time the resolution path reads through these it is a field read. That
-     * matters: {@code resolutionMemory()} calls this from inside {@code read}, and a slot that re-applied its
+     * matters: {@code memory()} calls this from inside {@code read}, and a slot that re-applied its
      * template on every access would allocate there — re-entering type resolution and {@code read} itself.
      * <p>
      * {@code Machine.super} is legal here rather than in {@link BasicMachine} because this class implements
      * {@code Machine} directly; a subclass implementing it only through this one cannot reach the default.
      */
     @Override
-    public Memory ownMemory() {
+    public Memory memory() {
         if (null == this.resolvedMemory)
-            this.resolvedMemory = Machine.super.ownMemory();
+            this.resolvedMemory = Machine.super.memory();
         return this.resolvedMemory;
     }
 
     @Override
-    public Network ownNetwork() {
+    public Network network() {
         if (null == this.resolvedNetwork)
-            this.resolvedNetwork = Machine.super.ownNetwork();
+            this.resolvedNetwork = Machine.super.network();
         return this.resolvedNetwork;
     }
 
     @Override
-    public InstSet ownInstset() {
+    public InstSet instset() {
         if (null == this.resolvedInstSet)
-            this.resolvedInstSet = Machine.super.ownInstset();
+            this.resolvedInstSet = Machine.super.instset();
         return this.resolvedInstSet;
     }
 
@@ -127,20 +124,25 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
      */
     private static Memory seedMemory() {
         final Memory memory = new BasicMemory();
-        memory.spaces().jvm().put(uri("+/#"), new stackSpace(f("+/#")));
         return memory;
     }
 
     public AbstractMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(new ConcurrentHashMap<>(), withMemory(jvm), tid, vid);
-        this.at(uri(ROUTE), this.smallToBigRoutes.toRec(), MUTABLE);
+        super(withMemory(jvm), tid, vid);
+        // per-machine fail stack: a fail lands under this machine's own address. Mounted FIRST so a fail thrown
+        // during component adoption (below) already has a space to land in.
+        if (null != this.vid()) {
+            final memSpace failSpace = memSpace.of(this.vid().extend("fail").extend(ALL), null);
+            failSpace.addQ(QCollection.incrQ());
+            this.memory().addSpace(failSpace);
+        }
         // Adopt the components. `at` is what sets a value's parent to the rec holding it, and
         // Machine.Component.machine() walks exactly that — seeding through the constructor map alone would leave
         // every component's machine() quietly answering mach0().
         // Parent the RESOLVED components, not the slot values: the slots hold templates now, and parenting one
         // would leave the memory's own machine() answering mach0().
-        this.ownMemory().parent(this);
-        this.ownNetwork().parent(this);
+        this.memory().parent(this);
+        this.network().parent(this);
         // DO NOT mount the machine's own ISA overlay into the memory index. A BasicInstSet claims `/m/#` -- the SAME
         // pattern the library space claims -- so mounting it creates a same-pattern collision and `mostSpecific`
         // breaks the tie arbitrarily: writes land in the empty overlay while the library is what should answer.
@@ -153,7 +155,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
 
     /**
      * Every machine has a memory from the moment it exists. Guaranteeing it here rather than creating one on
-     * demand is what keeps the read path allocation-free — an {@code ownMemory()} that constructed one lazily
+     * demand is what keeps the read path allocation-free — an {@code memory()} that constructed one lazily
      * would do so inside {@code read}, and building an Obj there re-enters type resolution and {@code read}.
      */
     private static Map<Obj, Obj> withMemory(final Map<Obj, Obj> jvm) {
@@ -166,20 +168,19 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
             final BasicNetwork network = new BasicNetwork();
             jvm.put(uri(NETWORK), instLambda(ignore -> network));
         }
-        // No INSTSET seed is needed: BasicMachine declares the slot unbound, and ownInstset()'s cache turns that
+        // No INSTSET seed is needed: BasicMachine declares the slot unbound, and instset()'s cache turns that
         // into ONE stable empty BasicInstSet per machine. A seed here would only add a second source of truth.
         return jvm;
     }
 
 
-    public Rec at(final Obj key, final Obj value) {
-        if (key.equals(PRIMARY))
-            this.primary = value.uriValue();
-        return super.at(key, value);
-    }
-
     @Override
     public synchronized void close() {
+        // A pushed child shares its parent's memory (inheritance = walk parent()), so the child does not own the
+        // index and must not clear it: clearing the shared memory here is what emptied the root's spaces on every
+        // pop(). Only the machine the memory was parented to — the root — tears the index down.
+        if (this.memory().machine() != this)
+            return;
         try {
             // Snapshot the keys first: removeSpace mutates the index, and removing while iterating the live
             // entry set is a ConcurrentModificationException — which surfaced as a shutdown that reported the
@@ -196,153 +197,23 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
                     });
         } catch (final Exception e) {
             throw MTronException.of(e);
-        } finally {
-            super.close();
         }
     }
 
-    @Override
     public Stats stats() {
         if (Machine.loaded())
             return this.iostats;
         throw MTronException.of("machine not loaded");
     }
 
-    public void unregisterRedirect(final fURI small, final fURI big) {
-        if (big.isRelative())
-            return;
-        this.smallToBigRoutes.computeRaw(small, (k, v) -> {
-            if (null != v) {
-                v.removeIf(x -> x.equals(big.basePath()));
-                if (v.isEmpty())
-                    return null;
-                return v;
-            }
-            return null;
-        });
-        this.bigToSmallRoutes.remove(uri(big));
-    }
-
-    public void registerRedirect(final fURI small, final fURI big) {
-        if (big.isRelative())
-            return;
-        this.smallToBigRoutes.computeRaw(small, (k, v) -> {
-            if (null == v) {
-                final Set<fURI> set = Collections.synchronizedSet(new TreeSet<>(Comparator.comparingInt(fURI::pathLength)));
-                set.add(big.basePath());
-                return set;
-            } else {
-                if (!v.contains(big.basePath()) && !this.hasRegisteredPrefix(big) && v.stream().noneMatch(this::hasRegisteredPrefix))
-                    LOG.warn("multiple redirects for {{b}}%s{{X}}: {{b}}%s {{g}}+ {{b}}%s{{X}} (consider prefixing import)", small, big, v.toString().replace("[", "").replaceAll("]", ""));
-                v.add(big.basePath());
-                return v;
-            }
-        });
-        this.bigToSmallRoutes.putRaw(big, small);
-    }
-
-    /**
-     * True if {@code target} lives under a namespace that has a prefix registered (a
-     * {@code prefixToVID} entry whose vid is a path-prefix of {@code target}). Used to silence
-     * the "multiple redirects ... consider prefixing import" warning once the short-name
-     * collision is already disambiguable via a prefix.
-     */
-    private boolean hasRegisteredPrefix(final fURI target) {
-        for (final Obj value : this.prefixToVID.values()) {
-            if (target.hasPrefix((fURI) value.jvm()))
-                return true;
-        }
-        return false;
-    }
-
-    @Override
-    public fURI redirect(final fURI furi, final boolean external) {
-        if (!furi.hasPoly() && furi.isGeneric())
-            return furi;
-        fURI temp;
-        if (external) {
-            final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
-            if (set.isEmpty()) {
-                temp = this.getSpaceFor(furi).redirect(furi, true);
-            } else if (set.size() > 1) {
-                final Optional<fURI> preferred = set.stream().filter(f -> f.hasPrefix(this.primary.toString())).findFirst();
-                temp = preferred.orElse(set.iterator().next());
-            } else {
-                temp = set.iterator().next();
-            }
-        } else {
-            temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
-        }
-        temp = furi.hasPoly() ? temp.poly(furi.poly().stream().map(x -> this.redirect(f(x), external)).map(fURI::toString).toList()) : temp;
-        temp = temp.c(furi.c()).q(furi.qMap());
-        temp = furi.hasDom() ? temp.dom(this.redirect(furi.dom(), external)) : temp;
-        temp = furi.hasRng() ? temp.rng(this.redirect(furi.rng(), external)) : temp;
-        return temp;
-    }
-
     @Override
     public synchronized void addSpace(final Space space) {
-        if (null == space.vid()) {
-            LOG.debug("vid-less spaces are self-managed and not indexed by router: %s", space);
-            return;
-        }
-        // NOTE (intended change, deliberately not made yet): same-pattern collision should become an
-        // OVERLAP check — `space.pattern().bimatches(existing.pattern())` — and a loud conflict, rather than
-        // silently closing a live space. Holding the destructive semantics through the Router takeover keeps
-        // this move behaviour-preserving, so a regression here can only mean the move broke something.
-        // Evict any previously registered space that shares the exact same pattern so
-        // the fresh space can take its place.  Re-registering a pattern with a newer
-        // incarnation (e.g. a fresh JDBC connection) replaces the stale one rather
-        // than being silently dropped.  Resources (connections, etc.) are closed first.
-        this.ownMemory().spaces().values()
-                .map(r -> (Space) r)
-                .filter(s -> space.pattern().compareTo(s.pattern()) == 0)
-                .toList()
-                .forEach(spc -> {
-                    LOG.warn("%s evicting %s (same pattern %s)", space, spc.vid(), space.pattern());
-                    // Eviction is a replacement, not a removal. spc.close() routes through
-                    // removeSpace(), which drops any prefix bound to this space's pattern (e.g.
-                    // `web`, `ide`, `math`). Snapshot those prefixes and restore them after close
-                    // so the new incarnation keeps its short-name prefix.
-                    final List<Map.Entry<Obj, Obj>> prefixes = this.prefixToVID.entrySet().stream()
-                            .filter(pv -> pv.getValue().uriValue().test(spc.pattern()))
-                            .toList();
-                    spc.close();
-                    prefixes.forEach(pv -> this.prefixToVID.put(pv.getKey(), pv.getValue()));
-                    this.ownMemory().removeSpace(spc.pattern());
-                });
-        final Space superSpace = this.hasSpaceFor(space.pattern()) ? this.getSpaceFor(space.pattern()) : noobjSpace.single();
-        final Rec subSpaces = space.jvm().getOrDefault(uri(SPACE), rec()).as();
-        if (!(superSpace instanceof noobjSpace)) {
-            final Rec superSpaces = superSpace.jvm().getOrDefault(uri(SPACE), rec()).as();
-            subSpaces.at(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
-            subSpaces.parent(superSpace);
-            superSpaces.at(uri(SUB), superSpaces.jvm().getOrDefault(uri(SUB), MObjs.objs0()).append(auto_from_(null == space.vid() ? space.tid() : space.vid()).tryToInst()), MUTABLE);
-            superSpace.at(uri(SPACE), superSpaces, MUTABLE);
-        }
-        if (!subSpaces.isEmpty())
-            space.at(uri(SPACE), subSpaces, MUTABLE);
-        this.ownMemory().addSpace(space);
-        Space.Helper.spaceOpenLog(this, space);
-        // save routes registered by spaceS
-        this.at(uri(ROUTE), this.smallToBigRoutes.toRec(), MUTABLE);
+        this.memory().addSpace(space);
     }
 
     @Override
     public synchronized void removeSpace(final fURI pattern) {
-        if (null == pattern)
-            return;
-        this.ownMemory().spaces().jvm()
-                .entrySet()
-                .stream()
-                .filter(kv -> kv.getKey().uriValue().test(pattern))
-                .toList()
-                .stream()
-                .peek(kv -> this.ownMemory().removeSpace(pattern))
-                .peek(kv -> {
-                    this.prefixToVID.entrySet().stream().filter(pv -> pv.getValue().uriValue().test(((Space) kv.getValue()).pattern())).forEach(pv -> this.prefixToVID.remove(pv.getKey()));
-                })
-                .forEach(kv -> Space.Helper.spaceCloseLog(this, (Space) kv.getValue()));
+        this.memory().removeSpace(pattern);
     }
 
     // ======================== authority dispatch ========================
@@ -363,79 +234,6 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
     }
 
     /**
-     * The authority guard. Three outcomes, and the third is the important one:
-     * <ol>
-     *   <li><b>mine, and unclaimed by any served space</b> — strip the authority and resolve locally
-     *       ({@code localize}), so {@code ws://localhost:8555/usr/x} reaches the local {@code /usr/#} space
-     *       rather than the ws <em>server</em> space whose wildcard host would otherwise claim it;</li>
-     *   <li><b>a declared peer</b> — delegate over its declared transport;</li>
-     *   <li><b>anything else</b> — fall through untouched, so a wildcard space can still legitimately claim
-     *       it ({@code httpspace}'s Jsoup fetch, {@code wsspace} as a server). Fail-closed: an undeclared host
-     *       simply is not a peer.</li>
-     * </ol>
-     * Runs <em>before</em> {@code getSpaceFor}, never inside it — {@code getSpaceFor} is a local primitive
-     * with ~20 call sites (including compile-time rewrites) that must not reach the network.
-     *
-     * @return the dispatched result, or empty when authority dispatch does not apply
-     */
-    private Optional<Obj> dispatchForeign(final fURI vid, final Obj obj) {
-        if (null == vid || !vid.hasHost() || null == vid.authority())
-            return Optional.empty();
-        if (this.own(vid)) {
-            // A space whose pattern names a host is *serving* that address — `wsspace`/`httpspace` pattern on
-            // `ws://#`/`http://#` and keep a session under `ws://localhost:PORT/<route>/<n>`. Localizing such a
-            // uri would strip the authority and hand it to a different space, so the session write would vanish
-            // and the peer on the socket would simply never be answered. But the same authority is also a
-            // legitimate way to name our *own* data (`ws://localhost:PORT/usr/x`), so defer only when
-            // localizing would land on nothing: if the path still resolves, the authority was decoration.
-            if (this.servesAddress(vid) && !this.localizesToSpace(vid))
-                return Optional.empty();
-            return Optional.of(null == obj ? this.read(vid.localize()) : this.write(vid.localize(), obj));
-        }
-        final Obj transport = this.resolutionNetwork().transportOf(vid.authority());
-        if (transport.isNoObj() || !transport.isObjInst())
-            return Optional.empty();
-        final fURI remote = vid.localize();
-        try {
-            final Obj message = null == obj
-                    ? from_(uri(remote)).tryToInst()
-                    : start_(remote.toUri()).ref_(obj);
-            LOG.debug("dispatching %s %s to peer %s", null == obj ? "read" : "write", remote, vid.authority());
-            final Obj response = transport.apply(message);
-            return Optional.of(response.isNoObj()
-                    ? fail("no response from peer %s for %s", vid.authority(), remote)
-                    : response);
-        } catch (final Exception e) {
-            return Optional.of(fail(e));
-        }
-    }
-
-    /**
-     * True when a mounted space's pattern names a host <em>and</em> matches {@code vid} — that space is the
-     * server for this address and must win over the guard's localization. The host test is what keeps this
-     * from being trivially true: a plain path space ({@code /usr/#}) or the catch-all pattern matches almost
-     * anything, while only an authority-claiming space can legitimately own an authority-addressed uri.
-     */
-    private boolean servesAddress(final fURI vid) {
-        final fURI base = vid.basePath();
-        return this.spaces().values()
-                .map(Obj::<Space>as)
-                .anyMatch(s -> s.pattern().hasHost() && base.test(s.pattern()));
-    }
-
-    /**
-     * True when the authority-free form of {@code vid} is claimed by a plain (hostless) space — the test for
-     * "the authority was decoration". Only hostless patterns count: a host-pattern space claiming it is the
-     * very ambiguity this is deciding.
-     */
-    private boolean localizesToSpace(final fURI vid) {
-        final fURI local = vid.localize().basePath();
-        return this.spaces().values()
-                .map(Obj::<Space>as)
-                .anyMatch(s -> !s.pattern().hasHost() && local.test(s.pattern()));
-    }
-
-    /**
      * The address index is the machine's Memory, so a machine's spaces are exactly the spaces its memory holds —
      * there is no second place a space could be registered. The root's memory holds every global space; a frame's
      * holds only what that frame introduced, which is what makes a pop take them with it.
@@ -445,7 +243,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         // resolutionMemory, not memory(): reading must never materialize a frame. Materializing constructs a
         // component, constructing an Obj runs its type check, and the type check reads through the router — which
         // lands back in read(). Only an explicit memory() call forms a frame's views.
-        return this.resolutionMemory().spaces();
+        return this.memory().spaces();
     }
 
     /**
@@ -456,60 +254,20 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
 
     @Override
     public <S extends Space> S getSpaceFor(final fURI match) {
-        return this.resolutionMemory().getSpaceFor(match);
+        return this.memory().getSpaceFor(match);
     }
 
     @Override
     public <SPACE extends Space> SPACE getSpace(final fURI vid) {
-        return this.resolutionMemory().getSpace(vid);
+        return this.memory().getSpace(vid);
     }
 
-    @Override
-    public void registerPrefix(final fURI prefix, final fURI vid) {
-        final fURI existing = this.prefixToVID.getRaw(prefix);
-        if (existing != null && !Objects.equals(vid, existing))
-            throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
-        this.prefixToVID.putRaw(prefix, vid);
-        this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
-        LOG.info("prefix {{b}}%s {{g}}=> {{b}}%s{{X}} registered", prefix, vid);
-    }
-
-    private fURI alignPrefix(final fURI vid) {
-        final fURI readableVID = vid.one();
-        if (readableVID.hasScheme()) {
-            final fURI prefixed = this.prefixToVID.getRaw(f(readableVID.scheme()));
-            if (null != prefixed) {
-                final fURI suffix = readableVID.scheme(null);
-                // The suffix is a short name within the prefix's namespace (e.g. `web:java`). Short
-                // names are redirects — types register `java -> /m/web/mime/java`, insts register
-                // `command -> /m/ide/inst/command` — and a name can be shared across instsets (both
-                // /m/web and /m/ide register `java`). So resolve the suffix against the redirect table,
-                // preferring the target that lives under this prefix's vid — that scoping is the whole
-                // point of the prefix. Fall back to the naive prefix + path extension when no redirect
-                // target sits under the prefix (e.g. `ide:inst/command`).
-                final Set<fURI> routes = this.smallToBigRoutes.getOrDefaultRaw(suffix.basePath(), Set.of());
-                final Optional<fURI> target = routes.stream()
-                        .filter(r -> r.hasPrefix(prefixed.toString()))
-                        .findFirst();
-                if (target.isPresent())
-                    return target.get().c(suffix.c()).q(suffix.qMap());
-                return prefixed.extend(suffix);
-            }
-        }
-        return readableVID;
-    }
-
-    @Override
     public Obj read(final fURI vid) {
         if (null == vid || NOOBJ.equals(vid.basePath()) || vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
         if (vid.equals(this.vid()) || vid.equals(vid.id()))
             return this;
-        // authority guard — mine resolves locally, a declared peer delegates, everything else falls through
-        final Optional<Obj> foreign = this.dispatchForeign(vid, null);
-        if (foreign.isPresent())
-            return foreign.get();
-        final fURI readableVID = this.alignPrefix(vid);
+        final fURI readableVID = this.memory().alignPrefix(vid);
         /// ///////////////////
         if (readableVID.isGeneric())
             return T(readableVID);
@@ -523,7 +281,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         // readAbsolute, not read: the machine resolves addresses through spaces whatever the vid's shape. The
         // relative branch is Memory's own contract, where a relative vid means "in the frame" — letting it claim
         // the machine's vids sent bulk relative writes to the argument stack instead of the space they named.
-        final Obj obj = this.resolutionMemory().readAbsolute(readableVID);
+        final Obj obj = this.memory().readAbsolute(readableVID);
         if (obj.isNoObj()) {
             final fURI bigVID = readableVID.big();
             if (!bigVID.equals(readableVID))
@@ -533,7 +291,6 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         return obj;
     }
 
-    @Override
     /**
      * DELIBERATELY NOT SYNCHRONIZED. Serializing this did fix a measured lost sibling, but it puts a lock on EVERY
      * write through a machine -- the hottest path there is -- and that lock can hold a thread that has nothing to do
@@ -547,11 +304,7 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
             LOG.warn("the provided write uri was null");
             return noobj();
         }
-        // authority guard — mirrors read()
-        final Optional<Obj> foreign = this.dispatchForeign(vid, obj);
-        if (foreign.isPresent())
-            return foreign.get();
-        final fURI writableVID = this.alignPrefix(vid);
+        final fURI writableVID = this.memory().alignPrefix(vid);
         /// ///////////////
         // A machine's own address is the machine. read() already says so (`vid.equals(this.vid())` -> this);
         // write had no matching guard, and it needs one now that the root's vid is `/`, which no space covers.
@@ -561,18 +314,16 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         if (obj == this && writableVID.equals(this.vid()))
             return obj;
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} at %s", obj, vid, writableVID);
-        // invalidate cached type resolutions that this write may touch --
-        // before the write, so a failed write still errs on the safe side.
-        TypeGraph.global().onWrite(writableVID);
-        // as in read(): which space answers is Memory's question, asked in one place
-        return this.resolutionMemory().writeAbsolute(writableVID, obj);
+        // as in read(): which space answers is Memory's question, asked in one place. write() carries the
+        // type-graph invalidation, so there is a single invalidation point for every write path.
+        return this.memory().write(writableVID, obj);
     }
 
     @Override
     public boolean hasSpaceFor(final fURI vid) {
         // alignment is the ISA's business (a short name is a redirect), so it happens here and the memory sees an
         // address it can resolve. Memory never renames an address.
-        return this.resolutionMemory().hasSpaceFor(this.alignPrefix(vid));
+        return this.memory().hasSpaceFor(this.memory().alignPrefix(vid));
     }
 
 
@@ -586,7 +337,6 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         return Machine.super.apply(call);
     }
 
-    @Override
     public Machine clone() {
         // A real shallow copy, as MObj already provides: the override exists only because Machine.clone() narrows the
         // return type, and stubbing it made `Obj.vid(fURI)` (which IS this.clone(jvm, tid, vid)) a no-op on a
@@ -595,11 +345,15 @@ public abstract class AbstractMachine extends AbstractSpace<Map<Obj, Obj>> imple
         return (Machine) super.clone();
     }
 
-    @Override
     public Machine clone(final Object jvm, final fURI tid, final fURI vid) {
         // set the fields on the COPY, never on this: that is what distinguishes vid() (copy then set) from
         // selfVID() (set in place), and the difference is the whole point of the pair.
         return (Machine) this.clone().self(jvm, tid, vid);
+    }
+
+    @Override
+    public Machine self(final Object jvm, final fURI tid, final fURI vid) {
+        return (Machine) super.self(jvm, null == tid ? this.tid() : tid, null == vid ? this.vid() : vid);
     }
 
     /*@Override

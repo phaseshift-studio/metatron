@@ -67,7 +67,7 @@ public abstract class AbstractHTTPServerTest extends AbstractMetatronTest {
      * Look up the registered Type for this handler from the Router.
      */
     protected Type handlerType() {
-        return Machine.root().read(handler.vid()).type();
+        return Machine.root().memory().read(handler.vid()).type();
     }
 
     @BeforeEach

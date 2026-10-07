@@ -330,7 +330,7 @@ public class ExistingCollectionSchema {
                 .isaPredicate(rec(fields))
                 .create();
 
-        Machine.writeToSpace(typeVID, type);
+        Machine.write(typeVID, type);
         SchemaSpace.logSchemaChange(this.space.logger(), "collection", "field",
                 collectionName, fieldTypes.keySet(), isNew);
     }

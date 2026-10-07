@@ -65,7 +65,7 @@ public final class Entity {
                     pinholder.logger().warn("no vid associated with %s", pinholder, entityName);
                 else {
                     pinholder.logger().info("writing to vid: %s", toVID.extend(kv.first().uriValue().toString()));
-                    Machine.writeToSpace(toVID.extend(kv.first().uriValue().toString()), newValue);
+                    Machine.write(toVID.extend(kv.first().uriValue().toString()), newValue);
                 }
                 found.set(true);
             }
@@ -79,7 +79,7 @@ public final class Entity {
                 pinholder.logger().warn("no vid associated with %s", pinholder, entityName);
             else {
                 pinholder.logger().info("writing to vid: %s", toVID.extend(pinUri.uriValue().toString()));
-                Machine.writeToSpace(toVID.extend(pinUri.uriValue().toString()), newValue);
+                Machine.write(toVID.extend(pinUri.uriValue().toString()), newValue);
             }
         }
         return pinholder;

@@ -68,13 +68,13 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
                 uri(DATA), uri("/tmp/memspace-test.mtron"),
                 uri(PATTERN), uri("/tt/#")), f("/sys/space/mem_persist_1"));
         final Map<fURI, Obj> data = generateRandomData(space.pattern().retractPattern(), 10);
-        data.forEach(Machine::writeToSpace);
-        data.forEach((k, v) -> assertEquals(v, Machine.readFromSpace(k)));
+        data.forEach(Machine::write);
+        data.forEach((k, v) -> assertEquals(v, Machine.read(k)));
         space.close();
         final memSpace space2 = memSpace.of(rec(
                 uri(DATA), uri("/tmp/memspace-test.mtron"),
                 uri(PATTERN), uri("/tt/#")), f("/sys/space/mem_persist_2"));
-        data.forEach((k, v) -> assertEquals(v, Machine.readFromSpace(k)));
+        data.forEach((k, v) -> assertEquals(v, Machine.read(k)));
         space2.close();
     }
 

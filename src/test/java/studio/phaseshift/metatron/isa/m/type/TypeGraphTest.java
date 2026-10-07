@@ -52,21 +52,21 @@ public class TypeGraphTest extends AbstractMetatronTest {
     @BeforeAll
     public static void setup() {
         InstSet.importInstSet(MATH_ISA_TID, f("math"));
-        TypeGraph.global();
+        Machine.current().memory().typeGraph();
     }
 
     @AfterEach
     public void cleanTypeGraph() {
         try {
-            Machine.writeToSpace(PROBE, noobj());
+            Machine.write(PROBE, noobj());
         } finally {
-            TypeGraph.global().clear();
+            Machine.current().memory().typeGraph().clear();
         }
     }
 
     @Test
     public void testMemoHit() {
-        final TypeGraph graph = TypeGraph.global();
+        final TypeGraph graph = Machine.current().memory().typeGraph();
         final AtomicInteger resolves = new AtomicInteger(0);
         final Supplier<Type> resolve = () -> {
             resolves.incrementAndGet();
@@ -81,7 +81,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
 
     @Test
     public void testInvalidationOnTypeWrite() {
-        final TypeGraph graph = TypeGraph.global();
+        final TypeGraph graph = Machine.current().memory().typeGraph();
         final AtomicInteger resolves = new AtomicInteger(0);
         // the parsed type carries its own (registered) path -- resolve and
         // watch through that path so the write below aliases a watched entry
@@ -95,14 +95,14 @@ public class TypeGraphTest extends AbstractMetatronTest {
         graph.memo(key, resolve);
         assertEquals(1, resolves.get(), "first resolution must run the resolver");
         // register the type at the watched path -- the write must invalidate
-        Machine.writeToSpace(typePath, type);
+        Machine.write(typePath, type);
         graph.memo(key, resolve);
         assertEquals(2, resolves.get(), "a write to the type path must force a re-resolution: resolves=" + resolves.get());
     }
 
     @Test
     public void testNoSpuriousInvalidationOnUnrelatedWrite() {
-        final TypeGraph graph = TypeGraph.global();
+        final TypeGraph graph = Machine.current().memory().typeGraph();
         final AtomicInteger resolves = new AtomicInteger(0);
         final Supplier<Type> resolve = () -> {
             resolves.incrementAndGet();
@@ -111,14 +111,14 @@ public class TypeGraphTest extends AbstractMetatronTest {
         final TypeGraph.Key key = new TypeGraph.Key(f("int").big(), null, null, null);
         graph.memo(key, resolve);
         // an unrelated data write must not disturb the memo
-        Machine.writeToSpace(f("/m/tgraphUnrelated"), jnt(42));
+        Machine.write(f("/m/tgraphUnrelated"), jnt(42));
         graph.memo(key, resolve);
         assertEquals(1, resolves.get(), "an unrelated write must not invalidate the memo: resolves=" + resolves.get());
     }
 
     @Test
     public void testConcurrentResolveDuringWrites() throws InterruptedException {
-        final TypeGraph graph = TypeGraph.global();
+        final TypeGraph graph = Machine.current().memory().typeGraph();
         final AtomicInteger resolves = new AtomicInteger(0);
         final Supplier<Type> resolve = () -> {
             resolves.incrementAndGet();
@@ -138,7 +138,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
                     for (int j = 0; j < 25; j++) {
                         graph.memo(key, resolve);
                         if (j % 4 == 0)
-                            Machine.writeToSpace(f("/m/tgraphHammer"), jnt(j));
+                            Machine.write(f("/m/tgraphHammer"), jnt(j));
                     }
                 } catch (final Exception e) {
                     errors.incrementAndGet();
@@ -161,7 +161,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
 
     @Test
     public void testRouterRebindClearsStaleRegistry() {
-        final TypeGraph graph = TypeGraph.global();
+        final TypeGraph graph = Machine.current().memory().typeGraph();
         final AtomicInteger resolves = new AtomicInteger(0);
         final Supplier<Type> resolve = () -> {
             resolves.incrementAndGet();

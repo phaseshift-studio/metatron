@@ -31,7 +31,7 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.branch_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -142,7 +142,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isZero()) return rhs;
         if (this.clessEquals(rhs))
             return this.c(c -> c.plus(rhs.c()));
-        return split_(objs(this.tryToInst(), rhs.tryToInst())).tryToInst();
+        return branch_(this, rhs).tryToInst();
     }
 
     @Override

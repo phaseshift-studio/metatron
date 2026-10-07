@@ -47,7 +47,7 @@ public class AuditFeatureTest extends AbstractFeatureTest {
     @Test
     public void testTrailPersistedWithPhases() {
         runLifecycle(feature());
-        final Obj rows = Machine.readFromSpace(f("/usr/test/audit/+"));
+        final Obj rows = Machine.read(f("/usr/test/audit/+"));
         assertFalse(rows.isNoObj(), "audit trail should be persisted");
         final Obj trail = rows.stream().reduce((a, b) -> b).orElse(noobj()).asRec().at(uri("trail"));
         assertFalse(trail.isNoObj(), "audit row should carry the trail");

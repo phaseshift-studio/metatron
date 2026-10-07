@@ -231,11 +231,11 @@ public class catInstSet extends AbstractInstSet {
                                             final Obj obj = object.at(OBJ);
                                             object.at(LAW, LawTable.typeLawsOf(obj.asType()), MUTABLE);
                                             object.at(MORPHED_TO, auto_(instLambda((ignore, i) -> {
-                                                final Obj insts = Machine.readFromSpace(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
+                                                final Obj insts = Machine.read(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
                                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
                                             })).tryToInst(), MUTABLE);
                                             object.at(MORPHED_FROM, auto_(instLambda((o, i) -> {
-                                                final Obj insts = Machine.readFromSpace(f("/m/inst/+")/*.dom(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())*/.rng(obj.vid())); // TODO: constrain to instset
+                                                final Obj insts = Machine.read(f("/m/inst/+")/*.dom(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())*/.rng(obj.vid())); // TODO: constrain to instset
                                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
                                             })).tryToInst(), MUTABLE);
                                             return object.selfTID(OBJECT_TID);
@@ -891,7 +891,7 @@ public class catInstSet extends AbstractInstSet {
      * The cast family, minus the identity casts ({@code as?X<=X} are trivially true, not graph edges).
      */
     private static List<Inst> asInsts() {
-        return Machine.readFromSpace(AS_INST_TID).stream()
+        return Machine.read(AS_INST_TID).stream()
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
                 .filter(inst -> !inst.tid().dom().equals(inst.tid().rng()))
@@ -1004,7 +1004,7 @@ public class catInstSet extends AbstractInstSet {
         final List<Inst> implicit = new ArrayList<>();
         if (!Machine.loaded())
             return implicit;
-        final List<Type> types = Machine.readFromSpace(AS_INST_TID).stream()
+        final List<Type> types = Machine.read(AS_INST_TID).stream()
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
                 .flatMap(inst -> List.of(inst.dom().vid(), inst.rng().vid()).stream())
@@ -1037,7 +1037,7 @@ public class catInstSet extends AbstractInstSet {
     public static Type catWrap(final Type type, final Map<Obj, Obj> theories) {
         final Rec objectRec = rec(mutableMap(uri(OBJ), type));
         objectRec.jvm().put(uri(LAW), rec(theories));
-        // Machine.writeToSpace(type.vidOrTid().addQ(CATQ_PATTERN.toString()), objectRec.tid(catInstSet.OBJECT_TID));
+        // Machine.write(type.vidOrTid().addQ(CATQ_PATTERN.toString()), objectRec.tid(catInstSet.OBJECT_TID));
         return type;
     }
 }

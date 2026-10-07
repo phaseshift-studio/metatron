@@ -76,12 +76,12 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
         this.space.insts().forEach(inst -> {
             if (inst.hasDom() && inst.hasRng()) {
                 hasDomRng.getAndIncrement();
-                long d = Machine.readFromSpace(inst.tid().dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long dash = Machine.readFromSpace(inst.tid().dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long r = Machine.readFromSpace(inst.tid().rng(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long rash = Machine.readFromSpace(inst.tid().rng(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long dr = Machine.readFromSpace(inst.tid().rng(null).dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long drash = Machine.readFromSpace(inst.tid().rng(ALL).dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long d = Machine.read(inst.tid().dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long dash = Machine.read(inst.tid().dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long r = Machine.read(inst.tid().rng(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long rash = Machine.read(inst.tid().rng(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long dr = Machine.read(inst.tid().rng(null).dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long drash = Machine.read(inst.tid().rng(ALL).dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 LOG.debug("inst [%s] dom [%s] rng [%s] domRng [%s]", inst.tid().basePath(), d, r, dr);
                 assertTrue(d > 0);
                 if (!inst.dom().c().isZeroable())

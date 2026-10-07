@@ -461,12 +461,12 @@ public class mcpServer extends MRec {
             return false;
         }
         final fURI outbox = this.subscriptionOutbox(id);
-        Machine.root().write(target.addQ(SUBQ), rec(mutableMap(
+        Machine.root().memory().write(target.addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(target),
                 uri(CODE), instC(f("mcp_resource_updated").dom(LST_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     final Obj changed = lhs.asLst().at(0);
                     final Obj value = lhs.asLst().at(1);
-                    Machine.root().write(outbox, rec(mutableMap(
+                    Machine.root().memory().write(outbox, rec(mutableMap(
                             uri(METHOD), uri("notifications/resources/updated"),
                             uri("params"), rec(uri(URI), changed, uri(VALUE), value),
                             uri("subscriptionId"), id)));
@@ -702,7 +702,7 @@ public class mcpServer extends MRec {
             // deciding which of the three shapes this is
             final Obj dereferenced = null == target ? null : target.dereference();
             final Obj pointer = null != dereferenced && !dereferenced.isNoObj() ? dereferenced : target;
-            final Obj read = null != pointer && pointer.isUri() ? Machine.root().read(pointer.uriValue()) : pointer;
+            final Obj read = null != pointer && pointer.isUri() ? Machine.root().memory().read(pointer.uriValue()) : pointer;
             if (null == read || read.isNoObj())
                 return noobj();
             if (read.isType() && read.asType().hasConstructor()

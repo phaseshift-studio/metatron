@@ -69,9 +69,9 @@ public class mcpEmulatorBuilder {
                     instC(M_ISA_INST_TID.extend("adduser").dom(ALL.maybe()).rng(URI_TID), rec(uri(USER), URI_TYPE),
                             (lhs, inst) -> {
                                 final fURI userDirectory = getUserDirectory(inst.arg(f(USER), 0).uriValue());
-                                if (!Machine.readFromSpace(userDirectory).isNoObj())
+                                if (!Machine.read(userDirectory).isNoObj())
                                     throw MTronException.of("user directory already exists: %s", userDirectory);
-                                Machine.writeToSpace(userDirectory, rec(TOOL, rec(), RESOURCE, rec(), PROMPT, rec()));
+                                Machine.write(userDirectory, rec(TOOL, rec(), RESOURCE, rec(), PROMPT, rec()));
                                 return userDirectory.toUri();
                             }), "noobj lhs", "uri of the newly created home directory",
                     Map.of(uri(USER), "the name of the user to create a home directory for"),
@@ -80,9 +80,9 @@ public class mcpEmulatorBuilder {
                     instC(M_ISA_INST_TID.extend("deluser").dom(ALL.maybe()).rng(ALL.maybeSome()), rec(uri(USER), URI_TYPE),
                             (lhs, inst) -> {
                                 final fURI userDirectory = getUserDirectory(inst.arg(f(USER), 0).uriValue());
-                                if (Machine.readFromSpace(userDirectory).isNoObj())
+                                if (Machine.read(userDirectory).isNoObj())
                                     throw MTronException.of("user directory does not exists: %s", userDirectory);
-                                Machine.writeToSpace(userDirectory.extend("#"), noobj());
+                                Machine.write(userDirectory.extend("#"), noobj());
                                 return str("user " + inst.arg(f(USER), 0) + " deleted");
                             }), "noobj lhs", "uri of the newly created home directory",
                     Map.of(uri(USER), "the name of the user to create a home directory for"),
@@ -98,13 +98,13 @@ public class mcpEmulatorBuilder {
                                             final String serverName = Str.Helper.cleanString(server.first());
                                             final Rec serverConfig = server.second().asRec();
                                             final Obj jsonServerConfig = str(ObjJSONSerializer.simple().write(serverConfig).toString()).as(WEB_JSON_TYPE);
-                                            final Inst asInst = Machine.readFromSpace(AS_INST_TID.dom(WEB_JSON_TID).rng(MCP_CLIENT_TID)).stream().findFirst().orElse(noobj()).asInst();
+                                            final Inst asInst = Machine.read(AS_INST_TID.dom(WEB_JSON_TID).rng(MCP_CLIENT_TID)).stream().findFirst().orElse(noobj()).asInst();
                                             LOG.debug("serverConfig: %s\njsonServerConfig: %s\nas-inst: %s", serverConfig, jsonServerConfig, asInst);
                                             final Obj mcpClient = asInst.apply(jsonServerConfig);
                                             LOG.debug("mcpClient: %s", mcpClient);
-                                            Machine.writeToSpace(userDirectory.extend(TOOL).extend(serverName), mcpClient);
+                                            Machine.write(userDirectory.extend(TOOL).extend(serverName), mcpClient);
                                         });
-                                        return Machine.readFromSpace(userDirectory.extend(TOOL).extend("+/"));
+                                        return Machine.read(userDirectory.extend(TOOL).extend("+/"));
                                     }),
                             "noobj lhs", "summary of installed servers with tool/resource/prompt counts",
                             Map.of(uri(USER), "the user to install servers for",

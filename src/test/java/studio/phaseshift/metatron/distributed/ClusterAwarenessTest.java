@@ -71,7 +71,7 @@ public class ClusterAwarenessTest extends AbstractMetatronTest {
      */
     @Test
     public void testClusterSingletonIsRegistered() {
-        final Obj cluster = Machine.readFromSpace(Network.CLUSTER_PATH);
+        final Obj cluster = Machine.read(Network.CLUSTER_PATH);
         assertTrue(cluster.isRec(), "/sys/cluster should be a rec, got " + cluster);
         assertTrue(cluster.asRec().has(uri(PEER)), "a cluster has a peer field");
         assertTrue(cluster.asRec().has(uri(STATUS)), "a cluster has a status method");
@@ -83,9 +83,9 @@ public class ClusterAwarenessTest extends AbstractMetatronTest {
      */
     @Test
     public void testPeerFieldIsLiveNotACopy() {
-        final Obj peerField = Machine.readFromSpace(Network.CLUSTER_PATH).asRec().at(uri(PEER));
+        final Obj peerField = Machine.read(Network.CLUSTER_PATH).asRec().at(uri(PEER));
         assertTrue(peerField.isRec(), "the peer field should resolve to the roster rec, got " + peerField);
-        assertEquals(Machine.readFromSpace(Network.Helper.peerRosterPath()).toString(), peerField.toString(),
+        assertEquals(Machine.read(Network.Helper.peerRosterPath()).toString(), peerField.toString(),
                 "the peer field must be the roster itself, not a snapshot of it");
     }
 
@@ -119,8 +119,8 @@ public class ClusterAwarenessTest extends AbstractMetatronTest {
      */
     @Test
     public void testStatusIsReachableAndReportsPerPeer() {
-        final Obj clusterRec = Machine.readFromSpace(Network.CLUSTER_PATH);
-        final Obj status = Machine.readFromSpace(Network.CLUSTER_PATH.extend("status"));
+        final Obj clusterRec = Machine.read(Network.CLUSTER_PATH);
+        final Obj status = Machine.read(Network.CLUSTER_PATH.extend("status"));
         assertFalse(status.isNoObj(), "the status inst must be retrievable at /sys/cluster/status");
         final Obj report = status.apply(clusterRec);
         assertFalse(report.isFail(), "applying status to the cluster must not fail: " + report);
@@ -137,14 +137,14 @@ public class ClusterAwarenessTest extends AbstractMetatronTest {
      */
     @Test
     public void testStatusReportsASilentPeerDown() {
-        final Obj roster = Machine.readFromSpace(Network.Helper.peerRosterPath());
+        final Obj roster = Machine.read(Network.Helper.peerRosterPath());
         final Map<Obj, Obj> declared = new LinkedHashMap<>(roster.asRec().jvm());
         // a declared peer whose transport cannot answer: the report must name it, and must not call it up
         declared.put(uri("ws://localhost:1"), noAnswerTransport());
-        Machine.writeToSpace(Network.Helper.peerRosterPath(), rec(declared));
+        Machine.write(Network.Helper.peerRosterPath(), rec(declared));
 
-        final Obj report = Machine.readFromSpace(Network.CLUSTER_PATH.extend("status"))
-                .apply(Machine.readFromSpace(Network.CLUSTER_PATH));
+        final Obj report = Machine.read(Network.CLUSTER_PATH.extend("status"))
+                .apply(Machine.read(Network.CLUSTER_PATH));
         assertEquals(2, report.stream().count(), "both the live and the silent peer belong in the report: " + report);
         assertTrue(report.stream().anyMatch(entry ->
                         "down".equals(entry.asRec().at(uri(STATUS)).asRec().at(uri(KIND)).strValue())),

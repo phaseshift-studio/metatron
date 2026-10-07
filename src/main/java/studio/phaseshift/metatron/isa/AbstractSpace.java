@@ -56,10 +56,10 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         this.at(PATTERN, uri(this.pattern = this.at(PATTERN).apply().uriValue()), MUTABLE);
         this.ioStats = new MStats();
         LOG = Graphitty.log(this);
-        // Don't auto-register InstSets - they're registered via importInstSetStream AFTER full construction
-        // This ensures docq and other post-super() setup is complete before registration
-        if (Machine.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Machine) && !(this instanceof InstSet))
-            Machine.root().addSpace(this);
+        // Don't auto-register InstSets - they're registered via import AFTER full construction.
+        // A space self-registers into the memory of the machine being constructed IN (current), not the root.
+        if (Machine.loaded() && !(this instanceof Machine) && !(this instanceof InstSet))
+            Machine.current().memory().addSpace(this);
     }
 
     @Override
@@ -67,7 +67,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         // LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
         /*final fURI routedVID = Space.Helper.routeFromSpace(vid, this.routes());
         if (!routedVID.test(this.pattern()))
-            return Machine.readFromSpace(routedVID);*/
+            return Machine.read(routedVID);*/
         QProc.Helper.checkSpaceQProcs(this, vid);
         return QProc.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
             final Obj result = Space.Helper.resolveRead(this, vid, directReader());

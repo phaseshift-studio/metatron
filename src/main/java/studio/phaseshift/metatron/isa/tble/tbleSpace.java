@@ -394,7 +394,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                         .findFirst().orElse(null);
         if (metadata == null) return;
         final Type type = this.schemaGenerator.refreshTableType(metadata);
-        Machine.writeToSpace(type.vid(), type);
+        Machine.write(type.vid(), type);
     }
 
     // =========================================================================
@@ -503,7 +503,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                             final fURI typeVID = this.schemaInstset.pattern()
                                     .retractPattern().extend(dp.collection());
                             final Type typed = (Type) obj.asType().vid(typeVID);
-                            Machine.writeToSpace(typeVID, typed);
+                            Machine.write(typeVID, typed);
                             LOG.info("registered type {{b}}%s{{X}} at collection path %s", typeVID, dp.collection());
                             return typed;
                         }
@@ -577,7 +577,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                 final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
                 if (pattern.hasScheme() && aligned.hasScheme() && !pattern.scheme().equals(aligned.scheme())) {
                     LOG.warn("interspace reroute: %s => %s", pattern, aligned);
-                    return Machine.readFromSpace(aligned).stream().map(o -> new IdObj(aligned, o)).iterator();
+                    return Machine.read(aligned).stream().map(o -> new IdObj(aligned, o)).iterator();
                 }
                 // ── collection-level schema resolution ──
                 // Shared across all SchemaSpaces: /db/collection → type from schema InstSet.

@@ -186,7 +186,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
     private void onCollectionCreated(final String name) {
         if (this.schemaInstset == null) return;
         final Type type = collectionType(name, this.schemaInstset.vid());
-        Machine.writeToSpace(type.vid(), type);
+        Machine.write(type.vid(), type);
         LOG.info("registered type {{b}}%s{{X}} for collection %s", type.vid(), name);
     }
 

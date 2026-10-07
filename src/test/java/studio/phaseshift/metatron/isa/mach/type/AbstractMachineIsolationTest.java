@@ -35,8 +35,7 @@ public abstract class AbstractMachineIsolationTest extends AbstractMetatronTest 
     @AfterEach
     public void unwind() {
         // a failed assertion must not leave a frame on this thread's stack
-        while (null != Machine.frame())
-            Machine.frame().machine().pop();
+        Machine.current(Machine.root());
     }
 
     /** Write {@code value} into this machine's component under {@code key}. */

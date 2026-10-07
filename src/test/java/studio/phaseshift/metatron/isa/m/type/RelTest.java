@@ -90,7 +90,7 @@ public class RelTest extends AbstractAlgebraTest<Rel> {
             "*a.zero().type()                                            % (a=>1).zero().type()",
     }, delimiter = '%')
     public void testRelZeroCanonical(final String code, final String expected) {
-        Machine.root().write("a", rel(uri("a"), jnt(1)));
+        Machine.root().memory().write("a", rel(uri("a"), jnt(1)));
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

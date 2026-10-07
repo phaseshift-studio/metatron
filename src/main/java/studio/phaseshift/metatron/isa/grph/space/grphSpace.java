@@ -344,7 +344,7 @@
              final List<String> cascadeSegs = remainder.size() <= 1 || "+".equals(remainder.get(0)) || "#".equals(remainder.get(0))
                      ? List.of() : remainder.subList(1, remainder.size());
              final fURI exactPattern = externalBase.extend(childKey);
-             final Obj readResult = Machine.readFromSpace(exactPattern);
+             final Obj readResult = Machine.read(exactPattern);
              final List<IdObj> readResults = readResult.isObjs()
                      ? IteratorUtil.stream(readResult.objsValue().iterator())
                      .map(o -> IdObj.of(o.vid() != null ? o.vid() : exactPattern, o)).toList()
@@ -511,7 +511,7 @@
 
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
                  if (routed.hasScheme() && !routed.test(this.pattern())) {
-                     return new IdObj(routed, Machine.root().read(routed)).iterator();
+                     return new IdObj(routed, Machine.root().memory().read(routed)).iterator();
                  }
                  // Flat key-value namespace (reserved kv_store label, or unknown collection).
                  // Only for paths under this space's prefix; absolute cross-space paths
@@ -610,7 +610,7 @@
                  LOG.debug("unknown tp3 vid: %s", pattern);
                  final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
                  if (full.equals(pattern)) return readCollection(dp);
-                 return IdObj.of(full, Machine.root().read(full)).iterator();
+                 return IdObj.of(full, Machine.root().memory().read(full)).iterator();
              }
          };
      }

@@ -519,7 +519,7 @@ public class AgentTest extends AbstractMetatronTest {
         initSQLiteSession();
 
         // Read the algorithm column — should be a Rec from JSON object default
-        final Obj row = Machine.readFromSpace(MEM_VID);
+        final Obj row = Machine.read(MEM_VID);
         assertFalse(row.isNoObj(), "row should exist");
         assertTrue(row.isRec(), "row should be Rec");
 
@@ -543,10 +543,10 @@ public class AgentTest extends AbstractMetatronTest {
                 )
         ).vid(MEM_VID);
 
-        Machine.writeToSpace(MEM_VID, memoryRec);
+        Machine.write(MEM_VID, memoryRec);
 
         // Read back — verify algorithm is a Rec (JSON detection working)
-        final Obj readBack = Machine.readFromSpace(MEM_VID);
+        final Obj readBack = Machine.read(MEM_VID);
         assertFalse(readBack.isNoObj());
         assertTrue(readBack.isRec());
 
@@ -557,8 +557,8 @@ public class AgentTest extends AbstractMetatronTest {
         assertEquals(3L, algoField.asRec().at(uri("message_count")).intValue());
 
         // Delete via noobj
-        Machine.writeToSpace(MEM_VID, noobj());
-        assertTrue(Machine.readFromSpace(MEM_VID).isNoObj());
+        Machine.write(MEM_VID, noobj());
+        assertTrue(Machine.read(MEM_VID).isNoObj());
     }
 
     // ========================================================================

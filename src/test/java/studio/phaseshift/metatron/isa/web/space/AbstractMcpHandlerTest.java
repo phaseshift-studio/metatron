@@ -194,7 +194,7 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
         final Obj subs = notifications.asRec().at(uri("resourceSubscriptions"));
         assertTrue(subs.isLst(), "ack resourceSubscriptions should be a list");
         assertFalse(subs.asLst().lstValue().isEmpty(), "ack should echo the subscribed uri");
-        final Obj registered = Machine.readFromSpace(target.addQ(SUBQ));
+        final Obj registered = Machine.read(target.addQ(SUBQ));
         assertFalse(registered.isNoObj(), "subscribed target should have a registered ?subq sub");
         assertFalse(registered.isLst() && registered.asLst().lstValue().isEmpty(),
                 "subscribed target should not have an empty ?subq sub list");

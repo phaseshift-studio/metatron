@@ -82,13 +82,13 @@ public class ToDoFeature extends AbstractFeature {
                         CommonUtil.indent(null == conceptFeature ? "<no concepts>" : "*<" + conceptFeature.root(agent).extend("concept_name") + ">", 2),
                         CommonUtil.indent(null == messageFeature ? "<no messages>" : "*<" + messageFeature.root(agent).extend("message_id").toString() + ">", 2))),
                 uri(TOOL), lst(
-                        docWrap(instC(f("get_todo").dom(ALL.maybe()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), lst(), (lhs, inst) -> Machine.readFromSpace(this.getRoot(agent)).orElse(lst())),
+                        docWrap(instC(f("get_todo").dom(ALL.maybe()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), lst(), (lhs, inst) -> Machine.read(this.getRoot(agent)).orElse(lst())),
                                 "noobj",
                                 "a todo lst",
                                 Map.of(),
                                 "retrieve an ordered lst of todos"),
                         docWrap(instC(f("add_todo").dom(ALL.maybe()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), rec(uri(TODO), LLM_TODO_TYPE, uri(INDEX).maybe(), INT_TYPE), (lhs, inst) -> {
-                                    Lst todoLst = Machine.readFromSpace(this.getRoot(agent)).orElse(lst());
+                                    Lst todoLst = Machine.read(this.getRoot(agent)).orElse(lst());
                                     final Rec todo = inst.arg(TODO, 0).asRec().tid(LLM_TODO_TID);
                                     if (todo.at(STATUS).isNoObj())
                                         todo.at(STATUS, uri("open"), MUTABLE);
@@ -108,22 +108,22 @@ public class ToDoFeature extends AbstractFeature {
                                         if (lastMessage.hasVID())
                                             todo.at(MESSAGE, todo.at(MESSAGE).orElse(lst()).add(auto_from_(lastMessage.vid())), MUTABLE);
                                     }
-                                    Machine.writeToSpace(this.getRoot(agent), todoLst);
+                                    Machine.write(this.getRoot(agent), todoLst);
                                     LOG.status(DEBUG, "\uD83D\uDCDD todo added: %s", todo);
                                     return todoLst;
                                 }), "noobj", "an updated todo lst",
                                 Map.of(uri(TODO), "the todo item to add to the todo lst",
                                         uri(INDEX).maybe(), "the index in the lst to add the todo (default: end of lst)"), "add a new item to the todo lst"),
                         docWrap(instC(f("remove_todo").dom(ALL.maybe()).rng(LST_TID.poly(LLM_TODO_TID.maybeSome())), rec(uri(INDEX), INT_TYPE), (lhs, inst) -> {
-                                    Lst todoLst = Machine.readFromSpace(this.getRoot(agent)).orElse(lst());
+                                    Lst todoLst = Machine.read(this.getRoot(agent)).orElse(lst());
                                     final int index = inst.arg(INDEX, 0).intValue().intValue();
                                     final String text = todoLst.lstValue().remove(index).strValue();
-                                    Machine.writeToSpace(this.getRoot(agent), todoLst);
+                                    Machine.write(this.getRoot(agent), todoLst);
                                     LOG.status(DEBUG, "\uD83D\uDCDD todo removed: %s", text);
                                     return todoLst;
                                 }), "noobj", "an updated todo lst",
                                 Map.of(uri(INDEX), "the index of the todo item to remove"), "remove an item from the todo lst")))));
-        final Obj todos = Machine.readFromSpace(this.getRoot(agent).extend("+"));
+        final Obj todos = Machine.read(this.getRoot(agent).extend("+"));
         if (!todos.isNoObj()) {
             agent.requireService(SystemService.class).addSystemMessage(
                     """

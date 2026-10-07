@@ -83,7 +83,7 @@ public class TransientFrameFeatureTest extends AbstractMetatronTest {
         assertTrue(popped.isComplete(), "popped frame is complete");
         assertNull(frame.current(), "stack empty after pop");
 
-        final Obj cleared = Machine.readFromSpace(frameURI);
+        final Obj cleared = Machine.read(frameURI);
         assertTrue(cleared.isNoObj(), "transient frame removed after pop");
     }
 }

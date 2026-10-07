@@ -253,7 +253,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
     @Override
     public int advanceChatId(final Agent agent) {
         final fURI sessionID = this.at(SESSION).uriValue();
-        Rec session = Machine.readFromSpace(sessionID).orElse(rec());
+        Rec session = Machine.read(sessionID).orElse(rec());
         try {
             // Ensure session exists in space with required fields
             if (session.at(ALGORITHM).isNoObj()) {
@@ -287,7 +287,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
             // one write per turn: creates the session on the first chat and
             // advances the counter on every one after it
             if (!session.at(ALGORITHM).isNoObj())
-                Machine.writeToSpace(sessionID, session.selfVID(sessionID));
+                Machine.write(sessionID, session.selfVID(sessionID));
             return chatId;
         } catch (final Exception e) {
             throw MTronException.of("unable to setup session: %s", MTronException.translateMessage(e));
@@ -300,7 +300,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
         // model calls this turn makes, so onCompleteResponse reports exactly it
         this.tokenCalculator.reset();
         final fURI sessionID = this.at(SESSION).uriValue();
-        Rec session = Machine.readFromSpace(sessionID).orElse(rec());
+        Rec session = Machine.read(sessionID).orElse(rec());
         try {
             // the turn id was advanced in the pre-chat phase (advanceChatId) — read it back
             final int chatId = agent.chatId();
@@ -784,7 +784,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
                 scoped = scoped.at(uri(DEPTH), jnt(depth.intValue().intValue()), MUTABLE);
             if (chatId.isInt())
                 scoped = scoped.at(uri(CHAT_ID), chatId, MUTABLE);
-            Machine.writeToSpace(vid, scoped);
+            Machine.write(vid, scoped);
             LEDGER_LOG.warn("re-scoping tool result %s into %s — it answers a request in that scope",
                     vid, scopeOf(request));
         } catch (final Exception e) {
@@ -828,7 +828,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
         if (null == vid || vid.isEmpty())
             return;
         try {
-            Machine.writeToSpace(vid, noobj());
+            Machine.write(vid, noobj());
         } catch (final Exception e) {
             // best-effort: a repair that cannot be written is reported, not thrown
         }
@@ -856,7 +856,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
                     .filter(request -> !unanswered.contains(Str.Helper.cleanString(request.asRec().at(uri(CONTENTS)))))
                     .toList();
             aiMessage.at(uri(TOOL_REQUESTS), kept.isEmpty() ? noobj() : lst(kept), MUTABLE);
-            Machine.writeToSpace(vid, aiMessage);
+            Machine.write(vid, aiMessage);
         } catch (final Exception e) {
             // best-effort: a repair that cannot be written is reported, not thrown
         }
@@ -875,7 +875,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
      * the message as their second.
      */
     private static List<Rec> readMessages(final fURI messageCollection) {
-        final Obj rows = Machine.readFromSpace(messageCollection.extend("+/"));
+        final Obj rows = Machine.read(messageCollection.extend("+/"));
         if (rows.isNoObj())
             return List.of();
         final List<Rec> messages = new ArrayList<>();

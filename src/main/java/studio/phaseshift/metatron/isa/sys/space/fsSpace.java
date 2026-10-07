@@ -154,7 +154,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         //final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
         LOG.debug("reading %s [mime:%s]", file.getPath(), mimeType.value);
         // Use parse (not eval) to avoid executing potential write-side-effect expressions
-        // in the file content (e.g. !* or -> sugar that Machine.writeToSpace).
+        // in the file content (e.g. !* or -> sugar that Machine.write).
         //
         // MIME resolution strategy:
         //
@@ -581,7 +581,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
      * Guards against reentrant writes through the Router during a write cycle.
      * When depth exceeds 2 levels, {@link #write(fURI, Obj)} short-circuits to
      * {@link #directWriter()} to avoid stack overflow through updateRecursion
-     * → Machine.writeToSpace → resolveWrite → locateBasePoly → readStream.
+     * → Machine.write → resolveWrite → locateBasePoly → readStream.
      */
     /**
      * When the exact file for a VID doesn't exist, walk up to find the nearest
@@ -611,8 +611,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         if (relative.isEmpty())
             return null;
         // Navigate into or mutate the parent rec using raw jvm() map access to
-        // avoid Poly.MUTABLE → objCheckAndSave → Machine.writeToSpace (reentrant).
-        // Poly.MUTABLE triggers Machine.writeToSpace on any value with a vid(),
+        // avoid Poly.MUTABLE → objCheckAndSave → Machine.write (reentrant).
+        // Poly.MUTABLE triggers Machine.write on any value with a vid(),
         // which would recreate the stack cycle through resolveWrite.
         final Map<Obj, Obj> jvm = parentObj.asRec().jvm();
         final fURI relativeFuri = f(relative.startsWith("/") ? relative.substring(1) : relative);

@@ -145,7 +145,7 @@ public class sysInstSet extends AbstractInstSet {
     /*
         lst(() ->{ Space sys = new sysInstSet();
                Machine.authority().addSpace(sys);
-               Machine.writeToSpace(sys); 
+               Machine.write(sys); 
                }(),() -> {
                System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
@@ -194,8 +194,8 @@ public class sysInstSet extends AbstractInstSet {
                             return noobj();
                         }), "close the lhs — release its resources; a router exits the vm, and a noobj runs the boot loader teardown"),
                         docWrap(instC(SYS_INST_TID.extend("redirect").dom(ALL.maybe()).rng(f("rec[short=>uri,long=>uri]")), lst(URI_TYPE), (lhs, inst) -> rec(
-                                uri(SHORT), uri(Machine.root().redirect(inst.arg(0).uriValue(), false)),
-                                uri(LONG), uri(Machine.root().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
+                                uri(SHORT), uri(Machine.root().memory().redirect(inst.arg(0).uriValue(), false)),
+                                uri(LONG), uri(Machine.root().memory().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
                         docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> {
                             Runtime rt = Runtime.getRuntime();
                             long totalMemory = rt.totalMemory();
@@ -245,7 +245,7 @@ public class sysInstSet extends AbstractInstSet {
                                     if (max < 0) max = -1;
                                     if (max != -1 && min > max)
                                         throw MTronException.of("read_file min=%d exceeds max=%d", min, max);
-                                    final Obj fileObj = Machine.readFromSpace(file);
+                                    final Obj fileObj = Machine.read(file);
                                     final int finalMin = min;
                                     if (fileObj.isStr()) {
                                         final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
@@ -270,7 +270,7 @@ public class sysInstSet extends AbstractInstSet {
                                     final String text = inst.arg(TEXT, 1).strValue();
                                     final int min = inst.arg(MIN, 2).intValue().intValue();
                                     final int max = inst.arg(MAX, 3).orElse(jnt(-1)).intValue().intValue();
-                                    final Obj fileObj = Machine.readFromSpace(file);
+                                    final Obj fileObj = Machine.read(file);
                                     if (fileObj.isStr()) {
                                         final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
 
@@ -281,7 +281,7 @@ public class sysInstSet extends AbstractInstSet {
                                         }
                                         startLines.add(min, text);
                                         final List<String> endLines = startLines.stream().filter(l -> !l.equals("<DELETE>")).toList();
-                                        Machine.writeToSpace(file, str(String.join("\n", endLines)));
+                                        Machine.write(file, str(String.join("\n", endLines)));
                                         return rec(STATUS, uri(SUCCESS),
                                                 OBJ, auto_from_(file).tryToInst(),
                                                 "start_line_count", jnt(startLines.size()),

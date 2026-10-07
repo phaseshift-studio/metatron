@@ -536,7 +536,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Obj value = readColumnWithMetadata(rs, col, metadata.tableName);
                 labeledValues.put(uri(col.name), value);
                 if (!value.isNoObj())
-                    Machine.root().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
+                    Machine.root().memory().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
             }
         }
         final fURI tid = storedTid != null ? storedTid : REC_TID;

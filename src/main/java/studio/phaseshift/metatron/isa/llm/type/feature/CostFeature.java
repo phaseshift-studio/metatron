@@ -81,7 +81,7 @@ public class CostFeature extends AbstractFeature {
      * feature hooks fire, so features can read it here.
      */
     public Rec persistCost(final Agent agent) {
-        final Rec cost = Machine.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ), agent.getChatPath().toRec().plus(this.calculator.getCost())).as();
+        final Rec cost = Machine.write(this.getRoot(agent).extend("_").addQ(INCRQ), agent.getChatPath().toRec().plus(this.calculator.getCost())).as();
         LOG.status(DEBUG, "💰 cost total: %.4f [in: %.4f out: %.4f] (%s)", cost.at(TOTAL).realValue(), cost.at(IN).realValue(), cost.at(OUT).realValue(), this.calculator.getCurrencyTID().name());
         if (this.has(TO)) this.at(TO).asInst().args(cost).apply(cost);
         return cost;

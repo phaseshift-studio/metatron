@@ -315,7 +315,7 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
         assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweep(root, false)),
                 "the repair leaves a valid ledger, got: " + AbstractMessageFeature.sweep(root, false));
         assertEquals(2L, messageCount(root), "and drops nothing: the result was moved, not discarded");
-        final Rec result = Machine.readFromSpace(root.extend(MESSAGE).extend("+/")).stream()
+        final Rec result = Machine.read(root.extend(MESSAGE).extend("+/")).stream()
                 .map(Obj::asRel)
                 .map(Rel::second)
                 .map(Obj::asRec)
@@ -363,7 +363,7 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
      * How many rows the ledger holds.
      */
     private static long messageCount(final fURI root) {
-        final Obj rows = Machine.readFromSpace(root.extend(MESSAGE).extend("+/"));
+        final Obj rows = Machine.read(root.extend(MESSAGE).extend("+/"));
         if (rows.isNoObj())
             return 0L;
         return rows.stream().map(Obj::asRel).map(Rel::second).filter(Obj::isRec).count();
@@ -382,7 +382,7 @@ public class AbstractMessageFeatureTest extends AbstractMetatronTest {
      * Every tool request id still carried by the ledger's ai messages.
      */
     private static List<String> requests(final fURI root) {
-        final Obj rows = Machine.readFromSpace(root.extend(MESSAGE).extend("+/"));
+        final Obj rows = Machine.read(root.extend(MESSAGE).extend("+/"));
         if (rows.isNoObj())
             return List.of();
         return rows.stream()

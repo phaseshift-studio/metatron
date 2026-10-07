@@ -280,7 +280,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
                 paneWriter.accept(effectivePaneId(), formatPaneMessage(level, f, args));
             } else {
                 this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
-                final Obj roots = Machine.readFromSpace(SYS.extend(LOGG).extend(ROOT));
+                final Obj roots = Machine.read(SYS.extend(LOGG).extend(ROOT));
                 roots.stream().filter(Obj::isUri).forEach(root -> {
                     rec(mutableMap(
                             uri(TIME), mathInstSet.nowDatetime(),

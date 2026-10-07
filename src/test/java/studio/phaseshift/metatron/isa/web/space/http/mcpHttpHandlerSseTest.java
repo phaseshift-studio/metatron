@@ -91,7 +91,7 @@ public class mcpHttpHandlerSseTest extends AbstractMetatronTest {
         final mcp_httpHandler handler = new mcp_httpHandler(
                 new LinkedHashMap<>(), mcp_httpHandler.HTTP_MCP_HANDLER_TID, f("/test/sse/mcp"));
         // one notification already fired (between subscriptions/listen and this GET)
-        Machine.writeToSpace("/test/sse/mcp/subscriptions/30/0", rec(
+        Machine.write("/test/sse/mcp/subscriptions/30/0", rec(
                 uri("method"), uri("notifications/resources/updated"),
                 uri("params"), rec(uri("uri"), uri("/usr/demo/age")),
                 uri("subscriptionId"), str("30")));
