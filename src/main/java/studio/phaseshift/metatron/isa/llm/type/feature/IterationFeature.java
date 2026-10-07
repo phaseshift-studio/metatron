@@ -219,14 +219,14 @@ public class IterationFeature extends AbstractFeature {
         fields.put(uri(NEXT), noobj());
         fields.put(uri(TIME), str(Date.from(Instant.now()).toString()));
 
-        final Obj written = Machine.writeToSpace(llmIterationPath(sessionVID),
+        final Obj written = Machine.write(llmIterationPath(sessionVID),
                 rec(fields, LLM_ITERATION_TID, null));
 
         // Back-patch the previous iteration's next pointer
         if (tail != null) {
-            final Rec tailRec = Machine.readFromSpace(tail.vid()).asRec();
+            final Rec tailRec = Machine.read(tail.vid()).asRec();
             tailRec.at(uri(NEXT), uri(written.vid()), Poly.MUTABLE);
-            Machine.writeToSpace(tail.vid(), tailRec);
+            Machine.write(tail.vid(), tailRec);
         }
 
         return written.asRec();
@@ -256,14 +256,14 @@ public class IterationFeature extends AbstractFeature {
      * Uses read-modify-write to preserve existing fields (prev, next, etc.).
      */
     private void linkMessages(final fURI iterationVID, final Set<fURI> messageVIDs) {
-        final Rec iteration = Machine.readFromSpace(iterationVID).asRec();
+        final Rec iteration = Machine.read(iterationVID).asRec();
         iteration.at(uri(MESSAGE), lst(
                 messageVIDs.stream()
                         .filter(Objects::nonNull)
                         .map(id -> (Obj) auto_from_(id).tryToInst())
                         .toList()
         ), Poly.MUTABLE);
-        Machine.writeToSpace(iterationVID, iteration);
+        Machine.write(iterationVID, iteration);
     }
 
     // =========================================================================
@@ -275,11 +275,11 @@ public class IterationFeature extends AbstractFeature {
      * the first iteration.
      */
     public Optional<Rec> prev(final fURI iterationVID) {
-        final Obj obj = Machine.readFromSpace(iterationVID);
+        final Obj obj = Machine.read(iterationVID);
         if (!obj.isRec()) return Optional.empty();
         final Obj prevField = obj.asRec().at(uri(PREV));
         if (prevField.isNoObj()) return Optional.empty();
-        final Obj prevObj = Machine.readFromSpace(prevField.uriValue());
+        final Obj prevObj = Machine.read(prevField.uriValue());
         return prevObj.isRec() ? Optional.of(prevObj.asRec()) : Optional.empty();
     }
 
@@ -288,11 +288,11 @@ public class IterationFeature extends AbstractFeature {
      * the last iteration.
      */
     public Optional<Rec> next(final fURI iterationVID) {
-        final Obj obj = Machine.readFromSpace(iterationVID);
+        final Obj obj = Machine.read(iterationVID);
         if (!obj.isRec()) return Optional.empty();
         final Obj nextField = obj.asRec().at(uri(NEXT));
         if (nextField.isNoObj()) return Optional.empty();
-        final Obj nextObj = Machine.readFromSpace(nextField.uriValue());
+        final Obj nextObj = Machine.read(nextField.uriValue());
         return nextObj.isRec() ? Optional.of(nextObj.asRec()) : Optional.empty();
     }
 
@@ -319,7 +319,7 @@ public class IterationFeature extends AbstractFeature {
      * Return the message VIDs linked to an iteration.
      */
     public List<fURI> messages(final fURI iterationVID) {
-        final Obj obj = Machine.readFromSpace(iterationVID);
+        final Obj obj = Machine.read(iterationVID);
         if (!obj.isRec()) return List.of();
         final Obj messageField = obj.asRec().at(uri(MESSAGE));
         if (messageField.isNoObj() || !messageField.isLst()) return List.of();

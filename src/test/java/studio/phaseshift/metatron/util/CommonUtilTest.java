@@ -118,7 +118,7 @@ public class CommonUtilTest extends AbstractMetatronTest {
         Machine.root().addSpace(space);
         final List<CommonUtil.TreeEntry> nodes = new ArrayList<>();
         CommonUtil.treeConsumer(f("local:"), 3, nodes::add);
-        LOG.warn(Machine.readFromSpace("local:#/"));
+        LOG.warn(Machine.read("local:#/"));
         // Debug: dump treeConsumer results
         for (int i = 0; i < nodes.size(); i++) {
             final var n = nodes.get(i);

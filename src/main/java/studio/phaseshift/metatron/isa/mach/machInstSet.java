@@ -289,43 +289,71 @@ public class machInstSet extends AbstractInstSet {
                                 .constructor(arg -> new BasicMemory(arg.asRec().jvm(), arg.vid()))
                                 .create(),
                         // network — a frame's reachable peers, read through to the ones it inherited
+                        /// /// CLUSTER AWARENESS /// ///
+                        docWrap(PEER_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(PEER_TID)
+                                        .isaPredicate(rec(
+                                                uri(AUTHORITY), URI_TYPE,
+                                                // absent transport ⇒ a peer we know about but cannot reach from
+                                                // here — which is what a peer reference looks like after it has
+                                                // crossed a wire. One type, two honest states.
+                                                //uri(TRANSPORT).maybe().asUri(), INST_TYPE,
+                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(STATUS).maybe().asUri(), REC_TYPE))
+                                        .create(), null, null,
+                                Map.of(uri(AUTHORITY), "the peer address with scheme and host:port for remote peers",
+                                        uri(NAME).maybe(), "a simple name for the peer",
+                                        //uri(TRANSPORT), "the inst that reaches it; absent when only known, not reachable",
+                                        uri(STATUS), "the last health report computed for this peer"),
+                                "one metatron instance the local instance knows about"),
+                        docWrap(CLUSTER_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(CLUSTER_TID)
+                                        .isaPredicate(rec(
+                                                uri(PEER).maybe().asUri(), ALL_TYPE,
+                                                uri(STATUS).maybe().asUri(), INST_TYPE,
+                                                uri(NAME).maybe().asUri(), STR_TYPE))
+                                        .create(), null, null,
+                                Map.of(uri(PEER), "the declared roster — an auto pointer, never a stale copy",
+                                        uri(STATUS), "the health method: peer => status"),
+                                "this VM's static view of its cluster (fields + methods)"),
                         MACH_NETWORK_TYPE = Type.Builder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_NETWORK_TID)
+                                // .isaPredicate(rec(
+                                //         uri(NAME).maybe().asUri(), STR_TYPE,
+                                //         uri(PEER).maybe().asUri(), lst(PEER_TYPE),
+                                //         uri(STATUS).maybe().asUri(), INST_TYPE,
+                                //         uri(STATE).maybe().asUri(), rec(
+                                //                 uri(LOCAL), ALL_TYPE,
+                                //                 URI_TYPE, ALL_TYPE)))
                                 .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
                                 .create(),
-                        MACH_MACHINE_TYPE = Type.Builder.build()
-                                .tid(SPACE_TID)
-                                .vid(MACH_MACHINE_TID)
-                                .isaPredicate(rec(
-                                        uri(INSTSET).maybe().asUri(), INSTSET_TYPE,
-                                        uri(COMPILER).maybe().asUri(), MACH_COMPILER_TYPE,
-                                        uri(MEMORY).maybe().asUri(), MACH_MEMORY_TYPE,
-                                        uri(NETWORK).maybe().asUri(), MACH_NETWORK_TYPE,
-                                        uri(PROCESSOR).maybe().asUri(), MACH_PROCESSOR_TYPE))
-                                // A REC THAT SATISFIES machine::T BECOMES A MACHINE. Not a new one: the members of
-                                // this type are already rec ENTRIES (instset, memory, network, compiler, processor),
-                                // so construction is a REINTERPRETATION of data that is already shaped correctly --
-                                // and a member the rec does not carry falls through to the accessor's default, which
-                                // is why a bare machine::T rec is a working machine rather than a broken one.
-                                //
-                                // WRAP, NOT of(): BasicMachine.of builds fresh components, and a slot that
-                                // constructs on apply re-enters type resolution from inside read -- the recursion
-                                // that already bit MachineFrameTest once (see its comment). wrap resolves nothing.
-                                //
-                                // AND DELIBERATELY NO push(): construction is a value, entering is control flow, and
-                                // they are different axes. This constructor is reachable at boot (the root and
-                                // /sys/mach are built through the type) and from every test that mints a machine, so
-                                // pushing here would materialize frame state everywhere, unbalance a frame that has
-                                // no matching pop site, and give entering a second, implicit, UNSCOPED form. The
-                                // scoped form already exists: the dereference, withPerspective(machine, fragment) --
-                                // in at the dereference, out when the fragment that followed it ends.
-                                //
-                                // NESTING IS THE ADDRESS, NOT A FIELD. The rec's vid is where this machine stands,
-                                // and for a machine living in a space its parent() is the container, so a machine
-                                // nested under the current one is simply a machine::T rec AT that address.
-                                .constructor(arg -> BasicMachine.of(MACH_MACHINE_TID, arg.vid()))
-                                .create(),
+                        MACH_MACHINE_TYPE = docWrap(Type.Builder.build()
+                                        .tid(SPACE_TID)
+                                        .vid(MACH_MACHINE_TID)
+                                        .isaPredicate(rec(
+                                                uri(INSTSET).maybe().asUri(), INSTSET_TYPE,
+                                                uri(COMPILER).maybe().asUri(), MACH_COMPILER_TYPE,
+                                                uri(MEMORY).maybe().asUri(), MACH_MEMORY_TYPE,
+                                                uri(NETWORK).maybe().asUri(), MACH_NETWORK_TYPE,
+                                                uri(PROCESSOR).maybe().asUri(), MACH_PROCESSOR_TYPE))
+                                        .constructor(arg -> BasicMachine.of(MACH_MACHINE_TID, arg.vid()))
+                                        .create(), Map.of(uri(INSTSET), "machine instruction set architecture",
+                                        uri(COMPILER), "parser, rewriter, resolver, and typer",
+                                        uri(MEMORY), "a frame of reference in space constrained by parent machine",
+                                        uri(NETWORK), "peers and shared peer state",
+                                        uri(PROCESSOR), "referential access to processing threads and computational state"),
+                                """
+                                a machine integrates language, structure, and process providing a frame of reference
+                                and action within metatron. machine's form nested stack by which parent machine state
+                                is accessible to children and by which parent machine's define the scope of a child
+                                machine's access to resources. lateral machine communication made possible through
+                                the  machine network where the peer group forms a shared computing workspace that is
+                                garbage collected when machine is popped off the parent stack. the absolute local root
+                                of the metatron graph (/.) is a root machine.
+                                """),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
@@ -355,36 +383,7 @@ public class machInstSet extends AbstractInstSet {
                                                 (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent virtual thread",
-                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping"),
-                        /// /// CLUSTER AWARENESS /// ///
-                        docWrap(PEER_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(PEER_TID)
-                                        .isaPredicate(rec(
-                                                uri(AUTHORITY), URI_TYPE,
-                                                // absent transport ⇒ a peer we know about but cannot reach from
-                                                // here — which is what a peer reference looks like after it has
-                                                // crossed a wire. One type, two honest states.
-                                                uri(TRANSPORT).maybe().asUri(), INST_TYPE,
-                                                uri(NAME).maybe().asUri(), STR_TYPE,
-                                                uri(TAG).maybe().asUri(), STR_TYPE,
-                                                uri(STATUS).maybe().asUri(), REC_TYPE))
-                                        .create(), null, null,
-                                Map.of(uri(AUTHORITY), "the peer's address, scheme and host:port",
-                                        uri(TRANSPORT), "the inst that reaches it; absent when only known, not reachable",
-                                        uri(STATUS), "the last health report computed for this peer"),
-                                "one metatron instance the local instance knows about"),
-                        docWrap(CLUSTER_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(CLUSTER_TID)
-                                        .isaPredicate(rec(
-                                                uri(PEER).maybe().asUri(), ALL_TYPE,
-                                                uri(STATUS).maybe().asUri(), INST_TYPE,
-                                                uri(NAME).maybe().asUri(), STR_TYPE))
-                                        .create(), null, null,
-                                Map.of(uri(PEER), "the declared roster — an auto pointer, never a stale copy",
-                                        uri(STATUS), "the health method: peer => status"),
-                                "this VM's static view of its cluster (fields + methods)")),
+                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping")),
                 uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
                         instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("/sys/thread");
@@ -394,9 +393,6 @@ public class machInstSet extends AbstractInstSet {
                                 thread.jvm().put(uri(SOURCE), auto_from_(uri(parent.vid())).tryToInst());
                             thread.applyAsync(lhs);
                             return thread;
-                        }),
-                        instC(MACH_INST_TID.extend("mount").dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(MACH_MACHINE_TYPE), (lhs, inst) -> {
-                            return lhs.asMachine().mount(inst.arg(0).asMachine());
                         }),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             ((AbstractThread) lhs).stop();
@@ -411,7 +407,14 @@ public class machInstSet extends AbstractInstSet {
                             return lhs;
                         })
                 ))),
-                uri(CONST), lst(BasicMachine.of(MACH_MACHINE_TID, SYS.extend(MACH))),
+                // uri(CONST), lst(docWrap(BasicMachine.of(MACH_MACHINE_TID, SYS.extend(MACH).extend(DEFAULT)),
+                //         mutableMap(
+                //                 uri(INSTSET), "machine instruction set architecture",
+                //                 uri(COMPILER), "machine rewriter, resolver, and type",
+                //                 uri(PROCESSOR), "machine execution engine",
+                //                 uri(MEMORY), "machine spatial memory include execution frame stack",
+                //                 uri(NETWORK), "machine cluster"),
+                //         "the default machine template used to generate machines")),
                 uri(REWRITE), lst(
                         // A monoidic reducer is ALREADY a gather: isGather() is "the dom coefficient is
                         // unbounded", and sum's dom is #{*}. resolve() therefore mints a barrier monad for it and
@@ -430,7 +433,7 @@ public class machInstSet extends AbstractInstSet {
                                             // peer, so declaring a cluster is writing a key per machine -- and it is the same
                                             // rec the run leaves its reports in, so the topology IS the mailbox set rather than
                                             // something kept beside it. Adding a peer is adding a key.
-                                            final Obj roster = Machine.readFromSpace(COMPUTE);
+                                            final Obj roster = Machine.read(COMPUTE);
                                             final Obj home = roster.isRec() ? roster.asRec().at(uri(MACH_HOME)) : noobj();
                                             final Obj boxes = home.isRec() ? home.asRec().at(uri(BARRIER)) : noobj();
                                             if (!boxes.isRec() || boxes.asRec().jvm().isEmpty())
@@ -511,7 +514,7 @@ public class machInstSet extends AbstractInstSet {
                                                 // reports to THE HOME'S MAILBOX FOR IT -- the one the home's gather waits on
                                                 worker.add(instB(TO_INST_TID, lst(uri(homeBoxes.extend(peer.name())))));
                                                 // and the code is shipped to the PEER'S OWN INBOX, which is named by the peer
-                                                Machine.writeToSpace(COMPUTE.extend(peer.name()).extend("recv"),
+                                                Machine.write(COMPUTE.extend(peer.name()).extend("recv"),
                                                         MCode.of(worker));
                                             }
                                             final List<Inst> out = new ArrayList<>(insts.size() + peers.size());

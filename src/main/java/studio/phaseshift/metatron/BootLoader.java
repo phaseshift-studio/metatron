@@ -30,11 +30,9 @@ import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
@@ -46,6 +44,7 @@ import studio.phaseshift.metatron.isa.sys.LogObj;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -68,9 +67,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TYPER_TYPE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -78,6 +79,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_INST_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -490,6 +492,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     QCollection.incrQ(),
                     QCollection.mimeQ(),
                     QCollection.lockQ()));
+            sysSpace.write(f("/sys?docq"), QCollection.Docs.doc("local system resources"));
+            sysSpace.write(f("/sys/mach?docq"), QCollection.Docs.doc("machine templates"));
+            sysSpace.write(f("/sys/mach/default?docq"), QCollection.Docs.doc("default machine template"));
+            sysSpace.write(f("/sys/space?docq"), QCollection.Docs.doc("local system space mounts"));
+            sysSpace.write("/sys/info", auto_(instB(SYS_INST_TID.extend("sys_stat"), lst())).tryToInst());
+            sysSpace.write(f("/sys/info?docq"), QCollection.Docs.doc("local physical machine information"));
+            sysSpace.write(f("/sys/thread?docq"), QCollection.Docs.doc("metatron threads globally"));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
             // minted from the template at /sys/mach, so the root has all five slots. Built by the
             // pattern/vid constructor it had only pattern, primary, memory and network — an address space
@@ -499,14 +508,17 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // stored inside the address space it defines is what forced the old /sys/router self-reference.
             // `*` reaches it instead, through Memory's fallback to the machine's own rec.
             ROOT_MACHINE = BasicMachine.of(MACH_MACHINE_TID, f("/."));
-            Machine.root().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
+            Machine.current(Machine.root());   // the boot runs as root: every library registers where it is written
+            Machine.current().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROOT_MACHINE.vid());
             sysSpace.write("/sys/typer/stage", typer);
             sysSpace.write("/sys/tracer", tracer);
             sysSpace.write("/sys/rewriter", rewriter);
             sysSpace.write("/sys/tmp", str("""
+                                           
                                            use /sys/tmp as a temporary location for objs.
                                            note that /sys/tmp can be automatically garbage collected at any time.
+                                           
                                            """));
             sysSpace.write("/sys/emoji", EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));
             // LOAD STDIO INSTRUCTIONS
@@ -525,13 +537,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // Machine.authority().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
-            Machine.root().addSpace(m);  // explicit registration after full construction
-            Machine.writeToSpace(m);
+            Machine.current().addSpace(m);  // explicit registration after full construction
             m.setup();
             //
             final InstSet sys = new sysInstSet();
-            Machine.root().addSpace(sys);
-            Machine.writeToSpace(sys);
+            Machine.current().addSpace(sys);
             sys.setup();
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
@@ -541,14 +551,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
             //
             final InstSet mach = new machInstSet();
-            Machine.root().addSpace(mach);  // explicit registration after full construction
-            Machine.writeToSpace(mach);
-            sysSpace.write("/sys/space/stack", Memory.argStack());
+            Machine.current().addSpace(mach);  // explicit registration after full construction
             mach.setup();
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
-            Machine.writeToSpace(f("boot/args"), args);
-            ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK
-            MFail.FAIL_STACK_PATTERN = args.at("fail_stack_pattern").orElse(uri(MFail.FAIL_STACK_PATTERN)).uriValue();
+            Machine.write(f("boot/args"), args);
             // Establish the system root thread so boot-spawned threads
             // (console, agents) inherit it as source via CURRENT_THREAD.
             // The task blocks on SHUTDOWN_LATCH — stays in 'run' until shutdown.
@@ -565,15 +571,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     }),
                     f("/sys/thread/main")), "this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure");
             systemThread.applyAsync();
-            Machine.writeToSpace("/sys/thread/main", systemThread);
+            Machine.write("/sys/thread/main", systemThread);
             BootLoader.CURRENT_THREAD.set(systemThread);
             /// /// SET THE CLUSTER SINGLETON /// ///
             // Installed HERE, not with the other /sys registries earlier in boot: at that point the space that
             // serves /sys/* is not yet mounted, so a write is claimed by a catch-all whose writer is the no-op
             // (k, v) -> v and vanishes WITHOUT A WORD. /sys/thread/main lands because it is written after the
             // boot profile has been evaluated, so the cluster goes beside it.
-            Machine.writeToSpace(Network.CLUSTER_PATH, Machine.root().network().cluster());
-            LOG.info("{{c}}cluster{{X}} registered: %s", Machine.readFromSpace(Network.CLUSTER_PATH));
+            Machine.write(Network.CLUSTER_PATH, Machine.root().network().cluster());
+            LOG.info("{{c}}cluster{{X}} registered: %s", Machine.read(Network.CLUSTER_PATH));
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
                 LOG.info("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
@@ -595,20 +601,19 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // a stdio session was asked for and the profile did not mount a carrier — attach the default
             // one. Idempotent by construction (mcp_stdioHandler.serving()), so a profile that DID mount one
             // wins and --mcp stays sugar over the profile rather than a competing code path.
-            if (args.has(uri(MCP)) && !studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.serving()) {
+            if (args.has(uri(MCP)) && !mcp_stdioHandler.serving()) {
                 LOG.info("attaching the default mcp stdio carrier");
                 // a fallback must never take the boot down with it: a profile that failed to mount its own
                 // carrier still deserves to report why, rather than dying with no output at all (2026-09-26)
                 try {
-                    final Obj attached = studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.of(
-                            rec(mutableMap(uri(HOST), uri("mcp_mtron"))));
+                    final Obj attached = mcp_stdioHandler.of(rec(mutableMap(uri(HOST), uri("mcp_mtron"))));
                     if (attached.isFail())
                         LOG.error("unable to attach the default mcp stdio carrier: %s", attached);
                 } catch (final Throwable e) {
                     LOG.error("unable to attach the default mcp stdio carrier: %s", null == e.getMessage() ? e.getClass().getName() : e.getMessage());
                 }
             }
-            final Obj log = Machine.writeToSpace(LogObj.of(rec(args.at(LOGG).orElse(uri(TRACE.levelStr)), lst(uri(ALL))), SYS_VID.extend(LOGG)));
+            final Obj log = Machine.write(LogObj.of(rec(args.at(LOGG).orElse(uri(TRACE.levelStr)), lst(uri(ALL))), SYS_VID.extend(LOGG)));
             LOG.info("logging now handled by %s", log);
             ///////////////////////////////////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));

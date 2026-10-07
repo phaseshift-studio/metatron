@@ -102,7 +102,7 @@ public class ChatStack implements FrameService {
         frame.session(this.session).chatId(this.chatId).depth(frameDepth);
         if (null != parent)
             frame.parentURI(parent);
-        Machine.writeToSpace(uri, frame);
+        Machine.write(uri, frame);
         this.stack.push(uri);
         return frame;
     }
@@ -112,18 +112,18 @@ public class ChatStack implements FrameService {
         final fURI uri = this.stack.pop();
         if (null == uri)
             return null;
-        final Obj obj = Machine.readFromSpace(uri);
+        final Obj obj = Machine.read(uri);
         if (!(obj instanceof Frame frame))
             return null;
         frame.complete();
-        Machine.writeToSpace(uri, frame);
+        Machine.write(uri, frame);
         return frame;
     }
 
     @Override
     public Obj at(final fURI key) {
         for (final fURI uri : this.stack) {
-            final Obj value = Machine.readFromSpace(uri.extend(key));
+            final Obj value = Machine.read(uri.extend(key));
             if (!value.isNoObj())
                 return value;
         }
@@ -135,7 +135,7 @@ public class ChatStack implements FrameService {
         final fURI uri = this.current();
         if (null == uri)
             return;
-        Machine.writeToSpace(uri.extend(key), value);
+        Machine.write(uri.extend(key), value);
     }
 
     @Override

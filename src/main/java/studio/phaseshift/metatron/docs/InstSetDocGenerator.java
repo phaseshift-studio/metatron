@@ -152,7 +152,7 @@ public class InstSetDocGenerator {
                     if (!vid.equals("/m"))
                         InstSet.importInstSet(f(vid));
                     LOG.info("fetching: " + vid);
-                    final InstSet is = (InstSet) Machine.readFromSpace(f(vid));
+                    final InstSet is = (InstSet) Machine.read(f(vid));
                     LOG.info("  read " + vid + " type=" + is.getClass().getSimpleName() + " noObj=" + is.isNoObj());
 
                     final Meta meta = extractMeta(is, vid);
@@ -188,7 +188,7 @@ public class InstSetDocGenerator {
                     final List<Obj> constsToMove = new ArrayList<>();
                     for (final Obj c : consts) {
                         try {
-                            final Obj resolved = Machine.readFromSpace(c.vid());
+                            final Obj resolved = Machine.read(c.vid());
                             if (resolved != null && !resolved.isNoObj() && resolved.isType()) {
                                 types.add(resolved.asType());
                                 constsToMove.add(c);
@@ -247,7 +247,7 @@ public class InstSetDocGenerator {
         // class loading at BootLoader.load).  Without this, parentType() ->
         // T(fURI) creates bare types without predicates, breaking the
         // refinement chain display.
-        Machine.root().write(SPACE_TYPE.vid(), SPACE_TYPE);
+        Machine.root().memory().write(SPACE_TYPE.vid(), SPACE_TYPE);
     }
 
     // ========================================================================
@@ -309,7 +309,7 @@ public class InstSetDocGenerator {
                 for (final Obj item : lst.jvm()) {
                     final String uri = item instanceof Str s ? s.jvm() : SER.write(item);
                     final String name = DocsUtil.leafName(uri);
-                    final Obj typeObj = Machine.readFromSpace(f(uri));
+                    final Obj typeObj = Machine.read(f(uri));
                     spaces.add(new SpaceEntry(uri, name, typeObj, SER.write(typeObj)));
                 }
             }
@@ -327,7 +327,7 @@ public class InstSetDocGenerator {
     private static Rec fetchDoc(final fURI uri) {
         if (uri == null) return null;
         try {
-            final Obj docObj = Machine.readFromSpace(uri.addQ("docq"));
+            final Obj docObj = Machine.read(uri.addQ("docq"));
             if (docObj == null || docObj.isNoObj() || !(docObj instanceof Rec r)) return null;
             final String desc = fieldStr(r, "desc");
             if (desc == null || desc.isEmpty() || "no documentation available".equals(desc))

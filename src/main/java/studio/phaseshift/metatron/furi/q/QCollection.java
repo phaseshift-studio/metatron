@@ -272,14 +272,14 @@ public final class QCollection {
         return QProc.Helper.build(REFQ_TID, REFQ_PATTERN).postRead((u, o) ->
                         objs(Stream.of(u.q(REFQ_PATTERN).split(","))
                                 .map(fURI.Singleton::f)
-                                .map(Machine::readFromSpace)).append(o))
+                                .map(Machine::read)).append(o))
                 .create();
     }
 
     public static QProc lineQ() {
         return QProc.Helper.build(LINEQ_TID, LINEQ_PATTERN)
                 .preWrite((furi, obj) -> {
-                    final String objString = Str.Helper.cleanString(Machine.readFromSpace(furi.removeQ(LINEQ_PATTERN)));
+                    final String objString = Str.Helper.cleanString(Machine.read(furi.removeQ(LINEQ_PATTERN)));
                     // split with -1 so trailing empties (and thus blank-line structure) are preserved
                     final String[] split = objString.split("\n", -1);
                     final int[] lineRange = lineRange(furi, split.length);
@@ -290,7 +290,7 @@ public final class QCollection {
                     for (int i = 0; i < lineRange[0]; i++) result.add(split[i]);
                     result.addAll(Arrays.asList(replacement));
                     for (int i = lineRange[1] + 1; i < split.length; i++) result.add(split[i]);
-                    Machine.writeToSpace(furi.removeQ(LINEQ_PATTERN), str(String.join("\n", result)));
+                    Machine.write(furi.removeQ(LINEQ_PATTERN), str(String.join("\n", result)));
                     return obj;
                 }).postRead((furi, obj) -> {
                     final String objString = Str.Helper.cleanString(obj);
@@ -354,7 +354,7 @@ public final class QCollection {
                     final fURI mint = CommonUtil.mintShortUUID(furi.basePath(), true);
                     final Obj mintedObj = obj.vid(mint);
                     LOG.info("vid %s minted for %s", mint, mintedObj);
-                    Machine.writeToSpace(mintedObj);
+                    Machine.write(mintedObj);
                     return mintedObj;
                 }).create();
     }
@@ -445,7 +445,7 @@ public final class QCollection {
             if (inst.dom().isCode()) {
                 REWRITE_TABLE.put(inst.tid(), obj.asRec());
             } else {
-                Machine.root().registerRedirect(f(vid.name()), vid);
+                Machine.root().memory().registerRedirect(f(vid.name()), vid);
                 INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> Collections.synchronizedSet(new LinkedHashSet<>())).add(obj.asRec());
             }
             return obj;
@@ -504,7 +504,7 @@ public final class QCollection {
                 .preWrite((vid, obj) -> {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
-                        return Machine.writeToSpace(vidBig, obj);
+                        return Machine.write(vidBig, obj);
                     final Rec doc = obj.tid().equals(DOCS_TID) ? obj.asRec() : new Docs(obj.toCleanString());
                     if (vid.hasRng()) {
                         INST_DOCS.write(vidBig.removeQ(DOCQ), doc);
@@ -516,10 +516,10 @@ public final class QCollection {
                 .preRead((vid) -> {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
-                        return Machine.readFromSpace(vidBig);
+                        return Machine.read(vidBig);
                     final Obj instDoc = INST_DOCS.read(vidBig.removeQ(DOCQ));
                     final Obj doc = instDoc.isNoObj() ?
-                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.root().read(vidBig.removeQ(DOCQ))))) :
+                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.root().memory().read(vidBig.removeQ(DOCQ))))) :
                             instDoc;
                     // dual-mode interface doc: a doc carrying 'build' (how to implement) alongside
                     // 'desc' (how to use).  The branch is implementation status: an interface inst's
@@ -527,7 +527,7 @@ public final class QCollection {
                     // write — so implemented iff the live inst is no longer the interface.  Unimplemented
                     // → surface the build docs; implemented → surface the use docs.
                     if (doc.isRec() && doc.asRec().has(DOC_BUILD)) {
-                        final Obj live = Machine.root().read(vidBig.removeQ(DOCQ));
+                        final Obj live = Machine.root().memory().read(vidBig.removeQ(DOCQ));
                         final boolean implemented = !live.isNoObj() && live.isInst() &&
                                 !live.<Inst>as().tid().basePath().equals(vidBig.removeQ(DOCQ));
                         if (!implemented)
@@ -612,14 +612,14 @@ public final class QCollection {
                     final fURI sourceVid = vid.qLess();
                     final String hash = Integer.toHexString(sourceVid.toString().hashCode());
                     final fURI embedVid = f(sourceVid.scheme() + ":embedding/" + model + "/" + hash);
-                    final Obj embedding = Machine.readFromSpace(embedVid);
+                    final Obj embedding = Machine.read(embedVid);
                     if (!embedding.isNoObj())
                         return embedding;
                     // Lazy compute: read source, write to embedding URI.
-                    final Obj source = Machine.readFromSpace(sourceVid);
+                    final Obj source = Machine.read(sourceVid);
                     if (source.isNoObj())
                         return source;
-                    return Machine.writeToSpace(embedVid, source);
+                    return Machine.write(embedVid, source);
                 }).create();
     }
 
@@ -652,7 +652,7 @@ public final class QCollection {
                     final Obj stored = obj.vid(cleaned);
                     // QProc handles storage itself (same pattern as tbleIncrQ).
                     // cleaned URI has no ?incrq → won't rematch on recursive write.
-                    return Machine.writeToSpace(cleaned, stored);
+                    return Machine.write(cleaned, stored);
                     //return obj;
                 }).create();
     }
@@ -856,6 +856,13 @@ public final class QCollection {
         return type;
     }
 
+    public static Obj docWrap(final Obj value, final Map<Obj, String> structuralDescription, final String description, final String... examples) {
+        if (value.isType())
+            return docWrap((Type) value, structuralDescription, description, examples);
+        internalDocWrap(value, null, null, structuralDescription, description, examples);
+        return value;
+    }
+
     public static InstSet docWrap(final InstSet instSet, final String description, final String... examples) {
         internalDocWrap(instSet, null, null, null, description, examples);
         return instSet;
@@ -895,6 +902,10 @@ public final class QCollection {
             return docRec instanceof Docs ? (Docs) docRec : new Docs(docRec.jvm(), docRec.tid(), docRec.vid());
         }
 
+        public static Docs doc(final String description) {
+            return new Docs(description);
+        }
+
         public static Docs doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
             final List<Str> ex = Arrays.stream(examples).map(MStr::str).toList();
             return new Docs(mutableMap(
@@ -907,7 +918,7 @@ public final class QCollection {
         }
 
         public static Docs doc(final Inst inst) {
-            return doc(Machine.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().orElse(NO_DOCS).asRec());
+            return doc(Machine.read(inst.tid().addQ(DOCQ)).stream().findFirst().orElse(NO_DOCS).asRec());
         }
     }
 }

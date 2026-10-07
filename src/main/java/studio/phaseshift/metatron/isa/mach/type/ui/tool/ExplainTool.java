@@ -436,7 +436,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             // <j> — Java lambda
             String className = inst.functionClassName();
             fURI basePath = inst.tid().basePath();
-            Obj doc = Machine.readFromSpace(basePath.addQ(QCollection.DOCQ));
+            Obj doc = Machine.read(basePath.addQ(QCollection.DOCQ));
             String docBody = (doc.isRec() && !QCollection.isNoDocs(doc))
                     ? new QCollection.Docs(doc.asRec()).description()
                     : "{{y}}no documentation available{{X}}";

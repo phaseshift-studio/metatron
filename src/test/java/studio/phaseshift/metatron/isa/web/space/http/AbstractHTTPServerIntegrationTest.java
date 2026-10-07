@@ -201,7 +201,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
             // §8.1.2). Every non-templated value is still held to the invariant.
             if (isTemplated(r.second()))
                 return;
-            final Obj type = Machine.root().read(r.second().uriValue());
+            final Obj type = Machine.root().memory().read(r.second().uriValue());
             assertFalse(type.isNoObj(),
                     "Type should be registered in Router at " + r.second().uriValue());
             // commented out so extending tests can run threaded

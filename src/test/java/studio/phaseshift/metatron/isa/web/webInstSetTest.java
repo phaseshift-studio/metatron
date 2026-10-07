@@ -84,8 +84,8 @@ class webInstSetTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testProtocolSubsumption(final String sub, final String parent,
                                  final boolean expected, final String desc) {
-        final Type subType = Machine.readFromSpace(f(sub)).<Type>as();
-        final Type parentType = Machine.readFromSpace(f(parent)).<Type>as();
+        final Type subType = Machine.read(f(sub)).<Type>as();
+        final Type parentType = Machine.read(f(parent)).<Type>as();
         assertEquals(expected, subType.test(parentType), desc);
     }
 
@@ -128,7 +128,7 @@ class webInstSetTest extends AbstractMetatronTest {
     void testTextMimeTypesAcceptAStr(final String mimeName, final boolean expected, final String desc) {
         final MIME.MIMEType mime = MIME.MIMEType.valueOf(mimeName);
         final fURI tid = mime.toTid();
-        final boolean accepts = null != tid && Machine.readFromSpace(tid).<Type>as().test(T(STR_TID));
+        final boolean accepts = null != tid && Machine.read(tid).<Type>as().test(T(STR_TID));
         LOG.info("%s.toTid() = %s -> accepts a str: %s", mimeName, tid, accepts);
         assertEquals(expected, accepts, desc);
     }
@@ -151,7 +151,7 @@ class webInstSetTest extends AbstractMetatronTest {
             "/m/rec             % false % an ordinary type is not",
     }, delimiter = '%')
     void testProtocolSurfaceTypes(final String vid, final boolean expected, final String desc) {
-        final Type type = Machine.readFromSpace(f(vid)).<Type>as();
+        final Type type = Machine.read(f(vid)).<Type>as();
         LOG.info("%s => %s, isProtocolSurface=%s", vid, type, isProtocolSurface(type));
         assertEquals(expected, isProtocolSurface(type), desc + ": " + vid);
     }
@@ -162,7 +162,7 @@ class webInstSetTest extends AbstractMetatronTest {
      */
     @Test
     void testRouteTypeIsRegistered() {
-        final Obj routeType = Machine.readFromSpace(f("/m/web/route"));
+        final Obj routeType = Machine.read(f("/m/web/route"));
         LOG.info("/m/web/route => %s", routeType);
         assertEquals(false, routeType.isNoObj(), "the route table type should be registered at /m/web/route");
         assertEquals(true, routeType.isType(), "and it should be a type: " + routeType);
@@ -186,7 +186,7 @@ class webInstSetTest extends AbstractMetatronTest {
             "/m/web/mime/css      % a css document",
     }, delimiter = '%')
     void testDocumentTypesAreStr(final String vid, final String desc) {
-        final Type docType = Machine.readFromSpace(f(vid)).<Type>as();
+        final Type docType = Machine.read(f(vid)).<Type>as();
         LOG.info("%s => %s", vid, docType);
         assertEquals(true, docType.test(T(STR_TID)), desc + " must accept a str: " + vid);
     }

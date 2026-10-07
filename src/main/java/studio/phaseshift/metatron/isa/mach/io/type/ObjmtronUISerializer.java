@@ -429,7 +429,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
         // uris where the serializer writes them.  Going around it left every vid -- and every type
         // named inside a refinement or a collection -- unclickable while plain uri values were fine
-        final fURI vid = Machine.loaded() ? Machine.root().redirect(obj.vid(), false) : obj.vid();
+        final fURI vid = Machine.loaded() ? Machine.root().memory().redirect(obj.vid(), false) : obj.vid();
         return sb.append("{{y}}@{{/y}}").append(this.writeUriExtension(vid.toUri(), "y", true));
     }
 

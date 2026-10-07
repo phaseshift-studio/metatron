@@ -279,9 +279,9 @@ public @interface Training {
                 for (final Inst inst : insts) {
                     try {
                         final fURI docQID = inst.tid().addQ(DOCQ);
-                        Rec doc = Machine.readFromSpace(docQID).orElse(rec());
+                        Rec doc = Machine.read(docQID).orElse(rec());
                         if (!hasDocs(doc))
-                            doc = Machine.readFromSpace(docQID.basePath().addQ(DOCQ)).orElse(rec());
+                            doc = Machine.read(docQID.basePath().addQ(DOCQ)).orElse(rec());
                         if (hasDocs(doc)) {
                             final String desc = doc.at(DESC).strValue();
                             if (!ctx.isEmpty()) ctx.append("; ");

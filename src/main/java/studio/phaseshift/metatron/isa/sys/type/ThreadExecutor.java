@@ -226,7 +226,7 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
             final Thread javaThread = Thread.ofVirtual()
                     .name(null != thread.vid() ? thread.vid().toString() : "metatron-virtual")
                     .unstarted(() -> {
-                        studio.phaseshift.metatron.isa.mach.type.Machine.withPerspective(perspective);
+                        studio.phaseshift.metatron.isa.mach.type.Machine.current(perspective);
                         wrapped.run();
                         thread.landedPerspective(studio.phaseshift.metatron.isa.mach.type.Machine.current());
                     });
@@ -235,7 +235,7 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
         } else {
             this.service.execute(() -> {
                 thread.setJavaThread(Thread.currentThread());
-                studio.phaseshift.metatron.isa.mach.type.Machine.withPerspective(perspective);
+                studio.phaseshift.metatron.isa.mach.type.Machine.current(perspective);
                 wrapped.run();
                 thread.landedPerspective(studio.phaseshift.metatron.isa.mach.type.Machine.current());
             });

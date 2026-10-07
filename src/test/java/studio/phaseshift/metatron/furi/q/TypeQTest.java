@@ -70,8 +70,8 @@ public class TypeQTest extends AbstractMetatronTest {
         LOG.warn("%s\n%s", this.space, Machine.root().spaces());
         final Type type = ObjmtronSerializer.parse(specifyType);
         final fURI write = f(writeVID);
-        Machine.writeToSpace(write.addQ("T"), type);
-        assertEquals(type, Machine.readFromSpace(write.addQ("T")));
+        Machine.write(write.addQ("T"), type);
+        assertEquals(type, Machine.read(write.addQ("T")));
         assertTrue(type.isType());
         checkCodeParseApply(LOG, writeTo, result);
         if (!result.trim().equals("<ERROR>"))

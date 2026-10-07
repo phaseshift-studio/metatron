@@ -58,8 +58,6 @@ import java.util.function.Supplier;
  */
 public final class TypeGraph {
 
-    private static volatile TypeGraph THE;
-
     /**
      * a canonical memo key over the <em>raw</em> resolution arguments (value-equality
      * types: fURI and Obj both define value-based equals/hashCode).
@@ -96,18 +94,7 @@ public final class TypeGraph {
     private final AtomicLong misses = new AtomicLong(0);
     private final AtomicLong skips = new AtomicLong(0);
 
-    private TypeGraph() {
-    }
-
-    public static TypeGraph global() {
-        final TypeGraph t = THE;
-        if (null != t)
-            return t;
-        synchronized (TypeGraph.class) {
-            if (null == THE)
-                THE = new TypeGraph();
-            return THE;
-        }
+    public TypeGraph() {
     }
 
     /**

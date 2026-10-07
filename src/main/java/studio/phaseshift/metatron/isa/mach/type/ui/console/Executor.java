@@ -143,7 +143,7 @@ public final class Executor {
                         // no auto_xxx hook: the boundary is the thread, and the session is this thread.
                         if (mach instanceof studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread worker
                                 && null != worker.landedPerspective())
-                            Machine.withPerspective(worker.landedPerspective());
+                            Machine.current(worker.landedPerspective());
                     }
                 } else {
                     computeResult.set(this.console.input.apply(resolvedResult));

@@ -469,7 +469,7 @@ public class InstTest extends AbstractObjTest {
     }
 
     @ParameterizedTest
-    @TestData(value = {"|inst?int{?}<=int(min=>else(3),max=>else(8)){ is(and(gte(*min),lte(*max))) }@band"})
+    @TestData(value = {"|band?int{?}<=int(min=>else(3),max=>else(8)){ is(and(gte(*min),lte(*max))) }@band"})
     @CsvSource(value = {
             "1.band()                                              % noobj",
             "2.band()                                              % noobj",

@@ -206,6 +206,6 @@ public class MessageBuilder {
      * @return the written Rec (with VID assigned by the space)
      */
     public Rec create(final fURI writePath) {
-        return Machine.writeToSpace(writePath, this.create()).as();
+        return Machine.write(writePath, this.create()).as();
     }
 }

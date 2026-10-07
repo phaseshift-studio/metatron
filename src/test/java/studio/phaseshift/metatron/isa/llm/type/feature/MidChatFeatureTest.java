@@ -314,7 +314,7 @@ public class MidChatFeatureTest extends AbstractMetatronTest {
      * leaves are rels carrying the message as their second.
      */
     private static List<Rec> ledgerMessages(final fURI root) {
-        final Obj rows = Machine.readFromSpace(root.extend(MESSAGE).extend("+/"));
+        final Obj rows = Machine.read(root.extend(MESSAGE).extend("+/"));
         if (rows.isNoObj())
             return List.of();
         final List<Rec> messages = new ArrayList<>();

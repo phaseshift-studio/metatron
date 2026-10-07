@@ -194,7 +194,7 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
                         Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: write: " + make(writeExpression) + " | read: " + make(readExpression)));
             }
         } finally {
-            Machine.root().write(make("$$/rootless/#"), noobj());
+            Machine.root().memory().write(make("$$/rootless/#"), noobj());
         }
     }
 
@@ -280,7 +280,7 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
                 assertEquals(expectedObj, readObj, Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: update: " + make(updateExpression) + " | read: " + make(readExpression)));
             }
         } finally {
-            Machine.root().write(make("$$/#"), noobj());
+            Machine.root().memory().write(make("$$/#"), noobj());
         }
     }
 
@@ -373,7 +373,7 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
                     "test:treepoly >> 0",
                     "test:treepoly");
         } finally {
-            Machine.root().write(make("$$/treepoly/#"), noobj());
+            Machine.root().memory().write(make("$$/treepoly/#"), noobj());
         }
     }
 
@@ -412,7 +412,7 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
             final Obj app = ObjmtronSerializer.parse("*<test:dirpoly/code/main/java/App.java>").apply();
             assertTrue(app.isStr(), "/ path navigation must reach the file, got: " + app);
         } finally {
-            Machine.root().write(make("$$/dirpoly/#"), noobj());
+            Machine.root().memory().write(make("$$/dirpoly/#"), noobj());
         }
     }
 

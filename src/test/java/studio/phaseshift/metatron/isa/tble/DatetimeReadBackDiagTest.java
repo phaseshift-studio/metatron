@@ -95,12 +95,12 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
         final tbleSpace spaceA = makeSpace("a");
         final Obj dt = mathInstSet.parseDatetime("2026-08-25T22:34:11.533-06:00");
         LOG.info("writing dt = {} tid={}", dt, dt.tid());
-        Machine.writeToSpace(f("db:events/1"), rec(uri("label"), str("hello world"), uri("created"), dt));
+        Machine.write(f("db:events/1"), rec(uri("label"), str("hello world"), uri("created"), dt));
         dump("caseA after write");
 
-        final Obj fieldBack = Machine.readFromSpace(f("db:events/1/created")).selfVID(null);
+        final Obj fieldBack = Machine.read(f("db:events/1/created")).selfVID(null);
         LOG.info("caseA field read-back: {} tid={} class={}", fieldBack, fieldBack.tid(), fieldBack.getClass().getSimpleName());
-        final Rec rowBack = (Rec) Machine.readFromSpace(f("db:events/1")).selfVID(null);
+        final Rec rowBack = (Rec) Machine.read(f("db:events/1")).selfVID(null);
         final Obj rowDt = rowBack.at(uri("created"));
         LOG.info("caseA row  read-back: {} tid={} class={}", rowDt, rowDt.tid(), rowDt.getClass().getSimpleName());
         Machine.root().removeSpace(spaceA.vid());
@@ -126,13 +126,13 @@ public class DatetimeReadBackDiagTest extends AbstractMetatronTest {
                 ).jvm(),
                 f("/sys/space/dt-diag/b2")
         );
-        final Obj bBack = Machine.readFromSpace(f("db:stamps/7/ts")).selfVID(null);
+        final Obj bBack = Machine.read(f("db:stamps/7/ts")).selfVID(null);
         LOG.info("caseB pre-seeded read-back: {} tid={} class={}", bBack, bBack.tid(), bBack.getClass().getSimpleName());
         dump("caseB before write");
 
-        Machine.writeToSpace(f("db:stamps/8"), rec(uri("ts"), dt));
+        Machine.write(f("db:stamps/8"), rec(uri("ts"), dt));
         dump("caseB after write");
-        final Obj bBack2 = Machine.readFromSpace(f("db:stamps/8/ts")).selfVID(null);
+        final Obj bBack2 = Machine.read(f("db:stamps/8/ts")).selfVID(null);
         LOG.info("caseB write-then-read: {} tid={} class={}", bBack2, bBack2.tid(), bBack2.getClass().getSimpleName());
         Machine.root().removeSpace(spaceB2.vid());
         spaceB2.close();

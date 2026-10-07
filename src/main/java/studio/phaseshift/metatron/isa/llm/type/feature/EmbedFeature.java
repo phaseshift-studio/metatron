@@ -139,7 +139,7 @@ public class EmbedFeature extends AbstractFeature {
                 uri(META), agent.service(MessageService.class)
                         .<Obj>map(m -> rec(SESSION, uri(m.sessionVID())))
                         .orElse(noobj())), VEC_EMBEDDING_TID, null);
-        final Obj complete = Machine.writeToSpace(writeLocation, embedding);
+        final Obj complete = Machine.write(writeLocation, embedding);
         result.put(EMBED, complete.hasVID() ? auto_from_(complete.vid()) : noobj());
     }
 

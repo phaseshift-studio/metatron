@@ -65,33 +65,33 @@ public class TreeWidgetTest extends AbstractMetatronTest {
         final memSpace space = memSpace.of(rec(uri(PATTERN), uri("local:#")), f("/sys/space/local"));
         Machine.root().addSpace(space);
         // Build a deterministic tree in memory
-        Machine.writeToSpace(f("local:docs"), str("docs/"));
-        Machine.writeToSpace(f("local:docs/index.adoc"), str("= docs"));
-        Machine.writeToSpace(f("local:projects"), str("projects/"));
-        Machine.writeToSpace(f("local:projects/metatron"), str("metatron/"));
-        Machine.writeToSpace(f("local:projects/metatron/src"), str("src/"));
-        Machine.writeToSpace(f("local:projects/metatron/src/main"), str("main/"));
-        Machine.writeToSpace(f("local:projects/metatron/src/main/Main.java"), str("// main"));
-        Machine.writeToSpace(f("local:projects/metatron/src/main/Config.java"), str("// config"));
-        Machine.writeToSpace(f("local:projects/metatron/src/test"), str("test/"));
-        Machine.writeToSpace(f("local:projects/metatron/src/test/MainTest.java"), str("// test"));
-        Machine.writeToSpace(f("local:projects/metatron/README.md"), str("# metatron"));
-        Machine.writeToSpace(f("local:projects/other"), str("other/"));
-        Machine.writeToSpace(f("local:projects/other/notes.txt"), str("notes"));
+        Machine.write(f("local:docs"), str("docs/"));
+        Machine.write(f("local:docs/index.adoc"), str("= docs"));
+        Machine.write(f("local:projects"), str("projects/"));
+        Machine.write(f("local:projects/metatron"), str("metatron/"));
+        Machine.write(f("local:projects/metatron/src"), str("src/"));
+        Machine.write(f("local:projects/metatron/src/main"), str("main/"));
+        Machine.write(f("local:projects/metatron/src/main/Main.java"), str("// main"));
+        Machine.write(f("local:projects/metatron/src/main/Config.java"), str("// config"));
+        Machine.write(f("local:projects/metatron/src/test"), str("test/"));
+        Machine.write(f("local:projects/metatron/src/test/MainTest.java"), str("// test"));
+        Machine.write(f("local:projects/metatron/README.md"), str("# metatron"));
+        Machine.write(f("local:projects/other"), str("other/"));
+        Machine.write(f("local:projects/other/notes.txt"), str("notes"));
         // A pure folder chain (no file children until the leaf folder) — for flatten tests.
-        Machine.writeToSpace(f("local:chain"), str("chain/"));
-        Machine.writeToSpace(f("local:chain/a"), str("a/"));
-        Machine.writeToSpace(f("local:chain/a/b"), str("b/"));
-        Machine.writeToSpace(f("local:chain/a/b/c"), str("c/"));
-        Machine.writeToSpace(f("local:chain/a/b/c/File.java"), str("// file"));
-        Machine.writeToSpace(f("local:chain/a/b/c/Other.java"), str("// other"));
+        Machine.write(f("local:chain"), str("chain/"));
+        Machine.write(f("local:chain/a"), str("a/"));
+        Machine.write(f("local:chain/a/b"), str("b/"));
+        Machine.write(f("local:chain/a/b/c"), str("c/"));
+        Machine.write(f("local:chain/a/b/c/File.java"), str("// file"));
+        Machine.write(f("local:chain/a/b/c/Other.java"), str("// other"));
         // xref fixture: canonical leaves under local:xref/src/* and two alias leaves
         // (mainRef, helpRef) whose raw values are !@ auto pointers to those canonicals.
-        Machine.writeToSpace(f("local:xref/src"), str("src/"));
-        Machine.writeToSpace(f("local:xref/src/a_main"), str("// a"));
-        Machine.writeToSpace(f("local:xref/src/b_help"), str("// b"));
-        Machine.writeToSpace(f("local:xref/mainRef"), auto_from_(f("local:xref/src/a_main")).tryToInst());
-        Machine.writeToSpace(f("local:xref/helpRef"), auto_from_(f("local:xref/src/b_help")).tryToInst());
+        Machine.write(f("local:xref/src"), str("src/"));
+        Machine.write(f("local:xref/src/a_main"), str("// a"));
+        Machine.write(f("local:xref/src/b_help"), str("// b"));
+        Machine.write(f("local:xref/mainRef"), auto_from_(f("local:xref/src/a_main")).tryToInst());
+        Machine.write(f("local:xref/helpRef"), auto_from_(f("local:xref/src/b_help")).tryToInst());
     }
 
     @Test
@@ -248,17 +248,17 @@ public class TreeWidgetTest extends AbstractMetatronTest {
      */
     @Test
     public void testXrefScratchStyleIndex() {
-        Machine.writeToSpace(f("local:rx/code/0/classes/Echo/0/members/0/PREFIX"), str("// prefix"));
-        Machine.writeToSpace(f("local:rx/code/0/classes/Echo/0/members/1/name"), str("// name"));
-        Machine.writeToSpace(f("local:rx/code/0/classes/Echo/0/members/4/speak"), str("// speak"));
-        Machine.writeToSpace(f("local:rx/code/0/classes/Echo/0/members/6/name"), str("// name"));
+        Machine.write(f("local:rx/code/0/classes/Echo/0/members/0/PREFIX"), str("// prefix"));
+        Machine.write(f("local:rx/code/0/classes/Echo/0/members/1/name"), str("// name"));
+        Machine.write(f("local:rx/code/0/classes/Echo/0/members/4/speak"), str("// speak"));
+        Machine.write(f("local:rx/code/0/classes/Echo/0/members/6/name"), str("// name"));
         final Obj idx = rec(uri("field"), rec(
                         uri("PREFIX"), auto_from_(f("local:rx/code/0/classes/Echo/0/members/0/PREFIX")).tryToInst(),
                         uri("name"), auto_from_(f("local:rx/code/0/classes/Echo/0/members/1/name")).tryToInst()),
                 uri("method"), rec(
                         uri("speak"), auto_from_(f("local:rx/code/0/classes/Echo/0/members/4/speak")).tryToInst(),
                         uri("name"), auto_from_(f("local:rx/code/0/classes/Echo/0/members/6/name")).tryToInst()));
-        Machine.writeToSpace(f("local:rx/idx/Echo"), idx);
+        Machine.write(f("local:rx/idx/Echo"), idx);
         final TreeWidget tree = new TreeWidget(mutableMap(
                 uri(ROOT), uri("local:rx/idx/Echo"),
                 uri(MAX), jnt(5),

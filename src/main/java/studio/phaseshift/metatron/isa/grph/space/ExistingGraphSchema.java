@@ -302,7 +302,7 @@ public class ExistingGraphSchema {
         // Merge into the schema InstSet at SCHEMA (bootstrap if needed)
         final Obj schema = this.space.at(uri(SCHEMA));
         if (schema.isInstSet() && schema.<InstSet>as().pattern() != null) {
-            Machine.writeToSpace(
+            Machine.write(
                     schema.<InstSet>as().pattern().retractPattern().extend(label),
                     type);
         } else {

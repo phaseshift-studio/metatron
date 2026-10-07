@@ -226,7 +226,7 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
 
     /**
      * Instruction-call traversals (outE, out, inV, outV, inE, in, etc.).
-     * Delegates to the route-based directReader via Machine.readFromSpace using the vertex/edge VID.
+     * Delegates to the route-based directReader via Machine.read using the vertex/edge VID.
      */
     @ParameterizedTest
     @CsvSource(value = {

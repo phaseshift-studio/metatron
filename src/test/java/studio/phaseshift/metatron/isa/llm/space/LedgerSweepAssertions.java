@@ -87,13 +87,13 @@ final class LedgerSweepAssertions {
         final fURI ledger = memoryRoot.extend(MESSAGE).extend("_").addQ(INCRQ);
 
         // a request with its result immediately after it is what the gate writes
-        Machine.writeToSpace(ledger, aiRequest(HEALTHY_CALL));
-        Machine.writeToSpace(ledger, toolResult(HEALTHY_CALL));
+        Machine.write(ledger, aiRequest(HEALTHY_CALL));
+        Machine.write(ledger, toolResult(HEALTHY_CALL));
         assertTrue(AbstractMessageFeature.clean(AbstractMessageFeature.sweepSession(sessionVID, false, false)),
                 "a request followed immediately by its result is clean, got: " + AbstractMessageFeature.sweepSession(sessionVID, false, false));
 
         // an answer that never arrived
-        Machine.writeToSpace(ledger, aiRequest(ORPHAN_CALL));
+        Machine.write(ledger, aiRequest(ORPHAN_CALL));
         final List<String> findings = ids(AbstractMessageFeature.sweepSession(sessionVID, false, false), AbstractMessageFeature.ORPHAN);
         assertEquals(List.of(ORPHAN_CALL), findings, "the unanswered request is the only finding, got: " + findings);
 
@@ -106,7 +106,7 @@ final class LedgerSweepAssertions {
         // written a second time.  The gate's dedup memory (PUBLISHED) is in-JVM, so
         // a restart lets a re-offered group be published again — and the second copy
         // takes no results, because the first consumed them.
-        Machine.writeToSpace(ledger, aiRequest(HEALTHY_CALL));
+        Machine.write(ledger, aiRequest(HEALTHY_CALL));
         assertEquals(List.of(HEALTHY_CALL), ids(AbstractMessageFeature.sweepSession(sessionVID, false, false), AbstractMessageFeature.DUPLICATE),
                 "the second copy is reported as a duplicate, not as a missing result");
 
@@ -119,7 +119,7 @@ final class LedgerSweepAssertions {
                 "and deletes nothing — the duplicate keeps its prose, it just stops asking for answers it cannot get");
 
         // prune is the explicit opt-in to deleting it
-        Machine.writeToSpace(ledger, aiRequest(HEALTHY_CALL));
+        Machine.write(ledger, aiRequest(HEALTHY_CALL));
         assertEquals(List.of(HEALTHY_CALL), ids(AbstractMessageFeature.sweepSession(sessionVID, true, true), AbstractMessageFeature.DUPLICATE),
                 "the duplicate is reported");
         assertEquals(before, messageCount(memoryRoot), "and pruned — back to the size it was before");
@@ -129,7 +129,7 @@ final class LedgerSweepAssertions {
      * How many rows the ledger holds.
      */
     private static long messageCount(final fURI memoryRoot) {
-        final Obj rows = Machine.readFromSpace(memoryRoot.extend(MESSAGE).extend("+/"));
+        final Obj rows = Machine.read(memoryRoot.extend(MESSAGE).extend("+/"));
         if (rows.isNoObj())
             return 0L;
         return rows.stream().map(Obj::asRel).map(Rel::second).filter(Obj::isRec).count();

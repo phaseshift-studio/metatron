@@ -83,7 +83,7 @@ public class ToolFeatureTest extends AbstractFeatureTest {
         if (null != reject) qs.add(REJECT + "=" + mtronLst(reject));
         if (null != env) qs.add(ENV + "=" + env);
         final String uri = SYS_BASH_INST_TID + (qs.isEmpty() ? "" : "?" + String.join("&", qs));
-        return Machine.readFromSpace(uri).asInst();
+        return Machine.read(uri).asInst();
     }
 
     /**

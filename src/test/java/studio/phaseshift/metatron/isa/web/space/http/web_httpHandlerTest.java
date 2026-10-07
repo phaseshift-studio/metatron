@@ -61,8 +61,8 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
                 uri(ROUTE), rec()
         ), f("/sys/space/test/web-content/" + getClass().getSimpleName()));
         // Populate with test content
-        Machine.writeToSpace(f("mem:test-pages/index.html"), str("<html><body><h1>Hello World</h1></body></html>"));
-        Machine.writeToSpace(f("mem:test-pages/about.html"), str("<html><body><h1>About</h1></body></html>"));
+        Machine.write(f("mem:test-pages/index.html"), str("<html><body><h1>Hello World</h1></body></html>"));
+        Machine.write(f("mem:test-pages/about.html"), str("<html><body><h1>About</h1></body></html>"));
     }
 
     @AfterEach
@@ -141,12 +141,12 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         final fURI target = f("mem:test-pages/set-upd");
         // JSON-derived base (string keys) — mirrors the PUT body path
         final Obj jsonBase = ObjJSONSerializer.simple().inputBytes("{\"a\":{\"b\":2,\"c\":3},\"d\":4}");
-        Machine.writeToSpace(target, jsonBase);
-        final Obj read = Machine.readFromSpace(target);
+        Machine.write(target, jsonBase);
+        final Obj read = Machine.read(target);
         final Obj delta = ObjmtronSerializer.parse("+[d=>100]");
         final Obj updated = update_(delta).apply(read);
-        final Obj writeResult = Machine.writeToSpace(target, updated);
-        final Obj after = Machine.readFromSpace(target);
+        final Obj writeResult = Machine.write(target, updated);
+        final Obj after = Machine.read(target);
         System.out.printf("jsonBase=%s | delta=%s (tid=%s) | read=%s | updated=%s | writeResult=%s | after=%s%n",
                 jsonBase, delta, delta.tid(), read, updated, writeResult, after);
         assertFalse(after.isNoObj(),
@@ -177,11 +177,11 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
                     uri(PATTERN), uri("mem:test-pages/#"),
                     uri(ROUTE), rec()
             ), f("/sys/space/test/web-int/" + getClass().getSimpleName()));
-            Machine.writeToSpace(f("mem:test-pages/index.html"),
+            Machine.write(f("mem:test-pages/index.html"),
                     str("<html><body><h1>Hello World</h1></body></html>", HTML_TID, null));
-            Machine.writeToSpace(f("mem:test-pages/about.html"),
+            Machine.write(f("mem:test-pages/about.html"),
                     str("<html><body><h1>About</h1></body></html>", HTML_TID, null));
-            Machine.writeToSpace(f("mem:test-pages/data.json"),
+            Machine.write(f("mem:test-pages/data.json"),
                     str("{\"key\":\"value\"}", WEB_JSON_TID, null));
             super.setupHTTPSpace();
         }

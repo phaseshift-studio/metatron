@@ -114,7 +114,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
     }
 
     public Rec addMessage(final Rec message) {
-        final Rec message2 = Machine.writeToSpace(this.memoryRoot.extend("_").addQ(INCRQ), message).asRec();
+        final Rec message2 = Machine.write(this.memoryRoot.extend("_").addQ(INCRQ), message).asRec();
         return message2;
     }
 
@@ -149,7 +149,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
      */
     private List<Rel> sessionRels(final fURI sesVID) {
         final fURI msgBase = this.memoryRoot.extend(MESSAGE);
-        return Machine.readFromSpace(msgBase.extend("+/"))
+        return Machine.read(msgBase.extend("+/"))
                 .stream()
                 .map(Obj::asRel)
                 .filter(pair -> pair.second().isRec())
@@ -458,7 +458,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                         LOG.warn("no tool channel for %d tool requests — dropping them from the ai message",
                                 aiMessage.toolExecutionRequests().size());
                         msgRec.recValue().remove(uri(TOOL_REQUESTS));
-                        Machine.writeToSpace(writePath, msgRec);
+                        Machine.write(writePath, msgRec);
                         continue;
                     }
                     // the pairing gate: written only once every request has its
@@ -470,7 +470,7 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
                                         .map(request -> request.name() + "(" + request.id() + ")").toList());
                     continue;
                 }
-                Machine.writeToSpace(writePath, msgRec);
+                Machine.write(writePath, msgRec);
             } catch (final Exception e) {
                 LOG.warn("error writing ai_message (non-blocking): %s", e.getMessage());
             }
@@ -525,14 +525,14 @@ public class SpaceChatSessionStore implements ChatMemoryStore {
         final fURI msgBase = this.memoryRoot.extend(MESSAGE);
         for (int id = 1; ; id++) {
             try {
-                final Obj msgObj = Machine.readFromSpace(msgBase.extend(String.valueOf(id)));
+                final Obj msgObj = Machine.read(msgBase.extend(String.valueOf(id)));
                 if (msgObj.isNoObj()) break;
                 if (!msgObj.isRec()) continue;
                 final Rec msgRec = msgObj.asRec();
                 final Obj sessionField = msgRec.at(uri(SESSION));
                 if (sessionField.isNoObj() || !sessionField.isUri() || !sessionField.uriValue().equals(sesVID))
                     continue;
-                Machine.writeToSpace(msgBase.extend(String.valueOf(id)), noobj());
+                Machine.write(msgBase.extend(String.valueOf(id)), noobj());
             } catch (final Exception e) {
                 break; // no more entries
             }

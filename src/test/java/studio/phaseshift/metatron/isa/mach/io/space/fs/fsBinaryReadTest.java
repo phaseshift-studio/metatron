@@ -90,7 +90,7 @@ class fsBinaryReadTest extends AbstractMetatronTest {
     void testBinaryIsReadAsBytes(final String path, final String kind, final String expectedTid,
                                  final String desc) throws Exception {
         final long fileSize = Files.size(WEBSITE.resolve(path));
-        final Obj obj = Machine.readFromSpace(f("mfs:" + path));
+        final Obj obj = Machine.read(f("mfs:" + path));
         if (obj.isBytes()) {
             LOG.info("read mfs:%s => %s [%d bytes, file is %d]", path, obj.tid(), obj.asBytes().jvm().array().length, fileSize);
             assertEquals(fileSize, obj.asBytes().jvm().array().length,

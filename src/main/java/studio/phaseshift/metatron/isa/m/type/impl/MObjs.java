@@ -54,7 +54,7 @@ public class MObjs implements Objs {
         this.vid = vid;
         this.tid = tid;
         if (null != vid)
-            Machine.writeToSpace(vid, this);
+            Machine.write(vid, this);
     }
 
     @Override

@@ -28,10 +28,10 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.dckr.dckrSpace.DCKR_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATASIZE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -68,7 +68,7 @@ public class dckrInstSet extends AbstractInstSet {
     public static final fURI DOCKER_COMPOSE_TID = DCKR_ISA_TID.extend("compose");
     public static final fURI DOCKER_CONTAINER_STATE_TID = DCKR_ISA_TID.extend("container_state");
     public static final fURI DOCKER_VOLUME_TID = DCKR_ISA_TID.extend("volume");
-    public static final fURI DOCKER_NETWORK_TID = DCKR_ISA_TID.extend("network");
+    public static final fURI DOCKER_NETWORK_TID = DCKR_ISA_TID.extend("networks");
 
     public static final String DOCKER_IMAGE_TID_STRING = "/m/dckr/image";
     public static final String DOCKER_CONTAINER_TID_STRING = "/m/dckr/container";

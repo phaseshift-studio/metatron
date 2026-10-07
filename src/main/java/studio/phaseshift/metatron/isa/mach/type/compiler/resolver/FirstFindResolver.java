@@ -122,7 +122,7 @@ public class FirstFindResolver extends MRec implements Resolver, InstSelector {
                 fromLhs = at.stream();
         }
 
-        final Stream<Obj> fromSpace = Machine.readFromSpace(basePath).stream();
+        final Stream<Obj> fromSpace = Machine.read(basePath).stream();
 
         return Stream.concat(fromLhs, fromSpace);
     }

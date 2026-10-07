@@ -61,7 +61,7 @@ public class EntityBuilder {
         final fURI vidOrTid = TypeSpec.Helper.vidOrTid(this.getClass().getConstructors()[0].getParameterTypes()[0].getAnnotation(TypeSpec.class));
         this.haosSpace = Machine.root().getSpaceFor(vidOrTid);
         this.haosPrefix = f(Space.Helper.extractRewrite(this.haosSpace.jvm()).get1()).asNode();
-        final Obj deviceType = Machine.readFromSpace(vidOrTid);
+        final Obj deviceType = Machine.read(vidOrTid);
         assert device.test(deviceType);
         this.settings = rec(uri("unique_id"), uri(entityVID), uri("dev"), rec(uri("identifiers"), uri(device.vid()), uri("name"), device.at(uri("name"))));
     }

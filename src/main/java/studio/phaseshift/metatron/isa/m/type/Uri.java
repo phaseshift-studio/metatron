@@ -564,7 +564,7 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
                 // real child, never a fabricated address.  Uri components (scheme, host, …)
                 // live in rec space, not uri space — use .as(rec::T)>>component for those.
                 final fURI target = lhs.uriValue().extend(argUri.toString());
-                return Machine.readFromSpace(target).isNoObj() ? noobj() : uri(target);
+                return Machine.read(target).isNoObj() ? noobj() : uri(target);
             }
             return noobj();
         }

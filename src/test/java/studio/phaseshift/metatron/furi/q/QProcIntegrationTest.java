@@ -174,7 +174,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testIncrQ(final String uri, final int pattern, final String value, final String desc) {
         final fURI vid = BASE.extend(uri).addQ("incrq");
-        final Obj r1 = Machine.writeToSpace(vid, ObjmtronSerializer.parse(value));// ObjmtronSerializer.parse(value).vid(f(vid));
+        final Obj r1 = Machine.write(vid, ObjmtronSerializer.parse(value));// ObjmtronSerializer.parse(value).vid(f(vid));
         LOG.warn("incr %s => %s", vid, r1.vid());
         assertNotNull(r1.vid(), desc + ": should have a VID");
         final int index = BASE.segmentLength() - 1 + pattern;
@@ -193,7 +193,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     @Test
     public void testMintQ() {
         final fURI target = f(BASE + "/mint?mintq");
-        final Obj written = Machine.writeToSpace(target, str("hello"));
+        final Obj written = Machine.write(target, str("hello"));
         assertNotEquals(noobj(), written);
         assertNotNull(written.vid());
         assertTrue(written.vid().toString().startsWith(BASE + "/mint/"),
@@ -216,12 +216,12 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
 
         for (int i = 0; i < numSubscriptions; i++)
             for (int j = 0; j < 3; j++)
-                Machine.writeToSpace(BASE + "/sub" + i, jnt(j));
+                Machine.write(BASE + "/sub" + i, jnt(j));
 
         CommonUtil.sleepThread(500);
 
         for (int i = 0; i < numSubscriptions; i++) {
-            final Obj sub = Machine.readFromSpace(BASE + "/sub" + i + "?subq");
+            final Obj sub = Machine.read(BASE + "/sub" + i + "?subq");
             assertNotEquals(noobj(), sub, "subscription " + i + " should still exist");
         }
     }

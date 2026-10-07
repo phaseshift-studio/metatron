@@ -78,7 +78,7 @@ public final class DocsUtil {
                 new uiInstSet(), new vecInstSet()
         }) {
             Machine.root().addSpace(is);
-            Machine.writeToSpace(is);
+            Machine.write(is);
             is.setup();
         }
         // hardcode type checker in support of runtime inst resolution

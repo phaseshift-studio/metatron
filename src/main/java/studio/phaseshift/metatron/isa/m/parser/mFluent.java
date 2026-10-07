@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -277,6 +278,11 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.SPLIT_INST_TID, lst(obj)));
     }
 
+    public F branch_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.BRANCH_INST_TID, lst(obj)));
+    }
+
+
     public F choose_(final Obj obj) {
         return this.addInst(instB(mInstSet.CHOOSE_INST_TID, lst(obj)));
     }
@@ -363,7 +369,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     }
 
     public F auto_(final Obj obj) {
-        return this.addInst(instB(mInstSet.AUTO_INST_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.AUTO_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(obj)));
     }
 
     public F auto_from_(final Obj obj) {
@@ -695,6 +701,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F split_(final Obj obj) {
             return new mFluent<F>().split_(obj);
+        }
+
+        public static <F extends mFluent<F>> F branch_(final Obj... obj) {
+            return new mFluent<F>().branch_(obj);
         }
 
         public static <F extends mFluent<F>> F choose_(final Obj obj) {

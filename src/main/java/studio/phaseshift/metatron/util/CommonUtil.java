@@ -485,7 +485,7 @@ public final class CommonUtil {
             // A null base means "no parent", so mint absolutely — exactly as mintUUID does. Without this, extend()
             // NPEs, which is how a machine with no vid surfaced: Machine.push() mints from this.vid().
             shortId = (null == baseURI) ? f(segment) : baseURI.extend(segment);
-        } while (retryIfCollision && !Machine.readFromSpace(shortId).isNoObj());
+        } while (retryIfCollision && !Machine.read(shortId).isNoObj());
         return shortId;
     }
 
@@ -925,7 +925,7 @@ public final class CommonUtil {
                                   final Set<fURI> forceExpand,
                                   final int depth, final boolean isLast,
                                   final fURI xref, final Consumer<TreeEntry> consumer) {
-        final Obj obj = Machine.readFromSpace(uri);
+        final Obj obj = Machine.read(uri);
         // Directories carry the trailing / (a branch); the display name is the last real
         // segment, so strip the branch marker before naming (keep the branch uri for navigation).
         final String name = uri.asNode().name();
@@ -941,11 +941,11 @@ public final class CommonUtil {
             // concrete uris).  Spaces that override it return the raw stored values,
             // so a child whose value is an auto pointer (!* / !@) reveals its
             // canonical target here with no extra reads.  Spaces without a native
-            // override fall back to the resolved readFromSpace listing below.
+            // override fall back to the resolved read listing below.
             final java.util.List<fURI> streamedUris = new java.util.ArrayList<>();
             final java.util.Map<fURI, fURI> streamedXrefs = new java.util.HashMap<>();
             try {
-                Machine.root().readStream(uri.extend("+/")).forEach(id -> {
+                Machine.root().memory().readStream(uri.extend("+/")).forEach(id -> {
                     final fURI childUri = id.furi();
                     if (null == childUri || childUri.equals(uri) || childUri.hasPattern()) return;
                     streamedUris.add(childUri);
@@ -961,7 +961,7 @@ public final class CommonUtil {
                 childUris.addAll(streamedUris);
                 childXrefs.putAll(streamedXrefs);
             } else {
-                Machine.readFromSpace(uri.extend("+/")).stream()
+                Machine.read(uri.extend("+/")).stream()
                         .filter(o -> !o.isNoObj())
                         .forEach(o -> {
                             final Rel rel = o.asRel();

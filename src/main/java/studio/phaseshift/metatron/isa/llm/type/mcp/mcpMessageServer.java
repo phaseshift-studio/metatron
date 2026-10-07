@@ -266,7 +266,7 @@ public class mcpMessageServer {
             ToolPairGate.closeStale(ledger, boundaryChatId, callId -> lostToolResult(message, callId));
 
         // write to <root>/message/_?incrq and return the written rec (vid assigned by the space)
-        final Rec written = Machine.writeToSpace(ledger.ledgerWritePath(), message).as();
+        final Rec written = Machine.write(ledger.ledgerWritePath(), message).as();
         return withIdentity(written);
     }
 

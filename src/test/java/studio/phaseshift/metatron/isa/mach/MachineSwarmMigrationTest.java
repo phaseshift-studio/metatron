@@ -119,8 +119,8 @@ public class MachineSwarmMigrationTest extends AbstractMetatronTest {
             result = aResult.get(30, TimeUnit.SECONDS);
         } catch (final Exception e) {
             LOG.warn("cascade stalled: %s", e);
-            LOG.warn("  a/barrier/b holds %s", Machine.readFromSpace(f("/usr/marko/a/barrier/b")));
-            LOG.warn("  a/barrier/c holds %s", Machine.readFromSpace(f("/usr/marko/a/barrier/c")));
+            LOG.warn("  a/barrier/b holds %s", Machine.read(f("/usr/marko/a/barrier/b")));
+            LOG.warn("  a/barrier/c holds %s", Machine.read(f("/usr/marko/a/barrier/c")));
             LOG.warn("  halted: a=%s b=%s c=%s", pa.halted(), pb.halted(), pc.halted());
             throw e;
         }

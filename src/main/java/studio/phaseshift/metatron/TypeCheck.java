@@ -73,14 +73,14 @@ public enum TypeCheck {
     public static void enable(final TypeCheck... stages) {
         TYPE_CHECKS.addAll(List.of(stages));
         for (final TypeCheck stage : stages) {
-            Machine.writeToSpace(f("/sys/typer/stage/" + stage.name()), BOOL_TRUE);
+            Machine.write(f("/sys/typer/stage/" + stage.name()), BOOL_TRUE);
         }
     }
 
     public static void disable(final TypeCheck... stages) {
         List.of(stages).forEach(TYPE_CHECKS::remove);
         for (final TypeCheck stage : stages) {
-            Machine.writeToSpace(f("/sys/typer/stage/" + stage.name()), BOOL_FALSE);
+            Machine.write(f("/sys/typer/stage/" + stage.name()), BOOL_FALSE);
         }
     }
 
@@ -89,7 +89,7 @@ public enum TypeCheck {
     }
 
     public static Set<TypeCheck> getEnabled() {
-        TypeCheck.init(Machine.readFromSpace("/sys/typer/stage").asRec());
+        TypeCheck.init(Machine.read("/sys/typer/stage").asRec());
         return new LinkedHashSet<>(TYPE_CHECKS);
     }
 

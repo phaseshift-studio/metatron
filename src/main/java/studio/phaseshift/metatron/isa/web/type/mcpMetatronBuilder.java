@@ -131,7 +131,7 @@ public final class mcpMetatronBuilder {
             tools.at(uri(mTool.toolName(toolTid("write_memory"))), docWrap(instC(toolTid("write_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
                             rec(uri("current_memory"), ALL_TYPE,
                                     uri("previous_memory").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
-                                final Obj previousMemory = Machine.readFromSpace(inst.arg(f("previous_memory"), 1).uriValue());
+                                final Obj previousMemory = Machine.read(inst.arg(f("previous_memory"), 1).uriValue());
                                 final fURI memoryBasePath = previousMemory.vid().retract(1).basePath();
                                 final Obj currentMemory = inst.arg(f("current_memory"), 0).vid(CommonUtil.mintShortUUID(memoryBasePath, true));
                                 return rel(previousMemory, currentMemory, REL_TID, CommonUtil.mintShortUUID(memoryBasePath, true));
@@ -143,7 +143,7 @@ public final class mcpMetatronBuilder {
                             rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
                                 final Obj memId = inst.arg(f("memory_vid"), 0);
                                 if (!memId.isNoObj())
-                                    return Machine.readFromSpace(memId.uriValue());
+                                    return Machine.read(memId.uriValue());
                                 else
                                     return noobj();
                             }), "noobj lhs", "the memory fragment by vid which can then be walked with >>",
@@ -192,7 +192,7 @@ public final class mcpMetatronBuilder {
                                 uri("router_vid"), uri(router.vid()),
                                 uri("router_tid"), uri(router.tid()),
                                 uri("space_count"), jnt(router.spaces().jvm().size()),
-                                uri("io_stats"), router.stats().ioStats());
+                                uri("io_stats"), router.memory().stats().ioStats());
                     }), "noobj lhs", "router vid, tid, and space count", Map.of(), "returns router vid, tid, and space count"), MUTABLE);
 
             // find_inst — gets lst of loaded /m instructions and documentation
@@ -206,7 +206,7 @@ public final class mcpMetatronBuilder {
                                     pattern = pattern.dom(inst.arg(f(DOM), 1).uriValue());
                                 if (inst.args().has(RNG))
                                     pattern = pattern.rng(inst.arg(f(RNG), 2).uriValue());
-                                return lst(Machine.root().read(pattern.addQ(DOCQ))
+                                return lst(Machine.root().memory().read(pattern.addQ(DOCQ))
                                         .stream()
                                         .map(Obj::asRec)
                                         .filter(o -> o.at(OBJ).isInst())
@@ -238,7 +238,7 @@ public final class mcpMetatronBuilder {
                                 final WebSocketRec server = new WebSocketRec(
                                         new LinkedHashMap<>(inst.args().jvm()),
                                         vid.extend("wsserver"), CommonUtil.mintShortUUID(vid, true));
-                                Machine.writeToSpace(server);
+                                Machine.write(server);
                                 return server;
                             }),
                     "noobj lhs",

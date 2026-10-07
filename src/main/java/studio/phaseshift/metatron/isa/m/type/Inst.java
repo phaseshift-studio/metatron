@@ -310,7 +310,7 @@ public interface Inst extends Call {
         // find all other insts of the same name
         // if they all have the same domain coefficient as the lhs obj,
         // then that can be hard coded into the compilation
-        Obj resolved2 = Machine.readFromSpace(this.tid());
+        Obj resolved2 = Machine.read(this.tid());
         final List<cInt> uniqueDomains = resolved2.stream().map(v -> v.tid().dom().c()).distinct().toList();
         final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.getFirst().equals(lhs.tid().c())) ? this.dom(lhs.type()) : this;
         this.logger().trace("performing runtime resolution of %s => %s", lhs, domainInst);

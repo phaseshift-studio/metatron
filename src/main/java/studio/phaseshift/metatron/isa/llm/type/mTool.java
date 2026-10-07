@@ -208,7 +208,7 @@ public class mTool extends MRec {
     }
 
     public static QCollection.Docs mtronInstToDocs(final Inst inst) {
-        final Obj found = Machine.readFromSpace(inst.tid().addQ(DOCQ)).stream().findFirst().filter(x -> x instanceof QCollection.Docs).filter(x -> !QCollection.isNoDocs(x)).orElse(noobj());
+        final Obj found = Machine.read(inst.tid().addQ(DOCQ)).stream().findFirst().filter(x -> x instanceof QCollection.Docs).filter(x -> !QCollection.isNoDocs(x)).orElse(noobj());
         final QCollection.Docs doc = found.isNoObj() ? doc(inst,
                 inst.dom().tid().toString(),
                 inst.rng().tid().toString(),

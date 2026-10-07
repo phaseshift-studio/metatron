@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
@@ -50,7 +51,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
@@ -536,9 +536,6 @@ public class mInstSet extends AbstractInstSet {
                                                         (lhs, inst) -> estoreSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create(), "", "",
                                 Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
                                 "an in-memory space with objs indexed by a topic trie"),*/
-                        docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst call frames",
-                                "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
-                                "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
                         docWrap(QPROC_TYPE, """
                                             qprocs (query processors) are optional space components.
                                             qproc behaviors are driven by a qprocs specified uri ?-query pattern.
@@ -1094,7 +1091,7 @@ public class mInstSet extends AbstractInstSet {
         } catch (final Throwable ignored) {
             // cold-start semi-resolution may throw; the timed loop below will surface a real failure
         }
-        final TypeGraph graph = TypeGraph.global();
+        final TypeGraph graph = Machine.current().memory().typeGraph();
         graph.resetStats();
         ScoringResolver.resetTimings();
         FixPointRewriter.resetRewriteTimings();

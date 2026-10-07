@@ -91,8 +91,8 @@ public class StatusLine implements Runnable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
-        final Real inBytes = mathInstSet.normalizeData(real((double) (Machine.root().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
-        final Real outBytes = mathInstSet.normalizeData(real((double) (Machine.root().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
+        final Real inBytes = mathInstSet.normalizeData(real((double) (Machine.root().memory().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
+        final Real outBytes = mathInstSet.normalizeData(real((double) (Machine.root().memory().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
         this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
         this.addWidget(f("in_bytes"), () -> " {{w}}\uD83D\uDCE5 {{%s}}%s::%.2f ".formatted(getForegroundColor(), inBytes.tid().name(), inBytes.realValue()));
         this.addWidget(f("out_bytes"), () -> "{{w}}\uD83D\uDCE4 {{%s}}%s::%.2f ".formatted(getForegroundColor(), outBytes.tid().name(), outBytes.realValue()));
@@ -105,11 +105,11 @@ public class StatusLine implements Runnable {
         this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Machine.authority().stats().monadicStats().killedMonads()));
         this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Machine.authority().stats().monadicStats().barrierMonads()));
         this.addWidget(f("ws"), () -> "{{w}}ws:{{w&[g]}}[%d]{{[%s]}} %s".formatted(Machine.authority().stats().ioStats().connections(), this.getColor(), formatMessage(Machine.authority().stats().ioStats().lastMessage())));*/
-        Machine.writeToSpace(console.vid().extend(STATUS).addQ(SUBQ), instLambda((lhs, inst) -> {
+        Machine.write(console.vid().extend(STATUS).addQ(SUBQ), instLambda((lhs, inst) -> {
             message(lhs.asRec().at(OBJ));
             return noobj();
         }));
-        Machine.writeToSpace(console.vid().extend(STATUS).extend("widget").extend("#").addQ(SUBQ), instLambda((lhs, inst) -> {
+        Machine.write(console.vid().extend(STATUS).extend("widget").extend("#").addQ(SUBQ), instLambda((lhs, inst) -> {
             message(f(lhs.asRec().at(TARGET).uriValue().name()), lhs.asRec().at(OBJ));
             return noobj();
         }));

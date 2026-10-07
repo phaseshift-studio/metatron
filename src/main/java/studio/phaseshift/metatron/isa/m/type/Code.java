@@ -122,10 +122,15 @@ public interface Code extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         final Call code = this.tryToInst();
-        if (code.isCode())
+        if (code.isCode()) {
+            // nested code is another process in the CURRENT machine, not a new machine: run it on the current
+            // machine's compiler + processor with no push/pop of a Machine (argFrames carries the argument scope).
             // wrapStart prepends start(value) for a value lhs; a monadic lhs passes through unchanged and
             // rides START so the monad's loop/state context survives into the processor.
-            return Machine.defaultMachine().apply(wrapStart(lhs, code.as()), lhs.isMonad() ? lhs : noobj());
+            final Machine current = Machine.current();
+            final Code compiled = current.compiler().apply(wrapStart(lhs, code.as())).asCode();
+            return current.processor().code(compiled).apply(lhs.isMonad() ? lhs : noobj());
+        }
         // single inst: dispatch by the inst's own monad flag. A monadic inst (loop())
         // receives the monad; a value inst is resolved and applied against the monad's obj.
         final boolean monadic = code.isInst() && code.resolve(lhs).tid().hasQ(MONAD_IN);

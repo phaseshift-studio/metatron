@@ -107,14 +107,14 @@ public class web_httpHandler extends HttpRec {
                 }
 
                 // 1 — Direct read from Router (space-agnostic: fsSpace, memSpace, etc.)
-                Obj requestObj = Machine.readFromSpace(requestURI.qprocLess());
+                Obj requestObj = Machine.read(requestURI.qprocLess());
 
                 // 1.5 — When the request URI looks like a directory (no file extension),
                 // try the DEFAULT_PAGE.  This handles / → local:web where fsSpace returns
                 // a directory listing (rec or lst) rather than a DIR_TID URI.
                 if (!requestObj.isNoObj() && !requestURI.name().contains(".")) {
                     final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
-                    final Obj defaultObj = Machine.readFromSpace(requestURI.extend(defaultPage));
+                    final Obj defaultObj = Machine.read(requestURI.extend(defaultPage));
                     if (!defaultObj.isNoObj()) {
                         requestObj = defaultObj;
                     }
@@ -149,7 +149,7 @@ public class web_httpHandler extends HttpRec {
                 //     Also applies when the path resolves to a directory (DIR_TID).
                 if (isNoobjOrDir(requestObj) && !foundBase) {
                     final String defaultPage = this.at(uri(DEFAULT_PAGE)).orElse(str("index.html")).strValue();
-                    requestObj = Machine.root().read(requestURI.extend(defaultPage));
+                    requestObj = Machine.root().memory().read(requestURI.extend(defaultPage));
                 }
 
                 // 4 — 404 if still nothing (skip when a base document was found — see above)
@@ -271,7 +271,7 @@ public class web_httpHandler extends HttpRec {
             }
         }
         try {
-            Machine.writeToSpace(resolveAddress(exchange), value);
+            Machine.write(resolveAddress(exchange), value);
             sendStatus(exchange, 201);
         } catch (final Exception e) {
             LOG.error("error handling write: %s", e.getMessage());
@@ -340,13 +340,13 @@ public class web_httpHandler extends HttpRec {
         }
         final fURI fileURI = resolveAddress(exchange);
         try {
-            final Obj base = Machine.readFromSpace(fileURI);
+            final Obj base = Machine.read(fileURI);
             if (base.isNoObj()) {
                 sendErrorQuiet(404, "Not Found: " + fileURI);
                 return noobj();
             }
             final Obj updated = update_(delta).apply(base); // a >>= delta
-            Machine.writeToSpace(fileURI, updated);
+            Machine.write(fileURI, updated);
             sendStatus(exchange, 200);
         } catch (final Exception e) {
             LOG.error("error handling update: %s", e.getMessage());
@@ -368,7 +368,7 @@ public class web_httpHandler extends HttpRec {
             return noobj();
         }
         try {
-            Machine.writeToSpace(resolveAddress(exchange), noobj());
+            Machine.write(resolveAddress(exchange), noobj());
             sendStatus(exchange, 204);
         } catch (final Exception e) {
             LOG.error("error handling delete: %s", e.getMessage());

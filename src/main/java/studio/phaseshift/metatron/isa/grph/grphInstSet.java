@@ -146,7 +146,7 @@ public class grphInstSet extends AbstractInstSet {
         fURI path = base.extend(direction.name());
         if (!inst.arg(0).isNoObj())
             path = path.extend(inst.arg(0).uriValue().toString());
-        return Machine.readFromSpace(path);
+        return Machine.read(path);
     }
 
     private static Obj routeVertexTraversal(final Obj lhs, final Inst inst, final Direction direction) {
@@ -156,7 +156,7 @@ public class grphInstSet extends AbstractInstSet {
         if (!inst.arg(0).isNoObj())
             path = path.extend(inst.arg(0).uriValue().toString());
         path = path.extend(direction.opposite().name());
-        return Machine.readFromSpace(path);
+        return Machine.read(path);
     }
 
     private static Obj routeBothTraversal(final Obj lhs, final Inst inst) {
@@ -169,8 +169,8 @@ public class grphInstSet extends AbstractInstSet {
                 ? base.extend("IN").extend("+")
                 : base.extend("IN").extend(inst.arg(0).uriValue().toString()).extend(Tokens.OUT);
         return objs(Stream.concat(
-                Machine.readFromSpace(outPath).stream(),
-                Machine.readFromSpace(inPath).stream()));
+                Machine.read(outPath).stream(),
+                Machine.read(inPath).stream()));
     }
 
     private static Obj routeBothETraversal(final Obj lhs, final Inst inst) {
@@ -182,8 +182,8 @@ public class grphInstSet extends AbstractInstSet {
         final fURI inPath = inst.arg(0).isNoObj()
                 ? base.extend("IN")
                 : base.extend("IN").extend(inst.arg(0).uriValue().toString());
-        final Obj outResult = Machine.readFromSpace(outPath);
-        final Obj inResult = Machine.readFromSpace(inPath);
+        final Obj outResult = Machine.read(outPath);
+        final Obj inResult = Machine.read(inPath);
         if (outResult.isFail()) return outResult;
         if (inResult.isFail()) return inResult;
         return objs(Stream.concat(outResult.stream(), inResult.stream()));
@@ -265,20 +265,20 @@ public class grphInstSet extends AbstractInstSet {
                                 "an element", "the element values", mutableMap(jnt(0), "zero or more element property labels"), "returns the lhs element arg-labeled values"),
                         docWrap(instC(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
-                                    return vid != null ? Machine.readFromSpace(vid.extend("IN")) : lhs.asRec().at(IN);
+                                    return vid != null ? Machine.read(vid.extend("IN")) : lhs.asRec().at(IN);
                                 }),
                                 "an edge", "the incoming vertex", Map.of(), "returns the lhs edge head vertex"),
                         docWrap(instC(OUTV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
-                                    return vid != null ? Machine.readFromSpace(vid.extend("OUT")) : lhs.asRec().at(OUT);
+                                    return vid != null ? Machine.read(vid.extend("OUT")) : lhs.asRec().at(OUT);
                                 }),
                                 "an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex"),
                         docWrap(instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID.c(cInt.of(2))), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
                                     if (vid != null)
                                         return objs(Stream.concat(
-                                                Machine.readFromSpace(vid.extend("IN")).stream(),
-                                                Machine.readFromSpace(vid.extend("OUT")).stream()));
+                                                Machine.read(vid.extend("IN")).stream(),
+                                                Machine.read(vid.extend("OUT")).stream()));
                                     return objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream()));
                                 }),
                                 "an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices"),

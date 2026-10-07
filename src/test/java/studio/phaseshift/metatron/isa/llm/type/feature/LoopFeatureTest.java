@@ -60,7 +60,7 @@ public class LoopFeatureTest extends AbstractFeatureTest {
     @Test
     public void testIterationsPersisted() {
         runLifecycle(feature());
-        final Obj rows = Machine.readFromSpace(f("/usr/test/loop/+"));
+        final Obj rows = Machine.read(f("/usr/test/loop/+"));
         assertFalse(rows.isNoObj(), "loop iterations should be persisted");
     }
 

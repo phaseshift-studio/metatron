@@ -37,6 +37,9 @@ feature=>[/
 * **tbleSpace (Java)**: `references/tble-space-java.md` — Relational-database space architecture, dual-path reads
   (table-mapped + KV store), ExistingTableSchema lifecycle, SQL rewrite pushdown (count, sum, limit, offset, where,
   select, KV), dialect handling, VID stamping, schema generation.
+* **Machine Architecture (Java)**: `references/machine-architecture-java.md` — Machine and its five components
+  (Memory, Network, InstSet, Compiler, Processor), the frame/ComponentUnion nesting model, push/pop/move, the
+  compile→run pipeline, threads/monads, and the read-path invariants + migration state.
 * **Distributed primitives (Java)**: `references/distributed-metatron.md` — Index of every place metatron crosses a
   process boundary: the Router dispatch seam (`own`/`isPeer`/`dispatchForeign`, `/sys/peer` roster), the wire
   transports (`wsspace`/`wsclient`, `httpspace`, `mqttspace`, `serialspace`, `dckrspace`, `grphspace`, `vecspace`,

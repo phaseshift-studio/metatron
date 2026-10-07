@@ -193,7 +193,7 @@ public class LoopFeature extends AbstractFeature {
      */
     private void persist(final Agent agent, final ChatFrame result) {
         try {
-            final Obj written = Machine.writeToSpace(this.getRoot(agent).extend("_").addQ(INCRQ),
+            final Obj written = Machine.write(this.getRoot(agent).extend("_").addQ(INCRQ),
                     rec(uri("iterations"), lst(this.iterations.stream().map(r -> (Obj) r).toList())));
             result.putRef("loop_results", written);
         } catch (final Exception e) {

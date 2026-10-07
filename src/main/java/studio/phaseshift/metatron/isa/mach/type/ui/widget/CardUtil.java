@@ -152,7 +152,7 @@ public final class CardUtil {
         if (obj.isType() || obj.isInst()) {
             final fURI key = Obj.Helper.specificTypeId(obj);
             if (key != null) {
-                final Obj docObj = Machine.readFromSpace(key.addQ(QCollection.DOCQ));
+                final Obj docObj = Machine.read(key.addQ(QCollection.DOCQ));
                 if (docObj.isRec() && !QCollection.isNoDocs(docObj)) {
                     final QCollection.Docs docs = new QCollection.Docs(docObj.asRec());
                     final StringBuilder sb = new StringBuilder();

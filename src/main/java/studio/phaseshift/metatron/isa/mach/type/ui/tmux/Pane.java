@@ -150,8 +150,8 @@ public class Pane implements PaneNode, Stylable<Pane> {
     public void unsubscribe() {
         if (this.vid() == null)
             return;
-        Machine.root().write(this.vid().extend(IN).addQ(SUBQ), noobj());
-        Machine.root().write(this.vid().extend(OUT).addQ(SUBQ), noobj());
+        Machine.root().memory().write(this.vid().extend(IN).addQ(SUBQ), noobj());
+        Machine.root().memory().write(this.vid().extend(OUT).addQ(SUBQ), noobj());
     }
 
     public void subscribe() {
@@ -159,14 +159,14 @@ public class Pane implements PaneNode, Stylable<Pane> {
             log.warn("console has no vid. unable to support pane subscriptions.");
             return;
         }
-        Machine.root().write(this.vid().extend(IN).addQ(SUBQ), rec(mutableMap(
+        Machine.root().memory().write(this.vid().extend(IN).addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(this.vid().extend(IN)),
                 uri(CODE), instC(f("in_pane").dom(ALL).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     this.appendInput(lhs.asLst().at(1));
                     this.console.renderPanes();
                     return noobj();
                 })), SUBQ_SUB_TID, null));
-        Machine.root().write(this.vid().extend(OUT).addQ(SUBQ), rec(mutableMap(
+        Machine.root().memory().write(this.vid().extend(OUT).addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(this.vid().extend(OUT)),
                 uri(CODE), instC(f("out_pane").dom(ALL).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     this.appendResult(lhs.asLst().at(1));

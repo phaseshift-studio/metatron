@@ -59,7 +59,7 @@ public class DatetimeTypeTest extends AbstractInstSetTest {
 
     @AfterEach
     public void teardown() {
-        Machine.writeToSpace(PROBE, noobj());
+        Machine.write(PROBE, noobj());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class DatetimeTypeTest extends AbstractInstSetTest {
         // an unrelated registry write bumps the type graph generation --
         // datetime must still resolve to the registered type afterwards
         final Obj probeType = ObjmtronSerializer.parse("int::T@" + PROBE).apply();
-        Machine.writeToSpace(probeType.vid(), probeType);
+        Machine.write(probeType.vid(), probeType);
         final Type after = MType.T(MATH_DATETIME_TID);
         assertEquals(before, after,
                 "datetime resolution must be stable across an unrelated registry write");

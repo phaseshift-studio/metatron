@@ -158,7 +158,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
     }
 
     private RouteLane classify(final Obj resolved) {
-        Obj target = resolved.isUri() ? Machine.readFromSpace(resolved.uriValue()) : resolved;
+        Obj target = resolved.isUri() ? Machine.read(resolved.uriValue()) : resolved;
         // ── mcp_server type: materialize it so the transport wraps it ──
         if (target.isType() && target.asType().hasConstructor()
                 && Obj.Helper.specificType(target).test(MCP_SERVER_TYPE)) {

@@ -165,7 +165,7 @@ public abstract class AbstractMetatronTest {
         final Obj mutationResult = ObjmtronSerializer.parse(mutationCode).apply();
         LOG.debug("testing %s <= %s", stateResult, mutationResult);
         expected.forEach((k, v) -> {
-            final Obj actual = Machine.readFromSpace(k);
+            final Obj actual = Machine.read(k);
             final Obj desired = ObjmtronSerializer.parse(v).apply();
             LOG.debug("\t%s [expected] == %s [actual]", desired, actual);
             assertEquals(desired, actual);
