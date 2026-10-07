@@ -535,7 +535,12 @@
                     <include>conf/kitty/open-actions.conf</include>
                 </includes>
             </resource>
-            <!-- META-INF/services handled via bin/metatron classpath (src/main/resources) -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>META-INF/services/**</include>
+                </includes>
+            </resource>
         </resources>
         <testResources>
             <testResource>

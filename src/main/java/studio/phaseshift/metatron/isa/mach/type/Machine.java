@@ -198,15 +198,25 @@ public interface Machine extends Rec, AutoCloseable {
         return this.at(uri(SPACE)).orElse(rec());
     }
 
-    boolean hasSpaceFor(final fURI vid);
+    default boolean hasSpaceFor(final fURI vid) {
+        return this.memory().hasSpaceFor(vid);
+    }
 
-    void addSpace(final Space space);
+    default void addSpace(final Space space) {
+        this.memory().addSpace(space);
+    }
 
-    void removeSpace(final fURI vid);
+    default void removeSpace(final fURI vid) {
+        this.memory().removeSpace(vid);
+    }
 
-    <SPACE extends Space> SPACE getSpace(final fURI pattern);
+    default <SPACE extends Space> SPACE getSpace(final fURI pattern) {
+        return this.memory().getSpace(pattern);
+    }
 
-    <SPACE extends Space> SPACE getSpaceFor(final fURI vid);
+    default <SPACE extends Space> SPACE getSpaceFor(final fURI vid) {
+        return this.memory().getSpaceFor(vid);
+    }
 
     interface Component extends Rec {
         default Machine machine() {

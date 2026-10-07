@@ -384,11 +384,11 @@ public interface Inst extends Call {
     }
 
     default boolean isInitial() {
-        return this.dom().c().isZero();// || this.dom().tid().coefficientValue().isQuestion();
+        return this.dom().c().isZero();// || this.dom().typeId().coefficientValue().isQuestion();
     }
 
     default boolean isFilter() {
-        return this.dom().c().isOne() && this.rng().c().isMaybe() && this.dom().tid().basePath().equals(this.rng().tid().basePath());
+        return this.dom().c().isOne() && this.rng().c().isMaybe() && this.dom().typeId().basePath().equals(this.rng().tid().basePath());
     }
 
     default boolean isMap() {
@@ -571,12 +571,12 @@ public interface Inst extends Call {
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst, final Map<fURI, fURI> generics) {
             final GraphittyLogger LOG = Graphitty.log(lhs);
             Inst apiInstTemp = apiInst;
-            if (apiInstTemp.dom().tid().one().isGeneric() && !lhs.isNoObj() && lhs.type().c().within(apiInstTemp.dom().c())) {
-                generics.put(apiInstTemp.dom().tid().one(), lhs.type().tid().one());
+            if (apiInstTemp.dom().typeId().one().isGeneric() && !lhs.isNoObj() && lhs.type().c().within(apiInstTemp.dom().c())) {
+                generics.put(apiInstTemp.dom().typeId().one(), lhs.type().typeId().one());
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
             }
-            if (apiInstTemp.rng().tid().one().isGeneric() && generics.containsKey(apiInstTemp.rng().tid().one())) {
-                apiInstTemp = apiInstTemp.rng(T(generics.get(apiInstTemp.rng().tid().one()).c(apiInstTemp.rng().c())));
+            if (apiInstTemp.rng().typeId().one().isGeneric() && generics.containsKey(apiInstTemp.rng().typeId().one())) {
+                apiInstTemp = apiInstTemp.rng(T(generics.get(apiInstTemp.rng().typeId().one()).c(apiInstTemp.rng().c())));
             }
             if (!apiInst.args().isEmpty())
                 if (apiInst.args().isRec()) {
@@ -613,7 +613,7 @@ public interface Inst extends Call {
                         if (apiArg.isObjInst()) { // todo: isCall()?
                             apiArg = Helper.bindGenerics(lhs, apiArg.asInst(), userArg);
                         } else {
-                            if (apiArg.tid().one().isGeneric())
+                            if (apiArg.typeId().one().isGeneric())
                                 apiArg = apiArg.tid(generics.getOrDefault(apiArg.tid().one(), userArg.tid())).c(apiArg.c());
                             if (null != apiArg && !apiArg.isObjCall() && !userArg.tid().one().isGeneric() && !userArg.test(apiArg)) {
                                 // TODO: isClessGeneric() and cLess.isGeneric() behave differently
@@ -625,8 +625,8 @@ public interface Inst extends Call {
                     apiInstTemp = apiInstTemp.args(lst(resolvedArgs));
                 }
 
-            if (apiInstTemp.rng().tid().one().isGeneric()) {
-                apiInstTemp = apiInstTemp.rng(T(generics.getOrDefault(apiInstTemp.rng().tid().one(), userInst.rng().tid()).c(apiInstTemp.rng().c())));
+            if (apiInstTemp.rng().typeId().one().isGeneric()) {
+                apiInstTemp = apiInstTemp.rng(T(generics.getOrDefault(apiInstTemp.rng().typeId().one(), userInst.rng().typeId()).c(apiInstTemp.rng().c())));
             }
             ///  hail mary
             if (apiInstTemp.dom().tid().one().isGeneric() || apiInstTemp.dom().tid().one().equals(ALL)) {

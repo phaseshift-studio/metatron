@@ -167,6 +167,16 @@ public interface InstSet extends Space, Machine.Component {
                     }*/
                 })
                 .peek(InstSet::setup); // setup
+    
+                  /*  final Machine machine = Machine.current();
+                    final InstSet own = machine.instset();
+                    if (own instanceof BasicInstSet) {
+                        ((BasicInstSet) own).refer(isa);
+                    } else {
+                        ((BasicInstSet) machine.instset(new BasicInstSet()).instset()).refer(isa);
+                    }*/
+
+        //.peek(InstSet::setup); // setup
     }
 
     static void importInstSet(final fURI vid, final fURI prefix) {
