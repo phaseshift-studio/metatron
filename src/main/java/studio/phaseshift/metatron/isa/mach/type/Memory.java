@@ -176,8 +176,8 @@ public interface Memory extends Space, Machine.Component, Closeable {
     default Obj write(final fURI vid, final Obj obj) {
         // every write may touch a cached type resolution; invalidate before routing (relative or absolute)
         this.typeGraph().onWrite(vid);
-        if (vid.isId())
-            return this.writeAbsolute(hereVID(), obj);
+        //     if (vid.isId())
+        //         return this.writeAbsolute(hereVID(), obj);
         if (vid.isAbsolute() || vid.hasScheme() || vid.hasHost())
             return this.writeAbsolute(vid, obj);
         this.stack().write(vid, obj);
@@ -206,6 +206,14 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * the most specific pattern in scope, not the innermost level.
      */
     Rec spaces();
+
+    /**
+     * The machine-scoped persistent root frame — the relative bindings that survive frame pops and thread
+     * boundaries (a console's {@code a -> 13} lands here and is visible from every later command thread), but
+     * are dropped when the machine itself is reset. Not the per-thread arg frames: those live in
+     * {@link #argStack()}'s {@code sjvm}.
+     */
+    Rec rootFrame();
 
     /**
      * The relative projection: the bindings in scope, walking the <em>same</em> chain and calling {@code stack()}
@@ -289,23 +297,10 @@ public interface Memory extends Space, Machine.Component, Closeable {
         return path.startsWith("/") ? path.substring(1) : path;
     }
 
-    /**
-     * The most specific space covering {@code vid} across the chain. Shared by every implementation, so the
-     * resolution rule is stated once.
-     */
-    /**
-     * The address of "here": the live frame's vid, else where the thread stands. Reading it through the frame stack
-     * is what lets `.` mean the frame's interior inside a frame.
-     * <p>
-     * It must never re-enter resolution -- a ThreadLocal read and a vid read, nothing more -- because resolving a
-     * machine's own address while standing in that machine is a self-reference.
-     */
-    static fURI hereVID() {
-        return Machine.current().vid();
-    }
-
     static <SPACE extends Space> SPACE mostSpecific(final Rec spaces, final fURI vid) {
-        final Optional<SPACE> space = spaces.jvm().values().stream()
+        // snapshot first: the space index is a mutable LinkedHashMap, and addSpace can land a space on another
+        // thread mid-iteration (or re-entrantly during boot), which trips the map's fail-fast iterator
+        final Optional<SPACE> space = new java.util.ArrayList<Obj>(spaces.jvm().values()).stream()
                 .map(Obj::<SPACE>as)
                 .filter(s -> vid.basePath().test(s.pattern()))
                 .min(Comparator

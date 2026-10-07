@@ -1,12 +1,9 @@
 package studio.phaseshift.metatron.isa.mach;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.distributed.PeerCluster;
-import studio.phaseshift.metatron.distributed.TestSpace;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Code;
@@ -97,41 +94,6 @@ public abstract class AbstractMultiServerSingleSpaceTest extends AbstractMetatro
      */
     public AbstractMultiServerSingleSpaceTest(final fURI computeVID) {
         this.COMPUTE_VID = computeVID;
-    }
-
-    /**
-     * the cluster of REAL JVMs, started by whichever subclass owns the space definition
-     */
-    protected static PeerCluster CLUSTER = null;
-
-    /**
-     * START THE CLUSTER. The peers are forked JVMs, so a suite cannot hand them a Space OBJECT -- it hands them a
-     * DEFINITION, evaluated on every peer, which is what TestSpace.Helper.attach is for. That is also how a dynamic
-     * value travels: a TestContainer's mapped port is only known after the container starts, so the definition is
-     * built at runtime here rather than declared in an annotation.
-     * <p>
-     * This runs ALONGSIDE the single-JVM scenarios while the peer-based ones are built out, so nothing that works
-     * today stops working. Static, and called from the subclass's own @BeforeAll: JUnit runs a superclass's
-     *
-     * @BeforeAll first and an instance hook is unreachable from a static lifecycle method, which is the same reason
-     * AbstractTbleSpaceTest hands its config to its subclass.
-     */
-    protected static void startCluster(final int peerCount, final String computeSpaceDefinition) throws Exception {
-        CLUSTER = PeerCluster.of(peerCount)
-                // THE STORE IS NOT THE COMPUTE NAMESPACE. PeerNode mounts its store at <root>/# as a memSpace, so
-                // pointing it at /usr/compute would put a memory space over the very namespace the seeded table
-                // space is meant to own -- two spaces claiming one pattern. The store is the cluster's own
-                // bookkeeping; the space under test arrives through TestSpace.Helper.attach below.
-                .start();
-        TestSpace.Helper.attach(CLUSTER.peers(), computeSpaceDefinition);
-    }
-
-    @AfterAll
-    public static void stopCluster() throws Exception {
-        if (null != CLUSTER) {
-            CLUSTER.close();
-            CLUSTER = null;
-        }
     }
 
     @BeforeEach

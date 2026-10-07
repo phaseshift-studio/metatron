@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.distributed;
+package studio.phaseshift.metatron.isa.mach.network;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.m.space.memSpace;

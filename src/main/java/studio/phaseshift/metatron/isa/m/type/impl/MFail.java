@@ -28,16 +28,18 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.FAIL_TID;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class MFail extends MObj implements Fail {
 
-    /** The per-machine fail stack: a fail lands under the machine it executes in. */
+    /**
+     * The per-machine fail stack: a fail lands under the machine it executes in.
+     */
     public static fURI failStackPattern() {
-        return Machine.current().vid().extend("fail").extend("_").addQ("incrq");
+        return Machine.current().vid().extend("fail").extend("_").addQ(INCRQ);
     }
 
     /**

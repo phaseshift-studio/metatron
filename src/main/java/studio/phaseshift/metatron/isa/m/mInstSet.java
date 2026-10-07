@@ -1292,7 +1292,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("@", List.of(AT_INST_TID), 1),
                 Sugar.prefix("|", List.of(BLOCK_INST_TID), 1),
                 Sugar.wrap("_/", "\\_", List.of(WITHIN_INST_TID), 1),
-                Sugar.wrap("=", "=>", List.of(AS_INST_TID), 1),
+                Sugar.wrap("=", "=>", List.of(AS_INST_TID), 1),  // TODO: gut
                 Sugar.prefix("_", List.of(ID_INST_TID), 0),
                 Sugar.prefix("* ", List.of(MULT_INST_TID), 1),
                 Sugar.prefix("*", List.of(FROM_INST_TID), 1),
@@ -1318,7 +1318,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("^*", List.of(M_ISA_INST_TID.extend("auto_to")), 0),
                 Sugar.prefix("!*", List.of(AUTO_FROM_INST_TID), 1),
                 Sugar.prefix("!", List.of(AUTO_INST_TID), 1),
-                Sugar.prefix("~", List.of(THREAD_INST_TID), 1),
+                // Sugar.prefix("~", List.of(THREAD_INST_TID), 1),
                 Sugar.infix(" & ", List.of(AND_INST_TID)),
                 Sugar.infix(" | ", List.of(OR_INST_TID))));
     }

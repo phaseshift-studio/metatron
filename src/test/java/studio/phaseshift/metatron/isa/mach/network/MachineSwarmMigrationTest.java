@@ -1,4 +1,4 @@
-package studio.phaseshift.metatron.isa.mach;
+package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;

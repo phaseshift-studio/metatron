@@ -526,6 +526,9 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     @Override
     public String writeRec(final Rec rec) {
+        /* if (rec.has(FORMAT)) {
+            return rec.at(FORMAT).apply(rec).toCleanString();
+        }*/
         return this.postWrite(this.generateRec(new StringBuilder(), rec, 0).toString());
     }
 

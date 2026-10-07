@@ -151,7 +151,12 @@ public interface Machine extends Rec, AutoCloseable {
     // ======================== the entry point ========================
     static Obj read(final fURI vid) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst, "read " + vid),
-                () -> null == ROOT_MACHINE ? noobj() : Machine.current().memory().read(vid));
+                () -> {
+                    if (null == ROOT_MACHINE)
+                        return noobj();
+                    final Obj peer = Machine.current().network().read(vid);
+                    return peer.isNoObj() ? Machine.current().memory().read(vid) : peer;
+                });
     }
 
     static Obj read(final String vid) {
@@ -160,7 +165,12 @@ public interface Machine extends Rec, AutoCloseable {
 
     static Obj write(final fURI vid, final Obj obj) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "write " + vid),
-                () -> null == ROOT_MACHINE ? noobj() : Machine.current().memory().write(vid, obj));
+                () -> {
+                    if (null == ROOT_MACHINE)
+                        return noobj();
+                    final Obj peer = Machine.current().network().write(vid, obj);
+                    return peer.isNoObj() ? Machine.current().memory().write(vid, obj) : peer;
+                });
     }
 
     static Obj write(final String vid, final Obj obj) {
@@ -195,7 +205,7 @@ public interface Machine extends Rec, AutoCloseable {
 
     // ======================== the space contract and its index ========================
     default Rec spaces() {
-        return this.at(uri(SPACE)).orElse(rec());
+        return this.memory().spaces();
     }
 
     default boolean hasSpaceFor(final fURI vid) {

@@ -138,6 +138,42 @@ public interface Network extends Machine.Component, Closeable {
                 .map(e -> (Obj) Helper.probe(e.getKey(), e.getValue())));
     }
 
+    /**
+     * Authority dispatch — resolve a read against a <em>declared peer</em> rather than the local memory. An
+     * address without an authority, or whose authority is not in the roster, answers {@code noobj} so the
+     * caller falls through to {@code memory()}. A declared peer receives the destination-relative address
+     * ({@code localize()}) and answers through its transport.
+     */
+    default Obj read(final fURI vid) {
+        if (!vid.hasAuthority())
+            return noobj();
+        final Obj roster = Machine.read(Helper.peerRosterPath());
+        if (!roster.isRec())
+            return noobj();
+        final Obj transport = Helper.transport(roster.asRec(), vid.scheme() + "://" + vid.authority());
+        if (transport.isNoObj())
+            return noobj(); // authority not declared: not a peer this frame may reach
+        final Obj message = ObjmtronSerializer.parse("from(<" + vid.localize() + ">)");
+        return transport.apply(message);
+    }
+
+    /**
+     * Authority dispatch — write {@code obj} to a declared peer's destination-relative address via its
+     * transport. Same local/undeclared fall-through as {@link #read(fURI)}.
+     */
+    default Obj write(final fURI vid, final Obj obj) {
+        if (!vid.hasAuthority())
+            return noobj();
+        final Obj roster = Machine.read(Helper.peerRosterPath());
+        if (!roster.isRec())
+            return noobj();
+        final Obj transport = Helper.transport(roster.asRec(), vid.scheme() + "://" + vid.authority());
+        if (transport.isNoObj())
+            return noobj();
+        final Obj message = ObjmtronSerializer.parse(ObjmtronSerializer.single().write(obj) + ".to(<" + vid.localize() + ">)");
+        return transport.apply(message);
+    }
+
     class Helper {
 
         /**
@@ -247,6 +283,20 @@ public interface Network extends Machine.Component, Closeable {
          */
         public static fURI peerRosterPath() {
             return SYS.extend(PEER);
+        }
+
+        /**
+         * The transport a declared peer's authority resolves to, or {@code noobj}. Looked up by <em>authority
+         * string</em> rather than {@code rec.at(uri(...))}: the roster is a rec of {@code <uri> => <transport>},
+         * and a uri key that has round-tripped through a space's serializer may carry a different vid than a
+         * freshly minted {@code uri(...)}, so key equality fails where the address itself is identical.
+         */
+        public static Obj transport(final Rec roster, final String authority) {
+            return roster.jvm().entrySet().stream()
+                    .filter(e -> e.getKey().isUri() && authority.equals(e.getKey().uriValue().toString()))
+                    .map(java.util.Map.Entry::getValue)
+                    .findFirst()
+                    .orElse(noobj());
         }
     }
 }
