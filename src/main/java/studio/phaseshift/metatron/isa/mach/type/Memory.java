@@ -143,7 +143,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * Read through the chain: a relative vid resolves as a binding, an absolute one to the space that covers it.
      * The routing rule lives here and only here, so every level of memory routes identically.
      */
-    default Obj read(final fURI vid) {
+    /*default Obj read(final fURI vid) {
         // "here" has no spelling in either aspect below: it is the zero displacement, so it names no entry in the
         // frame chain and no path in the space index. Resolve it to the CURRENT FRAME's address (or the root's when
         // no frame is live) and let the ordinary absolute path do the work — which is exactly the semantics wanted:
@@ -151,7 +151,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
         if (vid.isId())
             return this.readAbsolute(hereVID());
         return (vid.isAbsolute() || vid.hasScheme() || vid.hasHost()) ? this.readAbsolute(vid) : argStack().read(vid);
-    }
+    }*/
 
     /**
      * An absolute address is a space's to answer. When no space covers it the machine in effect answers with its
@@ -218,7 +218,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * — has no reason to exist: args are a key in a frame, and scopes are the chain.
      */
     default Space stack() {
-        return argStack().root();
+        return argStack();
     }
 
     /**
@@ -308,7 +308,9 @@ public interface Memory extends Space, Machine.Component, Closeable {
         final Optional<SPACE> space = spaces.jvm().values().stream()
                 .map(Obj::<SPACE>as)
                 .filter(s -> vid.basePath().test(s.pattern()))
-                .min(Comparator.comparing(Space::pattern));
+                .min(Comparator
+                        .comparing((Space s) -> !s.pattern().hasScheme())
+                        .thenComparing(Space::pattern));
         return space.orElse(null);
     }
 }

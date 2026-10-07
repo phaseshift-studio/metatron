@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
@@ -43,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.Inst.ARGS_FURI;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -59,6 +61,14 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Space root;
+
+    /**
+     * The persistent root frame — the one binding store that survives frame pops <em>and</em> thread
+     * boundaries. It is static (shared across every per-thread {@link #ARG_STACK} instance) because a
+     * relative write is a machine-scoped binding, not a thread-local arg; the arg frames in
+     * {@code sjvm} are the only part of this stack that is per-thread.
+     */
+    private static final Rec rootFrame = rec(mutableMap());
 
     public Space root() {
         return this.root;
@@ -103,16 +113,13 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
             if (!o.isNoObj())
                 return o;
         }
-        return this.root.read(vid);
+        return this.rootFrame.at(vid.toUri());
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.sjvm, this.root.jvm());
-        if (!this.sjvm().isEmpty())
-            this.sjvm().getFirst().<Poly>as().at(vid.toUri(), obj);
-        // else
-        this.root.write(vid, obj);
+        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.sjvm, this.rootFrame.jvm());
+        this.rootFrame.at(vid.toUri(), obj, Poly.MUTABLE);
         return obj;
     }
 

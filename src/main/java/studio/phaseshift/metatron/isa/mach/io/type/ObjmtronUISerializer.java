@@ -361,7 +361,9 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         // lossless + compact: Double.toString is the shortest round-trippable form and
         // keeps a trailing .0 on whole numbers, so a real (1.0) never reads back as an int (1)
         final String ds = Double.toString(real.jvm());
-        sb.append(ds.substring(0, Math.min(ds.indexOf(".") + 5, ds.length() - ds.indexOf("."))));
+        final String ds2 = ds.substring(0, Math.min(ds.indexOf(".") + 5, ds.length() - ds.indexOf(".")) + 1);
+        sb.append(ds2);
+        if (ds2.endsWith(".")) sb.append("0");
         this.handleVID(sb, real);
         return postWrite(sb.toString());
     }
