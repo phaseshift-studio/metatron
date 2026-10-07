@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -61,14 +62,6 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Space root;
-
-    /**
-     * The persistent root frame — the one binding store that survives frame pops <em>and</em> thread
-     * boundaries. It is static (shared across every per-thread {@link #ARG_STACK} instance) because a
-     * relative write is a machine-scoped binding, not a thread-local arg; the arg frames in
-     * {@code sjvm} are the only part of this stack that is per-thread.
-     */
-    private static final Rec rootFrame = rec(mutableMap());
 
     public Space root() {
         return this.root;
@@ -113,14 +106,25 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
             if (!o.isNoObj())
                 return o;
         }
-        return this.rootFrame.at(vid.toUri());
+        return rootFrame().at(vid.toUri());
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.sjvm, this.rootFrame.jvm());
-        this.rootFrame.at(vid.toUri(), obj, Poly.MUTABLE);
+        final Rec rootFrame = rootFrame();
+        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.sjvm, rootFrame.jvm());
+        // a single-segment write is a binding (replace), a nested write is a path (merge into the poly there):
+        // `a -> {5,6,7}` overwrites `a`, while `a/b/c -> {4,5,6}` folds into `a`'s c
+        if (1 == vid.asNode().segmentLength())
+            rootFrame.jvm().put(vid.toUri(), obj);
+        else
+            rootFrame.at(vid.toUri(), obj, Poly.MUTABLE);
         return obj;
+    }
+
+    /** the machine-scoped persistent bindings, shared across threads and dropped with the machine */
+    private static Rec rootFrame() {
+        return Machine.current().memory().rootFrame();
     }
 
     public Obj peek() {

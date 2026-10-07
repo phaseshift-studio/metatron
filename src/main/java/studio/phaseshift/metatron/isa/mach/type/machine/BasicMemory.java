@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -71,6 +72,7 @@ public class BasicMemory extends MRec implements Memory {
      * relative write. A field cannot be orphaned that way, which is what makes {@code addSpace}'s put stick.
      */
     private final Rec spaces = rec(mutableMap());
+    private final Rec rootFrame = rec(mutableMap());
     private final TypeGraph typeGraph = new TypeGraph();
 
     public BasicMemory() {
@@ -110,6 +112,14 @@ public class BasicMemory extends MRec implements Memory {
     @Override
     public Rec spaces() {
         return this.spaces;
+    }
+
+    /**
+     * This machine's persistent relative bindings — shared across threads, dropped with the machine.
+     */
+    @Override
+    public Rec rootFrame() {
+        return this.rootFrame;
     }
 
     @Override
@@ -277,6 +287,12 @@ public class BasicMemory extends MRec implements Memory {
             return noobj();
         if (vid.equals(this.vid()) || vid.equals(vid.id()))
             return this;
+        if (vid.hasPrefix(f("~"))) {
+            return vid.equals(f("~")) ? Machine.current() : Machine.current().at(vid.pretract(1));
+        } else if (vid.hasPrefix(Machine.root().vid())) {
+            return (vid.equals(Machine.root().vid())) ? Machine.root() : Machine.root().at(vid.asNode());
+        }
+
         final fURI readableVID = this.alignPrefix(vid);
         /// ///////////////////
         if (readableVID.isGeneric())
@@ -284,7 +300,7 @@ public class BasicMemory extends MRec implements Memory {
         // Resolution belongs to Memory — the guard and the prefix alignment above are the machine's, and the
         // big() fallback below is too, but *which space answers* is memory's question and is asked in one place.
         if (readableVID.test(STACK_PATTERN)) {
-            final Obj stackObj = this.stack().read(readableVID.basePath());
+            final Obj stackObj = this.stack().read(readableVID);
             if (!stackObj.isNoObj())
                 return stackObj;
         }
@@ -295,7 +311,7 @@ public class BasicMemory extends MRec implements Memory {
         if (obj.isNoObj()) {
             final fURI bigVID = readableVID.big();
             if (!bigVID.equals(readableVID))
-                return this.read(bigVID);
+                return this.read(bigVID.q(vid.qMap()));
         }
         // todo c(mult vid.c())
         return obj;

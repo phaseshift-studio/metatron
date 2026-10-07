@@ -1,4 +1,7 @@
-package studio.phaseshift.metatron.isa.mach;
+package studio.phaseshift.metatron.isa.mach.network;
+
+import studio.phaseshift.metatron.isa.mach.AbstractMachineTest;
+import studio.phaseshift.metatron.isa.mach.AbstractMultiServerSingleSpaceTest;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

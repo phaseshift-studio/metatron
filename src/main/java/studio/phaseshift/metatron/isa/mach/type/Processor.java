@@ -20,13 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Objs;
-import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -35,10 +29,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.function.Consumer;
 
-import static studio.phaseshift.metatron.Tokens.CODE;
-import static studio.phaseshift.metatron.Tokens.LHS;
-import static studio.phaseshift.metatron.Tokens.MONAD_IN;
-import static studio.phaseshift.metatron.Tokens.MONAD_OUT;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code0;
