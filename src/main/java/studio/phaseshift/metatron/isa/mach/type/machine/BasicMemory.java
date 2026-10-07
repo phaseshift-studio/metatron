@@ -34,8 +34,10 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MEMORY_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -270,9 +272,32 @@ public class BasicMemory extends MRec implements Memory {
         return readableVID;
     }
 
-    /**
-     public Memory clone() {
-     return this;
-     }
-     **/
+    public Obj read(final fURI vid) {
+        if (null == vid || NOOBJ.equals(vid.basePath()) || vid.isZero()) // || READ_AS_NOOBJ.contains(vid))
+            return noobj();
+        if (vid.equals(this.vid()) || vid.equals(vid.id()))
+            return this;
+        final fURI readableVID = this.alignPrefix(vid);
+        /// ///////////////////
+        if (readableVID.isGeneric())
+            return T(readableVID);
+        // Resolution belongs to Memory — the guard and the prefix alignment above are the machine's, and the
+        // big() fallback below is too, but *which space answers* is memory's question and is asked in one place.
+        if (readableVID.test(STACK_PATTERN)) {
+            final Obj stackObj = this.stack().read(readableVID.basePath());
+            if (!stackObj.isNoObj())
+                return stackObj;
+        }
+        // readAbsolute, not read: the machine resolves addresses through spaces whatever the vid's shape. The
+        // relative branch is Memory's own contract, where a relative vid means "in the frame" — letting it claim
+        // the machine's vids sent bulk relative writes to the argument stack instead of the space they named.
+        final Obj obj = this.readAbsolute(readableVID);
+        if (obj.isNoObj()) {
+            final fURI bigVID = readableVID.big();
+            if (!bigVID.equals(readableVID))
+                return this.read(bigVID);
+        }
+        // todo c(mult vid.c())
+        return obj;
+    }
 }

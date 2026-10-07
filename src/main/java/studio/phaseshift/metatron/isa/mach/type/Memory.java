@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.space.variableStack;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
+import studio.phaseshift.metatron.isa.m.space.variableStack;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
@@ -150,7 +150,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
         // inside a frame `.` is that frame's interior, at the root it is the root's.
         if (vid.isId())
             return this.readAbsolute(hereVID());
-        return vid.isAbsolute() ? this.readAbsolute(vid) : this.stack().read(vid);
+        return (vid.isAbsolute() || vid.hasScheme() || vid.hasHost()) ? this.readAbsolute(vid) : argStack().read(vid);
     }
 
     /**
@@ -178,7 +178,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
         this.typeGraph().onWrite(vid);
         if (vid.isId())
             return this.writeAbsolute(hereVID(), obj);
-        if (vid.isAbsolute())
+        if (vid.isAbsolute() || vid.hasScheme() || vid.hasHost())
             return this.writeAbsolute(vid, obj);
         this.stack().write(vid, obj);
         return obj;

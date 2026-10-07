@@ -29,11 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.resolver.InstSelector;
 import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -355,9 +351,9 @@ public class ScoringResolver extends MRec implements Resolver, InstSelector {
             // e.g., as(skill::T) should strongly prefer as?skill<=dir over as?file<=uri
             // IMPORTANT: Only apply this to actual 'as' instructions, not constructors or other instructions
             if (Obj.Helper.specificTypeId(apiInst).basePath().equals(AS_INST_TID) && userFirstArg != null && (userFirstArg.isNoObj() || userFirstArg.isType()) && !apiRngID.isGeneric()) {
-                // Extract the actual type being requested (the Type's tid, not the Type object's own tid)
-                final fURI requestedTypeTid = Obj.Helper.specificTypeId(userFirstArg);
-                if (!requestedTypeTid.isGeneric() && apiRngID.basePath().equals(requestedTypeTid.basePath())) {
+                // Extract the actual type being requested (the Type's vid, not the Type object's own tid)
+                final fURI requestedTypeVid = Obj.Helper.specificTypeId(userFirstArg);
+                if (!requestedTypeVid.isGeneric() && apiRngID.basePath().equals(requestedTypeVid.basePath())) {
                     // Huge bonus: the API's output type matches what the user asked for
                     score += 2000;
                 }

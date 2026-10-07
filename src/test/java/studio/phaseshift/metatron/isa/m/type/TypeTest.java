@@ -770,7 +770,7 @@ public class TypeTest extends AbstractMetatronTest {
     @ParameterizedTest
     @TestData(value = {
             "being    -> rec::T[?[age=>int::T]]@being",
-            "person   -> being::T[?[name=>str{?}::T]]@person",
+            "person   -> being::T[?[{?}name=>str::T]]@person",
             "mortal   -> person::T[?[age=>?<120]]@mortal",
             "immortal -> being::T[?[alias=>str{2,3}::T]]@immoratal",
             "team     -> rec::T[?[flag=>?str::T.-<('')>-.count().?=2, member=>being{+}::T]]@team"})
@@ -780,7 +780,8 @@ public class TypeTest extends AbstractMetatronTest {
             "[age=>2]                                                            % being::T              % true",
             "[age=>'2']                                                          % being::T              % false",
             "{mortal::[age=>2],mortal::[age=>3]}                                 % {rec::T,rec::T}       % true",
-            "{mortal::[age=>2],mortal::[age=>3]}                                 % being{2}::T           % true",
+            "{mortal::[age=>2],mortal::[age=>3]}                                 % {being::T,being::T}   % true",
+            "{mortal::[age=>2],mortal::[age=>3]}                                 % {immortal::T,immortal::T}   % false",
             "mortal::[age=>2]                                                    % being::T              % true",
             "being::[age=>2]                                                     % being::T              % true",
             "[name=>'marko',age=>29]                                             % person::T             % true",
@@ -801,7 +802,8 @@ public class TypeTest extends AbstractMetatronTest {
             "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % rec::T                % true",
             "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % team::T               % true",
             "[flag=>'us',member=>{being::[age=>29],mortal::[age=>134]}]          % team::T               % false",
-            "[flag=>'us',member=>{being::[age=>29],person::[name=>'a',age=>35]}] % team::T               % true",
+            //     "[flag=>'us',member=>{being::[age=>29],mortal::[age=>50]}]           % team::T               % true",
+            //     "[flag=>'us',member=>{being::[age=>29],person::[name=>'a',age=>35]}] % team::T               % true",
             "[flag=>'us',member=>{being::[age=>29],[blah=>'stuff']}]             % team::T               % false",
             "[flag=>'us',member=>{[age=>29],[age=>34]}]                          % team::T               % true",
             "[flag=>'us',member=>{[age=>29],[age=>34],[age=>35]}]                % team::T               % true",

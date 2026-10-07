@@ -20,32 +20,25 @@ package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.AbstractSpace;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.space.noobjSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 
 /**
  * AbstractMachine — the machine's concrete body: the address index, the short-name tables and the
@@ -205,127 +198,6 @@ public abstract class AbstractMachine extends MRec implements Machine {
             return this.iostats;
         throw MTronException.of("machine not loaded");
     }
-
-    @Override
-    public synchronized void addSpace(final Space space) {
-        this.memory().addSpace(space);
-    }
-
-    @Override
-    public synchronized void removeSpace(final fURI pattern) {
-        this.memory().removeSpace(pattern);
-    }
-
-    // ======================== authority dispatch ========================
-
-    /**
-     * The declared peer roster: a rec of {@code <authority-uri> => <transport-inst>}. The value is the
-     * transport — an inst that takes the message ({@code from(localized)} for a read, {@code start(localized)
-     * .ref(obj)} for a write) and returns the peer's response. Keeping it an inst is what keeps the Router
-     * free of any transport dependency: swapping ws for http, mqtt or a gRPC client is a roster change.
-     * <p>
-     * It lives at {@code /sys/peer}, beside {@code /sys/thread}, and <em>not</em> under {@code /sys/mach}: the
-     * Machine claims {@code /sys/mach} and {@code AbstractSpace}'s default writer is a no-op, so a roster
-     * written there is silently dropped — a failure mode worth remembering, because the symptom is a peer that
-     * quietly resolves to the local wildcard-host space instead and <em>appears to work</em>.
-     */
-    public static fURI peerRosterPath() {
-        return SYS.extend(PEER);
-    }
-
-    /**
-     * The address index is the machine's Memory, so a machine's spaces are exactly the spaces its memory holds —
-     * there is no second place a space could be registered. The root's memory holds every global space; a frame's
-     * holds only what that frame introduced, which is what makes a pop take them with it.
-     */
-    @Override
-    public Rec spaces() {
-        // resolutionMemory, not memory(): reading must never materialize a frame. Materializing constructs a
-        // component, constructing an Obj runs its type check, and the type check reads through the router — which
-        // lands back in read(). Only an explicit memory() call forms a frame's views.
-        return this.memory().spaces();
-    }
-
-    /**
-     * The memory resolution reads through: the frame's if it already has one, else the machine's own. It never
-     * materializes a frame, because a lookup that did would allocate an Obj on the read path — and allocating an
-     * Obj runs a type check, which resolves a type through the router, which lands back in {@code read}.
-     */
-
-    @Override
-    public <S extends Space> S getSpaceFor(final fURI match) {
-        return this.memory().getSpaceFor(match);
-    }
-
-    @Override
-    public <SPACE extends Space> SPACE getSpace(final fURI vid) {
-        return this.memory().getSpace(vid);
-    }
-
-    public Obj read(final fURI vid) {
-        if (null == vid || NOOBJ.equals(vid.basePath()) || vid.isZero() || READ_AS_NOOBJ.contains(vid))
-            return noobj();
-        if (vid.equals(this.vid()) || vid.equals(vid.id()))
-            return this;
-        final fURI readableVID = this.memory().alignPrefix(vid);
-        /// ///////////////////
-        if (readableVID.isGeneric())
-            return T(readableVID);
-        // Resolution belongs to Memory — the guard and the prefix alignment above are the machine's, and the
-        // big() fallback below is too, but *which space answers* is memory's question and is asked in one place.
-        if (readableVID.test(STACK_PATTERN)) {
-            final Obj stackObj = Memory.argStack().read(readableVID.basePath());
-            if (!stackObj.isNoObj())
-                return stackObj;
-        }
-        // readAbsolute, not read: the machine resolves addresses through spaces whatever the vid's shape. The
-        // relative branch is Memory's own contract, where a relative vid means "in the frame" — letting it claim
-        // the machine's vids sent bulk relative writes to the argument stack instead of the space they named.
-        final Obj obj = this.memory().readAbsolute(readableVID);
-        if (obj.isNoObj()) {
-            final fURI bigVID = readableVID.big();
-            if (!bigVID.equals(readableVID))
-                return this.read(bigVID);
-        }
-        // todo c(mult vid.c())
-        return obj;
-    }
-
-    /**
-     * DELIBERATELY NOT SYNCHRONIZED. Serializing this did fix a measured lost sibling, but it puts a lock on EVERY
-     * write through a machine -- the hottest path there is -- and that lock can hold a thread that has nothing to do
-     * with the two writers being reconciled. The signature it produces is a hang that cannot be caught by a bounded
-     * wait, because the waiting thread never reaches its wait: it is blocked entering a write. Two attempts to
-     * serialize this pair of races (here, and again in the space's writer) both deadlocked, which says the fix
-     * belongs where the read-modify-write actually is, not on the callers.
-     */
-    public Obj write(final fURI vid, final Obj obj) {
-        if (null == vid) {
-            LOG.warn("the provided write uri was null");
-            return noobj();
-        }
-        final fURI writableVID = this.memory().alignPrefix(vid);
-        /// ///////////////
-        // A machine's own address is the machine. read() already says so (`vid.equals(this.vid())` -> this);
-        // write had no matching guard, and it needs one now that the root's vid is `/`, which no space covers.
-        // The auto-registration path (objCheckAndSave) writes the machine back at its own vid on every mutation
-        // of its rec — with vid /sys/router that silently resolved through /sys/#, and at `/` it would instead
-        // fail-closed for a write that is already true. Anything else at `/` still falls through and throws.
-        if (obj == this && writableVID.equals(this.vid()))
-            return obj;
-        LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} at %s", obj, vid, writableVID);
-        // as in read(): which space answers is Memory's question, asked in one place. write() carries the
-        // type-graph invalidation, so there is a single invalidation point for every write path.
-        return this.memory().write(writableVID, obj);
-    }
-
-    @Override
-    public boolean hasSpaceFor(final fURI vid) {
-        // alignment is the ISA's business (a short name is a redirect), so it happens here and the memory sees an
-        // address it can resolve. Memory never renames an address.
-        return this.memory().hasSpaceFor(this.memory().alignPrefix(vid));
-    }
-
 
     /**
      * A machine is a callable obj: {@code machine.apply(code)} compiles then runs. The stub this
