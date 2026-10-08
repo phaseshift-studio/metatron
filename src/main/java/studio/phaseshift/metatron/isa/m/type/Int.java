@@ -152,7 +152,7 @@ public interface Int extends Mono, Ring.O<Int> {
                     //    Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.right_distributive))),
                     instC(POW_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt((long) Math.pow(lhs.intValue(), inst.arg(0).intValue()))),
                     instC(MOD_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(lhs.intValue() % inst.arg(0).intValue())),
-                    instC(ORDER_INST_TID.dom(INT_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
+                    instC(ORDER_INST_TID.dom(INT_TID.maybeSome()).rng(LST_TID.poly(INT_TID.maybeSome())), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
             ));
         }
     }

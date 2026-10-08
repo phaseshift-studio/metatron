@@ -45,8 +45,10 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.FAIL_TID;
 import static studio.phaseshift.metatron.Tokens.INT_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -1909,6 +1911,17 @@ public class TypeTest extends AbstractMetatronTest {
             "[nat::T]                     % [/m/int::T[?>0]@/m/math/nat]"}, delimiter = '%')
     public void testTypeCorruption(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    public void testGenericIds() {
+        assertTrue(T(A).isGeneric());
+        assertEquals(A, T(A).tid());
+        assertEquals(A, T(A).vid());
+        assertEquals(A, T(A).typeId());
+        assertEquals(ALL, T(ALL).tid());
+        assertEquals(ALL, T(ALL).vid());
+        assertEquals(ALL, T(ALL).typeId());
     }
 
 }

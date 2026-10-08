@@ -1320,7 +1320,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             }),
                             "any obj", "the lhs obj", Map.of(jnt(0), "the code to apply asynchronously to the lhs"), "a fork function \\(f(x) \\nearrow x\\): the arg code applied to the lhs in a virtual thread, immediately yielding the lhs"),
                     docWrap(instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()), "any objs", "a window of the lhs objs", Map.of(jnt(0), "the starting offset", jnt(1), "the window length (defaults to 0)"), "a windowing function \\(f(x, i, n) \\nearrow x'\\): the objs starting at offset i for a span of n"),
-                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(LST_TID.maybe()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))).collect(new CommonUtil.LstCollector())),
+                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(LST_TID.poly(A.maybeSome())).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))).collect(new CommonUtil.LstCollector())),
                             "maybe some objs", "maybe a lst sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
                     docWrap(instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
                                 Rel currentTransform = inst.arg(0).asRel();
@@ -1542,11 +1542,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
                     docWrap(instC(THROW_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))), "any obj", "a fail::T carrying the arg message", Map.of(jnt(0), "the failure message"), "a throwing function \\(f(x) \\nearrow \\emptyset\\): fails with the arg message"),
                     docWrap(instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()), "any obj", "the parent of the lhs obj", Map.of(), "a parent function \\(f(x) \\nearrow x'\\): the parent link of the lhs obj"),
-                    docWrap(instC(COUNT_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
+                    docWrap(instC(COUNT_INST_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                             "any objs", "the count of objs", Map.of(), "counts the number of objs"),
-                    docWrap(instC(SKIP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()), // tail
+                    docWrap(instC(SKIP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(INT_TYPE), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()), // tail
                             "any objs", "the objs after skipping", Map.of(jnt(0), "the number of objs to skip"), "skips the first n objs"),
-                    docWrap(instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // head
+                    docWrap(instC(TAKE_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(INT_TYPE), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // head
                             "any objs", "the objs before skipping", Map.of(jnt(0), "the number of objs to take"), "takes the first n objs"),
                     // Mutation box: detach the anchor (no auto-write during compute),
                     // compute in-memory (IMMUTABLE), then atomically write the result.

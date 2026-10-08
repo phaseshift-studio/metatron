@@ -603,19 +603,19 @@ public interface Inst extends Call {
                     for (int i = 0; i < apiInst.args().count(); i++) {
                         Obj apiArg = apiInst.arg(i);
                         Obj userArg = userInst.isObjInst() ? userInst.<Inst>as().arg(i) : userInst;
-                        if (apiArg.tid().isGeneric()) {
-                            final fURI lastBinding = generics.get(apiArg.tid().one());
-                            if (null != lastBinding && !userArg.tid().test(lastBinding))
+                        if (apiArg.typeId().isGeneric()) {
+                            final fURI lastBinding = generics.get(apiArg.typeId().one());
+                            if (null != lastBinding && !userArg.typeId().test(lastBinding))
                                 LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", userArg.tid(), lastBinding, apiArg.tid());
                             if (!userArg.isObjCall()) // TODO: can this be more specialized (currently necessary for when arg is a call and we want the result of the call to be the binding, not the call itself
-                                generics.computeIfAbsent(apiArg.tid().one(), k -> userArg.tid().one()); // beware of int[0] yielding noobj across all bindings
+                                generics.computeIfAbsent(apiArg.typeId().one(), k -> userArg.typeId().one()); // beware of int[0] yielding noobj across all bindings
                         }
                         if (apiArg.isObjInst()) { // todo: isCall()?
                             apiArg = Helper.bindGenerics(lhs, apiArg.asInst(), userArg);
                         } else {
                             if (apiArg.typeId().one().isGeneric())
-                                apiArg = apiArg.tid(generics.getOrDefault(apiArg.tid().one(), userArg.tid())).c(apiArg.c());
-                            if (null != apiArg && !apiArg.isObjCall() && !userArg.tid().one().isGeneric() && !userArg.test(apiArg)) {
+                                apiArg = apiArg.tid(generics.getOrDefault(apiArg.typeId().one(), userArg.typeId())).c(apiArg.c());
+                            if (null != apiArg && !apiArg.isObjCall() && !userArg.typeId().one().isGeneric() && !userArg.test(apiArg)) {
                                 // TODO: isClessGeneric() and cLess.isGeneric() behave differently
                                 return null;
                             }
