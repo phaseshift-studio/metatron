@@ -102,7 +102,7 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
         super(f("mongo:test_collection/rewrite_test"), () -> dcmntSpace.of(
                 rec(
                         uri(PATTERN), uri("mongo:#"),
-                        uri(QPROC), lst(QCollection.subq()),
+                        uri(QPROC), lst(QCollection.subQ()),
                         uri(HOST), uri(connectionString + "/" + DB_NAME),
                         uri(ROUTE), rec(uri("mongo:"), uri("")),
                         uri(COLLECTION), lst()

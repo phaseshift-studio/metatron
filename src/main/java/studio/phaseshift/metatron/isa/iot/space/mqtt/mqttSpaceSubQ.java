@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class mqttSpaceSubQ extends BaseQ {
 
     protected final mqttSpace space;
-    protected final QProc subq = QCollection.subq();
+    protected final QProc subq = QCollection.subQ();
 
     public mqttSpaceSubQ(final mqttSpace space) {
         super(mutableMap(uri(PATTERN), uri(SUBQ)), f(SUBQ), SUBQ_TID);

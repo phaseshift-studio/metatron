@@ -54,7 +54,7 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
             if (file.exists())
                 file.delete();*/
             final Space space = memSpace.of(rec(uri(PATTERN), uri("/t/#")), /*uri(PERSIST), uri("/tmp/memspace-test.mtron"),*/ f("/sys/space/mem"));
-            space.addQ(QCollection.subq());
+            space.addQ(QCollection.subQ());
             space.addQ(QCollection.lockQ());
             return space;
         });

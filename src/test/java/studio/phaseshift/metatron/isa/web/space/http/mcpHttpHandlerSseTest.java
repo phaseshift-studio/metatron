@@ -67,7 +67,7 @@ public class mcpHttpHandlerSseTest extends AbstractMetatronTest {
         // a space hosting the handler vid's outbox, with ?subq so the live-push registration works
         this.testSpace = memSpace.of(rec(
                         uri(PATTERN), uri("/test/sse/#"),
-                        uri(QPROC), lst(QCollection.subq())),
+                        uri(QPROC), lst(QCollection.subQ())),
                 f("/sys/space/sse_test"));
         this.server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
     }

@@ -551,7 +551,7 @@ public class mInstSet extends AbstractInstSet {
                                         .tid(QPROC_TID)
                                         .vid(SUBQ_TID)
                                         .isaPredicate(rec(uri(SUB).maybe().asUri(), rec(T(URI_TID.maybe()), SUBQ_TYPE)))
-                                        .constructor(QCollection::subq)
+                                        .constructor(QCollection::subQ)
                                         .create(), "", "",
                                 Map.of(uri(SUB).maybe().asUri(), "subscriptions to register immediately upon construction"),
                                 """

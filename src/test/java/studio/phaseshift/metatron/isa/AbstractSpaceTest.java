@@ -1414,7 +1414,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     @Test
     public void testMultipleQProcs() {
         this.space.addQ(QCollection.incrQ());
-        this.space.addQ(QCollection.subq());
+        this.space.addQ(QCollection.subQ());
         final List<QProc> qprocs = this.space.qs().lstValue().stream()
                 .map(o -> (QProc) o).toList();
         assertTrue(qprocs.size() >= 2, "should have >= 2 qprocs, got " + qprocs.size());

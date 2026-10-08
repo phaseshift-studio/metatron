@@ -36,7 +36,6 @@ import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.at_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -206,7 +205,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
 
     @Test
     public void testSubQConcurrency() {
-        space.addQ(QCollection.subq());
+        space.addQ(QCollection.subQ());
         final int numSubscriptions = 5;
 
         for (int i = 0; i < numSubscriptions; i++) {

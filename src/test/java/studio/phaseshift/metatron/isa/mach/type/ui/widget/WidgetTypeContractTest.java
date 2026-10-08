@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_GRID_TID;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_LABEL_LINE_TID;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_MATRIX_TID;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_MENU_BAR_TID;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_PANEL_TID;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_TABLE_TID;
@@ -149,6 +150,24 @@ public class WidgetTypeContractTest extends AbstractInstSetTest {
     void testGridTypeRejectsANonLstGrid() {
         final Map<Obj, Obj> jvm = mutableMap(uri("grid"), (Obj) str("not a lst of rows"));
         assertThrows(TypeMismatchException.class, () -> new GridWidget(jvm, UI_GRID_TID, null),
+                "the grid key is declared a lst; a bare str is not one");
+    }
+
+    /**
+     * A matrix's {@code grid} key is declared a {@code lst} — a lst of rows, each row a lst of glyph
+     * strs.  So the shape a writer actually writes must be accepted, and a non-list grid refused.
+     */
+    @Test
+    void testMatrixTypeAcceptsRowsOfGlyphs() {
+        assertDoesNotThrow(() -> new MatrixWidget(mutableMap(uri("grid"),
+                lst(lst(str("#"), str("@")), lst(str("@"), str("#")))), UI_MATRIX_TID, null).format(),
+                "a matrix written as rows of glyph strs must satisfy /m/mach/ui/widget/matrix_widget");
+    }
+
+    @Test
+    void testMatrixTypeRejectsANonLstGrid() {
+        final Map<Obj, Obj> jvm = mutableMap(uri("grid"), (Obj) str("not a lst of rows"));
+        assertThrows(TypeMismatchException.class, () -> new MatrixWidget(jvm, UI_MATRIX_TID, null),
                 "the grid key is declared a lst; a bare str is not one");
     }
 

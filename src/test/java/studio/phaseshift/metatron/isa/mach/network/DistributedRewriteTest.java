@@ -1,13 +1,12 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
-import studio.phaseshift.metatron.isa.mach.AbstractMachineTest;
-import studio.phaseshift.metatron.isa.mach.AbstractMultiServerSingleSpaceTest;
-
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.mach.AbstractMachineTest;
+import studio.phaseshift.metatron.isa.mach.AbstractMultiServerSingleSpaceTest;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
@@ -16,7 +15,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.Tokens.ROUTE;
 
 /**
  * THE DISTRIBUTION REWRITE, end to end: a user writes a monoidic reduction the way a user writes it -- no barriers,
@@ -57,7 +55,7 @@ public class DistributedRewriteTest extends AbstractMultiServerSingleSpaceTest {
     protected java.util.function.Supplier<Space> computeSpace() {
         return () -> memSpace.of(rec(
                 uri(PATTERN), uri("/usr/compute/#"),
-                uri(QPROC), lst(QCollection.subq())), nextComputeVID());
+                uri(QPROC), lst(QCollection.subQ())), nextComputeVID());
     }
 
     @ParameterizedTest

@@ -358,6 +358,11 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             final List<Obj> lhsList = lhs.lstValue();
             final List<Obj> rhsList = rhs.lstValue();
             final List<Obj> result = new ArrayList<>();
+            // The rhs IS the list's new shape: it is walked element-by-element (a `_` keeps the lhs
+            // element, `none` drops it), so a shorter rhs shortens the list and a longer one grows
+            // it.  This is asserted by mInstSetTest's update rows — do NOT append the lhs tail here:
+            // mInstSetTest.testUpdate (`>>= [b=>[c=>[_,parent...]]]`) and testPolySpace
+            // (`@a>>=[_,7,_,_]`) both depend on the rhs defining the arity.
             for (int i = 0; i < Math.min(lhsList.size(), rhsList.size()); i++) {
                 final Obj newElement = updateRecursion(lhs.at(i), rhs.at(i), operation);
                 if (!newElement.isNone())

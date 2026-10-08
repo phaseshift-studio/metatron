@@ -183,7 +183,7 @@ public abstract class AbstractMcpHandlerTest extends AbstractMetatronTest {
 
     @Test
     public void testSubscriptionsListen() {
-        this.testSpace.addQ(QCollection.subq());
+        this.testSpace.addQ(QCollection.subQ());
         final fURI target = this.testSpacePattern().retractPattern().extend("mcp_sub_res1");
         final Rec res = mcpRequest(request(30, "subscriptions/listen", rec(
                 uri("notifications"), rec(

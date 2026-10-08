@@ -30,7 +30,6 @@ import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
@@ -39,7 +38,10 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.io.Closeable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -83,7 +85,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class dcmntSpaceSubQ extends BaseQ implements Closeable {
 
     protected final dcmntSpace space;
-    protected final QProc subq = QCollection.subq();
+    protected final QProc subq = QCollection.subQ();
 
     // Track active change stream watchers: fURI pattern -> (cursor, running flag, future)
     private final Map<fURI, WatcherHandle> activeWatchers = new ConcurrentHashMap<>();
@@ -148,7 +150,7 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
 
                     // Parse the path to determine collection and optional document ID
                     final DataPath dp = DataPath.of(basePath);
-                   // final List<String> segments = reladtivePath.segments();
+                    // final List<String> segments = reladtivePath.segments();
 
                     if (!dp.hasCollection()) {
                         LOG.warn("must subscribe to a collection: %s", basePath);
@@ -204,33 +206,36 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
 
         final studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread watcher =
                 new studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread(
-                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
-                        uri("code"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0)),
-                studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID,
-                studio.phaseshift.metatron.util.CommonUtil.mintShortUUID(
-                        studio.phaseshift.metatron.furi.fURI.Singleton.f("/sys/thread"), true)) {
-            @Override
-            public Runnable createTask() {
-                return () -> {
-                    LOG.debug("change stream watcher started for: %s", basePath);
-                    try {
-                        while (running.get() && cursor.hasNext()) {
-                            final ChangeStreamDocument<Document> change = cursor.next();
-                            processChangeEvent(basePath, collectionName, change);
-                        }
-                    } catch (final Exception e) {
-                        if (running.get()) {
-                            LOG.error("change stream error for %s: %s", basePath, e.getMessage());
-                        }
-                    } finally {
-                        running.set(false);
-                        try { cursor.close(); } catch (final Exception ignored) {}
-                        activeWatchers.remove(basePath);
-                        LOG.debug("change stream watcher stopped for: %s", basePath);
+                        studio.phaseshift.metatron.util.CommonUtil.mutableMap(
+                                uri("code"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0)),
+                        studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID,
+                        studio.phaseshift.metatron.util.CommonUtil.mintShortUUID(
+                                studio.phaseshift.metatron.furi.fURI.Singleton.f("/sys/thread"), true)) {
+                    @Override
+                    public Runnable createTask() {
+                        return () -> {
+                            LOG.debug("change stream watcher started for: %s", basePath);
+                            try {
+                                while (running.get() && cursor.hasNext()) {
+                                    final ChangeStreamDocument<Document> change = cursor.next();
+                                    processChangeEvent(basePath, collectionName, change);
+                                }
+                            } catch (final Exception e) {
+                                if (running.get()) {
+                                    LOG.error("change stream error for %s: %s", basePath, e.getMessage());
+                                }
+                            } finally {
+                                running.set(false);
+                                try {
+                                    cursor.close();
+                                } catch (final Exception ignored) {
+                                }
+                                activeWatchers.remove(basePath);
+                                LOG.debug("change stream watcher stopped for: %s", basePath);
+                            }
+                        };
                     }
                 };
-            }
-        };
         watcher.applyAsync();
         final var future = watcher.future();
 
