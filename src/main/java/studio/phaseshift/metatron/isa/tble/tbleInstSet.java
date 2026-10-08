@@ -90,6 +90,14 @@ public class tbleInstSet extends AbstractInstSet {
             final fURI resolved = space.redirect(ref.uriValue(), true);
             final DataPath dp = DataPath.withoutDB(resolved);
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
+            // The existing-table schema is discovered lazily (ensureTableMapping);
+            // force it before consulting getTableNames() so the guard sees the
+            // real tables instead of the empty pre-discovery schema.
+            try {
+                space.schemaInstset();
+            } catch (final RuntimeException e) {
+                return false;
+            }
             return space.existingTableSchema != null && space.existingTableSchema.getTableNames().contains(dp.collection().toLowerCase());
         };
 
@@ -135,7 +143,7 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: *table.count() → SELECT COUNT(*)
                         docWrap(CommonRewrites.countRewrite(
                                 tbleSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_count"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_count").rng(INT_TID),
                                 (space, dp) -> {
                                     final String tableName = dp.collection();
                                     try (final Statement stmt = space.sjvm().createStatement();
@@ -153,7 +161,31 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: *table.sum() → SELECT SUM(*)
                         docWrap(CommonRewrites.sumRewrite(
                                 tbleSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_sum"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_sum").rng(INT_TID),
+                                (space, dp) -> {
+                                    final String tableName = dp.collection();
+                                    if (!dp.hasField()) return 0L;
+                                    final String columnName = dp.field();
+                                    final String query = "SELECT SUM(" + columnName + ") FROM " + tableName;
+                                    LOG.debug("sql_sum query %s", query);
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(query)) {
+                                        return rs.next() ?
+                                                (rs.getMetaData().getColumnType(1) == JDBCType.DOUBLE.getVendorTypeNumber() ?
+                                                        rs.getDouble(1) :
+                                                        rs.getLong(1)) :
+                                                0L;
+                                    } catch (SQLException e) {
+                                        if (e.getErrorCode() == 1054)
+                                            return 0L;
+                                        throw MTronException.of(e);
+                                    }
+                                },
+                                tableGuard
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),
+                        docWrap(CommonRewrites.sumColumnRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_sum_column").rng(INT_TID),
                                 (space, dp) -> {
                                     final String tableName = dp.collection();
                                     if (!dp.hasField()) return 0L;
@@ -702,7 +734,7 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: from(table/+).order(select(col)) → SELECT * FROM table ORDER BY col
                         docWrap(CommonRewrites.orderRewrite(
                                 tbleSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_order"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_order").rng(LST_TID),
                                 (space, dp, columns) -> {
                                     final String tableName = dp.collection();
                                     final String orderClause = String.join(", ", columns);
@@ -714,7 +746,7 @@ public class tbleInstSet extends AbstractInstSet {
                                         try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
                                             while (pkRs.next()) pkColumns.add(pkRs.getString("COLUMN_NAME"));
                                         }
-                                        final Objs rows = objs0();
+                                        final List<Obj> rows = new ArrayList<>();
                                         while (rs.next()) {
                                             final Rec row = space.existingTableSchema.readRow(rs, tableName);
                                             final fURI prefix = externalPrefix.apply(space);
@@ -727,9 +759,9 @@ public class tbleInstSet extends AbstractInstSet {
                                                                     (vid, seg) -> vid.extend(seg),
                                                                     (a, b) -> b);
 
-                                            rows.append(row.selfVID(rowVID));
+                                            rows.add(row.selfVID(rowVID));
                                         }
-                                        return rows.asObjs();
+                                        return lst(rows);
                                     } catch (SQLException e) {
                                         if (e.getErrorCode() == 1054) return noobj();
                                         throw MTronException.of(e, "%s", sql);

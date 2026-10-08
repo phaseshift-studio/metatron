@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
-import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.IdentityResolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.IdentityRewriter;
@@ -87,7 +86,7 @@ public interface Compiler extends Machine.Component, Rec {
      * @return the resolver stage component ({@code resolver::T}) — identity by default
      */
     default Resolver resolver() {
-        return IdentityResolver.single();
+        return ScoringResolver.single();
     }
 
     /**

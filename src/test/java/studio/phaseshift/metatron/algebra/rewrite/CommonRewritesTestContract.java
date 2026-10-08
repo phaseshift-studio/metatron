@@ -20,12 +20,15 @@ package studio.phaseshift.metatron.algebra.rewrite;
 
 import org.junit.jupiter.params.provider.Arguments;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
@@ -137,8 +140,18 @@ public interface CommonRewritesTestContract {
      * @param expected    The expected result
      */
     default void runRewriteTest(String description, String code, Obj expected) throws Exception {
-        final Obj result = ObjmtronSerializer.parse(code).apply();
+        final Obj parsed = ObjmtronSerializer.parse(code);
+        final Obj result = parsed.apply();
         assertEquals(expected, result, description);
+        // Also verify the expression was actually rewritten to the native instruction set —
+        // not merely that the mtron fallback produced the right answer.
+        final String prefix = getNativeInstructionPrefix();
+        if (prefix != null && !prefix.isEmpty()) {
+            final Code rewritten = Machine.root().compiler().rewrite().apply(parsed).asCode();
+            final boolean nativeRewrite = rewritten.insts().stream()
+                    .anyMatch(inst -> inst.tid().name().startsWith(prefix));
+            assertTrue(nativeRewrite, description + ": expected native rewrite (" + prefix + "*)");
+        }
     }
 
     // ========================================================================

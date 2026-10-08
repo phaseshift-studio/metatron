@@ -126,8 +126,11 @@ public final class CommonRewrites {
                 .match(ALL, COUNT_INST_TID)
                 .matchPredicate(matches -> {
                     final Inst first = matches.getFirst().asInst();
-                    // Only FROM (*) and AT (@) instructions carry a data-path URI
-                    if (!first.tid().test(FROM_INST_TID) && !first.tid().test(AT_INST_TID))
+                    // Accept any data-source instruction: FROM (*) / AT (@), or a
+                    // pushed-down sql_limit/sql_where/sql_skip that already carries the
+                    // resolved data-path URI in arg(0).
+                    if (!first.tid().test(FROM_INST_TID) && !first.tid().test(AT_INST_TID)
+                            && !first.arg(0).isUri())
                         return false;
                     final Obj ref = first.arg(0);
                     // only apply when the path ends at collection level (no field/extensions)
@@ -182,16 +185,27 @@ public final class CommonRewrites {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
-                .rng(A)
+                .rng(Tokens.INT_TID)
                 .match(FROM_INST_TID, SUM_INST_TID)
                 .matchFromOrAt()
                 .matchSpacePredicate(matchSpacePredicate)
-                .optimize("from_sum", (space, dp, coeff) -> {
-                    final Number sum = sumFunction.apply(space, dp);
-                    return (sum instanceof Double || sum instanceof Float)
-                            ? real(sum.doubleValue())
-                            : jnt(sum.longValue());
-                })
+                .optimize("from_sum", (space, dp, coeff) -> jnt(sumFunction.apply(space, dp).longValue()))
+                .build();
+    }
+
+    public static <S extends Space> Inst sumColumnRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final BiFunction<S, DataPath, Number> sumFunction,
+            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+
+        return RewriteBuilder.forDatabase(spaceType)
+                .tid(rewriteTID)
+                .rng(Tokens.INT_TID)
+                .match(FROM_INST_TID, RSHIFT_INST_TID, SUM_INST_TID)
+                .matchFromOrAt()
+                .matchSpacePredicate(matchSpacePredicate)
+                .optimize("from_rshift_sum", (space, dp, coeff) -> jnt(sumFunction.apply(space, dp).longValue()))
                 .build();
     }
 
@@ -353,7 +367,7 @@ public final class CommonRewrites {
                             expandedfURI, limitValue, space);
 
                     // Create the optimized instruction
-                    return List.of(instC(this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
+                    return List.of(instC(this.rewriteTid.dom(ALL.zero()).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
                                     (lhs, inst) -> {
                                         try {
                                             return this.limitOperation.execute(typedSpace, dp, limitValue);
@@ -412,7 +426,7 @@ public final class CommonRewrites {
          * Execute the native select/projection operation.
          *
          * @param space  The database space
-         * @param furi   The resolved fURI for the table/collection
+         * @param dp     The resolved datapath for the table/collection
          * @param fields The list of field/field names to select
          * @return The projected results (typically an Objs of rows with only selected fields)
          * @throws Exception if the operation fails
@@ -529,7 +543,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                                 lst(
                                         uri(expandedfURI),
                                         lst(colObjs)),
@@ -800,7 +814,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                                 lst(uri(expandedfURI), str(filterClause)),
                                 (lhs, inst) -> {
                                     // Barrier re-application guard: if the SwarmProcessor
@@ -1070,7 +1084,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                                 lst(
                                         uri(furi),
                                         str(filterClause)),
@@ -1217,7 +1231,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                                 lst(
                                         uri(furi),
                                         str(filterClause),
@@ -1341,7 +1355,7 @@ public final class CommonRewrites {
                         expandedfURI, skipValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(expandedfURI), jnt(skipValue)),
                         (lhs, inst) -> {
                             try {
@@ -1475,7 +1489,7 @@ public final class CommonRewrites {
                         furi, skipValue, limitValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(furi), jnt(skipValue), jnt(limitValue)),
                         (lhs, inst) -> {
                             try {
@@ -1614,7 +1628,7 @@ public final class CommonRewrites {
                         furi, filterClause, skipValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(furi), str(filterClause), jnt(skipValue)),
                         (lhs, inst) -> {
                             try {
@@ -1727,7 +1741,7 @@ public final class CommonRewrites {
                         furi, filterClause, columns, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(furi), str(filterClause), lst(columns.stream().<Obj>map(col -> str(col)).toList())),
                         (lhs, inst) -> {
                             try {
@@ -1829,7 +1843,7 @@ public final class CommonRewrites {
                         furi, filterClause, columns, skipValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(furi), str(filterClause), lst(columns.stream().<Obj>map(col -> str(col)).toList()), jnt(skipValue)),
                         (lhs, inst) -> {
                             try {
@@ -1930,7 +1944,7 @@ public final class CommonRewrites {
                         furi, filterClause, skipValue, limitValue, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(furi), str(filterClause), jnt(skipValue), jnt(limitValue)),
                         (lhs, inst) -> {
                             try {
@@ -1968,7 +1982,7 @@ public final class CommonRewrites {
 
         return new OrderRewriteBuilder<>(spaceType, orderFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(Tokens.ALL_STAR)
+                .rng(Tokens.LST_TID.maybe())
                 .match(FROM_INST_TID, ORDER_INST_TID)
                 .matchFromOrAt()
                 .build();
@@ -2038,7 +2052,7 @@ public final class CommonRewrites {
                 LOG.debug("evaluating native order on %s by %s in space %s", expandedfURI, columns, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(expandedfURI), lst(columns.stream().map(c -> (Obj) str(c)).toList())),
                         (lhs, inst) -> {
                             try {
@@ -2144,7 +2158,7 @@ public final class CommonRewrites {
                 LOG.debug("evaluating native dedup on %s by %s in space %s", expandedfURI, columns, space);
 
                 return List.of(instC(
-                        this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(expandedfURI), lst(columns.stream().map(c -> (Obj) str(c)).toList())),
                         (lhs, inst) -> {
                             try {

@@ -42,6 +42,7 @@ import java.util.function.Predicate;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.RSHIFT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -280,8 +281,17 @@ public class RewriteBuilder<S extends Space> {
      */
     protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
         return map -> {
-            // Extract fURI from the first instruction (FROM instruction)
-            final fURI oldfURI = map.values().iterator().next().arg(0).asUri().uriValue();
+            final List<Inst> matched = map.values().stream().toList();
+            // Extract fURI from the first instruction (FROM/AT instruction)
+            fURI oldfURI = matched.getFirst().arg(0).asUri().uriValue();
+            // Fold a field access (>>field / rshift) into the source URI so DataPath resolves the
+            // column: from(x) >> field  →  from(x/field).
+            for (final Inst m : matched) {
+                if (m.tid().basePath().equals(RSHIFT_INST_TID.basePath()) && m.arg(0).isUri()) {
+                    oldfURI = oldfURI.extend(m.arg(0).uriValue());
+                    break;
+                }
+            }
             final Space space = Machine.root().getSpaceFor(oldfURI);
 
             // Check if this is the correct space type

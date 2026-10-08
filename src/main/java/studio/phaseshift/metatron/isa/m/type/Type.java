@@ -92,7 +92,7 @@ public interface Type extends Obj {
     default boolean isPattern() {
         return (null != this.vid() && this.vid().hasPattern()) || this.tid().hasPattern();
     }
-
+    
     // Base types are excluded because they carry coefficient variance ({1}, {2}, …): `test()` and
     // `testObjs()` use isNominal() as a shortcut to the coefficient-blind testNominally(), and base
     // types must instead take the coefficient-aware full path. (testNominally strips coefficients.)

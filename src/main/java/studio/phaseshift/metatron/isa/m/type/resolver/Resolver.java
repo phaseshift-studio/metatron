@@ -105,7 +105,7 @@ public interface Resolver extends Machine.Component {
                         token = resolvedInst.isFilter() ? resolvedInst.rng().c(resolvedInst.c().max()) : resolvedInst.rng();
                         if (resolvedInst.isGather()) {
                             LOG.trace("  {{m}}==|{{/m}} marking {{y}}barrier{{/y}} at %s", resolvedInst);
-                        } else if (resolvedInst.isInitial()) {
+                        } else if (resolvedInst.isInitial() && !resolvedInst.hasRng()) {
                             LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
                             token = resolvedInst.arg(0).isType() ? resolvedInst.arg(0) : resolvedInst.arg(0).type();
                         }
