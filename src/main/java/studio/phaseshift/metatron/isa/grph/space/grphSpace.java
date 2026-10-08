@@ -511,7 +511,7 @@
 
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
                  if (routed.hasScheme() && !routed.test(this.pattern())) {
-                     return new IdObj(routed, Machine.root().memory().read(routed)).iterator();
+                     return new IdObj(routed, Machine.current().memory().read(routed)).iterator();
                  }
                  // Flat key-value namespace (reserved kv_store label, or unknown collection).
                  // Only for paths under this space's prefix; absolute cross-space paths
@@ -610,7 +610,7 @@
                  LOG.debug("unknown tp3 vid: %s", pattern);
                  final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
                  if (full.equals(pattern)) return readCollection(dp);
-                 return IdObj.of(full, Machine.root().memory().read(full)).iterator();
+                 return IdObj.of(full, Machine.current().memory().read(full)).iterator();
              }
          };
      }

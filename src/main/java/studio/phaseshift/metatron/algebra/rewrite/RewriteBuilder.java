@@ -292,7 +292,7 @@ public class RewriteBuilder<S extends Space> {
                     break;
                 }
             }
-            final Space space = Machine.root().getSpaceFor(oldfURI);
+            final Space space = Machine.current().memory().getSpaceFor(oldfURI);
 
             // Check if this is the correct space type
             if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(map.values().stream().toList()))) {

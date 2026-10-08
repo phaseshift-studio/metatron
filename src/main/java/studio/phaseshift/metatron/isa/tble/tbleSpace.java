@@ -135,6 +135,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
     protected TableSchema schema;
     protected ExistingTableSchema existingTableSchema;
     protected boolean tableMappingInitialized = false;
+    protected boolean tablesDiscovered = false;
     protected SQLSchemaGenerator schemaGenerator;
     protected SQLSchemaInstSet schemaInstset;
     protected String databaseName;
@@ -195,7 +196,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
             // always route to it (the expensive existing-table discovery stays lazy — the
             // placeholder's first read triggers it and swaps in the populated instset).
             this.schemaInstset = new SQLSchemaInstSet(this.vid().extend(INSTSET), List.of(), this);
-            Machine.root().addSpace(this.schemaInstset);
+            Machine.current().memory().addSpace(this.schemaInstset);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
@@ -272,13 +273,31 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
      * Lazily runs the (expensive) existing-table discovery + schema-instset
      * construction on first table-mapped access.  Idempotent.
      */
+    /**
+     * Lazily discovers the existing tables (populating {@link #existingTableSchema})
+     * WITHOUT building/registering the schema instset.  Used by the SQL rewrite guards
+     * to see the real table names without the schema-space side effects of
+     * {@link #schemaInstset()}.  Idempotent.
+     */
+    public void ensureTables() {
+        if (this.tablesDiscovered)
+            return;
+        this.tablesDiscovered = true;
+        try {
+            this.existingTableSchema.initialize(this.sjvm());
+        } catch (final SQLException e) {
+            this.tablesDiscovered = false; // allow a later retry
+            throw MTronException.of(e);
+        }
+    }
+
     private void ensureTableMapping() throws SQLException {
         if (this.tableMappingInitialized)
             return;
         this.tableMappingInitialized = true;
 
+        this.ensureTables();
         final Connection conn = this.sjvm();
-        this.existingTableSchema.initialize(conn);
         LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables for database %s",
                 this.existingTableSchema.getTableNames().size(), null == conn.getCatalog() ? "" : conn.getCatalog());
 
@@ -301,7 +320,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
         // are the single source of truth — column types AND FK references are
         // embedded in the isaPredicate; no separate native schema needed.
         this.schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
-        Machine.root().addSpace(this.schemaInstset);
+        Machine.current().memory().addSpace(this.schemaInstset);
         this.schemaInstset.setup();
 
         // Wire schema into the space's own Rec so SchemaSpace.schema()

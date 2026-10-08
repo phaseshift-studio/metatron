@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -134,7 +135,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 """)),
                 uri(INST), lst(
                         instC(MQL_INST_TID.dom(DCMNT_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<dcmntSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
-                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Machine.root().<dcmntSpace>getSpaceFor(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
+                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Machine.current().memory().<dcmntSpace>getSpaceFor(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
                                 "a document collection",
                                 "the result of the mql query",
                                 Map.of(jnt(0), "an mql query represented as a rec"),
@@ -161,16 +162,37 @@ public class dcmntInstSet extends AbstractInstSet {
                                 (space, dp) -> {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    // MongoDB aggregation pipeline: [{$group: {_id: null, total: {$sum: 1}}}]
+                                    // MongoDB aggregation: $sum the field when a column is selected, else count documents.
+                                    final Object sumExpr = dp.hasField() ? "$" + dp.field() : 1;
                                     final Document result = collection.aggregate(Arrays.asList(
                                             new Document("$group", new Document(ID_FIELD_STRING, null)
-                                                    .append("total", new Document("$sum", 1)))
+                                                    .append("total", new Document("$sum", sumExpr)))
                                     )).first();
                                     if (result != null && result.containsKey("total")) {
                                         return result.get("total", Number.class);
                                     }
                                     return 0;
                                 }
+                        ),
+
+                        // Optimize: *collection.>>field.sum() → MongoDB aggregation $sum on that field
+                        CommonRewrites.sumColumnRewrite(
+                                dcmntSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("mql_sum_column"),
+                                (space, dp) -> {
+                                    final String collectionName = dp.collection();
+                                    final String columnName = dp.field();
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
+                                    final Document result = collection.aggregate(Arrays.asList(
+                                            new Document("$group", new Document(ID_FIELD_STRING, null)
+                                                    .append("total", new Document("$sum", "$" + columnName)))
+                                    )).first();
+                                    if (result != null && result.containsKey("total")) {
+                                        return result.get("total", Number.class);
+                                    }
+                                    return 0;
+                                },
+                                null
                         ),
 
                         // Optimize: *collection.mean() → MongoDB aggregation $avg
@@ -303,6 +325,10 @@ public class dcmntInstSet extends AbstractInstSet {
                                            final fURI baseUri,
                                            final dcmntSpace space,
                                            final int limit) {
+        // MongoDB's find().limit(0) means "no limit" (returns everything), unlike SQL
+        // LIMIT 0 (returns nothing) — so guard the zero case explicitly.
+        if (limit == 0)
+            return noobj();
         return objs(IteratorUtil.stream(collection.find().limit(limit).iterator()).map(doc -> {
             final Object docId = doc.get(ID_FIELD_STRING);
             final String idStr = docId instanceof org.bson.types.ObjectId oid

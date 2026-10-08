@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.*;
+import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
+import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -76,6 +78,12 @@ public abstract class AbstractMachine extends MRec implements Machine {
         if (null == this.resolvedMemory)
             this.resolvedMemory = Machine.super.memory();
         return this.resolvedMemory;
+    }
+
+    @Override
+    public Machine memory(final Memory memory) {
+        this.resolvedMemory = memory;
+        return this;
     }
 
     @Override
@@ -178,12 +186,12 @@ public abstract class AbstractMachine extends MRec implements Machine {
             // Snapshot the keys first: removeSpace mutates the index, and removing while iterating the live
             // entry set is a ConcurrentModificationException — which surfaced as a shutdown that reported the
             // entry set rather than the spaces it had closed.
-            this.spaces().jvm().keySet().stream()
+            this.memory().spaces().jvm().keySet().stream()
                     .filter(Obj::isUri)
                     .toList()
                     .forEach(key -> {
                         try {
-                            this.removeSpace(key.uriValue());
+                            this.memory().removeSpace(key.uriValue());
                         } catch (final Exception e) {
                             LOG.warn(e);
                         }

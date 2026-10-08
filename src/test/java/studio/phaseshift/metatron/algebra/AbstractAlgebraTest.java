@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.algebra.Form.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -73,7 +74,7 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals(group.zero(), group.minus(group), "a - a         = 0");
             assertEquals(group.neg(), group.zero().minus(group), "0 - a         = (-a)");
             /// /////////////////////////////////////////////////////////////////////////
-            Machine.root().memory().write("a", group);
+            Machine.current().memory().write(f("a"), group);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
@@ -109,7 +110,7 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals(group.one().div(group), group.inv(), "1 / a         = (1/a)");
             assertEquals(group.div(group.one()), group, "a / 1         = a");
             /// /////////////////////////////////////////////////////////////////////////
-            Machine.root().memory().write("a", group);
+            Machine.current().memory().write(f("a"), group);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
@@ -135,7 +136,7 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals(monoid, monoid.zero().plus(monoid), "0 + a = a");
             assertEquals(monoid, monoid.plus(monoid.zero()), "a + 0 = a");
             /// /////////////////////////////////////////////////////////////////////////
-            Machine.root().memory().write("a", monoid);
+            Machine.current().memory().write("a", monoid);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
@@ -160,7 +161,7 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals(monoid, monoid.one().mult(monoid), "1 * a = a");
             assertEquals(monoid, monoid.mult(monoid.one()), "a * 1 = a");
             /// /////////////////////////////////////////////////////////////////////////
-            Machine.root().memory().write("a", monoid);
+            Machine.current().memory().write("a", monoid);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);
@@ -206,7 +207,7 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals(zeroable.zero(), zeroable.plus(zeroable).zero(), "0 invariant under plus (0 of a+a = 0)");
             // mixed-call annihilator laws (0 * a = 0, 1 * 0 = 0) are pinned by the mtron rows below
             /// /////////////////////////////////////////////////////////////////////////
-            Machine.root().memory().write("a", this.obj);
+            Machine.current().memory().write("a", this.obj);
             final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
             final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhsObj, rhsObj, lhs + " != " + rhs);

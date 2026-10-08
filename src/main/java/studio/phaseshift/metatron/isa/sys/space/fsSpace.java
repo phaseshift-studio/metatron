@@ -84,7 +84,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public static File staticObjToFile(final Obj obj) {
         try {
-            final Space space = Machine.root().getSpaceFor(obj.uriValue().basePath());
+            final Space space = Machine.current().memory().getSpaceFor(obj.uriValue().basePath());
             if (space instanceof fsSpace) {
                 return new File(space.redirect(obj.uriValue().basePath(), true).toString());
             } else {

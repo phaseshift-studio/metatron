@@ -2,20 +2,26 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+
 import studio.phaseshift.metatron.isa.Space;
+
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -40,16 +46,22 @@ public abstract class AbstractSpaceIsolationTest extends AbstractMetatronTest {
 
     @AfterEach
     public void unwind() {
-        Machine.current(Machine.root());
+        Machine.current(Machine.current());
     }
 
-    /** The Space in effect at this machine — frame-aware, so a live frame's own level answers. */
+    /**
+     * The Space in effect at this machine — frame-aware, so a live frame's own level answers.
+     */
     protected abstract Space view(Machine machine);
 
-    /** An address in this Space's jurisdiction (relative for a memory, absolute for an ISA). */
+    /**
+     * An address in this Space's jurisdiction (relative for a memory, absolute for an ISA).
+     */
     protected abstract fURI key(String name);
 
-    /** A value distinguishable from the others, so a shadow cannot be mistaken for inheritance. */
+    /**
+     * A value distinguishable from the others, so a shadow cannot be mistaken for inheritance.
+     */
     protected abstract Obj value(int n);
 
     // ------------------------------------------------------------------ the four isolation assertions

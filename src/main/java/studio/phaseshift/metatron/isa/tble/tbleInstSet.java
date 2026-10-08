@@ -90,11 +90,11 @@ public class tbleInstSet extends AbstractInstSet {
             final fURI resolved = space.redirect(ref.uriValue(), true);
             final DataPath dp = DataPath.withoutDB(resolved);
             if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
-            // The existing-table schema is discovered lazily (ensureTableMapping);
+            // The existing-table schema is discovered lazily (ensureTables);
             // force it before consulting getTableNames() so the guard sees the
             // real tables instead of the empty pre-discovery schema.
             try {
-                space.schemaInstset();
+                space.ensureTables();
             } catch (final RuntimeException e) {
                 return false;
             }
@@ -824,7 +824,7 @@ public class tbleInstSet extends AbstractInstSet {
 
                         // Optimize: *kvPath/+.count() → SELECT COUNT(*) FROM kv_store WHERE furi LIKE ...
                         docWrap(RewriteBuilder.forDatabase(tbleSpace.class)
-                                        .tid(TBLE_ISA_REWRITE_TID.extend("kv_count"))
+                                        .tid(TBLE_ISA_REWRITE_TID.extend("sql_kv_count"))
                                         .rng(INT_TID)
                                         .match(FROM_INST_TID, COUNT_INST_TID)
                                         .matchSpacePredicate(kvGuard)
@@ -849,7 +849,7 @@ public class tbleInstSet extends AbstractInstSet {
                                 "leverages native SELECT COUNT(*) FROM kv_store with LIKE-based pattern matching"),
 
                         // Optimize: *kvPath/+.take(n) → SELECT * FROM kv_store WHERE furi LIKE ... LIMIT n
-                        docWrap(new KVLimitRewriteBuilder(TBLE_ISA_REWRITE_TID.extend("kv_limit"))
+                        docWrap(new KVLimitRewriteBuilder(TBLE_ISA_REWRITE_TID.extend("sql_kv_limit"))
                                         .match(FROM_INST_TID, TAKE_INST_TID)
                                         .matchSpacePredicate(kvGuard)
                                         .build(),
@@ -887,7 +887,7 @@ public class tbleInstSet extends AbstractInstSet {
                 final long limitValue = takeInst.arg(0).asInt().jvm();
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = Machine.root().getSpaceFor(oldfURI);
+                final Space space = Machine.current().memory().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space))
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -908,7 +908,7 @@ public class tbleInstSet extends AbstractInstSet {
                         + whereClause + " LIMIT " + limitValue;
 
                 return java.util.List.of(instC(
-                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
                         lst(uri(expandedfURI), jnt(limitValue)),
                         (lhs, inst) -> {
                             try (final Statement stmt = typedSpace.sjvm().createStatement();

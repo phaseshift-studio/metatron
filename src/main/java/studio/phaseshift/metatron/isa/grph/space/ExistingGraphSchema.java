@@ -157,7 +157,7 @@ public class ExistingGraphSchema {
                     INSTSET_TID, instSetVid
             ) {
             };
-            Machine.root().addSpace(instSet);
+            Machine.current().memory().addSpace(instSet);
             instSet.setup();
             this.space.at(uri(SCHEMA), instSet, MUTABLE);
         }
@@ -320,7 +320,7 @@ public class ExistingGraphSchema {
                     INSTSET_TID, instSetVid
             ) {
             };
-            Machine.root().addSpace(instSet);
+            Machine.current().memory().addSpace(instSet);
             instSet.setup();
             this.space.at(uri(SCHEMA), instSet, MUTABLE);
         }

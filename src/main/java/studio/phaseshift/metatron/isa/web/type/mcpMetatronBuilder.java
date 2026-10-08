@@ -175,7 +175,7 @@ public final class mcpMetatronBuilder {
                             toolTid("list_space").dom(ALL.maybe()).rng(ALL.maybe()),
                             lst(), (lhs, inst) -> {
                                 final Map<Obj, Obj> spaces = new LinkedHashMap<>();
-                                Machine.root().spaces().jvm().entrySet().forEach(kv -> {
+                                Machine.current().memory().spaces().jvm().entrySet().forEach(kv -> {
                                     spaces.put(kv.getKey(), uri(kv.getValue().<Space>as().pattern()));
                                 });
                                 return rec(spaces);
@@ -187,11 +187,11 @@ public final class mcpMetatronBuilder {
                     toolTid("router_info").dom(ALL.maybe()).rng(ALL.maybe()),
                     lst(), (lhs, inst) -> {
                         if (!Machine.loaded()) return str("router not loaded");
-                        final Machine router = Machine.root();
+                        final Machine router = Machine.current();
                         return rec(
                                 uri("router_vid"), uri(router.vid()),
                                 uri("router_tid"), uri(router.tid()),
-                                uri("space_count"), jnt(router.spaces().jvm().size()),
+                                uri("space_count"), jnt(router.memory().spaces().jvm().size()),
                                 uri("io_stats"), router.memory().stats().ioStats());
                     }), "noobj lhs", "router vid, tid, and space count", Map.of(), "returns router vid, tid, and space count"), MUTABLE);
 
@@ -206,7 +206,7 @@ public final class mcpMetatronBuilder {
                                     pattern = pattern.dom(inst.arg(f(DOM), 1).uriValue());
                                 if (inst.args().has(RNG))
                                     pattern = pattern.rng(inst.arg(f(RNG), 2).uriValue());
-                                return lst(Machine.root().memory().read(pattern.addQ(DOCQ))
+                                return lst(Machine.current().memory().read(pattern.addQ(DOCQ))
                                         .stream()
                                         .map(Obj::asRec)
                                         .filter(o -> o.at(OBJ).isInst())

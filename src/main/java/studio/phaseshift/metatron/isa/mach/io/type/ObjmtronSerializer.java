@@ -414,7 +414,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 return sb;
             }
         }
-        sb.append(Machine.loaded() ? Machine.root().memory().redirect(obj.tid(), false) : obj.tid());
+        sb.append(Machine.loaded() ? Machine.current().memory().redirect(obj.tid(), false) : obj.tid());
         if (!obj.isObjInst())
             sb.append("::");
         return sb;
@@ -426,7 +426,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
         // uris where the serializer writes them.  Going around it left every vid -- and every type
         // named inside a refinement or a collection -- unclickable while plain uri values were fine
-        final fURI vid = Machine.loaded() ? Machine.root().memory().redirect(obj.vid(), false) : obj.vid();
+        final fURI vid = Machine.loaded() ? Machine.current().memory().redirect(obj.vid(), false) : obj.vid();
         return sb.append("@").append(this.writeUri(vid.toUri()));
     }
 
@@ -505,7 +505,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         // where the serializer writes them, and appending the raw string left every type named in a
         // result (inst::T, union(…), #::T, uri::T) unclickable while the plain uri values beside it
         // were fine
-        final fURI name = Machine.loaded() ? Machine.root().memory().redirect(type.tid(), false) : type.tid();
+        final fURI name = Machine.loaded() ? Machine.current().memory().redirect(type.tid(), false) : type.tid();
         sb.append(this.writeUri(name.toUri())).append("::T");
         if (type.hasPredicate()) {
             if (type.isIsaPredicate()) {

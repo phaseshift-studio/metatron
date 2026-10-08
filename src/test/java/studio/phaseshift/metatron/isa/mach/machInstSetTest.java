@@ -29,9 +29,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BARRIER_INST_TID;
+
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.furi.q.QCollection;
+
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -91,7 +93,7 @@ public class machInstSetTest extends AbstractInstSetTest {
             AbstractMachineTest.declarePeers(peers.split(","));
 
         // THE STAGE UNDER TEST, and nothing else -- no apply, no resolve, no type
-        final Code rewritten = Machine.root().compiler().rewrite().apply(ObjmtronSerializer.parse(code)).asCode();
+        final Code rewritten = Machine.current().compiler().rewrite().apply(ObjmtronSerializer.parse(code)).asCode();
         LOG.warn("rewritten %s => %s", code, rewritten);
 
         assertEquals(mailboxes.startsWith("(") ? List.of() : List.of(mailboxes.split(";")),

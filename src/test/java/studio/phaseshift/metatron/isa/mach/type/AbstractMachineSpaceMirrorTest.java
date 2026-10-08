@@ -2,13 +2,16 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -37,16 +40,22 @@ public abstract class AbstractMachineSpaceMirrorTest extends AbstractMetatronTes
 
     @AfterEach
     public void unwind() {
-        Machine.current(Machine.root());
+        Machine.current(Machine.current());
     }
 
-    /** Mount on {@code machine} a space that claims {@code pattern} and holds {@code address => marker}. */
+    /**
+     * Mount on {@code machine} a space that claims {@code pattern} and holds {@code address => marker}.
+     */
     protected abstract void mountInto(Machine machine, String pattern, String address, Obj marker);
 
-    /** Read {@code address} through this machine's frame of reference — noobj when nothing covers it. */
+    /**
+     * Read {@code address} through this machine's frame of reference — noobj when nothing covers it.
+     */
     protected abstract Obj readThrough(Machine machine, String address);
 
-    /** A value distinguishable from the others, so a shadow cannot be mistaken for inheritance. */
+    /**
+     * A value distinguishable from the others, so a shadow cannot be mistaken for inheritance.
+     */
     protected abstract Obj value(int n);
 
     @Test

@@ -67,7 +67,7 @@ public class TypeQTest extends AbstractMetatronTest {
             "#::T         % /t/k  % /t/k -> \"hello\"   % */t/k        % \"hello\"",
     }, delimiter = '%')
     public void testTypedVID(final String specifyType, final String writeVID, final String writeTo, final String readFrom, final String result) {
-        LOG.warn("%s\n%s", this.space, Machine.root().spaces());
+        LOG.warn("%s\n%s", this.space, Machine.current().memory().spaces());
         final Type type = ObjmtronSerializer.parse(specifyType);
         final fURI write = f(writeVID);
         Machine.write(write.addQ("T"), type);

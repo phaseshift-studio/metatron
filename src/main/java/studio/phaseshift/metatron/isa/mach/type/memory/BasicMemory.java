@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.machine;
+package studio.phaseshift.metatron.isa.mach.type.memory;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -289,8 +290,8 @@ public class BasicMemory extends MRec implements Memory {
             return this;
         if (vid.hasPrefix(f("~"))) {
             return vid.equals(f("~")) ? Machine.current() : Machine.current().at(vid.pretract(1));
-        } else if (vid.hasPrefix(Machine.root().vid())) {
-            return (vid.equals(Machine.root().vid())) ? Machine.root() : Machine.root().at(vid.asNode());
+        } else if (vid.hasPrefix(Machine.current().vid())) {
+            return (vid.equals(Machine.current().vid())) ? Machine.current() : Machine.current().at(vid.asNode());
         }
 
         final fURI readableVID = this.alignPrefix(vid);

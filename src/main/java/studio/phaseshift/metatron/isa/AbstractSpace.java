@@ -165,7 +165,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     @Override
     public Obj parent() {
-        return null == this.parent ? this.at(uri(SUPER)).orElse(Machine.root()) : this.parent;
+        return null == this.parent ? this.at(uri(SUPER)).orElse(Machine.current()) : this.parent;
     }
 
     @Override

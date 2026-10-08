@@ -945,7 +945,7 @@ public final class CommonUtil {
             final java.util.List<fURI> streamedUris = new java.util.ArrayList<>();
             final java.util.Map<fURI, fURI> streamedXrefs = new java.util.HashMap<>();
             try {
-                Machine.root().memory().readStream(uri.extend("+/")).forEach(id -> {
+                Machine.current().memory().readStream(uri.extend("+/")).forEach(id -> {
                     final fURI childUri = id.furi();
                     if (null == childUri || childUri.equals(uri) || childUri.hasPattern()) return;
                     streamedUris.add(childUri);

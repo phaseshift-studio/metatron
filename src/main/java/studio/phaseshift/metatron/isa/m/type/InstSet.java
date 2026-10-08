@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * The {@code Machine.Component} half is the model — an ISA is one of the five things a Machine is made of, beside
  * its compiler, processor, network and memory. The {@code Space} half is an accident of how importing was
- * implemented: {@code importInstSetStream} does {@code Machine.current().addSpace(isa)}, so an ISA had to be a
+ * implemented: {@code importInstSetStream} does {@code Machine.current().memory().addSpace(isa)}, so an ISA had to be a
  * Space to be reachable. Frame-scoping imports removes that need, and this declaration is where the two
  * descriptions meet in the meantime.
  */
@@ -69,7 +69,7 @@ public interface InstSet extends Space, Machine.Component {
             .constructor(arg -> {
                 final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
                 };
-                Machine.current().addSpace(isa);
+                Machine.current().memory().addSpace(isa);
                 isa.setup();
                 return isa;
             }).create();
@@ -157,7 +157,7 @@ public interface InstSet extends Space, Machine.Component {
         return loadInstSetProvider(vid)
                 .map(ServiceLoader.Provider::get)///  new
                 .peek(isa -> {
-                    Machine.current().addSpace(isa);
+                    Machine.current().memory().addSpace(isa);
                   /*  final Machine machine = Machine.current();
                     final InstSet own = machine.instset();
                     if (own instanceof BasicInstSet) {

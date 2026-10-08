@@ -45,7 +45,7 @@ public class MType extends MObj implements Type {
     private MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid, final boolean register) {
         super(jvm, tid.big(), null == vid ? null : vid.big());
         if (register && Machine.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
-            Machine.root().memory().write(this.vid(), this);
+            Machine.current().memory().write(this.vid(), this);
         }
     }
 

@@ -38,7 +38,6 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
  * instrumentation but synchronization, and one here once hid a race. The only logging is on the failure path -- a
  * bounded wait whose catch dumps the mailboxes and what each machine halted with, which is what turns a hang into a
  * diagnosis instead of a wait nobody can explain.
-
  */
 public class MachineSwarmMigrationTest extends AbstractMetatronTest {
 
@@ -68,7 +67,7 @@ public class MachineSwarmMigrationTest extends AbstractMetatronTest {
                     uri(PATTERN), uri("/usr/marko/#"),
                     uri(QPROC), lst(QCollection.subq())), f("/usr/marko"));
             for (final Machine machine : machines)
-                machine.addSpace(mailboxes);
+                machine.memory().addSpace(mailboxes);
         } finally {
             BootLoader.BOOTING = booting;
         }
@@ -86,7 +85,7 @@ public class MachineSwarmMigrationTest extends AbstractMetatronTest {
      */
     @Test
     public void testTheCascadeAcrossThreeMachines() throws Exception {
-        final Machine a = Machine.root();
+        final Machine a = Machine.current();
         final Machine b = newMachineAt(f("/mach/swarmB"));
         final Machine c = newMachineAt(f("/mach/swarmC"));
         registerBarrierSpace(a, b, c);

@@ -334,7 +334,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
      */
     private static AbstractThread resolveYield(final Obj yieldObj) {
         if (yieldObj.isUri()) {
-            final Obj resolved = studio.phaseshift.metatron.isa.mach.type.Machine.root().memory().read(yieldObj.uriValue().qLess());
+            final Obj resolved = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().read(yieldObj.uriValue().qLess());
             if (resolved instanceof AbstractThread t)
                 return t;
         } else if (yieldObj.isInst()) {

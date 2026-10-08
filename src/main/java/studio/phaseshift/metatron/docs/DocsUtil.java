@@ -77,7 +77,7 @@ public final class DocsUtil {
                 new dcmntInstSet(), new rdfInstSet(), new dckrInstSet(),
                 new uiInstSet(), new vecInstSet()
         }) {
-            Machine.root().addSpace(is);
+            Machine.current().memory().addSpace(is);
             Machine.write(is);
             is.setup();
         }

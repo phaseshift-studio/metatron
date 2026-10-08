@@ -125,7 +125,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
                 : List.of();
         LOG.info("checkDistributedCode: %d shard(s) declared for %s", declared.size(), code);
 
-        final Machine home = Machine.root();
+        final Machine home = Machine.current();
         final Code compiled = home.compiler().apply(ObjmtronSerializer.parse(code)).asCode();
         // THE HOME FORM, logged because it is the one artifact a distributed run never shows: the workers' forms are
         // printed by the shards as they run, so when the home stalls there is nothing to compare them against.
@@ -272,7 +272,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
      * nothing to do with the database. Never close a live space to make room for another; give each its own vid.
      */
     protected static void registerComputeSpace(final Supplier<Space> computeSpace) {
-        Machine.root().addSpace(computeSpace.get());
+        Machine.current().memory().addSpace(computeSpace.get());
     }
 
     protected static void declarePeers(final String... peers) {

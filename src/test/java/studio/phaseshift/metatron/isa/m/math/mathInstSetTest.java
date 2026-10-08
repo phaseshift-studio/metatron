@@ -741,7 +741,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
 
     @Test
     public void testConstants() {
-        Machine.root().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QPROC), lst(QCollection.constQ())), f("abc")));
+        Machine.current().memory().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QPROC), lst(QCollection.constQ())), f("abc")));
         assertEquals(jnt(34), ObjmtronSerializer.parse("/abc/xyz -> 34").apply());
         assertEquals(jnt(34), ObjmtronSerializer.parse("*/abc/xyz").apply());
         assertEquals(jnt(99), ObjmtronSerializer.parse("/abc/xyz -> 99").apply());
