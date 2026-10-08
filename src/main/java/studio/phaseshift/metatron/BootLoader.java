@@ -108,7 +108,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static final int EXIT_RESET = 100;
     public static java.util.function.IntConsumer EXIT_HANDLER = System::exit;
     private static final GraphittyLogger LOG;
-    public static volatile Machine ROOT_MACHINE;
+    public static volatile Machine ROOT_MACHINE = null;
     public static Rec ARGS;
     /**
      * Tracks the currently executing metatron thread on this Java thread.
@@ -509,18 +509,18 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // `*` reaches it instead, through Memory's fallback to the machine's own rec.
             ROOT_MACHINE = BasicMachine.of(MACH_MACHINE_TID, f("/."));
             Machine.current(Machine.root());   // the boot runs as root: every library registers where it is written
-            Machine.current().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
+            Machine.current().memory().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROOT_MACHINE.vid());
-            sysSpace.write("/sys/typer/stage", typer);
-            sysSpace.write("/sys/tracer", tracer);
-            sysSpace.write("/sys/rewriter", rewriter);
-            sysSpace.write("/sys/tmp", str("""
-                                           
-                                           use /sys/tmp as a temporary location for objs.
-                                           note that /sys/tmp can be automatically garbage collected at any time.
-                                           
-                                           """));
-            sysSpace.write("/sys/emoji", EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));
+            sysSpace.write(Machine.relativeToCurrent("/sys/typer/stage"), typer);
+            sysSpace.write(Machine.relativeToCurrent("/sys/tracer"), tracer);
+            sysSpace.write(Machine.relativeToCurrent("/sys/rewriter"), rewriter);
+            sysSpace.write(Machine.relativeToCurrent("/sys/tmp"), str("""
+                                                                      
+                                                                      use /sys/tmp as a temporary location for objs.
+                                                                      note that /sys/tmp can be automatically garbage collected at any time.
+                                                                      
+                                                                      """));
+            sysSpace.write(Machine.relativeToCurrent("/sys/emoji"), EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));
             // LOAD STDIO INSTRUCTIONS
            /* sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                 final Object arg = inst.arg(0).jvm();
@@ -537,11 +537,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // Machine.authority().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
-            Machine.current().addSpace(m);  // explicit registration after full construction
+            Machine.current().memory().addSpace(m);  // explicit registration after full construction
             m.setup();
             //
             final InstSet sys = new sysInstSet();
-            Machine.current().addSpace(sys);
+            Machine.current().memory().addSpace(sys);
             sys.setup();
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
@@ -551,7 +551,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
             //
             final InstSet mach = new machInstSet();
-            Machine.current().addSpace(mach);  // explicit registration after full construction
+            Machine.current().memory().addSpace(mach);  // explicit registration after full construction
             mach.setup();
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Machine.write(f("boot/args"), args);

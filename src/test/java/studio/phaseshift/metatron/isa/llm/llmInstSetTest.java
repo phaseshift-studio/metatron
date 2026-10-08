@@ -67,7 +67,7 @@ public class llmInstSetTest extends AbstractInstSetTest {
 
     @AfterAll
     public static void unloadFileSystem() {
-        Machine.root().removeSpace(f("/sys/space/fs"));
+        Machine.current().memory().removeSpace(f("/sys/space/fs"));
     }
 
     @ParameterizedTest

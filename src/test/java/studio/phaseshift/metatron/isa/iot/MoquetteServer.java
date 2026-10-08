@@ -48,7 +48,7 @@ public final class MoquetteServer {
         try {
             mqttBroker = new Server();
             mqttBroker = mqttBroker.withConfig().disablePersistence().disableTelemetry().port(port).startServer();
-            Machine.root().logger().info("mqtt broker started press [CTRL+C] to stop");
+            Machine.current().logger().info("mqtt broker started press [CTRL+C] to stop");
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

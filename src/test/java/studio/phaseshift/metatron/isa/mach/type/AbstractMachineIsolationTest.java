@@ -2,13 +2,16 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -35,16 +38,22 @@ public abstract class AbstractMachineIsolationTest extends AbstractMetatronTest 
     @AfterEach
     public void unwind() {
         // a failed assertion must not leave a frame on this thread's stack
-        Machine.current(Machine.root());
+        Machine.current(Machine.current());
     }
 
-    /** Write {@code value} into this machine's component under {@code key}. */
+    /**
+     * Write {@code value} into this machine's component under {@code key}.
+     */
     protected abstract void writeInto(Machine machine, String key, Obj value);
 
-    /** Read {@code key} back from this machine's component — noobj when it does not hold it. */
+    /**
+     * Read {@code key} back from this machine's component — noobj when it does not hold it.
+     */
     protected abstract Obj readFrom(Machine machine, String key);
 
-    /** A value distinguishable from the others a test writes, so a leak cannot be mistaken for inheritance. */
+    /**
+     * A value distinguishable from the others a test writes, so a leak cannot be mistaken for inheritance.
+     */
     protected abstract Obj value(int n);   // compared with equals(), so any Obj works — not just an int
 
     @Test

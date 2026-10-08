@@ -480,12 +480,12 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
             // sits exactly at `depth` it falls back to projecting deeper uris onto their
             // depth-`depth` prefix — the implicit "directory spine" a flat space lacks.  When
             // no space supports the base uri, the walk is simply empty — not an error.
-            if (!Machine.root().hasSpaceFor(base))
+            if (!Machine.current().memory().hasSpaceFor(base))
                 return noobj();
             // The real reference spine: stored uris sitting exactly `depth` below base
             // (e.g. fsSpace directories).  This is the common, non-synthesizing path.
             final List<fURI> uris = new ArrayList<>(IteratorUtil.stream(
-                            Machine.root().getSpaceFor(base).directReader().apply(pattern))
+                            Machine.current().memory().getSpaceFor(base).directReader().apply(pattern))
                     .map(IdObj::furi)
                     .filter(u -> relativeDepth(u, base) == depth)
                     .toList());
@@ -494,7 +494,7 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
             // filesystem would materialize as a directory on the way to a file.  Read-time
             // only (nothing is written), so * on a synthesized uri still resolves to noobj.
             if (uris.isEmpty()) {
-                IteratorUtil.stream(Machine.root().getSpaceFor(base).directReader().apply(base.extend(fURI.Singleton.ALL)))
+                IteratorUtil.stream(Machine.current().memory().getSpaceFor(base).directReader().apply(base.extend(fURI.Singleton.ALL)))
                         .map(IdObj::furi)
                         .filter(u -> relativeDepth(u, base) > depth)
                         .map(u -> u.retract(relativeDepth(u, base) - depth))

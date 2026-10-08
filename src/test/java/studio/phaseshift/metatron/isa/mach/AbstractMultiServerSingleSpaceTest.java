@@ -99,13 +99,13 @@ public abstract class AbstractMultiServerSingleSpaceTest extends AbstractMetatro
     @BeforeEach
     public void registerComputeSpace() {
         computeSpaceInstance = computeSpace().get();
-        // Machine.root().addSpace(computeSpaceInstance);
+        // Machine.current().memory().addSpace(computeSpaceInstance);
     }
 
     @AfterEach
     public void releaseComputeSpace() {
         if (null != computeSpaceInstance) {
-            Machine.root().removeSpace(computeSpaceInstance.vid());
+            Machine.current().memory().removeSpace(computeSpaceInstance.vid());
             computeSpaceInstance = null;
         }
     }
@@ -114,7 +114,7 @@ public abstract class AbstractMultiServerSingleSpaceTest extends AbstractMetatro
      * the home form's gathers, as addresses
      */
     private static List<String> gathersOf(final String source) {
-        return Machine.root().compiler().rewrite().apply(ObjmtronSerializer.parse(source)).asCode()
+        return Machine.current().compiler().rewrite().apply(ObjmtronSerializer.parse(source)).asCode()
                 .insts().stream()
                 .filter(inst -> inst.tid().basePath().equals(BARRIER_INST_TID))
                 .map(inst -> inst.arg(0).toString())

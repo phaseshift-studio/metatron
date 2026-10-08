@@ -208,7 +208,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 // may redirect to a different URI where the type has no constructor,
                 // falling through to a plain MRec (same root cause as the wsSpace
                 // ClassCastException fix).
-                final Obj type = Machine.root().memory().read(lane.handlerType());
+                final Obj type = Machine.current().memory().read(lane.handlerType());
                 if (type.isType() && type.asType().hasConstructor()) {
                     handler = type.asType().constructor().apply(rec(config)).as();
                     if (!handler.isFail())
@@ -357,7 +357,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
      * a document) is still a mount, and it is exactly the "resolves to nothing, so serve 404" case.
      */
     private RouteLane classify(final Obj routed, final boolean templated) {
-        Obj target = routed.isUri() ? Machine.root().memory().read(routed.uriValue()) : routed;
+        Obj target = routed.isUri() ? Machine.current().memory().read(routed.uriValue()) : routed;
         // ── mcp_server type: materialize it so the transport wraps it ──
         if (target.isType() && target.asType().hasConstructor()
                 && Obj.Helper.specificType(target).test(MCP_SERVER_TYPE)) {
@@ -508,7 +508,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
           /* if (pattern.test(this.pattern)) {
                 final fURI location = Space.Helper.routeFromSpace(pattern.scheme(null).host(null), this.routes());
                 if (location != null && !location.toString().isEmpty()) {
-                    return Machine.root().memory().write(location, obj);
+                    return Machine.current().memory().write(location, obj);
                 }
             }*/
 

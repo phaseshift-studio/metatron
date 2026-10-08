@@ -396,7 +396,7 @@ public interface Space extends Rec, Closeable {
         public static void closeSpace(final Space space) {
             if (Machine.loaded()) {
                 // Machine.authority().removeSpace(space.pattern());
-                Machine.root().removeSpace(space.vid());
+                Machine.current().memory().removeSpace(space.vid());
                 // 
             }
         }

@@ -206,10 +206,10 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             JsonObject jo = json.getAsJsonObject();
             if (jo.has(TID_KEY)) {
                 rawTid = f(jo.get(TID_KEY).getAsString());
-                tid = Machine.root().memory().redirect(rawTid, true);
+                tid = Machine.current().memory().redirect(rawTid, true);
             }
             if (jo.has(VID_KEY)) vid = f(jo.get(VID_KEY).getAsString());
-            if (jo.has(BID_KEY)) bid = Machine.root().memory().redirect(f(jo.get(BID_KEY).getAsString()), true);
+            if (jo.has(BID_KEY)) bid = Machine.current().memory().redirect(f(jo.get(BID_KEY).getAsString()), true);
         }
         // schema-declared type (tool arg) supplies the tid when the wire carries no envelope
         if (tid == null && expectedTid != null) tid = expectedTid;

@@ -131,8 +131,8 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     @AfterAll
     public void teardownWsSpace() {
         if (this.space != null) {
-            Machine.root().removeSpace(this.space.vid());
-            Machine.root().removeSpace(WEB_ISA_TID);
+            Machine.current().memory().removeSpace(this.space.vid());
+            Machine.current().memory().removeSpace(WEB_ISA_TID);
             this.space.close();
             this.space = null;
         }
@@ -225,7 +225,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
         final Obj routes = space.at(ROUTE);
         assertFalse(routes.isNoObj(), "wsSpace should have a route table");
         routes.asRec().elements().forEach(r -> {
-            final Obj type = Machine.root().memory().read(r.second().uriValue());
+            final Obj type = Machine.current().memory().read(r.second().uriValue());
             assertFalse(type.isNoObj(),
                     "Type should be registered in Router at " + r.second().uriValue());
             assertTrue(type.isType(),

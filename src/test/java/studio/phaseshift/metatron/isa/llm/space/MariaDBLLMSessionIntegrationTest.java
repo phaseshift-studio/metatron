@@ -88,7 +88,7 @@ public class MariaDBLLMSessionIntegrationTest extends AbstractLLMSessionIntegrat
     protected void cleanupSession() throws Exception {
         if (this.space != null) {
             try {
-                Machine.root().removeSpace(this.space.vid());
+                Machine.current().memory().removeSpace(this.space.vid());
             } catch (final Exception ignored) {
             }
             this.space.close();

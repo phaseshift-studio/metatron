@@ -91,8 +91,8 @@ public class StatusLine implements Runnable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
-        final Real inBytes = mathInstSet.normalizeData(real((double) (Machine.root().memory().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
-        final Real outBytes = mathInstSet.normalizeData(real((double) (Machine.root().memory().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
+        final Real inBytes = mathInstSet.normalizeData(real((double) (Machine.current().memory().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
+        final Real outBytes = mathInstSet.normalizeData(real((double) (Machine.current().memory().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
         this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
         this.addWidget(f("in_bytes"), () -> " {{w}}\uD83D\uDCE5 {{%s}}%s::%.2f ".formatted(getForegroundColor(), inBytes.tid().name(), inBytes.realValue()));
         this.addWidget(f("out_bytes"), () -> "{{w}}\uD83D\uDCE4 {{%s}}%s::%.2f ".formatted(getForegroundColor(), outBytes.tid().name(), outBytes.realValue()));

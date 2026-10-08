@@ -305,7 +305,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         int hash = code.hashCode();
         int done = 2;
         while (done != 0) {
-            Machine.root().spaces()
+            Machine.current().memory().spaces()
                     .elements()
                     .filter(r -> r.second() instanceof catInstSet)
                     .flatMap(r -> r.second().<InstSet>as().rewrites().stream())

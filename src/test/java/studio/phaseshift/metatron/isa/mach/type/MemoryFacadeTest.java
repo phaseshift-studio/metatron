@@ -38,7 +38,7 @@ public class MemoryFacadeTest extends AbstractMetatronTest {
      */
     @Test
     public void testAnInstSetIsMountedInAMemoryIndex() {
-        final Object found = Machine.root().memory().findSpace(f("/m/inst/plus"));
+        final Object found = Machine.current().memory().findSpace(f("/m/inst/plus"));
         assertEquals(true, null != found, "the authority's memory finds the ISA by an address in its pattern");
     }
 }

@@ -170,7 +170,7 @@ public class TypeGraphTest extends AbstractMetatronTest {
         final TypeGraph.Key key = new TypeGraph.Key(f("real").big(), null, null, null);
         graph.memo(key, resolve);
         assertEquals(1, resolves.get(), "first resolution must run the resolver");
-        final Machine saved = Machine.root();
+        final Machine saved = Machine.current();
         try {
             // a different router instance stands in for a re-boot / reload:
             // the stale registry must be dropped and the re-resolution forced

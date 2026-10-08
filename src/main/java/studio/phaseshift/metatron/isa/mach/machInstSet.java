@@ -34,8 +34,8 @@ import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.FirstFindResol
 import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicMemory;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicNetwork;
+import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
+import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -62,7 +62,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_T
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -393,6 +392,15 @@ public class machInstSet extends AbstractInstSet {
                                 thread.jvm().put(uri(SOURCE), auto_from_(uri(parent.vid())).tryToInst());
                             thread.applyAsync(lhs);
                             return thread;
+                        }),
+                        instC(MACH_INST_TID.extend("push").dom(MACH_MACHINE_TID.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) -> {
+                            final Machine machine = lhs.isMachine() ? lhs.asMachine() : Machine.current();
+                            return inst.arg(0).isNoObj() ? machine.push() : machine.push(inst.arg(0).uriValue());
+                        }),
+                        instC(MACH_INST_TID.extend("pop").dom(MACH_MACHINE_TID.maybe()).rng(MACH_MACHINE_TID), lst(), (lhs, inst) -> {
+                            if (lhs.isMachine())
+                                return lhs.asMachine().pop();
+                            return Machine.current().pop();
                         }),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             ((AbstractThread) lhs).stop();

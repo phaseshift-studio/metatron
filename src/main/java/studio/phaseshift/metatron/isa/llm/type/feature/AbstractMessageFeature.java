@@ -246,7 +246,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
      */
     private SpaceChatSessionStore createStore(final Agent agent, final int chatId) {
         final fURI sessionID = this.at(SESSION).uriValue();
-        final Space space = Machine.root().getSpaceFor(sessionID);
+        final Space space = Machine.current().memory().getSpaceFor(sessionID);
         return new SpaceChatSessionStore(agent, space, agent.chatDepth(), chatId, SpaceChatSessionStore.memoryRootOf(sessionID));
     }
 

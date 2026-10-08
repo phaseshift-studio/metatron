@@ -66,7 +66,7 @@ public final class Device {
                             final fURI toVID = miotInstSet.deduceVID(lhs, f("+").extend(lhs.tid().name()));
                             if (null != toVID) {
                                 lhs.asRec().at(inst.arg(0).tid().name(), inst.arg(0), Poly.MUTABLE);
-                                Machine.root().memory().write(toVID.extend(inst.arg(0).tid().name()), inst.arg(0));
+                                Machine.current().memory().write(toVID.extend(inst.arg(0).tid().name()), inst.arg(0));
                             }
                             return lhs;
                         }).create(types, insts);

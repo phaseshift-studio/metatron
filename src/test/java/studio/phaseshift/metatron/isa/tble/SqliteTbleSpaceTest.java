@@ -164,7 +164,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
             assertEquals(expectedValue.getClass(), actualValue.getClass(),
                     "Type class should be preserved: " + description);
         } finally {
-            Machine.root().removeSpace(testSpace.vid());
+            Machine.current().memory().removeSpace(testSpace.vid());
             testSpace.close();
         }
     }
@@ -255,7 +255,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
             final Obj emailField = Machine.read(f("db:users/1/email"));
             assertEquals(str("alice@example.com"), emailField, "Should return just the email field value");
         } finally {
-            Machine.root().removeSpace(testSpace.vid());
+            Machine.current().memory().removeSpace(testSpace.vid());
             testSpace.close();
 
             // Clean up database

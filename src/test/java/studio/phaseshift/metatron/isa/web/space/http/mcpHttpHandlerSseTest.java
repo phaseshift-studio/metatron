@@ -79,7 +79,7 @@ public class mcpHttpHandlerSseTest extends AbstractMetatronTest {
             this.server = null;
         }
         if (this.testSpace != null) {
-            Machine.root().removeSpace(this.testSpace.vid());
+            Machine.current().memory().removeSpace(this.testSpace.vid());
             this.testSpace.close();
             this.testSpace = null;
         }

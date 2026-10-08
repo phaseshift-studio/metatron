@@ -859,7 +859,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default void delete() {
         if (null != this.vid())
-            Machine.root().memory().write(this.vid(), noobj());
+            Machine.current().memory().write(this.vid(), noobj());
     }
 
     /**
@@ -870,7 +870,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Obj save() {
-        return null == this.vid() ? this : Machine.root().memory().write(this.vid(), this);
+        return null == this.vid() ? this : Machine.current().memory().write(this.vid(), this);
     }
 
     default boolean booleanCheck() {
@@ -936,7 +936,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          * not, and fall back to the Obj walk ({@link Type#isRefinementOf(Type)}).
          */
         public static boolean inInstSet(final fURI tid) {
-            return null != tid && Machine.loaded() && Machine.root().getSpaceFor(tid) instanceof InstSet;
+            return null != tid && Machine.loaded() && Machine.current().memory().getSpaceFor(tid) instanceof InstSet;
         }
 
         /**
@@ -950,7 +950,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (null == vid || !Machine.loaded())
                 return null;
             try {
-                final Space space = Machine.root().getSpaceFor(vid);
+                final Space space = Machine.current().memory().getSpaceFor(vid);
                 return space instanceof InstSet is ? is.vidToTid(vid) : null;
             } catch (final RuntimeException e) {
                 return null;

@@ -175,7 +175,7 @@ public class mcp_httpHandler extends HttpRec {
             // 1 — drain notifications already fired (between subscriptions/listen and this GET)
             this.drainOutbox(sse, outbox);
             // 2 — live push: wake on each notification the server writes to its outbox
-            Machine.root().memory().write(outbox.extend("#").addQ(SUBQ),
+            Machine.current().memory().write(outbox.extend("#").addQ(SUBQ),
                     rec(mutableMap(
                                     uri(TARGET), uri(outbox.extend("#")),
                                     uri(CODE), instC(f("mcp_sse_push").dom(LST_TID).rng(NOOBJ_TID), lst(),
@@ -201,7 +201,7 @@ public class mcp_httpHandler extends HttpRec {
                 }
             }
             // the stream is ending — drop the live-push subscription
-            Machine.root().memory().write(outbox.extend("#").addQ(SUBQ), noobj());
+            Machine.current().memory().write(outbox.extend("#").addQ(SUBQ), noobj());
         } finally {
             sse.close();
         }

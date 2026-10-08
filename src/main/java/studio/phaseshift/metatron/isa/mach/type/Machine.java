@@ -20,12 +20,12 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicMemory;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicNetwork;
+import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
+import studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion;
+import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -34,10 +34,8 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 
@@ -82,7 +80,7 @@ public interface Machine extends Rec, AutoCloseable {
      */
     // ======================== identity and place ========================
     static Machine jvmRoot() {
-        return null == ROOT_MACHINE ? mach0() : (Machine) ROOT_MACHINE;
+        return null == ROOT_MACHINE ? mach0() : ROOT_MACHINE;
     }
 
     /**
@@ -90,7 +88,7 @@ public interface Machine extends Rec, AutoCloseable {
      * Resolution reads THIS, never {@link #current()} -- a machine that EXECUTES code need not be able to RESOLVE it.
      */
     static Machine root() {
-        return jvmRoot();
+        return null == ROOT_MACHINE ? mach0() : ROOT_MACHINE;
     }
 
     /**
@@ -100,6 +98,14 @@ public interface Machine extends Rec, AutoCloseable {
     static Machine current() {
         final Machine machine = CURRENT.get();
         return null != machine ? machine : root();
+    }
+
+    static fURI relativeToCurrent(final fURI furi) {
+        return Machine.current().vid().extend(furi);
+    }
+
+    static fURI relativeToCurrent(final String furi) {
+        return Machine.relativeToCurrent(f(furi));
     }
 
     /**
@@ -127,7 +133,6 @@ public interface Machine extends Rec, AutoCloseable {
                 CURRENT.remove();
             else
                 CURRENT.set(previous);
-
         }
     }
 
@@ -140,22 +145,13 @@ public interface Machine extends Rec, AutoCloseable {
         return machine;
     }
 
-    // ======================== the space funnel ========================
-    // Reads and writes through root(), the machine whose spaces answer.
-    //
-    // WHY THE NAMES ARE read/write AND NOT read/write: Machine IS-A Space, so it already has
-    // instance read(fURI)/write(fURI, Obj), and a static of the same name cannot coexist with them -- same signature,
-    // same erasure. The longer names are that collision, not a preference; shortening them means either moving the
-    // statics onto another type or taking the instance methods away, and neither is worth doing before the facade
-    // work (memory() as the single read/write interface) settles which of the two is the entry point.
-    // ======================== the entry point ========================
     static Obj read(final fURI vid) {
         return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst, "read " + vid),
                 () -> {
                     if (null == ROOT_MACHINE)
                         return noobj();
-                    final Obj peer = Machine.current().network().read(vid);
-                    return peer.isNoObj() ? Machine.current().memory().read(vid) : peer;
+                    final fURI machineLessVID = vid.removePrefix(Machine.current().vid());
+                    return Machine.current().network().read(machineLessVID).orElse(Machine.current().memory().read(machineLessVID));
                 });
     }
 
@@ -196,37 +192,8 @@ public interface Machine extends Rec, AutoCloseable {
         return null != ROOT_MACHINE;
     }
 
-    /**
-     * Narrow AutoCloseable's checked close() so callers need not handle an exception.
-     */
-    @Override
-    default void close() {
-    }
 
     // ======================== the space contract and its index ========================
-    default Rec spaces() {
-        return this.memory().spaces();
-    }
-
-    default boolean hasSpaceFor(final fURI vid) {
-        return this.memory().hasSpaceFor(vid);
-    }
-
-    default void addSpace(final Space space) {
-        this.memory().addSpace(space);
-    }
-
-    default void removeSpace(final fURI vid) {
-        this.memory().removeSpace(vid);
-    }
-
-    default <SPACE extends Space> SPACE getSpace(final fURI pattern) {
-        return this.memory().getSpace(pattern);
-    }
-
-    default <SPACE extends Space> SPACE getSpaceFor(final fURI vid) {
-        return this.memory().getSpaceFor(vid);
-    }
 
     interface Component extends Rec {
         default Machine machine() {
@@ -279,11 +246,27 @@ public interface Machine extends Rec, AutoCloseable {
      * for reading and writing addresses.
      */
     default Memory memory() {
-        final Obj proto = this.at(uri(MEMORY));
-        if (proto.isNoObj())
-            return new BasicMemory();
-        final Obj resolved = proto.isCall() ? proto.apply() : proto;
-        return resolved instanceof Memory ? (Memory) resolved : new BasicMemory();
+        final Obj proto = this.atDirect(uri(MEMORY));
+        if (proto.isNoObj()) {
+            final Memory memory = new BasicMemory();
+            this.at(uri(MEMORY), memory, MUTABLE);
+            return memory;
+        } else if (proto instanceof Memory) {
+            return (Memory) proto;
+        } else {
+            final Memory memory = proto.isCall() ? proto.apply().as() : proto.as();
+            this.at(uri(MEMORY), memory, MUTABLE);
+            return memory;
+        }
+    }
+
+    /**
+     * Bind this machine's memory — used by {@link #push()} to hand a child frame its {@link MemoryUnion} over the
+     * parent's memory.
+     */
+    default Machine memory(final Memory memory) {
+        CommonUtil.close(this.atDirect(uri(MEMORY)));
+        return this.at(uri(MEMORY), memory, MUTABLE).as();
     }
 
     /**
@@ -306,7 +289,7 @@ public interface Machine extends Rec, AutoCloseable {
         // A machine with NO vid (test machines, and any rootless construct) has no address to extend, so the
         // extension becomes the child's address outright — and the descendant rule below does not apply, because
         // there is nothing to descend from. Only when there IS a parent address does a frame have to stay under it.
-        final fURI childVID = ((null == parentVID) ? extension.resolve() : parentVID.resolve().extend(extension.name()).resolve()).c(extension.c());
+        final fURI childVID = ((null == parentVID) ? extension.resolve() : parentVID.resolve().extend(extension).resolve());
         if (null != parentVID && !childVID.removeSubpath(parentVID.resolve()).asNode().pathString().equals(childVID.name()))
             // print the RESOLVED forms, because the raw ones are what made this message hard to act on: the check
             // compares resolved segment lists, so a raw `/.` and a raw `aaa` say nothing about which comparison
@@ -317,6 +300,8 @@ public interface Machine extends Rec, AutoCloseable {
         if (child == this)
             throw MTronException.of("push(%s) cannot mint a child: clone() returned this machine, so the child would BE the parent", extension);
         child.parent(this);
+        // The child's memory is a union over this machine's memory: its own fresh level over the enclosing one.
+        child.memory(new MemoryUnion(this.memory()));
         CURRENT.set(child);
         return child;
     }
@@ -334,6 +319,11 @@ public interface Machine extends Rec, AutoCloseable {
         machine.close();
         CURRENT.set(parentMachine);
         return parentMachine;
+    }
+
+    @Override
+    default void close() {
+        this.pop();
     }
 
     /**
@@ -454,60 +444,12 @@ public interface Machine extends Rec, AutoCloseable {
                 return this.instset;
             }
 
-            public Object sjvm() {
-                return Map.of();
-            }
-
-            public Map<Uri, Obj> routes() {
-                return Map.of();
-            }
-
-            public Stats stats() {
-                return new MStats();
-            }
-
             public Obj read(final fURI vid) {
                 return noobj();
             }
 
             public Obj write(final fURI vid, final Obj obj) {
                 return noobj();
-            }
-
-            @Override
-            public boolean hasSpaceFor(final fURI vid) {
-                return false;
-            }
-
-            @Override
-            public void addSpace(final Space space) {
-            }
-
-            @Override
-            public void removeSpace(final fURI vid) {
-            }
-
-            @Override
-            public <SPACE extends Space> SPACE getSpace(final fURI pattern) {
-                return null;
-            }
-
-            public void registerRedirect(final fURI small, final fURI big) {
-            }
-
-            public void unregisterRedirect(final fURI small, final fURI big) {
-            }
-
-            public void registerPrefix(final fURI prefix, final fURI vid) {
-            }
-
-            public fURI redirect(final fURI furi, final boolean big) {
-                return NOOBJ;
-            }
-
-            @Override
-            public <SPACE extends Space> SPACE getSpaceFor(final fURI vid) {
-                return noobjSpace.single();
             }
 
         }

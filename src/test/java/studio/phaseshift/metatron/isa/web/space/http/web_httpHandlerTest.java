@@ -68,7 +68,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
     @AfterEach
     public void teardownContentSpace() {
         if (this.contentSpace != null) {
-            Machine.root().removeSpace(this.contentSpace.vid());
+            Machine.current().memory().removeSpace(this.contentSpace.vid());
             this.contentSpace.close();
             this.contentSpace = null;
         }
@@ -164,7 +164,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         @AfterAll
         public void teardownContentSpace() {
             if (this.contentSpace != null) {
-                Machine.root().removeSpace(this.contentSpace.vid());
+                Machine.current().memory().removeSpace(this.contentSpace.vid());
                 this.contentSpace.close();
                 this.contentSpace = null;
             }

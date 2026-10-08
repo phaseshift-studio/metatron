@@ -247,7 +247,7 @@ public class InstSetDocGenerator {
         // class loading at BootLoader.load).  Without this, parentType() ->
         // T(fURI) creates bare types without predicates, breaking the
         // refinement chain display.
-        Machine.root().memory().write(SPACE_TYPE.vid(), SPACE_TYPE);
+        Machine.current().memory().write(SPACE_TYPE.vid(), SPACE_TYPE);
     }
 
     // ========================================================================

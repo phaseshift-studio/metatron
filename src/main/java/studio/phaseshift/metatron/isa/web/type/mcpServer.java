@@ -456,17 +456,17 @@ public class mcpServer extends MRec {
      * target is not backed by any registered space.
      */
     private boolean subscribeResource(final Obj id, final fURI target) {
-        if (!Machine.root().hasSpaceFor(target)) {
+        if (!Machine.current().memory().hasSpaceFor(target)) {
             LOG.warn("no space for resource subscription target %s — skipping", target);
             return false;
         }
         final fURI outbox = this.subscriptionOutbox(id);
-        Machine.root().memory().write(target.addQ(SUBQ), rec(mutableMap(
+        Machine.current().memory().write(target.addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(target),
                 uri(CODE), instC(f("mcp_resource_updated").dom(LST_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     final Obj changed = lhs.asLst().at(0);
                     final Obj value = lhs.asLst().at(1);
-                    Machine.root().memory().write(outbox, rec(mutableMap(
+                    Machine.current().memory().write(outbox, rec(mutableMap(
                             uri(METHOD), uri("notifications/resources/updated"),
                             uri("params"), rec(uri(URI), changed, uri(VALUE), value),
                             uri("subscriptionId"), id)));
@@ -702,7 +702,7 @@ public class mcpServer extends MRec {
             // deciding which of the three shapes this is
             final Obj dereferenced = null == target ? null : target.dereference();
             final Obj pointer = null != dereferenced && !dereferenced.isNoObj() ? dereferenced : target;
-            final Obj read = null != pointer && pointer.isUri() ? Machine.root().memory().read(pointer.uriValue()) : pointer;
+            final Obj read = null != pointer && pointer.isUri() ? Machine.current().memory().read(pointer.uriValue()) : pointer;
             if (null == read || read.isNoObj())
                 return noobj();
             if (read.isType() && read.asType().hasConstructor()
