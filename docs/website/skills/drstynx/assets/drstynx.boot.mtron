@@ -303,7 +303,7 @@ agent::[
                                                                        protocol     => ollama,
                                                                        host         => <http://ginger.local:11434>,
                                                                        llm          => <qwen3.8:27b>].to(/usr/dr/model))),
-                      response      => [complete => print?<=rec("{{y}}{{:horse:}} ${>>chat}")]],
+                      response      => [complete => print?rec<=rec("{{y}}{{:horse:}} ${>>chat}")]],
   think_feature::::::[on_agent_ctor => inst(a=>agent::T){
                                           accordion_widget::[title => "thoughts", 
                                                              body  => "",

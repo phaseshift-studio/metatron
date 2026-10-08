@@ -830,10 +830,11 @@ public class llmInstSet extends AbstractInstSet {
                                 "maps an agent to a skill by aggregating its features' tools and resources",
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)]].as(skill::T)"),
                         // CHAT INSTRUCTION
-                        docWrap(instC(LLM_INST_TID.extend("chat").dom(LLM_AGENT_TID).rng(LLM_CHAT_RESULT_TID), lst(STR_TYPE), (lhs, inst) -> agent(lhs.asRec()).chat(inst.arg(0).strValue())),
+                        docWrap(instC(LLM_INST_TID.extend("chat").dom(LLM_AGENT_TID).rng(LLM_CHAT_RESULT_TID), lst(STR_TYPE, T(REC_TID.maybe())), (lhs, inst) -> agent(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).orElse(rec0()))),
                                 "an agent to chat with",  // dom
                                 "chat result rec — monos inline (chat, user, time), feature outputs as !* refs", // rng
-                                mutableMap(jnt(0), "the message to send the agent"), // args
+                                mutableMap(jnt(0), "the message to send the agent",
+                                        jnt(1).maybe(), "a rec::T schema for a structured response"), // args
                                 "communicate with an agent. if the agent is already executing, the chat message is pushed on their stack at *<agent>/message_stack", // desc
                                 "@agent.chat('what is a database?')"),
                         docWrap(instC(LLM_INST_TID.extend("embed").dom(LLM_MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),

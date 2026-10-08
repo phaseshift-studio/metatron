@@ -29,6 +29,7 @@ import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolErrorHandlerResult;
 import dev.langchain4j.service.tool.ToolExecution;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.WatermarkUtil;
@@ -491,11 +492,12 @@ public class Agent extends MRec {
     // ── Chat ───────────────────────────────────────────────────────
 
     public ChatFrame chat(final String message) {
-        return this.chat(message, noobjRec());
+        return this.chat(message, rec0().c(cInt.ZERO()).asRec());
     }
 
     public ChatFrame chat(final String message, final Rec responseFormat) {
         this.load();
+        boolean formattedResponse = null != responseFormat && !responseFormat.isNoObj() && !responseFormat.isEmpty();
         if (this.at(ACTIVE).booleanCheck() && this.hasFeature(LLM_MIDCHAT_FEATURE_TID)) {
             final MidChatFeature midchat = this.require(MidChatFeature.class);
             midchat.push(this, rec(MESSAGE, str(message), METADATA, responseFormat));
@@ -542,7 +544,10 @@ public class Agent extends MRec {
                         return ChatFrame.chatFrame().put(CHAT, result);
                     }
                 }
-                this.feature(LLM_CHAT_FEATURE_TID).ifPresent(chat -> chat.asRec().at(FORMAT, (responseFormat.isNoObj() || responseFormat.asRec().isEmpty()) ? noobj() : responseFormat, MUTABLE));
+                this.feature(LLM_CHAT_FEATURE_TID).ifPresent(chat -> {
+                    if (formattedResponse)
+                        chat.asRec().at(FORMAT, responseFormat, MUTABLE);
+                });
 
                 final AgentServices agent = this.buildService(features, responseFormat);
 
@@ -699,45 +704,50 @@ public class Agent extends MRec {
 
     private void onCompleteResponse(final ChatResponse c, final Rec responseFormat, final List<Obj> features,
                                     final long startNanos, final CountDownLatch latch) {
-        StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
-        final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
-        Machine.current().memory().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
-        // Parse response format if requested
-        final boolean formatted = !responseFormat.isNoObj();
-        final Obj chatObj;
-        // A formatted response is a structured rec end to end — there is no text channel for a
-        // watermark to ride in.
-        final WatermarkUtil.Scan scan = formatted ? null : WatermarkUtil.scan(fullText);
-        if (formatted) {
-            chatObj = ObjJSONSerializer.simple().inputBytes(fullText);
-        } else {
-            // Scan the watermarks out of the response: what the model addressed to a feature lands
-            // on the result, and the markup is stripped from what the user sees — and, because the
-            // chat is persisted, from what the ledger keeps.
-            chatObj = str(scan.visible());
+        try {
+            StatusLine.message(str("\uD83D\uDCE6 on_complete_response"));
+            final String fullText = null == c.aiMessage().text() ? "" : c.aiMessage().text();
+            Machine.current().memory().stats().ioStats().incrBytesRecv(fullText.getBytes().length);
+            // Parse response format if requested
+            final boolean formatted = null != responseFormat && !responseFormat.isNoObj() && !responseFormat.isEmpty();
+            final Obj chatObj;
+            // A formatted response is a structured rec end to end — there is no text channel for a
+            // watermark to ride in.
+            final WatermarkUtil.Scan scan = formatted ? null : WatermarkUtil.scan(fullText);
+            if (null == scan) {
+                chatObj = ObjJSONSerializer.simple().inputBytes(fullText);
+            } else {
+                // Scan the watermarks out of the response: what the model addressed to a feature lands
+                // on the result, and the markup is stripped from what the user sees — and, because the
+                // chat is persisted, from what the ledger keeps.
+                chatObj = str(scan.visible());
+            }
+            // Build the chat_result — monos inline (chat, user, time), the watermarks the model
+            // emitted as an ordered watermark::T lst; feature outputs are attached by the features
+            // themselves in their onCompleteResponse.
+            final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
+            // The result is the frame itself when a frame provider is attached (pushed at chat() entry
+            // with the prompt); otherwise build a standalone ChatFrame here.  Either way the monos
+            // (chat, user, time) and the watermarks are written onto it, and the features attach their
+            // outputs to the same rec.
+            final ChatFrame result = null != this.currentResult
+                    ? this.currentResult
+                    : ChatFrame.chatFrame().prompt(this.userMessage());
+            result.put(CHAT, chatObj.apply(this))
+                    .put(USER, str(this.userMessage()))
+                    .put(TIME, mathInstSet.nowDatetime())
+                    .put(RUNTIME, mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
+            if (null != scan && !scan.isEmpty())
+                result.put(WATERMARK, scan.list());
+            this.currentResult = result;
+            this.logger().none("\n");
+            features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, this.currentResult));
+            // Signal the waiting thread after all hooks have mutated the result
+        } catch (final Exception e) {
+            LOG.error(e);
+        } finally {
+            latch.countDown();
         }
-        // Build the chat_result — monos inline (chat, user, time), the watermarks the model
-        // emitted as an ordered watermark::T lst; feature outputs are attached by the features
-        // themselves in their onCompleteResponse.
-        final long elapsed = (System.nanoTime() - startNanos) / 1_000_000;
-        // The result is the frame itself when a frame provider is attached (pushed at chat() entry
-        // with the prompt); otherwise build a standalone ChatFrame here.  Either way the monos
-        // (chat, user, time) and the watermarks are written onto it, and the features attach their
-        // outputs to the same rec.
-        final ChatFrame result = null != this.currentResult
-                ? this.currentResult
-                : ChatFrame.chatFrame().prompt(this.userMessage());
-        result.put(CHAT, chatObj.apply(this))
-                .put(USER, str(this.userMessage()))
-                .put(TIME, mathInstSet.nowDatetime())
-                .put(RUNTIME, mathInstSet.normalizeTime(real((double) elapsed, MATH_MILLIS_TID, null)));
-        if (null != scan && !scan.isEmpty())
-            result.put(WATERMARK, scan.list());
-        this.currentResult = result;
-        this.logger().none("\n");
-        features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_COMPLETE_RESPONSE, this.currentResult));
-        // Signal the waiting thread after all hooks have mutated the result
-        latch.countDown();
     }
 
     private ChatFrame persistResult(final FrameService frameService) {
