@@ -629,9 +629,9 @@ public interface Inst extends Call {
                 apiInstTemp = apiInstTemp.rng(T(generics.getOrDefault(apiInstTemp.rng().typeId().one(), userInst.rng().typeId()).c(apiInstTemp.rng().c())));
             }
             ///  hail mary
-            if (apiInstTemp.dom().tid().one().isGeneric() || apiInstTemp.dom().tid().one().equals(ALL)) {
+            if (apiInstTemp.dom().typeId().one().isGeneric() || apiInstTemp.dom().typeId().one().equals(ALL)) {
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
-                apiInstTemp = apiInstTemp.tid(Helper.apiOrUser(apiInstTemp.tid(), userInst.tid(), generics));
+                apiInstTemp = apiInstTemp.tid(Helper.apiOrUser(apiInstTemp.typeId(), userInst.typeId(), generics));
             }
             LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, apiInstTemp, apiInst);
             return apiInstTemp;

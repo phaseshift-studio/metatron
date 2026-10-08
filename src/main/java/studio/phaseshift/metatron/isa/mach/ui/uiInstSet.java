@@ -90,6 +90,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_PANEL_TYPE;
     public static final fURI UI_GRID_TID = UI_WIDGET_TID.extend("grid_widget");
     public static Type UI_GRID_TYPE;
+    public static final fURI UI_MATRIX_TID = UI_WIDGET_TID.extend("matrix_widget");
+    public static Type UI_MATRIX_TYPE;
     public static final fURI UI_LABEL_LINE_TID = UI_WIDGET_TID.extend("label_line_widget");
     public static Type UI_LABEL_LINE_TYPE;
     public static final fURI UI_MENU_BAR_TID = UI_WIDGET_TID.extend("menu_bar_widget");
@@ -275,6 +277,17 @@ public class uiInstSet extends AbstractInstSet {
                                         .create(), "maybe an obj", "a grid of widgets", Map.of(
                                         uri("grid"), "a lst of rows, each row a lst of cell widgets"),
                                 "a grid of rows x cols of embedded, runnable widgets"),
+                        docWrap(UI_MATRIX_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_MATRIX_TID)
+                                        .isaPredicate(rec(
+                                                (Obj) uri("grid").maybe(), LST_TYPE,
+                                                uri(TITLE).maybe().asUri(), STR_TYPE))
+                                        .constructor(arg -> new MatrixWidget(arg.asRec().jvm(), UI_MATRIX_TID, arg.vid()))
+                                        .create(), "maybe an obj", "a matrix of glyphs", Map.of(
+                                        uri("grid"), "a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line",
+                                        uri(TITLE).maybe(), "the title drawn in the top border"),
+                                "a matrix of glyphs: a lst of lsts of characters drawn as a rectangular face (cell (row,col) is one-to-one with the drawn grid), styled like every other widget, plus a latched update(row,col,glyph) member that repaints one cell without a whole pass"),
                         docWrap(UI_LABEL_LINE_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_LABEL_LINE_TID)

@@ -24,6 +24,7 @@ isa.mach.type.ui.widget
   Selector.java             ← selector with attachment
   AbstractWidget.java       ← base for interactive widgets (raw mode, key handling)
   GridWidget.java           ← widget grid layout
+  MatrixWidget.java         ← grid of glyphs (lst of lsts), one-cell incremental repaint
   CardWidget.java           ← simple card
   WidgetCanvas.java         ← pane-bounded absolute/relative render helper
   Utilities.java            ← runCursorLessWidget, key constants

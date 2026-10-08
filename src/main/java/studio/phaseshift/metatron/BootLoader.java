@@ -488,7 +488,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
             sysSpace.jvm().put(uri(QPROC), lst(
                     QCollection.docQ(),
-                    QCollection.subq(),
+                    QCollection.subQ(),
                     QCollection.incrQ(),
                     QCollection.mimeQ(),
                     QCollection.lockQ()));

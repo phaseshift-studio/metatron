@@ -661,7 +661,7 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static QProc subq() {
+    public static QProc subQ() {
         final Lst subscriptions = lst(new ArrayList<>());
         return QProc.Helper.build(SUBQ_TID, SUBQ_PATTERN)
                 .obj(f(OBJ), subscriptions)
@@ -674,10 +674,13 @@ public final class QCollection {
                     final fURI subID = vid.qValue(SUBQ, fURI.class);
                     if (obj.isNoObj() || obj.isNone()) {
                         subscription = noobj();
-                        subscriptions.lstValue().removeIf(existingSub ->
+                        final boolean unsubscribed = subscriptions.lstValue().removeIf(existingSub ->
                                 (subID != null && null != existingSub.vid() && existingSub.vid().bimatches(subID)) ||
                                         vid.basePath().bimatches(existingSub.asRec().at(TARGET).uriValue()));
-                        obj.logger().info("unsubscribing from %s", vid.basePath());
+                        if (unsubscribed) {
+                            subscriptions.logger().info("unsubscribing from %s", vid.basePath());
+                        }
+                        return bool(unsubscribed);
                     } else if (obj.tid().basePath().equals(SUBQ_SUB_TID)) {
                         subscription = obj;
                         if (!subscription.asRec().has(TARGET))

@@ -65,7 +65,7 @@ public class MachineSwarmMigrationTest extends AbstractMetatronTest {
             // processor thread -- and its report lands where nobody is subscribed.
             final memSpace mailboxes = memSpace.of(rec(
                     uri(PATTERN), uri("/usr/marko/#"),
-                    uri(QPROC), lst(QCollection.subq())), f("/usr/marko"));
+                    uri(QPROC), lst(QCollection.subQ())), f("/usr/marko"));
             for (final Machine machine : machines)
                 machine.memory().addSpace(mailboxes);
         } finally {

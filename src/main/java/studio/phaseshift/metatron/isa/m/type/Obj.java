@@ -1452,10 +1452,15 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
                                 final fURI pattern = inst.arg(0).uriValue();
                                 if (pattern.hasPattern()) {
-                                    return objs(Machine.read(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
+                                    // vid(), NOT selfVID(): the read handed back the object the space
+                                    // HOLDS, and selfVID mutates in place — a read must not write into
+                                    // the store.  vid() stamps a copy and the location is preserved.
+                                    return objs(Machine.read(pattern.asBranch()).stream().map(x -> x.asRel().second().vid(x.asRel().first().uriValue())));
                                 } else {
                                     final Obj resolved = Machine.read(pattern);
-                                    return resolved.hasVID() ? resolved : resolved.selfVID(pattern);
+                                    // vid(), not selfVID(): stamping the located-read's result in place
+                                    // would write that vid into the object the space holds.
+                                    return resolved.hasVID() ? resolved : resolved.vid(pattern);
                                 }
                             }),
                             "any obj", "the obj at the arg uri", Map.of(jnt(0), "the uri or uri pattern to read"), "a spatial read function: reads the obj at the arg uri, preserving its spatial location (sugar'd @)"),

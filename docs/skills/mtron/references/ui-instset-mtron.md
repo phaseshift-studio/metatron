@@ -71,6 +71,7 @@ the same declarations the type checker uses:
 | `modal_widget::T`          | `title`, `body`                                               |
 | `swipe_panel_widget::T`    | `obj`                                                         |
 | `tree_select_widget::T`    | `root`, `max`, `on_select`, `label`                           |
+| `matrix_widget::T`         | `grid` (a lst of rows, each a lst of glyphs), `title`          |
 | `selector_widget::T`       | *(none of its own — it works the rec it is handed)*           |
 
 A widget also answers to more than the keys its type declares: a store-backed accordion grows `expand`,
@@ -137,6 +138,33 @@ accordion_widget::[title=>'notes',body=>"l01\nl02\nl03"].as?str<=widget(str::T)
 menu_bar_widget::[height=>1,lines=>[label_line_widget::[body=>'File'],label_line_widget::[body=>'Edit']]].as?str<=widget(str::T)
 label_line_widget::[body=>'a label line'].as?str<=widget(str::T)
 ```
+
+A `matrix_widget` is a grid of glyphs: cell `(row, col)` of its `grid` draws in the col-th column of
+the face's row-th line, one-to-one. The grid is read with `at()`, so it may be stored **lazily as a
+referent** (`grid=>!*g`): the widget is a view over that grid, and the board is mutated by writing
+the referent — never through the widget. The next surface pass (a prompt cycle, a resize, a click)
+reads it again and draws it, so no per-cell repaint machinery is involved:
+
+```mtron_pre
+g10 -> [,].repeat(code=>+['.'],until=>loop()?>9)-<[_].repeat(code=>+(>>0.-<[_]),until=>loop()?>8).to(/usr/uidoc/g10)
+board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
+@/usr/uidoc/board.display()             [-- pin it once --]
+@/usr/uidoc/g10/1/0 >>= '@'             [-- one cell of the REFERENT --]
+@/usr/uidoc/g10/+/0 >>= '%'             [-- every row's column 0 --]
+```
+
+The referent must be an **absolute** uri. A relative uri is a variable frame on the thread that wrote
+it, and a render pass runs on the surface's render thread — a relative referent does not resolve there,
+so the board would draw nothing until something forces the grid (`1-<…`).
+
+A grid built by a fold can also **alias a row** to the first cell written into it (the row's members
+come back bound to that cell's vid, so every cell of the row reads the same glyph). For a board driven
+cell-by-cell, use an explicit lst of lsts — a literal, or a value materialized with `.to(...)` — and the
+write lands on exactly one cell.
+
+A literal grid works the same way, and its cells are written by the same paths one level in
+(`@/usr/uidoc/board/grid/1/0 >>= '@'`). `grid => <fold>` does **not** work: `=>` *quotes* the fold, so
+the key would hold the code — build the grid at its own vid (or `.to(...)` the value into the key).
 
 ## style
 
@@ -208,7 +236,7 @@ panel_widget::[title=>'note',body=>'drag me'].display()      [-- floats, if the 
 A move writes only `top`/`left` and a resize only `width`/`height` (plus the position it was resized from):
 a height cap nobody asked for would clip content that arrives later.
 
-## the three insts
+## the insts
 
 | inst      | dom → rng                | what it does                                                                                                             |
 |-----------|--------------------------|--------------------------------------------------------------------------------------------------------------------------|

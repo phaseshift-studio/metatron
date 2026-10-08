@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.subq;
+import static studio.phaseshift.metatron.furi.q.QCollection.subQ;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
@@ -53,7 +53,7 @@ public class PostgreSQLMultiServerSingleSpaceTest extends AbstractMultiServerSin
                         uri(HOST), uri(DB.getJdbcHost()),
                         uri(DRIVER), uri(DB.getDriverClass()),
                         uri(TABLE), lst(),
-                        uri(QPROC), lst(subq())),
+                        uri(QPROC), lst(subQ())),
                 nextComputeVID());
     }
 

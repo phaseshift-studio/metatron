@@ -62,7 +62,7 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
         super(() -> {
             try {
                 return miotSpace.of(rec(
-                        uri(QPROC), lst(QCollection.subq()),
+                        uri(QPROC), lst(QCollection.subQ()),
                         uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
                         uri(SERIALIZER), ObjmtronSerializer.single(), // USING MTRON SERIALIZER (JSON SERIALIZER ISN'T ONE-TO-ONE WITH TEST EXPECTATION TYPES)
@@ -89,9 +89,9 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
         AbstractMetatronTest.end();
         CommonUtil.sleepThread(1000);
     }
-    
+
     @Override
     public void testMonoUpdate() {
-        
+
     }
 }

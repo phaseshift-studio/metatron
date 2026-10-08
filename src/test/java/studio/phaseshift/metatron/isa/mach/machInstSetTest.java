@@ -18,9 +18,12 @@
 
 package studio.phaseshift.metatron.isa.mach;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -28,16 +31,11 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BARRIER_INST_TID;
-
-import org.junit.jupiter.api.BeforeAll;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.furi.q.QCollection;
-
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.QPROC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BARRIER_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -53,7 +51,7 @@ public class machInstSetTest extends AbstractInstSetTest {
     public static void registerCompute() {
         AbstractMachineTest.registerComputeSpace(() -> memSpace.of(rec(
                 uri(PATTERN), uri("/usr/compute/#"),
-                uri(QPROC), lst(QCollection.subq())), AbstractMachineTest.COMPUTE_VID));
+                uri(QPROC), lst(QCollection.subQ())), AbstractMachineTest.COMPUTE_VID));
     }
 
     /**

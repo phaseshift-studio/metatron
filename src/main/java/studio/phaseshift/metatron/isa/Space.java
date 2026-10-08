@@ -365,8 +365,29 @@ public interface Space extends Rec, Closeable {
                         if (vid.isNode() || !obj.isPoly()) {
                             if (base.poly().isRec())
                                 Helper.resolveWrite(LOG, space, base.furi(), base.poly().asRec().at(uri(vid.removePrefix(base.furi())), obj), directWriter, directReader);
-                            else if (base.poly().isLst())
-                                Helper.resolveWrite(LOG, space, base.furi(), base.poly().asLst().append(obj), directWriter, directReader);
+                            else if (base.poly().isLst()) {
+                                // A deep write into a list is a POSITIONAL set, not an append: the
+                                // address names a cell inside the list (…/grid/0/1), and appending
+                                // put the value BESIDE the list at the parent vid instead of in it.
+                                // Mirror the rec branch above — the relative path is the list's own
+                                // key walk, which Lst.at(uri) sets by index, recursively.  An
+                                // un-addressed write (no path below the base) keeps the append,
+                                // which is what writing a list with no address has always meant.
+                                final fURI relative = vid.removePrefix(base.furi());
+                                // Only a numeric tail addresses a cell.  A wildcard (`…/+/2`,
+                                // `…/4/+`) never arrives here — Space.write expands a pattern into
+                                // one concrete key write per match (the pattern.hasPattern()
+                                // branch), which is the deliberate way to fill a column or a row.
+                                // This guard is for a leaf/name address, which keeps the old append
+                                // rather than throwing on a non-index key.
+                                final boolean addressed = !relative.path().isEmpty()
+                                        && CommonUtil.isInt(relative.path().getFirst());
+                                Helper.resolveWrite(LOG, space, base.furi(),
+                                        addressed
+                                                ? base.poly().asLst().at(relative, obj, MUTABLE)
+                                                : base.poly().asLst().append(obj),
+                                        directWriter, directReader);
+                            }
                             else {
                                 writeComplete(obj, base.poly());
                                 return directWriter.apply(vid, obj);
