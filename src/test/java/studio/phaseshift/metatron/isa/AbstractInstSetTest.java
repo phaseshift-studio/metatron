@@ -51,10 +51,19 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
     protected void setup() {
         this.space = this.spaceSupplier.get();
         if (null != this.space) {
-            this.space.setup();
             if (this.space.vid() == null)
                 LOG.warn("provided space has no vid and thus can not be shutdown automatically");
+            // MOUNT BEFORE SETUP. Both production imports do it in this order
+            // (InstSet.INSTSET_TYPE's constructor and importInstSetStream: addSpace, then setup).
+            // It matters: an instset's setup() doc-wraps every definition it declares, and
+            // QCollection.internalDocWrap resolves the owning space of each id via getSpaceFor.
+            // With the instset not yet mounted, those ~78 documentation writes fall through to the
+            // enclosing space's doc-query space, where each deep write costs tens of milliseconds
+            // (measured ~4.2s per setup, versus ~0.1s once the instset is mounted first). Since this
+            // fixture runs per @ParameterizedTest row, the wrong order made every row of
+            // mathInstSetTest — as()-heavy or not — pay that cost.
             Machine.current().memory().addSpace(this.space);
+            this.space.setup();
         }
     }
 

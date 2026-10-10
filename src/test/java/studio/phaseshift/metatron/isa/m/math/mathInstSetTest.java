@@ -47,7 +47,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 public class mathInstSetTest extends AbstractInstSetTest {
 
     public mathInstSetTest() {
@@ -60,7 +59,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "cmplx::[1.0,2.0] + cmplx::[-1.0,3.0]                  % cmplx::[0.0,5.0]",
             "cmplx::[1.0,2.0] - cmplx::[3.0,4.0]                   % cmplx::[-2.0,-2.0]",
             "cmplx::[1.0,2.0] * cmplx::[3.0,4.0]                   % cmplx::[-5.0,10.0]",
-            "cmplx::[1.0,2.0] / cmplx::[1.0,1.0]                   % cmplx::[1.5,0.5]",
+            "cmplx::[1.0,2.0].div(cmplx::[1.0,1.0])                % cmplx::[1.5,0.5]",
             // unary
             "cmplx::[1.0,2.0].neg()                                % cmplx::[-1.0,-2.0]",
             "cmplx::[1.0,1.0].inv()                                % cmplx::[0.5,-0.5]",
