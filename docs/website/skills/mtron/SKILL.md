@@ -450,6 +450,16 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, casting, lowest common
   denominator.
 
+**Execution & the machine**
+
+* [mach instruction set](references/mach-instset-mtron.md) -- `/m/mach`: the machine (`machine::T` and its five slots,
+  and how a machine nests as a frame of reference) and, at its centre, the compiler as four atomic stages --
+  `parser::T` (the language seam: any language can be parsed as long as it generates `code::T`) -> `rewriter::T` ->
+  `resolver::T` (the walk plus its two collaborators, selector and binder) -> `typer::T` -- each an optional rec entry
+  with a default, so `compiler::[=>]` is the default compiler and naming one entry overrides that stage. Then the
+  processor that runs what the compiler produced, the other slots, threads, and the recipe for hosting another
+  language.
+
 **Spaces & data sources**
 
 * [sys instruction set + fsSpace](references/sys-instset-mtron.md) -- one file, two docs: `/m/sys` (the guarded `bash`

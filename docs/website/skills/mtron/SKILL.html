@@ -297,6 +297,7 @@
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -804,6 +805,16 @@ evaluation model.</li>
 <li><a href="references/type-system-mtron.html">mtron type system</a> -- vid/tid, coefficients, the universal type, defining types,
 predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, casting, lowest common
 denominator.</li>
+</ul>
+<p><strong>Execution &amp; the machine</strong></p>
+<ul>
+<li><a href="references/mach-instset-mtron.html">mach instruction set</a> -- <code>/m/mach</code>: the machine (<code>machine::T</code> and its five slots,
+and how a machine nests as a frame of reference) and, at its centre, the compiler as four atomic stages --
+<code>parser::T</code> (the language seam: any language can be parsed as long as it generates <code>code::T</code>) -&gt; <code>rewriter::T</code> -&gt;
+<code>resolver::T</code> (the walk plus its two collaborators, selector and binder) -&gt; <code>typer::T</code> -- each an optional rec entry
+with a default, so <code>compiler::[=&gt;]</code> is the default compiler and naming one entry overrides that stage. Then the
+processor that runs what the compiler produced, the other slots, threads, and the recipe for hosting another
+language.</li>
 </ul>
 <p><strong>Spaces &amp; data sources</strong></p>
 <ul>
