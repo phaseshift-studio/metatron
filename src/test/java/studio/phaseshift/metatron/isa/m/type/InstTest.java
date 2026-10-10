@@ -374,7 +374,7 @@ public class InstTest extends AbstractObjTest {
                 Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(noobj()))),
                 Tuple.Pair.with(noobj(), start_(jnt(2)).mult(noobj())),
                 Tuple.Pair.with(noobj(), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(noobj())).mult(noobj())))) {
-            LOG.trace("\n\ntesting %s == %s", item.get1(), item.get0());
+            LOG.warn("\n\ntesting %s == %s", item.get1(), item.get0());
             assertEquals(item.get0(), item.get1().apply());
         }
     }

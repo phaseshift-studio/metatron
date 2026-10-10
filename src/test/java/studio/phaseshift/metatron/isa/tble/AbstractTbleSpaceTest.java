@@ -387,10 +387,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
     @Override
     public String make(final String expression, final Method testMethod) {
-        // For testMonoUpdate, $$ → db: so seed data writes to db:<collection>/<docId>
-        // and update/read expressions resolve to the same two-segment document paths.
-        if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) ||
-                "testUpdateWrite".equals(testMethod.getName()))) {
+        // testMonoUpdate addresses documents by name ($$/people/1), not the
+        // a<b> table/row scheme below — fall through to the base mapping so $$
+        // becomes the space's base URI instead of leaking to the root memSpace.
+        if (testMethod != null && "testUpdateWrite".equals(testMethod.getName())) {
             if (!expression.contains("$$")) return expression;
             // a/b/c URI scheme: strip $$/, strip b-prefix from numeric entries,
             // keep a (table) and c (field) prefixes as part of the name.
@@ -1791,6 +1791,48 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             runRewriteTest(description, code, expected);
         } finally {
             cleanKVData();
+        }
+    }
+
+    // =========================================================================
+    //  KV wildcard reads that descend PAST the stored row
+    // =========================================================================
+
+    /**
+     * A wildcard read whose pattern descends past the row holding the value —
+     * {@code kv/<collection>/<entry>/+/<field>} — must find that parent row so
+     * Java-level {@code unrollPoly} can decompose the stored rec.
+     * <p>
+     * The MQTT-indexed KV schema used by MariaDB/MySQL narrowed such a read in SQL:
+     * the exact segment after the wildcard was compared against the wrong
+     * {@code segN} column, and its ancestor fallback built its prefix with
+     * {@code retractPattern()} (which only strips <em>trailing</em> wildcards, so the
+     * literal tail stayed in it). The parent rows never came back and the field read
+     * collapsed to a single value instead of one per stored row.
+     * <p>
+     * Each CSV row uses its own collection so parallel test execution cannot have one
+     * row's setup/cleanup race another's.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "kv/descent_name    %  name       %  {4}'Optimus Prime'",
+            "kv/descent_nested  %  meta/city  %  {4}'NYC'",
+    }, delimiter = '%')
+    public void testKVWildcardReadDescendsIntoStoredRec(String collection, String fieldPath,
+                                                        String expectedEncoded) throws Exception {
+        final fURI base = f("db:" + collection + "/people");
+        for (int i = 1; i <= 4; i++)
+            Machine.write(base.extend(String.valueOf(i)),
+                    rec(uri(NAME), str("Optimus Prime"),
+                            uri("meta"), rec(uri("city"), str("NYC"))));
+        try {
+            final Obj actual = ObjmtronSerializer.parse(
+                    "*" + base + "/+/" + fieldPath).apply().selfVID(null);
+            final Obj expected = ObjmtronSerializer.parse(expectedEncoded).apply();
+            assertEquals(expected, actual,
+                    collection + "/+/" + fieldPath + " should yield one value per stored row");
+        } finally {
+            Machine.current().memory().write(f("db:" + collection + "/#"), noobj());
         }
     }
 

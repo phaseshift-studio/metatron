@@ -23,10 +23,12 @@ import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
+import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.MQLRewriteUtils;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -172,7 +174,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                         return result.get("total", Number.class);
                                     }
                                     return 0;
-                                }
+                                },
+                                dcmntInstSet::summablePath
                         ),
 
                         // Optimize: *collection.>>field.sum() → MongoDB aggregation $sum on that field
@@ -192,7 +195,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                     }
                                     return 0;
                                 },
-                                null
+                                dcmntInstSet::summablePath
                         ),
 
                         // Optimize: *collection.mean() → MongoDB aggregation $avg
@@ -221,8 +224,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 (space, dp, limit) -> {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    final fURI baseUri = dp.spaceURI();
-                                    return readDocumentsAsObjs(collection, baseUri, space, (int) limit);
+                                    return readDocumentsAsObjs(collection, space, (int) limit);
                                 }
                         ),
 
@@ -233,12 +235,11 @@ public class dcmntInstSet extends AbstractInstSet {
                                 (space, dp, predicateStr) -> {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    final fURI baseUri = dp.spaceURI();
                                     final Bson filter = parseMongoFilter(predicateStr);
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
-                                    return readFilteredDocumentsAsObjs(collection, baseUri, space, filter);
+                                    return readFilteredDocumentsAsObjs(collection, space, filter);
                                 },
                                 MQLRewriteUtils.PREDICATE_JOINER,
                                 MQLRewriteUtils.CONDITION_FORMATTER
@@ -268,17 +269,19 @@ public class dcmntInstSet extends AbstractInstSet {
                                 (space, dp, predicateStr, limit) -> {
                                     final String collectionName = dp.collection();
                                     final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
-                                    final fURI baseUri = dp.spaceURI();
                                     final Bson filter = parseMongoFilter(predicateStr);
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
+                                    final Type collectionType = collectionType(space, collectionName);
                                     return objs(IteratorUtil.stream(collection.find(filter).limit((int) limit).iterator()).map(doc -> {
                                         final Object docId = doc.get(ID_FIELD_STRING);
                                         final String idStr = docId instanceof org.bson.types.ObjectId oid
                                                 ? oid.toHexString() : docId.toString();
-                                        final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
-                                        return space.getSerializer().read(doc.toBsonDocument()).selfVID(docUri);
+                                        return typeDocument(
+                                                space.getSerializer().read(doc.toBsonDocument())
+                                                        .selfVID(documentVID(space, collectionName, idStr)),
+                                                collectionType);
                                     }));
                                 }
                         ),
@@ -319,22 +322,46 @@ public class dcmntInstSet extends AbstractInstSet {
     // ==================== Helper Methods for Rewrites ====================
 
     /**
+     * Stamp a document with its collection's declared Type.  A bare
+     * {@code rec::T} is not a refinement of the collection's type, so a
+     * document read by a native rewrite must be typed to its collection to
+     * remain a valid instance of the collection schema.  No-op when the
+     * collection has no declared type.
+     */
+    private static Type collectionType(final dcmntSpace space, final String collectionName) {
+        return space.schema().types().stream()
+                .filter(t -> t.vid().name().equalsIgnoreCase(collectionName))
+                .findFirst().orElse(null);
+    }
+
+    private static Obj typeDocument(final Obj document, final Type collectionType) {
+        // Only type a document the collection type actually accepts: Mongo's own
+        // `_id` is part of the document body (unlike a SQL primary key), so a
+        // closed collection type rejects it.  Stamping a non-instance would make
+        // the native rewrites fail their result-type check.
+        return collectionType == null || !document.test(collectionType)
+                ? document : document.tid(collectionType.vid());
+    }
+
+    /**
      * Read documents from a collection with an optional limit, returning as Objs.
      */
     private static Obj readDocumentsAsObjs(final MongoCollection<Document> collection,
-                                           final fURI baseUri,
                                            final dcmntSpace space,
                                            final int limit) {
         // MongoDB's find().limit(0) means "no limit" (returns everything), unlike SQL
         // LIMIT 0 (returns nothing) — so guard the zero case explicitly.
         if (limit == 0)
             return noobj();
+        final String collectionName = collection.getNamespace().getCollectionName();
+        final Type collectionType = collectionType(space, collectionName);
         return objs(IteratorUtil.stream(collection.find().limit(limit).iterator()).map(doc -> {
             final Object docId = doc.get(ID_FIELD_STRING);
             final String idStr = docId instanceof org.bson.types.ObjectId oid
                     ? oid.toHexString() : docId.toString();
-            final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
-            return space.getSerializer().read(doc.toBsonDocument()).selfVID(docUri);
+            return typeDocument(
+                    space.getSerializer().read(doc.toBsonDocument()).selfVID(documentVID(space, collectionName, idStr)),
+                    collectionType);
         }));
     }
 
@@ -342,16 +369,44 @@ public class dcmntInstSet extends AbstractInstSet {
      * Read filtered documents from a collection, returning as Objs.
      */
     private static Obj readFilteredDocumentsAsObjs(final MongoCollection<Document> collection,
-                                                   final fURI baseUri,
                                                    final dcmntSpace space,
                                                    final Bson filter) {
+        final String collectionName = collection.getNamespace().getCollectionName();
+        final Type collectionType = collectionType(space, collectionName);
         return objs(IteratorUtil.stream(collection.find(filter).iterator()).map(doc -> {
             final Object docId = doc.get(ID_FIELD_STRING);
             final String idStr = docId instanceof org.bson.types.ObjectId oid
                     ? oid.toHexString() : docId.toString();
-            final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
-            return space.getSerializer().read(doc.toBsonDocument()).selfVID(docUri);
+            return typeDocument(
+                    space.getSerializer().read(doc.toBsonDocument()).selfVID(documentVID(space, collectionName, idStr)),
+                    collectionType);
         }));
+    }
+
+    /**
+     * The external VID of a document, built exactly the way the generic dcmnt
+     * read path builds it (space pattern, then collection, then id).  Using the
+     * scheme-less {@code DataPath.spaceURI()} instead produced a VID like
+     * {@code users/user1}, which routes to the root memSpace rather than back to
+     * this space.
+     */
+    private static fURI documentVID(final dcmntSpace space, final String collectionName, final String id) {
+        return space.pattern().retractPattern().extend(collectionName).extend(id);
+    }
+
+    /**
+     * Guard for the native {@code sum} aggregations: MongoDB can only sum a
+     * concrete field.  A wildcard field (a {@code collection/entry/+} walk over
+     * a sub-document's values) is not representable as {@code $sum}, and the
+     * rewrite used to emit {@code $sum: "$+"} — which silently aggregates to 0.
+     * Declining the rewrite lets the generic in-memory sum handle those paths.
+     */
+    private static boolean summablePath(final dcmntSpace space, final List<Inst> matches) {
+        final Obj ref = matches.getFirst().arg(0);
+        if (!ref.isUri())
+            return false;
+        final DataPath dp = DataPath.withoutDB(space.redirect(ref.uriValue(), true));
+        return !dp.fieldIsWildcard();
     }
 
     /**

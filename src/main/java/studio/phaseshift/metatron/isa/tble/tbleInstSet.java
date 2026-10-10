@@ -239,30 +239,30 @@ public class tbleInstSet extends AbstractInstSet {
                                         final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
                                         final List<String> pkColumns = new ArrayList<>();
                                         try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
-                                            while (pkRs.next()) {
+                                            while (pkRs.next())
                                                 pkColumns.add(pkRs.getString("COLUMN_NAME"));
-                                            }
                                         }
 
-                                        // Read rows and stamp routable VIDs for space routing
+                                        // Read rows, stamping each with the table's type and a
+                                        // routable VID.  readRow() omits PK columns from the row
+                                        // body by design (the PK lives in the URI), so the PK
+                                        // values are read straight off the ResultSet — reading
+                                        // them from the row produced "db:users/noobj".
+                                        final Type tableType = space.schemaInstset().types().stream()
+                                                .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
+                                                .findFirst().orElse(null);
                                         final Objs rows = objs0();
                                         while (rs.next()) {
                                             final Rec row = space.existingTableSchema.readRow(rs, tableName);
-                                            final Rec coerced = row;
-                                            /*final Rec coerced = space.existingTableSchema != null
-                                                    ? space.existingTableSchema.coerceRow(tableName, row)
-                                                    : row;*/
-                                            final fURI prefix = externalPrefix.apply(space);
-                                            final fURI rowVID =
-                                                    pkColumns.isEmpty()
-                                                            ? prefix.extend(tableName).extend(coerced.at(uri("id")).toString())
-                                                            : pkColumns.stream()
-                                                            .map(col -> coerced.at(uri(col)).toString())
-                                                            .reduce(prefix.extend(tableName),
-                                                                    (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b);
-
-                                            rows.append(coerced.selfVID(rowVID));
+                                            fURI rowVID = externalPrefix.apply(space).extend(tableName);
+                                            for (final String pk : pkColumns) {
+                                                final String pkValue = rs.getString(pk);
+                                                if (pkValue != null)
+                                                    rowVID = rowVID.extend(pkValue);
+                                            }
+                                            final Rec typed = tableType == null
+                                                    ? row : (Rec) row.tid(tableType.vid());
+                                            rows.append(typed.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
                                     } catch (SQLException e) {
@@ -300,26 +300,27 @@ public class tbleInstSet extends AbstractInstSet {
                                         final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
                                         final List<String> pkColumns = new ArrayList<>();
                                         try (final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)) {
-                                            while (pkRs.next()) {
+                                            while (pkRs.next())
                                                 pkColumns.add(pkRs.getString("COLUMN_NAME"));
-                                            }
                                         }
 
-                                        // Read rows and stamp routable VIDs for space routing
+                                        // Rows carry the table type + a routable VID — see
+                                        // the LIMIT rewrite above.
+                                        final Type tableType = space.schemaInstset().types().stream()
+                                                .filter(t -> t.vid().name().equalsIgnoreCase(tableName))
+                                                .findFirst().orElse(null);
                                         final Objs rows = objs0();
                                         while (rs.next()) {
                                             final Rec row = space.existingTableSchema.readRow(rs, tableName);
-                                            final fURI prefix = externalPrefix.apply(space);
-                                            final fURI rowVID =
-                                                    pkColumns.isEmpty()
-                                                            ? prefix.extend(tableName).extend(row.at(uri("id")).toString())
-                                                            : pkColumns.stream()
-                                                            .map(col -> row.at(uri(col)).toString())
-                                                            .reduce(prefix.extend(tableName),
-                                                                    (vid, seg) -> vid.extend(seg),
-                                                                    (a, b) -> b);
-
-                                            rows.append(row.selfVID(rowVID));
+                                            fURI rowVID = externalPrefix.apply(space).extend(tableName);
+                                            for (final String pk : pkColumns) {
+                                                final String pkValue = rs.getString(pk);
+                                                if (pkValue != null)
+                                                    rowVID = rowVID.extend(pkValue);
+                                            }
+                                            final Rec typed = tableType == null
+                                                    ? row : (Rec) row.tid(tableType.vid());
+                                            rows.append(typed.selfVID(rowVID));
                                         }
                                         return rows.asObjs();
                                     } catch (SQLException e) {
@@ -904,26 +905,30 @@ public class tbleInstSet extends AbstractInstSet {
                 if (whereClause == null)
                     return matchedInsts.stream().map(Obj::asInst).toList();
 
-                final String sql = "SELECT furi, obj FROM kv_store WHERE "
-                        + whereClause + " LIMIT " + limitValue;
-
+                // The projection and the row decoding belong to the schema: the
+                // JSON schemas keep every object in a single `obj` column, while
+                // TypedKeyValueSchema stores discrete typed columns.  A hand-rolled
+                // "SELECT furi, obj" therefore fails on the typed backends and
+                // decodes with the wrong serializer on the JSON ones.
                 return java.util.List.of(instC(
-                        this.rewriteTid.dom(ALL_STAR).rng(this.resultTid),
+                        this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
                         lst(uri(expandedfURI), jnt(limitValue)),
                         (lhs, inst) -> {
-                            try (final Statement stmt = typedSpace.sjvm().createStatement();
-                                 final ResultSet rs = stmt.executeQuery(sql)) {
+                            try {
                                 final Objs rows = objs0();
-                                while (rs.next()) {
-                                    final fURI rowFuri = f(rs.getString("furi"));
-                                    final Obj deserialized = ObjJSONSerializer.parse(rs.getString("obj"));
-                                    // rowFuri is already in external form from the KV store
-                                    final fURI rowVID = rowFuri;
-                                    rows.append(deserialized.selfVID(rowVID));
+                                final Iterator<Space.IdObj> entries = typedSpace.schema
+                                        .readWhere(typedSpace.sjvm(), whereClause, limitValue);
+                                while (entries.hasNext()) {
+                                    final Space.IdObj entry = entries.next();
+                                    // stored furi is space-internal; route it back out
+                                    // so the VID matches what a generic kv read yields.
+                                    final fURI rowVID =
+                                            Space.Helper.routeToSpace(entry.furi(), typedSpace.routes());
+                                    rows.append(entry.obj().selfVID(rowVID));
                                 }
                                 return rows.asObjs();
                             } catch (SQLException e) {
-                                throw MTronException.of(e, "%s", sql);
+                                throw MTronException.of(e, "%s", whereClause);
                             }
                         }
                 ));

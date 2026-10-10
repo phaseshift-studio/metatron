@@ -116,6 +116,22 @@ public class SimpleKeyValueSchema implements TableSchema {
     }
 
     @Override
+    public Iterator<Space.IdObj> readWhere(final Connection conn, final String whereClause,
+                                           final long limit) throws SQLException {
+        final String sql = "SELECT furi, obj FROM " + TABLE_NAME
+                + " WHERE " + whereClause + " LIMIT " + limit + ";";
+        try (final PreparedStatement stmt = conn.prepareStatement(sql);
+             final ResultSet rs = stmt.executeQuery()) {
+            final List<Space.IdObj> results = new ArrayList<>();
+            while (rs.next()) {
+                results.add(Space.IdObj.of(f(rs.getString("furi")),
+                        ObjJSONSerializer.simple().inputBytes(rs.getString("obj"))));
+            }
+            return results.iterator();
+        }
+    }
+
+    @Override
     public int delete(final Connection conn, final fURI furi) throws SQLException {
         final String sql = "DELETE FROM " + TABLE_NAME + " WHERE furi = ?;";
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {

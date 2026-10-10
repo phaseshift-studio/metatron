@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -52,13 +51,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -73,10 +69,8 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                     .tid(SPACE_TID)
                     .vid(MQTT_SPACE_TID)
                     .isaPredicate(rec(uri(HOST), URI_TYPE))
-                    .constructor(
-                            instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
-                                    lst(mInstSet.REC_TYPE), (lhs, inst) ->
-                                            mqttSpace.of(inst.arg(0).asRec().apply().asRec(), inst.arg(0).vid()))).create();
+                    .constructor(arg -> mqttSpace.of(arg.asRec().apply().asRec(), arg.vid()))
+                    .create();
 
     protected final fURI broker;
     protected final memSpace cache;
@@ -122,7 +116,12 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} route established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), config.getOrDefault(uri(ROUTE), rec()), uri(this.redirect(this.pattern(), false)));
-        this.cache = memSpace.of(this.pattern(), null);
+        // An internal mirror, reached only through this field — it must NOT self-register into the
+        // machine's space index. Registered, it carries the same pattern as the space itself, so
+        // Memory.findSpace can resolve /t/... addresses to this empty cache instead of the space:
+        // the mqttSpace.write() override is then bypassed and any qproc write fails checkSpaceQProcs
+        // ("no subq query processor attached to memspace [/t/#]").
+        this.cache = memSpace.unregistered(this.pattern(), null);
         if (this.at(SERIALIZER).isNoObj())
             this.at(uri(SERIALIZER), ObjJSONSerializer.simple(), MUTABLE);
         LOG.info("%s serializer loaded: %s", this.tid(), this.at(SERIALIZER));

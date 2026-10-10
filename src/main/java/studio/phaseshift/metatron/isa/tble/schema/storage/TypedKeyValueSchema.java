@@ -58,6 +58,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 public class TypedKeyValueSchema implements TableSchema {
 
     private static final String TABLE_NAME = "kv_store";
+    private static final String SELECT_COLUMNS =
+            "furi, type, tid, bool_val, int_val, real_val, str_val, complex_val";
     private static final ObjmtronSerializer SERIALIZER = ObjmtronSerializer.single();
 
     @Override
@@ -187,16 +189,39 @@ public class TypedKeyValueSchema implements TableSchema {
 
         if (pattern.hasPattern()) {
             // Pattern query - return all objects
-            sql = "SELECT furi, type, tid, bool_val, int_val, real_val, str_val, complex_val FROM " + TABLE_NAME + ";";
+            sql = "SELECT " + SELECT_COLUMNS + " FROM " + TABLE_NAME + ";";
             stmt = conn.prepareStatement(sql);
         } else {
             // Exact match query
-            sql = "SELECT furi, type, tid, bool_val, int_val, real_val, str_val, complex_val FROM " + TABLE_NAME + " WHERE furi = ?;";
+            sql = "SELECT " + SELECT_COLUMNS + " FROM " + TABLE_NAME + " WHERE furi = ?;";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, pattern.toString());
         }
 
         final ResultSet rs = stmt.executeQuery();
+        final List<Space.IdObj> results = decode(rs);
+
+        rs.close();
+        stmt.close();
+
+        return results.iterator();
+    }
+
+    @Override
+    public Iterator<Space.IdObj> readWhere(final Connection conn, final String whereClause,
+                                           final long limit) throws SQLException {
+        final String sql = "SELECT " + SELECT_COLUMNS + " FROM " + TABLE_NAME
+                + " WHERE " + whereClause + " LIMIT " + limit + ";";
+        try (final PreparedStatement stmt = conn.prepareStatement(sql);
+             final ResultSet rs = stmt.executeQuery()) {
+            return decode(rs).iterator();
+        }
+    }
+
+    /**
+     * Reconstruct the objects stored in the rows of a typed-column result set.
+     */
+    private List<Space.IdObj> decode(final ResultSet rs) throws SQLException {
         final List<Space.IdObj> results = new ArrayList<>();
 
         while (rs.next()) {
@@ -230,11 +255,7 @@ public class TypedKeyValueSchema implements TableSchema {
 
             results.add(Space.IdObj.of(furi, obj));
         }
-
-        rs.close();
-        stmt.close();
-
-        return results.iterator();
+        return results;
     }
 
     @Override

@@ -24,15 +24,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.tble.schema.storage.SimpleKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
+import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -219,6 +225,92 @@ public class fURIAwareIndexedSchemaTest extends AbstractMetatronTest {
         // Combination
         assertTrue(f("/a/b/c/d/e").test(f("/a/+/c/#")));
         assertFalse(f("/a/b/d/e").test(f("/a/+/c/#")));
+    }
+
+    // =========================================================================
+    //  MQTT-indexed pattern reads — the schema MariaDB/MySQL use
+    // =========================================================================
+
+    private static final int SEGMENT_COLUMNS = 7;
+
+    /**
+     * A pattern that descends PAST the row holding the value
+     * ({@code kv/test/people/+/name}, where the rec lives at {@code kv/test/people/1}) must
+     * return the stored parent rows, so the caller's Java-side {@code unrollPoly} can
+     * decompose the rec. The read used to compare the post-wildcard literal against the
+     * wrong {@code segN} column, and its ancestor fallback built its prefix with
+     * {@code retractPattern()} — which only strips <em>trailing</em> wildcards, so the
+     * literal tail stayed in the prefix. The parent rows never came back and the field read
+     * collapsed to a single value on MariaDB/MySQL.
+     * <p>
+     * SQLite has no {@code SUBSTRING_INDEX}, so the generated columns this schema creates on
+     * MariaDB/MySQL cannot be created here. The table is built by hand with the {@code segN}
+     * values those generated columns hold, which is what makes the SQL testable on the host.
+     */
+    @Test
+    public void testPatternDescendingPastStoredRowReturnsParents() throws SQLException {
+        createMqttStore();
+        for (int i = 1; i <= 4; i++)
+            insertMqttRow("kv/test/people/" + i, "[name=>'Optimus Prime',meta=>[city=>'NYC']]");
+
+        final TableSchema mqtt = new fURIAwareIndexedSchema();
+
+        final List<fURI> descent = furis(mqtt.read(conn, f("kv/test/people/+/name")));
+        assertEquals(4, descent.size(),
+                "a descending pattern must return the parent rows for unrollPoly: " + descent);
+        assertTrue(descent.stream().allMatch(u -> u.toString().startsWith("kv/test/people/")),
+                "expected the stored parent rows, got: " + descent);
+
+        // the non-descending fast path (segN equality) is unchanged
+        assertEquals(4, furis(mqtt.read(conn, f("kv/test/people/+"))).size(),
+                "a trailing wildcard should still match through the segN columns");
+    }
+
+    /** Builds {@code kv_store} the way {@link fURIAwareIndexedSchema#initialize} would, minus SUBSTRING_INDEX. */
+    private void createMqttStore() throws SQLException {
+        final StringBuilder ddl = new StringBuilder(
+                "CREATE TABLE kv_store (furi VARCHAR(512) NOT NULL PRIMARY KEY, obj TEXT NOT NULL");
+        for (int n = 1; n <= SEGMENT_COLUMNS; n++)
+            ddl.append(", seg").append(n).append(" VARCHAR(128)");
+        ddl.append(")");
+        try (final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DROP TABLE IF EXISTS kv_store");
+            stmt.executeUpdate(ddl.toString());
+        }
+    }
+
+    /**
+     * Inserts a row with the {@code segN} values the generated columns derive from
+     * {@code furi}: {@code segN = SUBSTRING_INDEX(SUBSTRING_INDEX(furi,'/',N+1),'/',-1)} —
+     * element N (0-based), or the last element when the furi is shorter, with an empty
+     * element as NULL. The furi is stored verbatim, as the space stores it (it routes the
+     * scheme away before handing the path to the schema).
+     */
+    private void insertMqttRow(final String furi, final String obj) throws SQLException {
+        final String[] parts = furi.split("/");
+        final StringBuilder columns = new StringBuilder("furi, obj");
+        final StringBuilder values = new StringBuilder("?, ?");
+        final List<String> params = new ArrayList<>();
+        params.add(furi);
+        params.add(obj);
+        for (int n = 1; n <= SEGMENT_COLUMNS; n++) {
+            columns.append(", seg").append(n);
+            values.append(", ?");
+            final String element = parts[Math.min(n, parts.length - 1)];
+            params.add(element.isEmpty() ? null : element);
+        }
+        try (final PreparedStatement stmt = conn.prepareStatement(
+                "INSERT INTO kv_store (" + columns + ") VALUES (" + values + ")")) {
+            for (int i = 0; i < params.size(); i++)
+                stmt.setString(i + 1, params.get(i));
+            stmt.executeUpdate();
+        }
+    }
+
+    private static List<fURI> furis(final Iterator<Space.IdObj> rows) {
+        final List<fURI> result = new ArrayList<>();
+        rows.forEachRemaining(row -> result.add(row.furi()));
+        return result;
     }
 
     private double extractValue(final String json) {
