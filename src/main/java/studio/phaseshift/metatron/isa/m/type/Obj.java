@@ -1195,7 +1195,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         public static void objCheckAndSave(final Obj obj) {
             objTypeCheck(obj);
             // RO_TEST (read-only type-test mode): check only, skip the incidental space write
-            if (!BootLoader.RO_TEST && null != obj.vid() && !obj.isType())
+            // A Space (and an InstSet, which is a Space) is a container registered via addSpace/import, not a value
+            // to be written at its own vid — writing it back into itself is what a catch-all used to swallow.
+            if (!BootLoader.RO_TEST && null != obj.vid() && !obj.isType() && !obj.isSpace())
                 Machine.write(obj.vid(), obj);
         }
 
@@ -1522,7 +1524,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
                     docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(B.maybeSome()), lst(URI_TYPE), (lhs, inst) -> {
                                 final Obj readObj = Machine.read(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
-                                return readObj.isType() ? readObj : readObj.clone().selfVID(null);
+                                return readObj.isType() || readObj.isMachine() ? readObj : readObj.clone().selfVID(null);
                             }), // TODO: only resolves when explicit mono args (not code args)
                             "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
                             "*abc        [-- obj at abc                            --]",

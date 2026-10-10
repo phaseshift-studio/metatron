@@ -569,9 +569,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         }
                         return noobj();
                     }),
-                    f("/sys/thread/main")), "this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure");
+                    f("~/thread/main")), "this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure");
             systemThread.applyAsync();
-            Machine.write("/sys/thread/main", systemThread);
+            Machine.write("~/thread/main", systemThread);
             BootLoader.CURRENT_THREAD.set(systemThread);
             /// /// SET THE CLUSTER SINGLETON /// ///
             // Installed HERE, not with the other /sys registries earlier in boot: at that point the space that

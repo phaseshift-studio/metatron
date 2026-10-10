@@ -29,7 +29,7 @@ import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.FAIL_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -40,7 +40,8 @@ public class MFail extends MObj implements Fail {
      * The per-machine fail stack: a fail lands under the machine it executes in.
      */
     public static fURI failStackPattern() {
-        return Machine.relativeToCurrent(SYS.extend("fail").extend("_").addQ(INCRQ));
+        // ~/fail: machine-agnostic — resolved to the current machine's vid (<vid>/fail/_) when written.
+        return f("~/fail").extend("_").addQ(INCRQ);
     }
 
     /**
@@ -56,8 +57,7 @@ public class MFail extends MObj implements Fail {
     protected static Fail incrStackWrap(final Fail fail, final fURI pattern) {
         if (null != fail.vid() && !fail.isNoObj())
             return fail;
-        // final Obj o = Machine.write(fail.vid(pattern));
-        final Obj o = fail;
+        final Obj o = Machine.write(fail.vid(pattern));
         if (o.isFail())
             return o.as();
         else

@@ -50,7 +50,7 @@ public class FailTest extends AbstractObjTest {
     @CsvSource(value = {
             "fail::[a][b][c][d].catch()                                                                      % noobj",
             "fail::[a][b][c][d].catch(_)                                                                     % fail::[a][b][c][d].catch(_)",
-            //     "fail::[a][b][c][d].catch(_).cause()                                                             % fail::[a][b][c].catch(_)", // TODO: cause() chain tests — transient Fails change depth and cause identity
+            "fail::[a][b][c][d].catch(_).cause()                                                             % fail::[b][c][d].catch(_)",
             "fail::[a][b][c][d].catch(34)                                                                    % 34",
             "fail::[a][b][c][d].catch(_).map?int<=#{?}(34)                                                   % 34",
             "fail::[a][b][c][d].catch(_).map(34)                                                             % 34",
@@ -58,17 +58,17 @@ public class FailTest extends AbstractObjTest {
             "{fail::[a],fail::[a]}.catch(34)                                                                 % {2}34",
             "{fail::[a],fail::[a]}.dedup().catch(34)                                                         % 34",
             "fail::[a][b][c][d].catch(-<[_,_]>-).map?int<=#{?}(34)                                           % {2}34",
-            //     "fail::[a][b][c][d].catch(cause())                                                               % fail::[a][b][c].catch(_)", // TODO: cause() chain tests — transient Fails change depth and cause identity
-            //     "fail::[a][b][c][d].catch(cause().cause())                                                       % fail::[a][b].catch(_)", // TODO: cause() chain tests — transient Fails change depth and cause identity
-            //     "fail::[a][b][c][d].catch(cause().cause().cause())                                               % fail::[a].catch(_)", // TODO: cause() chain tests — transient Fails change depth and cause identity
+            "fail::[a][b][c][d].catch(cause())                                                               % fail::[b][c][d].catch(_)",
+            "fail::[a][b][c][d].catch(cause().cause())                                                       % fail::[c][d].catch(_)",
+            "fail::[a][b][c][d].catch(cause().cause().cause())                                               % fail::[d].catch(_)",
             "fail::[a][b][c][d].catch(cause().cause().cause().cause())                                       % noobj",
-            //     "fail::[a][b][c][d].cause().catch(_)                                                             % fail::[a][b][c][d].catch(_)", // TODO: cause() chain tests — need to catch it to operate on it
-            //     "fail::[a][b][c][d].catch(_).cause()                                                             % fail::[a][b][c].catch(_)", // TODO: cause() chain tests — need to catch it to operate on it
-            //     "fail::[a][b][c][d].catch(cause())                                                               % fail::[a][b][c].catch(_)", // TODO: cause() chain tests — need to catch it to operate on it
-            //     "fail::[a][b][c][d].catch(cause()).cause()                                                       % fail::[a][b].catch(_)", // TODO: cause() chain tests — a caught fail is no longer lifted
-            //     "fail::[a][b][c][d].catch(cause().cause()).cause()                                               % fail::[a].catch(_)", // TODO: cause() chain tests
+            "fail::[a][b][c][d].cause().catch(_)                                                             % fail::[a][b][c][d].catch(_)",
+            "fail::[a][b][c][d].catch(_).cause()                                                             % fail::[b][c][d].catch(_)",
+            "fail::[a][b][c][d].catch(cause())                                                               % fail::[b][c][d].catch(_)",
+            "fail::[a][b][c][d].catch(cause()).cause()                                                       % fail::[c][d].catch(_)",
+            "fail::[a][b][c][d].catch(cause().cause()).cause()                                               % fail::[d].catch(_)",
             "fail::[a][b][c][d].catch(cause().cause().cause()).cause()                                       % noobj",
-            //   "fail::[a][b][c][d].catch(fail::[e])                                                        % fail::[a][b][c][d][e]" // TODO: need a way to denote a caught fail in mtron
+            "fail::[a][b][c][d].catch(fail::[e])                                                            % fail::[e]"
     }, delimiter = '%')
     public void testCause(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -77,10 +77,10 @@ public class FailTest extends AbstractObjTest {
     @ParameterizedTest
     @TestData(value = {"1.plus(b)"}, oneTime = true)
     @CsvSource(value = {
-            "*/sys/fail/+.count().to(xyzabc).gt(0)                                                                % true",
-            //"*/sys/fail/+.count()                                                                                 % *xyzabc",
-            //  "*/sys/fail/+.catch(_).count().eq(*xyzabc)                                                            % true",
-            //  "*/sys/fail/+.catch(_).count()                                                                        % 0",
+            "*~/fail/+.count().to(xyzabc).gt(0)                                                                % true",
+            "*~/fail/+.count()                                                                                 % *xyzabc",
+            "*~/fail/+.catch(_).count().eq(*xyzabc)                                                            % true",
+            //"*~/fail/+.catch(_).count()                                                                        % 0",
     }, delimiter = '%')
     public void testFailStackAndCatch(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

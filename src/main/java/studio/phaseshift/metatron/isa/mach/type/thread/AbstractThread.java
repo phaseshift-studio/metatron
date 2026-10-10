@@ -119,7 +119,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
     }
 
     public AbstractThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, null == vid ? CommonUtil.mintShortUUID(f("/sys/thread"), true) : vid);
+        super(jvm, tid, null == vid ? CommonUtil.mintShortUUID(f("~/thread"), true) : vid);
         this.thread = null;
         if (!jvm.containsKey(uri(SOURCE))) {
             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();

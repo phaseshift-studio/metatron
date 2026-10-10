@@ -50,6 +50,10 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
     protected GraphittyLogger LOG;
 
     public AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+        this(sjvm, config, tid, vid, true);
+    }
+
+    protected AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid, final boolean autoRegister) {
         super(config, tid, vid);
         InstSet.JREService.Helper.verifyClass(this.getClass(), vid);
         this.sjvm = sjvm;
@@ -58,7 +62,10 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         LOG = Graphitty.log(this);
         // Don't auto-register InstSets - they're registered via import AFTER full construction.
         // A space self-registers into the memory of the machine being constructed IN (current), not the root.
-        if (Machine.loaded() && !(this instanceof Machine) && !(this instanceof InstSet))
+        // autoRegister=false is for spaces that are NOT frame-scoped (the thread-local arg stack, the root type
+        // cache): registering one of those into the current frame's own level would shadow the parent's /sys and
+        // /m spaces behind an empty catch-all.
+        if (autoRegister && Machine.loaded() && !(this instanceof Machine) && !(this instanceof InstSet))
             Machine.current().memory().addSpace(this);
     }
 

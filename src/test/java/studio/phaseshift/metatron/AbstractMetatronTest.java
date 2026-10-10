@@ -85,6 +85,59 @@ public abstract class AbstractMetatronTest {
         BOOTED = false;
     }
 
+    /**
+     * Pop every pushed frame until the root machine is current again, so a failed mid-script assertion never leaks a
+     * frame into the next test. No-op at the root.
+     */
+    protected void resetToRoot() {
+        // compare by vid, not object identity: after a scripted push/pop the current machine can be a distinct
+        // instance that still names the root (/.); popping a root whose parent isn't a Machine is a no-op, so an
+        // identity check would spin forever.
+        final fURI rootVID = Machine.defaultMachine().vid();
+        while (Machine.current() != null && !Machine.current().vid().equals(rootVID))
+            Machine.current().pop();
+    }
+
+    /**
+     * A stateful, sequential test script. Unlike {@code @CsvSource} — whose rows are independent and stateless — each
+     * line runs in order, so a machine can be pushed/popped mid-script and every observation is checked as it happens.
+     * This is the durable form of a console session: a thought about a mutation's consistency is ONE line.
+     * <p>
+     * Line forms:
+     * <pre>
+     *   [STATE] &lt;mtron&gt;            execute the mtron (mutate machine state: push, pop, write, …)
+     *   // &lt;comment&gt;               ignored (blank lines too)
+     *   &lt;code&gt; % &lt;expected&gt;        2 columns — checkCodeParseApply(code, expected); express relations with eq/neq/gt/…
+     *   &lt;lhs&gt; % &lt;rhs&gt; % &lt;equals&gt;   3 columns — checkEquality(eval(lhs), eval(rhs), equals)
+     * </pre>
+     */
+    protected void script(final String... lines) {
+        for (int i = 0; i < lines.length; i++) {
+            final String line = lines[i].trim();
+            if (line.isEmpty() || line.startsWith("//"))
+                continue;
+            try {
+                if (line.startsWith("[STATE] ")) {
+                    final String mtron = line.substring("[STATE] ".length()).trim();
+                    LOG.debug("[state] %s", mtron);
+                    ObjmtronSerializer.parseMulti(mtron).apply();
+                    continue;
+                }
+                final String[] parts = line.split("%", -1);
+                if (parts.length == 3)
+                    checkEquality(LOG, ObjmtronSerializer.parse(parts[0].trim()).apply(),
+                            ObjmtronSerializer.parse(parts[1].trim()).apply(), Boolean.parseBoolean(parts[2].trim()));
+                else if (parts.length == 2)
+                    checkCodeParseApply(LOG, parts[0].trim(), parts[1].trim());
+                else
+                    fail("script line must be [STATE] <mtron>, <code> % <expected>, or <lhs> % <rhs> % <equals>: " + line);
+            } catch (final AssertionError | RuntimeException e) {
+                System.out.println("SCRIPT LINE " + (i + 1) + " FAILED: " + line);
+                throw e;
+            }
+        }
+    }
+
     public static void checkMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
         final Obj a = ObjmtronSerializer.parse(lhs);
         final Obj b = ObjmtronSerializer.parse(rhs);

@@ -25,9 +25,11 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ComponentUnion;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.util.MTronException;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MEMORY_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -103,12 +105,30 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
 
     @Override
     public Obj read(final fURI vid) {
+        if (vid.hasPrefix(f("~"))) {
+            final fURI home = Machine.current().vid();
+            return this.read(vid.equals(f("~")) ? home : home.extend(vid.pretract(1)).resolve());
+        }
         final Space space = this.findSpace(vid);
-        return null != space ? space.read(vid) : this.previous.read(vid);
+        if (null != space) {
+            final Obj result = space.read(vid);
+            if (!result.isNoObj())
+                return result;
+            // the nearest level declared the vid but answered noobj — fall through to the enclosing level. the rec
+            // lives in the root's space (global registration), while this machine's data lives in its own infra, so a
+            // rec read that misses here must still reach the root's copy.
+        }
+        return this.previous.read(vid);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
+        if (vid.hasPrefix(f("~"))) {
+            final fURI resolved = Machine.current().vid().extend(vid.pretract(1)).resolve();
+            if (vid.equals(obj.vid()))
+                obj.selfVID(resolved);
+            return this.write(resolved, obj);
+        }
         final Space space = this.findSpace(vid);
         return null != space ? space.write(vid, obj) : this.own().write(vid, obj);
     }
@@ -117,12 +137,25 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
 
     @Override
     public fURI redirect(final fURI furi, final boolean big) {
-        return null != this.current ? this.current.redirect(furi, big) : this.previous.redirect(furi, big);
+        // current's routes win; fall through to previous when current has no route. BasicMemory.redirect echoes the
+        // vid unchanged (base path intact) when its routing tables don't cover it — that echo is the "not found here".
+        if (null != this.current) {
+            final fURI resolved = this.current.redirect(furi, big);
+            if (!resolved.basePath().equals(furi.basePath()))
+                return resolved;
+        }
+        return this.previous.redirect(furi, big);
     }
 
     @Override
     public fURI alignPrefix(final fURI vid) {
-        return null != this.current ? this.current.alignPrefix(vid) : this.previous.alignPrefix(vid);
+        // prefix table is inherited: current's prefixes win, then the enclosing level's.
+        if (null != this.current) {
+            final fURI aligned = this.current.alignPrefix(vid);
+            if (!aligned.equals(vid))
+                return aligned;
+        }
+        return this.previous.alignPrefix(vid);
     }
 
     @Override

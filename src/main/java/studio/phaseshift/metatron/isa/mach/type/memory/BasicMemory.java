@@ -132,7 +132,13 @@ public class BasicMemory extends MRec implements Memory {
 
     @Override
     public void addSpace(final Space space) {
-        this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
+        // A space with no vid is managed by the object that created it, not by the memory's index: it is reached
+        // through its creator's own reference (a field, a closure), never by resolving an address. Indexing one by
+        // its pattern would let an anonymous catch-all (the arg stack's +/#, the qproc-internal # spaces) shadow the
+        // parent's real spaces from inside a frame. Only addressable (vid'd) spaces enter the index.
+        //if (null == space.vid())
+        //   return; // TODO: spaces with null vids should not be indexed
+        this.spaces().jvm().put(null == space.vid() ? space.pattern().retractPattern().toUri() : space.vid().toUri(), space);
     }
 
     @Override
@@ -289,9 +295,10 @@ public class BasicMemory extends MRec implements Memory {
         if (vid.equals(this.vid()) || vid.equals(vid.id()))
             return this;
         if (vid.hasPrefix(f("~"))) {
-            return vid.equals(f("~")) ? Machine.current() : Machine.current().at(vid.pretract(1));
-        } else if (vid.hasPrefix(Machine.current().vid())) {
-            return (vid.equals(Machine.current().vid())) ? Machine.current() : Machine.current().at(vid.asNode());
+            // ~ resolves to the current machine's vid, before the relative/absolute split: ~/sys → /xyz/sys.
+            // The bare ~ is the node vid (/. for the root); any extension resolves (. collapses): ~/thread → /thread.
+            final fURI home = Machine.current().vid();
+            return this.read(vid.equals(f("~")) ? home : home.extend(vid.pretract(1)).resolve());
         }
 
         final fURI readableVID = this.alignPrefix(vid);

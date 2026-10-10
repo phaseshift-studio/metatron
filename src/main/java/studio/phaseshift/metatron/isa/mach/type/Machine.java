@@ -19,14 +19,19 @@
 package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.machine.AbstractMachine;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
-import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -34,6 +39,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -146,13 +152,11 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     static Obj read(final fURI vid) {
-        return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst, "read " + vid),
-                () -> {
-                    if (null == ROOT_MACHINE)
-                        return noobj();
-                    final fURI machineLessVID = vid.removePrefix(Machine.current().vid());
-                    return Machine.current().network().read(machineLessVID).orElse(Machine.current().memory().read(machineLessVID));
-                });
+        if (null == ROOT_MACHINE)
+            return noobj();
+        // Pure pass-through: the single path to Memory. All routing (~ resolution, relative→stack, absolute→space)
+        // lives in Memory.read, so there is exactly one place a read is turned into an address.
+        return Machine.current().memory().read(vid);
     }
 
     static Obj read(final String vid) {
@@ -160,13 +164,10 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     static Obj write(final fURI vid, final Obj obj) {
-        return ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "write " + vid),
-                () -> {
-                    if (null == ROOT_MACHINE)
-                        return noobj();
-                    final Obj peer = Machine.current().network().write(vid, obj);
-                    return peer.isNoObj() ? Machine.current().memory().write(vid, obj) : peer;
-                });
+        if (null == ROOT_MACHINE)
+            return noobj();
+        // Pure pass-through: the single path to Memory (see read). No network-first, no prefix stripping.
+        return Machine.current().memory().write(vid, obj);
     }
 
     static Obj write(final String vid, final Obj obj) {
@@ -204,16 +205,16 @@ public interface Machine extends Rec, AutoCloseable {
         }
     }
 
-    @Override
+    // @Override  (disabled with the apply() below)
     // ======================== execution ========================
+    // TEMPORARILY DISABLED: this apply() re-homed CURRENT (Machine.current(this)) as a side effect, which made a bare
+    // machine dereference (*X) into a context switch. Dereference must stay pure; the explicit move() instruction in
+    // /m/mach is now the ONLY context switch. Until that is re-integrated, Machine inherits Obj.apply() (identity).
+    /*
     default Obj apply(final Obj call) {
         return this.apply(call.asCode(), noobj());
     }
 
-    /**
-     * The machine's single source of truth for execution: compile once, then run the compiled code against
-     * {@code start}. The processor does not re-resolve; runtime resolution is memoized by the compiler's resolver.
-     */
     default Obj apply(final Code code, final Obj start) {
         final Machine previous = CURRENT.get();
         Machine.current(this);
@@ -228,6 +229,7 @@ public interface Machine extends Rec, AutoCloseable {
                 CURRENT.set(previous);
         }
     }
+    */
 
     // ======================== components ========================
     default InstSet instset() {
@@ -270,6 +272,27 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
+     * Mount this machine's own infra space and embed the machine rec in it. The space has pattern {@code <vid>/#},
+     * so {@code ~/thread}, {@code ~/fail}, {@code ~/log} (and the rec's own entries — {@code ~/memory},
+     * {@code ~/processor} …) all resolve here as space values, not through any vid intercept. Called for the root
+     * in {@link AbstractMachine}'s constructor and for each child in {@link #push(fURI)}.
+     */
+    default Machine bootstrap() {
+        if (null != this.vid()) {
+            // The infra PATTERN is the resolved vid (/. → /#): /thread must match, and the root's "local" is
+            // everything. But the machine rec is written at the UNRESOLVED node vid (/.): a rec at a node is a
+            // single value, whereas at the branch / it would fan out into /q, /instset, … entries.
+            final fURI resolved = this.vid().resolve();
+            final memSpace infra = memSpace.unregistered(resolved.extend(ALL), resolved.extend("space"));
+            infra.addQ(QCollection.incrQ());
+            this.memory().addSpace(infra);
+            // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.
+            this.memory().write(this.vid(), this);
+        }
+        return this;
+    }
+
+    /**
      * This thread's frame stack, not initialised eagerly: until {@link #push()} is used there is no frame, and every
      * component accessor falls through to the machine's own slot.
      */
@@ -301,7 +324,17 @@ public interface Machine extends Rec, AutoCloseable {
             throw MTronException.of("push(%s) cannot mint a child: clone() returned this machine, so the child would BE the parent", extension);
         child.parent(this);
         // The child's memory is a union over this machine's memory: its own fresh level over the enclosing one.
-        child.memory(new MemoryUnion(this.memory()));
+        // Parent the union to the CHILD (not to the parent machine): Component.machine() walks parent(), and the
+        // read path's getSpaceFor/readAbsolute/writeAbsolute use it to decide whether the machine answers for its
+        // own rec keys. AbstractMachine.memory(Memory) stores only the resolvedMemory field (never at(), so the
+        // shared jvm stays untouched), which is why the parent link must be set explicitly here.
+        final MemoryUnion memory = new MemoryUnion(this.memory());
+        memory.parent(child);
+        child.memory(memory);
+        child.bootstrap();
+        // register the child rec in the ROOT's space (global): read(childVID) from ANY machine reaches it, so
+        // move(childVID) works from a sibling at any depth. the child's data stays in its own infra, so isolation holds.
+        Machine.root().memory().write(childVID, child);
         CURRENT.set(child);
         return child;
     }

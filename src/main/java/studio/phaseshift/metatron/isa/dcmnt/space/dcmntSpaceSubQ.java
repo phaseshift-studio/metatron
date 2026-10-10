@@ -210,7 +210,7 @@ public class dcmntSpaceSubQ extends BaseQ implements Closeable {
                                 uri("code"), studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0)),
                         studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID,
                         studio.phaseshift.metatron.util.CommonUtil.mintShortUUID(
-                                studio.phaseshift.metatron.furi.fURI.Singleton.f("/sys/thread"), true)) {
+                                studio.phaseshift.metatron.furi.fURI.Singleton.f("~/thread"), true)) {
                     @Override
                     public Runnable createTask() {
                         return () -> {

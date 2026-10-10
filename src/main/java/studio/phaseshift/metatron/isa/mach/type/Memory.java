@@ -35,6 +35,8 @@ import java.util.Optional;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -88,6 +90,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
     }
 
     /**
+     *
      * The route table is a memory rec entry ({@code route => [=>]}).
      */
     @Override
@@ -162,11 +165,26 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * a root read would re-enter itself.
      */
     default Obj readAbsolute(final fURI vid) {
-        // getSpaceFor, not findSpace: it is the fail-closed lookup. findSpace returns null and this method used
-        // to answer noobj, so an unresolvable address read as "exists but empty" here while throwing on the
-        // machine's path — two paths, two answers, and only one of them correct.
-        final Space space = this.getSpaceFor(vid);
-        return space == this.machine() ? this.machine().at(uri(rootRelative(vid))) : space.read(vid);
+        // findSpace, not getSpaceFor: the machine's own keys are the fallback, not a space, and resolving them is
+        // this method's job — getSpaceFor must never return the machine cast to a Space (Machine is a Rec).
+        final Space space = this.findSpace(vid);
+        if (null != space) {
+            final Obj result = space.read(vid);
+            if (!result.isNoObj())
+                return result;
+            // the space covered the vid but answered noobj (the /# infra catch-all does this for /memory, /processor,
+            // …) — fall through so the machine's own rec keys still answer.
+        }
+        final Machine machine = this.machine();
+        if (null != machine) {
+            final Obj key = machine.at(uri(rootRelative(vid)));
+            if (!key.isNoObj())
+                return key;
+        }
+        // No space and no machine key: answer noobj, do NOT throw. Throwing here would pre-empt the caller's big()
+        // fallback (small→big routing: count → /m/inst/count) and the walk-up to an enclosing machine — the exact
+        // two things a relative vid needs to resolve through a child's union memory.
+        return noobj();
     }
 
     /**
@@ -175,6 +193,18 @@ public interface Memory extends Space, Machine.Component, Closeable {
      */
     default Obj write(final fURI vid, final Obj obj) {
         // every write may touch a cached type resolution; invalidate before routing (relative or absolute)
+        if (null == vid)
+            return obj;
+        // ~ resolves to the current machine's vid, before the relative/absolute split: ~/sys → /xyz/sys.
+        // The extension resolves (. collapses): ~/thread → /thread — the selfVID stamp then carries the resolved vid.
+        if (vid.hasPrefix(f("~"))) {
+            final fURI resolved = Machine.current().vid().extend(vid.pretract(1)).resolve();
+            // the obj being written under a ~ vid carries that vid — stamp it to the resolved form so both the
+            // memory address and the obj's own vid are absolute (MObj's constructor writes obj.vid() == this vid).
+            if (vid.equals(obj.vid()))
+                obj.selfVID(resolved);
+            return this.write(resolved, obj);
+        }
         this.typeGraph().onWrite(vid);
         //     if (vid.isId())
         //         return this.writeAbsolute(hereVID(), obj);
@@ -191,10 +221,18 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * wildcard write landed on the stack instead of the space it named.
      */
     default Obj writeAbsolute(final fURI vid, final Obj obj) {
-        final Space space = this.getSpaceFor(vid);
-        return space == this.machine()
-                ? this.machine().at(uri(rootRelative(vid)), obj, MUTABLE)
-                : space.write(vid, obj);
+        final Space space = this.findSpace(vid);
+        if (null != space)
+            return space.write(vid, obj);
+        final Machine machine = this.machine();
+        if (null != machine) {
+            final Obj key = machine.at(uri(rootRelative(vid)));
+            if (!key.isNoObj())
+                return machine.at(uri(rootRelative(vid)), obj, MUTABLE);
+        }
+        // same as readAbsolute: answer obj, do NOT throw — a relative ~/ write resolves via the ~ branch before this,
+        // and a child's union write falls through to its own level, so throwing here only cuts off the fallbacks.
+        return obj;
     }
 
     /**
@@ -274,14 +312,8 @@ public interface Memory extends Space, Machine.Component, Closeable {
         final SPACE space = this.findSpace(vid);
         if (null != space)
             return space;
-        // The machine in effect answers, but ONLY for keys it actually holds. It is a Space and it is the root
-        // of the address space, so /processor, /memory and /network resolve from its rec without any space being
-        // mounted inside itself. An address it does NOT hold must still fail loudly: returning the machine
-        // unconditionally made every unresolvable address succeed with noobj, which is fail-closed silently
-        // becoming fail-open — a peer's namespace appeared to exist and merely be empty.
-        final Machine machine = this.machine();
-        if (null != machine && !machine.at(uri(rootRelative(vid))).isNoObj())
-            return (SPACE) machine;
+        // The machine's own keys (/processor, /memory, …) are the read/write path's fallback, handled in
+        // readAbsolute/writeAbsolute — never returned here as a cast-to-Space machine (Machine is a Rec, not a Space).
         if (!BOOTING)
             throw MTronException.of("no active space supports pattern %s", vid.toUri(false));
         return noobjSpace.single();
