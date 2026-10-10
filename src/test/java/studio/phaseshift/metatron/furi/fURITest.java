@@ -611,7 +611,7 @@ public class fURITest extends AbstractMetatronTest {
         final fURI furi1b = idem(f2);
         //  final fURI furi2a = mParser.m_furi().parse(f1).get();
         //  final fURI furi2b = mParser.m_furi().parse(f2).get();
-        // LOG.info("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", furi1a, furi2b);
+        // LOG.warn("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", f("/./abc"), f("/./abc").resolve());
         //assertEquals(furi1a.resolve(), furi2b);
         //assertEquals(furi2a.resolve(), furi1b);
         assertEquals(furi1a.resolve(), furi1b);

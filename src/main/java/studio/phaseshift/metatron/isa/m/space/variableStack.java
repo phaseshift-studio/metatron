@@ -68,8 +68,12 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
     }
 
     public variableStack(final fURI pattern) {
-        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID, null);
-        this.root = memSpace.of(this.pattern, null);
+        // The arg stack is this thread's local variables, reached via Memory.argStack(), not a machine space: its
+        // bindings persist through the machine's root frame, never through the space index. So it (and its root)
+        // must not auto-register into the current machine — inside a frame its +/# would match /sys and /m and
+        // shadow the parent's real spaces.
+        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID, null, false);
+        this.root = memSpace.unregistered(this.pattern, null);
         this.addQ(QCollection.refQ());
         this.addQ(QCollection.mintQ());
         this.addQ(QCollection.docQ());

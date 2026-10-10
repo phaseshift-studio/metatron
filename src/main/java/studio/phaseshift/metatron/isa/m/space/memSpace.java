@@ -52,7 +52,11 @@ public class memSpace extends AbstractMemorySpace {
     }
 
     protected memSpace(final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
-        super(new TopicTrie(), config, tid, vid);
+        this(config, tid, vid, true);
+    }
+
+    protected memSpace(final Map<Obj, Obj> config, final fURI tid, final fURI vid, final boolean autoRegister) {
+        super(new TopicTrie(), config, tid, vid, autoRegister);
         if (!this.at(DATA).isNoObj())
             Runtime.getRuntime().addShutdownHook(new Thread(() -> this.save()));
         load();
@@ -65,6 +69,19 @@ public class memSpace extends AbstractMemorySpace {
 
     public static memSpace of(final Rec config, final fURI vid) {
         return new memSpace(mutableMap(config.jvm()), vid);
+    }
+
+    /**
+     * A memSpace that does <em>not</em> self-register into the current machine's memory — for spaces that are not
+     * frame-scoped (the arg stack, the root type cache), so constructing one inside a frame never shadows the
+     * parent's spaces behind an empty catch-all.
+     */
+    public static memSpace unregistered(final fURI pattern, final fURI vid) {
+        return new memSpace(mutableMap(uri(Tokens.PATTERN), uri(pattern)), MEM_SPACE_TID, vid, false);
+    }
+
+    public static memSpace unregistered(final Rec config, final fURI vid) {
+        return new memSpace(mutableMap(config.jvm()), MEM_SPACE_TID, vid, false);
     }
 
     @Override

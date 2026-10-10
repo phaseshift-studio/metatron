@@ -398,7 +398,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
 
     /**
      * Surgically add or refresh the Type for a single table after on-the-fly
-     * creation or alteration.  Writes through {@link Router} so the type lands
+     * creation or alteration.  Writes through {@link studio.phaseshift.metatron.isa.mach.type.Memory} so the type lands
      * in the schema instset that owns it — no full rebuild, no direct coupling
      * to the instset instance.
      */
@@ -603,13 +603,13 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                 // Returns empty iterator when collection is unknown, falling through
                 // to the key-value path below.
                 final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
-                // if (dp.hasCollection() && !dp.hasEntry()) {
-                   /* final Iterator<IdObj> schemaResults =
+                if (dp.hasCollection() && !dp.hasEntry()) {
+                    final Iterator<IdObj> schemaResults =
                             resolveCollectionSchema(dp.collection());
-                    if (schemaResults.hasNext())
-                        return collectResults(schemaResults, pattern);*/
-                //return IteratorUtil.of();
-                //}
+                    //if (schemaResults.hasNext())
+                    //    return collectResults(schemaResults, pattern);
+                    return schemaResults;
+                }
 
                 // Lazy table-mapping discovery (see ensureTableMapping).
                 if (dp.hasCollection() && isTableCandidate(dp.collection().toLowerCase()))

@@ -374,7 +374,7 @@ public class machInstSet extends AbstractInstSet {
                                                 (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent core thread",
-                                "core::[code=>ping(<phaseshift.studio:80>),loop=>second::1.0]@/sys/thread/ping"),
+                                "core::[code=>ping(<phaseshift.studio:80>),loop=>second::1.0]@~/thread/ping"),
                         MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_VIRTUAL_THREAD_TID)
@@ -382,10 +382,10 @@ public class machInstSet extends AbstractInstSet {
                                                 (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent virtual thread",
-                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@/sys/thread/ping")),
+                                "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@~/thread/ping")),
                 uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
                         instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
-                            final fURI baseVID = f("/sys/thread");
+                            final fURI baseVID = f("~/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
                             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();
                             if (null != parent && null != parent.vid())
@@ -393,14 +393,18 @@ public class machInstSet extends AbstractInstSet {
                             thread.applyAsync(lhs);
                             return thread;
                         }),
-                        instC(MACH_INST_TID.extend("push").dom(MACH_MACHINE_TID.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) -> {
-                            final Machine machine = lhs.isMachine() ? lhs.asMachine() : Machine.current();
-                            return inst.arg(0).isNoObj() ? machine.push() : machine.push(inst.arg(0).uriValue());
-                        }),
-                        instC(MACH_INST_TID.extend("pop").dom(MACH_MACHINE_TID.maybe()).rng(MACH_MACHINE_TID), lst(), (lhs, inst) -> {
-                            if (lhs.isMachine())
-                                return lhs.asMachine().pop();
-                            return Machine.current().pop();
+                        instC(MACH_INST_TID.extend("push").dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> Machine.current().push(inst.arg(0).uriValue())),
+                        instC(MACH_INST_TID.extend("pop").dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(MACH_MACHINE_TYPE), (lhs, inst) -> inst.arg(0).asMachine().pop()),
+                        instC(MACH_INST_TID.extend("move").dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> {
+                            return Machine.current(inst.arg(0).uriValue().equals(f("/.")) ? Machine.root() : Machine.read(inst.arg(0).uriValue()).asMachine());
+                            
+                          /*  final fURI target = lhs.isUri() ? lhs.uriValue() : inst.arg(0).uriValue();
+                            final Obj found = Machine.read(target);
+                            // a branch vid (the root's /) reads back as a rel; unwrap to the machine it embeds
+                            final Machine machine = found.isMachine() ? found.asMachine()
+                                    : found.isRel() && found.asRel().second().isMachine() ? found.asRel().second().asMachine()
+                                    : null;
+                            return null != machine ? Machine.current(machine) : noobj();*/
                         }),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             ((AbstractThread) lhs).stop();

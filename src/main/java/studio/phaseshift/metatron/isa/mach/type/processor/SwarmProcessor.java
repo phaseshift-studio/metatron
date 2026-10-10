@@ -91,7 +91,8 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
     // ======================== Constructors & factories ========================
 
     protected SwarmProcessor(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, null == vid ? f("/sys/processor").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
+        // ~/processor: machine-agnostic — resolved to the current machine's vid on write (and selfVID-stamped).
+        super(jvm, tid, null == vid ? f("~/processor").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
         PROCESSORS.incrementAndGet();
         // Ensure machine state fields exist with defaults
         this.jvm().putIfAbsent(uri(RUN), RUNNING_SUPPLIER.get());

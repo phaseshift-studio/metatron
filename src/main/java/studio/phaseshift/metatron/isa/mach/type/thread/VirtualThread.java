@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class VirtualThread extends AbstractThread implements NotDetachable {
 
     public VirtualThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(mutableMap(jvm), tid, null == vid ? CommonUtil.mintShortUUID(f("/sys/thread"), true) : vid);
+        super(mutableMap(jvm), tid, null == vid ? CommonUtil.mintShortUUID(f("~/thread"), true) : vid);
     }
 
     protected VirtualThread() {

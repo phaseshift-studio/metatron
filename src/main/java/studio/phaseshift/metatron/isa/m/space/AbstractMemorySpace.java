@@ -42,7 +42,11 @@ public abstract class AbstractMemorySpace extends AbstractSpace<TopicTrie> {
 
 
     public AbstractMemorySpace(final TopicTrie sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
-        super(sjvm, config, tid, vid);
+        this(sjvm, config, tid, vid, true);
+    }
+
+    protected AbstractMemorySpace(final TopicTrie sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid, final boolean autoRegister) {
+        super(sjvm, config, tid, vid, autoRegister);
     }
 
     @Override
@@ -83,7 +87,9 @@ public abstract class AbstractMemorySpace extends AbstractSpace<TopicTrie> {
                                             Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), nodePattern).stream() :
                                             Stream.empty())).iterator();
                 } else {
-                    final Obj value = this.sjvm().get(pattern);
+                    // resolve(): the writer (resolveWrite → directWriter) stores under vid.resolve(), so the reader
+                    // must resolve too — otherwise /. (the root's node vid) writes to / but reads back /. → noobj.
+                    final Obj value = this.sjvm().get(pattern.resolve());
                     if (value != null)
                         return IteratorUtil.of(IdObj.of(pattern, value));
                     return readContainer(pattern);

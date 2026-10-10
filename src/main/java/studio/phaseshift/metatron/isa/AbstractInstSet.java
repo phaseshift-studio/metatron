@@ -88,9 +88,22 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         old = false;
     }
 
+    private static Map<Obj, Obj> addDocQ(final Map<Obj, Obj> jvm) {
+        if (jvm.containsKey(uri(QPROC))) {
+            Obj qprocs = jvm.get(uri(QPROC));
+            if (qprocs.isFail() || qprocs.isNoObj())
+                jvm.put(uri(QPROC), lst(QCollection.docQ()));
+            else if (qprocs.lstValue().stream().noneMatch(q -> q.tid().equals(QCollection.DOCQ_TID))) {
+                qprocs.lstValue().add(QCollection.docQ());
+            }
+        } else {
+            jvm.put(uri(QPROC), lst(QCollection.docQ()));
+        }
+        return jvm;
+    }
+
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(), jvm, tid, vid);
-        this.at(uri(QPROC), this.at(uri(Tokens.QPROC)).orElse(lst()).add(QCollection.docQ(), MUTABLE), MUTABLE);
+        super(new LinkedHashMap<>(), addDocQ(jvm), tid, vid);
         this.sugars().forEach(mParser::addSugar);
         old = false;
     }
