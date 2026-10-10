@@ -71,8 +71,11 @@ public abstract class AbstractMetatronTest {
             return;
         BOOTED = true;
         //memSpace.of(f("/sys/#"), null);
+        // every type assertion ON except code_resolve — the same stance DocsUtil boots with. The suite
+        // must exercise ENFORCEMENT, not just the type system's functions; code_resolve stays off because
+        // it demands fully-resolved code and most tests evaluate dynamically-built code.
         TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.values());
+        TypeCheck.disable(TypeCheck.code_resolve);
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec());

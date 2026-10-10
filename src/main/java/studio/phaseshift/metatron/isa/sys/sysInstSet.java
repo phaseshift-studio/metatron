@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
-
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
 import studio.phaseshift.metatron.isa.sys.space.serialSpace;
@@ -51,7 +50,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.JREService;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
@@ -89,7 +87,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       caller can inspect what {@code exec}/{@code bash} will actually run.</li>
  * </ul>
  */
-@JREService(vid = "/m/sys")
+@InstSet.JREService(vid = "/m/sys")
 public class sysInstSet extends AbstractInstSet {
     public static final fURI SYS = f("/sys");
     public static final fURI SYS_ISA_TID = M_ISA_TID.extend("sys");

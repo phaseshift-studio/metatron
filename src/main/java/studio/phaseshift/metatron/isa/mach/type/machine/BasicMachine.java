@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
-import studio.phaseshift.metatron.isa.mach.type.compiler.DefaultCompiler;
+import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_COMPILER_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -108,7 +109,7 @@ public class BasicMachine extends AbstractMachine {
                 uri(MEMORY), instLambda(ignore -> memory),
                 uri(NETWORK), instLambda(ignore -> network),
                 uri(INSTSET), instLambda(ignore -> instset),
-                uri(COMPILER), instLambda(ignore -> DefaultCompiler.fixpointScoringCompiler()),
+                uri(COMPILER), instLambda(ignore -> BasicCompiler.defaults()),
                 uri(PROCESSOR), instLambda(ignore -> SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null))), tid, vid);
         // uri("+").c(cInt.of(-1, 1)), instC(f("+").c(cInt.of(-1, 1)).dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(),
         //       (lhs, inst) -> lhs.asMachine().move(f(inst.tid().name()).c(inst.tid().c())))), tid, vid);

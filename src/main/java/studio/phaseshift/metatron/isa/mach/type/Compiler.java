@@ -23,10 +23,12 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.parser.Parser;
 import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.IdentityRewriter;
@@ -37,21 +39,27 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
- * Compiler — lowers {@code code::T} to {@code code::T} by composing three atomic, overridable
- * stages, each a machine component ({@code rewriter::T}, {@code resolver::T}, {@code typer::T}):
+ * Compiler — lowers source to {@code code::T} by composing four atomic, overridable stages, each a
+ * machine component ({@code parser::T}, {@code rewriter::T}, {@code resolver::T},
+ * {@code typer::T}):
  * <ul>
+ *   <li>{@link #parser()} — the {@link Parser} (reads source text and emits {@code code::T}; for
+ *       what is already parsed it is the identity, lifted into code). This is the language seam: a
+ *       parser emitting mtron code IS another language hosted on metatron;</li>
  *   <li>{@link #rewrite()} — the {@link Rewriter} (fixpoint over the rewrite rules);</li>
  *   <li>{@link #resolver()} — the {@link Resolver} (threads the type, resolves one inst at a
  *       time; generic binding runs inside per-candidate selection, so there is no separate
  *       binder);</li>
  *   <li>{@link #typer()} — the {@link Typer} (runtime type assertions).</li>
  * </ul>
- * {@link #apply} is the default schedule over that vocabulary — {@code rewrite → resolve → type}.
- * The stage methods ({@link #rewrite(Code)}, {@link #resolve(Code)}, {@link #type(Code)}) remain as
- * the overridable seams a compiler author reaches for, each defaulting to its component accessor.
+ * {@link #apply} is the default schedule over that vocabulary —
+ * {@code parse → rewrite → resolve → type}. The stage methods ({@link #parse(Obj)},
+ * {@link #rewrite(Code)}, {@link #resolve(Code)}, {@link #type(Code)}) remain as the overridable
+ * seams a compiler author reaches for, each defaulting to its component accessor.
  * <p>
  * <b>Java first, inst-ify later.</b> The stage components are mtron recs now; the composition
- * {@code typer(resolver(rewriter(code)))} is expressible in mtron once the stage insts exist.
+ * {@code typer(resolver(rewriter(parse(source))))} is expressible in mtron once the stage insts
+ * exist.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -60,13 +68,18 @@ public interface Compiler extends Machine.Component, Rec {
     // ======================== schedule ========================
 
     /**
-     * The default schedule — {@code rewrite → resolve → type}. Override to re-order, repeat, or
-     * interleave the stages; a compiler is the composition, the stages are the vocabulary.
+     * The default schedule — {@code parse → rewrite → resolve → type}. Override to re-order, repeat,
+     * or interleave the stages; a compiler is the composition, the stages are the vocabulary.
+     * <p>
+     * The {@code code::T} assertion this schedule used to open with is not lost, it moved: the parse
+     * stage now owns the front door and is contractually code-producing ({@link Parser#apply}), so a
+     * program handed in as text is accepted where it was previously a type error, and malformed text
+     * is reported by the parser as a statement about the source instead of failing a check about the
+     * obj that came in.
      */
     @Override
-    default Code apply(final Obj code) {
-        Type.Helper.typeCheck(code, CODE_TYPE);
-        Code c = code.asCode();
+    default Code apply(final Obj source) {
+        Code c = this.parse(source);
         c = this.rewrite().apply(c);
         c = this.resolver().apply(c);
         c = this.typer().apply(c);
@@ -74,6 +87,16 @@ public interface Compiler extends Machine.Component, Rec {
     }
 
     // ======================== stage components ========================
+
+    /**
+     * @return the parse stage component ({@code parser::T}) — {@code mtron_parser::T}, the only
+     * parser metatron ships. This is the language seam of the compiler: a parser that emits mtron
+     * code IS another language on metatron, since the three stages after it and the processor all
+     * take code.
+     */
+    default Parser parser() {
+        return mtronParser.single();
+    }
 
     /**
      * @return the rewriter stage component ({@code rewriter::T}) — identity by default
@@ -94,6 +117,19 @@ public interface Compiler extends Machine.Component, Rec {
      */
     default Typer typer() {
         return TypeTyper.single();
+    }
+
+    // ======================== stage · parse ========================
+
+    /**
+     * Parse {@code source} into the {@code code::T} the later stages take. The parser is total over
+     * objs, so this is the identity for a code that is already parsed — a compiler is handed both a
+     * program's text and its parsed obj, and re-reading the latter would parse a rendering of it and
+     * lose the vid and tid that only the obj carries — and for anything else it is the parser's lift
+     * ({@link Parser.Helper#toCode}).
+     */
+    default Code parse(final Obj source) {
+        return this.parser().apply(source);
     }
 
     // ======================== stage · rewrite ========================

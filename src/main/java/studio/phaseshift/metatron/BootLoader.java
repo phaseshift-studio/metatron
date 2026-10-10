@@ -463,12 +463,21 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             .collect(new CommonUtil.RecCollector()))).tid(TRACER_TYPE_TID).as());
             LOG.info("{{c}}tracer{{X}} registered: %s", tracer);
             /// /// SET TYPE CHECKER STAGES /// ///
-            final Rec typer = args.at("typer/stage")
-                    .orElse(Stream.of(TypeCheck.values())
-                            .map(tc -> rel(uri(tc.name()), tc == TypeCheck.code_resolve ? BOOL_FALSE : BOOL_TRUE))
-                            .collect(new CommonUtil.RecCollector())).vid(f("/sys/typer"));
-            TypeCheck.init(typer.tid(TYPER_TYPE_TID).as());
-            LOG.info("{{c}}typer{{X}} registered: %s", typer);
+            // the default is every assertion on except code_resolve. A boot profile's typer/stage names
+            // only the flags it wants to OVERRIDE (e.g. the console's `[code_resolve=>false]`), so it is
+            // merged over that default rather than replacing it — naming one flag must not silently
+            // disable the other four.
+            final Rec typerDefaults = Stream.of(TypeCheck.values())
+                    .map(tc -> rel(uri(tc.name()), tc == TypeCheck.code_resolve ? BOOL_FALSE : BOOL_TRUE))
+                    .collect(new CommonUtil.RecCollector());
+            // OVERRIDE per key, not union: rec plus() would turn a flag named in both recs into a
+            // multiplicity ({false,false}), which then fails the Bool cast in TypeCheck.init.
+            Rec typer = typerDefaults;
+            for (final Map.Entry<Obj, Obj> stage : args.at("typer/stage").orElse(rec()).asRec().recValue().entrySet())
+                typer = typer.at(stage.getKey(), stage.getValue());
+            final Rec typerRec = typer.vid(f("/sys/typer"));
+            TypeCheck.init(typerRec.tid(TYPER_TYPE_TID).as());
+            LOG.info("{{c}}typer{{X}} registered: %s", typerRec);
             /// /// SET REWRITER FILTER /// ///
             final Rec rewriter = args.at("rewriter").orElse(rec(uri("allow"), lst(uri(ALL)), uri("disallow"), lst())).vid(f("/sys/rewriter"));
             LOG.info("{{c}}rewriter{{X}}: %s", rewriter);
@@ -510,7 +519,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Machine.current(Machine.root());   // the boot runs as root: every library registers where it is written
             Machine.current().memory().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROOT_MACHINE.vid());
-            sysSpace.write(Machine.relativeToCurrent("/sys/typer/stage"), typer);
+            sysSpace.write(Machine.relativeToCurrent("/sys/typer/stage"), typerRec);
             sysSpace.write(Machine.relativeToCurrent("/sys/tracer"), tracer);
             sysSpace.write(Machine.relativeToCurrent("/sys/rewriter"), rewriter);
             sysSpace.write(Machine.relativeToCurrent("/sys/tmp"), str("""

@@ -31,14 +31,14 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class LambdaCompiler extends AbstractCompiler {
+public class LambdaCompiler extends BasicCompiler {
 
     public static final String REWRITE = "rewrite";
     public static final String RESOLVE = "resolve";
 
 
     public LambdaCompiler() {
-        this(mutableMap(), MACH_COMPILER_TID, null);
+        this(defaultStages(), MACH_COMPILER_TID, null);
     }
 
     public LambdaCompiler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {

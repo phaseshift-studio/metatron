@@ -384,9 +384,12 @@ public final class Tokens {
     public static final String INSTSET = "instset";
     public static final String COMPILER = "compiler";
     public static final String PROCESSOR = "processor";
+    public static final String PARSER = "parser";
     public static final String REWRITER = "rewriter";
     public static final String RESOLVER = "resolver";
     public static final String TYPER = "typer";
+    public static final String SELECTOR = "selector";
+    public static final String BINDER = "binder";
     // profiling::T rec keys — the structured profile() report
     public static final String RESOLVE = "resolve";
     public static final String APPLY = "apply";

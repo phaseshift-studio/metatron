@@ -21,7 +21,8 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
-import studio.phaseshift.metatron.isa.m.type.resolver.InstSelector;
+import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
+import studio.phaseshift.metatron.isa.m.type.resolver.Selector;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
@@ -245,16 +246,15 @@ public interface Inst extends Call {
 
     @Override
     default Inst resolve(final Obj lhs) {
-        return this.resolve(lhs, InstSelector.get());
+        return this.resolve(lhs, Selector.get(), Binder.get());
     }
 
     /**
-     * Resolve against an explicit {@link InstSelector} — the seam the compiler's resolver stages
-     * ({@code scoring_resolver::T}, {@code firstfind_resolver::T}) use to pin per-instruction
-     * selection without touching the active global selector. The one-arg overload delegates to
-     * the active selector.
+     * Resolve against an explicit {@link Selector} and {@link Binder} — the seam the compiler's
+     * resolution stage uses to pin per-instruction selection and binding without touching the
+     * active globals. The one-arg overload delegates to the active selector and binder.
      */
-    default Inst resolve(final Obj lhs, final InstSelector sel) {
+    default Inst resolve(final Obj lhs, final Selector sel, final Binder binder) {
         if (this.hasf())
             return this;
         final GraphittyLogger LOG = Graphitty.log(lhs);
@@ -292,7 +292,7 @@ public interface Inst extends Call {
         */
 
         try {
-            final Inst resolved = sel.resolveInst(lhs, this);
+            final Inst resolved = sel.apply(lhs, this, binder);
             if (null != resolved) {
                 LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
                 // Cache disabled - see comment above

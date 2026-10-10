@@ -41,40 +41,46 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /**
- * Abstract test class for InstSelector implementations.
+ * Abstract test class for {@link Selector} implementations.
  * <p>
- * Subclasses should provide the specific resolver to test via the constructor.
- * All parameterized tests will run against that resolver, making it easy to
- * compare behavior across different resolution strategies.
+ * Subclasses should provide the specific selector to test via the constructor.
+ * All parameterized tests will run against that selector (with the default
+ * {@code generic_binder::T}), making it easy to compare behavior across different
+ * resolution strategies.
  * <p>
- * To add a new resolver test:
+ * To add a new selector test:
  * <ol>
- *   <li>Create a new test class extending AbstractInstSelectorTest</li>
- *   <li>Pass the resolver supplier to the constructor</li>
- *   <li>Optionally override tests or add resolver-specific tests</li>
+ *   <li>Create a new test class extending AbstractResolverTest</li>
+ *   <li>Pass the selector supplier to the constructor</li>
+ *   <li>Optionally override tests or add selector-specific tests</li>
  * </ol>
  */
 public abstract class AbstractResolverTest extends AbstractMetatronTest {
 
-    protected final Supplier<InstSelector> resolverSupplier;
-    private InstSelector previousResolver;
+    protected final Supplier<Selector> resolverSupplier;
+    private Selector previousResolver;
+    private Binder previousBinder;
 
-    protected AbstractResolverTest(final Supplier<InstSelector> resolverSupplier) {
+    protected AbstractResolverTest(final Supplier<Selector> resolverSupplier) {
         this.resolverSupplier = resolverSupplier;
     }
 
     @BeforeEach
     protected void setupResolver() {
-        // Save current resolver and install test resolver
-        this.previousResolver = InstSelector.get();
-        InstSelector.set(this.resolverSupplier.get());
+        // Save current selector/binder and install the test selector with the default binder
+        this.previousResolver = Selector.get();
+        this.previousBinder = Binder.get();
+        Selector.set(this.resolverSupplier.get());
     }
 
     @AfterEach
     protected void restoreResolver() {
-        // Restore previous resolver
+        // Restore previous selector and binder
         if (this.previousResolver != null) {
-            InstSelector.set(this.previousResolver);
+            Selector.set(this.previousResolver);
+        }
+        if (this.previousBinder != null) {
+            Binder.set(this.previousBinder);
         }
     }
 
@@ -208,8 +214,8 @@ public abstract class AbstractResolverTest extends AbstractMetatronTest {
 
     @Test
     public void testResolverIsInstalled() {
-        // Verify the correct resolver is active
-        InstSelector current = InstSelector.get();
+        // Verify the correct selector is active
+        Selector current = Selector.get();
         assertNotNull(current);
         assertEquals(resolverSupplier.get().getClass(), current.getClass());
     }

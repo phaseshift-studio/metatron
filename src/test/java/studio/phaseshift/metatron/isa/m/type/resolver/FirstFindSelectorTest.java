@@ -21,22 +21,22 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.FirstFindResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.FirstFindSelector;
 
 /**
- * Test suite for {@link FirstFindResolver} — the compiler's {@code firstfind_resolver::T}, a
- * sibling of the ScoringResolver that pins the original first-match selection strategy.
+ * Test suite for {@link FirstFindSelector} — the compiler's {@code firstfind_selector::T}, the
+ * sibling of the specificity selector that pins the original first-match selection strategy.
  * <p>
- * Note: Some tests that work with the ScoringResolver may fail with first-match selection
+ * Note: Some tests that work with the specificity selector may fail with first-match selection
  * due to the non-deterministic nature of findFirst() when multiple instructions match.
  * <p>
- * Run with: mvn test -Dtest=FirstFindResolverTest
+ * Run with: mvn test -Dtest=FirstFindSelectorTest
  */
-@DisplayName("FirstFindResolver Tests")
-public class FirstFindResolverTest extends AbstractResolverTest {
+@DisplayName("FirstFindSelector Tests")
+public class FirstFindSelectorTest extends AbstractResolverTest {
 
-    public FirstFindResolverTest() {
-        super(FirstFindResolver::new);
+    public FirstFindSelectorTest() {
+        super(FirstFindSelector::new);
     }
 
     // ========================================================================
