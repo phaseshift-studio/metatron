@@ -1,0 +1,42 @@
+% mach-stages.tex — the compiler's four stages, and the processor that runs what they produce
+% Rendered with the tikz MCP server (compile_tikz), which wraps this body in a
+% standalone document (default preamble: tikz, amsmath, amssymb + common TikZ
+% libraries) and writes docs/website/skills/mtron/assets/mach-stages.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels carry NO box: `fill=none` plus white text,
+% so a label is ink over the page rather than a patch of it, and each is offset
+% clear of its stroke. The processor is dashed because it is the sibling of the
+% compiler, not one of its stages.
+
+\begin{tikzpicture}[
+  s/.style={draw, rounded corners=2pt, thick, minimum width=17mm, minimum height=8.5mm, font=\small},
+  d/.style={draw, dashed, rounded corners=2pt, thick, minimum width=17mm, minimum height=8.5mm, font=\small},
+  c/.style={draw, dotted, rounded corners=2pt, minimum width=13mm, minimum height=6mm, font=\scriptsize},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  ed/.style={-{Stealth[length=2.2mm]}, dashed},
+  el/.style={font=\scriptsize, inner sep=1pt, fill=none, text=white},
+  color=white
+]
+% the schedule: parse → rewrite → resolve → type
+\node[s] (p) at (0,0)    {\texttt{parser}};
+\node[s] (r) at (2.7,0)  {\texttt{rewriter}};
+\node[s] (v) at (5.4,0)  {\texttt{resolver}};
+\node[s] (t) at (8.1,0)  {\texttt{typer}};
+
+\draw[e] (-3.1,0) -- node[el,above=2pt]{source} (p);
+\draw[e] (p) -- (r);
+\draw[e] (r) -- (v);
+\draw[e] (v) -- (t);
+
+% what runs it
+\node[d] (x) at (10.9,0) {\texttt{processor}};
+\draw[ed] (t) -- node[el,above=2pt]{code} (x);
+
+% the resolver's two collaborators — strategies inside the stage, never stages
+\node[c] (sel) at (4.4,-1.7) {\texttt{selector}};
+\node[c] (bin) at (6.4,-1.7) {\texttt{binder}};
+\draw[ed] (sel) -- node[el,left=1pt,pos=0.75]{} (v);
+\draw[ed] (bin) -- (v);
+\node[el] at (5.4,-2.6) {binding gates selection};
+\end{tikzpicture}

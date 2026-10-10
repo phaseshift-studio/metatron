@@ -297,6 +297,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -424,7 +425,8 @@ isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compile
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
 isa/mach/type/machine/BasicNetwork.java     ← one level of network (roster is the rec)
 isa/mach/type/machine/BasicInstSet.java     ← the machine's OWN instset (n-ary union of imports)
-isa/mach/type/compiler/…                     ← Compiler impls + rewriter/resolver/typer stages
+isa/mach/type/compiler/…                     ← Compiler impls + parser/rewriter/resolver/typer stages
+isa/m/type/parser/Parser.java                ← the parse-stage contract (the language seam) + Parser.Helper.toCode
 isa/mach/type/processor/…                    ← Processor impls + Monad/MonadProcessor/SwarmProcessor + monads
 isa/mach/type/thread/…                       ← mThread / AbstractThread / VirtualThread / CoreThread / FutureObj
 isa/mach/machInstSet.java                    ← type registration (machine::T etc.) + bootstrap + sum_gather rewrite
@@ -493,14 +495,31 @@ cache the prototype, and return a <code>.clone()</code> (fresh instance per call
 <p><code>Memory.readAbsolute</code> asks <code>getSpaceFor(vid)</code>: the most specific space across the chain, else the machine itself (for
 keys it actually holds — <code>rootRelative</code> turns <code>/processor</code> into <code>processor</code>), else fail/noobj. The machine answering for
 its own rec keys is what makes <code>/</code> the root with no space mounted inside itself.</p>
-<h3>The compiler (three stages)</h3>
-<p><code>Compiler.apply</code> is the default schedule <code>rewrite → resolve → type</code> over three overridable stage components:</p>
+<h3>The compiler (four stages)</h3>
+<p><code>Compiler.apply</code> is the default schedule <code>parse → rewrite → resolve → type</code> over four overridable stage components:</p>
 <ul>
+<li><strong>parse</strong> — <code>Parser</code> (default <code>mtronParser</code>, <code>mtron_parser::T</code>; the language seam — see below).</li>
 <li><strong>rewrite</strong> — <code>Rewriter</code> (default <code>FixPointRewriter</code>, fixpoint over the rewrite rules).</li>
 <li><strong>resolve</strong> — <code>Resolver</code> (default <code>ScoringResolver</code>; threads the type one inst at a time; generic binding runs inside
 per-candidate selection, so there is no separate binder).</li>
 <li><strong>type</strong> — <code>Typer</code> (default <code>TypeTyper</code>, runtime type assertions).</li>
 </ul>
+<p>Stages are rec entries, not Java fields: <code>BasicCompiler.defaultStages()</code> supplies all four and <code>BasicCompiler.stages</code>
+merges a caller's over them, so <code>compiler::[=&gt;]</code> mints the default compiler <em>with</em> its stages and
+<code>compiler::[rewriter=&gt;fixpoint_rewriter::[max=&gt;3]]</code> overrides one.</p>
+<p><code>Parser</code> is where a <strong>language is hosted</strong>. Its contract is <code>Code apply(Obj source)</code>: read source text, emit
+<code>code::T</code>. Because the three stages after it, the processor and the distributed runtime all take code, a parser that
+emits mtron code <em>is</em> another language on metatron — no new instruction set, no new evaluator, no new type system;
+wire it as <code>compiler::[parser=&gt;my_parser::T]</code>. mtron is a deliberate substrate for this (Turing complete, rich type
+system, object-oriented and functional), so a new surface syntax lowers into a language worth lowering into rather
+than into an IR. A language whose syntax is elaborate but whose semantics are mtron's is a parser and nothing else:
+the default rewriter already runs on the code it produced. The stage is total over objs — an obj that is not a <code>str</code>
+is not re-read, only lifted as it stands — so one compiler takes a program's text or its parsed obj; re-reading the
+latter would parse a <em>rendering</em> and lose the vid and non-default tid. A grammar's own result is not always a code
+(mtron reads <code>6.plus(1)</code> as code, <code>plus(1)</code> as a lone inst, and <code>5</code> as the int itself), so <code>Parser.Helper.toCode</code>
+lifts all three: a code passes through, an inst becomes a one-inst code, anything else becomes a code that starts
+with it. <code>Compiler.parse</code> is that delegation; the <code>code::T</code> assertion the schedule used to open with is now the
+parser's contract.</p>
 <p><code>Compiler.Helper.resolve</code> memoizes nested-code resolution keyed by <code>(code identity, runtime lhs type id)</code>
 (<code>RESOLVE_CACHE</code>), delegating to <code>ScoringResolver.resolveCode</code> + <code>FixPointRewriter</code>.</p>
 <h3>The processor (monadic execution)</h3>
@@ -524,7 +543,9 @@ coefficient-summing view), and <code>ListMonad</code> the list-backed queue.</p>
 and <code>CoreThread</code> are the two concrete platform strategies. A worker publishes where it ended via <code>landedPerspective()</code>.</p>
 <h3>Bootstrap and the type hierarchy</h3>
 <p><code>machInstSet.setup()</code> registers the whole <code>machine::T</code> family under <code>/m/mach/component/…</code> — <code>processor::T</code>,
-<code>monad_processor::T</code>, <code>swarm_processor::T</code>, <code>compiler::T</code>, <code>default_compiler::T</code>, the rewriter/resolver/typer families,
+<code>monad_processor::T</code>, <code>swarm_processor::T</code>, <code>compiler::T</code> (with its <code>BasicCompiler</code> constructor, so
+<code>compiler::[parser=&gt;…,rewriter=&gt;…,resolver=&gt;…,typer=&gt;…]</code> mints one), the parser family (<code>parser::T</code>,
+<code>mtron_parser::T</code>), the rewriter/resolver/typer families,
 <code>memory::T</code>, <code>network::T</code>, and <code>machine::T</code> (whose shape is <code>instset</code>/<code>compiler</code>/<code>memory</code>/<code>network</code>/<code>processor</code>). The
 default machine lives at <code>/sys/mach/default</code> (a <code>const</code> built by <code>BasicMachine.of</code>). <code>sum_gather</code> — the rewrite that
 turns a monoidic reducer into a distributed gather over <code>/usr/compute</code> peers — lives here too.</p>
@@ -566,7 +587,8 @@ cursor), and <code>CURRENT</code> is a faithful &quot;walk up&quot; pointer.</p>
 <ol>
 <li>
 <p><strong>Per-frame, lazily-materialized union views.</strong> <code>Frame</code> held the <code>instset</code>/<code>memory</code>/<code>network</code> views as <em>per-frame</em>
-fields. That matters because <code>push()</code> clones with <code>this.jvm()</code> — <strong>the <code>jvm()</code> rec is shared</strong>, so a union view stored
+fields. That matters because <code>push()</code> clones with <code>this.jvm()</code> — <strong>the <code>jvm()</code> rec is shared</strong>, so a union view
+stored
 in the rec would leak between parent and child. The views must live in per-instance Java state: the
 <code>resolvedMemory</code>/<code>resolvedNetwork</code>/<code>resolvedInstSet</code> fields on <code>AbstractMachine</code> are that replacement — <strong>not</strong> &quot;old
 artifacts&quot;. (Removing <code>resolvedMemory</code> re-introduced a <code>StackOverflowError</code>: <code>memory()</code> → <code>atDirect(uri(MEMORY))</code> →

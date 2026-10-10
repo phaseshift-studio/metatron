@@ -297,6 +297,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -492,8 +493,8 @@ the same declarations the type checker uses:</p>
      rng=&gt;'a table widget',
      args=&gt;[
       {?}metadata=&gt;'a lst of rows of data behind the d...',
-      {?}header=&gt;'a lst of obj table headers',
-      {?}row=&gt;'a lst of poly table rows'],
+      {?}row=&gt;'a lst of poly table rows',
+      {?}header=&gt;'a lst of obj table headers'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -506,12 +507,12 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
      args=&gt;[
-      {?}code=&gt;'transform obj prior to insertion i...',
-      {?}expand=&gt;'branch uris whose children are rea...',
       {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
-      max=&gt;'the max depth to traverse',
+      {?}expand=&gt;'branch uris whose children are rea...',
+      {?}code=&gt;'transform obj prior to insertion i...',
+      root=&gt;'the root uri to traverse from',
       {?}flatten=&gt;'fold single-folder chains into one...',
-      root=&gt;'the root uri to traverse from'],
+      max=&gt;'the max depth to traverse'],
      desc=&gt;'[structural] the root uri space is...'],
     ...(10 more)]
 </code></pre>

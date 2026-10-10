@@ -297,6 +297,7 @@
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -3186,7 +3187,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}M{{r}}e{{c}}t{{r}}A{{g}}t{{m}}r{{y}}o{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{m}}E{{c}}T{{r}}a{{g}}t{{g}}R{{m}}O{{c}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -7361,14 +7362,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
 ==&gt;'tmpfs                    6355856       6504   6349352   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  548128060 362829764  61% /'
+==&gt;'/dev/nvme0n1p2         959786032  548129808 362828016  61% /'
 ==&gt;'tmpfs                   31779272       1056  31778216   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        240   6355612   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        232   6355620   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1347925252 573283292  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1347957608 573250936  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;articles
@@ -7383,6 +7384,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'dsh-usage-boot.log'
 ==&gt;dsh-usage-data
 ==&gt;escape
+==&gt;'hs_err_pid3714434.log'
 ==&gt;'language.properties'
 ==&gt;LICENSE
 ==&gt;'metatron.ide.mtron'
@@ -7395,7 +7397,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[mAchINe fAILed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/fail/_?incrq</code></pre>
+==&gt;fail::[MacHiNe FaILed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/fail/_?incrq</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7583,7 +7585,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1010/00/20/668?tz=-0600
+==&gt;datetime:://2026.10:1014/41/33/359?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9527,7 +9529,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
      code=&gt;at(ab).plus('B'),
      loop=&gt;second::1.0,
      state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime:://2026.10:1010/00/22/733?tz=-0600,
+    time=&gt;datetime:://2026.10:1014/41/35/282?tz=-0600,
     runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
     ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
@@ -10497,11 +10499,9 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
-==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -10546,25 +10546,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rec::T[?[
-    {?}name=&gt;str::T,
-    location=&gt;isa(area:V/+/id).!*id(),
-    {?}parent=&gt;auto_from::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[
-    {?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id(),
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[
-    {?}player=&gt;str::T,
-    {?}points=&gt;int::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[
-    {?}name=&gt;str::T,
-    {?}age=&gt;int::T,
-    {?}skill=&gt;uri::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10577,25 +10559,7 @@ mtron&gt; *lite:person/+/id     ​6​
     name=&gt;'alex',
     age=&gt;25,
     skill=&gt;graph]
-mtron&gt; *lite:+
-==&gt;rec::T[?[
-    {?}name=&gt;str::T,
-    location=&gt;isa(area:V/+/id).!*id(),
-    {?}parent=&gt;auto_from::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[
-    {?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id(),
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[
-    {?}player=&gt;str::T,
-    {?}points=&gt;int::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[
-    {?}name=&gt;str::T,
-    {?}age=&gt;int::T,
-    {?}skill=&gt;uri::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 </div>
@@ -11254,10 +11218,10 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
      mtron_stack=&gt;false,
      java_stack=&gt;false]]
 ==&gt;[
-    total_mem_jvm=&gt;mB::560,
-    free_mem_jvm=&gt;mB::146.32611,
+    total_mem_jvm=&gt;mB::592,
+    free_mem_jvm=&gt;mB::219.27702,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::413.67388,
+    used_mem_jvm=&gt;mB::372.72297,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[

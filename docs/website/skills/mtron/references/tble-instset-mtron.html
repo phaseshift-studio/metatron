@@ -297,6 +297,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -883,15 +884,16 @@ database says <em>what its key is</em>. Two things have to be true for it to wor
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
 ==&gt;[
-    body=&gt;'a note with a database-assigned key']@tbledoc:note/17
+    body=&gt;'a note with a database-assigned key']@tbledoc:note/19
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
 ==&gt;[
-    body=&gt;'another one']@tbledoc:note/18
+    body=&gt;'another one']@tbledoc:note/20
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
 ==&gt;11
 ==&gt;15
+==&gt;19
 ==&gt;2
 ==&gt;4
 ==&gt;6
@@ -903,6 +905,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;10
 ==&gt;14
 ==&gt;18
+==&gt;20
 ==&gt;5
 ==&gt;7
 ==&gt;9

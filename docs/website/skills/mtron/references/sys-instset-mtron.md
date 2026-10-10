@@ -71,7 +71,7 @@ mtron> bash('ls')
     'conf',
     'CONTRIBUTING.md',
     'Desktop',
-   ...(17 more)]
+   ...(18 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
@@ -91,10 +91,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/fail/_?incrq
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]@/fail/_?incrq
@@ -115,7 +115,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
      'conf',
      'CONTRIBUTING.md',
      'Desktop',
-   ...(17 more)]]
+   ...(18 more)]]
 ==>[
     'whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
@@ -127,7 +127,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'conf',
     'CONTRIBUTING.md',
     'Desktop',
-   ...(18 more)]
+   ...(19 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -169,7 +169,7 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: Desktop',
-   ...(17 more)]
+   ...(18 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>[
     '  File: AGENTS.md',
@@ -194,7 +194,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::409,
     bB::698,
     bB::409,
-   ...(17 more)]
+   ...(18 more)]
 ```
 Unit values test against each other's units:
 
@@ -266,10 +266,10 @@ mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
 ==>[
-    total_mem_jvm=>mB::472,
-    free_mem_jvm=>mB::127.40970,
+    total_mem_jvm=>mB::480,
+    free_mem_jvm=>mB::160.14443,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::344.59029,
+    used_mem_jvm=>mB::319.85556,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[
@@ -353,7 +353,7 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
     typer/stage=>[
      inst_dom=>true,
      inst_rng=>true,
-     type_ctor=>true,
+     type_pred=>true,
      obj_write=>true,
      code_resolve=>false],
     header=>"""
