@@ -56,8 +56,8 @@ mtron> *bash?docq
     dom=>'maybe an obj',
     rng=>'a lst[str] of results',
     args=>[
-     {?}timeout=>'a real number denoting timeout of ...',
-     cmd=>'the terminal command to evaluate (...'],
+     cmd=>'the terminal command to evaluate (...',
+     {?}timeout=>'a real number denoting timeout of ...'],
     desc=>'evaluate bash command. *important*...',
     example=>["bash('ls')                        ..."]]
 ```
@@ -266,10 +266,10 @@ mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
 ==>[
-    total_mem_jvm=>mB::480,
-    free_mem_jvm=>mB::160.14443,
+    total_mem_jvm=>mB::616,
+    free_mem_jvm=>mB::148.28080,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::319.85556,
+    used_mem_jvm=>mB::467.71919,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[

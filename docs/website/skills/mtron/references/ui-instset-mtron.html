@@ -280,6 +280,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
@@ -475,8 +476,8 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'an accordion obj',
      args=&gt;[
-      {?}title=&gt;'the title of the accordion',
-      {?}body=&gt;'the body content of the accordion'],
+      {?}body=&gt;'the body content of the accordion',
+      {?}title=&gt;'the title of the accordion'],
      desc=&gt;'[structural] an expandable/collaps...'],
     progress_table_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -492,9 +493,9 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a table widget',
      args=&gt;[
-      {?}metadata=&gt;'a lst of rows of data behind the d...',
+      {?}header=&gt;'a lst of obj table headers',
       {?}row=&gt;'a lst of poly table rows',
-      {?}header=&gt;'a lst of obj table headers'],
+      {?}metadata=&gt;'a lst of rows of data behind the d...'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -507,12 +508,12 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
      args=&gt;[
-      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
-      {?}expand=&gt;'branch uris whose children are rea...',
-      {?}code=&gt;'transform obj prior to insertion i...',
-      root=&gt;'the root uri to traverse from',
+      max=&gt;'the max depth to traverse',
       {?}flatten=&gt;'fold single-folder chains into one...',
-      max=&gt;'the max depth to traverse'],
+      root=&gt;'the root uri to traverse from',
+      {?}code=&gt;'transform obj prior to insertion i...',
+      {?}expand=&gt;'branch uris whose children are rea...',
+      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...'],
      desc=&gt;'[structural] the root uri space is...'],
     ...(10 more)]
 </code></pre>

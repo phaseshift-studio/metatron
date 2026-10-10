@@ -3,22 +3,18 @@ name: mach-instset
 description: |
   The machine instruction set at `/m/mach`: a machine is metatron's unit of **process** — a `space::T` whose five
   slots are its instruction set, compiler, memory, network and processor.
-  TRIGGER: When wiring or replacing a compile stage (`compiler::[rewriter=>…,resolver=>…]`), writing a parser for a
-  surface syntax other than mtron, choosing a resolution strategy (`scoring_resolver` vs `firstfind_resolver`,
-  specificity vs first-match selection), asking what a machine's `compiler` / `processor` / `memory` / `network` slot
-  holds, or tracing why an instruction chain compiled the way it did.
 ---
 
 # mach instruction set (`/m/mach`)
 
 A **machine** is metatron's unit of process: everything runs in one, and `/` is the root machine.
 
-`machine::T` carries exactly five components, and each is one rec entry:
+`machine::T` carries exactly five components, and each is one `rec::T` entry:
 
 | slot        | what it holds                                                       |
 |-------------|---------------------------------------------------------------------|
 | `instset`   | the instruction sets this frame can see (an n-ary union of imports) |
-| `compiler`  | the source to `code::T` converter, in stages                        |
+| `compiler`  | the source to `code::T` converter                                   |
 | `memory`    | the address space: relative uris (stack) and absolute uris (spaces) |
 | `network`   | the peers a machine indexes and maintains shared state              |
 | `processor` | the runtime that executes `code::T` over the metatron graph         |

@@ -280,6 +280,7 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
@@ -736,10 +737,10 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the compiler contract of machine::T — a machine&#39;s lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler IS its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=&gt;] is the default compiler.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
-  <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#'the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry'" class="text-info">&#39;the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry&#39;</a>
   <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
-  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#'the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry'" class="text-info">&#39;the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry&#39;</a>
+  <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
+  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -959,11 +960,11 @@ of the metatron graph (/.) is the root machine.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#'machine instruction set architecture'" class="text-info">&#39;machine instruction set architecture&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'referential access to processing threads and computational state'" class="text-info">&#39;referential access to processing threads and computational state&#39;</a>
   <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#'peers and shared peer state'" class="text-info">&#39;peers and shared peer state&#39;</a>
-  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'referential access to processing threads and computational state'" class="text-info">&#39;referential access to processing threads and computational state&#39;</a>
-  <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'parser, rewriter, resolver, and typer'" class="text-info">&#39;parser, rewriter, resolver, and typer&#39;</a>
+  <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#'machine instruction set architecture'" class="text-info">&#39;machine instruction set architecture&#39;</a>
   <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#'a frame of reference in space constrained by parent machine'" class="text-info">&#39;a frame of reference in space constrained by parent machine&#39;</a>
+  <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'parser, rewriter, resolver, and typer'" class="text-info">&#39;parser, rewriter, resolver, and typer&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__memory">
@@ -1063,8 +1064,8 @@ of the metatron graph (/.) is the root machine.
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> one metatron instance the local instance knows about</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the last health report computed for this peer'" class="text-info">&#39;the last health report computed for this peer&#39;</a>
-  <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#'the peer address with scheme and host:port for remote peers'" class="text-info">&#39;the peer address with scheme and host:port for remote peers&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#'the peer address with scheme and host:port for remote peers'" class="text-info">&#39;the peer address with scheme and host:port for remote peers&#39;</a>
+  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the last health report computed for this peer'" class="text-info">&#39;the last health report computed for this peer&#39;</a>
   <a href="#{?}name" class="text-light">{?}name</a> <span class="text-light">=&gt;</span> <a href="#'a simple name for the peer'" class="text-info">&#39;a simple name for the peer&#39;</a>
 </pre>
 </div>
@@ -1205,12 +1206,12 @@ scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
-  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
   <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
-  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">
