@@ -105,6 +105,88 @@ public abstract class LawTable {
     }
 
     /**
+     * An inst's declared entry together with the n-tid it was declared under — the address a rewrite
+     * retypes an unresolved chain instruction with so the instruction's coefficient shape is legible.
+     */
+    public record Declared(fURI tid, Entry entry) {
+    }
+
+    /**
+     * The owner table of an address — the table whose instset tid is the longest prefix. Null when none.
+     */
+    private static LawTable ownerOf(final fURI vid) {
+        if (null == vid || null == vid.basePath())
+            return null;
+        final String base = vid.basePath().toString();
+        LawTable owner = null;
+        int best = -1;
+        for (final Map.Entry<fURI, LawTable> e : TABLES.entrySet()) {
+            final String prefix = e.getKey().toString();
+            if ((base.equals(prefix) || base.startsWith(prefix + "/")) && prefix.length() > best) {
+                owner = e.getValue();
+                best = prefix.length();
+            }
+        }
+        return owner;
+    }
+
+    /**
+     * The declared entry of an op address, disambiguated by the operand type. The rewriter sees code
+     * <em>before</em> resolution, so a chain instruction carries only its op address ({@code /m/inst/plus},
+     * no dom/rng) and the law table's keys carry the endpoints. When several entries share the op address
+     * ({@code plus} over int, real, str, bool, …) the operand's type picks the right one; when nothing
+     * matches, null rather than a guess — a law-driven rewrite must never fire on the wrong type.
+     */
+    public static Declared declared(final fURI op, final Type operand) {
+        final LawTable owner = ownerOf(op);
+        if (null == owner || null == op.basePath())
+            return null;
+        final String base = op.basePath().toString();
+        final String type = (null == operand || null == operand.vid()) ? null : operand.vid().basePath().toString();
+        Declared first = null;
+        for (final Map.Entry<fURI, Entry> e : owner.table.entrySet()) {
+            if (!e.getKey().basePath().toString().equals(base))
+                continue;
+            if (null == first)
+                first = new Declared(e.getKey(), e.getValue());
+            if (null != type && (e.getKey().dom().basePath().toString().equals(type) || e.getKey().rng().basePath().toString().equals(type)))
+                return new Declared(e.getKey(), e.getValue());
+        }
+        return null == type ? first : null;
+    }
+
+    /**
+     * The entry of an inst, resolved from the law table of the instset that owns it — the sibling of
+     * {@link #typeLawsOf(Type)}, and the oracle a rewrite consults to learn an instruction's declared
+     * process laws before firing. Longest-prefix wins, so an inst address under {@code /m/math} routes to
+     * the math table rather than the {@code /m} table. Null when no table declares the inst.
+     */
+    public static Entry lawsOf(final fURI instTid) {
+        if (null == instTid)
+            return null;
+        final String vid = instTid.basePath().toString();
+        LawTable owner = null;
+        int best = -1;
+        for (final Map.Entry<fURI, LawTable> e : TABLES.entrySet()) {
+            final String prefix = e.getKey().toString();
+            if ((vid.equals(prefix) || vid.startsWith(prefix + "/")) && prefix.length() > best) {
+                owner = e.getValue();
+                best = prefix.length();
+            }
+        }
+        return null == owner ? null : owner.lookup(instTid);
+    }
+
+    /**
+     * Whether the inst declares the given process law — the guard a law-driven rewrite tests before firing.
+     */
+    public static boolean declares(final fURI instTid, final Law law) {
+        final Entry entry = lawsOf(instTid);
+        return null != entry && entry.laws().lstValue().stream()
+                .anyMatch(l -> l.uriValue().name().equals(law.name()));
+    }
+
+    /**
      * The structural theories the type models, keyed by each theory instance's name.
      */
     public final Rec typeLaws(final Type type) {

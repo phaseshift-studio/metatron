@@ -18,7 +18,7 @@ mtron> ... [-- larger agent definition --]
 ==>fail::[parse error at line 1, col 2:
      ... 
       ^
-     could not parse at '.']@/sys/fail/366
+     could not parse at '.']@/fail/_?incrq
 mtron> feature=>[
         tool_feature::[tool=>[!*eval]]
         ... [-- other features attached to agent --]
@@ -26,12 +26,12 @@ mtron> feature=>[
      feature=>[
            tool_feature::[tool=>[!*eval...
             ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/368
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/fail/_?incrq
 mtron> ]
 ==>fail::[parse error at line 1, col 1:
      ]
      ^
-     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/370
+     unexpected ']' — missing opening '[' or extra ']'?]@/fail/_?incrq
 ```
 ## References
 
@@ -49,6 +49,9 @@ mtron> ]
 * **tbleSpace (Java)**: `references/tble-space-java.md` — Relational-database space architecture, dual-path reads
   (table-mapped + KV store), ExistingTableSchema lifecycle, SQL rewrite pushdown (count, sum, limit, offset, where,
   select, KV), dialect handling, VID stamping, schema generation.
+* **Machine Architecture (Java)**: `references/machine-architecture-java.md` — Machine and its five components
+  (Memory, Network, InstSet, Compiler, Processor), the frame/ComponentUnion nesting model, push/pop/move, the
+  compile→run pipeline, threads/monads, and the read-path invariants + migration state.
 * **Distributed primitives (Java)**: `references/distributed-metatron.md` — Index of every place metatron crosses a
   process boundary: the Router dispatch seam (`own`/`isPeer`/`dispatchForeign`, `/sys/peer` roster), the wire
   transports (`wsspace`/`wsclient`, `httpspace`, `mqttspace`, `serialspace`, `dckrspace`, `grphspace`, `vecspace`,

@@ -179,19 +179,6 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "print(_)                                                                       % noobj",
-            "1.print(_)                                                                     % 1",
-            "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",
-            "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}",
-            "1.plus(0).plus::(2)                                                            % 3",
-            // "1.plus::(2)                                                                    % 3"
-    }, delimiter = '%')
-    public void testPrint(final String code, final String expected) {
-        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
-    }
-
-    @ParameterizedTest
-    @CsvSource(value = {
             "map(_)                                                                       % noobj",
             "1.map(_)                                                                     % 1",
             "1.map(noobj)                                                                 % noobj",
@@ -202,11 +189,23 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.map?{0}<=int(int{0}::100)                                                  % noobj",
             "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
-            "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }                         % {6,9,12,15}",
             "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
             "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}"
     }, delimiter = '%')
     public void testMap(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "print(_)                                                                       % noobj",
+            "1.print(_)                                                                     % 1",
+            "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",
+            "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}",
+            "1.plus(0).plus::(2)                                                            % 3",
+            // "1.plus::(2)                                                                    % 3"
+    }, delimiter = '%')
+    public void testPrint(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

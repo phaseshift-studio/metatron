@@ -344,7 +344,7 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
       op=>sql_where,
       args=>[people/+,"role = 'developer'"],
       f=>'<j>',
-      form=>gather,
+      form=>initial,
       c_dom=>0,
       c_rng=>0],
      [

@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -421,8 +425,6 @@ an instruction set to manipulate docker and docker compose</p>
     pattern=&gt;&lt;#&gt;],
    inst=&gt;instset::[
     pattern=&gt;&lt;#&gt;]]],
- space=&gt;[
-  super=&gt;!*/m],
  type=&gt;[
   space::T[?[
    {?}host=&gt;uri::T,
@@ -450,7 +452,7 @@ an instruction set to manipulate docker and docker compose</p>
   resource::T[?[
    {?}driver=&gt;uri::T,
    {?}scope=&gt;uri::T,
-   {?}container=&gt;&lt;#&gt;::T]]@/m/dckr/network,
+   {?}container=&gt;&lt;#&gt;::T]]@/m/dckr/networks,
   rec::T[?[
    services=&gt;[=&gt;]]]@/m/inst/compose]]@/m/dckr</code></pre>
                     </div>
@@ -479,8 +481,8 @@ an instruction set to manipulate docker and docker compose</p>
 </a><a href="#__m__dckr__image" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">image</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__dckr__network" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">network</span>
+</a><a href="#__m__dckr__networks" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">networks</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__dckr__resource" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">resource</span>
@@ -582,18 +584,18 @@ stopped.matches(docker_container_state::T)     [-- false --]</code></pre>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[id =&gt; &lt;sha256:abc123&gt;, repo_tags =&gt; [&lt;nginx:latest&gt;], size =&gt; mB::142.0]
 matches docker_image::T</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__dckr__network">
+</div><div class="card mb-3" id="__m__dckr__networks">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
-            <span class="code text-primary fw-bold">network::T</span>
+            <span class="code text-primary fw-bold">networks::T</span>
             <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__dckr__resource" class="instset-doc-small-code text-info code">/m/dckr/resource::T</a></span>
         </span>
-        <small class="text-muted code">/m/dckr/network</small>
+        <small class="text-muted code">/m/dckr/networks</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[
  {?}driver=&gt;uri::T,
  {?}scope=&gt;uri::T,
- {?}container=&gt;&lt;#&gt;::T]]@/m/dckr/network</code></pre></div>
+ {?}container=&gt;&lt;#&gt;::T]]@/m/dckr/networks</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  id=&gt;uri::T,
  {?}created=&gt;uri::T]</code></div></div>

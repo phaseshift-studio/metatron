@@ -23,7 +23,7 @@ mtron> """
     type=>streamable-http,
     url=><http://127.0.0.1:64342/stream>,
     headers=>[
-     IJ_MCP_SERVER_PROJECT_PATH=>/m/inst/thread(/software/metatron)]]
+     IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron]]
 ```
 If the snippet provided has an `mcpServer` outer wrapping, then do:
 
@@ -42,7 +42,7 @@ mtron> """
     type=>streamable-http,
     url=><http://127.0.0.1:64342/stream>,
     headers=>[
-     IJ_MCP_SERVER_PROJECT_PATH=>/m/inst/thread(/software/metatron)]]
+     IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron]]
 ```
 Moreover, if the `mcpServer` snippet has multiple inner servers endpoints defined, to load all of them, do:
 
@@ -55,12 +55,12 @@ mtron> {"mcpServers": {
             "intellij": {
    ...
      ^
-     unclosed '{' — missing '}'?]@/sys/fail/374
+     unclosed '{' — missing '}'?]@/fail/_?incrq
 mtron> }}
 ==>fail::[parse error at line 1, col 1:
      }}
      ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/sys/fail/376
+     unexpected '}' — missing opening '{' or extra '}'?]@/fail/_?incrq
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -78,14 +78,13 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][][]@/sys/fail/378
-   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]@/sys/fail/380
+==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][][]@/fail/_?incrq
+   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]@/fail/_?incrq
 mtron> *a>>tool
-==>fail::[inst apply failure: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null (at /m/inst/from@0) [mcpClient<163>]][Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null [mcpClient<163>]]@/sys/fail/382
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/384
+==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')]@/fail/_?incrq
 mtron> [-- => 3 --]
 ```
 ### WebSocket

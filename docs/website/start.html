@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -594,15 +598,31 @@ For now, create the following bootloader as plain text&#8201;&#8212;&#8201;it wi
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">import(/m/web);
 memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr;
-==&gt;fail::[unable to construct memspace::T: fail::[inst apply failure: Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null (at /m/inst/ctor) [mcpClient&lt;163&gt;]][Cannot invoke "dev.langchain4j.mcp.client.McpClient.listTools()" because "this.client" is null [mcpClient&lt;163&gt;]]@/sys/fail/612
-   	while parsing: memspace::[pattern  =&gt;/usr/#, q     =&gt;[docq::[=&gt;],subq::[=&gt;]]]@/sys/space/usr]@/sys/fail/614
 memspace::[pattern  =&gt;g:#,    q     =&gt;[subq::[=&gt;]]]           @/sys/space/graph;
 fsspace::[pattern   =&gt;local:#,route =&gt;[local: =&gt; &lt;~/&gt;]]       @/sys/space/fs;
 httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
 console::[=&gt;]@/usr/ui/console;
-==&gt;console::[=&gt;]@/usr/ui/console</code></pre>
+==&gt;console::[
+    menu=&gt;[  console=&gt;console::[
+      command_palette=&gt;/m/mach/ui/console/command_palette::[    console=&gt;!*/usr/ui/console,
+       help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+       redirect=&gt;[
+        input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+       header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+       quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+       reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+       clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+       ...(30 more)]@/usr/ui/console/command_palette],
+     help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+     redirect=&gt;[
+      input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+     header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+     quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+     reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+     clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+     ...(30 more)]]@/usr/ui/console</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -693,26 +713,31 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;14
+==&gt;12
 mtron&gt; */sys/space/+.&gt;&gt;pattern
+==&gt;mtronfs:#
+==&gt;local:#
 ==&gt;/te/cold/#
 ==&gt;g:#
 ==&gt;ha:#
 ==&gt;/usr/#
 ==&gt;/te/hot/#
 ==&gt;http://#
-==&gt;fs:#
-==&gt;acme:#
-==&gt;mtronfs:#
-==&gt;local:#
-==&gt;/sys/#
 ==&gt;loc:#
+==&gt;fs:#
 ==&gt;farm:#
+==&gt;acme:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
+==&gt;[
+    mtronfs:#=&gt;[
+     mtronfs:=&gt;&lt;.metatron&gt;]]
+==&gt;[
+    local:#=&gt;[
+     local:=&gt;/home/killswitch/]]
 ==&gt;[
     /te/cold/#=&gt;[
      /te/cold/=&gt;&lt;&gt;]]
-==&gt;{5}[=&gt;]
+==&gt;{3}[=&gt;]
 ==&gt;[
     ha:#=&gt;[
      ha:=&gt;/home/chips]]
@@ -727,17 +752,11 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
      fs:m=&gt;/home/killswitch/software/metatron,
      fs:=&gt;/home/killswitch/]]
 ==&gt;[
-    acme:#=&gt;[
-     acme:=&gt;&lt;&gt;]]
-==&gt;[
-    mtronfs:#=&gt;[
-     mtronfs:=&gt;&lt;.metatron&gt;]]
-==&gt;[
-    local:#=&gt;[
-     local:=&gt;/home/killswitch/]]
-==&gt;[
     farm:#=&gt;[
-     farm:=&gt;&lt;&gt;]]</code></pre>
+     farm:=&gt;&lt;&gt;]]
+==&gt;[
+    acme:#=&gt;[
+     acme:=&gt;&lt;&gt;]]</code></pre>
 </div>
 </div>
 <br><br></main>

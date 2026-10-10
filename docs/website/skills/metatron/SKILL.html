@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -403,7 +407,7 @@ snippet is sufficient for the spawned agent to execute mtron code.</p>
 ==&gt;fail::[parse error at line 1, col 2:
      ... 
       ^
-     could not parse at '.']@/sys/fail/366
+     could not parse at '.']@/fail/_?incrq
 mtron&gt; feature=&gt;[
         tool_feature::[tool=&gt;[!*eval]]
         ... [-- other features attached to agent --]
@@ -411,12 +415,12 @@ mtron&gt; feature=&gt;[
      feature=&gt;[
            tool_feature::[tool=&gt;[!*eval...
             ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/368
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/fail/_?incrq
 mtron&gt; ]
 ==&gt;fail::[parse error at line 1, col 1:
      ]
      ^
-     unexpected ']' — missing opening '[' or extra ']'?]@/sys/fail/370
+     unexpected ']' — missing opening '[' or extra ']'?]@/fail/_?incrq
 </code></pre>
 <h3>References</h3>
 <ul>
@@ -434,6 +438,9 @@ space-aware native pushdown, custom Function&lt;Code,Code&gt; rewrites, Code.rew
 <li><strong>tbleSpace (Java)</strong>: <code>references/tble-space-java.md</code> — Relational-database space architecture, dual-path reads
 (table-mapped + KV store), ExistingTableSchema lifecycle, SQL rewrite pushdown (count, sum, limit, offset, where,
 select, KV), dialect handling, VID stamping, schema generation.</li>
+<li><strong>Machine Architecture (Java)</strong>: <code>references/machine-architecture-java.md</code> — Machine and its five components
+(Memory, Network, InstSet, Compiler, Processor), the frame/ComponentUnion nesting model, push/pop/move, the
+compile→run pipeline, threads/monads, and the read-path invariants + migration state.</li>
 <li><strong>Distributed primitives (Java)</strong>: <code>references/distributed-metatron.md</code> — Index of every place metatron crosses a
 process boundary: the Router dispatch seam (<code>own</code>/<code>isPeer</code>/<code>dispatchForeign</code>, <code>/sys/peer</code> roster), the wire
 transports (<code>wsspace</code>/<code>wsclient</code>, <code>httpspace</code>, <code>mqttspace</code>, <code>serialspace</code>, <code>dckrspace</code>, <code>grphspace</code>, <code>vecspace</code>,

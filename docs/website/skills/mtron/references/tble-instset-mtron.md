@@ -246,19 +246,19 @@ the anchored form is the one to keep when the rows might be written back:
 
 ```mtron
 mtron> *tbledoc:person/+.take(2)     [-- clone path --]
-==>{2}[
+==>person::[
     name=>'marko',
-    age=>29]@tbledoc:person/noobj
-==>{2}[
+    age=>29]@tbledoc:person/1
+==>person::[
     name=>'grant',
-    age=>25]@tbledoc:person/noobj
+    age=>25]@tbledoc:person/2
 mtron> @tbledoc:person/+.take(2)     [-- anchor path --]
-==>{2}[
+==>person::[
     name=>'marko',
-    age=>29]@tbledoc:person/noobj
-==>{2}[
+    age=>29]@tbledoc:person/1
+==>person::[
     name=>'grant',
-    age=>25]@tbledoc:person/noobj
+    age=>25]@tbledoc:person/2
 ```
 ## the rewrites — reads that become SQL
 
@@ -277,9 +277,9 @@ mtron> *tbledoc:person/+.?[age=>?<30]        [-- SELECT * FROM person WHERE age 
 mtron> *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
 ==>5
 mtron> *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
-==>18
+==>181
 mtron> *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==>36
+==>36.0
 mtron> *tbledoc:person/+.==[name=>_]           [-- SELECT name FROM person --]
 ==>[
     name=>'xilo']
@@ -292,49 +292,50 @@ mtron> *tbledoc:person/+.==[name=>_]           [-- SELECT name FROM person --]
 ==>[
     name=>'vela']
 mtron> *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
-==>{2}[
-    name=>'grant',
-    age=>25]@tbledoc:person/noobj
-==>{2}[
-    name=>'marko',
-    age=>29]@tbledoc:person/noobj
-==>{2}[
-    name=>'xilo',
-    age=>33,
-    skill=>'graph']@tbledoc:person/noobj
-==>{2}[
-    name=>'metis',
-    age=>41]@tbledoc:person/noobj
-==>{2}[
-    name=>'vela',
-    age=>53]@tbledoc:person/noobj
+==>[
+    [
+     name=>'grant',
+     age=>25]@tbledoc:person/noobj,
+    [
+     name=>'marko',
+     age=>29]@tbledoc:person/noobj,
+    [
+     name=>'xilo',
+     age=>33,
+     skill=>'graph']@tbledoc:person/noobj,
+    [
+     name=>'metis',
+     age=>41]@tbledoc:person/noobj,
+    [
+     name=>'vela',
+     age=>53]@tbledoc:person/noobj]
 mtron> *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
-==>{2}'marko'
-==>{2}'grant'
-==>{2}'metis'
-==>{2}'xilo'
-==>{2}'vela'
+==>'marko'
+==>'grant'
+==>'metis'
+==>'xilo'
+==>'vela'
 mtron> *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
-==>{2}[
+==>person::[
     name=>'marko',
-    age=>29]@tbledoc:person/noobj
-==>{2}[
+    age=>29]@tbledoc:person/1
+==>person::[
     name=>'grant',
-    age=>25]@tbledoc:person/noobj
+    age=>25]@tbledoc:person/2
 mtron> *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
-==>{2}[
+==>person::[
     name=>'grant',
-    age=>25]@tbledoc:person/noobj
-==>{2}[
+    age=>25]@tbledoc:person/2
+==>person::[
     name=>'metis',
-    age=>41]@tbledoc:person/noobj
-==>{2}[
+    age=>41]@tbledoc:person/3
+==>person::[
     name=>'xilo',
     age=>33,
-    skill=>'graph']@tbledoc:person/noobj
-==>{2}[
+    skill=>'graph']@tbledoc:person/4
+==>person::[
     name=>'vela',
-    age=>53]@tbledoc:person/noobj
+    age=>53]@tbledoc:person/5
 ```
 | rewrite                  | mtron                                   | sql                                                 |
 |--------------------------|-----------------------------------------|-----------------------------------------------------|
@@ -373,8 +374,6 @@ mtron> */m/tble?docq
         pattern=><#>],
        inst=>instset::[
         pattern=><#>]]],
-     space=>[
-      super=>!*/m],
      const=>[
       [
        llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]@/m/web/helper],
@@ -387,12 +386,12 @@ mtron> */m/tble?docq
      rewrite=>[
       /m/tble/inst/rewrite/sql_count?rng=code{?}&dom=code(){<j>},
       /m/tble/inst/rewrite/sql_sum?rng=code{?}&dom=code(){<j>},
+      /m/tble/inst/rewrite/sql_sum_column?rng=code{?}&dom=code(){<j>},
       /m/tble/inst/rewrite/sql_mean?rng=code{?}&dom=code(){<j>},
       /m/tble/inst/rewrite/sql_limit?rng=code{?}&dom=code(){<j>},
       /m/tble/inst/rewrite/sql_offset?rng=code{?}&dom=code(){<j>},
       /m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&dom=code(){<j>},
-      /m/tble/inst/rewrite/sql_where?rng=code{?}&dom=code(){<j>},
-   ...(11 more)]]@/m/tble,
+   ...(12 more)]]@/m/tble,
     desc=>'relational tables, typed rows, and...',
     example=>['*acme:customer.where[person=>[name...']]
 ```
@@ -534,22 +533,28 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
 ==>[
-    body=>'a note with a database-assigned key']@tbledoc:note/11
+    body=>'a note with a database-assigned key']@tbledoc:note/17
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
 ==>[
-    body=>'another one']@tbledoc:note/12
+    body=>'another one']@tbledoc:note/18
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>1
 ==>12
-==>3
-==>10
+==>17
 ==>11
+==>15
 ==>2
 ==>4
-==>5
 ==>6
-==>7
 ==>8
+==>1
+==>13
+==>16
+==>3
+==>10
+==>14
+==>18
+==>5
+==>7
 ==>9
 ```
 ## taking the space down
@@ -567,7 +572,7 @@ mtron> tblespace::[pattern => tbledoc:#,
                    driver  => <org.sqlite.JDBC>,
                    route   => [tbledoc: => <>]]@/sys/space/tbledoc
 mtron> *tbledoc:person/+.count()                   [-- 0: a fresh mount has not discovered its tables yet --]
-==>0
+==>5
 mtron> */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
 ==>/sys/space/tbledoc/instset/award=>rec::T[?[
     {?}trophy=>str::T,

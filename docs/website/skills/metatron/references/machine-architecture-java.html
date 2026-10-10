@@ -1,0 +1,817 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>machine-architecture-java · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" title="metatron"><img src="../../../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../../../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_grph.html"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_iot.html"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_llm.html"><img
+                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
+                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach_ui.html"><img
+                            src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
+                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math_cat.html"><img
+                            src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
+                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_tble.html"><img
+                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
+                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/geometry-is-the-program.html"><i
+                            class="bi bi-diagram-3 icon-color me-2 isa-row"></i>geometry is the program</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/stream-ring-theory.pdf"><i
+                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/parametric-identities-in-ring-theory.html"><i
+                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/mm-adt.pdf"><i
+                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">machine-architecture-java</h1>
+        <small>Java-side Machine architecture — Machine, its five components (Memory, Network, InstSet, Compiler, Processor), the frame/ComponentUnion nesting model, push/pop/move, the compile→run pipeline, threads/monads, and the load-bearing invariants of the read path</small><br/>
+        <a href="machine-architecture-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>machine-architecture-java.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>Machine Architecture (Java)</h2>
+<h3>What a Machine is</h3>
+<p>A <strong>Machine</strong> is a <em>space of spaces</em> — the container in which address resolution happens. It is itself an address
+space (<code>Machine extends Space</code>), and its five members (<code>instset</code>, <code>memory</code>, <code>network</code>, <code>compiler</code>, <code>processor</code>) are rec
+entries shaped as <code>machine::T</code>. Of the five:</p>
+<ul>
+<li><strong>Memory</strong> is the facade over the world of spaces — the single read/write surface.</li>
+<li><strong>Compiler</strong> lowers code; <strong>Processor</strong> runs it; neither is an address space.</li>
+<li><strong>InstSet</strong> and <strong>Network</strong> are <em>accumulating</em> components (a frame wraps them); <strong>Compiler</strong> and <strong>Processor</strong> are
+<em>constructive</em> (whole-value, inherited or replaced).</li>
+</ul>
+<p>A machine replaced the old <code>Router</code> as the root of the address space. <code>Router.java</code> is gone; <code>Machine extends Space</code>,
+and <code>AbstractMachine extends AbstractSpace</code> is the one concrete body.</p>
+<h3>Package overview</h3>
+<pre><code>isa/mach/type/Machine.java            ← Machine interface + Frame + Component + Machine0 (the contract)
+isa/mach/type/Memory.java             ← Memory interface (relative bindings + absolute space index)
+isa/mach/type/Network.java            ← Network interface (peer roster + authority arithmetic)
+isa/mach/type/Compiler.java           ← Compiler interface (rewrite → resolve → type) + resolve memo
+isa/mach/type/Processor.java          ← Processor interface + Processor.Helper (the runtime core)
+isa/mach/type/ComponentUnion.java     ← frame wrapper: previous()/current(), read-through, close-current
+isa/mach/type/MemoryUnion.java        ← frame memory (binary read-through, pattern-aware at())
+isa/mach/type/NetworkUnion.java       ← frame network (binary read-through)
+isa/mach/type/InstSetUnion.java       ← frame ISA (binary read-through)
+isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
+isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
+isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
+isa/mach/type/machine/BasicNetwork.java     ← one level of network (roster is the rec)
+isa/mach/type/machine/BasicInstSet.java     ← the machine's OWN instset (n-ary union of imports)
+isa/mach/type/compiler/…                     ← Compiler impls + rewriter/resolver/typer stages
+isa/mach/type/processor/…                    ← Processor impls + Monad/MonadProcessor/SwarmProcessor + monads
+isa/mach/type/thread/…                       ← mThread / AbstractThread / VirtualThread / CoreThread / FutureObj
+isa/mach/machInstSet.java                    ← type registration (machine::T etc.) + bootstrap + sum_gather rewrite
+</code></pre>
+<h3>The five components</h3>
+<table>
+<thead>
+<tr><th>Component</th><th>Interface (extends)</th><th>One-line job</th><th>Frame behaviour</th></tr>
+</thead>
+<tbody>
+<tr><td>Memory</td><td><code>Space, Machine.Component, Closeable</code></td><td>relative bindings (names) + absolute index of spaces</td><td>accumulates (<code>MemoryUnion</code>)</td></tr>
+<tr><td>Network</td><td><code>Machine.Component, Closeable</code></td><td>peer roster <code>authority → transport</code>, <code>own</code>/<code>isPeer</code></td><td>accumulates (<code>NetworkUnion</code>)</td></tr>
+<tr><td>InstSet</td><td><code>Space</code> (via <code>AbstractInstSet</code>)</td><td>visible types/insts; <code>import</code> lands here</td><td>accumulates (<code>InstSetUnion</code>)</td></tr>
+<tr><td>Compiler</td><td><code>Machine.Component, Rec</code></td><td><code>code::T → code::T</code> in three stages</td><td>constructive (inherited/replaced)</td></tr>
+<tr><td>Processor</td><td><code>mThread, Machine.Component</code></td><td><code>code::T → obj</code>; the monadic execution engine</td><td>constructive</td></tr>
+</tbody>
+</table>
+<p><code>Machine.Component</code> is a <code>Rec</code> that answers <code>machine()</code> by walking its <code>parent()</code> chain up to the nearest <code>Machine</code>
+(falling back to <code>mach0()</code>). Components are <code>Rec</code>s <em>on purpose</em>: memory and network must be reachable from mtron
+(<code>&gt;&gt;space</code>, <code>&gt;&gt;previous</code>), not just from Java accessors.</p>
+<h3>The three accessor levels — the part that confuses</h3>
+<p>Every accumulating component has (up to) three ways to reach it, and the distinction is load-bearing:</p>
+<ol>
+<li><strong><code>own*</code></strong> — the machine's own slot, ignoring any frame. <code>ownMemory()</code> / <code>ownInstset()</code> / <code>ownNetwork()</code>. The slot
+holds a <em>template</em> (an <code>instLambda</code>), and <code>own*</code> applies it once and caches.</li>
+<li><strong>frame-aware</strong> — <code>memory()</code> / <code>instset()</code> / <code>network()</code>. Returns the current frame's union when a frame is live,
+else the machine's own slot.</li>
+<li><strong>resolution</strong> — <code>resolutionMemory()</code> / <code>resolutionNetwork()</code>. The one the read path uses: the frame's view <em>if it
+has already been materialized</em>, else the machine's own. It <strong>never materializes a frame</strong>, because materializing
+constructs a component, constructing an <code>Obj</code> runs a type check, and the type check reads through the machine —
+which lands back in <code>read()</code>. The non-allocating read-only helpers are <code>frameMemory()</code> / <code>frameNetwork()</code> and the
+<code>Frame.*View()</code> accessors.</li>
+</ol>
+<p><code>AbstractMachine</code> caches the three <code>own*</code> results in Java fields (<code>resolvedMemory</code>/<code>resolvedNetwork</code>/
+<code>resolvedInstSet</code>) so the read path sees a field read, not a template re-apply.</p>
+<h3>Frames and the component union (nesting)</h3>
+<p>A <strong>Frame</strong> (<code>Machine.Frame</code>) is one level of nesting: the machine it belongs to, its parent frame, and lazily
+materialized <code>instset</code>/<code>memory</code>/<code>network</code> views. Two thread-locals:</p>
+<ul>
+<li><code>FRAME</code> — the cursor (walks <em>up</em> only).</li>
+<li><code>FRAMES</code> — the address index <code>Map&lt;fURI, Frame&gt;</code> (the downward link the cursor can't provide).</li>
+</ul>
+<p><code>push()</code> clones the machine into a <strong>child</strong> whose vid strictly extends the parent's (<code>descendsFrom</code>), wraps it in a
+new <code>Frame</code>, and makes it current. <code>push(extension)</code> mints a unique vid from the extension. <code>pop()</code> restores the parent
+and closes the frame (releasing only what the frame introduced). <code>move(extension)</code> unifies push and pop via the
+coefficient's sign: positive = descend, negative = ascend one step.</p>
+<p>A frame wraps each <em>accumulating</em> component in a <code>ComponentUnion</code> (<code>previous()</code> + <code>current()</code>), reads <strong>through</strong>
+(own first, then parent), writes only to <code>current()</code>, and <code>close()</code>s only <code>current()</code>. Release is therefore structural:
+a popped frame takes its own spaces/peers/imports with it, and can never close what it inherited.</p>
+<p><strong><code>BasicInstSet</code> is the exception — it is n-ary, not binary.</strong> Memory and network are a fixed two-level tree; an ISA is
+an <em>ordered list of imported instsets held by reference</em>, own structure layered over them. Import order is precedence,
+own-first shadows a referenced name, and writes reach only the own structure — which is what makes a shared library
+instset safe to import from many machines.</p>
+<h3>How one evaluation flows</h3>
+<pre><code>machine.apply(code, start)
+  → Machine.current(this)                 // move this thread's perspective
+  → push()                                 // a fresh frame
+  → processor().code(compiler().apply(code).asCode()).apply(start)
+  → pop()                                  // release the frame
+</code></pre>
+<p><code>BasicMachine.of(...)</code> seeds the five slots as <code>instLambda</code> templates. <code>compiler()</code>/<code>processor()</code> apply the template,
+cache the prototype, and return a <code>.clone()</code> (fresh instance per caller). Every read/write funnels through
+<code>AbstractMachine.read/write</code>:</p>
+<pre><code>read(vid) → authority guard (dispatchForeign) → alignPrefix → stack check → resolutionMemory().readAbsolute(vid)
+</code></pre>
+<p><code>Memory.readAbsolute</code> asks <code>getSpaceFor(vid)</code>: the most specific space across the chain, else the machine itself (for
+keys it actually holds — <code>rootRelative</code> turns <code>/processor</code> into <code>processor</code>), else fail/noobj. The machine answering for
+its own rec keys is what makes <code>/</code> the root with no space mounted inside itself.</p>
+<h3>The compiler (three stages)</h3>
+<p><code>Compiler.apply</code> is the default schedule <code>rewrite → resolve → type</code> over three overridable stage components:</p>
+<ul>
+<li><strong>rewrite</strong> — <code>Rewriter</code> (default <code>FixPointRewriter</code>, fixpoint over the rewrite rules).</li>
+<li><strong>resolve</strong> — <code>Resolver</code> (default <code>ScoringResolver</code>; threads the type one inst at a time; generic binding runs inside
+per-candidate selection, so there is no separate binder).</li>
+<li><strong>type</strong> — <code>Typer</code> (default <code>TypeTyper</code>, runtime type assertions).</li>
+</ul>
+<p><code>Compiler.Helper.resolve</code> memoizes nested-code resolution keyed by <code>(code identity, runtime lhs type id)</code>
+(<code>RESOLVE_CACHE</code>), delegating to <code>ScoringResolver.resolveCode</code> + <code>FixPointRewriter</code>.</p>
+<h3>The processor (monadic execution)</h3>
+<p><code>Processor</code> is both an <code>mThread</code> and an <code>Obj</code>. <code>Processor.Helper</code> holds the runtime core that used to live on <code>Inst</code>:
+<code>apply</code> (resolve → <code>invoke</code>), <code>invoke</code> (noobj/domain guards, coefficient compression, range check), <code>applyArgs</code>
+(computeArgs), <code>resolveRuntime</code> (the <code>TypeCheck.code_resolve</code>-gated dynamic escape).</p>
+<p>The default processor is <strong><code>SwarmProcessor</code></strong> (extends <code>VirtualThread</code>, implements <code>MonadProcessor</code>), a monadic step
+loop over three queues stored in its rec:</p>
+<ul>
+<li><code>run</code> — the active monad queue (<code>ListMonad</code>).</li>
+<li><code>barrier</code> — monads parked at a gather/barrier.</li>
+<li><code>halted</code> — collected results (<code>RESULT</code> is an auto-pointer to <code>halted</code>).</li>
+</ul>
+<p>A <strong><code>StatefulMonad</code></strong> is a four-tuple <code>[obj, inst, state, code]</code> carried as an <code>Lst</code>; <code>apply()</code> feeds the inst's
+<code>monad_in</code> lens to <code>Processor.Helper.apply</code>, then <code>next()</code> walks to the successor inst. <code>Monad</code> itself is the minimal
+<code>obj</code>/<code>inst</code> interface with <code>halted</code>/<code>dead</code>/<code>zombie</code> states. <code>RunningMonads</code> is an inst-indexed running set (a
+coefficient-summing view), and <code>ListMonad</code> the list-backed queue.</p>
+<h3>Threads</h3>
+<p><code>mThread</code> is the unified lifecycle contract (<code>stop</code>/<code>pause</code>/<code>resume</code>/<code>state</code>/<code>apply</code>/<code>applyAsync</code>/<code>result</code>/<code>future</code>).
+<code>AbstractThread</code> implements it over an <code>MRec</code> + <code>FutureObj</code> and hands async work to <code>ThreadExecutor</code>; <code>VirtualThread</code>
+and <code>CoreThread</code> are the two concrete platform strategies. A worker publishes where it ended via <code>landedPerspective()</code>.</p>
+<h3>Bootstrap and the type hierarchy</h3>
+<p><code>machInstSet.setup()</code> registers the whole <code>machine::T</code> family under <code>/m/mach/component/…</code> — <code>processor::T</code>,
+<code>monad_processor::T</code>, <code>swarm_processor::T</code>, <code>compiler::T</code>, <code>default_compiler::T</code>, the rewriter/resolver/typer families,
+<code>memory::T</code>, <code>network::T</code>, and <code>machine::T</code> (whose shape is <code>instset</code>/<code>compiler</code>/<code>memory</code>/<code>network</code>/<code>processor</code>). The
+default machine lives at <code>/sys/mach/default</code> (a <code>const</code> built by <code>BasicMachine.of</code>). <code>sum_gather</code> — the rewrite that
+turns a monoidic reducer into a distributed gather over <code>/usr/compute</code> peers — lives here too.</p>
+<h3>Load-bearing invariants (keep these if you simplify)</h3>
+<ul>
+<li><strong>The read path must never allocate.</strong> Constructing an <code>Obj</code> resolves a type through a read, which recurses into
+<code>read()</code>. That single constraint explains <code>resolutionMemory()</code> vs <code>memory()</code>, the eager seeding in constructors, the
+<code>*View()</code> accessors, and the field-cached <code>own*</code> slots. Any simplification must preserve it.</li>
+<li><strong>Component slots hold templates, not instances.</strong> <code>at(COMPILER)</code> returns an <code>instLambda</code>; <code>compiler()</code> applies +
+caches + clones. <code>ownInstset()</code> must <code>instanceof</code>-check the resolved value (an mtron type check rejects the seeded
+<code>BasicInstSet</code>).</li>
+<li><strong><code>ComponentUnion.previous()</code> is a rec entry (<code>&gt;&gt;previous</code>), never a Java field, and never <code>Obj.orElse</code>.</strong> The parent
+fallback must be lazy — <code>orElse</code> evaluates the parent unconditionally on every hit.</li>
+<li><strong>Never write a roster under <code>/sys/mach</code>.</strong> The machine claims that address and <code>AbstractSpace</code>'s default writer is a
+no-op, so writes there are silently dropped. The peer roster lives at <code>/sys/peer</code>.</li>
+<li><strong><code>push()</code> must mint a child, not the parent.</strong> Use the 3-arg <code>clone</code> — <code>selfVID</code> <em>pins</em> an already-set vid, so a
+2-arg clone would silently keep the parent's address.</li>
+<li><strong><code>read()</code>/<code>write()</code> on a machine are always space-resolving</strong> (use <code>readAbsolute</code>/<code>writeAbsolute</code>), so a bulk
+wildcard write reaches the space it names, not the argument stack.</li>
+</ul>
+<h3>Migration state (why it reads as two systems at once)</h3>
+<p>The Router→Machine migration is <strong>not finished</strong>. <code>Router.java</code> is deleted, but its scaffolding remains:</p>
+<ul>
+<li><code>stackSpace</code> (<code>+/#</code>) still exists and is still seeded into the root memory; a board task is open to remove it.</li>
+<li><code>Memory.ARG_STACK</code> (<code>argFrames</code>) is marked <strong>temporary</strong> — the old per-instruction arg stack, moved into <code>Memory</code>
+so <code>Router</code> could be deleted; it is meant to fold into the frame chain.</li>
+<li><code>ExecutionStack</code> still wraps reads/writes and instruction apply.</li>
+<li><code>BasicNetwork.transportOf</code> still falls back to <code>/sys/peer</code> (a TODO notes the roster should become a frame-level
+projection).</li>
+</ul>
+<p>Any cleanup that lands these three (drop <code>stackSpace</code>, fold <code>argFrames</code> into the frame chain, retire the <code>/sys/peer</code>
+fallback) removes the &quot;two scoping mechanisms at once&quot; ambiguity that is the main source of the current complexity.</p>
+<hr />
+<h3>Post-refactor note — <code>Frame</code> class gutted (2026-10-08)</h3>
+<p>The <code>Frame</code> class (and the <code>FRAMES</code> address index) was removed in favor of <code>ThreadLocal&lt;Machine&gt;</code> (<code>CURRENT</code>) as the
+frame. Verdict: a good simplification — the frame <em>is</em> the machine (the vid encodes nesting, <code>push()</code>/<code>pop()</code> move the
+cursor), and <code>CURRENT</code> is a faithful &quot;walk up&quot; pointer.</p>
+<p>But <code>Frame</code> was carrying three responsibilities that must be rehomed, not deleted:</p>
+<ol>
+<li>
+<p><strong>Per-frame, lazily-materialized union views.</strong> <code>Frame</code> held the <code>instset</code>/<code>memory</code>/<code>network</code> views as <em>per-frame</em>
+fields. That matters because <code>push()</code> clones with <code>this.jvm()</code> — <strong>the <code>jvm()</code> rec is shared</strong>, so a union view stored
+in the rec would leak between parent and child. The views must live in per-instance Java state: the
+<code>resolvedMemory</code>/<code>resolvedNetwork</code>/<code>resolvedInstSet</code> fields on <code>AbstractMachine</code> are that replacement — <strong>not</strong> &quot;old
+artifacts&quot;. (Removing <code>resolvedMemory</code> re-introduced a <code>StackOverflowError</code>: <code>memory()</code> → <code>atDirect(uri(MEMORY))</code> →
+<code>uri(MEMORY)</code> → <code>MObj.&lt;init&gt;</code> → <code>fURI.big()</code> → <code>memory()</code>. The field memoizes the slot and breaks that cycle.)</p>
+</li>
+<li>
+<p><strong>The upward link.</strong> <code>Frame</code> had an explicit <code>parent</code>; the simplification leaves <code>Obj.parent()</code>, which returns
+<code>noobj</code> in the current code. Pick one reliable upward path: wire <code>parent()</code> on <code>push()</code>, or derive the parent from
+<code>vid.retract(1)</code> (machines have globally-unique vids, so the parent is addressable by retraction).</p>
+</li>
+<li>
+<p><strong>The downward/address index (<code>FRAMES</code>).</strong> <code>FRAMES</code> was <code>Map&lt;fURI, Frame&gt;</code> — cross-frame lookup by vid. It's
+recoverable through the memory's own space index (a machine is a <code>Space</code> and auto-registers under its vid via
+<code>AbstractSpace</code>'s <code>Machine.current().memory().addSpace(this)</code>), so <code>Machine.current().read(parentVID)</code> resolves the
+parent without a dedicated map — <em>provided</em> every machine registers under its vid.</p>
+</li>
+</ol>
+<p>The invariant to keep: <strong>the read path must never allocate, and component slots are templates.</strong> <code>memory()</code> (and
+eventually <code>network()</code>/<code>instset()</code>) must stay a field read on the read path (<code>resolution*</code>-style), never
+<code>atDirect(uri(MEMORY))</code>, which constructs a <code>Uri</code> and re-enters <code>read()</code> through <code>big()</code>.</p>
+<p>Net: keep the gutting of <code>Frame</code>, but rehome the three responsibilities explicitly — union views → per-instance
+<code>resolved*</code> fields (done for memory), parent link → <code>parent()</code> or <code>vid.retract(1)</code>, cross-frame lookup → memory's space
+index. That makes the simplification <em>cleaner</em> than the original, not just smaller.</p>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>
