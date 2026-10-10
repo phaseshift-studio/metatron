@@ -280,6 +280,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
@@ -393,20 +394,20 @@
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">mach-instset</h1>
-        <small>The machine instruction set at /m/mach: a machine is metatron's unit of **process** — a space::T whose five slots are its instruction set, compiler, memory, network and processor. TRIGGER: When wiring or replacing a compile stage (compiler::[rewriter=>…,resolver=>…]), writing a parser for a surface syntax other than mtron, choosing a resolution strategy (scoring_resolver vs firstfind_resolver, specificity vs first-match selection), asking what a machine's compiler / processor / memory / network slot holds, or tracing why an instruction chain compiled the way it did.</small><br/>
+        <small>The machine instruction set at /m/mach: a machine is metatron's unit of **process** — a space::T whose five slots are its instruction set, compiler, memory, network and processor.</small><br/>
         <a href="mach-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>mach-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
 <h2>mach instruction set (<code>/m/mach</code>)</h2>
 <p>A <strong>machine</strong> is metatron's unit of process: everything runs in one, and <code>/</code> is the root machine.</p>
-<p><code>machine::T</code> carries exactly five components, and each is one rec entry:</p>
+<p><code>machine::T</code> carries exactly five components, and each is one <code>rec::T</code> entry:</p>
 <table>
 <thead>
 <tr><th>slot</th><th>what it holds</th></tr>
 </thead>
 <tbody>
 <tr><td><code>instset</code></td><td>the instruction sets this frame can see (an n-ary union of imports)</td></tr>
-<tr><td><code>compiler</code></td><td>the source to <code>code::T</code> converter, in stages</td></tr>
+<tr><td><code>compiler</code></td><td>the source to <code>code::T</code> converter</td></tr>
 <tr><td><code>memory</code></td><td>the address space: relative uris (stack) and absolute uris (spaces)</td></tr>
 <tr><td><code>network</code></td><td>the peers a machine indexes and maintains shared state</td></tr>
 <tr><td><code>processor</code></td><td>the runtime that executes <code>code::T</code> over the metatron graph</td></tr>

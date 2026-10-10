@@ -280,6 +280,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
@@ -884,13 +885,14 @@ database says <em>what its key is</em>. Two things have to be true for it to wor
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
 ==&gt;[
-    body=&gt;'a note with a database-assigned key']@tbledoc:note/19
+    body=&gt;'a note with a database-assigned key']@tbledoc:note/21
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
 ==&gt;[
-    body=&gt;'another one']@tbledoc:note/20
+    body=&gt;'another one']@tbledoc:note/22
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
+==&gt;21
 ==&gt;11
 ==&gt;15
 ==&gt;19
@@ -901,6 +903,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;1
 ==&gt;13
 ==&gt;16
+==&gt;22
 ==&gt;3
 ==&gt;10
 ==&gt;14

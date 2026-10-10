@@ -533,13 +533,14 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
 ==>[
-    body=>'a note with a database-assigned key']@tbledoc:note/19
+    body=>'a note with a database-assigned key']@tbledoc:note/21
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
 ==>[
-    body=>'another one']@tbledoc:note/20
+    body=>'another one']@tbledoc:note/22
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>12
 ==>17
+==>21
 ==>11
 ==>15
 ==>19
@@ -550,6 +551,7 @@ mtron> *tbledoc:note/+/id                                    [-- the keys the ba
 ==>1
 ==>13
 ==>16
+==>22
 ==>3
 ==>10
 ==>14
