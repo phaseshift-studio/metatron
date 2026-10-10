@@ -28,11 +28,12 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.compiler.DefaultCompiler;
+import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
-import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.FirstFindResolver;
-import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
+import studio.phaseshift.metatron.isa.mach.type.compiler.parser.mtronParser;
+import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.*;
 import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
+import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.IdentityRewriter;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
@@ -168,23 +169,43 @@ public class machInstSet extends AbstractInstSet {
     public static Type MACH_PROCESSOR_TYPE;
     public static Type MACH_MONAD_PROCESSOR_TYPE;
     public static Type MACH_SWARM_PROCESSOR_TYPE;
-    // the compiler family — structural apply(code)->code contract, then the three stage families it composes
+    // the compiler family — structural apply(source)->code contract, then the four stage families it composes
     public static final fURI MACH_COMPILER_TID = MACH_MACHINE_COMPONENT_TID.extend(COMPILER);
-    public static final fURI MACH_DEFAULT_COMPILER_TID = MACH_COMPILER_TID.extend("default");
     public static Type MACH_COMPILER_TYPE;
-    public static Type MACH_DEFAULT_COMPILER_TYPE;
+    // the parser family — structural parse(source)->obj contract, the first stage and the one that
+    // runs before there is any code: it is what source text has instead of a type
+    public static final fURI MACH_PARSER_TID = MACH_MACHINE_COMPONENT_TID.extend(PARSER);
+    public static final fURI MACH_MTRON_PARSER_TID = MACH_PARSER_TID.extend("mtron_parser");
+    public static Type MACH_PARSER_TYPE;
+    public static Type MACH_MTRON_PARSER_TYPE;
     // the rewriter family — structural rewrite(code)->code contract, concrete fixpoint strategy
     public static final fURI MACH_REWRITER_TID = MACH_MACHINE_COMPONENT_TID.extend(REWRITER);
-    public static final fURI MACH_FIXPOINT_REWRITER_TID = MACH_REWRITER_TID.extend("fixpoint");
+    public static final fURI MACH_FIXPOINT_REWRITER_TID = MACH_REWRITER_TID.extend("fixpoint_rewriter");
+    public static final fURI MACH_IDENTITY_REWRITER_TID = MACH_REWRITER_TID.extend("identity_rewriter");
     public static Type MACH_REWRITER_TYPE;
     public static Type MACH_FIXPOINT_REWRITER_TYPE;
+    public static Type MACH_IDENTITY_REWRITER_TYPE;
     // the resolver family — structural resolve(code)->code contract, concrete scoring + firstfind strategies
     public static final fURI MACH_RESOLVER_TID = MACH_MACHINE_COMPONENT_TID.extend(RESOLVER);
-    public static final fURI MACH_SCORING_RESOLVER_TID = MACH_RESOLVER_TID.extend("scoring");
-    public static final fURI MACH_FIRSTFIND_RESOLVER_TID = MACH_RESOLVER_TID.extend("firstfind");
+    public static final fURI MACH_IDENTITY_RESOLVER_TID = MACH_RESOLVER_TID.extend("identity_resolver");
+    public static final fURI MACH_SCORING_RESOLVER_TID = MACH_RESOLVER_TID.extend("scoring_resolver");
+    public static final fURI MACH_FIRSTFIND_RESOLVER_TID = MACH_RESOLVER_TID.extend("firstfind_resolver");
     public static Type MACH_RESOLVER_TYPE;
+    public static Type MACH_IDENTITY_RESOLVER_TYPE;
     public static Type MACH_SCORING_RESOLVER_TYPE;
     public static Type MACH_FIRSTFIND_RESOLVER_TYPE;
+    // the selector + binder families — the resolver's two collaborators: pick the candidates, then
+    // make one of them concrete. Both are strategies the resolver composes, not stages of their own.
+    public static final fURI MACH_SELECTOR_TID = MACH_MACHINE_COMPONENT_TID.extend(SELECTOR);
+    public static final fURI MACH_SPECIFICITY_SELECTOR_TID = MACH_SELECTOR_TID.extend("specificity_selector");
+    public static final fURI MACH_FIRSTFIND_SELECTOR_TID = MACH_SELECTOR_TID.extend("firstfind_selector");
+    public static final fURI MACH_BINDER_TID = MACH_MACHINE_COMPONENT_TID.extend(BINDER);
+    public static final fURI MACH_GENERIC_BINDER_TID = MACH_BINDER_TID.extend("generic_binder");
+    public static Type MACH_SELECTOR_TYPE;
+    public static Type MACH_SPECIFICITY_SELECTOR_TYPE;
+    public static Type MACH_FIRSTFIND_SELECTOR_TYPE;
+    public static Type MACH_BINDER_TYPE;
+    public static Type MACH_GENERIC_BINDER_TYPE;
     // the typer family — structural type(code)->code contract
     public static final fURI MACH_TYPER_TID = MACH_MACHINE_COMPONENT_TID.extend(TYPER);
     public static Type MACH_TYPER_TYPE;
@@ -234,46 +255,133 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
                                         .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
                                 "a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result"),
-                        // the compiler family — structural apply(code)->code contract holding its three stages
-                        MACH_COMPILER_TYPE = Type.Builder.build()
-                                .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_COMPILER_TID)
-                                .isaPredicate(rec(
-                                        uri(REWRITER).maybe().asUri(), T(MACH_REWRITER_TID),
-                                        uri(RESOLVER).maybe().asUri(), T(MACH_RESOLVER_TID),
-                                        uri(TYPER).maybe().asUri(), T(MACH_TYPER_TID)))
-                                .create(),
-                        MACH_DEFAULT_COMPILER_TYPE = Type.Builder.build()
-                                .tid(MACH_COMPILER_TID)
-                                .vid(MACH_DEFAULT_COMPILER_TID)
-                                .constructor(arg -> new DefaultCompiler(arg.asRec().jvm(), MACH_DEFAULT_COMPILER_TID, arg.vid()))
-                                .create(),
+                        // the compiler family — structural apply(source)->code contract holding its four stages
+                        MACH_COMPILER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MACHINE_COMPONENT_TID)
+                                        .vid(MACH_COMPILER_TID)
+                                        .isaPredicate(rec(
+                                                uri(PARSER).maybe().asUri(), T(MACH_PARSER_TID),
+                                                uri(REWRITER).maybe().asUri(), T(MACH_REWRITER_TID),
+                                                uri(RESOLVER).maybe().asUri(), T(MACH_RESOLVER_TID),
+                                                uri(TYPER).maybe().asUri(), T(MACH_TYPER_TID)))
+                                        .constructor(arg -> new BasicCompiler(BasicCompiler.stages(arg.asRec().jvm()), MACH_COMPILER_TID, arg.vid()))
+                                        .create(),
+                                Map.of(
+                                        uri(PARSER).maybe(), "the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default",
+                                        uri(REWRITER).maybe(), "the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites",
+                                        uri(RESOLVER).maybe(), "the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default",
+                                        uri(TYPER).maybe(), "the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry"),
+                                "the compiler contract of machine::T — a machine's lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler IS its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=>] is the default compiler.",
+                                "compiler::[rewriter=>fixpoint_rewriter::[max=>3],resolver=>scoring_resolver::[=>]]   [-- wire the stages that matter; parser and typer default --]",
+                                "compiler::[parser=>mtron_parser::[=>]]   [-- name the read stage explicitly --]",
+                                "compiler::[=>]   [-- the default compiler: mtron parse, fixpoint, scoring, typer --]"),
+                        // the parser family — structural contract, one concrete language (mtron itself)
+                        MACH_PARSER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MACHINE_COMPONENT_TID)
+                                        .vid(MACH_PARSER_TID)
+                                        .create(),
+                                "the parse contract of compiler::T — the first stage, the only one that runs before there is any code, and the seam where a language is hosted: any language can be parsed as long as it generates code::T. given the rich type system, the object-oriented and functional-oriented approach, and turing-completeness, most any language can map to mtron code::T."),
+                        MACH_MTRON_PARSER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_PARSER_TID)
+                                        .vid(MACH_MTRON_PARSER_TID)
+                                        .constructor(arg -> new mtronParser(arg.asRec().jvm(), MACH_MTRON_PARSER_TID, arg.vid()))
+                                        .create(),
+                                "at the parse stage of compiler::T, mtron_parser::T reads metatron's own language through the mtron serializer, so what it accepts is exactly what a console line, a source file and a test row accept — the one parser metatron ships, and the compiler's default",
+                                "mtron_parser::[=>]   [-- the default parse stage of compiler::T --]"),
                         // the rewriter family — structural contract, concrete fixpoint strategy
-                        MACH_REWRITER_TYPE = Type.Builder.build()
-                                .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_REWRITER_TID)
-                                .create(),
-                        MACH_FIXPOINT_REWRITER_TYPE = Type.Builder.build()
-                                .tid(MACH_REWRITER_TID)
-                                .vid(MACH_FIXPOINT_REWRITER_TID)
-                                .isaPredicate(rec(uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))))
-                                .constructor(arg -> new FixPointRewriter(arg.asRec().jvm(), MACH_FIXPOINT_REWRITER_TID, arg.vid()))
-                                .create(),
+                        MACH_REWRITER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MACHINE_COMPONENT_TID)
+                                        .vid(MACH_REWRITER_TID)
+                                        .create(),
+                                "the rewrite contract of compiler::T — a lowering from code::T to code::T that runs before any type is resolved, so it decides what the instruction chain is: rules see generic dom/rng, and a rule-driven collapse, a native pushdown, or a distributed reduce's gather point all enter the compiled form here."),
+                        MACH_IDENTITY_REWRITER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_REWRITER_TID)
+                                        .vid(MACH_IDENTITY_REWRITER_TID)
+                                        .constructor(arg -> IdentityRewriter.single())
+                                        .create(),
+                                "at the rewrite stage of compiler::T, identity_rewriter::T is the no-op rewriter: it returns the code unchanged, which is the compiler's default when no concrete rewriter is wired",
+                                "identity_rewriter::[=>]   [-- the compiler's default rewrite stage --]"),
+                        MACH_FIXPOINT_REWRITER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_REWRITER_TID)
+                                        .vid(MACH_FIXPOINT_REWRITER_TID)
+                                        .isaPredicate(rec(uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))))
+                                        .constructor(arg -> new FixPointRewriter(arg.asRec().jvm(), MACH_FIXPOINT_REWRITER_TID, arg.vid()))
+                                        .create(),
+                                Map.of(uri(MAX).maybe(), "the convergence window: the number of consecutive stable passes the code must show before the fixpoint is accepted (default 2)"),
+                                "at the rewrite stage of compiler::T, fixpoint_rewriter::T applies every rewrite rule registered by every instset, in turn, over the whole code, and repeats the pass until the code hash is unchanged for max consecutive passes, so a rule re-runs on every pass and must be idempotent",
+                                "fixpoint_rewriter::[max=>3]   [-- accept the fixpoint after three stable passes --]"),
                         // the resolver family — structural contract, concrete scoring + firstfind strategies (empty config)
-                        MACH_RESOLVER_TYPE = Type.Builder.build()
-                                .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_RESOLVER_TID)
-                                .create(),
-                        MACH_SCORING_RESOLVER_TYPE = Type.Builder.build()
-                                .tid(MACH_RESOLVER_TID)
-                                .vid(MACH_SCORING_RESOLVER_TID)
-                                .constructor(arg -> new ScoringResolver(arg.asRec().jvm(), MACH_SCORING_RESOLVER_TID, arg.vid()))
-                                .create(),
-                        MACH_FIRSTFIND_RESOLVER_TYPE = Type.Builder.build()
-                                .tid(MACH_RESOLVER_TID)
-                                .vid(MACH_FIRSTFIND_RESOLVER_TID)
-                                .constructor(arg -> new FirstFindResolver(arg.asRec().jvm(), MACH_FIRSTFIND_RESOLVER_TID, arg.vid()))
-                                .create(),
+                        MACH_RESOLVER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MACHINE_COMPONENT_TID)
+                                        .vid(MACH_RESOLVER_TID)
+                                        .isaPredicate(rec(
+                                                uri(SELECTOR).maybe().asUri(), T(MACH_SELECTOR_TID),
+                                                uri(BINDER).maybe().asUri(), T(MACH_BINDER_TID)))
+                                        .create(),
+                                Map.of(
+                                        uri(SELECTOR).maybe(), "the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)",
+                                        uri(BINDER).maybe(), "the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"),
+                                "the resolution contract of compiler::T — the stage that turns a generic instruction chain into a typed one, and the compiler's widest-reaching stage: it threads each inst's range into the next inst's domain and, per inst, delegates to a selector (fetch and order the candidates) and a binder (make the chosen candidate concrete, or reject it), so which concrete inst a call becomes — and with it whether the inst is a filter, a gather/barrier, or an initial — is settled here, per element type. What it settles is what the processor then runs (a filter's {0,1} wing dropped for compile-time typing, an initial inst seeding the element type from its own argument, a cast's range rebound to the named type), and an inst it cannot resolve is left in place for runtime resolution — a semi-resolved code, not a failed one. Structural, not nominal: its two collaborators are rec fields, both optional and both defaulting, so a resolver is its walk plus whichever strategies it names. Its members are scoring_resolver::T (the default pair), firstfind_resolver::T (first match, no scoring) and identity_resolver::T (the no-op)",
+                                "scoring_resolver::[selector=>firstfind_selector::[=>]]   [-- a resolver::T: the same walk, first-match selection --]",
+                                "scoring_resolver::[=>]   [-- a resolver::T: both strategies default --]"),
+                        MACH_IDENTITY_RESOLVER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_RESOLVER_TID)
+                                        .vid(MACH_IDENTITY_RESOLVER_TID)
+                                        .constructor(arg -> IdentityResolver.single())
+                                        .create(),
+                                "at the resolution stage of compiler::T, identity_resolver::T is the no-op resolver: it threads no type and resolves no instruction — it returns the code unchanged — for a compiler whose resolve stage is done elsewhere",
+                                "identity_resolver::[=>]   [-- a resolve stage that does nothing --]"),
+                        MACH_SCORING_RESOLVER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_RESOLVER_TID)
+                                        .vid(MACH_SCORING_RESOLVER_TID)
+                                        .constructor(arg -> new ScoringResolver(arg.asRec().jvm(), MACH_SCORING_RESOLVER_TID, arg.vid()))
+                                        .create(),
+                                "at the resolution stage of compiler::T, scoring_resolver::T is the walk plus the default pair of collaborators: it threads each inst's range into the next inst's domain and, per inst, hands the call to its selector (specificity_selector::T by default) with its binder (generic_binder::T by default) — so which concrete inst a call becomes is settled here, per element type; wire a selector or binder entry to compose a different resolution",
+                                "scoring_resolver::[=>]   [-- the default resolution stage of compiler::T --]"),
+                        MACH_FIRSTFIND_RESOLVER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_RESOLVER_TID)
+                                        .vid(MACH_FIRSTFIND_RESOLVER_TID)
+                                        .constructor(arg -> {
+                                            final Map<Obj, Obj> stages = mutableMap(uri(SELECTOR), FirstFindSelector.single(), uri(BINDER), GenericBinder.single());
+                                            stages.putAll(arg.asRec().jvm());
+                                            return new ScoringResolver(stages, MACH_FIRSTFIND_RESOLVER_TID, arg.vid());
+                                        })
+                                        .create(),
+                                "at the resolution stage of compiler::T, firstfind_resolver::T is the same walk wired to firstfind_selector::T — a call resolves to the first viable candidate in read order, with no specificity scoring; the pre-scoring behavior, kept as the A/B counterpart of scoring_resolver::T",
+                                "firstfind_resolver::[=>]   [-- first match wins, no scoring --]"),
+                        // the binder family — the resolver's "make this candidate concrete" strategy
+                        MACH_BINDER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MACHINE_COMPONENT_TID)
+                                        .vid(MACH_BINDER_TID)
+                                        .create(),
+                                "the binding contract of resolver::T — the collaborator that turns one selected candidate into the instruction a call becomes, or rejects it: it binds the candidate's generics to the lhs, gates it on the lhs domain, and resolves its arguments (compiling nested code args), returning null when the candidate cannot be made concrete; because a candidate that fails to bind must not be selectable, binding gates selection rather than following it, which is why a binder is a strategy inside the resolve stage and never a stage of its own. The candidate arrives already shaped with the call's dom/rng hints — that shaping is the selector's rule."),
+                        MACH_GENERIC_BINDER_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_BINDER_TID)
+                                        .vid(MACH_GENERIC_BINDER_TID)
+                                        .constructor(arg -> new GenericBinder(arg.asRec().jvm(), MACH_GENERIC_BINDER_TID, arg.vid()))
+                                        .create(),
+                                "at the resolution stage of compiler::T, generic_binder::T is the binding algorithm: it binds the candidate's generics to the lhs, gates on the lhs domain, resolves the call's arguments, seeds an initial inst's range from its own argument, and copies the user's query maps — returning null at any step that rejects the candidate; the call's dom/rng hints (including a cast's named type) are applied by the selector before the candidate reaches it",
+                                "generic_binder::[=>]   [-- the default binder::T --]"),
+                        // the selector family — the resolver's "which candidate" strategy
+                        MACH_SELECTOR_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MACHINE_COMPONENT_TID)
+                                        .vid(MACH_SELECTOR_TID)
+                                        .create(),
+                                "the candidate contract of resolver::T — the collaborator that fetches the instructions a call may resolve to, orders them by its own rule, shapes each one with the call's dom/rng hints, and returns the first its binder can make concrete: the ordering rule is the whole strategy, and it is where resolution strategy varies — specificity_selector::T scores by signature specificity, firstfind_selector::T takes the first viable candidate in read order; a selector that cannot resolve an instruction returns null and leaves it for runtime resolution rather than failing the code"),
+                        MACH_SPECIFICITY_SELECTOR_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_SELECTOR_TID)
+                                        .vid(MACH_SPECIFICITY_SELECTOR_TID)
+                                        .constructor(arg -> new SpecificitySelector(arg.asRec().jvm(), MACH_SPECIFICITY_SELECTOR_TID, arg.vid()))
+                                        .create(),
+                                "at the resolution stage of compiler::T, specificity_selector::T orders a call's candidates by how specific their signatures are and takes the first its binder can bind: a concrete domain, an exact domain base-path match, a non-base dom/rng, matching arguments, and the large bonus that makes an as() candidate whose range names the requested type win; the from/at and as() shortcuts live here, since they return a finished contract rather than a candidate and so bypass the binder. Two legacy hint forms are preserved here and named: a single candidate replaces the dom outright, while a scored field keeps the API's declared dom and takes the call's coefficient",
+                                "specificity_selector::[=>]   [-- the default selector::T --]"),
+                        MACH_FIRSTFIND_SELECTOR_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_SELECTOR_TID)
+                                        .vid(MACH_FIRSTFIND_SELECTOR_TID)
+                                        .constructor(arg -> new FirstFindSelector(arg.asRec().jvm(), MACH_FIRSTFIND_SELECTOR_TID, arg.vid()))
+                                        .create(),
+                                "at the resolution stage of compiler::T, firstfind_selector::T takes the first viable candidate in read order, with no specificity scoring, so selection is order-dependent — the pre-scoring strategy, kept as the A/B counterpart of specificity_selector::T",
+                                "firstfind_selector::[=>]   [-- first match wins, no scoring --]"),
                         // the typer family — structural contract, runtime type assertions (identity for now)
                         MACH_TYPER_TYPE = Type.Builder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
@@ -351,7 +459,7 @@ public class machInstSet extends AbstractInstSet {
                                 machine's access to resources. lateral machine communication made possible through
                                 the  machine network where the peer group forms a shared computing workspace that is
                                 garbage collected when machine is popped off the parent stack. the absolute local root
-                                of the metatron graph (/.) is a root machine.
+                                of the metatron graph (/.) is the root machine.
                                 """),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()

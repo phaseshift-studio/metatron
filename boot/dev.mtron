@@ -9,7 +9,7 @@
  mqtt/broker  => <mqtt://ginger.local:1883>,
  typer/stage  => [inst_dom     => true, 
                   inst_rng     => true,
-                  type_ctor    => true,
+                  type_pred    => true,
                   obj_write    => true,
                   code_resolve => false],
  header => """

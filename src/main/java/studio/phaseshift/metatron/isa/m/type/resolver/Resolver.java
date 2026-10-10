@@ -37,9 +37,12 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  * InstResolver — the resolution stage of {@code compiler::T}: lowers {@code code::T} to
  * {@code code::T} by threading the type through the instruction chain and resolving one inst at a
  * time. A resolver is a machine component ({@code resolver::T}); {@link Helper#resolveCode} owns
- * the threading algorithm, and the concrete strategies ({@code scoring_resolver::T},
- * {@code firstfind_resolver::T}) supply the per-instruction selection via the supplied
- * {@link InstSelector}.
+ * the threading algorithm, and the per-instruction work is delegated to a {@link Selector} (which
+ * fetches and orders the candidates) and a {@link Binder} (which makes the chosen candidate
+ * concrete or rejects it). The two are collaborators of the one stage, not stages themselves:
+ * binding gates selection, so it runs inside the selector's candidate walk. Any selector therefore
+ * composes with any binder — {@code resolver::[selector=>specificity_selector::T,
+ * binder=>generic_binder::T]}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -74,16 +77,18 @@ public interface Resolver extends Machine.Component {
 
         /**
          * Resolve a full instruction chain — threads the output type of each instruction as the
-         * input type of the next via {@code Inst.resolve(Obj, InstSelector)}, selecting each inst
-         * with {@code sel}. An inst that resolves without a dom stays unresolved (resolved again
-         * at runtime); a filter's {0,1} wing is dropped for compile-time typing only.
+         * input type of the next via {@code Inst.resolve(Obj, Selector, Binder)}, selecting and
+         * binding each inst with {@code sel} and {@code binder}. An inst that resolves without a
+         * dom stays unresolved (resolved again at runtime); a filter's {0,1} wing is dropped for
+         * compile-time typing only.
          *
-         * @param lhs  the compile-time lhs ({@code noobj()} at the machine level)
-         * @param code the code to resolve
-         * @param sel  the per-instruction selection strategy for this stage
+         * @param lhs    the compile-time lhs ({@code noobj()} at the machine level)
+         * @param code   the code to resolve
+         * @param sel    the per-instruction selection strategy for this stage
+         * @param binder the binder {@code sel} makes each candidate concrete with
          * @return the resolved (or semi-resolved) code
          */
-        public static Code resolveCode(final Obj lhs, final Code code, final InstSelector sel) {
+        public static Code resolveCode(final Obj lhs, final Code code, final Selector sel, final Binder binder) {
             final GraphittyLogger LOG = Graphitty.log(Resolver.class);
             Obj token = lhs.isType() ? lhs : lhs.type();
             final List<Inst> resolvedCode = new ArrayList<>();
@@ -91,7 +96,7 @@ public interface Resolver extends Machine.Component {
             int i = 0;
             for (final Inst inst : code.insts()) {
                 try {
-                    final Inst resolvedInst = inst.resolve(token, sel);
+                    final Inst resolvedInst = inst.resolve(token, sel, binder);
                     if (!resolvedInst.hasDom()) {
                         resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
                         token = inst.hasRng() ? inst.rng() : token;

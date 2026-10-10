@@ -5,7 +5,7 @@
    ws/host    => <ws://localhost:8555>],
  typer/stage  => [inst_dom     => true, 
                   inst_rng     => true,
-                  type_ctor    => true,
+                  type_pred    => true,
                   obj_write    => true,
                   code_resolve => false],
  header        => """

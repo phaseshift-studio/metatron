@@ -710,6 +710,10 @@ public interface Type extends Obj {
                 /// //////////////////
                 /// OBJ <=> TYPE ///
                 /// //////////////////
+                /*if (!rhs.asType().isGeneric() && rhs.asType().isEphemeral()) {
+                    Type non = T(rhs.vid());
+                    rhs.self(non.jvm(), non.tid(), non.vid());
+                }*/
                 if (rhs.vid().isGeneric() || rhs.isObjCall())
                     return true;
                 if (rhs.vid().hasPoly()) {

@@ -4,12 +4,12 @@
    ws/host    => <ws://0.0.0.0:8555>],
  typer/stage  => [inst_dom     => false, 
                   inst_rng     => false,
-                  type_ctor    => false,
+                  type_pred    => false,
                   obj_write    => true,
                   code_resolve => false] 
 ]
 [===============]
-[== inst_rng,type_ctor,obj_write] ==]
+[== inst_rng,type_pred,obj_write] ==]
 [== metatron example boot ==]
 print("""
 {{y}} ____    ___    ___   ______    ___ ___  ______  ____    ___   ____  
