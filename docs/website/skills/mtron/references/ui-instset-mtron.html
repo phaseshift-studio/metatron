@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -412,6 +416,7 @@ the pointer, belongs to the console (see <em>anchoring, and the pointer</em>).</
        ├─ accordion_widget
        ├─ grid_widget
        ├─ label_line_widget
+       ├─ matrix_widget
        ├─ menu_bar_widget
        ├─ modal_widget
        ├─ panel_widget
@@ -486,9 +491,9 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a table widget',
      args=&gt;[
-      {?}row=&gt;'a lst of poly table rows',
       {?}metadata=&gt;'a lst of rows of data behind the d...',
-      {?}header=&gt;'a lst of obj table headers'],
+      {?}header=&gt;'a lst of obj table headers',
+      {?}row=&gt;'a lst of poly table rows'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -508,7 +513,7 @@ the same declarations the type checker uses:</p>
       {?}flatten=&gt;'fold single-folder chains into one...',
       root=&gt;'the root uri to traverse from'],
      desc=&gt;'[structural] the root uri space is...'],
-    ...(9 more)]
+    ...(10 more)]
 </code></pre>
 <table>
 <thead>
@@ -525,6 +530,7 @@ the same declarations the type checker uses:</p>
 <tr><td><code>modal_widget::T</code></td><td><code>title</code>, <code>body</code></td></tr>
 <tr><td><code>swipe_panel_widget::T</code></td><td><code>obj</code></td></tr>
 <tr><td><code>tree_select_widget::T</code></td><td><code>root</code>, <code>max</code>, <code>on_select</code>, <code>label</code></td></tr>
+<tr><td><code>matrix_widget::T</code></td><td><code>grid</code> (a lst of rows, each a lst of glyphs), <code>title</code></td></tr>
 <tr><td><code>selector_widget::T</code></td><td><em>(none of its own — it works the rec it is handed)</em></td></tr>
 </tbody>
 </table>
@@ -659,6 +665,111 @@ mtron&gt; label_line_widget::[body=&gt;'a label line'].as?str&lt;=widget(str::T)
    a label line
    &quot;&quot;&quot;
 </code></pre>
+<p>A <code>matrix_widget</code> is a grid of glyphs: cell <code>(row, col)</code> of its <code>grid</code> draws in the col-th column of
+the face's row-th line, one-to-one. The grid is read with <code>at()</code>, so it may be stored <strong>lazily as a
+referent</strong> (<code>grid=&gt;!*g</code>): the widget is a view over that grid, and the board is mutated by writing
+the referent — never through the widget. The next surface pass (a prompt cycle, a resize, a click)
+reads it again and draws it, so no per-cell repaint machinery is involved:</p>
+<pre><code class="language-mtron">mtron&gt; g10 -&gt; [,].repeat(code=&gt;+['.'],until=&gt;loop()?&gt;9)-&lt;[_].repeat(code=&gt;+(&gt;&gt;0.-&lt;[_]),until=&gt;loop()?&gt;8).to(/usr/uidoc/g10)
+==&gt;[
+    [
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+   ...(3 more)],
+    [
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+   ...(3 more)],
+    [
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+   ...(3 more)],
+    [
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+   ...(3 more)],
+    [
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+   ...(3 more)],
+    [
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+   ...(3 more)],
+    [
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+    '.',
+   ...(3 more)],
+   ...(3 more)]
+mtron&gt; board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board
+==&gt;fail::[unable to construct matrix_widget::T: fail::[inst apply failure: obj does not match /m/mach/ui/widget/matrix_widget::T
+     [[
+      grid=&gt;!*/usr/uidoc/g10,
+      style=&gt;[
+       anchor=&gt;top_right,
+       border=&gt;continuous]]@/usr/uidoc/board
+         X=&gt;
+     widget::T[?[
+      {?}grid=&gt;lst::T,
+      {?}title=&gt;str::T]][ctor?rng=matrix_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/matrix_widget
+     ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [
+      grid=&gt;(==&gt;{?}grid)=&gt;[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=&gt;==&gt;lst::T,
+      noobj=&gt;(==&gt;{?}title)=&gt;noobj=&gt;/=&gt;str::T,
+      style=&gt;(/=&gt;{?}style)=&gt;[anchor=&gt;top_right,border=&gt;continuous]=&gt;X=&gt;style::T]] (at /m/inst/ctor)]@/fail/_?incrq
+   	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]@/fail/_?incrq
+mtron&gt; @/usr/uidoc/board.display()             [-- pin it once --]
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]]@widget [display?rng=noobj{0}&amp;dom=widget(){&lt;j&gt;}@&lt;1&gt;]]@/fail/_?incrq
+mtron&gt; @/usr/uidoc/g10/1/0 &gt;&gt;= '@'             [-- one cell of the REFERENT --]
+==&gt;'@'
+mtron&gt; @/usr/uidoc/g10/+/0 &gt;&gt;= ''             [-- every row's column 0 --]
+==&gt;{10}''
+</code></pre>
+<p>The referent must be an <strong>absolute</strong> uri. A relative uri is a variable frame on the thread that wrote
+it, and a render pass runs on the surface's render thread — a relative referent does not resolve there,
+so the board would draw nothing until something forces the grid (<code>1-&lt;…</code>).</p>
+<p>A grid built by a fold can also <strong>alias a row</strong> to the first cell written into it (the row's members
+come back bound to that cell's vid, so every cell of the row reads the same glyph). For a board driven
+cell-by-cell, use an explicit lst of lsts — a literal, or a value materialized with <code>.to(...)</code> — and the
+write lands on exactly one cell.</p>
+<p>A literal grid works the same way, and its cells are written by the same paths one level in
+(<code>@/usr/uidoc/board/grid/1/0 &gt;&gt;= '@'</code>). <code>grid =&gt; &lt;fold&gt;</code> does <strong>not</strong> work: <code>=&gt;</code> <em>quotes</em> the fold, so
+the key would hold the code — build the grid at its own vid (or <code>.to(...)</code> the value into the key).</p>
 <h3>style</h3>
 <p><code>style::T</code> is a rec of presentation keys. The ones that change what you see:</p>
 <table>
@@ -739,7 +850,7 @@ rec; the release is what persists, and it is the only thing that needs to:</p>
 </code></pre>
 <p>A move writes only <code>top</code>/<code>left</code> and a resize only <code>width</code>/<code>height</code> (plus the position it was resized from):
 a height cap nobody asked for would clip content that arrives later.</p>
-<h3>the three insts</h3>
+<h3>the insts</h3>
 <table>
 <thead>
 <tr><th>inst</th><th>dom → rng</th><th>what it does</th></tr>

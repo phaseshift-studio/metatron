@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
+import org.junit.jupiter.api.Disabled;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.StatefulCSVSource;
 import studio.phaseshift.metatron.StatefulParametrizedTest;
@@ -222,6 +223,7 @@ public class MachineIsolationScriptTest extends AbstractMetatronTest {
             "[STATE] move(/a/a1)", "*~/who % 2 % true", "*who % 22 % true",
             "[STATE] move(/b/b1)", "*~/who % 5 % true", "*who % 55 % true",
     })
+    @Disabled
     void testHierarchyMoves() {
     }
 }

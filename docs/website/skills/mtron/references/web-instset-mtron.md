@@ -58,8 +58,8 @@ mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-m
    <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@/sys/space/docker
    mtron&gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
    mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
-   ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/web_basic
-   mtron&gt; httpspace::[pattern=&gt; http://#,
+   ==&gt;mcp_server::[
+       tool=&gt;[
    ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
 ==>[
@@ -196,13 +196,11 @@ mtron> */usr/person/1                                              [-- straight 
     name=>'marko',
     age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==>person::[
-    name=>'marko',
-    age=>29]
-mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==>'{"name":"marko","age":29}'
-mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
 ==>"person::[name=>'marko',age=>29]@/usr/person/1"
+mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
+==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/fail/_?incrq
+mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
+==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/fail/_?incrq
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

@@ -1,0 +1,73 @@
+% cat-positions.tex — the six position kinds
+% Rendered with the tikz MCP server (compile_tikz), which wraps this body in a
+% standalone document (default preamble: tikz, amsmath, amssymb + common TikZ
+% libraries) and writes docs/website/skills/mtron/assets/cat-positions.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels are deliberately UNFILLED (no
+% `fill=black` patch), so no text box shows against the page; labels are offset
+% clear of the strokes instead. Panels use black!85 / black!75 so they read as
+% slightly lighter than the page.
+
+\begin{tikzpicture}[
+  v/.style={circle, draw, thick, minimum size=4.6mm, inner sep=0pt, font=\scriptsize},
+  e/.style={-{Stealth[length=1.6mm]}, thick},
+  el/.style={font=\tiny, inner sep=0pt},
+  ttl/.style={font=\small\bfseries},
+  sub/.style={font=\tiny, text=white!60!black, align=center},
+  color=white
+]
+
+% 1 duplicate
+\begin{scope}[shift={(0,0)}]
+  \node[v] (a) at (0,0) {A}; \node[v] (b) at (1.7,0) {B};
+  \draw[e] (a) to[bend left=16] node[el,above=1pt]{f} (b);
+  \draw[e] (a) to[bend right=16] node[el,below=1pt]{g} (b);
+  \node[ttl, anchor=south] at (0.85,0.45) {duplicate};
+  \node[sub, anchor=north] at (0.85,-1.7) {same family, same endpoints};
+\end{scope}
+
+% 2 ambiguous
+\begin{scope}[shift={(4.6,0)}]
+  \node[v] (a) at (0,0) {A}; \node[v] (b) at (0,-1.1) {B}; \node[v] (c) at (1.7,-0.55) {C};
+  \draw[e] (a) -- (c); \draw[e] (b) -- (c);
+  \draw[dashed, white!45!black] (a) -- node[el,left=2pt]{overlap} (b);
+  \node[ttl, anchor=south] at (0.85,0.45) {ambiguous};
+  \node[sub, anchor=north] at (0.85,-1.7) {incomparable doms that overlap};
+\end{scope}
+
+% 3 incomparable
+\begin{scope}[shift={(9.2,0)}]
+  \node[v] (a) at (0,0) {A}; \node[v] (b) at (0,-1.1) {B}; \node[v] (c) at (1.7,-0.55) {C};
+  \draw[e] (a) -- (c); \draw[e] (b) -- (c);
+  \node[ttl, anchor=south] at (0.85,0.45) {incomparable};
+  \node[sub, anchor=north] at (0.85,-1.7) {incomparable, disjoint doms};
+\end{scope}
+
+% 4 coupling
+\begin{scope}[shift={(0,-3.0)}]
+  \node[v] (a) at (0,0) {A}; \node[v] (b) at (1.7,0) {B};
+  \draw[e] (a) to[bend left=16] node[el,above=1pt]{f} (b);
+  \draw[e] (b) to[bend left=16] node[el,below=1pt]{g} (a);
+  \node[ttl, anchor=south] at (0.85,0.45) {coupling};
+  \node[sub, anchor=north] at (0.85,-1.7) {an opposing edge exists};
+\end{scope}
+
+% 5 isochain
+\begin{scope}[shift={(4.6,-3.0)}]
+  \node[v] (a) at (0,0) {A}; \node[v] (b) at (0.85,-1.1) {B}; \node[v] (c) at (1.7,0) {C};
+  \draw[e] (a) to[bend left=12] (b); \draw[e] (b) to[bend left=12] (a);
+  \draw[e] (b) to[bend left=12] (c); \draw[e] (c) to[bend left=12] (b);
+  \draw[e] (c) to[bend left=12] (a); \draw[e] (a) to[bend left=12] (c);
+  \node[ttl, anchor=south] at (0.85,0.45) {isochain};
+  \node[sub, anchor=north] at (0.85,-1.7) {a chain of couplings};
+\end{scope}
+
+% 6 retract
+\begin{scope}[shift={(9.2,-3.0)}]
+  \node[v] (a) at (0.85,-0.35) {A};
+  \draw[e] (a) to[out=235,in=305,looseness=7] node[el,below=2pt]{f} (a);
+  \node[ttl, anchor=south] at (0.85,0.45) {retract};
+  \node[sub, anchor=north] at (0.85,-1.7) {mutually reachable,\\round trip idempotent};
+\end{scope}
+\end{tikzpicture}

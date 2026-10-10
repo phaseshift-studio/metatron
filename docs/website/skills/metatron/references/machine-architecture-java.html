@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>tble-space-java · PhaseShift Studio</title>
+    <title>machine-architecture-java · PhaseShift Studio</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -391,399 +391,205 @@
     })();
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
-        <h1 class="skill-title mb-1">tble-space-java</h1>
-        <small>Java-side tbleSpace architecture — relational-database space, dual-path reads (table-mapped + KV store), ExistingTableSchema lifecycle, SQL rewrite pushdown, schema generation, dialect handling, VID stamping</small><br/>
-        <a href="tble-space-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>tble-space-java.md</a>
+        <h1 class="skill-title mb-1">machine-architecture-java</h1>
+        <small>Java-side Machine architecture — Machine, its five components (Memory, Network, InstSet, Compiler, Processor), the frame/ComponentUnion nesting model, push/pop/move, the compile→run pipeline, threads/monads, and the load-bearing invariants of the read path</small><br/>
+        <a href="machine-architecture-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>machine-architecture-java.md</a>
     </div>
     <div class="markdown-body">
-<h2>tbleSpace (Java)</h2>
-<h3>Package map</h3>
-<pre><code>isa/tble/tbleSpace.java              ← space implementation (Constructor, directReader, addQ, close)
-isa/tble/tbleInstSet.java            ← instruction set + SQL rewrite registration
-isa/tble/KVStoreUtil.java            ← key-value URI-to-SQL LIKE translation
-isa/tble/schema/SQLRewriteUtils.java ← SQL condition formatting (equality, comparison, AND-joiner)
-isa/tble/space/ExistingTableSchema.java  ← table metadata, ALTER TABLE, type coercion
-isa/tble/space/SQLSchemaGenerator.java   ← generates per-database SQLSchemaInstSet
-isa/tble/space/SQLSchemaInstSet.java     ← per-database schema instset (Types for table columns)
-isa/tble/space/tbleIncrQ.java            ← DB-backed increment queue
-isa/tble/schema/storage/TableSchema.java ← table-mapped read path
-isa/tble/schema/storage/TypedKeyValueSchema.java  ← KV-store read path with type coercion
-isa/tble/schema/storage/fURIAwareIndexedSchema.java ← URI-indexed KV reads
-isa/tble/schema/storage/SimpleKeyValueSchema.java   ← raw KV reads
-</code></pre>
-<h3>Architecture overview</h3>
-<p><code>tbleSpace</code> bridges metatron's URI-graph model to relational databases. It extends <code>AbstractSpace&lt;Connection&gt;</code> (JDBC
-connection is the raw state) and implements <code>SchemaSpace</code>, giving it a schema-backed read path with metadata-driven type
-coercion.</p>
-<pre><code>┌───────────────────────────────────────────────────┐
-│                    tbleSpace                      │
-│  extends AbstractSpace&lt;Connection&gt;                │
-│  implements SchemaSpace                           │
-├───────────────────────────────────────────────────┤
-│  sjvm         → JDBC Connection                   │
-│  backend      → &quot;sqlite&quot; | &quot;postgresql&quot; | &quot;mysql&quot; │
-│  databaseName → catalog name                      │
-│  schema       → TableSchema | TypedKeyValueSchema │
-│  existingTableSchema → ExistingTableSchema        │
-│  schemaGenerator     → SQLSchemaGenerator         │
-│  schemaInstset       → SQLSchemaInstSet           │
-│  routes              → URI-prefix routing map     │
-├───────────────────────────────────────────────────┤
-│  directReader:  dual-path (table-mapped + KV)     │
-│  directWriter:  routed through schema             │
-│  rewrites:      registered in tbleInstSet         │
-└───────────────────────────────────────────────────┘
-</code></pre>
-<h3>Constructor and initialization</h3>
-<pre><code class="language-java">public tbleSpace(final Connection sjvm, final Map&lt;Obj, Obj&gt; config,
-                 final fURI tid, final fURI vid)
-</code></pre>
-<p><strong>Initialization sequence:</strong></p>
-<ol>
-<li><strong>Store JDBC connection</strong> as <code>sjvm</code> (raw state via <code>AbstractSpace&lt;Connection&gt;</code>)</li>
-<li><strong>Extract backend name</strong> from <code>DatabaseMetaData.getDatabaseProductName().toLowerCase()</code></li>
-<li><strong>Initialize schema</strong>: introspects existing tables via <code>ExistingTableSchema</code>, builds <code>TableSchema</code> for known tables
-and <code>TypedKeyValueSchema</code> for KV paths</li>
-<li><strong>Initialize table mapping</strong>: scans <code>_mtron_meta</code> for TID entries, maps table names to their declared metatron types</li>
-<li><strong>Generate schema instset</strong>: <code>SQLSchemaGenerator.generateSchemaInstset()</code> creates a per-database <code>SQLSchemaInstSet</code>
-with <code>Type</code> objects for every table column, registered as a Router space for type resolution</li>
-<li><strong>Wire SCHEMA</strong>: stores the schema instset at <code>uri(SCHEMA)</code> on the space itself (<code>SchemaSpace.schema()</code> resolves from
-here)</li>
-</ol>
-<pre><code class="language-java">// Backend detection
-public String backend() {
-    return this.backend;
-}
-
-public boolean isSqlite() {
-    return this.backend != null &amp;&amp; this.backend.contains(&quot;sqlite&quot;);
-}
-</code></pre>
-<h3>Dual-path read: table-mapped vs key-value</h3>
-<p><code>directReader()</code> is the heart of tbleSpace. It dispatches reads to one of two paths based on the URI:</p>
-<pre><code>read(pattern)
-    │
-    ├─ URI matches a known table?  ──→  TableSchema.read()
-    │   (collection name in existingTableSchema.getTableNames())
-    │   • Column-level type coercion via ExistingTableSchema
-    │   • VID stamping from primary key columns
-    │   • Poly unrolling for wildcard patterns
-    │
-    └─ URI doesn't match any table?  ──→  TypedKeyValueSchema.read()
-        (or SimpleKeyValueSchema)
-        • fURIAwareIndexedSchema for URI-prefix matching
-        • Translate URI patterns to SQL LIKE clauses via KVStoreUtil
-        • Deserialize JSON from kv_store.obj column
-</code></pre>
-<p><strong>Key difference:</strong> table-mapped reads return rows as <code>Rec</code> objects with typed columns. KV-store reads return rows
-serialized as JSON blobs, deserialized on read.</p>
-<p><strong>Table guard predicate</strong> (<code>tableGuard</code> in <code>tbleInstSet</code>):</p>
-<pre><code class="language-java">final BiPredicate&lt;tbleSpace, List&lt;Inst&gt;&gt; tableGuard = (space, matches) -&gt; {
-    final Obj ref = matches.getFirst().arg(0);
-    if (!ref.isUri()) return true;
-    final fURI resolved = space.redirect(ref.uriValue(), true);
-    final DataPath dp = DataPath.withoutDB(resolved);
-    if (!dp.hasCollection() || dp.collectionIsWildcard()) return false;
-    return space.existingTableSchema != null
-            &amp;&amp; space.existingTableSchema.getTableNames()
-            .contains(dp.collection().toLowerCase());
-};
-</code></pre>
-<p>Guards SQL rewrite pushdown: only fires when the URI's collection name matches an actual table in the database.</p>
-<h3>ExistingTableSchema</h3>
-<p>Manages table metadata discovered at construction time. Key capabilities:</p>
+<h2>Machine Architecture (Java)</h2>
+<h3>What a Machine is</h3>
+<p>A <strong>Machine</strong> is a <em>space of spaces</em> — the container in which address resolution happens. It is itself an address
+space (<code>Machine extends Space</code>), and its five members (<code>instset</code>, <code>memory</code>, <code>network</code>, <code>compiler</code>, <code>processor</code>) are rec
+entries shaped as <code>machine::T</code>. Of the five:</p>
 <ul>
-<li><strong><code>getTableNames()</code></strong> — all table names in the database</li>
-<li><strong><code>getColumnTypes(tableName)</code></strong> — column name → metatron type URI (from <code>_mtron_meta</code>)</li>
-<li><strong><code>coerceRow(tableName, rawRow)</code></strong> — apply column types to a raw JDBC row</li>
-<li><strong><code>addColumnOnTheFly(tableName, columnName, value)</code></strong> — <code>ALTER TABLE ADD COLUMN</code> when a write introduces a new field
-(race-safe: falls back to <code>DatabaseMetaData</code> re-read on concurrent column add)</li>
+<li><strong>Memory</strong> is the facade over the world of spaces — the single read/write surface.</li>
+<li><strong>Compiler</strong> lowers code; <strong>Processor</strong> runs it; neither is an address space.</li>
+<li><strong>InstSet</strong> and <strong>Network</strong> are <em>accumulating</em> components (a frame wraps them); <strong>Compiler</strong> and <strong>Processor</strong> are
+<em>constructive</em> (whole-value, inherited or replaced).</li>
 </ul>
-<p>Column types are stored in <code>_mtron_meta</code> as <code>$table</code> sentinel rows. When a table has no meta row, the schema generator
-infers types from JDBC metadata.</p>
-<h3>SQL rewrite pushdown</h3>
-<p>Registered in <code>tbleInstSet.setup()</code> under <code>uri(REWRITE)</code>. All rewrites follow the <code>RewriteBuilder</code> pattern (space-aware
-native pushdown).</p>
+<p>A machine replaced the old <code>Router</code> as the root of the address space. <code>Router.java</code> is gone; <code>Machine extends Space</code>,
+and <code>AbstractMachine extends AbstractSpace</code> is the one concrete body.</p>
+<h3>Package overview</h3>
+<pre><code>isa/mach/type/Machine.java            ← Machine interface + Frame + Component + Machine0 (the contract)
+isa/mach/type/Memory.java             ← Memory interface (relative bindings + absolute space index)
+isa/mach/type/Network.java            ← Network interface (peer roster + authority arithmetic)
+isa/mach/type/Compiler.java           ← Compiler interface (rewrite → resolve → type) + resolve memo
+isa/mach/type/Processor.java          ← Processor interface + Processor.Helper (the runtime core)
+isa/mach/type/ComponentUnion.java     ← frame wrapper: previous()/current(), read-through, close-current
+isa/mach/type/MemoryUnion.java        ← frame memory (binary read-through, pattern-aware at())
+isa/mach/type/NetworkUnion.java       ← frame network (binary read-through)
+isa/mach/type/InstSetUnion.java       ← frame ISA (binary read-through)
+isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
+isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
+isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
+isa/mach/type/machine/BasicNetwork.java     ← one level of network (roster is the rec)
+isa/mach/type/machine/BasicInstSet.java     ← the machine's OWN instset (n-ary union of imports)
+isa/mach/type/compiler/…                     ← Compiler impls + rewriter/resolver/typer stages
+isa/mach/type/processor/…                    ← Processor impls + Monad/MonadProcessor/SwarmProcessor + monads
+isa/mach/type/thread/…                       ← mThread / AbstractThread / VirtualThread / CoreThread / FutureObj
+isa/mach/machInstSet.java                    ← type registration (machine::T etc.) + bootstrap + sum_gather rewrite
+</code></pre>
+<h3>The five components</h3>
 <table>
 <thead>
-<tr><th>Rewrite</th><th>Match pattern</th><th>SQL generated</th></tr>
+<tr><th>Component</th><th>Interface (extends)</th><th>One-line job</th><th>Frame behaviour</th></tr>
 </thead>
 <tbody>
-<tr><td><code>sql_count</code></td><td><code>from(uri).count()</code></td><td><code>SELECT COUNT(*) FROM table</code></td></tr>
-<tr><td><code>sql_sum</code></td><td><code>from(uri).sum()</code></td><td><code>SELECT SUM(column) FROM table</code></td></tr>
-<tr><td><code>sql_mean</code></td><td><code>from(uri).mean()</code></td><td><code>SELECT AVG(column) FROM table</code></td></tr>
-<tr><td><code>sql_limit</code></td><td><code>from(uri).take(n)</code></td><td><code>SELECT * FROM table LIMIT n</code></td></tr>
-<tr><td><code>sql_offset</code></td><td><code>from(uri).skip(n)</code></td><td><code>SELECT * FROM table OFFSET n</code></td></tr>
-<tr><td><code>sql_offset_limit</code></td><td><code>sql_offset.take(m)</code></td><td><code>SELECT * FROM table LIMIT m OFFSET n</code></td></tr>
-<tr><td><code>sql_has</code></td><td><code>from(uri).has()</code></td><td><code>SELECT EXISTS(SELECT 1 FROM table LIMIT 1)</code></td></tr>
-<tr><td><code>sql_where</code></td><td><code>from(uri).isa(pred)</code></td><td><code>SELECT * FROM table WHERE conditions</code></td></tr>
-<tr><td><code>sql_where_count</code></td><td><code>sql_where.count()</code></td><td><code>SELECT COUNT(*) FROM table WHERE conditions</code></td></tr>
-<tr><td><code>sql_where_limit</code></td><td><code>sql_where.take(n)</code></td><td><code>SELECT * FROM table WHERE conditions LIMIT n</code></td></tr>
-<tr><td><code>sql_where_offset</code></td><td><code>sql_where.skip(n)</code></td><td><code>SELECT * FROM table WHERE conditions OFFSET n</code></td></tr>
-<tr><td><code>sql_where_offset_limit</code></td><td><code>sql_where_offset.take(m)</code></td><td><code>SELECT * FROM table WHERE conditions LIMIT m OFFSET n</code></td></tr>
-<tr><td><code>sql_order</code></td><td><code>from(uri).order(select(col))</code></td><td><code>SELECT * FROM table ORDER BY col1, col2</code></td></tr>
-<tr><td><code>sql_distinct</code></td><td><code>from(uri).dedup(select(col))</code></td><td><code>SELECT DISTINCT col1, col2 FROM table</code></td></tr>
-<tr><td><code>sql_select</code></td><td><code>from(uri)&gt;&gt;{cols}</code></td><td><code>SELECT col1, col2 FROM table</code></td></tr>
-<tr><td><code>kv_count</code></td><td><code>from(kvPattern).count()</code></td><td><code>SELECT COUNT(*) FROM kv_store WHERE furi LIKE ...</code></td></tr>
-<tr><td><code>kv_limit</code></td><td><code>from(kvPattern).take(n)</code></td><td><code>SELECT furi, obj FROM kv_store WHERE furi LIKE ... LIMIT n</code></td></tr>
+<tr><td>Memory</td><td><code>Space, Machine.Component, Closeable</code></td><td>relative bindings (names) + absolute index of spaces</td><td>accumulates (<code>MemoryUnion</code>)</td></tr>
+<tr><td>Network</td><td><code>Machine.Component, Closeable</code></td><td>peer roster <code>authority → transport</code>, <code>own</code>/<code>isPeer</code></td><td>accumulates (<code>NetworkUnion</code>)</td></tr>
+<tr><td>InstSet</td><td><code>Space</code> (via <code>AbstractInstSet</code>)</td><td>visible types/insts; <code>import</code> lands here</td><td>accumulates (<code>InstSetUnion</code>)</td></tr>
+<tr><td>Compiler</td><td><code>Machine.Component, Rec</code></td><td><code>code::T → code::T</code> in three stages</td><td>constructive (inherited/replaced)</td></tr>
+<tr><td>Processor</td><td><code>mThread, Machine.Component</code></td><td><code>code::T → obj</code>; the monadic execution engine</td><td>constructive</td></tr>
 </tbody>
 </table>
-<p><strong>Composition:</strong> Multiple rewrites can chain via the <code>Code.rewrite()</code> fixed-point loop. Simple example —
-<code>from(uri).skip(100).take(10)</code> fires two rewrites in sequence:</p>
+<p><code>Machine.Component</code> is a <code>Rec</code> that answers <code>machine()</code> by walking its <code>parent()</code> chain up to the nearest <code>Machine</code>
+(falling back to <code>mach0()</code>). Components are <code>Rec</code>s <em>on purpose</em>: memory and network must be reachable from mtron
+(<code>&gt;&gt;space</code>, <code>&gt;&gt;previous</code>), not just from Java accessors.</p>
+<h3>The three accessor levels — the part that confuses</h3>
+<p>Every accumulating component has (up to) three ways to reach it, and the distinction is load-bearing:</p>
 <ol>
-<li><code>sql_offset</code>: <code>from(uri).skip(100)</code> → <code>sql_offset(uri, 100)</code></li>
-<li><code>sql_offset_limit</code>: <code>sql_offset(uri, 100).take(10)</code> → <code>sql_offset_limit(uri, 100, 10)</code></li>
+<li><strong><code>own*</code></strong> — the machine's own slot, ignoring any frame. <code>ownMemory()</code> / <code>ownInstset()</code> / <code>ownNetwork()</code>. The slot
+holds a <em>template</em> (an <code>instLambda</code>), and <code>own*</code> applies it once and caches.</li>
+<li><strong>frame-aware</strong> — <code>memory()</code> / <code>instset()</code> / <code>network()</code>. Returns the current frame's union when a frame is live,
+else the machine's own slot.</li>
+<li><strong>resolution</strong> — <code>resolutionMemory()</code> / <code>resolutionNetwork()</code>. The one the read path uses: the frame's view <em>if it
+has already been materialized</em>, else the machine's own. It <strong>never materializes a frame</strong>, because materializing
+constructs a component, constructing an <code>Obj</code> runs a type check, and the type check reads through the machine —
+which lands back in <code>read()</code>. The non-allocating read-only helpers are <code>frameMemory()</code> / <code>frameNetwork()</code> and the
+<code>Frame.*View()</code> accessors.</li>
 </ol>
-<p>Result: a single <code>SELECT * FROM table LIMIT 10 OFFSET 100</code>.</p>
-<p>A more complex chain — <code>from(uri).isa(pred).skip(n).take(m)</code> fires three rewrites:</p>
-<ol>
-<li><code>sql_where</code>: <code>from(uri).isa(pred)</code> → <code>sql_where(uri, pred)</code></li>
-<li><code>sql_where_offset</code>: <code>sql_where(uri, pred).skip(n)</code> → <code>sql_where_offset(uri, pred, n)</code></li>
-<li><code>sql_where_offset_limit</code>: <code>sql_where_offset(uri, pred, n).take(m)</code> → <code>sql_where_offset_limit(uri, pred, n, m)</code></li>
-</ol>
-<p>Result: a single <code>SELECT * FROM table WHERE pred LIMIT m OFFSET n</code>.</p>
-<h4>Dialect handling</h4>
-<p>The standalone <code>sql_offset</code> and <code>sql_where_offset</code> rewrites need per-backend SQL because
-<code>OFFSET</code> without <code>LIMIT</code> is dialect-specific:</p>
-<pre><code class="language-java">if(space.isSqlite()){
-sql =&quot;SELECT * FROM &quot;+tableName +&quot; LIMIT -1 OFFSET &quot;+skip;
-}else if(space.
-
-backend() !=null
-        &amp;&amp;(space.
-
-backend().
-
-contains(&quot;mysql&quot;) ||space.
-
-backend().
-
-contains(&quot;mariadb&quot;))){
-sql =&quot;SELECT * FROM &quot;+tableName
-        +&quot; LIMIT 18446744073709551615 OFFSET &quot;+skip;  // max BIGINT UNSIGNED
-}else{
-sql =&quot;SELECT * FROM &quot;+tableName +&quot; OFFSET &quot;+skip;  // PostgreSQL
-}
-</code></pre>
-<p>The combined <code>sql_offset_limit</code>, <code>sql_where_offset_limit</code> rewrites don't need dialect handling —
-<code>LIMIT m OFFSET n</code> is standard SQL across all backends.</p>
-<h4>How order/dedup extract columns</h4>
-<p>Both <code>order()</code> and <code>dedup()</code> take a column spec wrapped in a <code>select()</code> (<code>==</code>) or <code>rshift()</code> (<code>&gt;&gt;</code>)
-instruction. The <code>OrderRewriteBuilder</code> and <code>DedupRewriteBuilder</code> unwrap the wrapper and extract column names via
-<code>CommonRewrites.extractColumnNames()</code>, which handles all legal mtron forms (in desugared and sugar notation):</p>
-<table>
-<thead>
-<tr><th>mtron (desugared)</th><th>mtron (sugar)</th><th>extracted columns</th></tr>
-</thead>
-<tbody>
-<tr><td><code>order(select(name))</code></td><td><code>order(==name)</code></td><td><code>[&quot;name&quot;]</code></td></tr>
-<tr><td><code>order(select([name=&gt;_,age=&gt;_]))</code></td><td><code>order(==[name=&gt;_,age=&gt;_])</code></td><td><code>[&quot;name&quot;, &quot;age&quot;]</code></td></tr>
-<tr><td><code>order(rshift(name))</code></td><td><code>order(&gt;&gt;name)</code></td><td><code>[&quot;name&quot;]</code></td></tr>
-<tr><td><code>order(rshift({name, age}))</code></td><td><code>order(&gt;&gt;{name,age})</code></td><td><code>[&quot;name&quot;, &quot;age&quot;]</code></td></tr>
-<tr><td><code>dedup(select(name))</code></td><td><code>dedup(==name)</code></td><td><code>[&quot;name&quot;]</code></td></tr>
-<tr><td><code>dedup(select([name=&gt;_,age=&gt;_]))</code></td><td><code>dedup(==[name=&gt;_,age=&gt;_])</code></td><td><code>[&quot;name&quot;, &quot;age&quot;]</code></td></tr>
-<tr><td><code>dedup(rshift(name))</code></td><td><code>dedup(&gt;&gt;name)</code></td><td><code>[&quot;name&quot;]</code></td></tr>
-<tr><td><code>dedup(rshift({name, age}))</code></td><td><code>dedup(&gt;&gt;{name,age})</code></td><td><code>[&quot;name&quot;, &quot;age&quot;]</code></td></tr>
-</tbody>
-</table>
-<h4>DISTINCT return types</h4>
-<p>Single-column <code>dedup(select(name))</code> returns scalar values (strings or numbers). Multi-column
-<code>dedup(select([name=&gt;_, value=&gt;_]))</code> returns <code>Rec</code> objects with column-name keys.</p>
-<h4>VID stamping</h4>
-<p>Every row-returning SQL rewrite stamps routable VIDs so the Router can locate the space for subsequent operations. The
-<code>sql_distinct</code> rewrite is the exception — it returns scalar values or lightweight recs, not full database rows with
-VIDs.</p>
-<pre><code class="language-java">// Discover primary key columns
-final DatabaseMetaData dbMeta = space.sjvm().getMetaData();
-final List&lt;String&gt; pkColumns = new ArrayList&lt;&gt;();
-try(
-final ResultSet pkRs = dbMeta.getPrimaryKeys(null, null, tableName)){
-        while(pkRs.
-
-next())pkColumns.
-
-add(pkRs.getString(&quot;COLUMN_NAME&quot;));
-        }
-
-// Stamp VID on each row
-        while(rs.
-
-next()){
-final Rec rawRow = ObjSQLSerializer.readCurrentAsRec(rs);
-final fURI rowVID = Space.Helper.routeToSpace(
-        pkColumns.isEmpty()
-                ? space.vid().extend(tableName).extend(rawRow.at(uri(&quot;id&quot;)).toString())
-                : pkColumns.stream()
-                .map(col -&gt; rawRow.at(uri(col)).toString())
-                .reduce(space.vid().extend(tableName),
-                        (vid, seg) -&gt; vid.extend(seg), (a, b) -&gt; b),
-        space.routes());
-    rows.
-
-append(rawRow.selfVID(rowVID));
-        }
-</code></pre>
-<h3>SQLSchemaInstSet</h3>
-<p>A per-database <code>InstSet</code> that holds <code>Type</code> objects for every table column. Generated by
-<code>SQLSchemaGenerator.generateSchemaInstset()</code> during construction:</p>
-<pre><code class="language-java">// VID is in /m/ namespace → writes route to memSpace, not back into tbleSpace
-public SQLSchemaInstSet(final fURI schemaVid, final Collection&lt;Type&gt; types) {
-    super(mutableMap(
-            uri(PATTERN), uri(schemaVid.extend(ALL)),
-            uri(TYPE), lst(types.stream().map(t -&gt; (Obj) t).toList())
-    ), INSTSET_TID, schemaVid);
-}
-</code></pre>
-<p>The generated Types encode column-level metatron types (int, str, bool, etc.) and foreign key references in their
-<code>isaPredicate</code>. The schema instset is registered as a Router space so type resolution can find it.</p>
-<h3>KVStoreUtil</h3>
-<p>Translates URI patterns into SQL <code>LIKE</code> clauses for the key-value storage path:</p>
-<pre><code class="language-java">// URI: /col/user123/profile/email
-// → WHERE furi LIKE '/col/user123/profile/email' OR furi LIKE '/col/user123/profile/email/%'
-public static String translateKVPatternToSQL(final fURI stored)
-</code></pre>
-<p>Handles wildcard patterns (<code>+</code>, <code>#</code>), exact matches, and hierarchical prefix matching.</p>
-<h3>SQLRewriteUtils</h3>
-<p>SQL-specific formatting for predicate translation. Used by <code>sql_where</code>:</p>
-<pre><code class="language-java">public static final CommonRewrites.ConditionFormatter CONDITION_FORMATTER =
-        new CommonRewrites.ConditionFormatter() {
-            @Override
-            public String equality(String field, String value) {
-                return field + &quot; = &quot; + value;
-            }
-
-            @Override
-            public String comparison(String field, ComparisonOp op, String value) {
-                return field + &quot; &quot; + op.symbol() + &quot; &quot; + value;
-            }
-
-            @Override
-            public String exists(String field) {
-                return field + &quot; IS NOT NULL&quot;;
-            }
-
-            @Override
-            public String escapeLiteral(String s) {
-                return s.replace(&quot;'&quot;, &quot;''&quot;);
-            }
-        };
-
-public static final CommonRewrites.PredicateJoiner PREDICATE_JOINER =
-        conds -&gt; String.join(&quot; AND &quot;, conds);
-</code></pre>
-<h3>Increment queue (tbleIncrQ)</h3>
-<p>Replaces the default in-memory <code>?incrq</code> with a database-backed implementation:</p>
-<pre><code class="language-java">
-@Override
-public Space addQ(final QProc qProc) {
-    final QProc toAdd = qProc.pattern().equals(QCollection.INCRQ_PATTERN)
-            ? new tbleIncrQ(this) : qProc;
-    // ... register in QPROC list
-}
-</code></pre>
-<p>Uses <code>RETURN_GENERATED_KEYS</code> for auto-increment — the database assigns the VID, which propagates back through the
-<code>?incrq</code> instruction.</p>
-<h3>Close lifecycle</h3>
-<pre><code class="language-java">
-@Override
-public void close() {
-    try {
-        this.sjvm().close();     // close JDBC connection
-        SchemaSpace.super.close(); // close schema instset
-    } catch (final Exception e) {
-        LOG.error(e);
-    } finally {
-        super.close();           // remove from Router, close QProcs
-    }
-}
-</code></pre>
-<p><code>SchemaSpace.super.close()</code> handles closing the schema instset and cleaning up Router registrations.</p>
-<h3>Test infrastructure</h3>
-<pre><code>AbstractTbleSpaceTest           ← shared test base (schema setup, rewrite tests)
-├── PostgreSQLTbleSpaceTest     ← PostgreSQL backend
-├── MariaDBTbleSpaceTest         ← MariaDB backend
-├── MySQLTbleSpaceTest           ← MySQL backend
-└── SqliteTbleSpaceTest          ← SQLite backend (in-memory)
-</code></pre>
-<p>Each backend provides a <code>DatabaseConfig</code> with DDL templates, boolean literal representation, and connection setup. Tests
-use <code>@ParameterizedTest</code> with a static <code>@BeforeAll</code> that seeds 10 rows into <code>rewrite_test(id, value, name, active)</code> plus
-additional tables (<code>users</code>, <code>products</code>, <code>companies</code>, <code>people</code>).</p>
-<h3>Foreign key inference</h3>
-<p><code>ExistingTableSchema</code> infers foreign key relationships through three mechanisms and wraps FK column values
-in <code>auto_from_()</code> on read so they resolve lazily to the referenced row.</p>
-<h4>Discovery mechanisms</h4>
-<ol>
-<li><strong>JDBC metadata</strong> (<code>discoverReferencesAndRegister</code>): reads <code>DatabaseMetaData.getImportedKeys()</code> for SQL-level
-<code>REFERENCES</code> constraints.</li>
-<li><strong><code>_mtron_meta</code> persistence</strong> (<code>loadMetaTable</code>): reads FK registrations persisted by <code>persistColumnType()</code>.
-Survives restarts.</li>
-<li><strong>Naming convention</strong> (<code>discoverFKByConvention</code> + <code>inferFKByConvention</code>): a column whose name matches another
-table name (case-insensitive, with or without trailing &quot;s&quot;) is treated as a FK.  Examples:
+<p><code>AbstractMachine</code> caches the three <code>own*</code> results in Java fields (<code>resolvedMemory</code>/<code>resolvedNetwork</code>/
+<code>resolvedInstSet</code>) so the read path sees a field read, not a template re-apply.</p>
+<h3>Frames and the component union (nesting)</h3>
+<p>A <strong>Frame</strong> (<code>Machine.Frame</code>) is one level of nesting: the machine it belongs to, its parent frame, and lazily
+materialized <code>instset</code>/<code>memory</code>/<code>network</code> views. Two thread-locals:</p>
 <ul>
-<li><code>people.company</code> → table <code>companies</code></li>
-<li><code>message.session</code> → table <code>session</code></li>
+<li><code>FRAME</code> — the cursor (walks <em>up</em> only).</li>
+<li><code>FRAMES</code> — the address index <code>Map&lt;fURI, Frame&gt;</code> (the downward link the cursor can't provide).</li>
 </ul>
+<p><code>push()</code> clones the machine into a <strong>child</strong> whose vid strictly extends the parent's (<code>descendsFrom</code>), wraps it in a
+new <code>Frame</code>, and makes it current. <code>push(extension)</code> mints a unique vid from the extension. <code>pop()</code> restores the parent
+and closes the frame (releasing only what the frame introduced). <code>move(extension)</code> unifies push and pop via the
+coefficient's sign: positive = descend, negative = ascend one step.</p>
+<p>A frame wraps each <em>accumulating</em> component in a <code>ComponentUnion</code> (<code>previous()</code> + <code>current()</code>), reads <strong>through</strong>
+(own first, then parent), writes only to <code>current()</code>, and <code>close()</code>s only <code>current()</code>. Release is therefore structural:
+a popped frame takes its own spaces/peers/imports with it, and can never close what it inherited.</p>
+<p><strong><code>BasicInstSet</code> is the exception — it is n-ary, not binary.</strong> Memory and network are a fixed two-level tree; an ISA is
+an <em>ordered list of imported instsets held by reference</em>, own structure layered over them. Import order is precedence,
+own-first shadows a referenced name, and writes reach only the own structure — which is what makes a shared library
+instset safe to import from many machines.</p>
+<h3>How one evaluation flows</h3>
+<pre><code>machine.apply(code, start)
+  → Machine.current(this)                 // move this thread's perspective
+  → push()                                 // a fresh frame
+  → processor().code(compiler().apply(code).asCode()).apply(start)
+  → pop()                                  // release the frame
+</code></pre>
+<p><code>BasicMachine.of(...)</code> seeds the five slots as <code>instLambda</code> templates. <code>compiler()</code>/<code>processor()</code> apply the template,
+cache the prototype, and return a <code>.clone()</code> (fresh instance per caller). Every read/write funnels through
+<code>AbstractMachine.read/write</code>:</p>
+<pre><code>read(vid) → authority guard (dispatchForeign) → alignPrefix → stack check → resolutionMemory().readAbsolute(vid)
+</code></pre>
+<p><code>Memory.readAbsolute</code> asks <code>getSpaceFor(vid)</code>: the most specific space across the chain, else the machine itself (for
+keys it actually holds — <code>rootRelative</code> turns <code>/processor</code> into <code>processor</code>), else fail/noobj. The machine answering for
+its own rec keys is what makes <code>/</code> the root with no space mounted inside itself.</p>
+<h3>The compiler (three stages)</h3>
+<p><code>Compiler.apply</code> is the default schedule <code>rewrite → resolve → type</code> over three overridable stage components:</p>
+<ul>
+<li><strong>rewrite</strong> — <code>Rewriter</code> (default <code>FixPointRewriter</code>, fixpoint over the rewrite rules).</li>
+<li><strong>resolve</strong> — <code>Resolver</code> (default <code>ScoringResolver</code>; threads the type one inst at a time; generic binding runs inside
+per-candidate selection, so there is no separate binder).</li>
+<li><strong>type</strong> — <code>Typer</code> (default <code>TypeTyper</code>, runtime type assertions).</li>
+</ul>
+<p><code>Compiler.Helper.resolve</code> memoizes nested-code resolution keyed by <code>(code identity, runtime lhs type id)</code>
+(<code>RESOLVE_CACHE</code>), delegating to <code>ScoringResolver.resolveCode</code> + <code>FixPointRewriter</code>.</p>
+<h3>The processor (monadic execution)</h3>
+<p><code>Processor</code> is both an <code>mThread</code> and an <code>Obj</code>. <code>Processor.Helper</code> holds the runtime core that used to live on <code>Inst</code>:
+<code>apply</code> (resolve → <code>invoke</code>), <code>invoke</code> (noobj/domain guards, coefficient compression, range check), <code>applyArgs</code>
+(computeArgs), <code>resolveRuntime</code> (the <code>TypeCheck.code_resolve</code>-gated dynamic escape).</p>
+<p>The default processor is <strong><code>SwarmProcessor</code></strong> (extends <code>VirtualThread</code>, implements <code>MonadProcessor</code>), a monadic step
+loop over three queues stored in its rec:</p>
+<ul>
+<li><code>run</code> — the active monad queue (<code>ListMonad</code>).</li>
+<li><code>barrier</code> — monads parked at a gather/barrier.</li>
+<li><code>halted</code> — collected results (<code>RESULT</code> is an auto-pointer to <code>halted</code>).</li>
+</ul>
+<p>A <strong><code>StatefulMonad</code></strong> is a four-tuple <code>[obj, inst, state, code]</code> carried as an <code>Lst</code>; <code>apply()</code> feeds the inst's
+<code>monad_in</code> lens to <code>Processor.Helper.apply</code>, then <code>next()</code> walks to the successor inst. <code>Monad</code> itself is the minimal
+<code>obj</code>/<code>inst</code> interface with <code>halted</code>/<code>dead</code>/<code>zombie</code> states. <code>RunningMonads</code> is an inst-indexed running set (a
+coefficient-summing view), and <code>ListMonad</code> the list-backed queue.</p>
+<h3>Threads</h3>
+<p><code>mThread</code> is the unified lifecycle contract (<code>stop</code>/<code>pause</code>/<code>resume</code>/<code>state</code>/<code>apply</code>/<code>applyAsync</code>/<code>result</code>/<code>future</code>).
+<code>AbstractThread</code> implements it over an <code>MRec</code> + <code>FutureObj</code> and hands async work to <code>ThreadExecutor</code>; <code>VirtualThread</code>
+and <code>CoreThread</code> are the two concrete platform strategies. A worker publishes where it ended via <code>landedPerspective()</code>.</p>
+<h3>Bootstrap and the type hierarchy</h3>
+<p><code>machInstSet.setup()</code> registers the whole <code>machine::T</code> family under <code>/m/mach/component/…</code> — <code>processor::T</code>,
+<code>monad_processor::T</code>, <code>swarm_processor::T</code>, <code>compiler::T</code>, <code>default_compiler::T</code>, the rewriter/resolver/typer families,
+<code>memory::T</code>, <code>network::T</code>, and <code>machine::T</code> (whose shape is <code>instset</code>/<code>compiler</code>/<code>memory</code>/<code>network</code>/<code>processor</code>). The
+default machine lives at <code>/sys/mach/default</code> (a <code>const</code> built by <code>BasicMachine.of</code>). <code>sum_gather</code> — the rewrite that
+turns a monoidic reducer into a distributed gather over <code>/usr/compute</code> peers — lives here too.</p>
+<h3>Load-bearing invariants (keep these if you simplify)</h3>
+<ul>
+<li><strong>The read path must never allocate.</strong> Constructing an <code>Obj</code> resolves a type through a read, which recurses into
+<code>read()</code>. That single constraint explains <code>resolutionMemory()</code> vs <code>memory()</code>, the eager seeding in constructors, the
+<code>*View()</code> accessors, and the field-cached <code>own*</code> slots. Any simplification must preserve it.</li>
+<li><strong>Component slots hold templates, not instances.</strong> <code>at(COMPILER)</code> returns an <code>instLambda</code>; <code>compiler()</code> applies +
+caches + clones. <code>ownInstset()</code> must <code>instanceof</code>-check the resolved value (an mtron type check rejects the seeded
+<code>BasicInstSet</code>).</li>
+<li><strong><code>ComponentUnion.previous()</code> is a rec entry (<code>&gt;&gt;previous</code>), never a Java field, and never <code>Obj.orElse</code>.</strong> The parent
+fallback must be lazy — <code>orElse</code> evaluates the parent unconditionally on every hit.</li>
+<li><strong>Never write a roster under <code>/sys/mach</code>.</strong> The machine claims that address and <code>AbstractSpace</code>'s default writer is a
+no-op, so writes there are silently dropped. The peer roster lives at <code>/sys/peer</code>.</li>
+<li><strong><code>push()</code> must mint a child, not the parent.</strong> Use the 3-arg <code>clone</code> — <code>selfVID</code> <em>pins</em> an already-set vid, so a
+2-arg clone would silently keep the parent's address.</li>
+<li><strong><code>read()</code>/<code>write()</code> on a machine are always space-resolving</strong> (use <code>readAbsolute</code>/<code>writeAbsolute</code>), so a bulk
+wildcard write reaches the space it names, not the argument stack.</li>
+</ul>
+<h3>Migration state (why it reads as two systems at once)</h3>
+<p>The Router→Machine migration is <strong>not finished</strong>. <code>Router.java</code> is deleted, but its scaffolding remains:</p>
+<ul>
+<li><code>stackSpace</code> (<code>+/#</code>) still exists and is still seeded into the root memory; a board task is open to remove it.</li>
+<li><code>Memory.ARG_STACK</code> (<code>argFrames</code>) is marked <strong>temporary</strong> — the old per-instruction arg stack, moved into <code>Memory</code>
+so <code>Router</code> could be deleted; it is meant to fold into the frame chain.</li>
+<li><code>ExecutionStack</code> still wraps reads/writes and instruction apply.</li>
+<li><code>BasicNetwork.transportOf</code> still falls back to <code>/sys/peer</code> (a TODO notes the roster should become a frame-level
+projection).</li>
+</ul>
+<p>Any cleanup that lands these three (drop <code>stackSpace</code>, fold <code>argFrames</code> into the frame chain, retire the <code>/sys/peer</code>
+fallback) removes the &quot;two scoping mechanisms at once&quot; ambiguity that is the main source of the current complexity.</p>
+<hr />
+<h3>Post-refactor note — <code>Frame</code> class gutted (2026-10-08)</h3>
+<p>The <code>Frame</code> class (and the <code>FRAMES</code> address index) was removed in favor of <code>ThreadLocal&lt;Machine&gt;</code> (<code>CURRENT</code>) as the
+frame. Verdict: a good simplification — the frame <em>is</em> the machine (the vid encodes nesting, <code>push()</code>/<code>pop()</code> move the
+cursor), and <code>CURRENT</code> is a faithful &quot;walk up&quot; pointer.</p>
+<p>But <code>Frame</code> was carrying three responsibilities that must be rehomed, not deleted:</p>
+<ol>
+<li>
+<p><strong>Per-frame, lazily-materialized union views.</strong> <code>Frame</code> held the <code>instset</code>/<code>memory</code>/<code>network</code> views as <em>per-frame</em>
+fields. That matters because <code>push()</code> clones with <code>this.jvm()</code> — <strong>the <code>jvm()</code> rec is shared</strong>, so a union view stored
+in the rec would leak between parent and child. The views must live in per-instance Java state: the
+<code>resolvedMemory</code>/<code>resolvedNetwork</code>/<code>resolvedInstSet</code> fields on <code>AbstractMachine</code> are that replacement — <strong>not</strong> &quot;old
+artifacts&quot;. (Removing <code>resolvedMemory</code> re-introduced a <code>StackOverflowError</code>: <code>memory()</code> → <code>atDirect(uri(MEMORY))</code> →
+<code>uri(MEMORY)</code> → <code>MObj.&lt;init&gt;</code> → <code>fURI.big()</code> → <code>memory()</code>. The field memoizes the slot and breaks that cycle.)</p>
+</li>
+<li>
+<p><strong>The upward link.</strong> <code>Frame</code> had an explicit <code>parent</code>; the simplification leaves <code>Obj.parent()</code>, which returns
+<code>noobj</code> in the current code. Pick one reliable upward path: wire <code>parent()</code> on <code>push()</code>, or derive the parent from
+<code>vid.retract(1)</code> (machines have globally-unique vids, so the parent is addressable by retraction).</p>
+</li>
+<li>
+<p><strong>The downward/address index (<code>FRAMES</code>).</strong> <code>FRAMES</code> was <code>Map&lt;fURI, Frame&gt;</code> — cross-frame lookup by vid. It's
+recoverable through the memory's own space index (a machine is a <code>Space</code> and auto-registers under its vid via
+<code>AbstractSpace</code>'s <code>Machine.current().memory().addSpace(this)</code>), so <code>Machine.current().read(parentVID)</code> resolves the
+parent without a dedicated map — <em>provided</em> every machine registers under its vid.</p>
 </li>
 </ol>
-<p>The lazy path (<code>inferFKByConvention</code>) fires at <strong>read time</strong> — if a column hasn't been registered as a FK yet,
-it checks naming convention on the first read and registers the FK permanently.</p>
-<h4>FK target path</h4>
-<p><code>FKTarget.targetPath</code> is <code>&quot;tableName/+/columnName&quot;</code> — e.g. <code>&quot;session/+/id&quot;</code>.  <code>buildFKReferencePath()</code> strips the
-<code>/+columnName</code> suffix to get the target table, then prepends the space's pattern to build the full reference path.</p>
-<h4>Path construction and the scheme-vs-path trap</h4>
-<p><code>buildFKReferencePath()</code> constructs the FK reference path by prepending <code>space.pattern().retractPattern()</code> (the
-space's base path) to the target table name and row ID:</p>
-<pre><code class="language-java">// For space pattern &lt;/usr/dr/#&gt;:
-this.space.pattern().retractPattern()  // → /usr/dr/
-    .extend(refTable)                   // → /usr/dr/session
-    .extend(rowId);                     // → /usr/dr/session/1   ← correct when rowId is bare PK
-</code></pre>
-<p><strong>Critical distinction</strong>: scheme-based patterns (<code>drdb:#</code>) vs path-based patterns (<code>/usr/dr/#</code>):</p>
-<table>
-<thead>
-<tr><th>Pattern</th><th>Bare PK <code>1</code> → FK path</th><th>Absolute value <code>/usr/dr/session/1</code> in column</th><th>Problem</th></tr>
-</thead>
-<tbody>
-<tr><td><code>drdb:#</code></td><td><code>drdb:session/1</code></td><td><code>drdb:session/1</code> (scheme prefix distinguishes)</td><td>None — easy to distinguish</td></tr>
-<tr><td><code>/usr/dr/#</code></td><td><code>/usr/dr/session/1</code></td><td><code>/usr/dr/session//usr/dr/session/1</code></td><td><strong>Path doubling</strong> — can't tell bare PK from absolute path</td></tr>
-</tbody>
-</table>
-<p>When callers store full URIs (e.g. <code>uri(/usr/dr/session/1)</code>) in FK columns instead of bare primary keys (e.g. <code>1</code>),
-the path-based pattern can't distinguish them — both look like path segments.</p>
-<h4><code>readColumnWithMetadata</code> guards</h4>
-<p>Three guards prevent FK miswrapping in <code>readColumnWithMetadata()</code>:</p>
-<table>
-<thead>
-<tr><th>Guard</th><th>Value example</th><th>Action</th><th>Why</th></tr>
-</thead>
-<tbody>
-<tr><td>Starts with <code>/</code></td><td><code>/usr/dr/session/1</code></td><td>Return plain <code>uri()</code> — no FK wrapping</td><td>Caller stored a full URI, not a bare PK</td></tr>
-<tr><td>Contains <code>:</code></td><td><code>drdb:session/1</code></td><td>Return plain <code>uri()</code> — no FK wrapping</td><td>Scheme-based absolute path</td></tr>
-<tr><td>Starts with <code>[</code></td><td><code>[!*/usr/dr/msg/4,...]</code></td><td>Skip FK, fall through to type reader</td><td>JSON list of references, not a single FK</td></tr>
-</tbody>
-</table>
-<p>Without these guards, three bugs occur:</p>
-<ol>
-<li>Absolute paths get doubled (<code>/usr/dr/session//usr/dr/session/1</code>)</li>
-<li>Plain URIs get wrapped in unnecessary <code>auto_from_</code> (<code>session=&gt;!*/usr/dr/session/1</code> instead of <code>session=&gt;/usr/dr/session/1</code>)</li>
-<li>JSON lists get treated as single FK path segments (<code>!*/usr/dr/message/[...]</code>)</li>
-</ol>
-<h4>FK persistence in <code>_mtron_meta</code></h4>
-<p><code>persistColumnType()</code> writes FK info to <code>_mtron_meta.ref_table</code>. When reading rows, <code>processMetaRow()</code> calls
-<code>registerOrPendingFK()</code> which registers with <code>SQLSchemaGenerator.registerFK()</code>. The <code>ref_table</code> column stores
-only the target table name (e.g. <code>&quot;session&quot;</code>), not a full path — <code>buildFKReferencePath()</code> reconstructs the path
-at read time.</p>
-<h4>When to avoid FK columns</h4>
-<p>If a column stores a <strong>list</strong> of references (e.g. <code>message =&gt; [!*/usr/dr/msg/1, !*/usr/dr/msg/2]</code>), the column
-should NOT have a FK inferred. The naming convention may still match (e.g. column <code>message</code> matches table <code>message</code>),
-but the <code>[</code> guard in <code>readColumnWithMetadata</code> prevents miswrapping. For new schemas, consider naming list-of-reference
-columns differently from their target tables to avoid the convention match entirely.</p>
-<h3>See also</h3>
-<ul>
-<li><code>rewrite-system-java.md</code> — RewriteBuilder, Rewriter, Code.rewrite () loop</li>
-<li><code>type-system-java.md</code> — Type interface, MType, Fluent API</li>
-<li><code>mtron-skill-reference.md</code> — mtron expression syntax (from, skip, take, isa, count)</li>
-</ul>
+<p>The invariant to keep: <strong>the read path must never allocate, and component slots are templates.</strong> <code>memory()</code> (and
+eventually <code>network()</code>/<code>instset()</code>) must stay a field read on the read path (<code>resolution*</code>-style), never
+<code>atDirect(uri(MEMORY))</code>, which constructs a <code>Uri</code> and re-enters <code>read()</code> through <code>big()</code>.</p>
+<p>Net: keep the gutting of <code>Frame</code>, but rehome the three responsibilities explicitly — union views → per-instance
+<code>resolved*</code> fields (done for memory), parent link → <code>parent()</code> or <code>vid.retract(1)</code>, cross-frame lookup → memory's space
+index. That makes the simplification <em>cleaner</em> than the original, not just smaller.</p>
 
     </div>
 </main>

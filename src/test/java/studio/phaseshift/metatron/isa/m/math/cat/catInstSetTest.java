@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,16 +50,25 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 public class catInstSetTest extends AbstractInstSetTest {
 
     public catInstSetTest() {
         super(catInstSet::new);
     }
 
+    @BeforeEach
+    public void installCategoryCompiler() {
+        Machine.current().compiler(CatTheoryCompiler.single());
+    }
+
     @BeforeAll
     public static void importAllInstSets() {
         InstSet.importInstSet(f("#"));
+        // the catch-all import re-adds the base /m instset, and re-adding an already-mounted instset
+        // re-registers its types against a fresh space, orphaning the types derived from them (e.g.
+        // cmplx, whose poly is built from real/lst) — cmplx ops then fail to resolve. re-importing
+        // /m/math after the catch-all restores them.
+        InstSet.importInstSet(f("/m/math"));
     }
 
     private static Inst plus() {
@@ -250,12 +260,13 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "nat::T.as(object::T)>>law>>rig         % rig_theory::[add=>plus?int<=int,mul=>mult?int<=int,zero=>0,one=>1]",
-            "nat::T.as(object::T)>>law>>add_monoid  % monoid_theory::[op=>plus?int<=int,id=>0]",
+            // the theory roles hold !* (auto_from) pointers to the live operations — the graph is the refs, not a copy
+            "nat::T.as(object::T)>>law>>rig         % rig_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
+            "nat::T.as(object::T)>>law>>add_monoid  % monoid_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0]",
             // "nat::T.as(object::T)>>law>>add_group   % noobj",
             //  "nat::T.as(object::T)>>law>>ring        % noobj",
-            "int::T.as(object::T)>>law>>ring        % ring_theory::[add=>plus?int<=int,mul=>mult?int<=int,zero=>0,one=>1]",
-            "int::T.as(object::T)>>law>>add_group   % group_theory::[op=>plus?int<=int,id=>0,inv=>neg?int<=int]",
+            "int::T.as(object::T)>>law>>ring        % ring_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
+            "int::T.as(object::T)>>law>>add_group   % group_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0,inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int]",
     }, delimiter = '%')
     void testNatVsInt(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
@@ -270,7 +281,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             //"|mult?int<=int(int::T).as(morphism::T)>>law     % [commutative,right_distributive,action]",
             "|minus?int<=int(int::T).as(morphism::T)>>law    % [action]",
             "|gt?bool<=int(int::T).as(morphism::T)>>law      % [right_distributive]",
-            "|div?int<=int(int::T).as(morphism::T)>>law      % noobj",
+            "|div?int<=int(int::T).as(morphism::T)>>law      % [action]",
             "|sum?int<=int{*}().as(morphism::T)>>law         % [monoidic,commutative,right_distributive]",
             "|prod?int<=int{*}().as(morphism::T)>>law        % [monoidic,commutative,right_distributive]",
     }, delimiter = '%')
@@ -297,8 +308,9 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * the {@code code.rewrite()} loop, but scoped to {@link catInstSet} only — proves the logical
-     * rewrites fire without {@code /m}'s heuristic rewrites doing the work.
+     * The cat-instset rewrites alone, applied to a fixpoint — scoped to {@link catInstSet} so the logical
+     * rules are proved without {@code /m}'s heuristic rewrites doing the work. The compiled form stays in
+     * the chain's pre-resolution shape, which is what the expectations below name.
      */
     private static Code catRewrite(final Code code) {
         final AtomicReference<Code> rewrittenCode = new AtomicReference<>(code);
@@ -322,21 +334,27 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * The logical rewrites — derived from the operand's declared theory (not hand-matched).
-     * {@code ring_theory_unit_removal} strips {@code op(id)} (the ring's zero/one) from code.
+     * {@code theory_unit_removal} — the unit law of every theory the operand's type models: {@code op(id)}
+     * drops out, and a bare identity operation (the code ring's {@code id}) is the identity morphism.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            // ring_theory_unit_removal — op(id) removed, where id comes from the operand's ring (zero=0, one=1)
+            // int ring — add/zero = 0, mul/one = 1
             "5.plus(0)          % start(5)          % 5",
             "5.mult(1)          % start(5)          % 5",
             "5.plus(0).mult(1)  % start(5)          % 5",
             "5.plus(0).mult(3)  % start(5).mult(3)  % 15",
             "5.plus(2).plus(0)  % start(5).plus(2)  % 7",
             "-5.mult(1)         % start(-5)         % -5",
+            // str concat_monoid — op/plus, id = ""
+            "\"ab\".plus(\"\")    % start(\"ab\")      % \"ab\"",
+            // bool rig — add/zero = false, mul/one = true
+            "true.plus(false)   % start(true)       % true",
+            "true.mult(true)    % start(true)       % true",
+            // code ring — the identity operation itself is the identity morphism
+            "5.id()             % start(5)          % 5",
     }, delimiter = '%')
-    @Disabled
-    public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
+    public void testUnitRemoval(final String code, final String expected, final String expectedResult) throws Exception {
         final Code firstStage = ObjmtronSerializer.parse(code);
         final Call secondStage = ObjmtronSerializer.parse(expected);
         final Call compilation = catRewrite(firstStage).tryToInst();
@@ -346,9 +364,9 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * {@code group_theory_involution} — {@code neg().neg()} collapses to identity (the additive
-     * group's inverse is period-two), derived from {@code add_group.inv}. The carrier comes from the
-     * seed (the argless {@code neg()} has no arg to derive it from).
+     * {@code theory_involution} — any operation declared {@code involution} (period two) collapses an
+     * adjacent pair to identity, not just the additive group's {@code neg}. The carrier comes from the
+     * seed (an argless involution has no arg to derive the type from).
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -357,6 +375,10 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.plus(2).neg().neg()  % start(5).plus(2)  % 7",
             "5.neg()                % start(5).neg()    % -5",
             "-5.neg().neg()         % start(-5)         % -5",
+            // the generalization — every declared involution, not only neg
+            "\"ab\".reverse().reverse()  % start(\"ab\")  % \"ab\"",
+            "true.not().not()       % start(true)       % true",
+            "2.0.inv().inv()        % start(2.0)        % 2.0",
     }, delimiter = '%')
     public void testInvolutions(final String code, final String expected, final String expectedResult) throws Exception {
         final Code firstStage = ObjmtronSerializer.parse(code);
@@ -368,8 +390,100 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
+     * {@code law_idempotent} — an adjacent pair of the same operation declared {@code idempotent} is that
+     * operation ({@code f·f ↦ f}).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"ab\".ucase().ucase()          % start(\"ab\").ucase()    % \"AB\"",
+            "false.plus(true).plus(true)    % start(false).plus(true) % true",
+            "2.zero().zero()                % start(2).zero()          % 0",
+    }, delimiter = '%')
+    public void testIdempotent(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * {@code law_absorbing} — an operation declared {@code absorbing} is a constant of the chain
+     * ({@code f ∘ g = f}), so everything before it is dead code.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.plus(3).zero()    % start(5).zero()   % 0",
+            "5.mult(2).zero()    % start(5).zero()   % 0",
+            "5.plus(3).plus(4).zero()  % start(5).zero()  % 0",
+    }, delimiter = '%')
+    public void testAbsorbing(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * {@code law_monoidic} — a fold of a fold is the fold ({@code reducer}/{@code join} form, declared
+     * {@code monoidic}).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.sum().sum()     % start({1,2,3}).sum()    % 6",
+            "{1,2,3}.prod().prod()   % start({1,2,3}).prod()   % 6",
+    }, delimiter = '%')
+    public void testMonoidic(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * {@code law_poset} — adjacent comparisons of an ordered type compose to the stricter single bound.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"m\".gt(\"a\").gt(\"z\")  % start(\"m\").gt(\"z\")  % false",
+            "\"m\".lt(\"z\").lt(\"a\")  % start(\"m\").lt(\"a\")  % false",
+    }, delimiter = '%')
+    public void testPoset(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * {@code inverse_cancellation} — an adjacent declared inverse pair with equal operands cancels to the
+     * identity (the group law {@code f·f⁻¹ = 1}, read off {@code Entry.inverse}).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.plus(3).minus(3)     % start(5)   % 5",
+            "6.mult(2).div(2)       % start(6)   % 6",
+    }, delimiter = '%')
+    public void testInverseCancellation(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * {@code form_map_unwrap} — the stream lift {@code map} is transparent on the value it wraps, so a
+     * mapping of an instruction is that instruction.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.map(neg)     % start(5).neg()    % -5",
+            "5.map(neg).map(neg)  % start(5)    % 5",
+    }, delimiter = '%')
+    public void testMapUnwrap(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * The lift's unfolding — {@code map} whose argument is an instruction ({@code map(*0)}) must unwrap for
+     * the enclosing chain to resolve, which is {@code form_map_unwrap}'s job. Only the rows that require
+     * that unfolding live here; a plain {@code map(+2)} resolves without the category.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }   % {6,9,12,15}",
+    }, delimiter = '%')
+    public void testMapUnfolding(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
      * {@code derivation_contraction} — folds a derived instruction's primitive composition back to the
-     * derived op: {@code plus·neg ↦ minus}.
+     * derived op: {@code plus·neg ↦ minus}, {@code mult·inv ↦ div}.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -384,6 +498,14 @@ public class catInstSetTest extends AbstractInstSetTest {
             "cmplx::[1.0,2.0].mult(cmplx::[1.0,1.0].inv())  % start(cmplx::[1.0,2.0]).div(cmplx::[1.0,1.0])    % cmplx::[1.5,0.5]",
     }, delimiter = '%')
     public void testDerivationContraction(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * The shared rewrite assertion: the cat-only fixpoint compiles the code to {@code expected}, and the
+     * code still evaluates to {@code expectedResult}.
+     */
+    private static void rewriteAssert(final String code, final String expected, final String expectedResult) {
         final Code firstStage = ObjmtronSerializer.parse(code);
         final Call secondStage = ObjmtronSerializer.parse(expected);
         final Call compilation = catRewrite(firstStage).tryToInst();

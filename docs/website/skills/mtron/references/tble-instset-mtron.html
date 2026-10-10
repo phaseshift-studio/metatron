@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -616,19 +620,19 @@ mtron&gt; @tbledoc:person/+/+      [-- anchor: the same fields, each still addre
 <p>The same holds for a rewrite's result — it is the clone path that hands rows back with a placeholder vid, which is why
 the anchored form is the one to keep when the rows might be written back:</p>
 <pre><code class="language-mtron">mtron&gt; *tbledoc:person/+.take(2)     [-- clone path --]
-==&gt;{2}[
+==&gt;person::[
     name=&gt;'marko',
-    age=&gt;29]@tbledoc:person/noobj
-==&gt;{2}[
+    age=&gt;29]@tbledoc:person/1
+==&gt;person::[
     name=&gt;'grant',
-    age=&gt;25]@tbledoc:person/noobj
+    age=&gt;25]@tbledoc:person/2
 mtron&gt; @tbledoc:person/+.take(2)     [-- anchor path --]
-==&gt;{2}[
+==&gt;person::[
     name=&gt;'marko',
-    age=&gt;29]@tbledoc:person/noobj
-==&gt;{2}[
+    age=&gt;29]@tbledoc:person/1
+==&gt;person::[
     name=&gt;'grant',
-    age=&gt;25]@tbledoc:person/noobj
+    age=&gt;25]@tbledoc:person/2
 </code></pre>
 <h3>the rewrites — reads that become SQL</h3>
 <p>The interesting half of <code>/m/tble</code>: a read that matches a table is rewritten to SQL before it runs, so <code>count()</code> is
@@ -644,9 +648,9 @@ same expression over a <code>memspace</code> stays in mtron.</p>
 mtron&gt; *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
 ==&gt;5
 mtron&gt; *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
-==&gt;18
+==&gt;181
 mtron&gt; *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==&gt;36
+==&gt;36.0
 mtron&gt; *tbledoc:person/+.==[name=&gt;_]           [-- SELECT name FROM person --]
 ==&gt;[
     name=&gt;'xilo']
@@ -659,49 +663,50 @@ mtron&gt; *tbledoc:person/+.==[name=&gt;_]           [-- SELECT name FROM person
 ==&gt;[
     name=&gt;'vela']
 mtron&gt; *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
-==&gt;{2}[
-    name=&gt;'grant',
-    age=&gt;25]@tbledoc:person/noobj
-==&gt;{2}[
-    name=&gt;'marko',
-    age=&gt;29]@tbledoc:person/noobj
-==&gt;{2}[
-    name=&gt;'xilo',
-    age=&gt;33,
-    skill=&gt;'graph']@tbledoc:person/noobj
-==&gt;{2}[
-    name=&gt;'metis',
-    age=&gt;41]@tbledoc:person/noobj
-==&gt;{2}[
-    name=&gt;'vela',
-    age=&gt;53]@tbledoc:person/noobj
+==&gt;[
+    [
+     name=&gt;'grant',
+     age=&gt;25]@tbledoc:person/noobj,
+    [
+     name=&gt;'marko',
+     age=&gt;29]@tbledoc:person/noobj,
+    [
+     name=&gt;'xilo',
+     age=&gt;33,
+     skill=&gt;'graph']@tbledoc:person/noobj,
+    [
+     name=&gt;'metis',
+     age=&gt;41]@tbledoc:person/noobj,
+    [
+     name=&gt;'vela',
+     age=&gt;53]@tbledoc:person/noobj]
 mtron&gt; *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
-==&gt;{2}'marko'
-==&gt;{2}'grant'
-==&gt;{2}'metis'
-==&gt;{2}'xilo'
-==&gt;{2}'vela'
+==&gt;'marko'
+==&gt;'grant'
+==&gt;'metis'
+==&gt;'xilo'
+==&gt;'vela'
 mtron&gt; *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
-==&gt;{2}[
+==&gt;person::[
     name=&gt;'marko',
-    age=&gt;29]@tbledoc:person/noobj
-==&gt;{2}[
+    age=&gt;29]@tbledoc:person/1
+==&gt;person::[
     name=&gt;'grant',
-    age=&gt;25]@tbledoc:person/noobj
+    age=&gt;25]@tbledoc:person/2
 mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
-==&gt;{2}[
+==&gt;person::[
     name=&gt;'grant',
-    age=&gt;25]@tbledoc:person/noobj
-==&gt;{2}[
+    age=&gt;25]@tbledoc:person/2
+==&gt;person::[
     name=&gt;'metis',
-    age=&gt;41]@tbledoc:person/noobj
-==&gt;{2}[
+    age=&gt;41]@tbledoc:person/3
+==&gt;person::[
     name=&gt;'xilo',
     age=&gt;33,
-    skill=&gt;'graph']@tbledoc:person/noobj
-==&gt;{2}[
+    skill=&gt;'graph']@tbledoc:person/4
+==&gt;person::[
     name=&gt;'vela',
-    age=&gt;53]@tbledoc:person/noobj
+    age=&gt;53]@tbledoc:person/5
 </code></pre>
 <table>
 <thead>
@@ -742,8 +747,6 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
         pattern=&gt;&lt;#&gt;],
        inst=&gt;instset::[
         pattern=&gt;&lt;#&gt;]]],
-     space=&gt;[
-      super=&gt;!*/m],
      const=&gt;[
       [
        llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/web/helper],
@@ -756,12 +759,12 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
      rewrite=&gt;[
       /m/tble/inst/rewrite/sql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
       /m/tble/inst/rewrite/sql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+      /m/tble/inst/rewrite/sql_sum_column?rng=code{?}&amp;dom=code(){&lt;j&gt;},
       /m/tble/inst/rewrite/sql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},
       /m/tble/inst/rewrite/sql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
       /m/tble/inst/rewrite/sql_offset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
       /m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-      /m/tble/inst/rewrite/sql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-   ...(11 more)]]@/m/tble,
+   ...(12 more)]]@/m/tble,
     desc=&gt;'relational tables, typed rows, and...',
     example=&gt;['*acme:customer.where[person=&gt;[name...']]
 </code></pre>
@@ -880,22 +883,28 @@ database says <em>what its key is</em>. Two things have to be true for it to wor
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
 ==&gt;[
-    body=&gt;'a note with a database-assigned key']@tbledoc:note/11
+    body=&gt;'a note with a database-assigned key']@tbledoc:note/17
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
 ==&gt;[
-    body=&gt;'another one']@tbledoc:note/12
+    body=&gt;'another one']@tbledoc:note/18
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==&gt;1
 ==&gt;12
-==&gt;3
-==&gt;10
+==&gt;17
 ==&gt;11
+==&gt;15
 ==&gt;2
 ==&gt;4
-==&gt;5
 ==&gt;6
-==&gt;7
 ==&gt;8
+==&gt;1
+==&gt;13
+==&gt;16
+==&gt;3
+==&gt;10
+==&gt;14
+==&gt;18
+==&gt;5
+==&gt;7
 ==&gt;9
 </code></pre>
 <h3>taking the space down</h3>
@@ -910,7 +919,7 @@ mtron&gt; tblespace::[pattern =&gt; tbledoc:#,
                    driver  =&gt; &lt;org.sqlite.JDBC&gt;,
                    route   =&gt; [tbledoc: =&gt; &lt;&gt;]]@/sys/space/tbledoc
 mtron&gt; *tbledoc:person/+.count()                   [-- 0: a fresh mount has not discovered its tables yet --]
-==&gt;0
+==&gt;5
 mtron&gt; */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
 ==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[
     {?}trophy=&gt;str::T,

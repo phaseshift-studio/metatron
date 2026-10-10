@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -421,8 +425,6 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     pattern=&gt;&lt;#&gt;],
    inst=&gt;instset::[
     pattern=&gt;&lt;#&gt;]]],
- space=&gt;[
-  super=&gt;!*/m],
  type=&gt;[
   int::T[?is(gte(0)).is(lte(100))][ctor?rng=percent&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/percent,
   int::T[inst(inst(0))]@/m/math/nat,
@@ -503,8 +505,8 @@ the collection of mathematical instructions, algebraic and numeric data types, a
   floor?rng=real&amp;dom=#{?}(real::T){&lt;j&gt;},
   round?rng=int&amp;dom=#{?}(real::T){&lt;j&gt;}],
  const=&gt;[
-  2.7182@/m/math/e?constq,
-  3.1415@/m/math/pi?constq]]@/m/math</code></pre>
+  2.71828@/m/math/e?constq,
+  3.14159@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
             </div>
@@ -691,14 +693,14 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         <span class="code text-secondary fw-bold">e</span>
         <small class="text-muted code">/m/math/e?constq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">2.7182@/m/math/e?constq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">2.71828@/m/math/e?constq</code></pre></div>
     
 </div><div class="card mb-3" id="__m__math__pi?constq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">pi</span>
         <small class="text-muted code">/m/math/pi?constq</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">3.1415@/m/math/pi?constq</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">3.14159@/m/math/pi?constq</code></pre></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
@@ -733,7 +735,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">cmplx::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst[__m__real,__m__real]" class="instset-doc-small-code text-info code">/m/lst[/m/real,/m/real]::T</a></span><span class="theory-chip theory-field">field<span class="chip-tip"><span class="chip-tip-name">field</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0), inv = inv</span></span></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0), inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0)</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0)</span></span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst[__m__real,__m__real]" class="instset-doc-small-code text-info code">/m/lst[/m/real,/m/real]::T</a></span><span class="theory-chip theory-field">field<span class="chip-tip"><span class="chip-tip-name">field</span><span class="chip-tip-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0), inv = inv</span></span></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0), inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0)</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0)</span></span></span>
         </span>
         <small class="text-muted code">/m/math/cmplx</small>
     </div>
@@ -1032,7 +1034,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">nat::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-roles">op = plus, id = 0</span></span></span><span class="theory-chip theory-rig">rig<span class="chip-tip"><span class="chip-tip-name">rig</span><span class="chip-tip-roles">add = plus, mul = mult, zero = 0, one = 1</span></span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = plus, id = 0</span></span></span><span class="theory-chip theory-rig">rig<span class="chip-tip"><span class="chip-tip-name">rig</span><span class="chip-tip-desc">the theory of rigs (semirings) \(\langle S, +, \cdot, 0, 1 \rangle\): an additive and a multiplicative monoid with \(\cdot\) distributive over \(+\), and no additive inverses</span><span class="chip-tip-roles">add = plus, mul = mult, zero = 0, one = 1</span></span></span>
         </span>
         <small class="text-muted code">/m/math/nat</small>
     </div>
@@ -1058,7 +1060,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">percent::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-roles">op = plus, id = 0</span></span></span><span class="theory-chip theory-rig">rig<span class="chip-tip"><span class="chip-tip-name">rig</span><span class="chip-tip-roles">add = plus, mul = mult, zero = 0, one = 1</span></span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = plus, id = 0</span></span></span><span class="theory-chip theory-rig">rig<span class="chip-tip"><span class="chip-tip-name">rig</span><span class="chip-tip-desc">the theory of rigs (semirings) \(\langle S, +, \cdot, 0, 1 \rangle\): an additive and a multiplicative monoid with \(\cdot\) distributive over \(+\), and no additive inverses</span><span class="chip-tip-roles">add = plus, mul = mult, zero = 0, one = 1</span></span></span>
         </span>
         <small class="text-muted code">/m/math/percent</small>
     </div>

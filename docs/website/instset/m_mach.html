@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -421,8 +425,6 @@ the reflective instruction set of metatron featuring process, monad, and code in
     pattern=&gt;&lt;#&gt;],
    inst=&gt;instset::[
     pattern=&gt;&lt;#&gt;]]],
- space=&gt;[
-  super=&gt;!*/m],
  type=&gt;[
   rec::T[?[
    pattern=&gt;uri::T,
@@ -459,7 +461,15 @@ the reflective instruction set of metatron featuring process, monad, and code in
   resolver::T[][ctor?rng=firstfind&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/resolver/firstfind,
   component::T[][ctor?rng=typer&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/typer,
   component::T[][ctor?rng=memory&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/memory,
-  component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/dckr/network,
+  rec::T[?[
+   authority=&gt;uri::T,
+   {?}name=&gt;str::T,
+   {?}status=&gt;rec::T]]@/m/mach/peer,
+  rec::T[?[
+   {?}peer=&gt;&lt;#&gt;::T,
+   {?}status=&gt;inst::T,
+   {?}name=&gt;str::T]]@/m/mach/cluster,
+  component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
   space::T[?[
    {?}instset=&gt;rec::T[?[
     {?}pattern=&gt;uri::T,
@@ -478,7 +488,7 @@ the reflective instruction set of metatron featuring process, monad, and code in
     {?}resolver=&gt;resolver::T,
     {?}typer=&gt;typer::T]]@/m/mach/component/compiler,
    {?}memory=&gt;component::T[][ctor?rng=memory&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/memory,
-   {?}network=&gt;component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/dckr/network,
+   {?}network=&gt;component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
    {?}processor=&gt;component::T[?[
     {?}state=&gt;union(stop,run,pause),
     {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?rng=machine&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine,
@@ -487,20 +497,11 @@ the reflective instruction set of metatron featuring process, monad, and code in
    stop=&gt;[,]]]@/m/mach/thread_executor,
   rec::T[inst([code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;inst(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T])]@/m/mach/thread,
   thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/core,
-  thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/virtual,
-  rec::T[?[
-   authority=&gt;uri::T,
-   {?}transport=&gt;inst::T,
-   {?}name=&gt;str::T,
-   {?}tag=&gt;str::T,
-   {?}status=&gt;rec::T]]@/m/mach/peer,
-  rec::T[?[
-   {?}peer=&gt;&lt;#&gt;::T,
-   {?}status=&gt;inst::T,
-   {?}name=&gt;str::T]]@/m/mach/cluster],
+  thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/virtual],
  inst=&gt;[
   /m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-  mount?rng=machine&amp;dom=machine(space::T[?[
+  push?rng=machine&amp;dom=#{?}(uri::T){&lt;j&gt;},
+  pop?rng=machine&amp;dom=#{?}(space::T[?[
   {?}instset=&gt;rec::T[?[
    {?}pattern=&gt;uri::T,
    {?}const=&gt;[
@@ -518,31 +519,14 @@ the reflective instruction set of metatron featuring process, monad, and code in
    {?}resolver=&gt;resolver::T,
    {?}typer=&gt;typer::T]]@/m/mach/component/compiler,
   {?}memory=&gt;component::T[][ctor?rng=memory&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/memory,
-  {?}network=&gt;component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/dckr/network,
+  {?}network=&gt;component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
   {?}processor=&gt;component::T[?[
    {?}state=&gt;union(stop,run,pause),
    {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?rng=machine&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine){&lt;j&gt;},
+  move?rng=machine&amp;dom=#{?}(uri::T){&lt;j&gt;},
   stop?rng=thread&amp;dom=thread(){&lt;j&gt;},
   pause?rng=thread&amp;dom=thread(){&lt;j&gt;},
   resume?rng=thread&amp;dom=thread(){&lt;j&gt;}],
- const=&gt;[
-  machine::[
-   pattern=&gt;&lt;#&gt;,
-   q=&gt;[
-    docq::[
-     pattern=&gt;docq,
-     pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
-     pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
-     obj=&gt;memspace::[
-      pattern=&gt;&lt;#&gt;],
-     inst=&gt;instset::[
-      pattern=&gt;&lt;#&gt;]]],
-   memory=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-   network=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-   instset=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-   compiler=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-   processor=&gt;inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-   route=&gt;[=&gt;]]@/sys/mach],
  rewrite=&gt;[
   /m/mach/inst/rewrite/sum_gather?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/mach</code></pre>
                     </div>
@@ -552,7 +536,7 @@ the reflective instruction set of metatron featuring process, monad, and code in
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">23</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">4</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">1</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">23</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">6</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">1</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -631,11 +615,17 @@ the reflective instruction set of metatron featuring process, monad, and code in
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__mach__inst__mount?rng=__m__mach__machine&dom=__m__mach__machine" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">mount</span>
+    <div class="d-flex flex-wrap"><a href="#__m__mach__inst__move?rng=__m__mach__machine&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">move</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__mach__inst__pause?rng=__m__mach__thread&dom=__m__mach__thread" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">pause</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__pop?rng=__m__mach__machine&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">pop</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__push?rng=__m__mach__machine&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">push</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__mach__inst__resume?rng=__m__mach__thread&dom=__m__mach__thread" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">resume</span>
@@ -671,8 +661,8 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> this VM&#39;s static view of its cluster (fields + methods)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#peer" class="text-light">peer</a> <span class="text-light">=&gt;</span> <a href="#'the declared roster — an auto pointer, never a stale copy'" class="text-info">&#39;the declared roster — an auto pointer, never a stale copy&#39;</a>
-  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health method: peer => status'" class="text-info">&#39;the health method: peer =&gt; status&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health method: peer => status'" class="text-info">&#39;the health method: peer =&gt; status&#39;</a>
+  <a href="#peer" class="text-light">peer</a> <span class="text-light">=&gt;</span> <a href="#'the declared roster — an auto pointer, never a stale copy'" class="text-info">&#39;the declared roster — an auto pointer, never a stale copy&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__compiler">
@@ -723,7 +713,7 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> run a concurrent core thread</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">core::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.0]@/sys/thread/ping</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">core::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.0]@~/thread/ping</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__compiler__default">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -802,7 +792,7 @@ the reflective instruction set of metatron featuring process, monad, and code in
   {?}resolver=&gt;resolver::T,
   {?}typer=&gt;typer::T]]@/m/mach/component/compiler,
  {?}memory=&gt;component::T[][ctor?rng=memory&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/memory,
- {?}network=&gt;component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/dckr/network,
+ {?}network=&gt;component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
  {?}processor=&gt;component::T[?[
   {?}state=&gt;union(stop,run,pause),
   {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?rng=machine&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
@@ -819,7 +809,24 @@ the reflective instruction set of metatron featuring process, monad, and code in
  {?}route=&gt;[
   uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T]</code></div></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a machine integrates language, structure, and process providing a frame of reference
+and action within metatron. machine&#39;s form nested stack by which parent machine state
+is accessible to children and by which parent machine&#39;s define the scope of a child
+machine&#39;s access to resources. lateral machine communication made possible through
+the  machine network where the peer group forms a shared computing workspace that is
+garbage collected when machine is popped off the parent stack. the absolute local root
+of the metatron graph (/.) is a root machine.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'referential access to processing threads and computational state'" class="text-info">&#39;referential access to processing threads and computational state&#39;</a>
+  <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#'peers and shared peer state'" class="text-info">&#39;peers and shared peer state&#39;</a>
+  <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#'machine instruction set architecture'" class="text-info">&#39;machine instruction set architecture&#39;</a>
+  <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#'a frame of reference in space constrained by parent machine'" class="text-info">&#39;a frame of reference in space constrained by parent machine&#39;</a>
+  <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'parser, rewriter, resolver, and typer'" class="text-info">&#39;parser, rewriter, resolver, and typer&#39;</a>
+</pre>
+</div>
 </div><div class="card mb-3" id="__m__mach__component__memory">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -865,7 +872,7 @@ the reflective instruction set of metatron featuring process, monad, and code in
         </span>
         <small class="text-muted code">/m/mach/component/network</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/dckr/network</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  {?}machine=&gt;machine::T]</code></div></div>
     
@@ -879,18 +886,16 @@ the reflective instruction set of metatron featuring process, monad, and code in
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
  authority=&gt;uri::T,
- {?}transport=&gt;inst::T,
  {?}name=&gt;str::T,
- {?}tag=&gt;str::T,
  {?}status=&gt;rec::T]]@/m/mach/peer</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> one metatron instance the local instance knows about</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#'the inst that reaches it; absent when only known, not reachable'" class="text-info">&#39;the inst that reaches it; absent when only known, not reachable&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#'the peer address with scheme and host:port for remote peers'" class="text-info">&#39;the peer address with scheme and host:port for remote peers&#39;</a>
   <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the last health report computed for this peer'" class="text-info">&#39;the last health report computed for this peer&#39;</a>
-  <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#"the peer's address, scheme and host:port"" class="text-info">&quot;the peer&#39;s address, scheme and host:port&quot;</a>
+  <a href="#{?}name" class="text-light">{?}name</a> <span class="text-light">=&gt;</span> <a href="#'a simple name for the peer'" class="text-info">&#39;a simple name for the peer&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor">
@@ -977,12 +982,12 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
-  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
   <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
-  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">
@@ -1033,41 +1038,20 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> run a concurrent virtual thread</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">virtual::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.5]@/sys/thread/ping</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">virtual::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.5]@~/thread/ping</code></pre>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">4</span></h3>
-    <div class="card mb-3" id="__m__mach__inst__mount?rng=__m__mach__machine&dom=__m__mach__machine">
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">6</span></h3>
+    <div class="card mb-3" id="__m__mach__inst__move?rng=__m__mach__machine&dom=#{?}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
-            <span class="code text-primary fw-bold">mount</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__mach__machine" data-bs-toggle="tooltip" title="domain" class="code text-info">machine</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__mach__machine" data-bs-toggle="tooltip" title="range" class="code text-success">machine</a></span></span>
+            <span class="code text-primary fw-bold">move</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__mach__machine" data-bs-toggle="tooltip" title="range" class="code text-success">machine</a></span></span>
         </span>
-        <small class="text-muted code">/m/mach/inst/mount?rng=/m/mach/machine&amp;dom=/m/mach/machine</small>
+        <small class="text-muted code">/m/mach/inst/move?rng=/m/mach/machine&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__mount?rng=__m__mach__machine&dom=__m__mach__machine-doc-0-tab').click();document.getElementById('__m__mach__inst__mount?rng=__m__mach__machine&dom=__m__mach__machine-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mount?rng=machine&dom=machine(space::T[?[
-  {?}instset=>rec::T[?[
-   {?}pattern=>uri::T,
-   {?}const=>[
-    <#>::T],
-   {?}type=>{?}[
-    <#>::T],
-   {?}inst=>{?}[
-    inst::T],
-   {?}rewrite=>{?}[
-    inst::T],
-   {?}sugar=>{?}[
-    lst::T]]][ctor?rng=instset&dom=#{?}(<#>::T){<j>}]@/m/instset,
-  {?}compiler=>component::T[?[
-   {?}rewriter=>rewriter::T,
-   {?}resolver=>resolver::T,
-   {?}typer=>typer::T]]@/m/mach/component/compiler,
-  {?}memory=>component::T[][ctor?rng=memory&dom=#{?}(<#>::T){<j>}]@/m/mach/component/memory,
-  {?}network=>component::T[][ctor?rng=network&dom=#{?}(<#>::T){<j>}]@/m/dckr/network,
-  {?}processor=>component::T[?[
-   {?}state=>union(stop,run,pause),
-   {?}result=><#>::T]]@/m/mach/component/processor]][ctor?rng=machine&dom=#{?}(<#>::T){<j>}]@<a href="#__m__mach__machine" data-bs-toggle="tooltip" title="domain" class="code text-info">machine</a>){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__move?rng=__m__mach__machine&dom=#{?}-doc-0-tab').click();document.getElementById('__m__mach__inst__move?rng=__m__mach__machine&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">move?rng=machine&dom=<span class="code text-info">#{?}</span>(uri::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__mach__inst__pause?rng=__m__mach__thread&dom=__m__mach__thread">
@@ -1079,6 +1063,49 @@ the reflective instruction set of metatron featuring process, monad, and code in
         <small class="text-muted code">/m/mach/inst/pause?rng=/m/mach/thread&amp;dom=/m/mach/thread</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__pause?rng=__m__mach__thread&dom=__m__mach__thread-doc-0-tab').click();document.getElementById('__m__mach__inst__pause?rng=__m__mach__thread&dom=__m__mach__thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pause?rng=thread&dom=thread(){<j>}</code></pre>
+</div>
+    
+</div><div class="card mb-3" id="__m__mach__inst__pop?rng=__m__mach__machine&dom=#{?}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">pop</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__mach__machine" data-bs-toggle="tooltip" title="range" class="code text-success">machine</a></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/pop?rng=/m/mach/machine&amp;dom=#{?}</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__pop?rng=__m__mach__machine&dom=#{?}-doc-0-tab').click();document.getElementById('__m__mach__inst__pop?rng=__m__mach__machine&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pop?rng=machine&dom=<span class="code text-info">#{?}</span>(space::T[?[
+  {?}instset=>rec::T[?[
+   {?}pattern=>uri::T,
+   {?}const=>[
+    <#>::T],
+   {?}type=>{?}[
+    <#>::T],
+   {?}inst=>{?}[
+    inst::T],
+   {?}rewrite=>{?}[
+    inst::T],
+   {?}sugar=>{?}[
+    lst::T]]][ctor?rng=instset&dom=<span class="code text-info">#{?}</span>(<#>::T){<j>}]@/m/instset,
+  {?}compiler=>component::T[?[
+   {?}rewriter=>rewriter::T,
+   {?}resolver=>resolver::T,
+   {?}typer=>typer::T]]@/m/mach/component/compiler,
+  {?}memory=>component::T[][ctor?rng=memory&dom=<span class="code text-info">#{?}</span>(<#>::T){<j>}]@/m/mach/component/memory,
+  {?}network=>component::T[][ctor?rng=network&dom=<span class="code text-info">#{?}</span>(<#>::T){<j>}]@/m/mach/component/network,
+  {?}processor=>component::T[?[
+   {?}state=>union(stop,run,pause),
+   {?}result=><#>::T]]@/m/mach/component/processor]][ctor?rng=machine&dom=<span class="code text-info">#{?}</span>(<#>::T){<j>}]@<a href="#__m__mach__machine" data-bs-toggle="tooltip" title="range" class="code text-success">machine</a>){<j>}</code></pre>
+</div>
+    
+</div><div class="card mb-3" id="__m__mach__inst__push?rng=__m__mach__machine&dom=#{?}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">push</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__mach__machine" data-bs-toggle="tooltip" title="range" class="code text-success">machine</a></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/push?rng=/m/mach/machine&amp;dom=#{?}</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__push?rng=__m__mach__machine&dom=#{?}-doc-0-tab').click();document.getElementById('__m__mach__inst__push?rng=__m__mach__machine&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">push?rng=machine&dom=<span class="code text-info">#{?}</span>(uri::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__mach__inst__resume?rng=__m__mach__thread&dom=__m__mach__thread">

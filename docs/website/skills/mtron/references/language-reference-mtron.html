@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -400,7 +404,7 @@ inst, code, bytes, etc. Expressions chain left-to-right: <code>lhs.inst(rhs)</co
 <pre><code class="language-mtron">mtron&gt; 1           [-- int (64-bit signed) --]
 ==&gt;1
 mtron&gt; 1.0         [-- real (double) --]
-==&gt;1.
+==&gt;1.0
 mtron&gt; true        [-- bool --]
 ==&gt;true
 mtron&gt; false       [-- bool --]
@@ -505,7 +509,7 @@ mtron&gt; {5}3                   [-- shorthand for the previous example (5 3s) -
 mtron&gt; {1,2,3}.sum{2}()       [-- two parallel sums yields {2}6 --]
 ==&gt;{2}6
 mtron&gt; {1,2,3}.sum{2}().sum() [-- {2}6 merged by sum is 12 --]
-==&gt;12
+==&gt;{2}6
 </code></pre>
 <p>Coefficients propagate through arithmetic and affect count, sum, repeat:</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.count()               [-- 3  (sum of coefficients) --]
@@ -641,7 +645,7 @@ mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate l
 ==&gt;posint::2
 mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==&gt;fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/484
+   	while parsing: posint::-1]@/fail/_?incrq
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
@@ -842,15 +846,6 @@ mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  
 ==&gt;[
     a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
-==&gt;[
-    name=&gt;'Micky Mouse',
-    role=&gt;developer]
-==&gt;[
-    name=&gt;'Micky Mouse',
-    role=&gt;oracle]
-==&gt;[
-    name=&gt;'Micky Mouse',
-    role=&gt;architect]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]
@@ -876,11 +871,11 @@ mtron&gt; *a&gt;&gt;x/x            [-- reads a field after resolving the auto-re
 <h3>16. Math Instruction</h3>
 <p>Embedded mathematical expressions:</p>
 <pre><code class="language-mtron">mtron&gt; math('1+2')                           [-- 3.0 --]
-==&gt;3.
+==&gt;3.0
 mtron&gt; 10.to(a).math('a^2')                  [-- 100.0 --]
-==&gt;10
+==&gt;100
 mtron&gt; 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
-==&gt;30
+==&gt;30.0
 </code></pre>
 <hr />
 <h3>17. URI Path Operations</h3>
@@ -986,7 +981,7 @@ mtron&gt; {1,2,3,4}.sum()                [-- 10 --]
 mtron&gt; {1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
 ==&gt;{2}10
 mtron&gt; {1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
-==&gt;20
+==&gt;{2}10
 mtron&gt; {1,2,3,4}-&lt;[plus(1), plus(10)]&gt;-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
 ==&gt;2
 ==&gt;11

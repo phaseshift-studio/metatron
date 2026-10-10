@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -445,16 +449,16 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'dist',
-   ...(14 more)]
+    'Desktop',
+   ...(17 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;[
     'Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.5M ...',
+    'tmpfs                  6.1G  6.4M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  522G ...',
+    '/dev/nvme0n1p2         916G  523G ...',
     'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -462,15 +466,15 @@ mtron&gt; bash('df -h')
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/640
+==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/fail/_?incrq
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
+    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/sys/fail/642
+    [ProcBuilder&lt;228&gt;]]@/fail/_?incrq
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
@@ -484,8 +488,8 @@ the same <code>==</code> projection:</p>
      'boot',
      'conf',
      'CONTRIBUTING.md',
-     'dist',
-   ...(14 more)]]
+     'Desktop',
+   ...(17 more)]]
 ==&gt;[
     'whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
@@ -496,8 +500,8 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'dist',
-   ...(15 more)]
+    'Desktop',
+   ...(18 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -533,13 +537,13 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: boot',
     '  File: conf',
     '  File: CONTRIBUTING.md',
-    '  File: dist',
-   ...(14 more)]
+    '  File: Desktop',
+   ...(17 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;[
     '  File: AGENTS.md',
     '  Size: 37531     	Blocks: 80     ...',
-    'Device: 259,5	Inode: 26502940    L...',
+    'Device: 259,5	Inode: 22852383    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
    ...
 </code></pre>
@@ -549,14 +553,14 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
 converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du</code>:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash('stat ${_} | sed -n &quot;s/.*Size: \([0-9]*\).*/\1/p&quot;')&gt;&gt;0.as?int&lt;=str(int::T).as(bB::T)]
 ==&gt;[
-    bB::37,
-    bB::40,
-    bB::40,
-    bB::40,
-    bB::40,
-    bB::69,
-    bB::40,
-   ...(14 more)]
+    bB::375,
+    bB::409,
+    bB::409,
+    bB::409,
+    bB::409,
+    bB::698,
+    bB::409,
+   ...(17 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -564,7 +568,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
 </code></pre>
 <p>And they filter a lst by the same predicate — the branches that fail are dropped:</p>
 <pre><code class="language-mtron">mtron&gt; [bB::34192.0, bB::100.0]==[_ =&gt; ?&gt;kB::30.0]==[_ =&gt; else(none)]
-==&gt;[bB::34]
+==&gt;[bB::341]
 </code></pre>
 <h4>security modulators (q-params)</h4>
 <p><code>bash</code> is hardened at the <strong>instruction</strong>, not the call site: <code>allow</code>, <code>reject</code>,
@@ -586,9 +590,9 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/644
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/fail/_?incrq
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/646
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/fail/_?incrq
 </code></pre>
 <p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:</p>
@@ -611,13 +615,13 @@ no input to take, so it is shown rather than run:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
 ==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;8
+==&gt;1
 mtron&gt; sys_stat()
 ==&gt;[
-    total_mem_jvm=&gt;mB::64,
-    free_mem_jvm=&gt;mB::407.6393,
-    max_mem_mach=&gt;gB::15.156,
-    used_mem_jvm=&gt;mB::240.3606,
+    total_mem_jvm=&gt;mB::472,
+    free_mem_jvm=&gt;mB::127.40970,
+    max_mem_mach=&gt;gB::15.1562,
+    used_mem_jvm=&gt;mB::344.59029,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[
@@ -676,7 +680,7 @@ is doing — the sugar is short precisely because it is legible once:</p>
 ==&gt;fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=tex...
      ^
-     could not parse at '[']@/sys/fail/648
+     could not parse at '[']@/fail/_?incrq
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
 ==&gt;[
     space=&gt;/sys/space,

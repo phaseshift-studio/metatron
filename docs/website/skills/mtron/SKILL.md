@@ -68,7 +68,7 @@ mtron> /a/b/c   -> |plus(2)
 mtron> /a/b/d   -> 'm'
 ==>'m'
 mtron> /a/b/d/e -> [1.0,0xa5,true]
-==>[1.,0xa5,true]
+==>[1.0,0xa5,true]
 ```
 To retrieve stored objs, dereference their uris. The uri is the **reference**, the obj is the **referent** and the
 process of moving from one to the other is called **dereferencing** (also known as **resolving**).
@@ -83,11 +83,11 @@ mtron> */a/b
     q=>r,
     c=>plus(2),
     d=>[
-     e=>[1.,0xa5,true]]]
+     e=>[1.0,0xa5,true]]]
 mtron> */a/b/c
 mtron> */a/b/d
 ==>[
-    e=>[1.,0xa5,true]]
+    e=>[1.0,0xa5,true]]
 ```
 Of particular significance is the result of `*/a/b`: polys (`lst`, `rec`, `rel`)
 maintain an internal uri scheme that interacts with the outer space's uri scheme. That interplay recurs throughout

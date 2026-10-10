@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -444,7 +448,7 @@ mtron&gt; /a/b/c   -&gt; |plus(2)
 mtron&gt; /a/b/d   -&gt; 'm'
 ==&gt;'m'
 mtron&gt; /a/b/d/e -&gt; [1.0,0xa5,true]
-==&gt;[1.,0xa5,true]
+==&gt;[1.0,0xa5,true]
 </code></pre>
 <p>To retrieve stored objs, dereference their uris. The uri is the <strong>reference</strong>, the obj is the <strong>referent</strong> and the
 process of moving from one to the other is called <strong>dereferencing</strong> (also known as <strong>resolving</strong>).</p>
@@ -457,11 +461,11 @@ mtron&gt; */a/b
     q=&gt;r,
     c=&gt;plus(2),
     d=&gt;[
-     e=&gt;[1.,0xa5,true]]]
+     e=&gt;[1.0,0xa5,true]]]
 mtron&gt; */a/b/c
 mtron&gt; */a/b/d
 ==&gt;[
-    e=&gt;[1.,0xa5,true]]
+    e=&gt;[1.0,0xa5,true]]
 </code></pre>
 <p>Of particular significance is the result of <code>*/a/b</code>: polys (<code>lst</code>, <code>rec</code>, <code>rel</code>)
 maintain an internal uri scheme that interacts with the outer space's uri scheme. That interplay recurs throughout

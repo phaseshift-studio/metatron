@@ -673,19 +673,12 @@ public class mInstSet extends AbstractInstSet {
                                                 .match(instA(ID_INST_TID).insts())
                                                 .rewrite(x -> List.of())).asCode()), "removes identity instructions: \\(g \\cdot \\mathrm{id} \\leadsto g\\)"),
 
-                        // Flatten nested map instructions
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"),
-                                code -> code.selfJVM(
-                                        RewriterBuilder.search(code.insts())
-                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(ALL_TYPE)))).insts())
-                                                .repeat()
-                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions: \\(\\mathrm{map}(f) \\cdot \\mathrm{map}(g) \\leadsto \\mathrm{map}(f \\cdot g)\\)"),
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_inst"),
-                                code -> code.selfJVM(
-                                        RewriterBuilder.search(code.insts())
-                                                .match(instB(MAP_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(instB(M_ISA_INST_TID.extend("#"), lst(T(ALL.maybeSome()))))).insts())
-                                                .repeat()
-                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens a mapping of an inst to the inst: \\(f \\in \\mathrm{inst} \\Rightarrow \\mathrm{map}(f) \\leadsto f\\)"),
+                        // NOTE: map_nest / map_inst / plus_zero / mult_one have been removed — they are the
+                        // syntactic shadows of catInstSet's `form_map_unwrap` (the transparent `map` lift)
+                        // and `theory_unit_removal` (op(id) for the operand's declared algebra). id_removal
+                        // stays: the category is only present when `/m/math/cat` is imported, and the identity
+                        // instruction has to be dropped on the base path too (testSplitMergeCode needs it).
+
                         // Eliminate else() after non-maybe instruction (dead code)
                         // Pattern: .count().else(x) → .count() (count always returns a value)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
@@ -712,40 +705,10 @@ public class mInstSet extends AbstractInstSet {
                         //                             return List.of(instB(RSHIFT_INST_TID, lst(jnt(run.size()))));
                         //                         })).asCode()),
 
-                        // Optimize plus(0) for any PlusMonoid (identity)
-                        // Pattern: .plus(0) → identity (no-op)
-                        // DISABLED: This rewrite is interfering with Rec operations (RecTest.testAt() failures)
-                        // The rewrite removes .plus(0) operations that are needed for record access patterns
-
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("plus_zero"),
-                                code -> code.selfJVM(
-                                        RewriterBuilder.search(code.insts())
-                                                .match(cachedMatch(PLUS_ZERO_MATCH, () -> List.of(instB(PLUS_INST_TID, lst()))))
-                                                .rewrite(map -> {
-                                                    final Inst plusInst = map.values().iterator().next();
-                                                    if (plusInst.args().count() > 0 && plusInst.arg(0).isInt() && plusInst.arg(0).asInt().intValue() == 0) {
-                                                        // plus(0) is identity, remove it
-                                                        return List.of();
-                                                    }
-                                                    return List.of(plusInst);
-                                                })).asCode()), "removes plus(0) — the additive identity of a plus-monoid: \\(x + 0 \\leadsto x\\)"),
-
-                        // Optimize mult(1) for integers (identity)
-                        // Pattern: .mult(1) → identity (no-op)
-                        // DISABLED: This rewrite is interfering with list operations
-
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("mult_one"),
-                                code -> code.selfJVM(
-                                        RewriterBuilder.search(code.insts())
-                                                .match(cachedMatch(MULT_ONE_MATCH, () -> List.of(instB(MULT_INST_TID, lst()))))
-                                                .rewrite(map -> {
-                                                    final Inst multInst = map.values().iterator().next();
-                                                    if (multInst.args().count() > 0 && multInst.arg(0).isInt() && multInst.arg(0).asInt().intValue() == 1) {
-                                                        // mult(1) is identity, remove it
-                                                        return List.of();
-                                                    }
-                                                    return List.of(multInst);
-                                                })).asCode()), "removes mult(1) — the multiplicative identity of a mult-monoid: \\(x \\cdot 1 \\leadsto x\\)"),
+                        // plus_zero / mult_one are gone — `plus(0)` and `mult(1)` are exactly the unit
+                        // patterns of the operand's declared ring/monoid, which is what catInstSet's
+                        // `theory_unit_removal` removes (and it does so only when the type actually declares
+                        // that identity, which is why the syntactic versions had to be disabled).
 
                         // Collapse identical branches in split-merge by summing coefficients
                         // Pattern: -<[inst,inst,...]>- → inst{n}

@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -421,11 +425,9 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     pattern=&gt;&lt;#&gt;],
    inst=&gt;instset::[
     pattern=&gt;&lt;#&gt;]]],
- space=&gt;[
-  super=&gt;!*/m],
  type=&gt;[
   space::T[?[
-   host=&gt;uri::T]][inst?rng=mqttspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/iot/space/mqttspace,
+   host=&gt;uri::T]][ctor?rng=mqttspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/iot/space/mqttspace,
   mqttspace::T[][inst?rng=haos&amp;dom=#(isa([
   pattern=&gt;uri::T])){&lt;j&gt;}]@/m/iot/haos/space/haos]]@/m/iot</code></pre>
                     </div>
@@ -489,7 +491,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
         <a href="m_iot_space_mqttspace.html" class="code text-primary fw-bold text-decoration-none">mqttspace</a>
         <small class="text-muted code">/m/iot/space/mqttspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][inst?rng=mqttspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@mqttspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][ctor?rng=mqttspace&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@mqttspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
  pattern=&gt;uri::T,
  {?}q=&gt;[

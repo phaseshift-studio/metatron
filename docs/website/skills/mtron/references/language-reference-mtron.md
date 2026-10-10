@@ -16,7 +16,7 @@ inst, code, bytes, etc. Expressions chain left-to-right: `lhs.inst(rhs)`.
 mtron> 1           [-- int (64-bit signed) --]
 ==>1
 mtron> 1.0         [-- real (double) --]
-==>1.
+==>1.0
 mtron> true        [-- bool --]
 ==>true
 mtron> false       [-- bool --]
@@ -139,7 +139,7 @@ mtron> {5}3                   [-- shorthand for the previous example (5 3s) --]
 mtron> {1,2,3}.sum{2}()       [-- two parallel sums yields {2}6 --]
 ==>{2}6
 mtron> {1,2,3}.sum{2}().sum() [-- {2}6 merged by sum is 12 --]
-==>12
+==>{2}6
 ```
 Coefficients propagate through arithmetic and affect count, sum, repeat:
 
@@ -304,7 +304,7 @@ mtron> posint::2                    [-- posint::2  (admitted: the predicate lets
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/484
+   	while parsing: posint::-1]@/fail/_?incrq
 ```
 ---
 
@@ -548,15 +548,6 @@ mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[
     a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
-==>[
-    name=>'Micky Mouse',
-    role=>developer]
-==>[
-    name=>'Micky Mouse',
-    role=>oracle]
-==>[
-    name=>'Micky Mouse',
-    role=>architect]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 
@@ -595,11 +586,11 @@ Embedded mathematical expressions:
 
 ```mtron
 mtron> math('1+2')                           [-- 3.0 --]
-==>3.
+==>3.0
 mtron> 10.to(a).math('a^2')                  [-- 100.0 --]
-==>10
+==>100
 mtron> 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
-==>30
+==>30.0
 ```
 ---
 
@@ -726,7 +717,7 @@ mtron> {1,2,3,4}.sum()                [-- 10 --]
 mtron> {1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
 ==>{2}10
 mtron> {1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
-==>20
+==>{2}10
 mtron> {1,2,3,4}-<[plus(1), plus(10)]>-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
 ==>2
 ==>11

@@ -1,0 +1,46 @@
+% cat-rewrites.tex — declarations funnel into the law-driven rewrites
+% Rendered with the tikz MCP server (compile_tikz), which wraps this body in a
+% standalone document (default preamble: tikz, amsmath, amssymb + common TikZ
+% libraries) and writes docs/website/skills/mtron/assets/cat-rewrites.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels are deliberately UNFILLED (no
+% `fill=black` patch), so no text box shows against the page; labels are offset
+% clear of the strokes instead. Panels use black!85 / black!75 so they read as
+% slightly lighter than the page.
+
+\begin{tikzpicture}[
+  decl/.style={draw, rounded corners=3pt, fill=black!85, text width=4.0cm, align=center, font=\scriptsize, inner sep=4pt, minimum height=1.0cm},
+  gate/.style={draw, thick, rounded corners=3pt, fill=black!75, text width=11.4cm, align=center, font=\small, inner sep=6pt},
+  rule/.style={draw, rounded corners=3pt, fill=black!87, text width=2.7cm, align=center, font=\scriptsize, inner sep=4pt, minimum height=0.85cm},
+  a/.style={-{Stealth[length=2mm]}, thick, white!75!black},
+  bus/.style={thick, white!75!black},
+  color=white
+]
+
+\node[decl] (law1) at (0,0)    {\texttt{object::T>>law}\\[1pt] theory roles: \texttt{add}/\texttt{zero}, \texttt{mul}/\texttt{one}, \texttt{op}/\texttt{id}, \ldots};
+\node[decl] (law2) at (5.0,0)  {\texttt{morphism::T>>law}\\[1pt] \texttt{idempotent}, \texttt{absorbing}, \texttt{monoidic}, \texttt{commutative}, \texttt{poset}};
+\node[decl] (law3) at (10.0,0) {\texttt{analysis.inverse}\\[1pt] the declared opposing edge $f^{-1}$};
+\node[decl] (law4) at (15.0,0) {\texttt{derivation}\\[1pt] $\mathrm{lhs} \mapsto \mathrm{rhs}$};
+
+\foreach \l in {law1,law2,law3,law4} \draw[bus] (\l.south) -- (\l.south |- 0,-1.35);
+\draw[bus] (-0.15,-1.35) -- (15.15,-1.35);
+\draw[a] (7.5,-1.35) -- (7.5,-1.9);
+
+\node[gate] (gate) at (7.5,-2.9) {\texttt{LawTable.declared(op, operand)} — a law fires only for an operand type that \emph{declares} it};
+
+\node[rule] (r1) at (0.4,-5.0)  {\texttt{theory\_*}\\[1pt] unit, involution};
+\node[rule] (r2) at (3.9,-5.0)  {\texttt{law\_*}\\[1pt] 5 process laws};
+\node[rule] (r3) at (7.5,-5.0)  {\texttt{inverse\_*}\\[1pt] cancellation};
+\node[rule] (r4) at (11.1,-5.0) {\texttt{derivation\_*}\\[1pt] contraction};
+\node[rule] (r5) at (14.6,-5.0) {\texttt{form\_*}\\[1pt] \texttt{map} unwrap};
+
+\foreach \r in {r1,r2,r3,r4,r5} {
+  \draw[bus] (gate.south) -- ++(0,-0.45) -| (\r.north);
+  \draw[bus] (\r.south) -- ++(0,-0.45);
+}
+\draw[bus] (-0.2,-6.25) -- (15.2,-6.25);
+
+\node[gate, fill=black!85] (out) at (7.5,-7.1) {the rewritten chain, handed to the next compiler stage};
+\draw[a] (7.5,-6.25) -- (out.north);
+\end{tikzpicture}

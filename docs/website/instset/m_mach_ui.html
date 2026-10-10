@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -421,8 +425,11 @@ terminal widgets to spruce up the metatron</p>
     pattern=&gt;&lt;#&gt;],
    inst=&gt;instset::[
     pattern=&gt;&lt;#&gt;]]],
- space=&gt;[
-  super=&gt;!*/m/mach],
+ inst=&gt;[
+  as?rng=str&amp;dom=widget(str::T){&lt;j&gt;},
+  display?rng=noobj{0}&amp;dom=widget(){&lt;j&gt;},
+  nano?rng=#{?}&amp;dom=#{?}(){&lt;j&gt;},
+  less?rng=noobj{0}&amp;dom=str(isa(int::T).else(10)){&lt;j&gt;}],
  type=&gt;[
   rec::T[][ctor?rng=console&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/console,
   uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@/m/mach/ui/anchor,
@@ -491,6 +498,9 @@ terminal widgets to spruce up the metatron</p>
   widget::T[?[
    {?}grid=&gt;lst::T]][ctor?rng=grid_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/grid_widget,
   widget::T[?[
+   {?}grid=&gt;lst::T,
+   {?}title=&gt;str::T]][ctor?rng=matrix_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/matrix_widget,
+  widget::T[?[
    {?}body=&gt;str::T,
    {?}key=&gt;uri::T,
    {?}on_key=&gt;&lt;#&gt;::T]][ctor?rng=label_line_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/label_line_widget,
@@ -510,12 +520,7 @@ terminal widgets to spruce up the metatron</p>
   widget::T[?[
    {?}data=&gt;rec::T,
    {?}context=&gt;int::T,
-   {?}total=&gt;int::T]][ctor?rng=stack_bar_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/stack_bar_widget],
- inst=&gt;[
-  as?rng=str&amp;dom=widget(str::T){&lt;j&gt;},
-  display?rng=noobj{0}&amp;dom=widget(){&lt;j&gt;},
-  nano?rng=#{?}&amp;dom=#{?}(){&lt;j&gt;},
-  less?rng=noobj{0}&amp;dom=str(isa(int::T).else(10)){&lt;j&gt;}]]@/m/mach/ui</code></pre>
+   {?}total=&gt;int::T]][ctor?rng=stack_bar_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/stack_bar_widget]]@/m/mach/ui</code></pre>
                     </div>
                 </div>
             </div>
@@ -523,7 +528,7 @@ terminal widgets to spruce up the metatron</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">17</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">18</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -550,6 +555,9 @@ terminal widgets to spruce up the metatron</p>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__ui__widget__label_line_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">label_line_widget</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__ui__widget__matrix_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">matrix_widget</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__ui__widget__menu_bar_widget" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">menu_bar_widget</span>
@@ -597,7 +605,7 @@ terminal widgets to spruce up the metatron</p>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">17</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">18</span></h3>
     <div class="card mb-3" id="__m__mach__ui__widget__accordion_widget">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -635,8 +643,8 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#an accordion obj" class="text-success">an accordion obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
-  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
+  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__anchor">
@@ -745,6 +753,47 @@ terminal widgets to spruce up the metatron</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the text body displayed on the label'" class="text-info">&#39;the text body displayed on the label&#39;</a>
 </pre>
 </div>
+</div><div class="card mb-3" id="__m__mach__ui__widget__matrix_widget">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">matrix_widget::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__mach__ui__widget" class="instset-doc-small-code text-info code">/m/mach/ui/widget::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/ui/widget/matrix_widget</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[
+ {?}grid=&gt;lst::T,
+ {?}title=&gt;str::T]][ctor?rng=matrix_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/matrix_widget</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[
+ {?}style=&gt;rec::T[?[
+  {?}border=&gt;str::T,
+  {?}background=&gt;str::T,
+  {?}foreground=&gt;str::T,
+  {?}divider=&gt;str::T,
+  {?}headerDivider=&gt;str::T,
+  {?}pointer=&gt;str::T,
+  {?}leftMargin=&gt;int::T,
+  {?}rightMargin=&gt;int::T,
+  {?}topMargin=&gt;int::T,
+  {?}bottomMargin=&gt;int::T,
+  {?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@/m/mach/ui/anchor,
+  {?}width=&gt;int::T,
+  {?}height=&gt;int::T,
+  {?}top=&gt;int::T,
+  {?}left=&gt;int::T,
+  {?}zIndex=&gt;int::T,
+  {?}scroll=&gt;&lt;#&gt;::T,
+  {?}scrollX=&gt;int::T,
+  {?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/style]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a matrix of glyphs: a lst of lsts of characters drawn as a rectangular face (cell (row,col) is one-to-one with the drawn grid), styled like every other widget, plus a latched update(row,col,glyph) member that repaints one cell without a whole pass</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a matrix of glyphs" class="text-success">a matrix of glyphs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title drawn in the top border'" class="text-info">&#39;the title drawn in the top border&#39;</a>
+  <a href="#grid" class="text-light">grid</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line'" class="text-info">&#39;a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line&#39;</a>
+</pre>
+</div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__menu_bar_widget">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -782,8 +831,8 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a menu bar widget" class="text-success">a menu bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#height" class="text-light">height</a> <span class="text-light">=&gt;</span> <a href="#'the interior height of the menu bar in rows'" class="text-info">&#39;the interior height of the menu bar in rows&#39;</a>
-  <a href="#lines" class="text-light">lines</a> <span class="text-light">=&gt;</span> <a href="#'a lst of line widgets laid out across the bar'" class="text-info">&#39;a lst of line widgets laid out across the bar&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lines" class="text-light">lines</a> <span class="text-light">=&gt;</span> <a href="#'a lst of line widgets laid out across the bar'" class="text-info">&#39;a lst of line widgets laid out across the bar&#39;</a>
+  <a href="#height" class="text-light">height</a> <span class="text-light">=&gt;</span> <a href="#'the interior height of the menu bar in rows'" class="text-info">&#39;the interior height of the menu bar in rows&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__modal_widget">
@@ -823,8 +872,8 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#modal" class="text-success">modal</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
-  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
+  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__panel_widget">
@@ -864,8 +913,8 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#panel" class="text-success">panel</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
-  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
+  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__progress_table_widget">
@@ -980,8 +1029,8 @@ terminal widgets to spruce up the metatron</p>
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a stack bar widget" class="text-success">a stack bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#"the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)"" class="text-info">&quot;the sections: [key =&gt; int], each labelled by its key and drawn smallest first, largest last; the reserved key &lt;&gt; (the empty uri) is the what-is-left section — drawn last, wearing the unused section&#39;s style (dark by default)&quot;</a>
-  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
   <a href="#{?}total" class="text-light">{?}total</a> <span class="text-light">=&gt;</span> <a href="#'the numerator of the percent (default: the sum of the data)'" class="text-info">&#39;the numerator of the percent (default: the sum of the data)&#39;</a>
+  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__style">
@@ -1116,9 +1165,9 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a table widget" class="text-success">a table widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'a lst of obj table headers'" class="text-info">&#39;a lst of obj table headers&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}metadata" class="text-light">{?}metadata</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows of data behind the display'" class="text-info">&#39;a lst of rows of data behind the display&#39;</a>
   <a href="#{?}row" class="text-light">{?}row</a> <span class="text-light">=&gt;</span> <a href="#'a lst of poly table rows'" class="text-info">&#39;a lst of poly table rows&#39;</a>
-  <a href="#{?}metadata" class="text-light">{?}metadata</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows of data behind the display'" class="text-info">&#39;a lst of rows of data behind the display&#39;</a>
+  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'a lst of obj table headers'" class="text-info">&#39;a lst of obj table headers&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_select_widget">
@@ -1160,10 +1209,10 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree select tool" class="text-success">a tree select tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
-  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
   <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
-  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
+  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_widget">
@@ -1207,12 +1256,12 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree widget" class="text-success">a tree widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
-  <a href="#{?}expand" class="text-light">{?}expand</a> <span class="text-light">=&gt;</span> <a href="#'branch uris whose children are read regardless of max'" class="text-info">&#39;branch uris whose children are read regardless of max&#39;</a>
-  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
-  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
   <a href="#{?}flatten" class="text-light">{?}flatten</a> <span class="text-light">=&gt;</span> <a href="#'fold single-folder chains into one path row (default false)'" class="text-info">&#39;fold single-folder chains into one path row (default false)&#39;</a>
-  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
+  <a href="#{?}expand" class="text-light">{?}expand</a> <span class="text-light">=&gt;</span> <a href="#'branch uris whose children are read regardless of max'" class="text-info">&#39;branch uris whose children are read regardless of max&#39;</a>
+  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget">

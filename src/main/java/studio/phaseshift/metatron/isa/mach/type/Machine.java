@@ -284,6 +284,7 @@ public interface Machine extends Rec, AutoCloseable {
             // single value, whereas at the branch / it would fan out into /q, /instset, … entries.
             final fURI resolved = this.vid().resolve();
             final memSpace infra = memSpace.unregistered(resolved.extend(ALL), resolved.extend("space"));
+            infra.addQ(QCollection.docQ());
             infra.addQ(QCollection.incrQ());
             this.memory().addSpace(infra);
             // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.

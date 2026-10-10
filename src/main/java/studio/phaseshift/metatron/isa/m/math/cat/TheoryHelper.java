@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -32,6 +33,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.OBJECT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Theory resolution — reading a type's declared algebraic structures (the theory instances under
@@ -128,6 +130,69 @@ public class TheoryHelper extends MRec {
 
     public static Inst unit(final Type type, final fURI theoryTID, final String opRole, final String idRole) {
         return unit(type, nameOf(theoryTID), opRole, idRole);
+    }
+
+    /**
+     * The named theory instances of a type — the {@code object::T.law} rec, keyed by the user's name for
+     * each instance (e.g. {@code ring}, {@code add_group}, {@code boolean}). Empty when the type models no
+     * algebraic structure. This is the enumeration a law-driven rewrite walks.
+     */
+    public static Rec instances(final Type type) {
+        return OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0());
+    }
+
+    /**
+     * The (op, identity) role pairs a theory can witness: {@code add}/{@code zero}, {@code mul}/{@code one},
+     * {@code op}/{@code id}, {@code or}/{@code zero}, {@code and}/{@code one}, {@code join}/{@code bottom},
+     * {@code meet}/{@code top}. Each pair names the unit pattern {@code op(id)} the theory licenses.
+     */
+    public static final List<String[]> UNIT_ROLES = List.of(
+            new String[]{ADD, ZERO}, new String[]{MUL, ONE}, new String[]{OP, ID},
+            new String[]{OR, ZERO}, new String[]{AND, ONE}, new String[]{JOIN, BOTTOM}, new String[]{MEET, TOP});
+
+    /**
+     * The identity roles whose value is an <em>operation</em> rather than a literal — the multiplicative
+     * side ({@code one}, {@code id}) of a theory whose identity is a morphism, e.g. the code ring's
+     * {@code id}. A bare occurrence of one of these is the identity morphism and drops out of a chain.
+     */
+    public static final List<String> IDENTITY_ROLES = List.of(ONE, ID);
+
+    /**
+     * The unit pattern of an instance's role pair — the inst {@code op} applied to the instance's identity
+     * element, e.g. {@code add(zero)} for a ring. {@code noobj} when the instance does not declare both roles.
+     * The law roles hold {@code !*} pointers, so applying {@code args} to the pointer builds the pattern the
+     * shipped rewrites test with {@link Inst#test(Obj)}; the pointer is transparent.
+     */
+    public static Inst unit(final Rec instance, final String opRole, final String idRole) {
+        final Obj id = instance.at(f(idRole));
+        final Obj op = instance.at(f(opRole));
+        if (id.isNoObj() || !op.isInst())
+            return noobj().asInst();
+        return op.asInst().args(lst(id));
+    }
+
+    /**
+     * The op address of an instance's identity <em>operation</em>, or null when the role holds a literal
+     * (e.g. {@code zero => 0}) rather than an operation (code's {@code one => !*id}). A {@code !*} pointer
+     * names its target in its own argument, so the address is read without resolving — the target may be an
+     * as-yet-unresolved registration.
+     */
+    public static fURI identityAddress(final Rec instance, final String idRole) {
+        // the raw rec value: `at()` dereferences an auto (`!*`) role, and a pointer whose target is not
+        // registered yet reads back noobj — which is exactly the code ring's `one => !*id`
+        Obj id = instance.jvm().get(uri(idRole));
+        if (null == id)
+            id = instance.at(f(idRole));
+        if (null == id || id.isNoObj())
+            return null;
+        if (id.isUri())
+            return id.uriValue().basePath();
+        if (!id.isInst())
+            return null;
+        final Inst inst = id.asInst();
+        if (!inst.args().isEmpty() && inst.arg(0).isUri())
+            return inst.arg(0).uriValue().basePath();
+        return inst.tid().basePath();
     }
 
     // ---- stable, algebra-specific conveniences (used by the shipped rewrites) -----------------------------------------

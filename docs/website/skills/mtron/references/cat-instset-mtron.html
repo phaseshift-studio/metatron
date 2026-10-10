@@ -256,6 +256,7 @@
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
@@ -292,6 +293,9 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -388,7 +392,7 @@
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">cat-instset</h1>
-        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form), set-theoretic class (class), or declared process laws (law), or when wiring the algebraic theories (ring / field / rig / group / monoid / boolean / lattice).</small><br/>
+        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form), set-theoretic class (class), or declared process laws (law), when wiring the algebraic theories (ring / field / rig / group / monoid / boolean / lattice), or when adding a law-driven rewrite — the category *is* the rewrite table.</small><br/>
         <a href="cat-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>cat-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -400,6 +404,13 @@ morphisms (the edges), and an inst's dom/rng are its source and target endpoints
 </code></pre>
 <p>The lift is a type constructor. An <em>object</em> is constructed from a type and a <em>morphism</em> from an inst. The cat-graph is
 dynamically generated, not apriori defined.</p>
+<!-- figure source: assets/tikz/cat-lift.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
+<img src="../assets/cat-lift.png" alt="the lift: a type is a vertex, an inst is an edge" width="40%" style="float:right; margin:0 0 0.9em 1.5em"/>
+<p>Every morphism is classified on three axes — <code>form</code> (its n-tid coefficient shape), <code>position</code> (its place in the
+graph), and <code>law</code> (the algebraic laws it obeys) — and every object carries the structural theories it models. Those
+same declarations are what the rewriter stage consumes (see <em>the declared rewrites</em>). A vertex is a type lifted to
+<code>object::T</code> (<code>obj</code>, <code>law</code>, <code>morphed_to</code>, <code>morphed_from</code>); an edge is an inst lifted to <code>morphism::T</code>
+(<code>src</code> = dom, <code>trgt</code> = rng, <code>form</code>, <code>class</code>, <code>law</code>, <code>derivation</code>, <code>analysis</code>).</p>
 <p><strong>IMPORTANT</strong>: when referencing an instruction directly in a <code>console::T</code>, a <code>block</code> inst (sugar'd <code>|</code>) prevents the
 instruction from being evaluated.</p>
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T)
@@ -467,86 +478,6 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;as?rng=real&amp;dom=int(real::T){&lt;j&gt;}]
-==&gt;morphism::[
-    name=&gt;as,
-    form=&gt;mapper,
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;as?rng=str&amp;dom=int(str::T){&lt;j&gt;}]
-==&gt;morphism::[
-    name=&gt;as,
-    form=&gt;mapper,
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;as?rng=uri&amp;dom=int(uri::T){&lt;j&gt;}]
-==&gt;morphism::[
-    name=&gt;as,
-    form=&gt;mapper,
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;as?rng=rec&amp;dom=int(rec::T){&lt;j&gt;}]
-==&gt;morphism::[ name=&gt;plus,
-    form=&gt;mapper,
-    class=&gt;[endo],
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;plus?rng=int&amp;dom=int(int::T){&lt;j&gt;},
-    ...(1 more)]
-==&gt;morphism::[ name=&gt;mult,
-    form=&gt;mapper,
-    class=&gt;[endo],
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;mult?rng=int&amp;dom=int(int::T){&lt;j&gt;},
-    ...(1 more)]
-==&gt;morphism::[ name=&gt;zero,
-    form=&gt;mapper,
-    class=&gt;[endo],
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;zero?rng=int&amp;dom=int(){&lt;j&gt;},
-    ...(1 more)]
-==&gt;morphism::[ name=&gt;one,
-    form=&gt;mapper,
-    class=&gt;[endo],
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;one?rng=int&amp;dom=int(){&lt;j&gt;},
-    ...(1 more)]
-==&gt;morphism::[ name=&gt;neg,
-    form=&gt;mapper,
-    class=&gt;[
-     endo,
-     iso,
-     auto,
-     section,
-     retraction,
-     mono,
-     epi],
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;neg?rng=int&amp;dom=int(){&lt;j&gt;},
-    ...(1 more)]
-==&gt;morphism::[ name=&gt;div,
-    form=&gt;mapper,
-    class=&gt;[endo],
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;div?rng=int&amp;dom=int(int::T){&lt;j&gt;},
-    ...(1 more)]
-==&gt;morphism::[ name=&gt;minus,
-    form=&gt;mapper,
-    class=&gt;[endo],
    ...
 </code></pre>
 <h4>the morphism block — <code>morphism::T</code> (an edge)</h4>
@@ -555,10 +486,13 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
 <tr><th>field</th><th>what it is</th></tr>
 </thead>
 <tbody>
+<tr><td><code>name</code></td><td>the operation's name</td></tr>
+<tr><td><code>obj</code></td><td>the inst this morphism wraps (the edge itself)</td></tr>
 <tr><td><code>form</code></td><td>the n-tid coefficient shape (<code>mapper</code>, <code>filter</code>, <code>reducer</code>, <code>flatmapper</code>, …)</td></tr>
 <tr><td><code>class</code></td><td>the set-theoretic class (<code>endo</code>, <code>iso</code>, <code>auto</code>, <code>mono</code>, <code>epi</code>, <code>section</code>, <code>retraction</code>)</td></tr>
 <tr><td><code>src</code></td><td>the source object (the morphism's dom)</td></tr>
 <tr><td><code>trgt</code></td><td>the target object (the morphism's rng)</td></tr>
+<tr><td><code>derivation</code></td><td>the declared defining equation, <code>lhs ↦ rhs</code>, when the operation is derived (see <em>the declared rewrites</em>)</td></tr>
 <tr><td><code>law</code></td><td>the declared <strong>process</strong> laws the morphism obeys (see <em>process laws</em>)</td></tr>
 <tr><td><code>analysis</code></td><td>a lazy sub-block of whole-graph stats — see below</td></tr>
 </tbody>
@@ -574,7 +508,7 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
 <tr><td>a morphism</td><td><code>src</code></td><td><code>trgt</code></td></tr>
 </tbody>
 </table>
-<p><code>morphed_to(A)</code> is \(\{ f \mid \mathrm{src}(f) = A \}\); <code>morphed_from(A)</code> is \(\{ f \mid \mathrm{trgt}(f) = A \}\).
+<p><code>morphed_to(A)</code> is \(\{ f \mid \mathrm{src} (f) = A \}\); <code>morphed_from(A)</code> is \(\{ f \mid \mathrm{trgt} (f) = A \}\).
 Composing them round-trips — from an object to its edges and back, or from an edge to its endpoints and back.</p>
 <h3>the <code>analysis</code> sub-block</h3>
 <p><code>analysis</code> is one lazy <code>auto()</code> — it stays a single <code>{&lt;j&gt;}</code> marker at level 1 until you <code>&gt;&gt;analysis</code>, so the
@@ -593,6 +527,8 @@ morphism block reads small. Inside it, each stat is itself lazy:</p>
 </table>
 <h3>the six edge kinds</h3>
 <p><code>position</code> classifies an edge against the rest of the graph into up to six labels:</p>
+<!-- figure source: assets/tikz/cat-positions.tex (same recipe) -->
+<img src="../assets/cat-positions.png" alt="the six position kinds: duplicate, ambiguous, incomparable, coupling, isochain, retract" width="100%" style="margin:0.3em 0 0 0"/>
 <table>
 <thead>
 <tr><th>kind</th><th>the relation to the graph</th></tr>
@@ -628,7 +564,9 @@ implications are computed; a proper (non-split) mono/epi awaits composition, whi
 </table>
 <h3>the algebraic theories — laws of structure</h3>
 <p>An object can model several algebraic structures; <code>object::T&gt;&gt;law</code> is a rec keyed by the name you give each
-instance. <code>algebraic_theory::T</code> is the nominal super-type grouping them:</p>
+instance, and each role holds a <code>!*</code> (<code>auto_from</code>) pointer to the <em>live</em> operation rather than a copy — the graph is
+the references, and a role dereferences transparently on <code>&gt;&gt;</code> (<code>...&gt;&gt;law&gt;&gt;ring&gt;&gt;add</code> yields the inst). <code>theory::T</code>
+is the nominal super-type grouping them:</p>
 <table>
 <thead>
 <tr><th>type</th><th>roles (fields)</th><th>what it asserts</th></tr>
@@ -683,11 +621,112 @@ laws):</p>
 <p>A law is either <strong>structural</strong> (one of the object theories above) or <strong>process</strong> (these morphism labels). The former
 provenance axis (syntactic / declared / semantic) is dropped: the table serves the declared process laws, and the
 rest are derived from the n-tid or computed on demand.</p>
+<h3>the declared rewrites — laws as rules</h3>
+<p>Everything above is also the rewriter's input. A rule fires only when the operand's type <strong>declares</strong> the law it
+consumes, so the category <em>is</em> the rewrite table: an algebra registered on a type immediately licenses its rules, and
+a type that models no such structure is left alone.</p>
+<!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
+<img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
+<table>
+<thead>
+<tr><th>rewrite</th><th>reads</th><th>rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>theory_unit_removal</code></td><td>every theory instance of the operand's type</td><td>\(\mathrm{op}(\mathrm{id}) \leadsto \varepsilon\)</td></tr>
+<tr><td><code>theory_involution</code></td><td>\(\mathrm{law} \ni \mathrm{involution}\), or the declared <code>inv</code> role</td><td>\(f \cdot f \leadsto \varepsilon\)</td></tr>
+<tr><td><code>law_idempotent</code></td><td>\(\mathrm{law} \ni \mathrm{idempotent}\)</td><td>\(f \cdot f \leadsto f\)</td></tr>
+<tr><td><code>law_absorbing</code></td><td>\(\mathrm{law} \ni \mathrm{absorbing}\)</td><td>\(g \cdot f \leadsto f\)</td></tr>
+<tr><td><code>law_monoidic</code></td><td>\(\mathrm{law} \ni \mathrm{monoidic}\) + the <code>reducer</code>/<code>join</code> form</td><td>\(f \cdot f \leadsto f\)</td></tr>
+<tr><td><code>law_poset</code></td><td>\(\mathrm{law} \ni \mathrm{poset}\)</td><td>\(\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))\)</td></tr>
+<tr><td><code>inverse_cancellation</code></td><td><code>analysis.inverse</code></td><td>\(f(a) \cdot f^{-1}(a) \leadsto \varepsilon\)</td></tr>
+<tr><td><code>form_map_unwrap</code></td><td>the stream lift <code>map</code></td><td>\(\mathrm{map}(f) \leadsto f\)</td></tr>
+<tr><td><code>derivation_contraction</code></td><td><code>derivation</code></td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
+</tbody>
+</table>
+<p><strong>One declared law has no rule.</strong> <code>commutative</code> is recorded on many insts, but canonicalizing a commutative
+operand is a no-op where it would be legal: a stream is a <em>bag</em> (<code>{3,1,2}</code> already equals <code>{1,2,3}</code>), while a
+<code>lst</code>'s order is semantic, so reordering one would be unsound. The law stays declared (it is what licenses the
+inverse-pair search) without a rewrite of its own.</p>
+<p>The first two generalise a <em>ring's</em> unit and a <em>group's</em> inverse to every declared structure: the unit law is read
+for each <code>(op, id)</code> role pair a theory names (<code>add</code>/<code>zero</code>, <code>mul</code>/<code>one</code>, <code>op</code>/<code>id</code>, <code>or</code>/<code>zero</code>, <code>and</code>/<code>one</code>,
+<code>join</code>/<code>bottom</code>, <code>meet</code>/<code>top</code>), so \(x + 0\), \(x \cdot 1\), \(x \cdot \langle\rangle\) (uri), \(x \cdot .\) (machine) and
+\(x \cdot \mathrm{id}\) (code) all drop, and a bare identity <em>operation</em> (<code>code</code>'s \(\mathrm{id}\)) is the identity
+morphism. The involution law holds for every operation declared <code>involution</code> — <code>neg</code>, <code>inv</code>, <code>not</code>, <code>reverse</code>,
+<code>conjugate</code> — not only the additive group's.</p>
+<pre><code class="language-mtron">mtron&gt; 5.plus(0)
+==&gt;5
+mtron&gt; 5.id()
+==&gt;5
+mtron&gt; 5.neg().neg()
+==&gt;5
+mtron&gt; &quot;ab&quot;.reverse().reverse()
+==&gt;'ab'
+</code></pre>
+<p>The process laws act on the chain, each gated by the operand type's declaration:</p>
+<pre><code class="language-mtron">mtron&gt; &quot;ab&quot;.ucase().ucase()
+==&gt;'AB'
+mtron&gt; 2.zero().zero()
+==&gt;0
+mtron&gt; {1,2,3}.sum().sum()
+==&gt;6
+mtron&gt; 5.plus(3).zero()
+==&gt;0
+mtron&gt; &quot;m&quot;.gt(&quot;a&quot;).gt(&quot;z&quot;)
+==&gt;false
+</code></pre>
+<p>and the two <em>relational</em> declarations — the opposing edge and the defining equation — close the loop:</p>
+<pre><code class="language-mtron">mtron&gt; 5.plus(3).minus(3)
+==&gt;5
+mtron&gt; 6.plus(3.neg())
+==&gt;3
+mtron&gt; 6.0.mult(2.0.inv())
+==&gt;3.0
+mtron&gt; {1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }
+==&gt;6
+==&gt;9
+==&gt;12
+==&gt;15
+</code></pre>
+<p><strong>A worked compression.</strong> One expression, four of the rules above firing, and the whole chain collapses from eight
+operations to two. <code>explain()&gt;&gt;format</code> prints the <em>compiled</em> code — the op, its dom/rng, its arg and its coefficient
+shape per line — so you can always see what a rewrite did:</p>
+<pre><code class="language-mtron">mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2)
+==&gt;3
+mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op     dom          rng     args  f    desc     c_dom  c_rng 
+    start  noobj{0}::T  int::T  6     &lt;j&gt;  initial  {0}    {1}   
+    minus  int::T       int::T  3     &lt;j&gt;  mapper   {1}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<p>Reading the two rows that survive: <code>plus(0)</code> and <code>mult(1)</code> are the int ring's units (<code>theory_unit_removal</code>),
+<code>neg().neg()</code> is the additive group's involution (<code>theory_involution</code>), <code>plus(3.neg())</code> folds to <code>minus(3)</code>
+(<code>derivation_contraction</code>), and <code>mult(2).div(2)</code> is a declared inverse pair (<code>inverse_cancellation</code>). What is left is
+the seed and one operation.</p>
+<p><strong>Direction.</strong> Every rule above removes or preserves chain length, so a rule set that is only ever applied in that
+direction settles under any length-stable <code>rewriter::T</code> — the shipped <code>fixpoint_rewriter</code> is one such stage, not the
+only one. The dual of <code>derivation_contraction</code> — <code>derivation_expansion</code>
+(\(\mathrm{minus} \leadsto \mathrm{plus} \cdot \mathrm{neg}\)) — is deliberately <strong>not</strong> registered: it trades the
+length back, so the pair would alternate forever and no stage could settle. Lowering to a target that lacks the
+derived operation is a policy, not a law.</p>
+<p><strong>Resolution.</strong> The stage order is the compiler's to choose, and the default schedule rewrites <em>before</em> it resolves,
+so a chain instruction still carries only its op address while the law tables are keyed by the full n-tid.
+<code>LawTable.declared(op, operand)</code> bridges the two — it resolves the declared entry by address, disambiguated by the
+operand's type, and returns nothing rather than guessing, so a law never fires for a type that does not declare it.
+A schedule that resolves first (see <code>compiler::T</code>) lets the rewriter read the endpoints directly. <code>form_map_unwrap</code>
+is the one rule kept keyed to its operation rather than to a shape, because \(\{?\} \to \{?\}\) is also <code>is</code>'s
+coefficient shape and a shape-only test would unwrap a predicate.</p>
+<p><strong>Not yet wired</strong> — the graph/relation family: <code>inverse</code>-pair elision (\(x.\mathrm{as} (B).\mathrm{as} (A) \leadsto x\)
+when the round trip is a <code>coupling</code>), <code>as</code>-cast fusion through a refinement, and <code>section</code>/<code>retraction</code> cancellation.
+It needs the whole cast subgraph (<code>check()</code>, <code>implicit()</code>) rather than one instruction, so it is a separate slice.</p>
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>
 <li><a href="language-reference-mtron.html">mtron language reference</a> — <code>.as(type::T)</code>, <code>&gt;&gt;</code> rshift, coefficients.</li>
 <li><a href="math-instset-mtron.html">math instruction set</a> — <code>/m/math</code>, where the category and its theories live.</li>
+<li><a href="../metatron/references/rewrite-system-java.html">rewrite system</a> — the <code>rewriter::T</code> stage and rewrite instructions.</li>
+<li>figure sources — <code>assets/tikz/cat-*.tex</code> (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
+<code>assets/</code>).</li>
 </ul>
 
     </div>
