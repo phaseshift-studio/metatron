@@ -140,11 +140,9 @@ public interface Type extends Obj {
         //       || Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.tid());
         //   return refines && this.c().within(other.c());
 
-        if (Obj.Helper.inInstSet(this.tid())) {
-            final boolean refines = Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.vid())
-                    || Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.tid());
-            return refines && this.c().within(other.c());
-        }
+        /*if (Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.vid())
+                || Obj.Helper.isRefinementOfTid(this.vid(), this.tid(), other.tid()))
+            return this.c().within(other.c());*/
         // fallback: Obj walk (parentType()) for types not in an InstSet, which also
         // reaches the root and so covers a #{n} rhs without a separate root guard.
         final fURI otherVid = other.vid();

@@ -870,7 +870,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Obj save() {
-        return null == this.vid() ? this : Machine.current().memory().write(this.vid(), this);
+        return null == this.vid() ? this : Machine.write(this.vid(), this);
     }
 
     default boolean booleanCheck() {
@@ -897,73 +897,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return obj.isType() ? obj.asType() : obj.type();
         }
 
-        /**
-         * Address-only refinement check: is {@code otherTid} on the nominal
-         * refinement chain of a type named {@code vid} whose parent is {@code tid}
-         * (vid -> tid -> ... -> base)?  Resolves parents via the {@link InstSet}
-         * registry ({@code vid -> tid} edges) without constructing a {@link Type},
-         * so it is the fast, recursion-free path for InstSet-registered types.
-         * <p>
-         * The root ({@code #}) is never reached by the walk (base types, whose
-         * {@code vid == tid}, have no parent), so a root {@code otherTid} returns
-         * true nominally — the coefficient bound is left to the caller.
-         */
-        public static boolean isRefinementOfTid(final fURI vid, final fURI tid, final fURI otherTid) {
-            if (null == otherTid)
-                return false;
-            // root type (#/ALL): every type refines it — coefficient checked by caller
-            if (otherTid.basePath().equals(ALL))
-                return true;
-            // node 1: the type's own vid
-            if (null != vid && vid.basePath().equals(otherTid.basePath()))
-                return true;
-            // base type (vid == tid): the chain is just {vid}, already checked above
-            if (null == tid || (null != vid && vid.basePath().equals(tid.basePath())))
-                return false;
-            // node 2+: walk the nominal chain from the parent tid
-            fURI current = tid;
-            while (null != current) {
-                if (current.basePath().equals(otherTid.basePath()))
-                    return true;
-                current = vidToTid(current);
-            }
-            return false;
-        }
-
-        /**
-         * whether a tid is registered in an {@link InstSet} (so its parent edges are
-         * resolvable via {@link #vidToTid(fURI)}).  on-the-fly/user-defined types are
-         * not, and fall back to the Obj walk ({@link Type#isRefinementOf(Type)}).
-         */
-        public static boolean inInstSet(final fURI tid) {
-            return null != tid && Machine.loaded() && Machine.current().memory().getSpaceFor(tid) instanceof InstSet;
-        }
-
-        /**
-         * Address-only parent-tid lookup: resolves the {@link InstSet} registry
-         * ({@link InstSet#vidToTid(fURI)}) — a pre-built fURI {@code vid -> tid}
-         * edge — without touching Objs, constructing a {@link Type}, or applying a
-         * predicate.  This is what keeps {@link #isRefinementOfTid} in the fURI
-         * domain and therefore predicate-blind (and more lenient).
-         */
-        private static fURI vidToTid(final fURI vid) {
-            if (null == vid || !Machine.loaded())
-                return null;
-            try {
-                final Space space = Machine.current().memory().getSpaceFor(vid);
-                return space instanceof InstSet is ? is.vidToTid(vid) : null;
-            } catch (final RuntimeException e) {
-                return null;
-            }
-        }
-
-        /**
-         * The type-preserving {@code isa} filter — one concrete-domain registration
-         * per base type ({@code dom(T).rng(T.maybe())}, i.e. {@code T{?}<=T}).  Each
-         * concrete {@code T} domain carries a ONE coefficient, so {@code isa} resolves
-         * as a pointwise map/filter rather than a gather (an unbounded domain would
-         * aggregate the whole upstream pipeline before applying).
-         */
         public static Set<Inst> isaInsts() {
             return Set.of(
                     isaOf(INT_TID), isaOf(REC_TID), isaOf(REL_TID), isaOf(BOOL_TID),
@@ -1454,15 +1387,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
                                 final fURI pattern = inst.arg(0).uriValue();
                                 if (pattern.hasPattern()) {
-                                    // vid(), NOT selfVID(): the read handed back the object the space
-                                    // HOLDS, and selfVID mutates in place — a read must not write into
-                                    // the store.  vid() stamps a copy and the location is preserved.
-                                    return objs(Machine.read(pattern.asBranch()).stream().map(x -> x.asRel().second().vid(x.asRel().first().uriValue())));
+                                    return objs(Machine.read(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
                                 } else {
                                     final Obj resolved = Machine.read(pattern);
-                                    // vid(), not selfVID(): stamping the located-read's result in place
-                                    // would write that vid into the object the space holds.
-                                    return resolved.hasVID() ? resolved : resolved.vid(pattern);
+                                    return resolved.hasVID() ? resolved : resolved.selfVID(pattern);
                                 }
                             }),
                             "any obj", "the obj at the arg uri", Map.of(jnt(0), "the uri or uri pattern to read"), "a spatial read function: reads the obj at the arg uri, preserving its spatial location (sugar'd @)"),
@@ -1500,7 +1428,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "maybe an obj", "the arg without an applied lhs", Map.of(jnt(0), "the unapplied rhs"), "the lhs obj is halted and the arg is the rhs obj"),
                     docWrap(instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))), "any obj", "the branch results as objs", Map.of(jnt(0), "the branches to split into"), "a split function \\(f(x) \\nearrow x'\\): the lhs applied through each branch (sugar'd -<[...]>-)"),
                     docWrap(instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))).collect(new CommonUtil.LstCollector()))), "any obj", "a lst of the branch results", Map.of(jnt(0), "the branches to split into"), "a branching function: the lhs applied through each branch, the results as a lst"),
-                    docWrap(instC(BRANCH_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))))), "any obj", "the branch results as objs", Map.of(jnt(0), "the branches to apply to the lhs"), "a branching function: the lhs applied through each arg branch, the results as objs with their branch coefficients"),
+                    docWrap(instC(BRANCH_INST_TID.dom(A).rng(B.maybeSome()), lst(T(B.maybeSome()), T(B.maybeSome()), T(B.maybeSome())), (lhs, inst) -> objs(inst.args().elements().map(o -> o.apply(lhs).c(lhs.c().mult(o.c()))))), "any obj", "the branch results as objs", Map.of(jnt(0), "the branches to apply to the lhs"), "a branching function: the lhs applied through each arg branch, the results as objs with their branch coefficients"),
                     docWrap(instC(CHOOSE_INST_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
                             "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching function f(x):g(a)->a',g(b)->b',..."),
                     /**

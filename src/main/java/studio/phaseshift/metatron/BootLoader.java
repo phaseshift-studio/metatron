@@ -486,19 +486,18 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
             final fURI SYS_VID = f("/sys");
             final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
-            sysSpace.jvm().put(uri(QPROC), lst(
-                    QCollection.docQ(),
-                    QCollection.subQ(),
-                    QCollection.incrQ(),
-                    QCollection.mimeQ(),
-                    QCollection.lockQ()));
+            sysSpace.addQ(QCollection.docQ());
+            sysSpace.addQ(QCollection.subQ());
+            sysSpace.addQ(QCollection.incrQ());
+            sysSpace.addQ(QCollection.mimeQ());
+            sysSpace.addQ(QCollection.lockQ());
             sysSpace.write(f("/sys?docq"), QCollection.Docs.doc("local system resources"));
             sysSpace.write(f("/sys/mach?docq"), QCollection.Docs.doc("machine templates"));
             sysSpace.write(f("/sys/mach/default?docq"), QCollection.Docs.doc("default machine template"));
-            sysSpace.write(f("/sys/space?docq"), QCollection.Docs.doc("local system space mounts"));
+            sysSpace.write(f("~/space?docq"), QCollection.Docs.doc("local system space mounts"));
             sysSpace.write("/sys/info", auto_(instB(SYS_INST_TID.extend("sys_stat"), lst())).tryToInst());
             sysSpace.write(f("/sys/info?docq"), QCollection.Docs.doc("local physical machine information"));
-            sysSpace.write(f("/sys/thread?docq"), QCollection.Docs.doc("metatron threads globally"));
+            sysSpace.write(f("~/thread?docq"), QCollection.Docs.doc("metatron threads globally"));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
             // minted from the template at /sys/mach, so the root has all five slots. Built by the
             // pattern/vid constructor it had only pattern, primary, memory and network — an address space

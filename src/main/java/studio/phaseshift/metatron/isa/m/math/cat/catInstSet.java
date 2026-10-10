@@ -248,7 +248,7 @@ public class catInstSet extends AbstractInstSet {
                         docWrap(THEORY_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(THEORY_TID)
-                                .isaPredicate(rec())
+                                //.isaPredicate(rec())
                                 .create(), "the nominal super-type of the algebraic theories: a theory names its operations by role, e.g. \\(\\mathrm{ring} \\mapsto \\{\\mathrm{add}, \\mathrm{mul}, \\mathrm{zero}, \\mathrm{one}\\}\\)"),
                         docWrap(RING_THEORY_TYPE = Type.Builder.build()
                                 .tid(THEORY_TID)

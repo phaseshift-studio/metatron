@@ -167,6 +167,11 @@ public class fURIAwareIndexedSchema implements TableSchema {
      * - /sensor/+/temperature -> matches /sensor/kitchen/temperature, /sensor/bedroom/temperature
      * - /sensor/# -> matches /sensor/kitchen, /sensor/kitchen/temperature, etc.
      * - /sensor/+/# -> matches /sensor/kitchen/temperature, /sensor/bedroom/humidity/current
+     * <p>
+     * A pattern that descends PAST the row holding the value (e.g. {@code kv/test/people/+/name},
+     * where the rec is stored at {@code kv/test/people/1}) cannot be narrowed in SQL — the deeper
+     * segments exist only inside the stored rec.  Those return every row at the concrete prefix and
+     * let the caller's Java-side {@code unrollPoly} decompose them.
      */
     private Iterator<Space.IdObj> readMqttPattern(final Connection conn, final fURI pattern) throws SQLException {
         // Build WHERE clause based on pattern segments
@@ -181,6 +186,23 @@ public class fURIAwareIndexedSchema implements TableSchema {
         // (the scheme+namespace prefix or leading empty for absolute URIs).
         // Therefore we start from path index 1 to align with DB seg1.
         final List<String> pathString = pattern.asRelativeNode().path();
+
+        // A '+' wildcard followed by more segments (kv/test/people/+/name) is a DESCENT
+        // past the row that stores the value: the whole rec lives at kv/test/people/1, so
+        // the deeper segments are not DB segments at any fixed position and no segN
+        // equality can express them.  The ancestor fallback below cannot either — it
+        // builds its prefix with retractPattern(), which only strips TRAILING wildcards,
+        // so the literal tail (…/+/name) stays in the prefix and the parent rows are never
+        // returned; Java-level unrollPoly then has nothing to decompose.  Match the
+        // concrete prefix instead and let collectResults/unrollPoly pick the real matches
+        // — the same contract TypedKeyValueSchema honours by returning every row for a
+        // pattern read.  It returns a superset, so correctness is unchanged.
+        final int firstWildcard = firstWildcardIndex(pathString);
+        if (firstWildcard > 0 && hasExactSegmentAfter(pathString, firstWildcard)) {
+            final String concretePath = String.join("/", pathString.subList(0, firstWildcard));
+            return readBelowPath(conn, concretePath);
+        }
+
         for (int i = 1; i < Math.min(pathString.size(), MAX_SEGMENTS + 2); i++) {
             final String seg = pathString.get(i);
 
@@ -266,6 +288,71 @@ public class fURIAwareIndexedSchema implements TableSchema {
         stmt.close();
 
         return results.iterator();
+    }
+
+    /**
+     * Index of the first single- or multi-level wildcard segment, or {@code -1} when the
+     * pattern has none.  Index 0 is the namespace element (see the seg1 alignment note in
+     * {@link #readMqttPattern}), so the scan starts at 1.
+     */
+    private static int firstWildcardIndex(final List<String> path) {
+        for (int i = 1; i < path.size(); i++) {
+            final String seg = path.get(i);
+            if (seg.equals("+") || seg.equals("#"))
+                return i;
+        }
+        return -1;
+    }
+
+    /**
+     * Whether a concrete (non-wildcard, non-empty) segment follows the wildcard — i.e. the
+     * pattern descends past the row that stores the value, which only Java-level
+     * {@code unrollPoly} can resolve.
+     */
+    private static boolean hasExactSegmentAfter(final List<String> path, final int wildcardIndex) {
+        for (int i = wildcardIndex + 1; i < path.size(); i++) {
+            final String seg = path.get(i);
+            if (!seg.isEmpty() && !seg.equals("+") && !seg.equals("#"))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Read the row at {@code path} and every row beneath it.  A descent pattern cannot be
+     * narrowed in SQL, so this returns the superset the caller filters (and unrolls) in
+     * Java; an empty path degenerates to every row.
+     */
+    private Iterator<Space.IdObj> readBelowPath(final Connection conn, final String path) throws SQLException {
+        final boolean bounded = !path.isEmpty();
+        final String sql = "SELECT furi, obj FROM " + TABLE_NAME
+                + (bounded ? " WHERE furi = ? OR furi LIKE ?;" : ";");
+        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (bounded) {
+                stmt.setString(1, path);
+                stmt.setString(2, path + "/%");
+            }
+            try (final ResultSet rs = stmt.executeQuery()) {
+                final List<Space.IdObj> results = new ArrayList<>();
+                while (rs.next())
+                    results.add(Space.IdObj.of(f(rs.getString("furi")), SERIALIZER.read(rs.getString("obj"))));
+                return results.iterator();
+            }
+        }
+    }
+
+    @Override
+    public Iterator<Space.IdObj> readWhere(final Connection conn, final String whereClause,
+                                           final long limit) throws SQLException {
+        final String sql = "SELECT furi, obj FROM " + TABLE_NAME
+                + " WHERE " + whereClause + " LIMIT " + limit + ";";
+        try (final PreparedStatement stmt = conn.prepareStatement(sql);
+             final ResultSet rs = stmt.executeQuery()) {
+            final List<Space.IdObj> results = new ArrayList<>();
+            while (rs.next())
+                results.add(Space.IdObj.of(f(rs.getString("furi")), SERIALIZER.read(rs.getString("obj"))));
+            return results.iterator();
+        }
     }
 
     @Override

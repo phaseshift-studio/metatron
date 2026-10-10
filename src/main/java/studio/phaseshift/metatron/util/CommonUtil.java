@@ -484,7 +484,7 @@ public final class CommonUtil {
             final String segment = Long.toHexString(uuid.getMostSignificantBits()).substring(0, 8); // first 8 hex of the MSB
             // A null base means "no parent", so mint absolutely — exactly as mintUUID does. Without this, extend()
             // NPEs, which is how a machine with no vid surfaced: Machine.push() mints from this.vid().
-            shortId = (null == baseURI) ? f(segment) : baseURI.extend(segment);
+            shortId = (null == baseURI || baseURI.equals(f("/."))) ? f(segment) : baseURI.extend(segment);
         } while (retryIfCollision && !Machine.read(shortId).isNoObj());
         return shortId;
     }

@@ -1897,15 +1897,15 @@ public class TypeTest extends AbstractMetatronTest {
             "nat -> int::T[?>10]"})
     @ParameterizedTest
     @CsvSource(value = {
-            "*nat                         % int::T[?>10]",
-            "*nat.type()                  % #::T",
-            "*nat.type().type()           % #::T",
-            "*/m/math/nat                 % /m/int::T[?>10]@/m/math/nat",
-            "*/m/math/nat                 % /m/int::T[?>10]@nat",
-            "*/m/math/nat                 % int::T[?>10]@nat",
+            "*nat                         % |int::T[?>10]",
+            "*nat.type()                  % |#::T",
+            "*nat.type().type()           % |#::T",
+            "*/m/math/nat                 % |/m/int::T[?>10]@/m/math/nat",
+            "*/m/math/nat                 % |/m/int::T[?>10]@nat",
+            "*/m/math/nat                 % |int::T[?>10]@nat",
             //   "*/m/math/nat.type()          % int::T",
             //   "*/m/math/nat.type().type()   % #::T",
-            "nat::T.type()                % int::T",
+            "|nat::T.type()               % int::T",
             "[#::T]                       % [#::T]",
             "[int::T]                     % [/m/int::T]",
             "[nat::T]                     % [/m/int::T[?>0]@/m/math/nat]"}, delimiter = '%')

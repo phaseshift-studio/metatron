@@ -366,8 +366,13 @@ public final class CommonRewrites {
                     LOG.debug("evaluating native limit operation on %s with limit %d in space %s",
                             expandedfURI, limitValue, space);
 
-                    // Create the optimized instruction
-                    return List.of(instC(this.rewriteTid.dom(Tokens.ALL_STAR).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
+                    // Create the optimized instruction.  The domain must be
+                    // ALL.zero() (a nullary source that ignores its LHS), exactly
+                    // as the generic RewriteBuilder.createOptimizedInst() sets it:
+                    // with a non-zero domain the returned rows are re-multiplied by
+                    // the LHS coefficient, duplicating every row (e.g. take(2)
+                    // yielded each row twice with coefficient 2).
+                    return List.of(instC(this.rewriteTid.dom(ALL.zero()).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
                                     (lhs, inst) -> {
                                         try {
                                             return this.limitOperation.execute(typedSpace, dp, limitValue);

@@ -217,11 +217,11 @@ public class catInstSetTest extends AbstractInstSetTest {
             "|gt?bool<=int(int::T).as(morphism::T)>>form     % mapper",
             "|sum?int<=int{*}().as(morphism::T)>>form        % reducer",
             // inverse
-           /* "|plus?int<=int(int::T).as(morphism::T)>>analysis>>inverse  % /m/inst/minus?rng=/m/int&dom=/m/int",
+            "|plus?int<=int(int::T).as(morphism::T)>>analysis>>inverse  % /m/inst/minus?rng=/m/int&dom=/m/int",
             "|mult?int<=int(int::T).as(morphism::T)>>analysis>>inverse  % /m/inst/div?rng=/m/int&dom=/m/int",
             "|minus?int<=int(int::T).as(morphism::T)>>analysis>>inverse % /m/inst/plus?rng=/m/int&dom=/m/int",
             "|div?int<=int(int::T).as(morphism::T)>>analysis>>inverse   % /m/inst/mult?rng=/m/int&dom=/m/int",
-            "|neg?int<=int().as(morphism::T)>>analysis>>inverse         % /m/inst/neg?rng=/m/int&dom=/m/int",*/
+            "|neg?int<=int().as(morphism::T)>>analysis>>inverse         % /m/inst/neg?rng=/m/int&dom=/m/int",
             // position
             //  "|plus?int<=int(int::T).as(morphism::T)>>analysis>>position % [incomparable,retract]",
     }, delimiter = '%')

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestCategory;
@@ -32,6 +33,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Isolated
 public interface SubQTest extends QProcTest {
 
     @TestCategory.Write
@@ -57,5 +59,6 @@ public interface SubQTest extends QProcTest {
         assertFalse(result.isNoObj(), "subscription code didn't fire (or didn't fire in time)");
         assertTrue(result.isBool(), "expected a boolean value from checking message result");
         assertTrue(result.boolValue());
+        //Machine.write(subscription, noobj());
     }
 }

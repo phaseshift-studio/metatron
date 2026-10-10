@@ -7,6 +7,7 @@ opencode.json
 !.mvn/
 !.mvn/wrapper/
 !.mvn/wrapper/maven-wrapper.properties
+.mvn/extensions.xml
 # `.*` above also swallows the docker build context and new GitHub workflows.
 !.dockerignore
 !.github/

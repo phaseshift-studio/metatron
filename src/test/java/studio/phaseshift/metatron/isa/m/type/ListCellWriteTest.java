@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -51,8 +50,8 @@ public class ListCellWriteTest extends AbstractMetatronTest {
      */
     @Test
     void shouldSetACellOfAListStoredInASpace() {
-        final fURI spaceVid = f("/usr/deepwrite");
-        final memSpace space = memSpace.of(rec(uri(Tokens.PATTERN), uri("/usr/deepwrite/#")), spaceVid);
+        final fURI spaceVid = f("~/usr/deepwrite");
+        final memSpace space = memSpace.of(rec(uri(Tokens.PATTERN), uri("~/usr/deepwrite/#")), spaceVid);
         Machine.current().memory().addSpace(space);
         try {
             Machine.write(f("/usr/deepwrite/grid"),
@@ -87,7 +86,7 @@ public class ListCellWriteTest extends AbstractMetatronTest {
             Machine.read(f("/usr/sugarwrite/grid/0/1"));                        // a PLAIN read, no @ inst at all
             assertEquals(clean, Machine.read(f("/usr/sugarwrite/grid")).vid(null),
                     "a READ of a cell must not change the structure (this is where the vid comes from if it fails)");
-            ObjmtronSerializer.parse("@/usr/sugarwrite/grid/0/1 -> 'Z'").apply();
+            ObjmtronSerializer.parse("@/usr/sugarwrite/grid/0/1 >>= 'Z'").apply();
             assertEquals(lst(lst(str("a"), str("Z"), str("c")), lst(str("d"), str("e"), str("f")), lst(str("g"), str("h"), str("i"))),
                     Machine.read(f("/usr/sugarwrite/grid")).vid(null),
                     "the sugar spelling sets the addressed cell — no stray key, no vid left behind");

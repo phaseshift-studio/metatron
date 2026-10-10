@@ -598,22 +598,25 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
                     LOG.warn("interspace reroute: %s => %s", pattern, aligned);
                     return Machine.read(aligned).stream().map(o -> new IdObj(aligned, o)).iterator();
                 }
+                // Lazy table-mapping discovery (see ensureTableMapping).  This must
+                // run BEFORE the collection-schema branch: ensureTableMapping() is
+                // what wires the schema instset into the space, so without it a
+                // collection backed by a real table resolves to nothing.
+                final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
+                if (dp.hasCollection() && isTableCandidate(dp.collection().toLowerCase()))
+                    ensureTableMapping();
+
                 // ── collection-level schema resolution ──
                 // Shared across all SchemaSpaces: /db/collection → type from schema InstSet.
-                // Returns empty iterator when collection is unknown, falling through
-                // to the key-value path below.
-                final DataPath dp = DataPath.of(f(this.databaseName).extend(aligned));
+                // A collection with no declared schema falls through to the table /
+                // key-value paths below: a one-segment URI (db:a01) is indistinguishable
+                // from a collection here, but it is really a flat kv entry.
                 if (dp.hasCollection() && !dp.hasEntry()) {
                     final Iterator<IdObj> schemaResults =
                             resolveCollectionSchema(dp.collection());
-                    //if (schemaResults.hasNext())
-                    //    return collectResults(schemaResults, pattern);
-                    return schemaResults;
+                    if (schemaResults.hasNext())
+                        return schemaResults;
                 }
-
-                // Lazy table-mapping discovery (see ensureTableMapping).
-                if (dp.hasCollection() && isTableCandidate(dp.collection().toLowerCase()))
-                    ensureTableMapping();
 
                 // ── table-mapped path (entry-level) ──
                 if (this.existingTableSchema != null

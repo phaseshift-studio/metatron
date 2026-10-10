@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -100,7 +101,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         final Obj src = thread.source();
         assertNotNull(src, desc + ": source should not be null");
         // unset source defaults to empty string URI
-        assertEquals(f("/sys/thread/main"), Obj.Helper.getAutoPointer(thread.source()).get(), desc + ": unset source should main thread");
+        assertEquals(f("/thread/main"), Obj.Helper.getAutoPointer(thread.source()).get(), desc + ": unset source should main thread");
     }
 
     // =========================================================
@@ -115,7 +116,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         final VirtualThread thread = new VirtualThread(
                 mutableMap(uri(CODE), instB(START_INST_TID, lst(str("done")))),
                 MACH_VIRTUAL_THREAD_TID,
-                CommonUtil.mintShortUUID(f("/sys/thread"), true)) {
+                CommonUtil.mintShortUUID(f("~/thread"), true)) {
             @Override
             public Runnable createTask() {
                 return () -> {
@@ -147,7 +148,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
     @Test
     void testVirtualThreadCompletesAndTransitions() throws Exception {
         final CountDownLatch done = new CountDownLatch(1);
-        final fURI vid = CommonUtil.mintShortUUID(f("/sys/thread"), true);
+        final fURI vid = CommonUtil.mintShortUUID(f("~/thread"), true);
 
         final VirtualThread thread = new VirtualThread(
                 mutableMap(uri(CODE), jnt(99)),
@@ -186,7 +187,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         final VirtualThread threadA = new VirtualThread(
                 mutableMap(uri(CODE), jnt(1), uri(SOURCE), auto_from_(sourceA).tryToInst()),
                 MACH_VIRTUAL_THREAD_TID,
-                CommonUtil.mintShortUUID(f("/sys/thread"), true)) {
+                CommonUtil.mintShortUUID(f("~/thread"), true)) {
             @Override
             public Runnable createTask() {
                 return () -> {
@@ -202,7 +203,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         final VirtualThread threadB = new VirtualThread(
                 mutableMap(uri(CODE), jnt(2), uri(SOURCE), auto_from_(sourceB).tryToInst()),
                 MACH_VIRTUAL_THREAD_TID,
-                CommonUtil.mintShortUUID(f("/sys/thread"), true)) {
+                CommonUtil.mintShortUUID(f("~/thread"), true)) {
             @Override
             public Runnable createTask() {
                 return () -> {
@@ -279,18 +280,16 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
 
     @Test
     void testCoreThreadRoutesThroughExecutor() throws Exception {
-        final fURI vid = CommonUtil.mintShortUUID(f("/sys/thread"), true);
+        final fURI vid = CommonUtil.mintShortUUID(f("/thread"), true);
 
         // Verify CoreThread.apply() routes through ThreadExecutor.
         // CoreThread's createTask uses SwarmProcessor internally; test that
         // the thread is tracked by the executor regardless of computation result.
-        final studio.phaseshift.metatron.isa.mach.type.thread.CoreThread thread =
-                studio.phaseshift.metatron.isa.mach.type.thread.CoreThread.core(
-                        start_(jnt(1)), vid);
+        final CoreThread thread = CoreThread.core(start_(jnt(1)), vid);
 
-        thread.apply(noobj());
+        thread.applyAsync(noobj());
         // Give the executor thread time to register
-        Thread.sleep(200);
+        Thread.sleep(500);
 
         // Thread should appear in either active or inactive list
         final Lst run = executor.at(uri(RUN));
@@ -321,7 +320,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         final VirtualThread thread = new VirtualThread(
                 mutableMap(uri(CODE), parsedCode),
                 MACH_VIRTUAL_THREAD_TID,
-                CommonUtil.mintShortUUID(f("/sys/thread"), true)) {
+                CommonUtil.mintShortUUID(f("~/thread"), true)) {
             @Override
             public Runnable createTask() {
                 return () -> {
@@ -451,7 +450,7 @@ public class ThreadExecutorTest extends AbstractMetatronTest {
         // Two threads with yield pointers — A pauses → B resumes, and vice versa
         final VirtualThread threadB = VirtualThread.virtual(jnt(2));
         threadB.jvm().put(uri(LOOP), real(5.0d));
-        threadB.jvm().put(uri(YIELD), uri(f("/sys/thread"))); // will be updated after A is created
+        threadB.jvm().put(uri(YIELD), uri(f("~/thread"))); // will be updated after A is created
         threadB.pause(); // start B in PAUSE
         threadB.apply(noobj());
         Thread.sleep(50);

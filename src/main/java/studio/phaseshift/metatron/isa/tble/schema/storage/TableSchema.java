@@ -65,6 +65,29 @@ public interface TableSchema {
     Iterator<Space.IdObj> read(final Connection conn, final fURI pattern) throws SQLException;
 
     /**
+     * Read up to {@code limit} objects whose {@code furi} satisfies the given SQL
+     * {@code WHERE} clause (as produced by
+     * {@link studio.phaseshift.metatron.isa.tble.KVStoreUtil}).
+     * <p>
+     * Only the schema knows the {@code kv_store} column layout it created — one
+     * {@code obj} text column for the JSON schemas, discrete typed columns
+     * ({@code int_val}, {@code complex_val}, …) for the typed schema — so the
+     * projection and the row decoding are delegated here instead of being assumed
+     * by callers.
+     *
+     * @param conn        the database connection
+     * @param whereClause a SQL condition over {@code furi} (no leading WHERE)
+     * @param limit       maximum number of rows to return
+     * @return iterator of matching fURIs and their objects
+     * @throws SQLException if the read fails
+     */
+    default Iterator<Space.IdObj> readWhere(final Connection conn, final String whereClause,
+                                            final long limit) throws SQLException {
+        throw new UnsupportedOperationException(
+                this.getClass().getSimpleName() + " does not support pattern-limited reads");
+    }
+
+    /**
      * Delete an object at the given fURI.
      *
      * @param conn the database connection
