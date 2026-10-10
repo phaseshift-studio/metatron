@@ -964,6 +964,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                         "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
                         "&?" +
                         "(?<query>.+)?)?");
+        // The String -> fURI cache is not a grammar rule, so it is not here: see fURICache, whose only caller is
+        // Singleton.of(String) below.
         public static final fURI ALL = new XXPXXXfURI(List.of("#"));
         public static final fURI WILD_ONE = new XXPXXXfURI(List.of("+"));
         public static final fURI NOOBJ = f("noobj").zero();
@@ -978,12 +980,27 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         }
 
 
+        /**
+         * The cache entry point: the interned fURI for a string. Identity is stable across calls —
+         * {@code of(s) == of(s)} — which is what lets the cached instance's lazy derivations be shared and gives
+         * {@link #equals} a reference-equality fast path. The caching policy itself (bounds, generations) lives in
+         * {@link fURICache}; all this has to do is hand it the key and the parser.
+         */
         public static fURI of(final String furi) {
             if (null == furi || furi.isEmpty())
                 return Singleton.empty();
             final String furiParse = furi.startsWith("<") && furi.endsWith(">") ? furi.substring(1, furi.length() - 1) : furi;
             if (furiParse.isEmpty())
                 return Singleton.empty();
+            return fURICache.cached(furiParse, Singleton::parse);
+        }
+
+        /**
+         * Parse a uri string with no recourse to the intern pool — the pre-cache path. Called by {@link #of(String)}
+         * on a miss; retained as package-private so fURIPerformanceTest can measure the cached and uncached paths
+         * against each other in one JVM.
+         */
+        static fURI parse(final String furiParse) {
             if ("{0}".equals(furiParse))
                 return Singleton.NOOBJ;
             if ("/".equals(furiParse))
@@ -994,7 +1011,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             final Matcher matcher = hasTemplates ? Singleton.FURI_TEMPLATE_PATTERN.matcher(furiParse) : Singleton.FURI_PATTERN.matcher(furiParse);
 
             if (!matcher.matches())
-                throw MTronException.of("unable to parse %s to a furi: %s", furi, furiParse);
+                throw MTronException.of("unable to parse %s to a furi: %s", furiParse, furiParse);
             final String scheme = matcher.group(SCHEME);
             final String host = matcher.group(HOST);
             final String portStr = matcher.group(PORT);

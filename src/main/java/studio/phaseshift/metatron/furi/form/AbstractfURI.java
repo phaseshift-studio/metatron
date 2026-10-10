@@ -133,6 +133,17 @@ public abstract class AbstractfURI implements fURI {
     private transient volatile fURI canonical;
     private transient volatile boolean dotFound;
 
+    /*
+     * The other cached-derivation slots, all pure functions of this instance's (final) fields, so a race can only
+     * recompute the same value. `hash` and `string` are set last-after-compute so a reader either sees the finished
+     * value or recomputes it. `hash` uses 0 as "not computed" and is never stored as 0 (a computed 0 becomes -1,
+     * which satisfies the hashCode contract just as well and keeps the sentinel unambiguous).
+     */
+    private transient volatile int hash;
+    private transient volatile String string;
+    private transient volatile fURI base;
+    private transient volatile Boolean generic;
+
     @Override
     public fURI resolve() {
         final fURI cached = this.canonical;
@@ -158,6 +169,18 @@ public abstract class AbstractfURI implements fURI {
     public boolean hasDotSegments() {
         this.resolve(); // answers both questions from the same pass, and caches it
         return this.dotFound;
+    }
+
+    @Override
+    public boolean isGeneric() {
+        // Consulted first thing on every BasicMemory.redirect (the big()/small() hot path) and pure in the path, so
+        // the character scan is done once per uri rather than once per clone.
+        final Boolean cached = this.generic;
+        if (null != cached)
+            return cached;
+        final boolean computed = fURI.super.isGeneric();
+        this.generic = computed;
+        return computed;
     }
 
     /**
@@ -248,12 +271,19 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI c(final cInt coefficient) {
+        // A uri is immutable, so re-applying the coefficient it already carries is the identity — returning `this`
+        // instead of a fresh equal copy is what keeps BasicMemory.redirect allocation-free on an unrouted address.
+        if (Objects.equals(this.c(), coefficient))
+            return this;
         return fURI.of(this.scheme(), this.host(), this.port(), this.path(), coefficient, this.poly(), this.qMap(), this.templates());
     }
 
     @Override
     public fURI q(final Map<String, String> query) {
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), null == query ? Map.of() : query, this.templates());
+        final Map<String, String> newQ = null == query ? Map.of() : query;
+        if (Objects.equals(this.qMap(), newQ))
+            return this;
+        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
     }
 
     @Override
@@ -355,7 +385,14 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI basePath() {
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), cInt.ONE(), List.of(), Map.of(), this.templates());
+        // Pure in this instance's own fields, and hit twice per BasicMemory.redirect (once per routing table), so it
+        // is derived once. The derived uri is a different object, so no recursion back into this slot.
+        final fURI cached = this.base;
+        if (null != cached)
+            return cached;
+        final fURI computed = fURI.of(this.scheme(), this.host(), this.port(), this.path(), cInt.ONE(), List.of(), Map.of(), this.templates());
+        this.base = computed;
+        return computed;
     }
 
     @Override
@@ -884,6 +921,11 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public String toString() {
+        // Rendering is pure and this is on every string-keyed path (logging, serialization, f(uri.toString()) in
+        // BasicMemory.redirect's poly branch), so it is built once per uri.
+        final String cached = this.string;
+        if (null != cached)
+            return cached;
         final StringBuilder sb = new StringBuilder();
         if (this.hasTemplates()) {
             this.getTemplate(SCHEME).map(s -> "${" + s + "}").or(() -> Optional.ofNullable(this.scheme())).ifPresent(s -> sb.append(s).append(":"));
@@ -919,18 +961,27 @@ public abstract class AbstractfURI implements fURI {
             if (!this.qMap().isEmpty())
                 sb.append("?").append(this.qString());
         }
-        return sb.toString();
+        final String rendered = sb.toString();
+        this.string = rendered;
+        return rendered;
     }
 
     @Override
     public int hashCode() {
+        // Memoized: a uri is compared and hashed far more often than it is built, and this is the HashMap probe cost.
+        int h = this.hash;
+        if (0 != h)
+            return h;
         // identical to Objects.hash(scheme, path, c, templates) without the Object[] allocation
         final fURI thisResolved = this.resolve();
-        int h = 1;
+        h = 1;
         h = 31 * h + (null == thisResolved.scheme() ? 0 : thisResolved.scheme().hashCode());
         h = 31 * h + (null == thisResolved.path() ? 0 : thisResolved.path().hashCode());
         h = 31 * h + (null == thisResolved.c() ? 0 : thisResolved.c().hashCode());
         h = 31 * h + (null == thisResolved.templates() ? 0 : thisResolved.templates().hashCode());
+        if (0 == h)
+            h = -1; // keep 0 as the not-yet-computed sentinel; any stable value satisfies the contract
+        this.hash = h;
         return h;
     }
 
@@ -951,7 +1002,10 @@ public abstract class AbstractfURI implements fURI {
                 && ((!thisResolved.hasPoly() && !thatResolved.hasPoly()) || Objects.equals(thisResolved.poly(), thatResolved.poly()))
                 && Objects.equals(thisResolved.c(), thatResolved.c())
                 && ((!thisResolved.hasTemplates() && !thatResolved.hasTemplates()) || Objects.equals(thisResolved.templates(), thatResolved.templates()))
-                && ((!thisResolved.hasQ() && !thatResolved.hasQ()) || Objects.equals(new HashMap<>(thisResolved.qMap()), new HashMap<>(thatResolved.qMap())));
+                // Map extends AbstractMap and defines equals by content across implementations (Map.of vs
+                // LinkedHashMap), so the defensive HashMap copies that used to sit here were pure allocation — two
+                // maps per comparison, on the equality that runs in the resolver's inner loop.
+                && ((!thisResolved.hasQ() && !thatResolved.hasQ()) || thisResolved.qMap().equals(thatResolved.qMap()));
     }
 
 }
