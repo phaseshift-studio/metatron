@@ -44,7 +44,13 @@ public class MType extends MObj implements Type {
 
     private MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid, final boolean register) {
         super(jvm, tid.big(), null == vid ? null : vid.big());
-        if (register && Machine.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
+        // Only a CANONICAL form (coefficient one) auto-registers. Resolving a coefficient variant
+        // ({2}, {+}, {?*} ...) of an already-named type -- e.g. the resolver asking for
+        // T(vid=nat{?*}) while scoping a `*nat` read -- must not overwrite the name's registration
+        // with the variant, or every later read of the name answers with that variant's coefficient.
+        // Types whose own coefficient is not one are still registered, but by the explicit write
+        // (X -> Y) that defines them, not by construction.
+        if (register && this.c().isOne() && Machine.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
             Machine.current().memory().write(this.vid(), this);
         }
     }
@@ -85,16 +91,34 @@ public class MType extends MObj implements Type {
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
         if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             Obj obj = Machine.read(checkID);
-            obj = obj.selfTID(obj.tid().c(checkID.c()));
+            // clone before re-typing: self() mutates in place, and the obj just read is the SHARED
+            // registered type (often also referenced from another type's predicate). Re-typing it with
+            // this request's coefficient would rewrite that shared type -- e.g. resolving the two-being
+            // multiplicity being{2} would rewrite the registered being, and team's member=>being{+}
+            // predicate with it.
+            obj = obj.clone().selfTID(obj.tid().c(checkID.c()));
             if (obj.isType()) {
                 if (checkID.c().equals(obj.c()) &&
                         Objects.equals(obj.asType().predicate(), predicate) &&
                         Objects.equals(obj.asType().constructor(), constructor))
                     return obj.asType();
-                else
+                else {
+                    // A request that names BOTH a base type and a vid (X::T@name) wins over the
+                    // registered form: a re-registration may rebase a name onto a different type
+                    // (mortal -> person::T[...]@mortal after mortal was human::T[...]@mortal), and
+                    // taking the stored obj's ids would silently keep the old base. A name-only
+                    // request -- T(vid) or X::T with no @vid -- falls back to the registered ids,
+                    // since there the "tid" argument is the name being looked up.
+                    final boolean useRequested = null != tid && null != vid;
+                    final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
+                    final fURI derivedVID = useRequested ? bigVID : obj.vid();
+                    // The coefficient is folded into the tid BEFORE construction so the constructor's
+                    // canonical-only registration rule sees the final coefficient -- a variant must not
+                    // register itself after the fact.
                     return new MType(Tuple.Pair.with(
                             null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid(), obj.vid()).selfTID(obj.tid().c(checkID.c())).as(); // coefficient specific type doesn't exist, create it
+                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), derivedTID, derivedVID).as(); // coefficient specific type doesn't exist, create it
+                }
             }
         }
         // final boolean isBaseType = ;
