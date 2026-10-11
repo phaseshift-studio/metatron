@@ -418,9 +418,8 @@ isa/mach/type/Network.java            ← Network interface (peer roster + autho
 isa/mach/type/Compiler.java           ← Compiler interface (rewrite → resolve → type) + resolve memo
 isa/mach/type/Processor.java          ← Processor interface + Processor.Helper (the runtime core)
 isa/mach/type/ComponentUnion.java     ← frame wrapper: previous()/current(), read-through, close-current
-isa/mach/type/MemoryUnion.java        ← frame memory (binary read-through, pattern-aware at())
-isa/mach/type/NetworkUnion.java       ← frame network (binary read-through)
-isa/mach/type/InstSetUnion.java       ← frame ISA (binary read-through)
+isa/mach/type/memory/MemoryUnion.java ← the ONE implementation today: frame memory (pattern-aware at())
+                                        (there is no NetworkUnion or InstSetUnion — see &quot;The five components&quot;)
 isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
@@ -439,8 +438,8 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 </thead>
 <tbody>
 <tr><td>Memory</td><td><code>Space, Machine.Component, Closeable</code></td><td>relative bindings (names) + absolute index of spaces</td><td>accumulates (<code>MemoryUnion</code>)</td></tr>
-<tr><td>Network</td><td><code>Machine.Component, Closeable</code></td><td>peer roster <code>authority → transport</code>, <code>own</code>/<code>isPeer</code></td><td>accumulates (<code>NetworkUnion</code>)</td></tr>
-<tr><td>InstSet</td><td><code>Space</code> (via <code>AbstractInstSet</code>)</td><td>visible types/insts; <code>import</code> lands here</td><td>accumulates (<code>InstSetUnion</code>)</td></tr>
+<tr><td>Network</td><td><code>Machine.Component, Closeable</code></td><td>peer roster <code>authority → transport</code>, <code>own</code>/<code>isPeer</code></td><td><strong>shared</strong> today: the roster lives at <code>/sys/peer</code>, so a child's declaration is the parent's. The union is intended, and needs the roster moved onto the component plus a deny arm</td></tr>
+<tr><td>InstSet</td><td><code>Space</code> (via <code>AbstractInstSet</code>)</td><td>visible types/insts; <code>import</code> lands here</td><td>accumulates — <code>BasicInstSet</code> is an n-ary union over referenced ISAs, membership in the rec under <code>reference</code></td></tr>
 <tr><td>Compiler</td><td><code>Machine.Component, Rec</code></td><td><code>code::T → code::T</code> in three stages</td><td>constructive (inherited/replaced)</td></tr>
 <tr><td>Processor</td><td><code>mThread, Machine.Component</code></td><td><code>code::T → obj</code>; the monadic execution engine</td><td>constructive</td></tr>
 </tbody>

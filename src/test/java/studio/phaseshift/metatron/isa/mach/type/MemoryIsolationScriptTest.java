@@ -18,24 +18,27 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
-import org.junit.jupiter.api.Disabled;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.StatefulCSVSource;
 import studio.phaseshift.metatron.StatefulParametrizedTest;
 
 /**
- * Machine ISOLATION as a stateful script — mutation and its observation are one line each, in order. The
+ * MEMORY isolation as a stateful script — mutation and its observation are one line each, in order. The
  * {@code [STATE]} lines push/pop mid-script, which a plain {@code @CsvSource} cannot express.
  * <p>
- * The isolation invariants proven here, each as a script of mtron observations:
+ * This is the MEMORY half of the machine-isolation pair; {@code NetworkIsolationScriptTest} is the network half,
+ * deliberately in the same script form so the two read side by side.
+ * <p>
+ * The invariants proven here, each as a script of mtron observations:
  * <ol>
  *     <li><b>thread count</b> — {@code /thread} is the root's own set, {@code ~/thread} is the current machine's.</li>
  *     <li><b>tilde tracks the machine</b> — {@code ~} and {@code /.} name a {@code machine::T} wherever you stand.</li>
  *     <li><b>write isolation</b> — a child's write is its own; it does not leak up or across.</li>
  *     <li><b>executor is global</b> — one funnel at {@code /sys/thread/executor}, not a per-machine component.</li>
+ *     <li><b>the nest is a stack</b> — a name is bound in the machine that bound it, so each level reads its own.</li>
  * </ol>
  */
-public class MachineIsolationScriptTest extends AbstractMetatronTest {
+public class MemoryIsolationScriptTest extends AbstractMetatronTest {
 
     @StatefulParametrizedTest
     @StatefulCSVSource({
@@ -223,7 +226,6 @@ public class MachineIsolationScriptTest extends AbstractMetatronTest {
             "[STATE] move(/a/a1)", "*~/who % 2 % true", "*who % 22 % true",
             "[STATE] move(/b/b1)", "*~/who % 5 % true", "*who % 55 % true",
     })
-    @Disabled
     void testHierarchyMoves() {
     }
 }

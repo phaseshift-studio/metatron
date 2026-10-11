@@ -256,7 +256,7 @@ public interface Machine extends Rec, AutoCloseable {
         } else if (proto instanceof Memory) {
             return (Memory) proto;
         } else {
-            final Memory memory = proto.isCall() ? proto.apply().as() : proto.as();
+            final Memory memory = (proto.isInst() || proto.isCall()) ? proto.apply().as() : proto.as();
             this.at(uri(MEMORY), memory, MUTABLE);
             return memory;
         }
@@ -363,13 +363,28 @@ public interface Machine extends Rec, AutoCloseable {
     /**
      * The machine's roster of peers. Created rather than defaulted: an absent slot must become a real roster, or
      * every peer registered into it vanishes silently.
+     * <p>
+     * Resolved the same way {@link #memory()} is, and for the same three reasons. A slot that already holds a
+     * network is handed back <b>as itself</b> — no apply, so a component can be bound at construction, before
+     * there is any machine to compile with. Whatever is resolved is written <b>back into the slot</b>, so the
+     * machine ends up holding its real components rather than a default that is re-minted on every read. And a
+     * deferred seed (an inst) is applied, so the older spelling still works. Leaving the result unretained is what
+     * kept this slot a template.
      */
     default Network network() {
-        final Obj proto = this.at(uri(NETWORK));
-        if (proto.isNoObj())
-            return new BasicNetwork();
-        final Obj resolved = proto.isCall() ? proto.apply() : proto;
-        return resolved instanceof Network ? (Network) resolved : new BasicNetwork();
+        final Obj proto = this.atDirect(uri(NETWORK));
+        if (proto.isNoObj()) {
+            final Network network = new BasicNetwork();
+            this.at(uri(NETWORK), network, MUTABLE);
+            return network;
+        } else if (proto instanceof Network) {
+            return (Network) proto;
+        } else {
+            // an instLambda is an Inst whose isCall() is false, so the isInst() arm is what runs a deferred seed
+            final Network network = (proto.isInst() || proto.isCall()) ? proto.apply().as() : proto.as();
+            this.at(uri(NETWORK), network, MUTABLE);
+            return network;
+        }
     }
 
     /**

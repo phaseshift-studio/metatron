@@ -246,6 +246,16 @@ public interface Memory extends Space, Machine.Component, Closeable {
     Rec spaces();
 
     /**
+     * The enclosing level's memory, or {@code null} at the root. A level lists only its OWN index, so this is the
+     * accessor that lets generic code walk the frame chain — {@code MemoryUnion} implements it, the root's
+     * {@code BasicMemory} inherits the {@code null}. Mirrors {@code ComponentUnion.previous()} for the component
+     * kind (memory, network, …) whose generic form is not on the interface.
+     */
+    default Memory previous() {
+        return null;
+    }
+
+    /**
      * The machine-scoped persistent root frame — the relative bindings that survive frame pops and thread
      * boundaries (a console's {@code a -> 13} lands here and is visible from every later command thread), but
      * are dropped when the machine itself is reset. Not the per-thread arg frames: those live in

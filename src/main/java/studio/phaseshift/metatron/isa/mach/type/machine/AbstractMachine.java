@@ -109,14 +109,15 @@ public abstract class AbstractMachine extends MRec implements Machine {
     }
 
     /**
-     * the pattern/vid scaffolding, with the memory built once and closed over by its slot
+     * the pattern/vid scaffolding, with the memory bound as ITSELF — an instance needs nothing resolved, which is
+     * what lets the memory slot stop being a deferred seed (see BasicMachine.of)
      */
     private static Map<Obj, Obj> seedConfig(final fURI pattern) {
         final Memory memory = seedMemory();
         return new ConcurrentHashMap<>(Map.of(
                 uri(PATTERN), uri(pattern),
                 PRIMARY, uri(M_ISA_TID),
-                uri(MEMORY), instLambda(ignore -> memory)));
+                uri(MEMORY), memory));
     }
 
     /**
@@ -156,14 +157,15 @@ public abstract class AbstractMachine extends MRec implements Machine {
      * would do so inside {@code read}, and building an Obj there re-enters type resolution and {@code read}.
      */
     private static Map<Obj, Obj> withMemory(final Map<Obj, Obj> jvm) {
-        // built eagerly and closed over, so applying a slot never constructs
+        // bound as THEMSELVES, not as deferred seeds: a slot already holding its component is handed straight back
+        // by the accessor, so nothing is applied and no compiler is needed while the machine is being built
         if (!jvm.containsKey(uri(MEMORY))) {
             final BasicMemory memory = new BasicMemory();
-            jvm.put(uri(MEMORY), instLambda(ignore -> memory));
+            jvm.put(uri(MEMORY), memory);
         }
         if (!jvm.containsKey(uri(NETWORK))) {
             final BasicNetwork network = new BasicNetwork();
-            jvm.put(uri(NETWORK), instLambda(ignore -> network));
+            jvm.put(uri(NETWORK), network);
         }
         // No INSTSET seed is needed: BasicMachine declares the slot unbound, and instset()'s cache turns that
         // into ONE stable empty BasicInstSet per machine. A seed here would only add a second source of truth.

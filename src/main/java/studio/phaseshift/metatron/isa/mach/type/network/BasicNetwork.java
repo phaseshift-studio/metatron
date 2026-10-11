@@ -24,23 +24,24 @@ import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_NETWORK_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * BasicNetwork — one level of a machine's network: a roster of {@code <authority-uri> => <transport-inst>}.
+ * BasicNetwork — one level of a machine's network: a roster of {@code <service-uri> => <transport-inst>}.
  * <p>
- * Like {@link BasicMemory} it holds <b>no state in Java fields</b>: the roster <em>is</em> this rec, so mtron can
- * read and write the peers of a frame directly.
+ * It holds <b>no state in Java fields</b>: the roster <em>is</em> this rec, so mtron reads and writes the peers of
+ * a frame directly and nothing the boundary acts on is hidden from reflection.
  * <p>
  * The value is the transport — an inst that takes the message and returns the peer's response. Keeping it an inst
- * is what keeps the machine free of any transport dependency: swapping ws for http, mqtt or a gRPC client is a
- * roster change, not a code change.
+ * is what keeps the machine free of any transport dependency: swapping ws for http, mqtt, a container endpoint or a
+ * shared space is a roster change, not a code change.
+ * <p>
+ * The roster's home is still {@code /sys/peer}, reached through {@link Network#roster()}. It moves onto this rec —
+ * the component's own map — once the network slot is mounted as a writable space; until then that path is the one
+ * address mtron can write membership to, and routing every read through a single accessor keeps the move free.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -65,16 +66,5 @@ public class BasicNetwork extends MRec implements Network {
                 .filter(v -> v instanceof AutoCloseable)
                 .forEach(CommonUtil::close);
         this.jvm().clear();
-    }
-
-    @Override
-    public Set<String> authorities() {
-        final Set<String> authorities = new LinkedHashSet<>();
-        this.jvm().keySet().stream()
-                .filter(Obj::isUri)
-                .map(k -> k.uriValue().authority())
-                .filter(Objects::nonNull)
-                .forEach(authorities::add);
-        return authorities;
     }
 }

@@ -65,7 +65,11 @@ public interface InstSet extends Space, Machine.Component {
                     uri(TYPE).maybe(), lst(T(ALL_STAR)).maybe(),
                     uri(INST).maybe(), lst(INST_TYPE).maybe(),
                     uri(REWRITE).maybe(), lst(INST_TYPE).maybe(),
-                    uri(SUGAR).maybe(), lst(LST_TYPE).maybe()))
+                    uri(SUGAR).maybe(), lst(LST_TYPE).maybe(),
+                    // the union's MEMBERSHIP: the imported ISAs, by vid, IN IMPORT ORDER (earlier = higher
+                    // precedence). Declared here because it is what makes the union reflective — this is the field
+                    // that answers "what are my insts, rewrites, sugars and types" without walking the mounts.
+                    uri(REFERENCE).maybe().asUri(), lst(URI_TYPE).maybe()))
             .constructor(arg -> {
                 final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
                 };
@@ -83,6 +87,17 @@ public interface InstSet extends Space, Machine.Component {
     fURI G = f("G");
 
     void setup();
+
+    /**
+     * Refer to another instset — an import, held BY REFERENCE and never copied.
+     * <p>
+     * A plain store ignores this (the default): it is a {@link Space} holding its own structure and nothing else.
+     * It is meaningful on an instset that is a UNION over the ones it imports, where this both records the
+     * membership and fixes its precedence — earlier references are consulted first, after the own structure.
+     */
+    default InstSet refer(final InstSet isa) {
+        return this;
+    }
 
     @Override
     fURI pattern();
@@ -157,24 +172,17 @@ public interface InstSet extends Space, Machine.Component {
         return loadInstSetProvider(vid)
                 .map(ServiceLoader.Provider::get)///  new
                 .peek(isa -> {
-                    Machine.current().memory().addSpace(isa);
-                  /*  final Machine machine = Machine.current();
-                    final InstSet own = machine.instset();
-                    if (own instanceof BasicInstSet) {
-                        ((BasicInstSet) own).refer(isa);
-                    } else {
-                        ((BasicInstSet) machine.instset(new BasicInstSet()).instset()).refer(isa);
-                    }*/
+                    // BOTH, deliberately. The MOUNT keeps the ISA addressable exactly where it always was, so
+                    // nothing about resolution changes yet; the REFER is what populates the machine's own instset
+                    // union, so the machine knows its vocabulary as one reflective unit instead of only as a side
+                    // effect of the global space index. Dropping the mount is the later step that lets the Space
+                    // half of InstSet go — and it cannot come first, because a Machine created with no inherited
+                    // vocabulary is a Machine whose code cannot run.
+                    final Machine machine = Machine.current();
+                    machine.memory().addSpace(isa);
+                    machine.instset().refer(isa);
                 })
                 .peek(InstSet::setup); // setup
-    
-                  /*  final Machine machine = Machine.current();
-                    final InstSet own = machine.instset();
-                    if (own instanceof BasicInstSet) {
-                        ((BasicInstSet) own).refer(isa);
-                    } else {
-                        ((BasicInstSet) machine.instset(new BasicInstSet()).instset()).refer(isa);
-                    }*/
 
         //.peek(InstSet::setup); // setup
     }

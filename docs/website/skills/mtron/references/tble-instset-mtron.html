@@ -885,10 +885,10 @@ database says <em>what its key is</em>. Two things have to be true for it to wor
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
 ==&gt;[
-    body=&gt;'a note with a database-assigned key']@tbledoc:note/21
+    body=&gt;'a note with a database-assigned key']@tbledoc:note/23
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
 ==&gt;[
-    body=&gt;'another one']@tbledoc:note/22
+    body=&gt;'another one']@tbledoc:note/24
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
@@ -896,6 +896,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;11
 ==&gt;15
 ==&gt;19
+==&gt;23
 ==&gt;2
 ==&gt;4
 ==&gt;6
@@ -908,6 +909,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;10
 ==&gt;14
 ==&gt;18
+==&gt;24
 ==&gt;20
 ==&gt;5
 ==&gt;7

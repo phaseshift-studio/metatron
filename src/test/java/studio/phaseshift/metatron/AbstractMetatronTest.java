@@ -28,8 +28,10 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Supplier;
@@ -102,14 +104,61 @@ public abstract class AbstractMetatronTest {
     }
 
     /**
+     * A test-side action a script may invoke as {@code [DIRECTIVES] <name> [args…]}.
+     * <p>
+     * Directives exist for the facts a mtron expression cannot reach: starting a peer cluster, mounting a space
+     * that claims an authority, or probing a Java-side predicate such as the network's {@code own} / {@code
+     * isPeer}. A directive that establishes state does it the way the test would; a directive that probes writes
+     * its answer to an address the script then asserts on, so the observation stays in the script.
+     */
+    @FunctionalInterface
+    protected interface Directive {
+        void apply(String... args) throws Exception;
+    }
+
+    /**
+     * The directives THIS suite offers, by name. Empty by default — a suite that needs infrastructure exposes it
+     * here rather than reaching around the script, which keeps the script the single readable account of what is
+     * being proven.
+     */
+    protected Map<String, Directive> directives() {
+        return Map.of();
+    }
+
+    /**
+     * Run one directive call: the first token names the directive (in CAPS), the rest are its arguments.
+     */
+    private void directive(final String call) {
+        final String[] parts = call.split("\\s+");
+        final Directive directive = this.directives().get(parts[0]);
+        if (null == directive)
+            throw MTronException.of("no such directive: %s (this suite offers %s)", parts[0], this.directives().keySet());
+        try {
+            directive.apply(Arrays.copyOfRange(parts, 1, parts.length));
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    /**
+     * The language's own annotation form — {@code [-- … --]} — is a comment anywhere it appears, so a script may
+     * annotate a directive line the same way it annotates an expression.
+     */
+    private static String stripComment(final String line) {
+        final int at = line.indexOf("[--");
+        return at < 0 ? line : line.substring(0, at);
+    }
+
+    /**
      * A stateful, sequential test script. Unlike {@code @CsvSource} — whose rows are independent and stateless — each
      * line runs in order, so a machine can be pushed/popped mid-script and every observation is checked as it happens.
      * This is the durable form of a console session: a thought about a mutation's consistency is ONE line.
      * <p>
      * Line forms:
      * <pre>
+     *   [NAME args…]               run the test-side directive NAME (CAPS), offered by this suite
      *   [STATE] &lt;mtron&gt;            execute the mtron (mutate machine state: push, pop, write, …)
-     *   // &lt;comment&gt;               ignored (blank lines too)
+     *   // &lt;comment&gt;               ignored (blank lines too), and [-- … --] is stripped anywhere
      *   &lt;code&gt; % &lt;expected&gt;        2 columns — checkCodeParseApply(code, expected); express relations with eq/neq/gt/…
      *   &lt;lhs&gt; % &lt;rhs&gt; % &lt;equals&gt;   3 columns — checkEquality(eval(lhs), eval(rhs), equals)
      * </pre>
@@ -120,13 +169,28 @@ public abstract class AbstractMetatronTest {
             if (line.isEmpty() || line.startsWith("//"))
                 continue;
             try {
+                // [NAME args…] — a test-side directive, bracketed like [STATE] and named in CAPS so it is obvious
+                // at a glance that the line leaves mtron. [-- … --] is stripped first: the language's own
+                // annotation form is a comment wherever it appears, including on a directive line.
+                if (line.startsWith("[") && !line.startsWith("[STATE]")) {
+                    final int close = line.indexOf(']');
+                    if (close < 0)
+                        fail("a directive line must close its bracket: " + line);
+                    final String call = (stripComment(line.substring(1, close)) + " "
+                            + stripComment(line.substring(close + 1))).trim();
+                    if (call.isEmpty() || call.startsWith("--"))
+                        continue; // a bare [-- comment --]
+                    LOG.debug("[directive] %s", call);
+                    this.directive(call);
+                    continue;
+                }
                 if (line.startsWith("[STATE] ")) {
                     final String mtron = line.substring("[STATE] ".length()).trim();
                     LOG.debug("[state] %s", mtron);
                     ObjmtronSerializer.parseMulti(mtron).apply();
                     continue;
                 }
-                final String[] parts = line.split("%", -1);
+                final String[] parts = stripComment(line).split("%", -1);
                 if (parts.length == 3)
                     checkEquality(LOG, ObjmtronSerializer.parse(parts[0].trim()).apply(),
                             ObjmtronSerializer.parse(parts[1].trim()).apply(), Boolean.parseBoolean(parts[2].trim()));

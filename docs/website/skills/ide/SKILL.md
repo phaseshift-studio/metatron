@@ -105,9 +105,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[
     status=>success,
-    runtime=>millis::712,
+    runtime=>millis::752,
     command=>'mvn -f src/test/resources/scratch ...',
-    output=>!*/sys/tmp/8e09d214]
+    output=>!*/sys/tmp/a8395af1]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.

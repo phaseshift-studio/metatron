@@ -302,6 +302,13 @@ public final class Tokens {
     public static final String RUNTIME = "runtime";
     public static final String TRANSPORT = "transport";
     public static final String PROTOCOL = "protocol";
+    /**
+     * the protocol SURFACE a wire endpoint speaks — {@code mtron_ws}, {@code mtron_http}, {@code mcp_ws}, …: the
+     * refinements of {@code ws_handler::T} / {@code http_handler::T} that webSpace registers in a space's route
+     * table. Distinct from {@link #PROTOCOL} (the wire dialect itself) and from {@link #TRANSPORT} (the client
+     * that carries a message to it).
+     */
+    public static final String HANDLER = "handler";
     public static final String COMMAND = "command";
     public static final String SERVER = "server";
     public static final String LOCAL = "local";

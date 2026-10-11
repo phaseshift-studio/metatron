@@ -473,16 +473,6 @@ categorical realization of types and insts as objects and morphisms</p>
      rhs=&gt;code::T]]][ctor?rng=morphism&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
   {?}law=&gt;[
    uri::T=&gt;rec::T@/m/math/cat/theory]]][ctor?rng=object&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/cat/category/object){&lt;j&gt;}],
- rewrite=&gt;[
-  /m/math/cat/inst/rewrite/theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/law_idempotent?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/law_absorbing?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/law_monoidic?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/law_poset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/inverse_cancellation?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/form_map_unwrap?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-  /m/math/cat/inst/rewrite/derivation_contraction?rng=code{?}&amp;dom=code(){&lt;j&gt;}],
  type=&gt;[
   rec::T[?[
    obj=&gt;&lt;#&gt;::T,
@@ -577,7 +567,17 @@ categorical realization of types and insts as objects and morphisms</p>
   theory::T[?[
    add=&gt;inst::T,
    mul=&gt;inst::T,
-   zero=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/near_ring_theory]]@/m/math/cat</code></pre>
+   zero=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/near_ring_theory],
+ rewrite=&gt;[
+  /m/math/cat/inst/rewrite/theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/law_idempotent?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/law_absorbing?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/law_monoidic?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/law_poset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/inverse_cancellation?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/form_map_unwrap?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+  /m/math/cat/inst/rewrite/derivation_contraction?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/math/cat</code></pre>
                     </div>
                 </div>
             </div>
@@ -708,8 +708,8 @@ categorical realization of types and insts as objects and morphisms</p>
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a categorical structure to be refined into an object or morphism</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}orbit" class="text-light">{?}orbit</a> <span class="text-light">=&gt;</span> <a href="#'the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)'" class="text-info">&#39;the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)&#39;</a>
-  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)'" class="text-info">&#39;the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)'" class="text-info">&#39;the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)&#39;</a>
+  <a href="#{?}orbit" class="text-light">{?}orbit</a> <span class="text-light">=&gt;</span> <a href="#'the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)'" class="text-info">&#39;the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)&#39;</a>
   <a href="#{?}instset" class="text-light">{?}instset</a> <span class="text-light">=&gt;</span> <a href="#"uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category's morphisms are generated"" class="text-info">&quot;uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category&#39;s morphisms are generated&quot;</a>
 </pre>
 </div>
@@ -914,8 +914,8 @@ categorical realization of types and insts as objects and morphisms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
-  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
   <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
+  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__theory__rig_theory">

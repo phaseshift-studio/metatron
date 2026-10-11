@@ -56,8 +56,8 @@ mtron> *bash?docq
     dom=>'maybe an obj',
     rng=>'a lst[str] of results',
     args=>[
-     cmd=>'the terminal command to evaluate (...',
-     {?}timeout=>'a real number denoting timeout of ...'],
+     {?}timeout=>'a real number denoting timeout of ...',
+     cmd=>'the terminal command to evaluate (...'],
     desc=>'evaluate bash command. *important*...',
     example=>["bash('ls')                        ..."]]
 ```
@@ -79,7 +79,7 @@ mtron> bash('df -h')
     'Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.4M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  523G ...',
+    '/dev/nvme0n1p2         916G  521G ...',
     'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -266,10 +266,10 @@ mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
 ==>[
-    total_mem_jvm=>mB::616,
-    free_mem_jvm=>mB::148.28080,
+    total_mem_jvm=>mB::464,
+    free_mem_jvm=>mB::212.07069,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::467.71919,
+    used_mem_jvm=>mB::251.92930,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[

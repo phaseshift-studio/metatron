@@ -41,6 +41,13 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * that declares the address; a write to an address an ancestor already declares is written through to that
  * ancestor; a write to a new address materializes this level's own memory and lands there. Popping the frame
  * closes only {@link #current()}, so the ancestor's spaces (and any write-through) survive.
+ * <p>
+ * <b>A name is not an address.</b> The walk above is for <em>addresses</em> — vids that are absolute, or that
+ * carry a scheme or an authority. A <em>relative</em> vid is a NAME: it is bound in this level's own frame (the
+ * thread's arg stack, whose root frame is this machine's), and it is answered here and nowhere else. Letting a
+ * relative vid into the walk is what published a machine-local binding to an enclosing machine: the ancestor's
+ * catch-all {@code /#} space claims every relative vid, so {@code who -> 1} written in a child landed in the
+ * root's space and was readable from a sibling. The split is the one {@link Memory#write} already makes.
  */
 public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> {
 
@@ -103,20 +110,38 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
         return this.previous.getSpace(vid);
     }
 
+    /**
+     * A vid that names an <em>address</em> rather than a machine-local name — the split {@link Memory#write}
+     * makes, and which the fall-through below is written for. Only an address may be answered by an enclosing
+     * level once no space has spoken.
+     */
+    private static boolean isAddress(final fURI vid) {
+        return vid.isAbsolute() || vid.hasScheme() || vid.hasHost();
+    }
+
     @Override
     public Obj read(final fURI vid) {
         if (vid.hasPrefix(f("~"))) {
             final fURI home = Machine.current().vid();
             return this.read(vid.equals(f("~")) ? home : home.extend(vid.pretract(1)).resolve());
         }
+        // A NAME is answered by the innermost frame that bound it, so THIS level answers first and only a miss
+        // falls through. Asking `previous` first is what let an ancestor's frame answer for a child — and it is
+        // also why the ordering matters rather than the walk: an ancestor's catch-all # space covers every name,
+        // so a name must be given to the level that owns it before any enclosing space is consulted. A miss still
+        // falls through, because a short name may really be an address an enclosing level holds (`count` is
+        // resolved by the root's `big()` escalation to `/m/inst/count`).
+        if (!isAddress(vid)) {
+            final Obj local = this.own().read(vid);
+            return local.isNoObj() ? this.previous.read(vid) : local;
+        }
+        // An ADDRESS walks the levels' spaces, nearest first, and falls through to the enclosing level.
         final Space space = this.findSpace(vid);
         if (null != space) {
             final Obj result = space.read(vid);
             if (!result.isNoObj())
                 return result;
-            // the nearest level declared the vid but answered noobj — fall through to the enclosing level. the rec
-            // lives in the root's space (global registration), while this machine's data lives in its own infra, so a
-            // rec read that misses here must still reach the root's copy.
+            // the nearest level declared the vid but answered noobj — the enclosing level may still have it.
         }
         return this.previous.read(vid);
     }
@@ -129,6 +154,11 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
                 obj.selfVID(resolved);
             return this.write(resolved, obj);
         }
+        // A NAME binds in this level's own frame and is never written through to an enclosing level — which is
+        // how a child's binding reached the root machine and was readable from its siblings. No alignPrefix here,
+        // mirroring Memory.write: a write routes on the vid it was given.
+        if (!isAddress(vid))
+            return this.own().write(vid, obj);
         final Space space = this.findSpace(vid);
         return null != space ? space.write(vid, obj) : this.own().write(vid, obj);
     }
