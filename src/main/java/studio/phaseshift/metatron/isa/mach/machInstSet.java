@@ -402,18 +402,23 @@ public class machInstSet extends AbstractInstSet {
                                         .vid(PEER_TID)
                                         .isaPredicate(rec(
                                                 uri(AUTHORITY), URI_TYPE,
-                                                // absent transport ⇒ a peer we know about but cannot reach from
-                                                // here — which is what a peer reference looks like after it has
-                                                // crossed a wire. One type, two honest states.
-                                                //uri(TRANSPORT).maybe().asUri(), INST_TYPE,
+                                                // the endpoint and the SURFACE, in webSpace's own vocabulary: a
+                                                // space's `host` names where to dial and the handler refines the
+                                                // scheme into a protocol (mtron_ws, mcp_ws, …). Both absent ⇒ a peer
+                                                // we know about but cannot reach from here — which is what a peer
+                                                // reference looks like after it has crossed a wire. One type, two
+                                                // honest states.
+                                                uri(HOST).maybe().asUri(), URI_TYPE,
+                                                uri(HANDLER).maybe().asUri(), URI_TYPE,
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(STATUS).maybe().asUri(), REC_TYPE))
                                         .create(), null, null,
-                                Map.of(uri(AUTHORITY), "the peer address with scheme and host:port for remote peers",
-                                        uri(NAME).maybe(), "a simple name for the peer",
-                                        //uri(TRANSPORT), "the inst that reaches it; absent when only known, not reachable",
-                                        uri(STATUS), "the last health report computed for this peer"),
-                                "one metatron instance the local instance knows about"),
+                                Map.of(uri(AUTHORITY), "the peer address, scheme://host:port; the roster key is this same service uri",
+                                        uri(HOST), "the wire endpoint, including its route: ws://host:port/mtron",
+                                        uri(HANDLER), "the protocol surface at that endpoint: mtron_ws, mtron_http, mcp_ws, …",
+                                        uri(NAME), "a simple name for the peer",
+                                        uri(STATUS), "the health report computed for this peer — computed on call, never stored"),
+                                "one metatron machine this machine can reach: the value of a network roster entry"),
                         docWrap(CLUSTER_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(CLUSTER_TID)
@@ -422,21 +427,39 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(STATUS).maybe().asUri(), INST_TYPE,
                                                 uri(NAME).maybe().asUri(), STR_TYPE))
                                         .create(), null, null,
-                                Map.of(uri(PEER), "the declared roster — an auto pointer, never a stale copy",
-                                        uri(STATUS), "the health method: peer => status"),
+                                Map.of(uri(PEER).maybe(), "the declared roster — an auto, never a stale copy",
+                                        uri(STATUS).maybe(), "the health method: peer => status"),
                                 "this VM's static view of its cluster (fields + methods)"),
-                        MACH_NETWORK_TYPE = Type.Builder.build()
-                                .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_NETWORK_TID)
-                                // .isaPredicate(rec(
-                                //         uri(NAME).maybe().asUri(), STR_TYPE,
-                                //         uri(PEER).maybe().asUri(), lst(PEER_TYPE),
-                                //         uri(STATUS).maybe().asUri(), INST_TYPE,
-                                //         uri(STATE).maybe().asUri(), rec(
-                                //                 uri(LOCAL), ALL_TYPE,
-                                //                 URI_TYPE, ALL_TYPE)))
-                                .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
-                                .create(),
+                        MACH_NETWORK_TYPE = docWrap(Type.Builder.build()
+                                        .tid(MACH_MACHINE_COMPONENT_TID)
+                                        .vid(MACH_NETWORK_TID)
+                                        // EVERY COMPONENT PREDICATE FOLLOWS ONE CONVENTION — all keys OPTIONAL
+                                        // (see processor::T and compiler::T beside it) — so a slot's deferred
+                                        // default and a partially-filled level both pass: the predicate
+                                        // constrains what IS present and nothing more. A required-key or
+                                        // map-only predicate is a different test, and on a slot that still holds
+                                        // its default it fails machine construction outright. Measured.
+                                        //
+                                        // The roster is the `peer` field: <service-uri> => peer::T, which a
+                                        // fixed-key rec cannot describe, so the map idiom is the positional
+                                        // (keyType, valueType) pair — the same one a space's `route` uses. It
+                                        // lives at /sys/peer today and reaches the component through
+                                        // Network.roster(); the field is what it becomes.
+                                        .isaPredicate(rec(
+                                                uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID))))
+                                        .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
+                                        .create(),
+                                Map.of(uri(PEER).maybe(), "the roster — <service-uri> => peer::T",
+                                        uri(NAME), "a name for this network",
+                                        uri(STATUS), "the health method: peer => status"),
+                                """
+                                a machine's network: the peers this frame can reach, one roster entry per service
+                                uri. membership is declared, never emergent — a uri must not be able to make
+                                itself a peer merely by being addressed — and it is accumulating, so a child frame
+                                unions its own level over its parent's. the authorities this machine answers to
+                                are derived from the `host` every mounted space
+                                declares, so identity has exactly one source and cannot drift.
+                                """),
                         MACH_MACHINE_TYPE = docWrap(Type.Builder.build()
                                         .tid(SPACE_TID)
                                         .vid(MACH_MACHINE_TID)

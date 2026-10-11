@@ -13,7 +13,7 @@ A **machine** is metatron's unit of process: everything runs in one, and `/` is 
 
 | slot        | what it holds                                                       |
 |-------------|---------------------------------------------------------------------|
-| `instset`   | the instruction sets this frame can see (an n-ary union of imports) |
+| `instset`   | the vocabulary this frame sees: its own declarations over an ordered list of imported sets |
 | `compiler`  | the source to `code::T` converter                                   |
 | `memory`    | the address space: relative uris (stack) and absolute uris (spaces) |
 | `network`   | the peers a machine indexes and maintains shared state              |
@@ -163,7 +163,49 @@ axes of a machine.
 * **`network::T`** — the peers a frame can reach. A `peer::T` is one roster entry — an `authority`, an optional
   `name`, and an optional `transport` — and a peer that crossed a wire is *known but unreachable*: one type, two
   honest states.
-* **`instset`** — the frame's visible instruction sets, imported as an n-ary union.
+* **`instset`** — the frame's visible vocabulary, imported by reference; see below.
+
+## the instset — a union of references
+
+`instset` is the frame's **visible vocabulary**: the types, instructions, rewrites and sugars a program compiled here
+can see. Unlike every other component it is an **n-ary union** rather than a two-level walk — memory and the network
+are a frame over its parent, while an ISA is a LIST: this frame's own structure layered over an arbitrary number of
+imported sets.
+
+That it is also a `space::T` is an **accident worth naming**: importing an ISA mounts it into memory, so an ISA had to
+be a space to be reachable at all. Frame-scoped importing removes the need, and the declaration is where the two
+descriptions meet in the meantime.
+
+| part          | what it is                                                                                                    |
+|---------------|---------------------------------------------------------------------------------------------------------------|
+| own structure | the `type` / `inst` / `rewrite` / `sugar` entries written in this frame                                        |
+| `reference`   | an ORDERED list of the vids of the instruction sets this frame imported — held by reference, never copied      |
+
+Two rules fall out, and they are the whole point:
+
+* **an import is a reference, never a copy** — the library out in space is shared by every machine that imported it,
+  and is never mutated by any of them;
+* **resolution is own-first** — a type, inst, const or rewrite written here SHADOWS a name from any set this one
+  refers to, and among the references **import order is precedence**.
+
+The membership lives in the rec under `reference` — singular, like `pattern`, `type` and `inst`, holding a list — so
+the vocabulary reads from mtron as itself rather than as an opaque template. Importing is the `import` instruction,
+which takes the ISA's uri.
+
+**Not yet**: the vocabulary a frame sees is meant to be the union of the instruction sets it imported *and* the
+declarations made under its own `~` — `~/type/friend`, `~/inst/purchase` — for those same four kinds. `const` is
+deliberately excluded, and the reason is the point: `~` is the frame's whole address space, so a projection that
+admitted consts would union the frame's **memory** into its instruction set.
+
+Two measured facts stand in the way, and both are the sort that flatter a design that assumes them:
+
+* `~` is the current machine — it resolves to `Machine.current().vid()` — and it does **not** fall through to an
+  enclosing frame. A parent's `~/person` is invisible from a child, so inheriting a parent's `~`-addressed vocabulary
+  has to be *built* (re-bind `~` at each level of the walk, or walk frames in the projection); it does not come free
+  with the address walk.
+* importing currently does **both** — it mounts the ISA into memory *and* records the reference — so the mount can
+  only go once the union alone carries a frame's vocabulary. A machine created with no inherited vocabulary is a
+  machine whose code cannot run, which is why that order is not negotiable.
 
 ## threads
 
@@ -191,7 +233,7 @@ non-component families, which hang directly off `/m/mach`:
 |----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | compiler | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer` |
 | process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                                    |
-| state    | `memory`, `network`                                                                                                                                                                                                                                                  |
+| state    | `memory`, `network`, `instset`                                                                                                                                                                                                                                       |
 | machine  | `machine` (at `/m/mach/machine`, a `space::T`)                                                                                                                                                                                                                       |
 | the rest | `thread` / `virtual` / `core`, `peer`, `cluster`, `monad`, `component` (`/m/mach/component`, the root of every row above)                                                                                                                                            |
 

@@ -476,8 +476,8 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'an accordion obj',
      args=&gt;[
-      {?}body=&gt;'the body content of the accordion',
-      {?}title=&gt;'the title of the accordion'],
+      {?}title=&gt;'the title of the accordion',
+      {?}body=&gt;'the body content of the accordion'],
      desc=&gt;'[structural] an expandable/collaps...'],
     progress_table_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -493,9 +493,9 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a table widget',
      args=&gt;[
+      {?}metadata=&gt;'a lst of rows of data behind the d...',
       {?}header=&gt;'a lst of obj table headers',
-      {?}row=&gt;'a lst of poly table rows',
-      {?}metadata=&gt;'a lst of rows of data behind the d...'],
+      {?}row=&gt;'a lst of poly table rows'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -508,12 +508,12 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
      args=&gt;[
-      max=&gt;'the max depth to traverse',
-      {?}flatten=&gt;'fold single-folder chains into one...',
-      root=&gt;'the root uri to traverse from',
       {?}code=&gt;'transform obj prior to insertion i...',
       {?}expand=&gt;'branch uris whose children are rea...',
-      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...'],
+      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
+      max=&gt;'the max depth to traverse',
+      {?}flatten=&gt;'fold single-folder chains into one...',
+      root=&gt;'the root uri to traverse from'],
      desc=&gt;'[structural] the root uri space is...'],
     ...(10 more)]
 </code></pre>

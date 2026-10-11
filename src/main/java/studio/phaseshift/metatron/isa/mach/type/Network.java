@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.io.Closeable;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -46,9 +47,22 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
  * decides what "reachable" and "mine" mean.
  * <p>
  * It is a {@link Rec} — a map of authority to transport, which is exactly the shape the declared roster already
- * has ({@code /sys/peer}). Like Memory and the ISA, it is an <em>accumulating</em> component, so a frame wraps it
- * with a {@code ComponentUnion} rather than replacing it: a frame that dials a peer adds to its own
- * {@code current()} and inherits the rest.
+ * has ({@code /sys/peer}). Like Memory and the ISA it is <em>meant</em> to accumulate, so that a frame wraps it
+ * with a {@link ComponentUnion} rather than replacing it and a frame that dials a peer adds to its own
+ * {@code current()} while inheriting the rest.
+ * <p>
+ * <b>It does not accumulate yet, and the union cannot be the first step.</b> The roster lives in a shared space
+ * addressed {@code /sys/peer}, so this component's own level is empty and a union over it would compose nothing: a
+ * peer declared while standing in a child IS the parent's declaration, because the address is one address at every
+ * depth. The roster has to move home — onto {@code peer}, the field the declared type already carries — in the
+ * SAME change as the union, because either half alone is worse than neither: moving it without the union leaves a
+ * child's inherited membership unreachable, and the union without the move composes an empty component.
+ * <p>
+ * Membership is also a <em>capability</em>, unlike an address or a vocabulary. Memory's union is sound because an
+ * address means the same thing at every depth, so inheriting is pure extension; read-through on a roster instead
+ * answers "may this child dial the parent's peer" with a silent yes. Expressing a frame deliberately NARROWER than
+ * its parent is therefore the union's open question, and it needs a shadow-and-deny arm rather than a copy of
+ * {@link studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion}.
  * <p>
  * The authority algebra lives here rather than on the Router because it is not routing — it is what the network
  * <em>is</em>. Every question about whether two addresses denote the same service, or whether a host names this
@@ -62,10 +76,81 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 public interface Network extends Machine.Component, Closeable {
 
     /**
-     * The authorities this level declares. Membership is configuration, never traffic: a URI must not be able to
-     * make itself a peer merely by being addressed.
+     * The declared roster: {@code <service-uri> => peer::T}. THE source of truth for membership — declared, never
+     * emergent (a uri must not be able to make itself a peer merely by being addressed), and the only place a
+     * transport is named. Read as a value, never copied into a field, so mtron sees exactly what the boundary
+     * acts on.
+     * <p>
+     * The home is {@link Helper#peerRosterPath()} today; it is read through this one accessor so the home can move
+     * onto the component's own rec without touching a caller.
      */
-    Set<String> authorities();
+    default Rec roster() {
+        final Obj declared = Machine.read(Helper.peerRosterPath());
+        return declared.isRec() ? declared.asRec() : rec();
+    }
+
+    /**
+     * The peer authorities this level declares — the roster's keys. Deliberately NOT the same question as
+     * {@link #authorities()}, which asks which authorities are <em>mine</em>.
+     */
+    default Set<String> peers() {
+        final Set<String> peers = new LinkedHashSet<>();
+        this.roster().jvm().keySet().stream()
+                .filter(Obj::isUri)
+                .map(key -> key.uriValue().authority())
+                .filter(authority -> null != authority)
+                .forEach(peers::add);
+        return peers;
+    }
+
+    /**
+     * The authorities THIS machine answers to. <b>Derived, never declared twice</b>: every mounted space that names
+     * a {@code host} contributes it, with the loopback aliases collapsed — a server bound to {@code 0.0.0.0} is
+     * reachable as {@code localhost}. This is the other half of {@link #own(fURI)}, and it is why there is no
+     * self-authority field to go stale: identity has exactly one source, the config that was actually mounted.
+     * <p>
+     * The frame chain is walked, because a level lists only its own index — a child's mounted spaces live in its
+     * own level, its servers in the root's.
+     */
+    default Set<String> authorities() {
+        final Set<String> mine = new LinkedHashSet<>();
+        for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous())
+            for (final Obj declared : memory.spaces().jvm().values()) {
+                // A space's DECLARED CONFIG is read off the space itself, the same act its own constructor
+                // performs (a space is an MRec, and dckrSpace reads its host this way). It is NOT addressable as
+                // <vid>/host: the space's own pattern claims that path and answers from its store, which is empty
+                // of config. Measured — routing this through Machine.read returned no authorities at all.
+                if (!(declared instanceof Rec space))
+                    continue;
+                // the host may be a literal uri or an auto pointer at the boot args — resolve both
+                final Obj host = space.at(uri(HOST));
+                final Obj resolved = host.isUri() ? host : (host.isInst() ? host.apply() : noobj());
+                if (!resolved.isUri())
+                    continue;
+                final String authority = resolved.uriValue().authority();
+                if (null != authority)
+                    mine.add(authority);
+            }
+        return mine;
+    }
+
+    /**
+     * Is this address <b>mine</b>? Alias-aware, because the boot binds a wildcard while a caller addresses
+     * loopback — and getting that wrong makes the boundary forward a request to <em>itself</em>. This is a loop
+     * guard, not a nicety.
+     */
+    default boolean own(final fURI vid) {
+        return null != vid.authority() && this.authorities().stream()
+                .anyMatch(authority -> Helper.sameAuthority(authority, vid.authority()));
+    }
+
+    /**
+     * Is this address a <b>declared peer</b>? Membership is the roster, never traffic.
+     */
+    default boolean isPeer(final fURI vid) {
+        return null != vid.authority() && this.peers().stream()
+                .anyMatch(authority -> Helper.sameAuthority(authority, vid.authority()));
+    }
 
 
     /**
@@ -130,7 +215,7 @@ public interface Network extends Machine.Component, Closeable {
      */
     default Obj status(final Obj lhs) {
         final Obj field = lhs.isRec() ? lhs.asRec().at(uri(PEER)) : noobj();
-        final Obj roster = field.isRec() ? field : Machine.read(Helper.peerRosterPath());
+        final Obj roster = field.isRec() ? field : this.roster();
         if (!roster.isRec())
             return noobj(); // nothing declared: an empty cluster, not an error
         return objs(roster.asRec().jvm().entrySet().stream()
@@ -147,10 +232,7 @@ public interface Network extends Machine.Component, Closeable {
     default Obj read(final fURI vid) {
         if (!vid.hasAuthority())
             return noobj();
-        final Obj roster = Machine.read(Helper.peerRosterPath());
-        if (!roster.isRec())
-            return noobj();
-        final Obj transport = Helper.transport(roster.asRec(), vid.scheme() + "://" + vid.authority());
+        final Obj transport = Helper.transport(this.roster(), vid.scheme() + "://" + vid.authority());
         if (transport.isNoObj())
             return noobj(); // authority not declared: not a peer this frame may reach
         final Obj message = ObjmtronSerializer.parse("from(<" + vid.localize() + ">)");
@@ -164,10 +246,7 @@ public interface Network extends Machine.Component, Closeable {
     default Obj write(final fURI vid, final Obj obj) {
         if (!vid.hasAuthority())
             return noobj();
-        final Obj roster = Machine.read(Helper.peerRosterPath());
-        if (!roster.isRec())
-            return noobj();
-        final Obj transport = Helper.transport(roster.asRec(), vid.scheme() + "://" + vid.authority());
+        final Obj transport = Helper.transport(this.roster(), vid.scheme() + "://" + vid.authority());
         if (transport.isNoObj())
             return noobj();
         final Obj message = ObjmtronSerializer.parse(ObjmtronSerializer.single().write(obj) + ".to(<" + vid.localize() + ">)");

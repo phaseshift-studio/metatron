@@ -95,8 +95,8 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'an accordion obj',
      args=>[
-      {?}body=>'the body content of the accordion',
-      {?}title=>'the title of the accordion'],
+      {?}title=>'the title of the accordion',
+      {?}body=>'the body content of the accordion'],
      desc=>'[structural] an expandable/collaps...'],
     progress_table_widget=>docs::[
      obj=>widget::T[?[
@@ -112,9 +112,9 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'a table widget',
      args=>[
+      {?}metadata=>'a lst of rows of data behind the d...',
       {?}header=>'a lst of obj table headers',
-      {?}row=>'a lst of poly table rows',
-      {?}metadata=>'a lst of rows of data behind the d...'],
+      {?}row=>'a lst of poly table rows'],
      desc=>'[structural] a tabular data widget'],
     tree_widget=>docs::[
      obj=>widget::T[?[
@@ -127,12 +127,12 @@ mtron> */m/mach/ui/widget?docq
      dom=>'maybe an obj',
      rng=>'a tree widget',
      args=>[
-      max=>'the max depth to traverse',
-      {?}flatten=>'fold single-folder chains into one...',
-      root=>'the root uri to traverse from',
       {?}code=>'transform obj prior to insertion i...',
       {?}expand=>'branch uris whose children are rea...',
-      {?}xref=>'xref=>[max=>N, code=><call>] cross...'],
+      {?}xref=>'xref=>[max=>N, code=><call>] cross...',
+      max=>'the max depth to traverse',
+      {?}flatten=>'fold single-folder chains into one...',
+      root=>'the root uri to traverse from'],
      desc=>'[structural] the root uri space is...'],
     ...(10 more)]
 ```

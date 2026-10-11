@@ -93,10 +93,17 @@ public class BasicMachine extends AbstractMachine {
     }
 
     public static BasicMachine of(final fURI tid, final fURI vid) {
-        // Built once, here, and the slots close over them. Applying a slot therefore yields this instance rather
-        // than constructing one: `*/memory` reads a small template, `*/memory()` is the memory, and the accessor
-        // on the read path allocates nothing. A slot that constructed on apply would re-enter type resolution
-        // from inside `read` — the recursion that already bit MachineFrameTest once.
+        // EVERY COMPONENT SLOT IS BOUND AS ITSELF — not as a template (an instLambda the accessor must apply).
+        // This is what lets them stop being deferred, and it needs nothing from the compiler: the accessor hands
+        // back a slot that already holds its component, so AbstractMachine's constructor can parent it without
+        // applying anything. The deferral was only ever about ORDER — this method mints the root machine during
+        // BootLoader.load, before machInstSet.setup() assigns the component types AND before there is a machine to
+        // compile with (a Call-valued slot died with "machine has no compiler: /m/mach/machine{0}"). Handing over
+        // an instance needs neither a type nor a compiler.
+        //
+        // The processor keeps its CLONE-PER-FETCH semantic either way: processor() clones anything that is not a
+        // call, and SwarmProcessor.clone() is the override that exists precisely to hand each run a fresh
+        // processor rather than one sharing the running/barrier/halted queues.
         final BasicMemory memory = rootMemory();
         final BasicNetwork network = new BasicNetwork();
         final BasicInstSet instset = new BasicInstSet();
@@ -106,11 +113,11 @@ public class BasicMachine extends AbstractMachine {
                 // index is a throwaway map and every addSpace into it would be silently lost.
                 uri(PATTERN), uri(ALL),
                 uri(QPROC), lst(QCollection.docQ()),
-                uri(MEMORY), instLambda(ignore -> memory),
-                uri(NETWORK), instLambda(ignore -> network),
+                uri(MEMORY), memory,
+                uri(NETWORK), network,
                 uri(INSTSET), instLambda(ignore -> instset),
-                uri(COMPILER), instLambda(ignore -> BasicCompiler.defaults()),
-                uri(PROCESSOR), instLambda(ignore -> SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null))), tid, vid);
+                uri(COMPILER), BasicCompiler.defaults(),
+                uri(PROCESSOR), SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null)), tid, vid);
         // uri("+").c(cInt.of(-1, 1)), instC(f("+").c(cInt.of(-1, 1)).dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(),
         //       (lhs, inst) -> lhs.asMachine().move(f(inst.tid().name()).c(inst.tid().c())))), tid, vid);
     }

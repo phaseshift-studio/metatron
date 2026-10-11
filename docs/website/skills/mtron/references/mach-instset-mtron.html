@@ -406,7 +406,7 @@
 <tr><th>slot</th><th>what it holds</th></tr>
 </thead>
 <tbody>
-<tr><td><code>instset</code></td><td>the instruction sets this frame can see (an n-ary union of imports)</td></tr>
+<tr><td><code>instset</code></td><td>the vocabulary this frame sees: its own declarations over an ordered list of imported sets</td></tr>
 <tr><td><code>compiler</code></td><td>the source to <code>code::T</code> converter</td></tr>
 <tr><td><code>memory</code></td><td>the address space: relative uris (stack) and absolute uris (spaces)</td></tr>
 <tr><td><code>network</code></td><td>the peers a machine indexes and maintains shared state</td></tr>
@@ -550,7 +550,48 @@ parent's memory; that walk is what makes a machine a frame of reference.</li>
 <li><strong><code>network::T</code></strong> — the peers a frame can reach. A <code>peer::T</code> is one roster entry — an <code>authority</code>, an optional
 <code>name</code>, and an optional <code>transport</code> — and a peer that crossed a wire is <em>known but unreachable</em>: one type, two
 honest states.</li>
-<li><strong><code>instset</code></strong> — the frame's visible instruction sets, imported as an n-ary union.</li>
+<li><strong><code>instset</code></strong> — the frame's visible vocabulary, imported by reference; see below.</li>
+</ul>
+<h3>the instset — a union of references</h3>
+<p><code>instset</code> is the frame's <strong>visible vocabulary</strong>: the types, instructions, rewrites and sugars a program compiled here
+can see. Unlike every other component it is an <strong>n-ary union</strong> rather than a two-level walk — memory and the network
+are a frame over its parent, while an ISA is a LIST: this frame's own structure layered over an arbitrary number of
+imported sets.</p>
+<p>That it is also a <code>space::T</code> is an <strong>accident worth naming</strong>: importing an ISA mounts it into memory, so an ISA had to
+be a space to be reachable at all. Frame-scoped importing removes the need, and the declaration is where the two
+descriptions meet in the meantime.</p>
+<table>
+<thead>
+<tr><th>part</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td>own structure</td><td>the <code>type</code> / <code>inst</code> / <code>rewrite</code> / <code>sugar</code> entries written in this frame</td></tr>
+<tr><td><code>reference</code></td><td>an ORDERED list of the vids of the instruction sets this frame imported — held by reference, never copied</td></tr>
+</tbody>
+</table>
+<p>Two rules fall out, and they are the whole point:</p>
+<ul>
+<li><strong>an import is a reference, never a copy</strong> — the library out in space is shared by every machine that imported it,
+and is never mutated by any of them;</li>
+<li><strong>resolution is own-first</strong> — a type, inst, const or rewrite written here SHADOWS a name from any set this one
+refers to, and among the references <strong>import order is precedence</strong>.</li>
+</ul>
+<p>The membership lives in the rec under <code>reference</code> — singular, like <code>pattern</code>, <code>type</code> and <code>inst</code>, holding a list — so
+the vocabulary reads from mtron as itself rather than as an opaque template. Importing is the <code>import</code> instruction,
+which takes the ISA's uri.</p>
+<p><strong>Not yet</strong>: the vocabulary a frame sees is meant to be the union of the instruction sets it imported <em>and</em> the
+declarations made under its own <code>~</code> — <code>~/type/friend</code>, <code>~/inst/purchase</code> — for those same four kinds. <code>const</code> is
+deliberately excluded, and the reason is the point: <code>~</code> is the frame's whole address space, so a projection that
+admitted consts would union the frame's <strong>memory</strong> into its instruction set.</p>
+<p>Two measured facts stand in the way, and both are the sort that flatter a design that assumes them:</p>
+<ul>
+<li><code>~</code> is the current machine — it resolves to <code>Machine.current().vid()</code> — and it does <strong>not</strong> fall through to an
+enclosing frame. A parent's <code>~/person</code> is invisible from a child, so inheriting a parent's <code>~</code>-addressed vocabulary
+has to be <em>built</em> (re-bind <code>~</code> at each level of the walk, or walk frames in the projection); it does not come free
+with the address walk.</li>
+<li>importing currently does <strong>both</strong> — it mounts the ISA into memory <em>and</em> records the reference — so the mount can
+only go once the union alone carries a frame's vocabulary. A machine created with no inherited vocabulary is a
+machine whose code cannot run, which is why that order is not negotiable.</li>
 </ul>
 <h3>threads</h3>
 <p>A machine's work is carried by threads (<code>/m/mach/thread</code>), which are <code>rec::T</code>s with a lifecycle:</p>
@@ -580,7 +621,7 @@ non-component families, which hang directly off <code>/m/mach</code>:</p>
 <tbody>
 <tr><td>compiler</td><td><code>compiler</code>, <code>parser</code>, <code>mtron_parser</code>, <code>rewriter</code>, <code>fixpoint_rewriter</code>, <code>identity_rewriter</code>, <code>resolver</code>, <code>scoring_resolver</code>, <code>firstfind_resolver</code>, <code>identity_resolver</code>, <code>selector</code>, <code>specificity_selector</code>, <code>firstfind_selector</code>, <code>binder</code>, <code>generic_binder</code>, <code>typer</code></td></tr>
 <tr><td>process</td><td><code>processor</code>, <code>monad_processor</code>, <code>swarm_processor</code></td></tr>
-<tr><td>state</td><td><code>memory</code>, <code>network</code></td></tr>
+<tr><td>state</td><td><code>memory</code>, <code>network</code>, <code>instset</code></td></tr>
 <tr><td>machine</td><td><code>machine</code> (at <code>/m/mach/machine</code>, a <code>space::T</code>)</td></tr>
 <tr><td>the rest</td><td><code>thread</code> / <code>virtual</code> / <code>core</code>, <code>peer</code>, <code>cluster</code>, <code>monad</code>, <code>component</code> (<code>/m/mach/component</code>, the root of every row above)</td></tr>
 </tbody>

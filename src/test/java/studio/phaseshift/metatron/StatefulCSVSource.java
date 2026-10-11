@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * <p>
  * Line forms (see {@code AbstractMetatronTest#script(String...)}):
  * <pre>
+ *   [DIRECTIVES] &lt;name&gt; [args…] run a test-side directive the suite offers (peer clusters, mounts, probes)
  *   [STATE] &lt;mtron&gt;            mutate machine state (push, pop, write, …)
  *   // &lt;comment&gt;               ignored
  *   &lt;code&gt; % &lt;expected&gt;        checkCodeParseApply(code, expected)
