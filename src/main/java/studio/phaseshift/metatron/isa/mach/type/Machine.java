@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -32,6 +33,8 @@ import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
+import studio.phaseshift.metatron.isa.mach.type.network.PeerSpawn;
+import studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -42,8 +45,10 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_MACHINE_TID;
 
 /**
  * Machine: a SPACE OF SPACES -- the address space resolution happens in. Its members ({@code instset}, {@code memory},
@@ -154,9 +159,17 @@ public interface Machine extends Rec, AutoCloseable {
     static Obj read(final fURI vid) {
         if (null == ROOT_MACHINE)
             return noobj();
-        // Pure pass-through: the single path to Memory. All routing (~ resolution, relative→stack, absolute→space)
-        // lives in Memory.read, so there is exactly one place a read is turned into an address.
-        return Machine.current().memory().read(vid);
+        // Authority dispatch comes FIRST, before the handoff to Memory: an address carrying an authority a peer has
+        // declared is that peer's to answer, and Memory only ever sees an address already localized. Network.read
+        // answers noobj for an address with no authority, or one whose authority is not in the roster, so the local
+        // path is untouched (an empty roster is the normal case).
+        final Machine machine = Machine.current();
+        final Obj dispatched = machine.network().read(vid);
+        if (!dispatched.isNoObj())
+            return dispatched;
+        // Local routing (~ resolution, relative→stack, absolute→space) lives in Memory.read, so there is exactly one
+        // place a read is turned into an address.
+        return machine.memory().read(vid);
     }
 
     static Obj read(final String vid) {
@@ -166,8 +179,15 @@ public interface Machine extends Rec, AutoCloseable {
     static Obj write(final fURI vid, final Obj obj) {
         if (null == ROOT_MACHINE)
             return noobj();
-        // Pure pass-through: the single path to Memory (see read). No network-first, no prefix stripping.
-        return Machine.current().memory().write(vid, obj);
+        // Authority dispatch first, exactly as read: a declared peer's authority takes the write over the wire.
+        // Network.write answers noobj for an undeclared authority, so the local path is untouched — but a declared
+        // peer that is silent answers a fail, which must NOT be swallowed by the local fall-through.
+        final Machine machine = Machine.current();
+        final Obj dispatched = machine.network().write(vid, obj);
+        if (!dispatched.isNoObj())
+            return dispatched;
+        // Local pass-through to Memory (see read).
+        return machine.memory().write(vid, obj);
     }
 
     static Obj write(final String vid, final Obj obj) {
@@ -231,6 +251,27 @@ public interface Machine extends Rec, AutoCloseable {
     }
     */
 
+    /**
+     * Apply code to a lhs <em>in this machine</em>: compile it against the machine's compiler, then run the compiled
+     * form on its processor. This is the single place a {@link Code} hands off to a machine, which is what makes the
+     * machine the unit of execution — a machine that executes elsewhere (a {@code RemoteMachine}) overrides this one
+     * method and every caller above it (the console, {@code eval}, a nested code) follows without knowing.
+     */
+    default Obj applyCode(final Code code, final Obj lhs) {
+        final Call call = code.tryToInst();
+        if (call.isCode()) {
+            // wrapStart prepends start(value) for a value lhs; a monadic lhs passes through unchanged and rides
+            // START so the monad's loop/state context survives into the processor.
+            final Code compiled = this.compiler().apply(Code.wrapStart(lhs, call.as())).asCode();
+            return this.processor().code(compiled).apply(lhs.isMonad() ? lhs : noobj());
+        }
+        // single inst: dispatch by the inst's own monad flag. A monadic inst (loop()) receives the monad; a value
+        // inst is resolved and applied against the monad's obj.
+        final boolean monadic = call.isInst() && call.resolve(lhs).tid().hasQ(MONAD_IN);
+        final Obj arg = lhs.isMonad() && !monadic ? lhs.asMonad().obj() : lhs;
+        return call.resolve(arg).apply(arg);
+    }
+
     // ======================== components ========================
     default InstSet instset() {
         final Obj proto = this.at(uri(INSTSET));
@@ -286,6 +327,7 @@ public interface Machine extends Rec, AutoCloseable {
             final memSpace infra = memSpace.unregistered(resolved.extend(ALL), resolved.extend("space"));
             infra.addQ(QCollection.docQ());
             infra.addQ(QCollection.incrQ());
+            infra.addQ(QCollection.subQ());
             this.memory().addSpace(infra);
             // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.
             this.memory().write(this.vid(), this);
@@ -307,8 +349,31 @@ public interface Machine extends Rec, AutoCloseable {
     /**
      * Push a child machine whose vid strictly extends this machine's by {@code extension}, and return the child.
      * The extension is a uri because it is an expression: multi-segment, templated and composed steps all work.
+     * <p>
+     * An extension carrying an <b>authority</b> is a different boundary: it names another mtron instance rather
+     * than another frame. That machine is forked as a separate OS process when the authority is on this same
+     * physical machine (a loopback host), and merely declared as a peer otherwise — see {@link PeerSpawn}.
      */
     default Machine push(final fURI extension) {
+        // AN AUTHORITY IS A PROCESS BOUNDARY. Nothing below applies: a peer has its own vid, its own memory and
+        // its own lifetime, so it can neither descend from this machine nor share its memory. A HOST is the test
+        // rather than hasAuthority(), which also demands an explicit port — a pushed host without one gets a free
+        // port allocated, and the handle's vid then carries it.
+        if (null != extension && extension.hasHost()) {
+            // RESOLVE FIRST: the frame's address encodes the port, so the port has to exist before it is derived.
+            final fURI peer = PeerSpawn.resolve(extension);
+            // THE FRAME SPAWNS ITSELF, and it LIVES AT A LOCAL ADDRESS derived from the peer:
+            // ~/network/peer/<scheme>/<host>/<port>/<namespace>. Because the address is a path in THIS machine, the
+            // frame registers where every machine does, ~-relative state (~/fail, ~/thread) stays local, and a plain
+            // local read reaches it — no remote uri is ever written through the wire. The peer rec carries the FULL
+            // declared address, which is the only thing left that knows where the wire goes and what namespace the
+            // node mounts.
+            return Machine.current(new RemoteMachine(
+                    CommonUtil.mutableMap(
+                            uri(PATTERN), uri(ALL),
+                            uri(PEER), rec(uri(AUTHORITY), uri(peer.toString()))),
+                    MACH_REMOTE_MACHINE_TID, Network.Helper.peerPath(Machine.current().vid(), peer)));
+        }
         final fURI parentVID = this.vid();
         // A machine with NO vid (test machines, and any rootless construct) has no address to extend, so the
         // extension becomes the child's address outright — and the descendant rule below does not apply, because
@@ -347,6 +412,8 @@ public interface Machine extends Rec, AutoCloseable {
         final Machine machine = CURRENT.get();
         if (null == machine)
             return this;
+        // A pushed peer's lifetime is its frame's: the process this machine forked is reaped with the frame.
+        PeerSpawn.reap(machine);
         final Obj parent = machine.parent();
         if (!(parent instanceof Machine parentMachine))
             return this;

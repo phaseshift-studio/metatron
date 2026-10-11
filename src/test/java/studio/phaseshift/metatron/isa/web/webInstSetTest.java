@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection.Docs;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -36,8 +37,10 @@ import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.STR_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.web.webHelper.isProtocolSurface;
@@ -205,5 +208,28 @@ class webInstSetTest extends AbstractMetatronTest {
         final Obj typed = str(content, MIME.MIMEType.valueOf(mimeName).toTid(), null);
         LOG.info("%s typed as %s [%s]", mimeName, typed.tid(), desc);
         assertEquals(false, typed.isFail(), desc + ": " + typed);
+    }
+
+    /**
+     * The serializer singletons in the instset's CONST list are documented where a reader asks for them: a
+     * serializer's vid is its address, and {@code xml}/{@code html}/{@code markdown}/{@code text} carry no type
+     * of their own, so {@code docWrap(const)} is the only documentation they have. {@code obj_json} is
+     * documented through its simple configuration (both JSON instances share the vid). Not rows here:
+     * {@code bson}/{@code xsv} resolve to their serializer types at the same vid, while {@code mtron} and
+     * {@code bytebuffer} are registered from this instset but vidded under {@code /m/mach/io} (ioInstSet's
+     * pattern), so which doc-space their {@code docWrap} lands in depends on import order.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/m/web/serializer/obj_xml       % xml serializer",
+            "/m/web/serializer/obj_html      % html serializer",
+            "/m/web/serializer/obj_json      % json serializer",
+            "/m/web/serializer/obj_markdown  % markdown serializer",
+            "/m/web/serializer/obj_text      % plain text serializer",
+    }, delimiter = '%')
+    void testSerializerDocumentation(final String vid, final String expected) {
+        final Docs doc = new Docs(Machine.read(f(vid).addQ(DOCQ)).asRec());
+        LOG.info("%s => %s", vid, doc.description());
+        assertTrue(doc.description().contains(expected), vid + " should be documented: " + doc.description());
     }
 }

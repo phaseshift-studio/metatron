@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.*;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
+import studio.phaseshift.metatron.isa.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -175,6 +176,9 @@ public abstract class AbstractMachine extends MRec implements Machine {
 
     @Override
     public synchronized void close() {
+        // BEFORE the ownership guard: a handle to a forked peer must release its process whether or not this
+        // machine owns the memory index (it does not — its memory is a union over the parent's).
+        PeerSpawn.reap(this);
         // A pushed child shares its parent's memory (inheritance = walk parent()), so the child does not own the
         // index and must not clear it: clearing the shared memory here is what emptied the root's spaces on every
         // pop(). Only the machine the memory was parented to — the root — tears the index down.
