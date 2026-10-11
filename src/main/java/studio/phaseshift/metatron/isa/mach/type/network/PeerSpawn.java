@@ -1,0 +1,344 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.mach.type.network;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
+import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/**
+ * The process half of {@code push(<uri>)}: when the pushed address carries an authority that is still on this
+ * physical machine, the peer mtron instance that answers it is a real OS process — forked here, declared in the
+ * {@code /sys/peer} roster, and reaped when the frame that pushed it is popped.
+ * <p>
+ * This is the production form of the test harness's {@code PeerCluster}/{@code PeerNode} pair. The invariants it
+ * keeps are the ones that make an authority-routed read a real distributed act:
+ * <ul>
+ *   <li>the child is a separate JVM with its own {@code Router}, so nothing is shared but the socket;</li>
+ *   <li>the parent waits for the child's {@link MachNode#READY} marker rather than guessing a sleep, and reports
+ *       the child's own trace when it dies early or never arrives;</li>
+ *   <li>the roster entry is what makes the authority reachable — membership is declared, never emergent, so a
+ *       push that failed to start its node leaves no address that quietly resolves locally.</li>
+ * </ul>
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public final class PeerSpawn {
+
+    private static final long REPLY_TIMEOUT_MS = 15_000L;
+    // A node boots in ~2-4s. 30s is generous headroom, and the difference matters: a starved container (no free
+    // processes to fork) must FAIL LOUDLY AND FAST rather than look like a suite hung for three minutes per test.
+    private static final long READY_TIMEOUT_MS = 30_000L;
+
+    private static final GraphittyLogger LOG = Graphitty.log(PeerSpawn.class);
+
+    /**
+     * The process table: a spawned authority's key ({@code scheme://host:port}) to the OS process serving it.
+     * A {@code java.lang.Process} is not an {@code Obj}, so it cannot live in the machine's own rec — the table
+     * is the machine/OS boundary, kept beside the object graph rather than inside it.
+     */
+    private static final Map<String, Forked> FORKED = new ConcurrentHashMap<>();
+
+    /**
+     * the roster keys THIS class declared, so a pop only retracts what a push introduced.
+     */
+    private static final Set<String> DECLARED = ConcurrentHashMap.newKeySet();
+
+    private PeerSpawn() {
+        // static only
+    }
+
+    /**
+     * Fork (when the authority is local) and declare a peer, then hand back the inst that reaches it. This is the
+     * process half only — nothing here builds a {@link RemoteMachine}: a frame is minted by its own constructor,
+     * which calls this.
+     * <p>
+     * IDEMPOTENT BY ADDRESS, and that is what makes the constructor safe to run on materialisation: a frame read
+     * back from the roster, or entered by {@code move}, constructs again and must FIND the peer it declared rather
+     * than fork a twin.
+     */
+    public static Obj spawn(final fURI requested) {
+        final fURI authority = resolve(requested);
+        final String key = keyOf(authority);
+        // A PEER IS DECLARED ONCE. Hand back the reach that already exists.
+        if (FORKED.containsKey(key) || DECLARED.contains(key))
+            return transport(authority);
+        final boolean here = Network.Helper.isLoopbackHost(Network.Helper.hostOf(authority.authority()));
+        try {
+            if (here) {
+                final Path log = Files.createTempFile("metatron-node-" + authority.port() + "-", ".log");
+                final Process process = fork(authority, log);
+                FORKED.put(key, new Forked(process, log));
+                awaitReady(process, log, authority);
+            }
+            final Obj transport = transport(authority);
+            declare(key, transport);
+            LOG.warn("spawned node %s (forked=%s)", key, here);
+            return transport;
+        } catch (final IOException | RuntimeException e) {
+            // a half-spawned peer must leave nothing behind: no orphan process, and no roster entry claiming an
+            // address nothing serves
+            cleanup(key);
+            throw e instanceof RuntimeException runtime ? runtime : MTronException.of(e);
+        }
+    }
+
+    /**
+     * is the node serving this authority still running?
+     */
+    public static boolean alive(final fURI authority) {
+        if (null == authority)
+            return false;
+        final Forked forked = FORKED.get(keyOf(authority));
+        return null != forked && forked.process().isAlive();
+    }
+
+    /**
+     * End a pushed frame's reach: destroy the process it forked, retract the roster entry it declared. Idempotent,
+     * and a no-op for a machine that never named an authority — so it is safe from both {@code pop()} and
+     * {@code close()}.
+     */
+    public static void reap(final Machine machine) {
+        if (null == machine)
+            return;
+        // A FRAME'S OWN ADDRESS NO LONGER NAMES ITS PEER — it is a local path (/network/peer/<scheme>/<host>/<port>/…).
+        // What names the peer is the peer rec the frame carries: the authority beside the transport. So THAT keys the
+        // process table. Read generically off the rec, so nothing here asks what kind of machine this is — and note
+        // the earlier version tested the VID for an authority, which a local path never has, so it returned early and
+        // left every forked node running.
+        final Obj peer = machine.at(uri(PEER));
+        if (!peer.isRec())
+            return;
+        final Obj authority = peer.asRec().at(uri(AUTHORITY));
+        if (!authority.isUri())
+            return;
+        cleanup(keyOf(authority.uriValue()));
+    }
+
+    /**
+     * release everything a push for {@code key} established — safe to call whether or not any of it happened.
+     */
+    private static void cleanup(final String key) {
+        reapForked(key);
+        if (DECLARED.remove(key))
+            undeclare(key);
+    }
+
+    /**
+     * The transport that reaches a spawned node: open one {@code wsclient} to its {@code mtron_ws} endpoint, send
+     * the message ({@code from(localized)} for a read, {@code obj.to(localized)} for a write), return the response.
+     * This is the inst the roster stores, so the transport is a roster value and swapping ws for another wire is a
+     * roster change rather than a code change.
+     */
+    public static Inst transport(final fURI authority) {
+        return instLambda((lhs, inst) -> {
+            final Obj response = send(authority, lhs);
+            return response.isNoObj() && !answers(authority)
+                    ? fail("node %s did not answer %s", keyOf(authority), lhs.toShortString())
+                    : response;
+        });
+    }
+
+    // ========================================================================
+    // the wire
+    // ========================================================================
+
+    private static Obj send(final fURI authority, final Obj message) {
+        WebSocketRecClient client = null;
+        try {
+            // the 2-arg (timeout) sendRecv lives on the WebSocketObj the client drives, so build the rec first
+            final WebSocketRec wsRec = new WebSocketRec(mutableMap(
+                    uri(HOST), uri(keyOf(authority) + MachNode.MTRON_ROUTE + "?out=" + MIME.MIMEType.APPLICATION_MTRON.value),
+                    uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
+                    uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null);
+            client = new WebSocketRecClient(wsRec);
+            return wsRec.sendRecv(message, REPLY_TIMEOUT_MS);
+        } catch (final Exception e) {
+            return fail(e);
+        } finally {
+            if (null != client)
+                client.close();
+        }
+    }
+
+    /**
+     * a trivial round trip that needs no store at all, so it separates "nothing there" from "not answering"
+     */
+    private static boolean answers(final fURI authority) {
+        return !send(authority, ObjmtronSerializer.parse("1.plus(1)")).isNoObj();
+    }
+
+    // ========================================================================
+    // the roster
+    // ========================================================================
+
+    private static void declare(final String key, final Obj transport) {
+        final Obj current = Machine.read(Network.Helper.peerRosterPath());
+        final Map<Obj, Obj> roster = new LinkedHashMap<>(current.isRec() ? current.asRec().jvm() : Map.of());
+        roster.put(uri(key), transport);
+        Machine.write(Network.Helper.peerRosterPath(), rec(roster));
+        DECLARED.add(key);
+    }
+
+    private static void undeclare(final String key) {
+        final Obj current = Machine.read(Network.Helper.peerRosterPath());
+        if (!current.isRec())
+            return;
+        final Map<Obj, Obj> roster = new LinkedHashMap<>(current.asRec().jvm());
+        roster.keySet().removeIf(k -> k.isUri() && key.equals(k.uriValue().toString()));
+        Machine.write(Network.Helper.peerRosterPath(), rec(roster));
+    }
+
+    // ========================================================================
+    // the process
+    // ========================================================================
+
+    private static Process fork(final fURI authority, final Path log) throws IOException {
+        final List<String> command = new ArrayList<>();
+        command.add(Paths.get(System.getProperty("java.home"), "bin", "java").toString());
+        // inherit only the VM flags the child cannot boot without — the parent's full arg list can carry agents
+        for (final String arg : ManagementFactory.getRuntimeMXBean().getInputArguments())
+            if (arg.startsWith("--add-opens") || arg.startsWith("--add-modules")
+                    || arg.startsWith("--enable-native-access") || arg.startsWith("--sun-misc-unsafe-memory-access"))
+                command.add(arg);
+        command.add("-cp");
+        command.add(System.getProperty("java.class.path"));
+        command.add(MachNode.class.getName());
+        command.add(String.valueOf(authority.port()));
+        // the node's namespace is the LOCALIZED path — what the parent sends over the wire, not the parent's spelling
+        command.add(authority.localize().toString());
+        LOG.warn("forking node %s on port %d", keyOf(authority), authority.port());
+        return new ProcessBuilder(command)
+                .directory(new File(System.getProperty("user.dir")))
+                .redirectErrorStream(true)
+                .redirectOutput(log.toFile())
+                .start();
+    }
+
+    private static void awaitReady(final Process process, final Path log, final fURI authority) {
+        final long deadline = System.currentTimeMillis() + READY_TIMEOUT_MS;
+        while (System.currentTimeMillis() < deadline) {
+            if (!process.isAlive())
+                throw MTronException.of("node %s exited before it was ready:\n%s", keyOf(authority), trace(log));
+            if (trace(log).contains(MachNode.READY))
+                return;
+            try {
+                Thread.sleep(100L);
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw MTronException.of("interrupted while waiting for node %s", keyOf(authority));
+            }
+        }
+        throw MTronException.of("node %s did not become ready in time:\n%s", keyOf(authority), trace(log));
+    }
+
+    private static void reapForked(final String key) {
+        final Forked forked = FORKED.remove(key);
+        if (null == forked)
+            return;
+        final Process process = forked.process();
+        process.destroy();
+        try {
+            if (!process.waitFor(5, TimeUnit.SECONDS))
+                process.destroyForcibly();
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            process.destroyForcibly();
+        }
+        LOG.warn("reaped node %s (pid %d)", key, process.pid());
+    }
+
+    private static String trace(final Path log) {
+        try {
+            return Files.exists(log) ? Files.readString(log) : "";
+        } catch (final Exception e) {
+            return "<unreadable trace: %s>".formatted(e.getMessage());
+        }
+    }
+
+    // ========================================================================
+    // addressing
+    // ========================================================================
+
+    /**
+     * The authority this push will serve: its port when it named one, otherwise a free port — reflected in the
+     * handle's vid, which is the only way the caller learns where the node landed. A path is required, because the
+     * node's store is mounted there; a path-less authority would have to claim everything on the node, including
+     * the {@code /sys} it boots into.
+     */
+    /**
+     * The peer address this request will be served at: its port when it named one, otherwise a free port. Called
+     * BEFORE a frame's address is derived, because that address encodes the port.
+     */
+    public static fURI resolve(final fURI requested) {
+        // localize(), NOT basePath(): basePath() keeps the scheme and authority, so it would name the node's store
+        // `ws://host:port/worker/#` instead of `/worker/#`, and the node would answer nothing the parent sends.
+        final String root = requested.localize().toString();
+        if (root.isEmpty() || root.equals("/"))
+            throw MTronException.of("push(%s) needs a namespace path: the node's store is mounted there", requested);
+        final fURI scheme = null == requested.scheme() ? requested.scheme("ws") : requested;
+        return scheme.hasPort() ? scheme : scheme.port(freePort());
+    }
+
+    /**
+     * the roster key and the wire origin: {@code scheme://host:port}, with no path
+     */
+    private static String keyOf(final fURI authority) {
+        return (null == authority.scheme() ? "ws" : authority.scheme()) + "://" + authority.authority();
+    }
+
+    private static int freePort() {
+        try (final ServerSocket socket = new ServerSocket(0)) {
+            return socket.getLocalPort();
+        } catch (final IOException e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    private record Forked(Process process, Path log) {
+    }
+}

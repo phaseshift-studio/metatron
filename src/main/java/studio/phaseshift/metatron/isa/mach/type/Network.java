@@ -23,6 +23,8 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine;
 
 import java.io.Closeable;
 
@@ -152,7 +154,6 @@ public interface Network extends Machine.Component, Closeable {
                 .anyMatch(authority -> Helper.sameAuthority(authority, vid.authority()));
     }
 
-
     /**
      * where the cluster view lives — a sibling of {@code /sys/peer}, {@code /sys/thread} and {@code /sys/typer},
      * and deliberately <em>not</em> under {@code /sys/mach}: the Machine claims that address and
@@ -235,6 +236,10 @@ public interface Network extends Machine.Component, Closeable {
         final Obj transport = Helper.transport(this.roster(), vid.scheme() + "://" + vid.authority());
         if (transport.isNoObj())
             return noobj(); // authority not declared: not a peer this frame may reach
+        // A ws:// ADDRESS IS A WIRE ADDRESS, NOT A PLACE IN THIS MACHINE. Reading one asks the PEER for that path —
+        // the frame that stands in the peer has a local address of its own (/network/peer/<scheme>/<host>/<port>/<ns>,
+        // derived on push), and moving to it is an ordinary local read of a machine. So nothing here maps an
+        // authority to a frame: this is the data path, and only the data path.
         final Obj message = ObjmtronSerializer.parse("from(<" + vid.localize() + ">)");
         return transport.apply(message);
     }
@@ -246,10 +251,21 @@ public interface Network extends Machine.Component, Closeable {
     default Obj write(final fURI vid, final Obj obj) {
         if (!vid.hasAuthority())
             return noobj();
+        // A FAIL IS NOT SHIPPABLE DATA. Its serialization is a diagnostic rendering (fail::[...]), not mtron
+        // source, so the value round trip below cannot rebuild it — and a fail stack belongs to the JVM that
+        // raised it besides. Answering noobj sends the write down the local path, which is where a fail belongs.
+        if (obj.isFail())
+            return noobj();
         final Obj transport = Helper.transport(this.roster(), vid.scheme() + "://" + vid.authority());
         if (transport.isNoObj())
             return noobj();
-        final Obj message = ObjmtronSerializer.parse(ObjmtronSerializer.single().write(obj) + ".to(<" + vid.localize() + ">)");
+        final Obj message;
+        try {
+            message = ObjmtronSerializer.parse(ObjmtronSerializer.single().write(obj) + ".to(<" + vid.localize() + ">)");
+        } catch (final Exception e) {
+            // not mtron-parseable source: there is nothing to ship, so it is not a peer's to answer
+            return noobj();
+        }
         return transport.apply(message);
     }
 
@@ -362,6 +378,29 @@ public interface Network extends Machine.Component, Closeable {
          */
         public static fURI peerRosterPath() {
             return SYS.extend(PEER);
+        }
+
+        /**
+         * The <b>local address</b> of the frame that stands in a peer:
+         * {@code <base>/network/peer/<scheme>/<host>/<port>/<namespace>}. Derived from the authority, which is what
+         * makes a peer's address a path in THIS machine rather than a remote uri — so the frame registers itself
+         * where every machine does, {@code ~}-relative state ({@code ~/fail}, {@code ~/thread}) stays local, and a
+         * plain local read reaches it. Scheme and port are segments because neither may carry its own punctuation in
+         * a path.
+         * <p>
+         * ANCHORED ON {@code base}, never spelled {@code ~}. A vid that itself begins with {@code ~} is
+         * self-referential: {@code Memory.write} expands {@code ~} against {@code Machine.current().vid()}, so such
+         * a frame would resolve {@code ~/fail} to another {@code ~}-prefixed address against itself — recursing
+         * until the stack dies.
+         */
+        public static fURI peerPath(final fURI base, final fURI authority) {
+            fURI path = (null == base ? f("/") : base).resolve()
+                    .extend("network").extend(PEER)
+                    .extend(null == authority.scheme() ? "ws" : authority.scheme())
+                    .extend(authority.host());
+            if (authority.hasPort())
+                path = path.extend(String.valueOf(authority.port()));
+            return (authority.localize().isEmpty() ? path : path.extend(authority.localize())).resolve();
         }
 
         /**
