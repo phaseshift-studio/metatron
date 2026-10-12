@@ -313,9 +313,11 @@ public class InstTest extends AbstractObjTest {
             "[1,2,3]         % >-.sum()                         % [lst/#{*},#{*}/#]                       % 6",
             "[1,2,3]         % >-?int{*}<=lst[int].sum()        % [lst[int]/int{*},int{*}/int]            % 6",
             "[1,2,3]         % >-?<=lst[int].sum()              % [lst[int]/int{*},int{*}/int]            % 6",
-            "1              % -<[_]-<[_,_]>-                    % [int/lst[int],lst[lst]/lst[int]{2}]                        % {2}[1]",
-            "1              % -<[_]-<[_,_,_]>-                  % [int/lst[int],lst[lst]/lst[int]{3}]                        % {3}[1]",
-            "1              % -<[_]-<[_,_,_]>-.>-               % [int/lst[int],lst[lst]/lst[int]{3},lst[int]{3}/int{3}]     % {3}1",
+            "1              % -<[_]-<[_,_]                      % [int/lst[int],lst[int]/lst[lst]]                        % [[1],[1]]",
+            "1              % -<[_]-<[_,_]>-                    % [int/lst[int],lst[int]/lst[lst],lst[lst]/lst[int]{2}]                        % {2}[1]",
+            "1              % -<[_]-<[_,_,_]>-                  % [int/lst[int],lst[int]/lst[lst],lst[lst]/lst[int]{3}]                        % {3}[1]",
+            "1              % -<[_]-<[_,_,_]>-.>-               % [int/lst[int],lst[int]/lst[lst],lst[lst]/lst[int]{3},lst[int]{3}/int{3}]     % {3}1",
+            "1              % -<[_]-<[_,_,_]>-.>-.sum()         % [int/lst[int],lst[int]/lst[lst],lst[lst]/lst[int]{3},lst[int]{3}/int{3},int{3}/int]     % 3",
     })
     public void testCodeInternalDomRng(final String lhs, final String code, final String domRngPerStep, final String rhs) {
         final Obj lhsObj = ObjmtronSerializer.parse(lhs.trim());

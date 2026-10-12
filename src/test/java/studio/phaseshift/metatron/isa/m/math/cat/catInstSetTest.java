@@ -356,11 +356,29 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     public void testUnitRemoval(final String code, final String expected, final String expectedResult) throws Exception {
         final Code firstStage = ObjmtronSerializer.parse(code);
+        // an untouched twin: firstStage is the object handed to the rewriter, and this one is what it was parsed as
+        final Code pristine = ObjmtronSerializer.parse(code);
         final Call secondStage = ObjmtronSerializer.parse(expected);
         final Call compilation = catRewrite(firstStage).tryToInst();
         final Obj result = ObjmtronSerializer.parse(expectedResult);
         assertEquals(secondStage, compilation);
+        // (1) THE REWRITER DOES NOT MUTATE ITS INPUT — measured and passing, so the suspect is NOT the fixpoint loop
+        // damaging firstStage: what was parsed keeps the shape it was parsed with. The failure is in EVALUATION.
+        // NOTE the expectations are the chain's PRE-RESOLUTION shape (see catRewrite's javadoc), so a COMPILED form is
+        // not comparable to secondStage — a compiler probe here fires on nearly every row instead of the four that
+        // fail, which is a worse signal than none. Any further probe must be a VALUE comparison, not a shape one.
+        assertEquals(pristine.insts(), firstStage.insts(),
+                () -> String.format("the rewriter mutated the code it was handed: parsed %s, left %s", pristine, firstStage));
+        // (2) THE PARSED CODE, and (3) an untouched twin of it — both must mean expectedResult.
+        // THESE ROWS PIN A GAP-TOLERANT SEQUENCER. A rewrite that removes an inst from the MIDDLE of a chain leaves
+        // the survivors' POSITIONAL vids at their old indices (measured: 5.plus(3).zero() compiles to
+        // [start@<0>, zero@<2>], 5.neg().neg().plus(2) to [start@<0>, plus@<3>]). Code.nextInst therefore takes the
+        // next vid GREATER than the current one rather than current+1: with vid+1 the sequence ended at the gap and
+        // the chain silently evaluated as its PREFIX (the seed 5 instead of the law's 0, or 5 instead of 7). The rows
+        // whose rewrite removed a SUFFIX were contiguous all along and could not catch it.
         assertEquals(result, firstStage.apply(noobj()));
+        assertEquals(result, pristine.apply(noobj()),
+                () -> String.format("%s does not mean %s when evaluated as parsed (%s)", code, expectedResult, firstStage));
     }
 
     /**
@@ -382,11 +400,29 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     public void testInvolutions(final String code, final String expected, final String expectedResult) throws Exception {
         final Code firstStage = ObjmtronSerializer.parse(code);
+        // an untouched twin: firstStage is the object handed to the rewriter, and this one is what it was parsed as
+        final Code pristine = ObjmtronSerializer.parse(code);
         final Call secondStage = ObjmtronSerializer.parse(expected);
         final Call compilation = catRewrite(firstStage).tryToInst();
         final Obj result = ObjmtronSerializer.parse(expectedResult);
         assertEquals(secondStage, compilation);
+        // (1) THE REWRITER DOES NOT MUTATE ITS INPUT — measured and passing, so the suspect is NOT the fixpoint loop
+        // damaging firstStage: what was parsed keeps the shape it was parsed with. The failure is in EVALUATION.
+        // NOTE the expectations are the chain's PRE-RESOLUTION shape (see catRewrite's javadoc), so a COMPILED form is
+        // not comparable to secondStage — a compiler probe here fires on nearly every row instead of the four that
+        // fail, which is a worse signal than none. Any further probe must be a VALUE comparison, not a shape one.
+        assertEquals(pristine.insts(), firstStage.insts(),
+                () -> String.format("the rewriter mutated the code it was handed: parsed %s, left %s", pristine, firstStage));
+        // (2) THE PARSED CODE, and (3) an untouched twin of it — both must mean expectedResult.
+        // THESE ROWS PIN A GAP-TOLERANT SEQUENCER. A rewrite that removes an inst from the MIDDLE of a chain leaves
+        // the survivors' POSITIONAL vids at their old indices (measured: 5.plus(3).zero() compiles to
+        // [start@<0>, zero@<2>], 5.neg().neg().plus(2) to [start@<0>, plus@<3>]). Code.nextInst therefore takes the
+        // next vid GREATER than the current one rather than current+1: with vid+1 the sequence ended at the gap and
+        // the chain silently evaluated as its PREFIX (the seed 5 instead of the law's 0, or 5 instead of 7). The rows
+        // whose rewrite removed a SUFFIX were contiguous all along and could not catch it.
         assertEquals(result, firstStage.apply(noobj()));
+        assertEquals(result, pristine.apply(noobj()),
+                () -> String.format("%s does not mean %s when evaluated as parsed (%s)", code, expectedResult, firstStage));
     }
 
     /**
@@ -507,10 +543,28 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     private static void rewriteAssert(final String code, final String expected, final String expectedResult) {
         final Code firstStage = ObjmtronSerializer.parse(code);
+        // an untouched twin: firstStage is the object handed to the rewriter, and this one is what it was parsed as
+        final Code pristine = ObjmtronSerializer.parse(code);
         final Call secondStage = ObjmtronSerializer.parse(expected);
         final Call compilation = catRewrite(firstStage).tryToInst();
         final Obj result = ObjmtronSerializer.parse(expectedResult);
         assertEquals(secondStage, compilation);
+        // (1) THE REWRITER DOES NOT MUTATE ITS INPUT — measured and passing, so the suspect is NOT the fixpoint loop
+        // damaging firstStage: what was parsed keeps the shape it was parsed with. The failure is in EVALUATION.
+        // NOTE the expectations are the chain's PRE-RESOLUTION shape (see catRewrite's javadoc), so a COMPILED form is
+        // not comparable to secondStage — a compiler probe here fires on nearly every row instead of the four that
+        // fail, which is a worse signal than none. Any further probe must be a VALUE comparison, not a shape one.
+        assertEquals(pristine.insts(), firstStage.insts(),
+                () -> String.format("the rewriter mutated the code it was handed: parsed %s, left %s", pristine, firstStage));
+        // (2) THE PARSED CODE, and (3) an untouched twin of it — both must mean expectedResult.
+        // THESE ROWS PIN A GAP-TOLERANT SEQUENCER. A rewrite that removes an inst from the MIDDLE of a chain leaves
+        // the survivors' POSITIONAL vids at their old indices (measured: 5.plus(3).zero() compiles to
+        // [start@<0>, zero@<2>], 5.neg().neg().plus(2) to [start@<0>, plus@<3>]). Code.nextInst therefore takes the
+        // next vid GREATER than the current one rather than current+1: with vid+1 the sequence ended at the gap and
+        // the chain silently evaluated as its PREFIX (the seed 5 instead of the law's 0, or 5 instead of 7). The rows
+        // whose rewrite removed a SUFFIX were contiguous all along and could not catch it.
         assertEquals(result, firstStage.apply(noobj()));
+        assertEquals(result, pristine.apply(noobj()),
+                () -> String.format("%s does not mean %s when evaluated as parsed (%s)", code, expectedResult, firstStage));
     }
 }

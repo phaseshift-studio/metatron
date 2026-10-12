@@ -42,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.AUTHORITY;
-import static studio.phaseshift.metatron.Tokens.PEER;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -50,9 +49,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * {@code push(<uri>)} and {@code move(<uri>)} ACROSS A PROCESS BOUNDARY: an address carrying an authority that is
- * still on this physical machine forks a peer mtron instance (its own JVM), declares it in the {@code /sys/peer}
- * roster, and answers with a {@link RemoteMachine} — a frame that is thin because the code evaluated in it is
- * <b>executed by the peer</b>.
+ * still on this physical machine forks a peer mtron instance (its own JVM), records the connection in the frame's
+ * OWN {@code network.peer} — {@code <service-uri> => peer::T[authority, transport]} — while still declaring the
+ * address in the {@code /sys/peer} roster, and answers with a {@link RemoteMachine} — a frame that is thin because
+ * the code evaluated in it is <b>executed by the peer</b>.
  * <p>
  * The behaviors pinned are the ones a same-JVM alias cannot show:
  * <ul>
@@ -84,6 +84,8 @@ public class MachPushTest extends AbstractMetatronTest {
             assertInstanceOf(RemoteMachine.class, frame, "a pushed peer is a remote frame, not a local machine copy");
             assertTrue(PeerSpawn.alive(authority), "the pushed authority must be served by a forked process");
             assertTrue(rosterAuthorities().contains("localhost:" + port), "the push must declare the peer");
+            assertTrue(Machine.current().network().peers().contains("localhost:" + port),
+                    "the frame's network holds the connection it stands in: " + Machine.current().network().peers());
             // a write crosses the socket
             final fURI address = authority.extend("d");
             Machine.write(address, jnt(42));
@@ -127,8 +129,11 @@ public class MachPushTest extends AbstractMetatronTest {
             final fURI d = authority.extend("d");
             Machine.write(d, jnt(42));
             assertTrue(Machine.current().memory().read(d).isNoObj(), "the value is not in this VM");
-            // a single inst is an application too: it must be shipped, not resolved here
-            assertEquals(jnt(42), ObjmtronSerializer.parse("*/worker/d").apply(),
+            // a single inst is an application too: it must be shipped, not resolved here. eval() is the path that does
+            // it — it wraps a lone inst as a ONE-INSTRUCTION CODE, which is the shape Machine.applyCode hands to the
+            // frame's shipping processor. A bare parse(...).apply() goes to the static per-inst runtime instead and
+            // resolves HERE (the open half noted in RemoteMachine.applyCode).
+            assertEquals(jnt(42), ObjmtronSerializer.eval("*/worker/d"),
                     "the deref found the value, so the PEER evaluated it");
             // and a code chain likewise
             assertEquals(jnt(52), ObjmtronSerializer.parse("*/worker/d.plus(10)").apply(),
@@ -153,7 +158,7 @@ public class MachPushTest extends AbstractMetatronTest {
             assertTrue(moved.isMachine(), "move() answers the machine it moved to");
             assertInstanceOf(RemoteMachine.class, Machine.current(), "move() stands in the peer's frame");
             Machine.write(authority.extend("d"), jnt(7));
-            assertEquals(jnt(7), ObjmtronSerializer.parse("*/worker/d").apply(), "code there runs on the peer");
+            assertEquals(jnt(7), ObjmtronSerializer.eval("*/worker/d"), "code there runs on the peer");
         } finally {
             this.resetToRoot();
         }
@@ -180,7 +185,9 @@ public class MachPushTest extends AbstractMetatronTest {
     void testPushWithNoPortAllocatesOne() {
         final Machine frame = Machine.current().push(f("ws://localhost/worker"));
         try {
-            assertTrue(frame.vid().hasPort(), "the frame must carry the port the node actually landed on");
+            // the FRAME's vid is a local path (/network/peer/ws/localhost/<port>/worker), so the allocated port is
+            // on the CONNECTION's authority — which is what names the wire address — not on the path.
+            assertTrue(authorityOf(frame).hasPort(), "the connection must carry the port the node actually landed on");
             assertTrue(PeerSpawn.alive(authorityOf(frame)), "the node must be serving the allocated port");
         } finally {
             frame.pop();
@@ -196,6 +203,8 @@ public class MachPushTest extends AbstractMetatronTest {
             assertEquals("metatron.invalid:9", authorityOf(frame).authority());
             assertTrue(rosterAuthorities().contains("metatron.invalid:9"),
                     "an authority on another machine is declared as a peer");
+            assertTrue(Machine.current().network().peers().contains("metatron.invalid:9"),
+                    "and it is still a connection this frame holds: " + Machine.current().network().peers());
             assertFalse(PeerSpawn.alive(foreign), "an authority on another machine must not be forked");
         } finally {
             frame.pop();
@@ -232,11 +241,18 @@ public class MachPushTest extends AbstractMetatronTest {
     // ========================================================================
 
     /**
-     * The peer's WIRE address, read off the frame the way {@code reap} does. The frame's own vid is a local path
-     * ({@code /network/peer/<scheme>/<host>/<port>/<ns>}), so it no longer names the peer — the peer rec does.
+     * The peer's WIRE address, read off the connection the frame's OWN network carries. The frame's own vid is a
+     * local path ({@code /network/peer/<scheme>/<host>/<port>/<ns>}), so it no longer names the peer — the
+     * connection rec does ({@code network.peer} is {@code <service-uri> => peer::T[authority, transport]}).
      */
     private static fURI authorityOf(final Machine frame) {
-        return frame.at(uri(PEER)).asRec().at(uri(AUTHORITY)).uriValue();
+        return frame.network().connections().jvm().values().stream()
+                .filter(Obj::isRec)
+                .map(connection -> connection.asRec().<Obj>at(uri(AUTHORITY)))
+                .filter(Obj::isUri)
+                .map(Obj::uriValue)
+                .findFirst()
+                .orElseThrow();
     }
 
     private static Set<String> rosterAuthorities() {

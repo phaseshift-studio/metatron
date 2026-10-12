@@ -26,8 +26,6 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.processor.MonadProcessor;
-import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -133,9 +131,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         Obj running = noobj();
         for (final Code segment : segments) {
             try {
-                final Obj resolvedResult = segment.resolve(running);
-                final MonadProcessor mach = SwarmProcessor.of(resolvedResult.as());
-                running = mach.apply(noobj());
+                // compile-then-run through the one path every other caller shares (Machine.applyCode):
+                // a private resolve + SwarmProcessor shortcut here would skip the compiler's rewrite
+                // and type stages — and explain()/profile() ARE whole-chain rewrites, so skipping the
+                // rewriter left them reading as the identity functions their registered stubs are
+                // ("expected /m/rec (got 3)").
+                running = segment.apply(running);
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }

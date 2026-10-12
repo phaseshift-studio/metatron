@@ -22,13 +22,10 @@ import org.jspecify.annotations.NonNull;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.MONAD_IN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
@@ -57,20 +54,37 @@ public interface Code extends Call {
     }
 
     default Code rewrite() {
-        return FixPointRewriter.single().apply(this);
+        return Machine.current().compiler().rewriter().apply(this);
     }
 
     @Override
     default Code resolve(final Obj lhs) {
-        return Compiler.Helper.resolve(lhs, this);
+        return Machine.current().compiler().resolver().apply(lhs, this);
     }
 
+    /**
+     * THE NEXT INST BY LIST ORDER — the sequence is the list, the vid is only its identity.
+     * <p>
+     * Three short-circuits, cheapest first, then the memoized hash as a filter with equals as the only
+     * confirmation: 1) the identical inst (the common case — the monad hands back what it took, and a clone
+     * shares its vid reference), 2) the identical vid, 3) equal-but-distinct vids, which is the only case that
+     * pays the field-by-field fURI walk. Bound by size() - 1 so only members that HAVE a successor are anchors:
+     * the successor is then in range by construction, with no bounds check to borrow.
+     */
     default Inst nextInst(final Inst inst) {
         if (inst.isNoObj()) return noobj();
-        int i = Integer.parseInt(inst.vid().toString()) + 1;
-        for (final Inst in : this.jvm()) {
-            if (Integer.parseInt(in.vid().toString()) == i)
-                return in;
+        final List<Inst> insts = this.jvm();
+        final fURI vid = inst.vid();
+        final int hash = null == vid ? 0 : vid.hashCode();          // memoized in fURI (volatile int read)
+        final int size = this.jvm().size();
+        final int last = size - 1;
+        for (int i = 0; i < last; i++) {
+            final Inst check = insts.get(i);
+            final fURI cvid = check.vid();
+            if (inst == check || cvid == vid                            // identity, then shared vid reference
+                    || (null != vid && null != cvid                     // do NOT lean on fURI's 0-sentinel
+                    && cvid.hashCode() == hash && Objects.equals(cvid, vid)))   // hash filters, equals confirms
+                return insts.get(i + 1);
         }
         return noobj();
     }
@@ -121,10 +135,7 @@ public interface Code extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        // WHICH machine executes is the machine's own question: a machine that runs elsewhere (a RemoteMachine)
-        // redirects every application -- a code chain or a single inst -- in ONE place, and no caller here has to
-        // know where it ran. The whole body lives in Machine.applyCode so there is exactly one such place.
-        return Machine.current().applyCode(this, lhs);
+        return Machine.current().applyCode(lhs, this);
     }
 
     /**

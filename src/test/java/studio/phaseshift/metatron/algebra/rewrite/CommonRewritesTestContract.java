@@ -147,7 +147,7 @@ public interface CommonRewritesTestContract {
         // not merely that the mtron fallback produced the right answer.
         final String prefix = getNativeInstructionPrefix();
         if (prefix != null && !prefix.isEmpty()) {
-            final Code rewritten = Machine.current().compiler().rewrite().apply(parsed).asCode();
+            final Code rewritten = Machine.current().compiler().rewriter().apply(parsed).asCode();
             final boolean nativeRewrite = rewritten.insts().stream()
                     .anyMatch(inst -> inst.tid().name().startsWith(prefix));
             assertTrue(nativeRewrite, description + ": expected native rewrite (" + prefix + "*)");

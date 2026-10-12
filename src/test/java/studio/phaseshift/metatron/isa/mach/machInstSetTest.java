@@ -91,7 +91,7 @@ public class machInstSetTest extends AbstractInstSetTest {
             AbstractMachineTest.declarePeers(peers.split(","));
 
         // THE STAGE UNDER TEST, and nothing else -- no apply, no resolve, no type
-        final Code rewritten = Machine.current().compiler().rewrite().apply(ObjmtronSerializer.parse(code)).asCode();
+        final Code rewritten = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code)).asCode();
         LOG.warn("rewritten %s => %s", code, rewritten);
 
         assertEquals(mailboxes.startsWith("(") ? List.of() : List.of(mailboxes.split(";")),

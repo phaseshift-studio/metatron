@@ -19,24 +19,16 @@
 package studio.phaseshift.metatron.isa.mach.type.compiler.resolver;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
-import studio.phaseshift.metatron.isa.m.type.resolver.Selector;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static studio.phaseshift.metatron.Tokens.BINDER;
 import static studio.phaseshift.metatron.Tokens.SELECTOR;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_BINDER_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SCORING_RESOLVER_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SELECTOR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -67,6 +59,10 @@ public class ScoringResolver extends MRec implements Resolver {
 
     public ScoringResolver(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+        if (this.at(SELECTOR).isNoObj())
+            this.at(SELECTOR, SpecificitySelector.single(), MUTABLE);
+        if (this.at(BINDER).isNoObj())
+            this.at(BINDER, GenericBinder.single(), MUTABLE);
     }
 
     // fine-grained resolve-stage timing (read by the profile() instruction). times accumulate
@@ -80,59 +76,5 @@ public class ScoringResolver extends MRec implements Resolver {
         T_RESOLVE.set(0);
         T_BIND.set(0);
         T_COMPOSE.set(0);
-    }
-
-    /**
-     * The selector this resolver delegates per-instruction selection to — its {@code selector} rec
-     * entry, defaulting to {@code specificity_selector::T}.
-     * <p>
-     * The entry is read into an {@code Obj} before it is narrowed: {@code at()} is generic and
-     * unchecked, so naming the concrete type at the read site ({@code at(k).orElse(Specificity...)})
-     * makes the retrieval itself cast to that type and blows up when the entry is a different
-     * strategy.
-     */
-    public Selector selector() {
-        final Obj entry = this.at(uri(SELECTOR));
-        if (null == entry || entry.isNoObj())
-            return SpecificitySelector.single();
-        if (!(entry instanceof Selector))
-            // the structural predicate declares this field as selector::T; type_pred does not yet
-            // gate it (its per-machine assertions are a TODO on TypeTyper), so the accessor is the
-            // gate — and it names the mistake instead of surfacing as a bare CCE.
-            throw MTronException.of("resolver %s: %s is not a %s", this, entry, MACH_SELECTOR_TID);
-        return entry.as();
-    }
-
-    /**
-     * The binder this resolver hands to its selector — its {@code binder} rec entry, defaulting to
-     * {@code generic_binder::T} (read into an {@code Obj} first, as above).
-     */
-    public Binder binder() {
-        final Obj entry = this.at(uri(BINDER));
-        if (null == entry || entry.isNoObj())
-            return GenericBinder.single();
-        if (!(entry instanceof Binder))
-            throw MTronException.of("resolver %s: %s is not a %s", this, entry, MACH_BINDER_TID);
-        return entry.as();
-    }
-
-    @Override
-    public Code apply(final Obj code) {
-        return Resolver.Helper.resolveCode(noobj(), code.asCode(), this.selector(), this.binder());
-    }
-
-    /**
-     * Resolve a full instruction chain with the globally active selector and binder — the
-     * whole-code threading of {@link Resolver.Helper#resolveCode}.
-     */
-    public static Code resolveCode(final Obj lhs, final Code code) {
-        return Resolver.Helper.resolveCode(lhs, code, Selector.get(), Binder.get());
-    }
-
-    /**
-     * Resolve a full instruction chain with an explicit selector and binder.
-     */
-    public static Code resolveCode(final Obj lhs, final Code code, final Selector selector, final Binder binder) {
-        return Resolver.Helper.resolveCode(lhs, code, selector, binder);
     }
 }

@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_COMPILER_TID;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -42,7 +41,7 @@ public class CatTheoryCompiler extends BasicCompiler {
         Type.Helper.typeCheck(code, CODE_TYPE);
         Code c = code.asCode();
         c = this.resolver().apply(c);
-        c = this.rewrite().apply(c);
+        c = this.rewriter().apply(c);
         c = this.resolver().apply(c);
         c = this.typer().apply(c);
         return c;

@@ -78,13 +78,13 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 public interface Network extends Machine.Component, Closeable {
 
     /**
-     * The declared roster: {@code <service-uri> => peer::T}. THE source of truth for membership — declared, never
-     * emergent (a uri must not be able to make itself a peer merely by being addressed), and the only place a
-     * transport is named. Read as a value, never copied into a field, so mtron sees exactly what the boundary
-     * acts on.
+     * The KNOWN-SERVER roster: {@code <service-uri> => <transport>} at {@code /sys/peer}, the machines the system
+     * knows about. It is one shared address rather than per-machine state, and it is what {@link #isPeer(fURI)} and
+     * dispatch fall back to — a declared server is reachable even before this machine holds a connection to it.
+     * Declared, never emergent: a uri must not make itself known merely by being addressed.
      * <p>
-     * The home is {@link Helper#peerRosterPath()} today; it is read through this one accessor so the home can move
-     * onto the component's own rec without touching a caller.
+     * NOT this machine's own reach — that is {@link #connections()}, the connections the frame carries. Read as a
+     * value, never copied into a field, so mtron sees exactly what the boundary acts on.
      */
     default Rec roster() {
         final Obj declared = Machine.read(Helper.peerRosterPath());
@@ -92,12 +92,25 @@ public interface Network extends Machine.Component, Closeable {
     }
 
     /**
-     * The peer authorities this level declares — the roster's keys. Deliberately NOT the same question as
-     * {@link #authorities()}, which asks which authorities are <em>mine</em>.
+     * The connections <b>this machine</b> has to other machines: {@code <service-uri> => peer::T} — the
+     * component's own {@code peer} field. This is the machine's reach: what it has dialed, not what the system
+     * knows about.
+     * <p>
+     * Deliberately NOT {@link #roster()}. {@code /sys/peer} is the whole system's list of known servers, one
+     * shared address rather than per-machine state; membership here is the connection the frame carries, so a
+     * frame's reach can differ from its parent's and a pop retracts exactly what it dialed.
+     */
+    default Rec connections() {
+        return Helper.connections(this);
+    }
+
+    /**
+     * The peer authorities this machine holds a <b>connection</b> to — the connection keys. Deliberately NOT the
+     * same question as {@link #authorities()}, which asks which authorities are <em>mine</em>.
      */
     default Set<String> peers() {
         final Set<String> peers = new LinkedHashSet<>();
-        this.roster().jvm().keySet().stream()
+        this.connections().jvm().keySet().stream()
                 .filter(Obj::isUri)
                 .map(key -> key.uriValue().authority())
                 .filter(authority -> null != authority)
@@ -147,11 +160,34 @@ public interface Network extends Machine.Component, Closeable {
     }
 
     /**
-     * Is this address a <b>declared peer</b>? Membership is the roster, never traffic.
+     * Is this address a <b>peer</b>? Two honest ways to be one: this machine holds a connection to it, or the
+     * known-server roster declares it. Membership is never traffic either way.
      */
     default boolean isPeer(final fURI vid) {
-        return null != vid.authority() && this.peers().stream()
-                .anyMatch(authority -> Helper.sameAuthority(authority, vid.authority()));
+        if (null == vid.authority())
+            return false;
+        if (this.peers().stream().anyMatch(authority -> Helper.sameAuthority(authority, vid.authority())))
+            return true;
+        return this.roster().jvm().keySet().stream()
+                .filter(Obj::isUri)
+                .map(key -> key.uriValue().authority())
+                .anyMatch(authority -> null != authority && Helper.sameAuthority(authority, vid.authority()));
+    }
+
+    /**
+     * The <b>reach</b> for an authority: this machine's own connection first, the known-server roster second. A
+     * connection's value is a {@code peer::T} rec carrying its transport; a roster entry's value <em>is</em> the
+     * transport. {@code noobj} means the authority is neither dialed nor declared, and the caller falls through to
+     * local memory.
+     */
+    default Obj transportOf(final String authority) {
+        final Obj connection = Helper.entry(this.connections(), authority);
+        if (connection.isRec()) {
+            final Obj reach = connection.asRec().at(uri(TRANSPORT));
+            if (reach.isObjInst())
+                return reach;
+        }
+        return Helper.entry(this.roster(), authority);
     }
 
     /**
@@ -233,7 +269,7 @@ public interface Network extends Machine.Component, Closeable {
     default Obj read(final fURI vid) {
         if (!vid.hasAuthority())
             return noobj();
-        final Obj transport = Helper.transport(this.roster(), vid.scheme() + "://" + vid.authority());
+        final Obj transport = this.transportOf(vid.scheme() + "://" + vid.authority());
         if (transport.isNoObj())
             return noobj(); // authority not declared: not a peer this frame may reach
         // A ws:// ADDRESS IS A WIRE ADDRESS, NOT A PLACE IN THIS MACHINE. Reading one asks the PEER for that path —
@@ -256,7 +292,7 @@ public interface Network extends Machine.Component, Closeable {
         // raised it besides. Answering noobj sends the write down the local path, which is where a fail belongs.
         if (obj.isFail())
             return noobj();
-        final Obj transport = Helper.transport(this.roster(), vid.scheme() + "://" + vid.authority());
+        final Obj transport = this.transportOf(vid.scheme() + "://" + vid.authority());
         if (transport.isNoObj())
             return noobj();
         final Obj message;
@@ -404,13 +440,27 @@ public interface Network extends Machine.Component, Closeable {
         }
 
         /**
-         * The transport a declared peer's authority resolves to, or {@code noobj}. Looked up by <em>authority
-         * string</em> rather than {@code rec.at(uri(...))}: the roster is a rec of {@code <uri> => <transport>},
-         * and a uri key that has round-tripped through a space's serializer may carry a different vid than a
-         * freshly minted {@code uri(...)}, so key equality fails where the address itself is identical.
+         * The connections a network rec carries: its {@code peer} field when that field holds a rec, and an empty
+         * rec otherwise. Read off the <b>rec</b> rather than through {@link Network#connections()}, so it answers
+         * for a machine whose network came back from memory as a plain rec instead of the bound component — the
+         * callers that must not lose a frame's own reach (reap, the frame's own connection) go through here.
          */
-        public static Obj transport(final Rec roster, final String authority) {
-            return roster.jvm().entrySet().stream()
+        public static Rec connections(final Obj network) {
+            if (!network.isRec())
+                return rec();
+            final Obj field = network.asRec().atDirect(uri(PEER));
+            return field.isRec() ? field.asRec() : rec();
+        }
+
+        /**
+         * The entry a service uri resolves to in a rec of {@code <uri> => <value>}, or {@code noobj}. Looked up
+         * by <em>authority string</em> rather than {@code rec.at(uri(...))}: a uri key that has round-tripped
+         * through a space's serializer may carry a different vid than a freshly minted {@code uri(...)}, so key
+         * equality fails where the address itself is identical. Used for both homes — a connection map
+         * ({@code peer::T} values) and the known-server roster (transport values).
+         */
+        public static Obj entry(final Rec rec, final String authority) {
+            return rec.jvm().entrySet().stream()
                     .filter(e -> e.getKey().isUri() && authority.equals(e.getKey().uriValue().toString()))
                     .map(java.util.Map.Entry::getValue)
                     .findFirst()

@@ -56,18 +56,22 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   [CLUSTER_CLOSE]                close that cluster and clear the roster
  *   [MOUNT_AUTHORITY vid host]     mount a space claiming an authority (the only source of "mine")
  *   [DECLARE_SILENT uri]           declare one peer that can never answer — no socket is opened
- *   [PROBE_PEERS] [PROBE_PEER uri] [PROBE_OWN uri] [PROBE_MINE authority] [PROBE_STATUS]
+ *   [PROBE_ROSTER] [PROBE_PEER uri] [PROBE_OWN uri] [PROBE_MINE authority] [PROBE_STATUS]
  *                                  write a Java-side answer to /sys/network/probe/&lt;name&gt;, so the script can
  *                                  assert on a fact mtron cannot yet see
  * </pre>
  * <p>
+ * These scripts drive the KNOWN-SERVER ROSTER ({@code /sys/peer}) — the list of machines the system knows about,
+ * one shared address rather than per-machine state. The CONNECTIONS a machine holds are a different question and
+ * live on the component ({@code network.peer}); that is what {@code MachPushTest} pins.
+ * <p>
  * The invariants proven here:
  * <ol>
- *     <li><b>membership is declared</b> — the roster is a rec mtron writes and reads, and the cluster is exactly
- *         the peers it names.</li>
+ *     <li><b>declaration is explicit</b> — the roster is a rec mtron writes and reads, and the cluster is exactly
+ *         the servers it names.</li>
  *     <li><b>never emergent</b> — addressing a stranger answers {@code noobj} and leaves the roster untouched: a
- *         uri cannot make itself a peer merely by being addressed.</li>
- *     <li><b>the cluster view is live</b> — its {@code peer} field IS the roster, so a peer declared after the
+ *         uri cannot make itself known merely by being addressed.</li>
+ *     <li><b>the cluster view is live</b> — its {@code peer} field IS the roster, so a server declared after the
  *         view exists is visible through it; it is a pointer, never a snapshot.</li>
  *     <li><b>a silent peer is reported, not omitted</b> — {@code status} yields one entry per DECLARED peer, and
  *         reports it {@code down}; silence and absence are different facts.</li>
@@ -110,7 +114,7 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
                 "MOUNT_AUTHORITY", args -> mountAuthority(f(args[0]), f(args[1])),
                 "DECLARE_SILENT", args -> Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap(
                         uri(args[0]), noAnswerTransport()))),
-                "PROBE_PEERS", args -> this.probe("peers", jnt(this.network().peers().size())),
+                "PROBE_ROSTER", args -> this.probe("roster", jnt(this.network().roster().jvm().size())),
                 "PROBE_PEER", args -> this.probe("peer", jnt(this.network().isPeer(f(args[0])) ? 1 : 0)),
                 "PROBE_OWN", args -> this.probe("own", jnt(this.network().own(f(args[0])) ? 1 : 0)),
                 "PROBE_MINE", args -> this.probe("mine", jnt(this.network().authorities().contains(args[0]) ? 1 : 0)),
@@ -164,19 +168,19 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     }
 
     /**
-     * The roster is a rec mtron writes and reads, and the cluster is exactly the peers it names.
+     * The roster is a rec mtron writes and reads, and the cluster is exactly the known servers it names.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[ROSTER_CLEAR]",
-            "[PROBE_PEERS]",
-            "*/sys/network/probe/peers % 0                 [-- nothing declared: no peers --]",
-            "[CLUSTER 2 21001]                             [-- two peer addresses, declared by the cluster --]",
-            "[PROBE_PEERS]",
-            "*/sys/network/probe/peers % 2                 [-- the roster's keys ARE the peers --]",
+            "[PROBE_ROSTER]",
+            "*/sys/network/probe/roster % 0               [-- nothing declared: no known servers --]",
+            "[CLUSTER 2 21001]                             [-- two server addresses, declared by the cluster --]",
+            "[PROBE_ROSTER]",
+            "*/sys/network/probe/roster % 2              [-- the roster's keys ARE the declared servers --]",
             "[CLUSTER_CLOSE]                               [-- and un-declaring removes them --]",
-            "[PROBE_PEERS]",
-            "*/sys/network/probe/peers % 0"
+            "[PROBE_ROSTER]",
+            "*/sys/network/probe/roster % 0"
     })
     void testMembershipIsDeclared() {
     }
@@ -189,8 +193,8 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[ROSTER_CLEAR]",
             "[STATE] *<ws://never-declared:19999/x>        [-- address a host nobody declared --]",
-            "[PROBE_PEERS]",
-            "*/sys/network/probe/peers % 0                 [-- addressing it did not make it a peer --]",
+            "[PROBE_ROSTER]",
+            "*/sys/network/probe/roster % 0               [-- addressing it did not declare it --]",
             "[PROBE_PEER ws://never-declared:19999/x]",
             "*/sys/network/probe/peer % 0",
             "[PROBE_OWN ws://never-declared:19999/x]",
@@ -209,8 +213,8 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
             "*/sys/cluster/peer % */sys/peer % true        [-- the field IS the roster, not a copy of it --]",
             "[CLUSTER 1 21003]",
             "*/sys/cluster/peer % */sys/peer % true        [-- still the same thing, now populated --]",
-            "[PROBE_PEERS]",
-            "*/sys/network/probe/peers % 1                 [-- and the view saw the later declaration --]"
+            "[PROBE_ROSTER]",
+            "*/sys/network/probe/roster % 1               [-- and the view saw the later declaration --]"
     })
     void testClusterViewIsLive() {
     }
@@ -223,8 +227,8 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[DECLARE_SILENT ws://silent-host:21005]       [-- declared, and it can never answer --]",
-            "[PROBE_PEERS]",
-            "*/sys/network/probe/peers % 1                 [-- declared, so it is a peer --]",
+            "[PROBE_ROSTER]",
+            "*/sys/network/probe/roster % 1               [-- declared, so it is known --]",
             "*/sys/cluster/status.count() % 1              [-- and the report names it rather than dropping it --]",
             "[PROBE_STATUS]",
             "*/sys/network/probe/status % \"down\"           [-- DOWN, not absent --]"

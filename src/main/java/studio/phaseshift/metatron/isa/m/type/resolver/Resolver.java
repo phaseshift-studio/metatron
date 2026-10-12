@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.resolver;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -26,12 +27,17 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
+import static studio.phaseshift.metatron.Tokens.BINDER;
+import static studio.phaseshift.metatron.Tokens.SELECTOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * InstResolver — the resolution stage of {@code compiler::T}: lowers {@code code::T} to
@@ -55,13 +61,93 @@ public interface Resolver extends Machine.Component {
      * @param code the code to resolve
      * @return the resolved code
      */
-    Code apply(final Obj code);
+    @Override
+    default Code apply(final Obj code) {
+        return this.apply(noobj(), code.asCode());
+    }
+
+    default Code apply(final Obj lhs, final Code code) {
+        // compile-once: already fully-resolved code skips the resolve walk — but "resolved" is not
+        // the whole precondition. The resolver is also what NUMBERS a chain: resolveCode stamps each
+        // inst with its position vid (selfVID), and the processor walks a chain by that number
+        // (Code.nextInst). A whole-chain rewriter (explain_analysis/profile_analysis) mints its
+        // replacement with instC, whose lambda makes it read as resolved (Inst.isResolved == hasf)
+        // while its vid is still null — so a bare `1.plus(2).explain()`, whose rewrite output is that
+        // one inst, short-circuited here and reached the processor un-numbered:
+        //   NullPointerException: Inst.vid() is null   (Code.nextInst -> StatefulMonad.next)
+        // Requiring the numbering keeps the gate from accepting a chain the processor cannot walk.
+        if (code.isResolved(true) && Helper.isNumbered(code))
+            return code;
+        final fURI typeId = Obj.Helper.specificTypeId(lhs);
+        if (!typeId.isGeneric()) {
+            final Resolver.Helper.ResolveKey key = new Resolver.Helper.ResolveKey(code, typeId);
+            final Code cached = Resolver.Helper.RESOLVE_CACHE.get(key);
+            if (cached != null)
+                return cached;
+            final Code resolved = Resolver.Helper.resolveCode(lhs, code, this.selector(), this.binder());
+            if (resolved.isResolved(true)) {
+                if (Resolver.Helper.RESOLVE_CACHE.size() >= Resolver.Helper.RESOLVE_CACHE_MAX)
+                    Resolver.Helper.RESOLVE_CACHE.clear();
+                Resolver.Helper.RESOLVE_CACHE.putIfAbsent(key, resolved);
+            }
+            return resolved;
+        }
+        return Resolver.Helper.resolveCode(lhs, code, this.selector(), this.binder());
+    }
+
+    default Selector selector() {
+        return this.at(uri(SELECTOR)).orThrow(MTronException.of("resolver has no selector: %s", this));
+    }
+
+    default Binder binder() {
+        return this.at(uri(BINDER)).orThrow(MTronException.of("resolver has no binder: %s", this));
+    }
 
     public static class Helper {
 
         private Helper() {
             // do nothing
         }
+
+        // compile-once memo of nested-code resolution, keyed by (code identity, runtime lhs type id).
+        public static final ConcurrentHashMap<ResolveKey, Code> RESOLVE_CACHE = new ConcurrentHashMap<>();
+        public static final int RESOLVE_CACHE_MAX = 4096;
+
+        /**
+         * Whether every inst of {@code code} carries the position vid the resolver stamps on it.
+         * A null vid means the chain has not been through {@link #resolveCode} — a rewrite's freshly
+         * minted insts are exactly that — and the processor walks a chain by that number
+         * ({@code Code.nextInst}), so such a chain must not be treated as compile-once.
+         */
+        public static boolean isNumbered(final Code code) {
+            for (final Inst inst : code.jvm())
+                if (null == inst.vid())
+                    return false;
+            return true;
+        }
+
+        public static final class ResolveKey {
+            final Code code;
+            final fURI typeId;
+            final int identity;
+
+            ResolveKey(final Code code, final fURI typeId) {
+                this.code = code;
+                this.typeId = typeId;
+                this.identity = System.identityHashCode(code);
+            }
+
+            @Override
+            public int hashCode() {
+                return 31 * this.identity + this.typeId.hashCode();
+            }
+
+            @Override
+            public boolean equals(final Object other) {
+                return other instanceof ResolveKey k && k.code == this.code && k.typeId.equals(this.typeId);
+            }
+        }
+
 
         public static Inst getPolyAutoInst(final Poly<?, ?> poly, final Obj key) {
             final Obj slot = poly.atDirect(key);
@@ -108,9 +194,7 @@ public interface Resolver extends Machine.Component {
                         // the 0 wing ({0,n} → {n,n}) for compile-time typing only, leaving rng() itself maybe
                         // so isFilter()/isPredicate()/gather-classification still read the filter cardinality.
                         token = resolvedInst.isFilter() ? resolvedInst.rng().c(resolvedInst.c().max()) : resolvedInst.rng();
-                        if (resolvedInst.isGather()) {
-                            LOG.trace("  {{m}}==|{{/m}} marking {{y}}barrier{{/y}} at %s", resolvedInst);
-                        } else if (resolvedInst.isInitial() && !resolvedInst.hasRng()) {
+                        if (resolvedInst.isInitial() && !resolvedInst.hasRng()) {
                             LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
                             token = resolvedInst.arg(0).isType() ? resolvedInst.arg(0) : resolvedInst.arg(0).type();
                         }
@@ -118,7 +202,7 @@ public interface Resolver extends Machine.Component {
                     token = token.c(c -> c.mult(resolvedInst.c()));
                 } catch (final Exception e) {
                     resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
-                    LOG.debug("runtime resolution of %s required", null == inst ? "[0]" : inst);
+                    LOG.debug("runtime resolution of %s required", inst);
                     fullResolution = false;
                 }
                 i++;

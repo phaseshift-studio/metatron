@@ -18,10 +18,9 @@
 
 package studio.phaseshift.metatron.isa.mach.type.network;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.processor.AbstractProcessor;
@@ -33,8 +32,10 @@ import java.util.function.Consumer;
 import static studio.phaseshift.metatron.Tokens.TRANSPORT;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_PROCESSOR_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MOVE_INST_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.POP_INST_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.PUSH_INST_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -71,20 +72,23 @@ public class RemoteProcessor extends AbstractProcessor {
      * peer, where the address they name means nothing. Shipping {@code move} asked the peer to move, and the round
      * trip that answered it had no halt to wait on.
      * <p>
-     * The test is the vocabulary's own, not a list of names: those instructions ANSWER A MACHINE ({@code rng} is
-     * {@code machine::T}), whereas everything shippable answers a value. So "answers a machine ⇒ run it where the
-     * frame is being chosen" needs no maintenance as instructions are added.
+     * THEY ARE TESTED BY IDENTITY, and over the WHOLE chain. The tid is the identity the vocabulary already gives
+     * them ({@code /m/mach/inst/move|push|pop}), because the earlier test — "the rng is {@code machine::T}, since a
+     * frame instruction answers a machine" — cannot fire on a compiled chain: measured, the compiled {@code pop}
+     * carries {@code tid=/m/mach/inst/pop} with {@code rng=<#>::T}, its declared machine range widened away. So a
+     * chain that merely CONTAINED such an instruction was shipped whole, and {@code *~.pop(id())} — which BEGINS
+     * with a deref and ENDS with the pop — made the peer pop <em>its</em> frame while the parent's forked node
+     * stayed alive. It is a three-instruction set rather than the whole {@code /m/mach/inst} namespace on purpose:
+     * {@code gather} and {@code rewrite} live there too and MUST ship.
      */
     private static boolean frameInstruction(final Code code) {
-        final List<Inst> insts = code.insts();
-        if (insts.isEmpty())
-            return false;
-        // BY NAME, not by Type.test: test() runs the type's PREDICATE (is this obj a machine rec?), which is a
-        // different question from "is this rng the machine type" — the latter is an identity, and the type's name is
-        // that identity. (`rng=machine` in a compiled form is this vid's short name.)
-        final Type rng = insts.getFirst().rng();
-        return null != rng.vid() && MACH_MACHINE_TID.name().equals(rng.vid().name());
+        return code.insts().stream().anyMatch(inst -> FRAME_INSTRUCTIONS.contains(inst.tid().basePath()));
     }
+
+    /**
+     * the three instructions whose choice of frame cannot be made anywhere but here
+     */
+    private static final List<fURI> FRAME_INSTRUCTIONS = List.of(MOVE_INST_TID, PUSH_INST_TID, POP_INST_TID);
 
     /**
      * Run the code where it was submitted — on the enclosing frame's processor — rather than shipping it. Note it

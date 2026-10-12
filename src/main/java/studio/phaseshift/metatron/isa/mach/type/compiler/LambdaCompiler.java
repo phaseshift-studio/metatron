@@ -19,24 +19,17 @@
 package studio.phaseshift.metatron.isa.mach.type.compiler;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_COMPILER_TID;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class LambdaCompiler extends BasicCompiler {
-
-    public static final String REWRITE = "rewrite";
-    public static final String RESOLVE = "resolve";
-
-
+    
     public LambdaCompiler() {
         this(defaultStages(), MACH_COMPILER_TID, null);
     }
@@ -45,18 +38,4 @@ public class LambdaCompiler extends BasicCompiler {
         super(jvm, tid, vid);
     }
 
-    @Override
-    public Code rewrite(final Code code) {
-        return this.at(REWRITE).orElse(id_()).apply(code).as();
-    }
-
-    @Override
-    public Code resolve(final Code code) {
-        return this.at(RESOLVE).orElse(id_()).apply(code).as();
-    }
-
-    @Override
-    public Code apply(final Obj code) {
-        return this.at("apply").orElse(id_()).as();
-    }
 }

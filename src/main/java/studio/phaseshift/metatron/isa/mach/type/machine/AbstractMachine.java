@@ -19,8 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
@@ -39,7 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 
@@ -209,23 +206,6 @@ public abstract class AbstractMachine extends MRec implements Machine {
         throw MTronException.of("machine not loaded");
     }
 
-    /**
-     * A machine is a callable obj: {@code machine.apply(code)} compiles then runs. The stub this
-     * replaces returned {@code null}; re-pinning it to the {@link Machine} contract is the one thing
-     * a concrete machine base owes the interface.
-     */
-    @Override
-    public Obj apply(final Obj call) {
-        return Machine.super.apply(call);
-    }
-
-    public Machine clone() {
-        // A real shallow copy, as MObj already provides: the override exists only because Machine.clone() narrows the
-        // return type, and stubbing it made `Obj.vid(fURI)` (which IS this.clone(jvm, tid, vid)) a no-op on a
-        // machine — so `clone().selfVID(v)` silently retargeted the PARENT instead of minting a child.
-        // MObj.clone() already wraps the checked exception, so super.clone() here is unchecked.
-        return (Machine) super.clone();
-    }
 
     public Machine clone(final Object jvm, final fURI tid, final fURI vid) {
         // set the fields on the COPY, never on this: that is what distinguishes vid() (copy then set) from
@@ -233,13 +213,4 @@ public abstract class AbstractMachine extends MRec implements Machine {
         return (Machine) this.clone().self(jvm, tid, vid);
     }
 
-    @Override
-    public Machine self(final Object jvm, final fURI tid, final fURI vid) {
-        return (Machine) super.self(jvm, null == tid ? this.tid() : tid, null == vid ? this.vid() : vid);
-    }
-
-    /*@Override
-    public String toString() {
-        return 
-    }*/
 }
