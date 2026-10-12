@@ -145,18 +145,23 @@ public final class PeerSpawn {
     public static void reap(final Machine machine) {
         if (null == machine)
             return;
-        // A FRAME'S OWN ADDRESS NO LONGER NAMES ITS PEER — it is a local path (/network/peer/<scheme>/<host>/<port>/…).
-        // What names the peer is the peer rec the frame carries: the authority beside the transport. So THAT keys the
-        // process table. Read generically off the rec, so nothing here asks what kind of machine this is — and note
-        // the earlier version tested the VID for an authority, which a local path never has, so it returned early and
-        // left every forked node running.
-        final Obj peer = machine.at(uri(PEER));
-        if (!peer.isRec())
+        // A LOCAL CHILD SHARES ITS PARENT'S NETWORK SLOT (there is no NetworkUnion yet), so its connections ARE the
+        // parent's — reaping those would destroy a connection the child never made. Compare the SLOTS, not the
+        // resolved components: a frame read back from memory may carry a plain rec, and a slot it owns is still its
+        // own. The guard disappears with the union, which gives every frame its own level over the inherited one.
+        final Obj network = machine.atDirect(uri(NETWORK));
+        final Obj parent = machine.parent();
+        if (parent instanceof Machine parentMachine && network == parentMachine.atDirect(uri(NETWORK)))
             return;
-        final Obj authority = peer.asRec().at(uri(AUTHORITY));
-        if (!authority.isUri())
-            return;
-        cleanup(keyOf(authority.uriValue()));
+        // WHAT NAMES A PEER IS THE CONNECTION THE FRAME CARRIES: network.peer is <service-uri> => peer::T, and each
+        // entry's `authority` is what keys the process table. NOT the frame's vid: that is a local path
+        // (/network/peer/<scheme>/<host>/<port>/…), so it carries no authority — the earlier version tested the VID
+        // for one, returned early, and left every forked node running.
+        Network.Helper.connections(network).jvm().values().stream()
+                .filter(Obj::isRec)
+                .map(connection -> connection.asRec().<Obj>atDirect(uri(AUTHORITY)))
+                .filter(Obj::isUri)
+                .forEach(authority -> cleanup(keyOf(authority.uriValue())));
     }
 
     /**
@@ -329,6 +334,15 @@ public final class PeerSpawn {
      */
     private static String keyOf(final fURI authority) {
         return (null == authority.scheme() ? "ws" : authority.scheme()) + "://" + authority.authority();
+    }
+
+    /**
+     * The <b>connection key</b> for an authority: {@code scheme://host:port} as a uri — the same service uri the
+     * roster is keyed by, and what a frame's {@code network.peer} map is keyed by. Derived rather than spelled so
+     * the two homes cannot drift.
+     */
+    public static Obj service(final fURI authority) {
+        return uri(keyOf(authority));
     }
 
     private static int freePort() {

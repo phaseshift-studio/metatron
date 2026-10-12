@@ -114,7 +114,7 @@ public abstract class AbstractMultiServerSingleSpaceTest extends AbstractMetatro
      * the home form's gathers, as addresses
      */
     private static List<String> gathersOf(final String source) {
-        return Machine.current().compiler().rewrite().apply(ObjmtronSerializer.parse(source)).asCode()
+        return Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source)).asCode()
                 .insts().stream()
                 .filter(inst -> inst.tid().basePath().equals(BARRIER_INST_TID))
                 .map(inst -> inst.arg(0).toString())

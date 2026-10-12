@@ -92,6 +92,16 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI PUSH_INST_TID = MACH_INST_TID.extend("push");
 
     /**
+     * The other two frame-choosing instructions: {@code pop()} leaves the frame it is handed, {@code move(<uri>)}
+     * chooses the frame the NEXT code runs in. Named here because their IDENTITY is what a remote frame has to
+     * test: these three choose where code runs, so a remote frame runs them where the choice is made, and the
+     * compiled form no longer carries the {@code rng=machine} that used to say so (see
+     * {@code RemoteProcessor.frameInstruction}).
+     */
+    public static final fURI POP_INST_TID = MACH_INST_TID.extend("pop");
+    public static final fURI MOVE_INST_TID = MACH_INST_TID.extend("move");
+
+    /**
      * This machine's own name in a cluster roster. The home is IN the roster -- it is one of the machines -- but
      * it is not a PEER of itself, so it is filtered out of the distribution and its mailboxes are the ones the
      * peers report to.
@@ -450,14 +460,20 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(HANDLER).maybe().asUri(), URI_TYPE,
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
-                                                uri(STATUS).maybe().asUri(), REC_TYPE))
+                                                uri(STATUS).maybe().asUri(), REC_TYPE,
+                                                // THE REACH: the inst that ships a message to this peer and answers
+                                                // with what it computed. It is what makes a connection a connection
+                                                // rather than a known address — a peer rec without one is a machine
+                                                // we know about but cannot reach from here.
+                                                uri(TRANSPORT).maybe().asUri(), INST_TYPE))
                                         .create(), null, null,
-                                Map.of(uri(AUTHORITY), "the peer address, scheme://host:port; the roster key is this same service uri",
+                                Map.of(uri(AUTHORITY), "the peer address, scheme://host:port; the connection key is this same service uri",
                                         uri(HOST), "the wire endpoint, including its route: ws://host:port/mtron",
                                         uri(HANDLER), "the protocol surface at that endpoint: mtron_ws, mtron_http, mcp_ws, …",
                                         uri(NAME), "a simple name for the peer",
-                                        uri(STATUS), "the health report computed for this peer — computed on call, never stored"),
-                                "one metatron machine this machine can reach: the value of a network roster entry"),
+                                        uri(STATUS), "the health report computed for this peer — computed on call, never stored",
+                                        uri(TRANSPORT), "the reach: an inst that ships a message to the peer and answers with the peer's result"),
+                                "one metatron machine this machine can reach: the value of a network peer connection"),
                         docWrap(CLUSTER_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(CLUSTER_TID)
@@ -532,22 +548,28 @@ public class machInstSet extends AbstractInstSet {
                         MACH_REMOTE_MACHINE_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_MACHINE_TID)
                                         .vid(MACH_REMOTE_MACHINE_TID)
+                                        // EVERY ARM IS A PLAIN TYPE, and that is not stylistic. A slot bound to an
+                                        // inst expression (isa_(…).else_(…)) is not an inert constraint: testing a
+                                        // rec runs the value it is tested against (Rec.test -> Obj.test ->
+                                        // testObjs -> Code.apply), so such an arm is APPLIED during the check —
+                                        // and `Machine.applyCode` then routes through the machine's processor
+                                        // while this frame is current. Measured: with an isa_/else_ arm on
+                                        // processor, the check spun metatron-main for 1000+ s of CPU and the VM
+                                        // never finished booting. The components of a remote frame are the ones a
+                                        // local machine binds (compiler, memory, network) plus its own shipping
+                                        // processor, so the plain types describe it exactly.
                                         .isaPredicate(rec(
                                                 uri(INSTSET).maybe().asUri(), INSTSET_TYPE,
-                                                uri(COMPILER).maybe().asUri(), isa_(T(MACH_COMPILER_TID)).else_(BasicCompiler.defaults()),
+                                                uri(COMPILER).maybe().asUri(), MACH_COMPILER_TYPE,
                                                 uri(MEMORY).maybe().asUri(), T(MACH_MEMORY_TID),
                                                 uri(NETWORK).maybe().asUri(), T(MACH_NETWORK_TID),
-                                                uri(PROCESSOR).maybe().asUri(), isa_(T(MACH_REMOTE_PROCESSOR_TID)).else_(RemoteProcessor.of(noobj())),
-                                                // the peer this frame stands in. NOOBJ means "spawn one"; anything
-                                                // else means it already exists — materialise it, never fork a twin.
-                                                uri(PEER).maybe().asUri(), INST_TYPE))
+                                                uri(PROCESSOR).maybe().asUri(), T(MACH_REMOTE_PROCESSOR_TID)))
                                         // THE ONE PLACE A REMOTE FRAME IS BUILT. The frame does the rest itself: its
                                         // constructor spawns or finds the peer, wires the components, and stamps the
                                         // address, so this hands it only the rec it was declared with.
                                         .constructor(arg -> new RemoteMachine(arg.asRec().jvm(), MACH_REMOTE_MACHINE_TID, arg.vid()))
                                         .create(),
-                                Map.of(uri(PATTERN).maybe(), "the peer namespace this frame stands in",
-                                        uri(PEER).maybe(), "the inst that reaches the peer: message in, its answer out"),
+                                Map.of(uri(PATTERN).maybe(), "the peer namespace this frame stands in"),
                                 """
                                 a machine that executes remotely. move(<authority>) stands in one, and every code
                                 application in its frame is shipped to the peer answering for that authority, so
@@ -597,8 +619,8 @@ public class machInstSet extends AbstractInstSet {
                             return thread;
                         }),
                         instC(PUSH_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> Machine.current().push(inst.arg(0).uriValue())),
-                        instC(MACH_INST_TID.extend("pop").dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(MACH_MACHINE_TYPE), (lhs, inst) -> inst.arg(0).asMachine().pop()),
-                        instC(MACH_INST_TID.extend("move").dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> {
+                        instC(POP_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(MACH_MACHINE_TYPE), (lhs, inst) -> inst.arg(0).asMachine().pop()),
+                        instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> {
                             return Machine.current(inst.arg(0).uriValue().equals(f("/.")) ? Machine.root() : Machine.read(inst.arg(0).uriValue()).asMachine());
                             
                           /*  final fURI target = lhs.isUri() ? lhs.uriValue() : inst.arg(0).uriValue();

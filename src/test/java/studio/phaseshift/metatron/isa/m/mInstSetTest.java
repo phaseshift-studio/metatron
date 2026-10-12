@@ -34,10 +34,9 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -45,6 +44,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 @TestReport
@@ -1260,6 +1260,26 @@ public class mInstSetTest extends AbstractInstSetTest {
         final Obj fmt = r.asRec().atDirect("format");
         final Obj t = fmt.isCall() ? fmt.asCall().apply(NoObj.noobj()) : fmt;
         assertTrue(t.toString().contains("plus"), "the format should render the insts of the text table: " + t);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.plus(2).explain()       % /m/inst/explain/explanation",
+            "1.plus(2).explain()>>format % /m/str",
+            "1.plus(2).profile()       % /m/inst/profile/profiling",
+            "map(1.plus(2).explain())  % /m/inst/explain/explanation",
+    }, delimiter = '%')
+    public void testAnalysisSurvivesTheProcessorWalk(final String code, final String expectedVID) {
+        // the console's path: resolve, compile, then run the compiled chain on the processor
+        final Obj resolved = Call.Helper.resolveInspection(noobj(), ObjmtronSerializer.parse(code), ignored -> {
+        });
+        final Code compiled = Machine.current().compiler().apply(resolved).asCode();
+        // the processor walks a chain by position vid, so an un-numbered inst is a walk it cannot make
+        for (final Inst inst : compiled.insts())
+            assertNotNull(inst.vid(), "a compiled inst must carry its position vid: " + inst.tid() + " in " + code);
+        final Obj result = Machine.current().processor().code(compiled).apply(noobj());
+        assertFalse(result.isFail(), code + " must not fail: " + result);
+        assertEquals(expectedVID, result.type().vid().toString(), code + " => " + result);
     }
 
     @ParameterizedTest

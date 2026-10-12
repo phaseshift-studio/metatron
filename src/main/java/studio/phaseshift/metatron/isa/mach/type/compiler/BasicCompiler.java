@@ -21,8 +21,6 @@ package studio.phaseshift.metatron.isa.mach.type.compiler;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.type.parser.Parser;
-import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
@@ -88,32 +86,5 @@ public class BasicCompiler extends MRec implements Compiler {
      */
     public static BasicCompiler defaults() {
         return new BasicCompiler(defaultStages(), MACH_COMPILER_TID, null);
-    }
-
-    // the entries are read into an Obj before they are narrowed: at() is generic and unchecked, so
-    // naming a concrete type at the read site makes the retrieval itself cast to that type.
-
-    @Override
-    public Parser parser() {
-        final Obj entry = this.at(uri(PARSER));
-        return entry.as();
-    }
-
-    @Override
-    public Rewriter rewrite() {
-        final Obj entry = this.at(uri(REWRITER));
-        return entry.as();
-    }
-
-    @Override
-    public Resolver resolver() {
-        final Obj entry = this.at(uri(RESOLVER));
-        return entry.as();
-    }
-
-    @Override
-    public Typer typer() {
-        final Obj entry = this.at(uri(TYPER));
-        return entry.as();
     }
 }

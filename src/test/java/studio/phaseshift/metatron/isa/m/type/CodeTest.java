@@ -61,7 +61,7 @@ public class CodeTest extends AbstractMetatronTest {
         Code obj = ObjmtronSerializer.parse(code);
         LOG.debug("testing code resolution %s %s resolve", obj, resolved ? "{{g}}should{{X}}" : "{{r}}should not{{X}}");
         assertFalse(obj.isResolved(true));
-        obj = obj.resolve(noobj()).rewrite();
+        obj = obj.resolve(noobj());
         if (resolved) assertTrue(obj.isResolved(true));
         else assertFalse(obj.isResolved(true));
     }

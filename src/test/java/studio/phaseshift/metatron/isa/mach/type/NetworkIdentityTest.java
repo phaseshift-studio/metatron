@@ -35,8 +35,10 @@ import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.MEMORY;
 import static studio.phaseshift.metatron.Tokens.NETWORK;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.PEER;
 import static studio.phaseshift.metatron.Tokens.PROCESSOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -54,7 +56,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       that wrong makes the boundary forward a request to itself</li>
  *   <li><b>membership is never emergent</b> — a uri cannot make itself a peer by being addressed, and an undeclared
  *       authority is answered {@code noobj} rather than dialed</li>
- *   <li><b>the roster is the source of peers</b>, and a declared peer is never also "mine"</li>
+ *   <li><b>a CONNECTION is the source of peers</b>, the known-server roster is the source of "may I reach it", and
+ *       neither makes an address "mine"</li>
  * </ul>
  */
 public class NetworkIdentityTest extends AbstractMetatronTest {
@@ -119,26 +122,40 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
     }
 
     /**
-     * Peers come from the cluster roster — the same declaration production writes — and a declared peer is never
-     * also "mine", so the two questions cannot both answer yes.
+     * TWO QUESTIONS, TWO HOMES. The known-server roster ({@code /sys/peer}) answers "may this frame reach that
+     * address at all"; the CONNECTIONS the machine holds ({@code network.peer}) are what {@link Network#peers()}
+     * reports, declared and never emergent.
      * <p>
-     * A DETACHED cluster is used on purpose: it has real peer addresses and a real roster written by
+     * A DETACHED cluster is used on purpose: it has real server addresses and a real roster written by
      * {@link PeerCluster#connect()}, but no processes and no sockets, so this pins membership and identity without
      * going near the wire. Reaching a peer is the next slice, and that is what {@code NetworkTest} asserts.
      */
     @Test
-    public void testPeersComeFromTheClusterRoster() throws Exception {
+    public void testPeersAreTheMachinesConnections() throws Exception {
         final Network network = Machine.current().network();
+        final Obj wasConnected = network.atDirect(uri(PEER));
         assertTrue(network.peers().isEmpty(), "nothing is declared yet: " + network.peers());
         final PeerCluster cluster = PeerCluster.detached(2, "/n", 21001).connect();
         try {
-            assertEquals(Set.of("localhost:21001", "localhost:21002"), network.peers(),
-                    "the roster's keys ARE the peers — declared by the cluster, not by traffic");
-            assertTrue(network.isPeer(f("ws://localhost:21001/usr/x")));
+            assertTrue(network.isPeer(f("ws://localhost:21001/usr/x")),
+                    "a server the roster declares IS a peer this frame may dial");
+            assertTrue(network.peers().isEmpty(),
+                    "but the roster is the known servers, NOT the connections the machine holds: " + network.peers());
+            // THE CONNECTION IS THE MACHINE'S OWN REACH, and declaring one is what peers() reports — the same act
+            // PeerSpawn performs for a pushed peer (Machine.push builds the frame's own level the same way).
+            network.at(uri(PEER), rec(mutableMap(
+                    uri("ws://localhost:21001"),
+                    rec(mutableMap(uri(AUTHORITY), uri("ws://localhost:21001/n"))))), MUTABLE);
+            assertEquals(Set.of("localhost:21001"), network.peers(),
+                    "the connection keys ARE the peers — declared, not emergent");
             assertFalse(network.own(f("ws://localhost:21001/usr/x")), "a declared peer is not mine");
         } finally {
             cluster.close();
             Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap()));
+            // "no connections" is the ABSENT field, not an empty rec: writing [] as the connections map fails the
+            // network's positional predicate (measured — an empty rec's key is noobj, which is not a uri::T), and
+            // `at` with noobj removes the entry, which is the state a machine with nothing dialed is actually in.
+            network.at(uri(PEER), wasConnected, MUTABLE);
         }
     }
 
@@ -167,16 +184,14 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
     }
 
     /**
-     * The roster is ONE SHARED ADDRESS today, not per-machine state. {@code /sys/peer} is an absolute address in a
-     * space a child reaches through its unioned memory, so a declaration made while standing in a child IS the
+     * The KNOWN-SERVER ROSTER is ONE SHARED ADDRESS, not per-machine state. {@code /sys/peer} is an absolute address
+     * in a space a child reaches through its unioned memory, so a declaration made while standing in a child IS the
      * declaration the parent reads.
      * <p>
-     * This is the reason a {@code NetworkUnion} is not yet meaningful, and it is worth pinning so the assumption
-     * breaks loudly rather than silently: a union composes a component's OWN content across the frame chain, and
-     * the roster's content does not live on the component — it lives in a shared space. Membership becomes
-     * per-machine only when the roster moves onto the component's {@code peer} field, and the union is precisely
-     * what makes that inherited-but-not-shared. Moving the home without the union would make membership
-     * per-machine and <em>unreachable from a child</em>; the union without the move would compose nothing.
+     * That is now the deliberate difference between the two homes: the CONNECTIONS a machine holds live on the
+     * component's {@code peer} field (which is why a {@code NetworkUnion} is what will make them
+     * inherited-but-not-shared), while the known servers stay one list for the whole system. Pinned so the split
+     * stays a decision rather than an accident.
      */
     @Test
     public void testTheRosterIsOneSharedAddressToday() {
@@ -188,9 +203,11 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
                 rec(mutableMap(uri(AUTHORITY), uri("ws://declared-in-child:21011"))))));
         child.pop();
         try {
-            assertTrue(parent.peers().contains("declared-in-child:21011"),
+            assertTrue(parent.roster().jvm().keySet().stream()
+                            .anyMatch(key -> key.isUri()
+                                    && "ws://declared-in-child:21011".equals(key.uriValue().toString())),
                     "the roster is one shared address: a declaration made while standing in a child is the "
-                            + "parent's too — so membership is global, not per-machine: " + parent.peers());
+                            + "parent's too — so the known servers are global, not per-machine: " + parent.roster());
         } finally {
             Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap()));
         }

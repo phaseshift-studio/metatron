@@ -22,23 +22,23 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_MACHINE_TID;
 
 /**
  * A frame of reference that <b>executes somewhere else</b>. It is what {@code move(<authority>)} makes
- * {@code Machine.current()} point at, and it is deliberately thin: the authority is its address, the roster
- * transport that reaches the peer is its {@code transport} field, and it has no instset, compiler, processor or
- * memory of its own.
+ * {@code Machine.current()} point at, and it is deliberately thin: the connection it stands in rides in its own
+ * {@code network.peer} — the peer's authority and the transport that reaches it — and it has no instset, compiler,
+ * processor or memory of its own.
  * <p>
  * That thinness is the whole point. A local machine relabelled with a remote address would resolve and execute
  * <em>here</em> while merely looking remote — name resolution re-pointed, execution unmoved, and {@code ~}-relative
@@ -47,9 +47,9 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_MACHIN
  * handoff has exactly one site ({@link Machine#applyCode}), so the console, {@code eval}, and any nested code all
  * follow without knowing where they ran.
  * <p>
- * Its state is the REC, not Java fields, like every other metatron object: {@code pattern} and {@code transport}
- * are addressable ({@code *<authority>/transport} is the inst), serialisable, and visible to the type system the
- * way a machine's component slots are.
+ * Its state is the REC, not Java fields, like every other metatron object: {@code pattern} and the connection's
+ * {@code authority} and {@code transport} are addressable, serialisable within the VM, and visible to the type
+ * system the way a machine's component slots are.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -71,40 +71,54 @@ public class RemoteMachine extends MRec implements Machine {
         // local read finds it. A NULL vid here would SKIP that write — the frame would carry the address without
         // ever being stored at it, and nothing could read it back.
         super(jvm, tid, vid);
-        // THE REACH IS THE GUARD. A frame whose peer rec already carries a transport has a peer — it is a
-        // materialisation (a read-back, a move), not a birth — so it must NOT spawn a twin. spawn is idempotent by
-        // authority besides, so the two agree even if both run.
-        final Obj peer = this.at(uri(PEER));
-        if (peer.isRec() && peer.asRec().at(uri(TRANSPORT)).isNoObj())
-            peer.asRec().at(uri(TRANSPORT),
-                    PeerSpawn.spawn(peer.asRec().at(uri(AUTHORITY)).uriValue()), MUTABLE);
+        // THE REACH IS THE GUARD. The rec this frame is handed carries its OWN network level holding the connection
+        // it stands in (network.peer: <service-uri> => peer::T[authority]); a connection that ALREADY carries a
+        // transport has a peer — it is a materialisation (a read-back, a move), not a birth — so it must NOT spawn
+        // a twin. spawn is idempotent by authority besides, so the two agree even if both run.
+        final Rec connection = this.connection();
+        if (connection.at(uri(TRANSPORT)).isNoObj())
+            connection.at(uri(TRANSPORT), PeerSpawn.spawn(this.authority()), MUTABLE);
         // A remote frame is still a frame: it lives in the frame that moved into it, and it borrows that frame's
-        // compiler and network — minting those here would re-enter type resolution while this frame is current
-        // (which recursed until the stack died).
+        // compiler — minting one here would re-enter type resolution while this frame is current (which recursed
+        // until the stack died). Its NETWORK, though, is its own level, handed to it by the push that made it: the
+        // connection it stands in belongs to this frame, so a pop retracts exactly what this frame dialed.
         final Machine parent = Machine.current();
         this.at(COMPILER, parent.compiler(), MUTABLE);
-        this.at(NETWORK, parent.network(), MUTABLE);
         // ITS PROCESSOR, THOUGH, IS ITS OWN — the shipping one — and it goes IN THE SLOT like every machine's does.
         // That is the whole mechanism: every caller that evaluates code (the console, eval, a nested apply) asks the
         // machine for its processor, so a frame whose processor ships needs no case anywhere else, and the code is
         // handed over already compiled and resolved rather than as an argument the resolver would have to chase.
         // Stored, not computed on the fly: a machine that carried no processor in its rec would not be reflective.
-        this.at(PROCESSOR, RemoteProcessor.of(peer.asRec().at(uri(TRANSPORT))), MUTABLE);
+        this.at(PROCESSOR, RemoteProcessor.of(this.transport()), MUTABLE);
         this.parent(parent);
     }
 
     /**
-     * The inst that reaches the peer — message in, that peer's answer out. It rides in the peer rec the frame
-     * carries, so the frame has the reach without looking it up, and the authority beside it is what {@code reap}
-     * uses to find the process (the frame's own address is local now, so it can no longer name the peer).
+     * The connection this frame stands in — the entry of its own {@code network.peer}: a {@code peer::T} rec
+     * carrying the authority it was pushed for and the transport that reaches it. A remote frame IS a connection,
+     * so it has exactly one, and the single entry is the answer.
      */
-    public Inst transport() {
-        return this.at(uri(PEER)).asRec().at(uri(TRANSPORT)).as();
+    private Rec connection() {
+        return Network.Helper.connections(this.atDirect(uri(NETWORK))).jvm().values().stream()
+                .filter(Obj::isRec)
+                .map(Obj::asRec)
+                .findFirst()
+                .orElseThrow(() -> MTronException.of("remote frame %s carries no peer connection", this.vid()));
     }
 
-    /** the authority this frame stands in — {@code ws://host:port}, the peer's wire address */
+    /**
+     * The inst that reaches the peer — message in, that peer's answer out. It rides in the connection this frame
+     * carries, so the frame has the reach without looking it up.
+     */
+    public Inst transport() {
+        return this.connection().at(uri(TRANSPORT)).as();
+    }
+
+    /**
+     * the authority this frame stands in — {@code ws://host:port/<namespace>}, the peer's wire address
+     */
     public fURI authority() {
-        return this.at(uri(PEER)).asRec().at(uri(AUTHORITY)).uriValue();
+        return this.connection().at(uri(AUTHORITY)).uriValue();
     }
 
     /**
@@ -113,14 +127,7 @@ public class RemoteMachine extends MRec implements Machine {
      * handler applies it and answers, so nothing about the computation is local.
      */
     @Override
-    public Obj applyCode(final Code code, final Obj lhs) {
-        // EVERY application ships, and every application ships in ONE place: the shipping lives in the processor, so
-        // this routes to it rather than repeating the act. That matters because the default applyCode has a branch
-        // for a SINGLE inst (call.resolve(arg).apply(arg)) which applies through the static runtime and never touches
-        // the processor — a bare `1+2` in a remote frame would have run HERE with no packet and no log. The
-        // processor cannot make that mistake: it only ever ships.
-        if (lhs.isFail())
-            return lhs; // a fail is this VM's diagnostic, not a payload
+    public Obj applyCode(final Obj lhs, final Code code) {
         return this.processor().code(code.as()).apply(lhs);
     }
 
@@ -139,16 +146,21 @@ public class RemoteMachine extends MRec implements Machine {
     }
 
     /**
-     * The roster view from this frame: the ENCLOSING frame's network, because membership is declared once at
-     * {@code /sys/peer} and is global. A peer address read from this frame therefore dispatches by the same roster
-     * the frame itself was minted from.
+     * The network this frame stands in: <b>its own level</b> when it carries one — the connection it was pushed
+     * for — and otherwise the enclosing frame's, because a peer address must still dispatch by a network this frame
+     * can reach. Inheritance is not membership: a connection belongs to the frame that dialed it, so a pop retracts
+     * exactly what that frame made.
      * <p>
-     * Inherited rather than minted, and that is load-bearing: {@code Machine.network()} CONSTRUCTS a BasicNetwork,
-     * and constructing a component re-enters type resolution — which reads back through {@code Machine.read}, i.e.
-     * through <em>this</em> method while this frame is current. Minting one here recursed until the stack died.
+     * A slot that already holds a network is handed back <b>as itself</b>, never minted: {@code Machine.network()}
+     * CONSTRUCTS a BasicNetwork and writes it into the slot, and constructing a component re-enters type resolution
+     * — which reads back through {@code Machine.read}, i.e. through <em>this</em> method while this frame is
+     * current. Minting one here recursed until the stack died.
      */
     @Override
     public Network network() {
+        final Obj slot = this.atDirect(uri(NETWORK));
+        if (slot instanceof Network network)
+            return network;
         final Obj parent = this.parent();
         return parent instanceof Machine machine ? machine.network() : Machine.super.network();
     }

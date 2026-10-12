@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.annotation.*;
@@ -271,7 +270,7 @@ public @interface Training {
                 // Resolve instruction types: resolveCode for Code chains, unresolved for Inst
                 List<Inst> insts;
                 try {
-                    insts = obj.isCode() ? ScoringResolver.resolveCode(noobj(), obj.asCode()).insts() : obj.asCall().insts();
+                    insts = obj.isCode() ? Machine.current().compiler().resolver().apply(noobj(), obj.asCode()).insts() : obj.asCall().insts();
                 } catch (final Throwable e) {
                     insts = ((Call) obj).insts();  // fallback
                 }

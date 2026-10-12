@@ -1070,7 +1070,7 @@ public class mInstSet extends AbstractInstSet {
             final long rw0 = System.nanoTime();
             final Code rewritten = MCode.of(new ArrayList<>(originalInsts)).rewrite();
             final long rw1 = System.nanoTime();
-            final Code resolved = ScoringResolver.resolveCode(noobj(), rewritten);
+            final Code resolved = Machine.current().compiler().resolver().apply(noobj(), rewritten);
             final long r1 = System.nanoTime();
             final long a0 = System.nanoTime();
             resolved.apply(noobj());

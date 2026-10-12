@@ -22,11 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.machine.AbstractMachine;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
@@ -257,7 +253,7 @@ public interface Machine extends Rec, AutoCloseable {
      * machine the unit of execution — a machine that executes elsewhere (a {@code RemoteMachine}) overrides this one
      * method and every caller above it (the console, {@code eval}, a nested code) follows without knowing.
      */
-    default Obj applyCode(final Code code, final Obj lhs) {
+    default Obj applyCode(final Obj lhs, final Code code) {
         final Call call = code.tryToInst();
         if (call.isCode()) {
             // wrapStart prepends start(value) for a value lhs; a monadic lhs passes through unchanged and rides
@@ -319,7 +315,7 @@ public interface Machine extends Rec, AutoCloseable {
      * in {@link AbstractMachine}'s constructor and for each child in {@link #push(fURI)}.
      */
     default Machine bootstrap() {
-        if (null != this.vid()) {
+        if (this.hasVID()) {
             // The infra PATTERN is the resolved vid (/. → /#): /thread must match, and the root's "local" is
             // everything. But the machine rec is written at the UNRESOLVED node vid (/.): a rec at a node is a
             // single value, whereas at the branch / it would fan out into /q, /instset, … entries.
@@ -362,17 +358,30 @@ public interface Machine extends Rec, AutoCloseable {
         if (null != extension && extension.hasHost()) {
             // RESOLVE FIRST: the frame's address encodes the port, so the port has to exist before it is derived.
             final fURI peer = PeerSpawn.resolve(extension);
-            // THE FRAME SPAWNS ITSELF, and it LIVES AT A LOCAL ADDRESS derived from the peer:
-            // ~/network/peer/<scheme>/<host>/<port>/<namespace>. Because the address is a path in THIS machine, the
-            // frame registers where every machine does, ~-relative state (~/fail, ~/thread) stays local, and a plain
-            // local read reaches it — no remote uri is ever written through the wire. The peer rec carries the FULL
-            // declared address, which is the only thing left that knows where the wire goes and what namespace the
-            // node mounts.
+            // THE FRAME SPAWNS ITSELF, and it LIVES AT A LOCAL ADDRESS derived from the peer and anchored on the
+            // ROOT: <root>/network/peer/<scheme>/<host>/<port>/<namespace>. Because the address is a path in THIS
+            // machine, the frame registers where every machine does, ~-relative state (~/fail, ~/thread) stays
+            // local, and a plain local read reaches it — no remote uri is ever written through the wire.
+            //
+            // ANCHORED ON THE ROOT, not on the current frame: a peer is a machine-level entity, and anchoring on
+            // the frame that happens to be current would nest the same peer's address under the pushed frame when a
+            // second push for the same authority happens from inside it (measured: <frame>/network/peer/…/worker
+            // for the second push where the first got /network/peer/…/worker).
+            //
+            // ITS CONNECTION IS THE FRAME'S OWN NETWORK LEVEL: network.peer is <service-uri> => peer::T, and the
+            // entry push was asked for carries the FULL declared address — the only thing that knows where the wire
+            // goes and what namespace the node mounts. The reach (the transport) is filled in by the frame's own
+            // constructor, and the level is built HERE rather than in that constructor because constructing a
+            // component inside a frame re-enters type resolution while that frame is current.
+            final BasicNetwork network = new BasicNetwork(CommonUtil.mutableMap(
+                    uri(PEER), rec(CommonUtil.mutableMap(
+                            PeerSpawn.service(peer),
+                            rec(uri(AUTHORITY), uri(peer.toString()))))));
             return Machine.current(new RemoteMachine(
                     CommonUtil.mutableMap(
                             uri(PATTERN), uri(ALL),
-                            uri(PEER), rec(uri(AUTHORITY), uri(peer.toString()))),
-                    MACH_REMOTE_MACHINE_TID, Network.Helper.peerPath(Machine.current().vid(), peer)));
+                            uri(NETWORK), network),
+                    MACH_REMOTE_MACHINE_TID, Network.Helper.peerPath(Machine.root().vid(), peer)));
         }
         final fURI parentVID = this.vid();
         // A machine with NO vid (test machines, and any rootless construct) has no address to extend, so the
