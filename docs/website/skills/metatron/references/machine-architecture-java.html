@@ -298,6 +298,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -394,25 +395,26 @@
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">machine-architecture-java</h1>
-        <small>Java-side Machine architecture — Machine, its five components (Memory, Network, InstSet, Compiler, Processor), the frame/ComponentUnion nesting model, push/pop/move, the compile→run pipeline, threads/monads, and the load-bearing invariants of the read path</small><br/>
+        <small>Java-side Machine architecture — Machine, its five components (Memory, Network, InstSet, Compiler, Processor), the frame/ComponentUnion nesting model (the frame *is* the machine), push/pop/move, the compile→run pipeline, threads/monads, and the load-bearing invariants of the read path: data memory, instruction memory, and the hop between them.</small><br/>
         <a href="machine-architecture-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>machine-architecture-java.md</a>
     </div>
     <div class="markdown-body">
 <h2>Machine Architecture (Java)</h2>
 <h3>What a Machine is</h3>
 <p>A <strong>Machine</strong> is a <em>space of spaces</em> — the container in which address resolution happens. It is itself an address
-space (<code>Machine extends Space</code>), and its five members (<code>instset</code>, <code>memory</code>, <code>network</code>, <code>compiler</code>, <code>processor</code>) are rec
-entries shaped as <code>machine::T</code>. Of the five:</p>
+space: the interface is <code>Machine extends Rec, AutoCloseable</code> and the concrete body is <code>AbstractMachine extends AbstractSpace</code>. Its five members (<code>instset</code>, <code>memory</code>, <code>network</code>, <code>compiler</code>, <code>processor</code>) are rec entries shaped as
+<code>machine::T</code>. Of the five:</p>
 <ul>
 <li><strong>Memory</strong> is the facade over the world of spaces — the single read/write surface.</li>
 <li><strong>Compiler</strong> lowers code; <strong>Processor</strong> runs it; neither is an address space.</li>
 <li><strong>InstSet</strong> and <strong>Network</strong> are <em>accumulating</em> components (a frame wraps them); <strong>Compiler</strong> and <strong>Processor</strong> are
 <em>constructive</em> (whole-value, inherited or replaced).</li>
 </ul>
-<p>A machine replaced the old <code>Router</code> as the root of the address space. <code>Router.java</code> is gone; <code>Machine extends Space</code>,
-and <code>AbstractMachine extends AbstractSpace</code> is the one concrete body.</p>
+<p>A machine replaced the old <code>Router</code> as the root of the address space. <code>Router.java</code> is gone, and
+<code>AbstractMachine extends AbstractSpace</code> is the one concrete body — which is what makes a machine a <code>Space</code> that
+answers addresses, while <code>Machine</code> the interface stays a <code>Rec</code>.</p>
 <h3>Package overview</h3>
-<pre><code>isa/mach/type/Machine.java            ← Machine interface + Frame + Component + Machine0 (the contract)
+<pre><code>isa/mach/type/Machine.java            ← Machine interface + Component + Machine0 (the contract)
 isa/mach/type/Memory.java             ← Memory interface (relative bindings + absolute space index)
 isa/mach/type/Network.java            ← Network interface (peer roster + authority arithmetic)
 isa/mach/type/Compiler.java           ← Compiler interface (rewrite → resolve → type) + resolve memo
@@ -424,7 +426,8 @@ isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, autho
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
 isa/mach/type/machine/BasicNetwork.java     ← one level of network (roster is the rec)
-isa/mach/type/machine/BasicInstSet.java     ← the machine's OWN instset (n-ary union of imports)
+isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
+                                        enclosing machine's (via `previous`)
 isa/mach/type/compiler/…                     ← Compiler impls + parser/rewriter/resolver/typer stages
 isa/m/type/parser/Parser.java                ← the parse-stage contract (the language seam) + Parser.Helper.toCode
 isa/mach/type/processor/…                    ← Processor impls + Monad/MonadProcessor/SwarmProcessor + monads
@@ -439,7 +442,7 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 <tbody>
 <tr><td>Memory</td><td><code>Space, Machine.Component, Closeable</code></td><td>relative bindings (names) + absolute index of spaces</td><td>accumulates (<code>MemoryUnion</code>)</td></tr>
 <tr><td>Network</td><td><code>Machine.Component, Closeable</code></td><td>peer roster <code>authority → transport</code>, <code>own</code>/<code>isPeer</code></td><td><strong>shared</strong> today: the roster lives at <code>/sys/peer</code>, so a child's declaration is the parent's. The union is intended, and needs the roster moved onto the component plus a deny arm</td></tr>
-<tr><td>InstSet</td><td><code>Space</code> (via <code>AbstractInstSet</code>)</td><td>visible types/insts; <code>import</code> lands here</td><td>accumulates — <code>BasicInstSet</code> is an n-ary union over referenced ISAs, membership in the rec under <code>reference</code></td></tr>
+<tr><td>InstSet</td><td><code>Space</code> (via <code>AbstractInstSet</code>)</td><td>the vocabulary: types/insts/rewrites/sugars; <code>import</code> lands here</td><td>accumulates — <code>BasicInstSet</code> is own structure over its imports over the enclosing machine's ISA; membership in the rec under <code>reference</code></td></tr>
 <tr><td>Compiler</td><td><code>Machine.Component, Rec</code></td><td><code>code::T → code::T</code> in three stages</td><td>constructive (inherited/replaced)</td></tr>
 <tr><td>Processor</td><td><code>mThread, Machine.Component</code></td><td><code>code::T → obj</code>; the monadic execution engine</td><td>constructive</td></tr>
 </tbody>
@@ -447,39 +450,58 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 <p><code>Machine.Component</code> is a <code>Rec</code> that answers <code>machine()</code> by walking its <code>parent()</code> chain up to the nearest <code>Machine</code>
 (falling back to <code>mach0()</code>). Components are <code>Rec</code>s <em>on purpose</em>: memory and network must be reachable from mtron
 (<code>&gt;&gt;space</code>, <code>&gt;&gt;previous</code>), not just from Java accessors.</p>
-<h3>The three accessor levels — the part that confuses</h3>
-<p>Every accumulating component has (up to) three ways to reach it, and the distinction is load-bearing:</p>
-<ol>
-<li><strong><code>own*</code></strong> — the machine's own slot, ignoring any frame. <code>ownMemory()</code> / <code>ownInstset()</code> / <code>ownNetwork()</code>. The slot
-holds a <em>template</em> (an <code>instLambda</code>), and <code>own*</code> applies it once and caches.</li>
-<li><strong>frame-aware</strong> — <code>memory()</code> / <code>instset()</code> / <code>network()</code>. Returns the current frame's union when a frame is live,
-else the machine's own slot.</li>
-<li><strong>resolution</strong> — <code>resolutionMemory()</code> / <code>resolutionNetwork()</code>. The one the read path uses: the frame's view <em>if it
-has already been materialized</em>, else the machine's own. It <strong>never materializes a frame</strong>, because materializing
-constructs a component, constructing an <code>Obj</code> runs a type check, and the type check reads through the machine —
-which lands back in <code>read()</code>. The non-allocating read-only helpers are <code>frameMemory()</code> / <code>frameNetwork()</code> and the
-<code>Frame.*View()</code> accessors.</li>
-</ol>
-<p><code>AbstractMachine</code> caches the three <code>own*</code> results in Java fields (<code>resolvedMemory</code>/<code>resolvedNetwork</code>/
-<code>resolvedInstSet</code>) so the read path sees a field read, not a template re-apply.</p>
-<h3>Frames and the component union (nesting)</h3>
-<p>A <strong>Frame</strong> (<code>Machine.Frame</code>) is one level of nesting: the machine it belongs to, its parent frame, and lazily
-materialized <code>instset</code>/<code>memory</code>/<code>network</code> views. Two thread-locals:</p>
+<h3>Reaching a component</h3>
+<p>One accessor per component, and it returns the component — this machine's own level:</p>
 <ul>
-<li><code>FRAME</code> — the cursor (walks <em>up</em> only).</li>
-<li><code>FRAMES</code> — the address index <code>Map&lt;fURI, Frame&gt;</code> (the downward link the cursor can't provide).</li>
+<li><code>memory()</code>, <code>instset()</code>, <code>network()</code> — the accumulating components. The union with the enclosing machine lives
+<em>inside</em> the component (<code>previous</code>), not in a wrapper this call builds.</li>
+<li><code>compiler()</code>, <code>processor()</code> — the machine's own; <code>processor()</code> clones in its non-call arm, so a caller gets a fresh
+runtime.</li>
+<li>Each setter binds the slot, and for memory and instset that is <strong>field only</strong>, never <code>at()</code>: a rec write on a machine
+rec fails its own type check (<code>objCheckAndSave</code> → <code>Lst.test</code>). <code>push()</code> writes the child's memory and instset into
+the child's own rec directly (<code>jvm().put</code>), so an ADDRESS read of a slot answers with the same object the accessor
+returns.</li>
 </ul>
-<p><code>push()</code> clones the machine into a <strong>child</strong> whose vid strictly extends the parent's (<code>descendsFrom</code>), wraps it in a
-new <code>Frame</code>, and makes it current. <code>push(extension)</code> mints a unique vid from the extension. <code>pop()</code> restores the parent
-and closes the frame (releasing only what the frame introduced). <code>move(extension)</code> unifies push and pop via the
-coefficient's sign: positive = descend, negative = ascend one step.</p>
-<p>A frame wraps each <em>accumulating</em> component in a <code>ComponentUnion</code> (<code>previous()</code> + <code>current()</code>), reads <strong>through</strong>
-(own first, then parent), writes only to <code>current()</code>, and <code>close()</code>s only <code>current()</code>. Release is therefore structural:
-a popped frame takes its own spaces/peers/imports with it, and can never close what it inherited.</p>
-<p><strong><code>BasicInstSet</code> is the exception — it is n-ary, not binary.</strong> Memory and network are a fixed two-level tree; an ISA is
-an <em>ordered list of imported instsets held by reference</em>, own structure layered over them. Import order is precedence,
-own-first shadows a referenced name, and writes reach only the own structure — which is what makes a shared library
-instset safe to import from many machines.</p>
+<p><code>AbstractMachine</code> memoizes the three accumulating components in <code>resolvedMemory</code> / <code>resolvedNetwork</code> /
+<code>resolvedInstSet</code>, so the read path sees a field read — and that field is also what breaks the
+<code>atDirect(uri(MEMORY))</code> → <code>MObj.&lt;init&gt;</code> → <code>fURI.big()</code> → <code>memory()</code> cycle.</p>
+<p><strong>Why it is shaped this way: the read path must never allocate.</strong> Materializing a component constructs an <code>Obj</code>, whose
+type check reads through the machine, which lands back in <code>read()</code>. That one constraint is what the memo fields and
+the instance-seeded slots are for.</p>
+<h3>Frames and the component union (nesting)</h3>
+<p><strong>The frame is the machine.</strong> <code>push()</code> clones this machine into a <strong>child</strong> whose vid strictly extends the parent's
+(<code>descendsFrom</code>), makes it current (<code>CURRENT</code>, a thread-local) and gives it its own rec; <code>push(extension)</code> mints the
+child's vid from the extension. <code>pop()</code> restores the parent and releases what the frame opened; <code>move(extension)</code>
+unifies the two through the coefficient's sign (positive = descend, negative = ascend one step). A push carrying a
+<strong>host</strong> is a process boundary instead, not a frame: <code>Extension.hasHost()</code> spawns a peer with its own vid, memory and
+lifetime.</p>
+<p>Nesting is <strong>read-through via <code>previous</code></strong>, built at push time, one level per component:</p>
+<table>
+<thead>
+<tr><th>component</th><th>the child's level</th></tr>
+</thead>
+<tbody>
+<tr><td>memory</td><td><code>MemoryUnion(this.memory())</code> — the child's own spaces over the enclosing memory's</td></tr>
+<tr><td>instset</td><td><code>BasicInstSet(this.instset())</code> — the child's own declarations over the enclosing vocabulary</td></tr>
+<tr><td>network</td><td><strong>shared</strong> today: the roster lives at <code>/sys/peer</code>, so a child's declaration is the parent's — the union is intended, and needs the roster moved onto the component plus a deny arm</td></tr>
+</tbody>
+</table>
+<p>Reads go <strong>through</strong> (own first, then <code>previous</code>), writes reach only the own level, and a popped frame takes its own
+spaces and imports with it: it can never close what it inherited. Release is structural, not bookkeeping.</p>
+<p><strong><code>BasicInstSet</code> is a union in two directions, not a binary chain.</strong> Own structure over an <em>ordered list of imports</em>,
+and that whole stack over the enclosing machine's ISA. Two things about how the imports are held:</p>
+<ul>
+<li>the rec records the <strong>vids</strong> (<code>reference</code>, in import order — so the membership is legible from mtron, and printing it
+never inlines a library), while the frame holds the sets <strong>by object</strong>; resolution reads the objects, so belonging
+to a machine does not depend on the address index;</li>
+<li>precedence is <strong>per identity</strong>, not per name: an inst or rewrite by its <code>tid</code>, a type or const by its <code>vid</code>. A nearer
+level wins that identity; a <em>different</em> identity under the same name is added alongside — which is why <code>plus</code> is a
+family rather than a slot. Import order breaks ties.</li>
+</ul>
+<p>Writes reach only the own structure, which is what makes a shared library safe to import from many machines. And a
+read of the vocabulary is a <strong>schema query</strong> — dom/rng admission down the refinement lattice, ranked
+closest-to-the-token — reached through <code>Machine.read</code>: a caller reaching for <code>instset()</code> directly is an optimization of
+that read, never the door.</p>
 <h3>How one evaluation flows</h3>
 <pre><code>machine.apply(code, start)
   → Machine.current(this)                 // move this thread's perspective
@@ -487,14 +509,21 @@ instset safe to import from many machines.</p>
   → processor().code(compiler().apply(code).asCode()).apply(start)
   → pop()                                  // release the frame
 </code></pre>
-<p><code>BasicMachine.of(...)</code> seeds the five slots as <code>instLambda</code> templates. <code>compiler()</code>/<code>processor()</code> apply the template,
-cache the prototype, and return a <code>.clone()</code> (fresh instance per caller). Every read/write funnels through
-<code>AbstractMachine.read/write</code>:</p>
-<pre><code>read(vid) → authority guard (dispatchForeign) → alignPrefix → stack check → resolutionMemory().readAbsolute(vid)
+<p><code>BasicMachine.of(...)</code> binds each of the five slots <strong>as the component itself</strong> — an instance needs nothing resolved,
+which is what stopped the slots being deferred seeds; the accessors still tolerate a seed (<code>isInst()</code>/<code>isCall()</code> →
+<code>apply()</code>).</p>
+<p>Two different reads, and the distinction matters:</p>
+<pre><code>Machine.read(vid)         → network dispatch → data memory → instruction memory (only on a miss)
+BasicMemory.read(vid)     → ~ resolution → alignPrefix → stack check → readAbsolute → small→big fallback
 </code></pre>
-<p><code>Memory.readAbsolute</code> asks <code>getSpaceFor(vid)</code>: the most specific space across the chain, else the machine itself (for
-keys it actually holds — <code>rootRelative</code> turns <code>/processor</code> into <code>processor</code>), else fail/noobj. The machine answering for
-its own rec keys is what makes <code>/</code> the root with no space mounted inside itself.</p>
+<p><code>Machine.read</code> is the language's one way in, and it asks <strong>instruction memory</strong> as its last source — guarded against
+re-entry by <code>Machine.Helper.READING_INSTRUCTION_MEMORY</code>, because answering a schema query resolves the pattern's
+dom/rng types and resolving a type is itself a read. <code>BasicMemory.read</code> is the address-space read, and it is where a
+name becomes an address: <code>~</code> first, then the prefix alignment, the stack, and the space index — and a miss escalates
+small→big.</p>
+<p><code>BasicMemory.readAbsolute</code> asks <code>findSpace(vid)</code>: the most specific space across the chain. When no space covers the
+address the machine answers with <strong>its own rec keys</strong> (<code>at</code>, never <code>read</code> — a read would come straight back here and
+re-enter), which is what makes <code>/</code> the root with no space mounted inside itself.</p>
 <h3>The compiler (four stages)</h3>
 <p><code>Compiler.apply</code> is the default schedule <code>parse → rewrite → resolve → type</code> over four overridable stage components:</p>
 <ul>
@@ -552,19 +581,26 @@ turns a monoidic reducer into a distributed gather over <code>/usr/compute</code
 <h3>Load-bearing invariants (keep these if you simplify)</h3>
 <ul>
 <li><strong>The read path must never allocate.</strong> Constructing an <code>Obj</code> resolves a type through a read, which recurses into
-<code>read()</code>. That single constraint explains <code>resolutionMemory()</code> vs <code>memory()</code>, the eager seeding in constructors, the
-<code>*View()</code> accessors, and the field-cached <code>own*</code> slots. Any simplification must preserve it.</li>
-<li><strong>Component slots hold templates, not instances.</strong> <code>at(COMPILER)</code> returns an <code>instLambda</code>; <code>compiler()</code> applies +
-caches + clones. <code>ownInstset()</code> must <code>instanceof</code>-check the resolved value (an mtron type check rejects the seeded
-<code>BasicInstSet</code>).</li>
+<code>read()</code>. That single constraint explains the instance-seeded slots, the eager seeding in constructors, and the
+<code>resolvedMemory</code> / <code>resolvedNetwork</code> / <code>resolvedInstSet</code> memo fields. Any simplification must preserve it.</li>
+<li><strong>A component slot holds the component itself</strong> — <code>BasicMachine.of</code> binds all five as instances. The accessors still
+apply a deferred seed if one is present (<code>isInst()</code>/<code>isCall()</code> → <code>apply()</code>), and <code>instset()</code> is strict: an <code>InstSet</code>
+in the slot, else a fresh <code>BasicInstSet</code> (an mtron type check rejects a seeded <code>BasicInstSet</code>).</li>
+<li><strong><code>Machine.read</code> is the one way in</strong>: network → data memory → instruction memory, the last only on a miss, and never
+re-entered from inside an ISA read.</li>
+<li><strong>An ISA is a member by object, not by address.</strong> <code>refer</code> holds the ISA itself beside the vid recorded in the rec,
+so membership and resolution need no address index. The index entry (an ISA also being a space) is the separate half
+that is slated to go: an instruction set is vocabulary, not a place.</li>
 <li><strong><code>ComponentUnion.previous()</code> is a rec entry (<code>&gt;&gt;previous</code>), never a Java field, and never <code>Obj.orElse</code>.</strong> The parent
 fallback must be lazy — <code>orElse</code> evaluates the parent unconditionally on every hit.</li>
 <li><strong>Never write a roster under <code>/sys/mach</code>.</strong> The machine claims that address and <code>AbstractSpace</code>'s default writer is a
 no-op, so writes there are silently dropped. The peer roster lives at <code>/sys/peer</code>.</li>
 <li><strong><code>push()</code> must mint a child, not the parent.</strong> Use the 3-arg <code>clone</code> — <code>selfVID</code> <em>pins</em> an already-set vid, so a
 2-arg clone would silently keep the parent's address.</li>
-<li><strong><code>read()</code>/<code>write()</code> on a machine are always space-resolving</strong> (use <code>readAbsolute</code>/<code>writeAbsolute</code>), so a bulk
-wildcard write reaches the space it names, not the argument stack.</li>
+<li><strong>A machine is a space, so its own read is a space read</strong> (<code>AbstractSpace.read</code> → <code>Space.Helper.resolveRead</code>, q-procs
+and all). Address <em>resolution</em> belongs to memory: <code>BasicMemory.read</code>/<code>write</code> route an address to the space that covers
+it (<code>readAbsolute</code>/<code>writeAbsolute</code>) — which is why a bulk wildcard write reaches the space it names rather than the
+argument stack.</li>
 </ul>
 <h3>Migration state (why it reads as two systems at once)</h3>
 <p>The Router→Machine migration is <strong>not finished</strong>. <code>Router.java</code> is deleted, but its scaffolding remains:</p>
@@ -586,32 +622,58 @@ cursor), and <code>CURRENT</code> is a faithful &quot;walk up&quot; pointer.</p>
 <p>But <code>Frame</code> was carrying three responsibilities that must be rehomed, not deleted:</p>
 <ol>
 <li>
-<p><strong>Per-frame, lazily-materialized union views.</strong> <code>Frame</code> held the <code>instset</code>/<code>memory</code>/<code>network</code> views as <em>per-frame</em>
-fields. That matters because <code>push()</code> clones with <code>this.jvm()</code> — <strong>the <code>jvm()</code> rec is shared</strong>, so a union view
-stored
-in the rec would leak between parent and child. The views must live in per-instance Java state: the
-<code>resolvedMemory</code>/<code>resolvedNetwork</code>/<code>resolvedInstSet</code> fields on <code>AbstractMachine</code> are that replacement — <strong>not</strong> &quot;old
-artifacts&quot;. (Removing <code>resolvedMemory</code> re-introduced a <code>StackOverflowError</code>: <code>memory()</code> → <code>atDirect(uri(MEMORY))</code> →
+<p><strong>Per-frame, lazily-materialized union views — rehomed, and the premise behind it has since changed.</strong> The views
+live in per-instance Java state: <code>resolvedMemory</code> / <code>resolvedNetwork</code> / <code>resolvedInstSet</code> on <code>AbstractMachine</code> —
+<strong>not</strong> &quot;old artifacts&quot;. The reason is no longer a shared rec map (<code>push()</code> now clones with <code>null</code>, so the child
+owns its own map — see the 2026-10-12 note below); it is that a slot may hold a deferred seed and the read path
+must not allocate. (Removing <code>resolvedMemory</code> re-introduced a <code>StackOverflowError</code>: <code>memory()</code> → <code>atDirect(uri(MEMORY))</code> →
 <code>uri(MEMORY)</code> → <code>MObj.&lt;init&gt;</code> → <code>fURI.big()</code> → <code>memory()</code>. The field memoizes the slot and breaks that cycle.)</p>
 </li>
 <li>
-<p><strong>The upward link.</strong> <code>Frame</code> had an explicit <code>parent</code>; the simplification leaves <code>Obj.parent()</code>, which returns
-<code>noobj</code> in the current code. Pick one reliable upward path: wire <code>parent()</code> on <code>push()</code>, or derive the parent from
-<code>vid.retract(1)</code> (machines have globally-unique vids, so the parent is addressable by retraction).</p>
+<p><strong>The upward link — done two ways, deliberately.</strong> <code>push()</code> wires it explicitly (<code>child.parent(this)</code>) for the
+components' <code>Component.machine()</code> walk, and a machine's address still carries its ancestry (<code>vid.retract(1)</code>-style
+arithmetic), so an enclosing frame is reachable without a map. <code>Obj.parent()</code> on a machine that was never pushed
+remains a <code>noobj</code>-returning stub.</p>
 </li>
 <li>
-<p><strong>The downward/address index (<code>FRAMES</code>).</strong> <code>FRAMES</code> was <code>Map&lt;fURI, Frame&gt;</code> — cross-frame lookup by vid. It's
-recoverable through the memory's own space index (a machine is a <code>Space</code> and auto-registers under its vid via
-<code>AbstractSpace</code>'s <code>Machine.current().memory().addSpace(this)</code>), so <code>Machine.current().read(parentVID)</code> resolves the
-parent without a dedicated map — <em>provided</em> every machine registers under its vid.</p>
+<p><strong>The downward/address index (<code>FRAMES</code>) — rehomed into memory, and stronger than the map was.</strong> <code>push()</code> registers
+the child rec in the <strong>root's</strong> space (<code>Machine.root().memory().write(childVID, child)</code>), so <code>read(childVID)</code> from
+<em>any</em> machine reaches the child — a sibling at any depth, not just the parent — while the child's data stays in its
+own infra, so isolation holds.</p>
 </li>
 </ol>
 <p>The invariant to keep: <strong>the read path must never allocate, and component slots are templates.</strong> <code>memory()</code> (and
-eventually <code>network()</code>/<code>instset()</code>) must stay a field read on the read path (<code>resolution*</code>-style), never
+<code>network()</code>, <code>instset()</code>) must stay a field read on the read path, never
 <code>atDirect(uri(MEMORY))</code>, which constructs a <code>Uri</code> and re-enters <code>read()</code> through <code>big()</code>.</p>
 <p>Net: keep the gutting of <code>Frame</code>, but rehome the three responsibilities explicitly — union views → per-instance
-<code>resolved*</code> fields (done for memory), parent link → <code>parent()</code> or <code>vid.retract(1)</code>, cross-frame lookup → memory's space
-index. That makes the simplification <em>cleaner</em> than the original, not just smaller.</p>
+<code>resolved*</code> fields, parent link → wired at <code>push()</code> with address arithmetic as the other path, cross-frame lookup →
+memory's space index. That makes the simplification <em>cleaner</em> than the original, not just smaller.</p>
+<hr />
+<h3>Instruction memory and the read path (2026-10-12)</h3>
+<p>The components became <strong>machine-scoped instances</strong> rather than per-frame views, and instruction memory took its place
+in the read path:</p>
+<ul>
+<li><strong><code>Machine.read</code> reads instruction memory.</strong> Its sources are <code>network</code> (authority dispatch) → <code>memory</code> (data memory:
+spaces, instances, and the routing tables) → <strong><code>instset</code></strong>, the last only on a miss. The hop is guarded by
+<code>Machine.Helper.READING_INSTRUCTION_MEMORY</code>, because answering a schema query resolves the pattern's dom/rng types
+and resolving a type is itself a read — without the guard the hop re-entered itself until the stack died (measured:
+seven <code>StackOverflowError</code>s in <code>MachPushTest</code>). A read made <em>from inside</em> an ISA read is a data read.</li>
+<li><strong>A short name is routed by data memory.</strong> An ISA's tables are keyed by the full address, so the instset read asks
+<code>Machine.current().memory().redirect(pattern, true)</code> to turn <code>plus</code> into <code>/m/inst/plus</code> first. Names are data
+memory's job; addresses are instruction memory's.</li>
+<li><strong><code>push()</code> gives the child its own rec and its own component levels.</strong> <code>clone(null, …)</code> keeps the child's own map —
+while the map was shared, an address read of a slot (<code>*&lt;/xyz/instset</code>) reported the <em>enclosing</em> machine's component
+while the accessor reported the child's: the same slot disagreeing with itself. The child's memory is
+<code>MemoryUnion(this.memory())</code> and its ISA is <code>BasicInstSet(this.instset())</code>, both written straight into the child's
+rec (<code>jvm().put</code>), because a rec write on a machine rec fails its own type check.</li>
+<li><strong><code>BasicInstSet.refer</code> holds the ISA by object</strong> beside the vid recorded in the rec, so a member resolves without
+the address index — and a machine can hold a member that is <strong>not</strong> one of its spaces (<code>InstSetUnionReadTest</code>).</li>
+<li><strong>The registration — an ISA also being a space — is the last artifact of that era.</strong> Removing it is blocked on three
+measured things: migration writes that find the owning ISA by address, spaces that must decline a vid they cannot
+interpret instead of throwing, and documentation ownership, which resolves the owning space through the address index
+(with the registration gone a setup goes from ~0.1s to ~4.2s; a 13-test class went from 4.0s to 200.5s). The
+mtron-side doc, <code>mach-instset-mtron.md</code>, carries the same list from the language's side.</li>
+</ul>
 
     </div>
 </main>

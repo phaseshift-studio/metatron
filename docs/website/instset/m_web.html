@@ -298,6 +298,7 @@
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -840,7 +841,9 @@ the world of the web widens metatron</p>
         <small class="text-muted code">/m/web/serializer/obj_html</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_html::[=&gt;]@/m/web/serializer/obj_html</code></pre></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the html serializer — parses an html document into a rec and writes a rec back as html: \(\mathrm{html} \leadsto \mathrm{rec} \leadsto \mathrm{html}\)</p>
+</div>
 </div><div class="card mb-3" id="__m__web__serializer__obj_json">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_json</span>
@@ -851,28 +854,36 @@ the world of the web widens metatron</p>
  wrap_uri=&gt;true,
  bias_towards_uri=&gt;true,
  bias_towards_objs=&gt;false]@/m/web/serializer/obj_json</code></pre></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the json serializer in its simple configuration — transparent output (plain json arrays and objects), uri-biased and lossy: \(\mathrm{json} \leadsto \mathrm{rec} \leadsto \mathrm{json}\)</p>
+</div>
 </div><div class="card mb-3" id="__m__web__serializer__obj_markdown">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_markdown</span>
         <small class="text-muted code">/m/web/serializer/obj_markdown</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_markdown::[=&gt;]@/m/web/serializer/obj_markdown</code></pre></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the markdown serializer — parses a markdown document into a rec and writes a rec back as markdown: \(\mathrm{markdown} \leadsto \mathrm{rec} \leadsto \mathrm{markdown}\)</p>
+</div>
 </div><div class="card mb-3" id="__m__web__serializer__obj_text">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_text</span>
         <small class="text-muted code">/m/web/serializer/obj_text</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_text::[=&gt;]@/m/web/serializer/obj_text</code></pre></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the plain text serializer — reads text as an untyped str and writes an obj back as plain text: \(\mathrm{text} \leadsto \mathrm{str}\)</p>
+</div>
 </div><div class="card mb-3" id="__m__web__serializer__obj_xml">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_xml</span>
         <small class="text-muted code">/m/web/serializer/obj_xml</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_xml::[=&gt;]@/m/web/serializer/obj_xml</code></pre></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the xml serializer — parses an xml document into a rec and writes a rec back as xml: \(\mathrm{xml} \leadsto \mathrm{rec} \leadsto \mathrm{xml}\)</p>
+</div>
 </div><div class="card mb-3" id="__m__web__serializer__obj_xsv">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_xsv</span>

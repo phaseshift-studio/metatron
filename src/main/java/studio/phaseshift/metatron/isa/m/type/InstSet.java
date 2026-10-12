@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
@@ -73,7 +74,7 @@ public interface InstSet extends Space, Machine.Component {
             .constructor(arg -> {
                 final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
                 };
-                Machine.current().memory().addSpace(isa);
+                InstSet.mount(isa);
                 isa.setup();
                 return isa;
             }).create();
@@ -162,6 +163,25 @@ public interface InstSet extends Space, Machine.Component {
                 .filter(p -> f(p.type().getAnnotation(JREService.class).vid()).test(pattern));
     }
 
+    /**
+     * MOUNT AN INSTRUCTION SET — the ONE door a machine gets an ISA through.
+     * <p>
+     * An ISA becomes part of a machine in two ways, and they are two views of one fact: it is REGISTERED for address
+     * (so {@code Machine.read} reaches it and the structure it brings) and REFERRED into the machine's own instset
+     * (so {@code instset()} knows the vocabulary). Both are decided in {@code BasicMemory.addSpace}, which is the
+     * index that holds it — so no caller, including a hand-mount of a generated schema instset, can do one without
+     * the other. This method is the spelling that says so at a call site.
+     * <p>
+     * Dropping the registration — leaving only the refer — is the later step that lets the {@code Space} half of
+     * {@code InstSet} go, and it cannot come first: a machine with no reachable vocabulary is a machine whose code
+     * cannot run.
+     */
+    static void mount(final InstSet isa) {
+        // The REFER lives in the memory index now (BasicMemory.addSpace decides it), so this cannot do half the job
+        // and no caller can skip it. The method stays as the SPELLING that says what mounting an ISA means.
+        Machine.current().memory().addSpace(isa);
+    }
+
     static Stream<InstSet> importInstSetStream(final fURI vid) {
         return importInstSetStream(vid, null);
     }
@@ -171,17 +191,7 @@ public interface InstSet extends Space, Machine.Component {
             Machine.current().memory().registerPrefix(prefix, vid);
         return loadInstSetProvider(vid)
                 .map(ServiceLoader.Provider::get)///  new
-                .peek(isa -> {
-                    // BOTH, deliberately. The MOUNT keeps the ISA addressable exactly where it always was, so
-                    // nothing about resolution changes yet; the REFER is what populates the machine's own instset
-                    // union, so the machine knows its vocabulary as one reflective unit instead of only as a side
-                    // effect of the global space index. Dropping the mount is the later step that lets the Space
-                    // half of InstSet go — and it cannot come first, because a Machine created with no inherited
-                    // vocabulary is a Machine whose code cannot run.
-                    final Machine machine = Machine.current();
-                    machine.memory().addSpace(isa);
-                    machine.instset().refer(isa);
-                })
+                .peek(InstSet::mount)
                 .peek(InstSet::setup); // setup
 
         //.peek(InstSet::setup); // setup

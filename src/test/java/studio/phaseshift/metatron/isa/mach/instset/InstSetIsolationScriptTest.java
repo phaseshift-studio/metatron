@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type;
+package studio.phaseshift.metatron.isa.mach.instset;
 
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.StatefulCSVSource;
@@ -24,12 +24,14 @@ import studio.phaseshift.metatron.StatefulParametrizedTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /**
  * INSTRUCTION-SET isolation as a stateful script — the third of the machine-isolation trio, beside
@@ -60,7 +62,10 @@ public class InstSetIsolationScriptTest extends AbstractMetatronTest {
 
     /**
      * Import is Java-side (SPI via ServiceLoader), so a script cannot express it — the same reason the network
-     * suite needs {@code [CLUSTER]}. {@code [IMPORT]} is the operation itself, not a test hook.
+     * suite needs {@code [CLUSTER]}. {@code [IMPORT]} is the operation itself, not a test hook. The write/read
+     * directives are the same kind of thing: a declaration is a Java-side write into the union, and the READ is
+     * asked of the union rather than of an address, so the script can pose questions about membership and
+     * shadowing that an mtron line cannot spell.
      */
     @Override
     protected Map<String, Directive> directives() {
@@ -69,14 +74,26 @@ public class InstSetIsolationScriptTest extends AbstractMetatronTest {
                 "REFERENCE_COUNT", args -> this.probe("reference_count", jnt(this.instset().referVids().size())),
                 "REFERENCE_HAS", args -> this.probe("reference_has",
                         jnt(this.instset().referVids().stream()
-                                .anyMatch(reference -> reference.isUri() && reference.uriValue().equals(f(args[0]))) ? 1 : 0)));
+                                .anyMatch(reference -> reference.isUri() && reference.uriValue().equals(f(args[0]))) ? 1 : 0)),
+                // DECLARE A TYPE AT ITS OWN ADDRESS — identity-stable on purpose: a type's identity is its vid, so
+                // filing one at an address that is not its own would make it a DIFFERENT candidate rather than a
+                // shadow of the enclosing machine's. Declaring is `write(address, T(address))`.
+                "WRITE_TYPE", args -> this.instset().write(f(args[0]), T(f(args[0]))),
+                // how many candidates the union answers for an address — the shadowing question, asked as a count
+                "READ_COUNT", args -> this.probe("read_count", jnt(this.instset().read(f(args[0])).stream().count())),
+                "READ_EMPTY", args -> this.probe("read_empty", jnt(this.instset().read(f(args[0])).isNoObj() ? 1 : 0)),
+                // the TYPED view agrees with the space read — the other half of a declaration
+                "TYPE_HAS", args -> this.probe("type_has",
+                        jnt(this.instset().types().stream().anyMatch(t -> f(args[0]).equals(t.vid())) ? 1 : 0)));
     }
 
     private void probe(final String name, final Obj value) {
         Machine.write(PROBE.extend(name), value);
     }
 
-    /** The current machine's instset as the union it is; a bare store has no references to speak of. */
+    /**
+     * The current machine's instset as the union it is; a bare store has no references to speak of.
+     */
     private BasicInstSet instset() {
         final InstSet instset = Machine.current().instset();
         return instset instanceof BasicInstSet ? (BasicInstSet) instset : new BasicInstSet();
@@ -148,5 +165,66 @@ public class InstSetIsolationScriptTest extends AbstractMetatronTest {
             "[STATE] move(/.)"
     })
     void testNestingDoesNotCompoundTheVocabulary() {
+    }
+
+    /**
+     * THE FOUR ISOLATION ASSERTIONS, in the script form — own, inherit, no-leak-up, no-leak-across — because a
+     * script can push, pop and move, and the same questions asked of a live nest are the ones that matter.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            // OWN: a declaration answers where it was made, in BOTH views
+            "[WRITE_TYPE /m/iso/outer]",
+            "[READ_COUNT /m/iso/outer]",
+            "*/sys/instset/probe/read_count % 1 % true",
+            "[TYPE_HAS /m/iso/outer]",
+            "*/sys/instset/probe/type_has % 1 % true",
+            // INHERIT: a child that declares nothing of its own still answers the enclosing machine's declaration
+            "[STATE] *~.push(xyz)",
+            "[READ_COUNT /m/iso/outer]",
+            "*/sys/instset/probe/read_count % 1 % true",
+            // OWN in the child
+            "[WRITE_TYPE /m/iso/inner]",
+            "[READ_COUNT /m/iso/inner]",
+            "*/sys/instset/probe/read_count % 1 % true",
+            "[STATE] *~.pop(_)",
+            // NO LEAK UP: the child's declaration went with the child
+            "[READ_EMPTY /m/iso/inner]",
+            "*/sys/instset/probe/read_empty % 1 % true",
+            // NO LEAK ACROSS: and a sibling never saw it
+            "[STATE] *~.push(other)",
+            "[READ_EMPTY /m/iso/inner]",
+            "*/sys/instset/probe/read_empty % 1 % true",
+            "[READ_COUNT /m/iso/outer]",
+            "*/sys/instset/probe/read_count % 1 % true",
+            "[STATE] *~.pop(_)"
+    })
+    void testIsolationOwnInheritNoLeakUpNoLeakAcross() {
+    }
+
+    /**
+     * THE SAME ADDRESS DECLARED AT EVERY LEVEL ANSWERS ONCE, with the nearest level's declaration — the union read
+     * is a tree walk with per-identity shadowing, not "the first level that answers, wins" (that would erase an
+     * import whenever a frame extended a name) and not an accumulation of duplicates either. WHICH level won is
+     * pinned in InstSetUnionReadTest, where two contracts can be told apart by their args; here the count is the
+     * statement, at every depth and after each pop.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[WRITE_TYPE /m/iso/deep]",
+            "[STATE] *~.push(a)",
+            "[WRITE_TYPE /m/iso/deep]",
+            "[STATE] *~.push(b)",
+            "[WRITE_TYPE /m/iso/deep]",
+            "[READ_COUNT /m/iso/deep]",
+            "*/sys/instset/probe/read_count % 1 % true",
+            "[STATE] *~.pop(_)",
+            "[READ_COUNT /m/iso/deep]",
+            "*/sys/instset/probe/read_count % 1 % true",
+            "[STATE] *~.pop(_)",
+            "[READ_COUNT /m/iso/deep]",
+            "*/sys/instset/probe/read_count % 1 % true"
+    })
+    void testTheSameAddressAtEveryLevelAnswersOnce() {
     }
 }

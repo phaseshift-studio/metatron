@@ -1,0 +1,110 @@
+% mach-instset.tex — the two memories: data (instances) and instruction (schema)
+% Rendered with the tikz MCP server (compile_tikz); the PNG lands beside it in
+% docs/website/skills/mtron/assets/mach-instset.png (white ink, transparent).
+% Verified by compositing on the site's panel colour (#191C24).
+%
+% INK: white on a transparent background — the site's theme is dark. No edge
+% label carries a box (fill=none plus white text), so a label is ink over the
+% page. `off` (the dotted chips) is the one deliberate fade — white mixed 45%
+% toward black — and it means "not admitted by the query".
+%
+% THE FIGURE, IN ONE PICTURE — there are no sentences in it: everything is drawn,
+% tagged, or labelled in a word or two.
+%   * Each memory is a box whose header is its TYPE, centred over a rule:
+%     `memory::T` and `instset::T`.
+%   * An instruction set joins the machine TWICE. The `machine::T` vertex is where
+%     it lands, and the two edges out of it are block lines (horizontal, then down
+%     into the box) so their labels sit over clean horizontal runs: `membership`
+%     (solid, into `instset::T`) and `registration` (dashed, into `memory::T`).
+%     There is deliberately NO `import` node: the edges are the arrival, and an
+%     extra vertex asked the reader to draw a relation the picture does not need.
+%   * `memory::T` holds TWO things, and each gets a row: VALUES at addresses
+%     (`/usr/marko/age` — value -> `29`, a grab from space) and ROUTES (a NAME
+%     becomes an ADDRESS: `plus` — route -> `/m/inst/plus`).
+%   * The dotted line across the gap is the seam between the memories: it is the
+%     SAME address, now handed to `instset::T`, which answers it with the
+%     candidates the query ADMITS (`/m/inst/plus` — ?nat<=nat -> `int`, solid).
+%     The rest of that address's candidates are drawn dotted inside a group
+%     bracket labelled `off nat's path`: they are never in play, because the
+%     query's domain only reaches down nat's path (nat -> int -> #), which is the
+%     whole reason the `int` contract is the answer.
+%   * The tags under each header state the two lenses: INSTANCES / data and
+%     SCHEMA / inst.
+%   * A `previous` bracket per box was tried and dropped — it read as clutter
+%     rather than as nesting. Nesting lives in the prose.
+% Every claim is structural, so the figure does not age as the ISA work lands:
+% transient status stays in the prose, never in the picture.
+
+\begin{tikzpicture}[
+  panel/.style={draw, rounded corners=3pt, thick, minimum width=46mm, minimum height=38mm, inner sep=0pt},
+  hop/.style={draw, rounded corners=2pt, thick, minimum width=15mm, minimum height=6.5mm, font=\scriptsize},
+  chip/.style={draw, rounded corners=1.5pt, thick, font=\tiny, inner sep=1.4mm},
+  off/.style={draw, dotted, rounded corners=1.5pt, font=\tiny, inner sep=1.4mm, text=white!45!black, draw=white!45!black},
+  mach/.style={draw, rounded corners=2pt, thick, font=\scriptsize, inner sep=2mm},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  ed/.style={-{Stealth[length=2.2mm]}, dashed},
+  eo/.style={-{Stealth[length=1.8mm]}, thick},
+  el/.style={font=\scriptsize, inner sep=1pt, fill=none, text=white},
+  tl/.style={font=\tiny, inner sep=0.5pt, fill=none, text=white},
+  hd/.style={font=\small\bfseries, inner sep=0pt, fill=none, text=white},
+  gl/.style={draw, thin, text=white!60!black},
+  color=white
+]
+
+% ================= data memory =================
+\node[panel] (mem) at (0,0) {};
+\node[hd] at (0,1.45) {\texttt{memory::T}};
+\draw[thin] (-1.75,1.22) -- (1.75,1.22);
+\node[tl] at (0,1.02) {INSTANCES \ \ $\bullet$ \ \ data};
+\node[tl] at (0,0.70) {values, spaces, stack, frames};
+
+% a value at an address
+\node[chip] (v1) at (-0.65,-0.30) {\texttt{/usr/marko/age}};
+\node[chip] (v2) at ( 1.45,-0.30) {\texttt{29}};
+\draw[eo] (v1) -- node[tl,above=1pt]{value} (v2);
+
+% a name becomes an address
+\node[chip] (p1) at (-1.55,-1.05) {\texttt{plus}};
+\node[chip] (p2) at ( 0.75,-1.05) {\texttt{/m/inst/plus}};
+\draw[eo] (p1) -- node[tl,above=1pt]{route} (p2);
+
+% ================= instruction memory =================
+\node[panel] (isa) at (5.6,0) {};
+\node[hd] at (5.6,1.45) {\texttt{instset::T}};
+\draw[thin] (3.85,1.22) -- (7.35,1.22);
+\node[tl] at (5.6,1.02) {SCHEMA \ \ $\bullet$ \ \ inst};
+\node[tl] at (5.6,0.70) {types, insts, rewrites, sugars};
+
+% the address that crossed the seam, answered with the candidates the query admits
+\node[chip] (a1) at (4.25,-1.05) {\texttt{/m/inst/plus}};
+\node[chip] (a2) at (6.90,-1.05) {\texttt{int}};
+\draw[eo] (a1) -- node[tl,above=1pt]{\texttt{?nat<=nat}} (a2);
+
+% the rest of that address's candidates, and why they are not in play
+\draw[gl] (5.50,-1.38) -- (5.50,-1.72) (5.50,-1.38) -- (5.63,-1.38) (5.50,-1.72) -- (5.63,-1.72);
+\node[tl] at (4.82,-1.55) {off nat's path};
+\node[off] (f1) at (6.05,-1.55) {\texttt{real}};
+\node[off] (f2) at (6.80,-1.55) {\texttt{str}};
+\node[off] (f3) at (7.50,-1.55) {$\cdots$};
+
+% the seam: one address, two memories
+\draw[dotted, thick] (p2.east) -- (a1.west);
+
+% ================= an instruction set joins the machine twice =================
+\node[mach] (mach) at (2.8,3.3) {\texttt{machine::T}};
+\draw[ed] (mach.west) -| (-1.0,1.9);
+\draw[e]  (mach.east) -| (6.6,1.9);
+\node[tl] at (0.70,3.47) {registration};
+\node[tl] at (4.95,3.47) {membership};
+
+% ================= one read =================
+\node[el]  (rd)   at (-4.7,-3.4) {\texttt{*id}};
+\node[hop] (net)  at (-2.5,-3.4) {\texttt{network}};
+\node[hop] (mhop) at ( 0.0,-3.4) {\texttt{memory}};
+\node[hop] (ihop) at ( 5.6,-3.4) {\texttt{instset}};
+\draw[e] (rd)  -- (net);
+\draw[e] (net) -- node[el,above=10pt]{dispatch} (mhop);
+\draw[e] (mhop) -- node[el,above=4pt]{on a miss} (ihop);
+\draw[dotted, thick] (mem.south) -- (mhop.north);
+\draw[dotted, thick] (isa.south) -- (ihop.north);
+\end{tikzpicture}

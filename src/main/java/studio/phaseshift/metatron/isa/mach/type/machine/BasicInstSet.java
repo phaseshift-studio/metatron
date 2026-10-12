@@ -1,18 +1,21 @@
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.type.ComponentUnion;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.REFERENCE;
@@ -21,67 +24,176 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * The machine's OWN instset: an N-ARY union, unlike every other Machine component.
+ * The machine's OWN instset: instruction memory, and the one machine component that is a FACADE as well as a union.
  * <p>
- * Memory and the network are BINARY — a frame's level over the parent machine's, a fixed two-level tree walked
- * upward. An ISA is a LIST: an arbitrary number of imported instsets held BY REFERENCE, with this machine's own
- * structure layered over them. Two consequences follow, and they are the whole point:
- * <ul>
- *     <li><b>an import is a reference</b>, never a copy, so the library instset out in space is shared by every
- *     machine that imported it and is never mutated by any of them;</li>
- *     <li><b>resolution is own-first</b>, so a type, inst, const or rewrite written here SHADOWS a name from any
- *     instset this one refers to — and among the references, IMPORT ORDER IS PRECEDENCE.</li>
- * </ul>
- * The order rule is the same one import systems have always had, and it is why the references are an ordered list
- * rather than a set. Writing only ever reaches the own structure here, which is what makes the library safe to
- * share.
+ * It is a UNION because a child's vocabulary is its own level over the enclosing machine's — the same shape as
+ * {@link studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion}, and for the same reason: a component belongs
+ * to the machine that holds it, so a write made in a child lands in the child's level and the enclosing machine's
+ * vocabulary is untouched. What is unioned here is {@link #previous()}; see {@link ComponentUnion}.
  * <p>
- * <b>The references live IN THE REC, under {@code reference}, and that is what makes this union reflective.</b>
- * Held in a Java field the membership was invisible to mtron, so "what are my insts, rewrites, sugars and types"
- * had no answer that did not mean walking a flurry of mounts. The rec holds the referred <em>vids</em> in import
- * order — a vid rather than the object, so that referring never re-parents the library into this machine and
- * reading the rec never inlines a whole ISA. Resolution looks each vid up in the index that holds it.
+ * It is a FACADE because the instruction sets it uses are stored in Memory (imported ISAs are spaces), and a user
+ * should not have to wade through a sea of spaces looking for instsets and then search each of those for the items of
+ * interest. The own structure plus the ordered {@code reference} list plus {@link #previous()} are the single locus:
+ * every read and every kind accessor aggregates them, so "what are my insts, rewrites, sugars and types" is one
+ * question asked in one place.
+ * <p>
+ * Resolution is OWN-FIRST — this level's structure, then the imported instsets in import order, then the enclosing
+ * machine's — so a name written here SHADOWS the same name from any instset this one refers to, and among the
+ * references IMPORT ORDER IS PRECEDENCE. Writing only ever reaches the own structure, which is what makes an imported
+ * library safe to share. (Precedence: own → imports → previous.)
+ * <p>
+ * <b>The references live IN THE REC, under {@code reference}, and that is what makes this union reflective.</b> The
+ * rec holds the referred <em>vids</em> in import order — a vid rather than the object, so that printing the rec never
+ * inlines a whole ISA and an import order is legible to mtron. The OBJECT is held beside it (a map on this level), so
+ * <em>resolution</em> does not depend on the data index: instruction memory can be a member of a machine without
+ * being one of its spaces. Both are written by {@link #refer(InstSet)}, the only way in, so they cannot drift.
  */
-public class BasicInstSet extends AbstractInstSet {
+public class BasicInstSet extends AbstractInstSet implements ComponentUnion<InstSet> {
+
+    private InstSet previous = null;
 
     public BasicInstSet() {
         super(false);
     }
 
     /**
-     * Refer to an instset out in space — an import, held by reference and never copied. Appends to the rec's
+     * A level over the enclosing machine's instset.
+     */
+    public BasicInstSet(final InstSet previous) {
+        super(false);
+        this.previous = previous;
+    }
+
+    // ======================== the frame chain ========================
+
+    /** This level's own component — the ISA itself, whose structure is the level. */
+    @Override
+    public InstSet current() {
+        return this;
+    }
+
+    /** The enclosing machine's instset, or null at the root. */
+    @Override
+    public InstSet previous() {
+        return this.previous;
+    }
+
+    public BasicInstSet previous(final InstSet previous) {
+        this.previous = previous;
+        return this;
+    }
+
+    /**
+     * Refer to an instset out in space — an import, held by reference and never copied. Records the vid in the rec's
      * ordered {@code reference}, so import order IS the rec's order.
+     * <p>
+     * <b>The entry is WRITTEN, not {@code at(..., MUTABLE)}-saved.</b> {@code Rec.at} APPENDS when the entry already
+     * holds an {@code Objs}, and the payload here is the whole membership — so saving it added every member's
+     * coefficient to itself and DOUBLED them on every import (measured: 1, then {2}, then {4,2}, then {4,2,1}; i.e.
+     * the first import reaches 2^(n-2) after n imports, which is the 1024 in a twelve-import boot). A direct put
+     * REPLACES, which is what a set of vids wants.
+     * <p>
+     * Members are carried at coefficient ONE for the same reason: a multiplicity's coefficients are its cardinality
+     * (two {@code /m/math} is {@code {2}/m/math}), and cardinality is meaningful for data and meaningless for
+     * membership.
      */
     public BasicInstSet refer(final InstSet isa) {
         if (null == isa || isa == this || null == isa.vid())
             return this;
         final fURI vid = isa.vid();
-        final List<Obj> referred = new ArrayList<>(this.referVids());
-        if (referred.stream().noneMatch(reference -> reference.isUri() && reference.uriValue().equals(vid))) {
-            referred.add(uri(vid.toString()));
-            // a MULTIPLICITY, not a list: an Objs streams its members, collapses one member to that member and an
-            // empty one to noobj — so the read below covers one reference and many with the same code
-            this.at(uri(REFERENCE), objs(referred.toArray(new Obj[0])), Poly.MUTABLE);
+        if (this.referVids().stream().anyMatch(reference -> reference.isUri() && reference.uriValue().equals(vid))) {
+            // ALREADY A MEMBER — REFRESH THE OBJECT. A re-mount (a new instance of the same ISA, which is what a test
+            // fixture, a reload, or a second `import` does) must resolve to the ISA now in hand rather than to
+            // whatever the first refer recorded: the map is what resolution reads, so leaving a retired instance in
+            // it would keep answering from an ISA that has been replaced.
+            this.imports.put(vid.toString(), isa);
+            return this;
         }
+        final List<Obj> referred = new ArrayList<>();
+        this.ownReferVids().forEach(reference -> referred.add(reference.c(cInt::one)));
+        referred.add(uri(vid.toString()));
+        // a MULTIPLICITY, not a list: an Objs streams its members, collapses one member to that member and an
+        // empty one to noobj — so the reads below cover one reference and many with the same code
+        this.jvm().put(uri(REFERENCE), objs(referred.toArray(new Obj[0])));
+        // ... AND THE OBJECT BESIDE THE VID. The rec is what mtron reads (import order, precedence, and no inlining
+        // when the ISA is printed); this map is what resolution USES, so an import resolves without the data index —
+        // which is what lets an instruction set be a member of a machine without being one of its spaces. Both are
+        // written here, the only way in, so they cannot drift.
+        this.imports.put(vid.toString(), isa);
         return this;
     }
 
+    /** The imported ISAs, by vid — see {@link #refer(InstSet)}. Resolution reads THIS; the rec is the reflection. */
+    private final Map<String, InstSet> imports = new LinkedHashMap<>();
+
     /**
-     * The referred vids, in import order — read straight out of the rec, so it is exactly what mtron sees. No
-     * shape inspection: a multiplicity streams as one or as many, which is the whole reason it is stored as one.
+     * The referred vids THIS level recorded, in import order — read straight out of the rec, NEVER through
+     * {@link #at(Obj)}: this is the one accessor that must stay own-only, or a level would report its parent's
+     * imports as its own. No shape inspection: a multiplicity streams as one or as many, which is the whole reason
+     * it is stored as one.
      */
-    public List<Obj> referVids() {
-        return this.at(uri(REFERENCE)).stream().filter(Obj::isUri).toList();
+    public List<Obj> ownReferVids() {
+        return super.atDirect(uri(REFERENCE)).stream().filter(Obj::isUri).toList();
     }
 
     /**
-     * The referred instsets, resolved in import order. A vid that no longer resolves is skipped rather than
+     * A REC-KEY READ WALKS THE FRAME CHAIN, own-first — the contract every other component union has
+     * ({@code MemoryUnion} answers own then {@code previous}). Without it the membership was not reflectively
+     * readable inside a frame: {@code *~/instset/reference} was {@code noobj} in a child even though that child
+     * resolved every ISA its parent had imported, so the single locus went unaskable in the one place a frame makes
+     * it matter. The rec stays LAZY — nothing is copied up front — so an import the parent makes later is still seen.
+     */
+    @Override
+    public <O extends Obj> O at(final Obj key) {
+        final O own = super.at(key);
+        return own.isNoObj() && this.previous instanceof BasicInstSet enclosing ? enclosing.at(key) : own;
+    }
+
+    @Override
+    public <O extends Obj> O atDirect(final Obj key) {
+        final O own = super.atDirect(key);
+        return own.isNoObj() && this.previous instanceof BasicInstSet enclosing ? enclosing.atDirect(key) : own;
+    }
+
+    /**
+     * The referred vids the union knows: this level's, then the enclosing machine's (which excludes any this level
+     * already recorded). The facade's membership, and what makes {@code reference} answer for a child that imported
+     * nothing itself.
+     */
+    public List<Obj> referVids() {
+        final List<Obj> vids = new ArrayList<>(this.ownReferVids());
+        if (this.previous instanceof BasicInstSet enclosing)
+            for (final Obj vid : enclosing.referVids())
+                if (vids.stream().noneMatch(known -> known.isUri() && vid.isUri() && known.uriValue().equals(vid.uriValue())))
+                    vids.add(vid);
+        return List.copyOf(vids);
+    }
+
+    /**
+     * The referred instsets, resolved in import order — THE UNION'S, not this level's: a child that imported nothing
+     * itself still uses every ISA its enclosing machine referred, so resolving only {@code ownReferVids()} left
+     * {@code references()} disagreeing with {@link #referVids()} (measured: 0 vs 4 in a pushed child) while
+     * {@link #read(fURI)} happily resolved through the parent. A vid that no longer resolves is skipped rather than
      * thrown: a reference outlives the thing it names only in a torn-down world, and a broken reference must not
      * take resolution with it.
      */
     public List<InstSet> references() {
+        return this.resolveAll(this.referVids());
+    }
+
+    /**
+     * THE ISAS THIS LEVEL IMPORTED — the libraries, not the union's whole list. The tree order comes from walking
+     * {@link #previous}, so flattening the enclosing machine's imports here would place them AHEAD of that
+     * machine's own structure; {@link #references()} (the union's, for reflection) is the list to publish, this one
+     * is the list to walk.
+     */
+    private List<InstSet> ownReferences() {
+        return this.resolveAll(this.ownReferVids());
+    }
+
+    private List<InstSet> resolveAll(final List<Obj> vids) {
         final List<InstSet> references = new ArrayList<>();
-        for (final Obj reference : this.referVids())
+        for (final Obj reference : vids)
             if (reference.isUri()) {
                 final InstSet isa = resolve(reference.uriValue());
                 if (null != isa)
@@ -91,11 +203,15 @@ public class BasicInstSet extends AbstractInstSet {
     }
 
     /**
-     * Resolve a referred vid against the machines in scope, WALKING THE FRAME CHAIN: an ISA is a space, and the
-     * index that holds it is keyed by vid. The walk is what lets a child resolve a reference it inherited rather
-     * than only one it made itself.
+     * The ISA a referred vid names. RESOLUTION IS BY OBJECT FIRST — every reference this level recorded is held as
+     * the ISA itself (see {@link #refer(InstSet)}), so membership never requires the data index: an instruction set
+     * can be a member of a machine without being one of its spaces. The index walk is the FALLBACK, for a reference
+     * that only ever had a vid — a persisted ISA, or a level built before the object was held.
      */
-    private static InstSet resolve(final fURI vid) {
+    private InstSet resolve(final fURI vid) {
+        final InstSet imported = this.imports.get(vid.toString());
+        if (null != imported)
+            return imported;
         for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous()) {
             final Obj space = memory.spaces().at(uri(vid.toString()));
             if (space instanceof InstSet isa)
@@ -104,62 +220,134 @@ public class BasicInstSet extends AbstractInstSet {
         return null;
     }
 
-    /** Own structure first — this is what shadows a referenced name — then the references in import order. */
+    /**
+     * THE UNION READ: the tree is WALKED and candidates ACCUMULATE — this level's structure, then the ISAs this
+     * level imported (in import order), then the enclosing machine, recursively. A nearer candidate wins <b>only
+     * when it names the same thing</b>: an inst's identity is its {@code tid}, a type's or a const's is its
+     * {@code vid}. So a frame that declares its own {@code plus} for a new domain ADDS a candidate — the library's
+     * other {@code plus} contracts survive, which is what an overloaded name needs — while a frame that re-declares
+     * the very contract the library already has SHADOWS it.
+     * <p>
+     * This is deliberately NOT "the first level that answers, wins": that would make a local overload erase every
+     * imported overload of the same name, and resolution is a question about candidates, not about levels.
+     */
     @Override
     public Obj read(final fURI pattern) {
-        final Obj own = super.read(pattern);
-        if (!own.isNoObj())
-            return own;
-        for (final InstSet isa : this.references()) {
-            final Obj found = isa.read(pattern);
-            if (!found.isNoObj())
-                return found;
-        }
-        return noobj();
+        return this.read(pattern, new LinkedHashSet<>());
     }
 
-    /** Writes reach only this machine's own structure: the referenced libraries are read-only by construction. */
+    /**
+     * The walk, carrying the ISAs already on the stack — an import graph with a cycle in it answers nothing rather
+     * than recursing forever. (A frame's {@code previous} chain is a tree; the imports are libraries, and a cycle
+     * among them is a wiring mistake, not something to hang on.)
+     */
+    private Obj read(final fURI pattern, final Set<InstSet> visiting) {
+        if (!visiting.add(this))
+            return noobj();
+        try {
+            final List<Obj> candidates = new ArrayList<>();
+            final Set<String> seen = new LinkedHashSet<>();
+            this.gather(pattern, candidates, seen, visiting);
+            // A SHORT NAME IS AN ADDRESS IN DISGUISE. Memory's small→big tables are what turn `plus` into
+            // `/m/inst/plus`, and an ISA's tables are keyed by the FULL address — so asking only the pattern as
+            // written answered full names and nothing else. Ask the routed spelling too (identity dedupe collapses
+            // the overlap). Routing names stays Memory's job: a name is not something an ISA resolves about itself.
+            final fURI routed = Machine.current().memory().redirect(pattern, true);
+            if (!routed.equals(pattern))
+                this.gather(routed, candidates, seen, visiting);
+            return objs(candidates);
+        } finally {
+            visiting.remove(this);
+        }
+    }
+
+    private void gather(final fURI pattern, final List<Obj> candidates, final Set<String> seen,
+                        final Set<InstSet> visiting) {
+        this.gather(super.read(pattern), candidates, seen);
+        for (final InstSet isa : this.ownReferences())
+            this.gather(isa instanceof BasicInstSet basic ? basic.read(pattern, visiting) : isa.read(pattern),
+                    candidates, seen);
+        if (null != this.previous)
+            this.gather(this.previous instanceof BasicInstSet basic ? basic.read(pattern, visiting) : this.previous.read(pattern),
+                    candidates, seen);
+    }
+
+    /** Take a level's candidates, dropping any whose identity a nearer level has already answered. */
+    private void gather(final Obj from, final List<Obj> candidates, final Set<String> seen) {
+        if (null == from || from.isNoObj())
+            return;
+        from.stream().forEach(candidate -> {
+            final fURI identity = identity(candidate);
+            if (null == identity || seen.add(identity.toString()))
+                candidates.add(candidate);
+        });
+    }
+
+    /**
+     * WHAT A CANDIDATE <em>IS</em>: an inst is its tid (its dom/rng contract — two overloads of one name are two
+     * candidates), a type or a const is its vid. A candidate carried as a rel is judged by the obj inside it,
+     * because a non-node read wraps each hit as {@code uri => obj}.
+     */
+    private static fURI identity(final Obj candidate) {
+        final Obj obj = candidate.isRel() ? candidate.asRel().second() : candidate;
+        return obj.isInst() ? obj.tid() : obj.vid();
+    }
+
+    /** Writes reach only this machine's own structure: the enclosing level and the libraries are read-only here. */
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return super.write(vid, obj);
     }
 
-    // ---- the kind accessors merge, own-first, so enumeration sees what resolution sees ----
+    // ---- the kind accessors merge by the SAME identity rule, so enumeration sees what resolution sees ----
 
     @Override
     public Set<Obj> consts() {
-        return this.merge(super.consts(), isa -> isa.consts(), Obj::vid);
+        return this.merge(super.consts(), InstSet::consts, Obj::vid);
     }
 
     @Override
     public Set<Type> types() {
-        return this.merge(super.types(), isa -> isa.types(), Type::vid);
+        return this.merge(super.types(), InstSet::types, Type::vid);
     }
 
     @Override
     public Set<Inst> insts() {
-        return this.merge(super.insts(), isa -> isa.insts(), Inst::vid);
+        return this.merge(super.insts(), InstSet::insts, Inst::tid);
     }
 
     @Override
     public Set<Inst> rewrites() {
-        return this.merge(super.rewrites(), isa -> isa.rewrites(), Inst::vid);
+        return this.merge(super.rewrites(), InstSet::rewrites, Inst::tid);
     }
 
     /**
-     * Own entries first, then each reference's entries, dropping any whose vid is already shadowed.
+     * Own entries first, then each import's, then the enclosing machine's — dropping an entry whose IDENTITY is
+     * already answered by a nearer level. Insts are identified by tid and types/consts by vid, which is the same
+     * rule {@link #read(fURI)} applies per candidate: an overloaded name keeps every distinct contract, and a
+     * re-declared one keeps only the nearest.
      */
     private <T> Set<T> merge(final Set<T> own, final java.util.function.Function<InstSet, Set<T>> of,
-                             final java.util.function.Function<T, fURI> vidOf) {
+                             final java.util.function.Function<T, fURI> identityOf) {
         final Set<T> merged = new LinkedHashSet<>(own);
         final Set<fURI> seen = new LinkedHashSet<>();
-        own.forEach(t -> { final fURI v = vidOf.apply(t); if (null != v) seen.add(v); });
-        for (final InstSet isa : this.references())
-            for (final T t : of.apply(isa)) {
-                final fURI v = vidOf.apply(t);
-                if (null == v || seen.add(v))
-                    merged.add(t);
-            }
+        own.forEach(t -> {
+            final fURI id = identityOf.apply(t);
+            if (null != id) seen.add(id);
+        });
+        for (final InstSet isa : this.ownReferences())
+            this.mergeFrom(merged, seen, of.apply(isa), identityOf);
+        if (null != this.previous)
+            this.mergeFrom(merged, seen, of.apply(this.previous), identityOf);
         return merged;
+    }
+
+    private <T> void mergeFrom(final Set<T> merged, final Set<fURI> seen, final Set<T> entries,
+                               final java.util.function.Function<T, fURI> identityOf) {
+        for (final T t : entries) {
+            final fURI id = identityOf.apply(t);
+            if (null == id || seen.add(id))
+                merged.add(t);
+        }
     }
 }

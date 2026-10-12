@@ -50,8 +50,11 @@ noobj       [-- "no obj" (empty, none) --]
 ### objs (`{ , }` — unordered, streamed and bulked)
 
 ```mtron_pre
-{1,2,3} [-- equivalent to {2,1,3} (unordered) --]
-{1,1,2} [-- becomes {{2}1,2} (duplicates merged on coefficient) --]
+{1,2,3}                                  [-- equivalent to {2,1,3} (unordered) --]
+{1,2,3}.isa({1,2,3})                     [-- wrong assumption: checks 1, then 2, then 3 against isa arg --]
+{1,2,3}.isa?int{*}<=int{*}({1,2,3})      [-- isa now a barrier and checks stream against stream --]
+{1,2,3}.isa?int{*}<=int{*}({3,1,2})      [-- streams are unordered --]
+{3,1,2,3}.isa?int{*}<=int{*}({{2}3,1,2}) [-- coefficients accounted for --]
 ```
 
 ### Indexing / Access
@@ -90,12 +93,12 @@ Objs can carry a **vid** (address URI) via `@`:
 Every obj has a coefficient. Shorthand is `{n}obj` -- standing for `type{n}::obj`:
 
 ```mtron_pre
-3                      [-- coefficient {1} (default) --]
-{0}3                   [-- equivalent to noobj (0 3s) --]
-int{5}::3              [-- coefficient {5} represents 5 3s --]
-{5}3                   [-- shorthand for the previous example (5 3s) --]
-{1,2,3}.sum{2}()       [-- two parallel sums yields {2}6 --]
-{1,2,3}.sum{2}().sum() [-- {2}6 merged by sum is 12 --]
+3                                        [-- coefficient {1} (default) --]
+{0}3                                     [-- equivalent to noobj (0 3s) --]
+int{5}::3                                [-- coefficient {5} represents 5 3s --]
+{5}3                                     [-- shorthand for the previous example (5 3s) --]
+{1,2,3}.sum{2}()                         [-- two parallel sums yields {2}6 --]
+{1,2,3}.sum{2}().sum()                   [-- {2}6 merged by sum is 12 --]
 ```
 
 Coefficients propagate through arithmetic and affect count, sum, repeat:
@@ -139,11 +142,15 @@ int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ### Boolean logic
 
 ```mtron_pre
-3.is(gt(2))                 [-- 3  (filters: passes lhs through if true, noobj if false) --]
-3.is(true)                  [-- 3 --]
-{1,2,3,4,5}.is(gt(2))       [-- {3,4,5} --]
+3.is(gt(2))                        [-- 3  (filters: passes lhs through if true, noobj if false) --]
+3.is(eq(3))                        [-- 3  (filter based on equality) --]
+3.isa(3)                           [-- 3  (filter based on value-value testing) --]
+3.isa(int::T)                      [-- 3  (filter based on value-type testing) --]
+3.is(true)                         [-- 3 --]
+{1,2,3,4,5}.is(gt(2))              [-- {3,4,5} --]
 {1,2,3,4,5}.is(and(gt(2),lt(5)))   [-- {3,4} --]
-1.and(gt(2),lt(5))          [-- false --]
+{1,2,3,4,5}.is(?>2.?<5)            [-- {3,4} (using sugar'd syntax)--]
+1.and(gt(2),lt(5))                 [-- false --]
 ```
 
 ---
@@ -151,13 +158,15 @@ int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ## 5. String Operations
 
 ```mtron_pre
-"goodbye".plus(" nowhere")     [-- "goodbye nowhere" --]
-"goodbye" + " nowhere"         [-- sugar sytnax for previous --]
-'a b c'.split(' ')             [-- ["a", "b", "c"] --]
-'a b c'-<' '                   [-- sugar syntax for previous --]
-{"a","b","c"}>-' '             [-- "a b c"  (merge with separator) --]
-'ab3cd'.select('\d+')          [-- ['3'] --]
-'ab3cd'.select('\d{2}')        [-- [,]  (no match — empty pair) --]
+"goodbye".plus(" nowhere")                    [-- "goodbye nowhere" --]
+"goodbye" + " nowhere"                        [-- sugar sytnax for previous --]
+'a b c'.split(' ')                            [-- ["a", "b", "c"] --]
+'a b c'-<' '                                  [-- sugar syntax for previous --]
+{"a","b","c"}>-' '                            [-- "a b c"  (merge with separator) --]
+'ab3cd'.select('\d+')                         [-- ['3'] --]
+'ab3cd'.select('\d{2}')                       [-- [,]  (no match — empty pair) --]
+'abbc'>>=['a'=>'A','b{2}'=>'X']               [-- 'AXc' (update sugar syntax) --]
+'abbc'>>=['a'=>'A','b{2}'=>'X']=='[A-Z]{2,3}' [-- ['AX'] (update and select sugar syntax) --]
 ```
 
 ---
@@ -480,26 +489,26 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 
 ## 22. Sugar & Syntax Summary
 
-| Sugar      | Expansion        | Use                      |
-|------------|------------------|--------------------------|
-| `*uri`     | `from(uri)`      | Dereference URI          |
-| `!*uri`    | `auto_from(uri)` | Lazy cross-ref           |
-| `@uri`     | `at(uri)`        | Anchor to URI location   |
-| `_`        | `id()`           | Identity function        |
-| `>>=`      | `update()`       | Update-and-write-back    |
-| `>>`       | `rshift()`       | Right-shift (drop last)  |
-| `<<`       | `lshift()`       | Left-shift (drop first)  |
-| `>-`       | `merge()`        | Flatten / merge barrier  |
-| `-<`       | `split()`        | Distribute into branches |
-| `\|`       | `barrier()`      | Monadic barrier          |
-| `_/...\\_` | `within()`       | Structural within-block  |
-| `.`        | `.plus(1)`       | Dot-instruction call     |
-| `=>`       | `rel()`          | Key → value relation     |
-| `->`       | `ref()`          | Write to URI reference   |
-| `;`        | `end()`          | Sequence separator       |
-| `?pred`    | `is(pred)`       | Type/condition check     |
+| Sugar      | Expansion        | Use                        |
+|------------|------------------|----------------------------|
+| `*uri`     | `from(uri)`      | Dereference URI            |
+| `!*uri`    | `auto_from(uri)` | Lazy cross-ref             |
+| `@uri`     | `at(uri)`        | Anchor to URI location     |
+| `_`        | `id()`           | Identity function          |
+| `>>=`      | `update()`       | Update-and-write-back      |
+| `>>`       | `rshift()`       | Right-shift (drop last)    |
+| `<<`       | `lshift()`       | Left-shift (drop first)    |
+| `>-`       | `merge()`        | Flatten / merge barrier    |
+| `-<`       | `split()`        | Distribute into branches   |
+| `\|`       | `barrier()`      | Monadic barrier            |
+| `_/...\\_` | `within()`       | Structural within-block    |
+| `.`        | `.plus(1)`       | Dot-instruction call       |
+| `=>`       | `rel()`          | Key → value relation       |
+| `->`       | `ref()`          | Write to URI reference     |
+| `;`        | `end()`          | Sequence separator         |
+| `?pred`    | `is(pred)`       | Type/condition check       |
 | `lhs ? p`  | `lhs.isa(p)`     | Filter: keep if `p` admits |
-| `==`       | `select()`       | Structural select        |
+| `==`       | `select()`       | Structural select          |
 
 ---
 

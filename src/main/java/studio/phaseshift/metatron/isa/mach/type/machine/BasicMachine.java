@@ -115,7 +115,9 @@ public class BasicMachine extends AbstractMachine {
                 uri(QPROC), lst(QCollection.docQ()),
                 uri(MEMORY), memory,
                 uri(NETWORK), network,
-                uri(INSTSET), instLambda(ignore -> instset),
+                // the ISA is bound as ITSELF, like every other component — there is no template to apply, which is
+                // what keeps a slot from needing a compiler (or a machine) before one exists.
+                uri(INSTSET), instset,
                 uri(COMPILER), BasicCompiler.defaults(),
                 uri(PROCESSOR), SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null)), tid, vid);
         // uri("+").c(cInt.of(-1, 1)), instC(f("+").c(cInt.of(-1, 1)).dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(),

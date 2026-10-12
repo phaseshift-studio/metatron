@@ -338,15 +338,25 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
     format=>!inst?rng=str&dom=#{?}(){<j>},
     desc=>[
      rng=><#>,
-     insts=>2],
+     insts=>3],
     per_inst=>[
      [
-      op=>sql_where,
-      args=>[people/+,"role = 'developer'"],
+      op=>from,
+      args=>[mydb:people/+],
       f=>'<j>',
-      form=>initial,
+      form=>standard,
       c_dom=>0,
       c_rng=>0],
+     [
+      op=>isa,
+      dom=><#>,
+      rng=><#>,
+      args=>[
+       [
+        role=>developer]],
+      form=>mapper,
+      c_dom=>1,
+      c_rng=>1],
      [
       op=>select,
       dom=><#>,
@@ -364,14 +374,21 @@ mtron> *mydb:people/+.count().explain()                         [-- sql rewrite 
     format=>!inst?rng=str&dom=#{?}(){<j>},
     desc=>[
      rng=>int,
-     insts=>1],
+     insts=>2],
     per_inst=>[
      [
-      op=>sql_count,
-      rng=>int,
-      args=>[people/+],
+      op=>from,
+      args=>[mydb:people/+],
       f=>'<j>',
-      form=>initial,
+      form=>standard,
+      c_dom=>0,
+      c_rng=>0],
+     [
+      op=>count,
+      rng=>int,
+      args=>[,],
+      f=>'<j>',
+      form=>reducer,
       c_dom=>0,
       c_rng=>1]]]
 ```

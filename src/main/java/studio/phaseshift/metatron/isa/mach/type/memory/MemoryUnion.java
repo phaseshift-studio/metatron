@@ -222,9 +222,9 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
 
     @Override
     public void addSpace(final Space space) {
-        // Never evict the parent's space of the same pattern — install ours alongside it and shadow.
-        if (this.previous.hasSpaceFor(space.pattern()))
-            this.logger().warn("shadowing parent space for pattern %s", space.pattern());
+        // Never evict the parent's space of the same pattern — install ours alongside it and shadow. Shadowing is
+        // the UNION working: a frame's own interior speaks for its pattern and every miss still walks outward, so
+        // this is the normal case rather than something to report. (It used to warn on every frame mount.)
         this.own().addSpace(space);
     }
 
