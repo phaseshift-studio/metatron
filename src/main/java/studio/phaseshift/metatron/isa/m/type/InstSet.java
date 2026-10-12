@@ -87,6 +87,16 @@ public interface InstSet extends Space, Machine.Component {
     fURI F = f("F");
     fURI G = f("G");
 
+    /**
+     * The DECLARED read: what this instruction set's tables say about a pattern, with no lazy
+     * materialization. A plain store answers exactly as {@code read} does; a union walks its members with
+     * this form, so a read that the machine makes as a FALLBACK (see {@code Machine.read}'s instset hop)
+     * cannot cause work on the reader's behalf.
+     */
+    default Obj readDeclared(final fURI pattern) {
+        return this.read(pattern);
+    }
+
     void setup();
 
     /**

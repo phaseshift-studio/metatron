@@ -607,25 +607,21 @@ httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
 console::[=&gt;]@/usr/ui/console;
-==&gt;console::[
-    menu=&gt;[  console=&gt;console::[
-      command_palette=&gt;/m/mach/ui/console/command_palette::[    console=&gt;!*/usr/ui/console,
-       help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       redirect=&gt;[
-        input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
-       header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       ...(30 more)]@/usr/ui/console/command_palette],
-     help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     redirect=&gt;[
-      input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
-     header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     ...(30 more)]]@/usr/ui/console</code></pre>
+==&gt;console::[menu=&gt;[console=&gt;console::[command_palette=&gt;/m/mach/ui/console/command_palette::[console=&gt;!*/usr/ui/console,
+                                                                                             help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+                                                                                             header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             ...(30 more)]@/usr/ui/console/command_palette],
+                    help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+                    header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    ...(30 more)]]@/usr/ui/console</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -731,35 +727,17 @@ mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;farm:#
 ==&gt;acme:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;[
-    mtronfs:#=&gt;[
-     mtronfs:=&gt;&lt;.metatron&gt;]]
-==&gt;[
-    local:#=&gt;[
-     local:=&gt;/home/killswitch/]]
-==&gt;[
-    /te/cold/#=&gt;[
-     /te/cold/=&gt;&lt;&gt;]]
+==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
+==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]
+==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
 ==&gt;{3}[=&gt;]
-==&gt;[
-    ha:#=&gt;[
-     ha:=&gt;/home/chips]]
-==&gt;[
-    /te/hot/#=&gt;[
-     /te/hot/=&gt;&lt;&gt;]]
-==&gt;[
-    http://#=&gt;[
-     /=&gt;local:]]
-==&gt;[
-    fs:#=&gt;[
-     fs:m=&gt;/home/killswitch/software/metatron,
-     fs:=&gt;/home/killswitch/]]
-==&gt;[
-    farm:#=&gt;[
-     farm:=&gt;&lt;&gt;]]
-==&gt;[
-    acme:#=&gt;[
-     acme:=&gt;&lt;&gt;]]</code></pre>
+==&gt;[ha:#=&gt;[ha:=&gt;/home/chips]]
+==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
+==&gt;[http://#=&gt;[/=&gt;local:]]
+==&gt;[fs:#=&gt;[fs:m=&gt;/home/killswitch/software/metatron,
+           fs:=&gt;/home/killswitch/]]
+==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
+==&gt;[acme:#=&gt;[acme:=&gt;&lt;&gt;]]</code></pre>
 </div>
 </div>
 <br><br></main>

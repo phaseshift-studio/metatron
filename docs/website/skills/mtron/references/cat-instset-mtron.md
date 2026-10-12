@@ -38,35 +38,29 @@ instruction from being evaluated.
 
 ```mtron
 mtron> int::T.as(object::T)
-==>object::[
-    obj=>int::T,
-    law=>[
-     ring=>ring_theory::[
-      add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
-      mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
-      zero=>0,
-      one=>1],
-     add_group=>group_theory::[
-      op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
-      id=>0,
-      inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int],
-     add_monoid=>monoid_theory::[
-      op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
-      id=>0],
-     mult_monoid=>monoid_theory::[
-      op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
-      id=>1]],
-    morphed_to=>!inst?rng=#{*}&dom=#{?}(){<j>},
-    morphed_from=>!inst?rng=#{*}&dom=#{?}(){<j>}]
+==>object::[obj=>int::T,
+            law=>[ring=>ring_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                                      mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
+                                      zero=>0,
+                                      one=>1],
+                  add_group=>group_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                                            id=>0,
+                                            inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int],
+                  add_monoid=>monoid_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                                              id=>0],
+                  mult_monoid=>monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
+                                               id=>1]],
+            morphed_to=>!inst?rng=#{*}&dom=#{?}(){<j>},
+            morphed_from=>!inst?rng=#{*}&dom=#{?}(){<j>}]
 mtron> |plus?int<=int(int::T).as(morphism::T)
-==>morphism::[ name=>plus,
-    form=>mapper,
-    class=>[endo],
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>plus?rng=int&dom=int(int::T),
-    ...(1 more)]
+==>morphism::[name=>plus,
+              form=>mapper,
+              class=>[endo],
+              src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+              trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+              analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+              obj=>plus?rng=int&dom=int(int::T),
+              ...(1 more)]
 ```
 ## the two blocks
 
@@ -81,26 +75,26 @@ mtron> |plus?int<=int(int::T).as(morphism::T)
 
 ```mtron
 mtron> int::T.as(object::T).morphed_to()
-==>morphism::[
-    name=>as,
-    form=>mapper,
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>as?rng=bool&dom=int(bool::T){<j>}]
-==>morphism::[
-    name=>as,
-    form=>mapper,
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
-    obj=>as?rng=bytes&dom=int(bytes::T){<j>}]
-==>morphism::[
-    name=>as,
-    form=>mapper,
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+==>morphism::[name=>as,
+              form=>mapper,
+              src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+              trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+              analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+              obj=>as?rng=bool&dom=int(bool::T){<j>}]
+==>morphism::[name=>as,
+              form=>mapper,
+              src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+              trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+              analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+              obj=>as?rng=bytes&dom=int(bytes::T){<j>}]
+==>morphism::[name=>as,
+              form=>mapper,
+              src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+              trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+              analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+              obj=>as?rng=real&dom=int(real::T){<j>}]
+==>morphism::[name=>as,
+              form=>mapper,
    ...
 ```
 ### the morphism block — `morphism::T` (an edge)
@@ -203,10 +197,7 @@ laws):
 
 ```mtron
 mtron> |plus?int<=int(int::T).as(morphism::T)>>law
-==>[
-    commutative,
-    right_distributive,
-    action]
+==>[commutative,right_distributive,action]
 ```
 | law                  | what it asserts                                                              |
 |----------------------|------------------------------------------------------------------------------|

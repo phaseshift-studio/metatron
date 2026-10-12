@@ -429,6 +429,23 @@ public class Highlighter implements org.jline.reader.Highlighter {
     }
 
     /**
+     * The columns the {@code ==>} result prompt occupies.
+     */
+    public static final int RESULT_PROMPT_WIDTH = 3;
+
+    /**
+     * Shift a multi-line result past the {@code ==>} prompt it is written after, so its
+     * continuation lines begin under the value's first line instead of under the prompt.
+     * A result is written as {@code ==>value}, and only the value's first line sits one past
+     * the prompt — without this shift every later line starts at the value's own indent and
+     * the entries no longer line up.  The docs pipeline ({@code MtronPreprocessor}) and the
+     * websocket REPL ({@code bin/wsplus}) apply the same shift.
+     */
+    public static String indentResult(final String result) {
+        return null == result ? null : result.replace("\n", "\n" + " ".repeat(RESULT_PROMPT_WIDTH));
+    }
+
+    /**
      * The display columns {@code string} occupies once its markup is stripped — the
      * measure the widgets lay themselves out with.  Delegates to
      * {@link Graphitty#viewLength}, which counts columns and not characters: a CJK

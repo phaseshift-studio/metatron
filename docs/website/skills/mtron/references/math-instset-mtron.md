@@ -76,7 +76,7 @@ under `/m/math/+` and available via the standard type resolution system.
 ```mtron
 mtron> [-- current system time --]
 mtron> datetime_now()
-==>datetime:://2026.10:1205/25/20/177?tz=-0600
+==>datetime:://2026.10:1206/02/25/798?tz=-0600
 mtron> [-- from record (goes through .as(uri::T) first) --]
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
@@ -156,16 +156,12 @@ mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[port=>31]>>port
 ==>31
 mtron> [-- where filter: match day 25 --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>25]
-==>[
-    host=><2024.12>,
+==>[host=><2024.12>,
     port=>25,
     authority=><2024.12:25>,
     path=>[<>,<09>,<00>,<00>,<000>],
-    c=>[
-     min=>1,
-     max=>1],
-    q=>[
-     tz=>'-0500']]
+    c=>[min=>1,max=>1],
+    q=>[tz=>'-0500']]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>26]
 mtron> [-- rec update: change timezone --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz

@@ -38,15 +38,11 @@ links back to its containers.
 ```mtron
 mtron> dckrspace::T
 mtron> !*dckrspace?docq
-==>docs::[
-    obj=>space::T[?[
-     {?}host=>uri::T,
-     {?}progress=>rec::T]][ctor?rng=dckrspace&dom=#{?}(dckrspace::T){<j>}]@/m/dckr/space/dckrspace,
-    desc=>'[structural] a docker daemon space',
-    example=>[
-     'docker:compose/my-stack -> [servic...',
-     '*docker:container/+',
-     '*docker:image/nginx/<nginx:latest>']]
+==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?rng=dckrspace&dom=#{?}(dckrspace::T){<j>}]@/m/dckr/space/dckrspace,
+          desc=>'[structural] a docker daemon space',
+          example=>['docker:compose/my-stack -> [servic...',
+                    '*docker:container/+',
+                    '*docker:image/nginx/<nginx:latest>']]
 ```
 ```mtron
 dckrspace::[pattern   => docker:#,
@@ -291,106 +287,70 @@ mtron> tblespace::[pattern => mydb:#,
 ```mtron
 mtron> [-- insert tble rows --]
 mtron> mydb:people/1 -> [name=>'marko',role=>architect]
-==>[
-    name=>'marko',
-    role=>architect]
+==>[name=>'marko',role=>architect]
 mtron> mydb:people/2 -> [name=>'stynx',role=>developer]
-==>[
-    name=>'stynx',
-    role=>developer]
+==>[name=>'stynx',role=>developer]
 mtron> mydb:people/3 -> [name=>'metis',role=>oracle]
-==>[
-    name=>'metis',
-    role=>oracle]
+==>[name=>'metis',role=>oracle]
 ```
 ### Step 4: Query from mtron
 
 ```mtron
 mtron> *mydb:people/+                                           [-- all rows              --]
-==>[
-    name=>'marko',
-    role=>architect]
-==>[
-    name=>'metis',
-    role=>oracle]
-==>[
-    name=>'stynx',
-    role=>developer]
+==>[name=>'marko',role=>architect]
+==>[name=>'metis',role=>oracle]
+==>[name=>'stynx',role=>developer]
 mtron> *mydb:people/+/                                          [-- all rows keyed by uri --]
-==>mydb:people/1=>[
-    name=>'marko',
-    role=>architect]
-==>mydb:people/3=>[
-    name=>'metis',
-    role=>oracle]
-==>mydb:people/2=>[
-    name=>'stynx',
-    role=>developer]
+==>mydb:people/1=>[name=>'marko',role=>architect]
+==>mydb:people/3=>[name=>'metis',role=>oracle]
+==>mydb:people/2=>[name=>'stynx',role=>developer]
 mtron> *mydb:people/+/name                                      [-- all names             --]
 ==>'stynx'
 ==>'marko'
 ==>'metis'
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
-==>[
-    name=>'stynx']
+==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]
-==>explanation::[
-    format=>!inst?rng=str&dom=#{?}(){<j>},
-    desc=>[
-     rng=><#>,
-     insts=>3],
-    per_inst=>[
-     [
-      op=>from,
-      args=>[mydb:people/+],
-      f=>'<j>',
-      form=>standard,
-      c_dom=>0,
-      c_rng=>0],
-     [
-      op=>isa,
-      dom=><#>,
-      rng=><#>,
-      args=>[
-       [
-        role=>developer]],
-      form=>mapper,
-      c_dom=>1,
-      c_rng=>1],
-     [
-      op=>select,
-      dom=><#>,
-      rng=><#>,
-      args=>[
-       [
-        name=>id()]],
-      form=>mapper,
-      c_dom=>1,
-      c_rng=>1]]]
+==>explanation::[format=>!inst?rng=str&dom=#{?}(){<j>},
+                 desc=>[rng=><#>,insts=>3],
+                 per_inst=>[[op=>from,
+                             args=>[mydb:people/+],
+                             f=>'<j>',
+                             form=>standard,
+                             c_dom=>0,
+                             c_rng=>0],
+                            [op=>isa,
+                             dom=><#>,
+                             rng=><#>,
+                             args=>[[role=>developer]],
+                             form=>mapper,
+                             c_dom=>1,
+                             c_rng=>1],
+                            [op=>select,
+                             dom=><#>,
+                             rng=><#>,
+                             args=>[[name=>id()]],
+                             form=>mapper,
+                             c_dom=>1,
+                             c_rng=>1]]]
 mtron> *mydb:people/+.count()                                   [-- number of rows        --]
 ==>3
 mtron> *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==>explanation::[
-    format=>!inst?rng=str&dom=#{?}(){<j>},
-    desc=>[
-     rng=>int,
-     insts=>2],
-    per_inst=>[
-     [
-      op=>from,
-      args=>[mydb:people/+],
-      f=>'<j>',
-      form=>standard,
-      c_dom=>0,
-      c_rng=>0],
-     [
-      op=>count,
-      rng=>int,
-      args=>[,],
-      f=>'<j>',
-      form=>reducer,
-      c_dom=>0,
-      c_rng=>1]]]
+==>explanation::[format=>!inst?rng=str&dom=#{?}(){<j>},
+                 desc=>[rng=>int,insts=>2],
+                 per_inst=>[[op=>from,
+                             args=>[mydb:people/+],
+                             f=>'<j>',
+                             form=>standard,
+                             c_dom=>0,
+                             c_rng=>0],
+                            [op=>count,
+                             rng=>int,
+                             args=>[,],
+                             f=>'<j>',
+                             form=>reducer,
+                             c_dom=>0,
+                             c_rng=>1]]]
 ```
 ### Step 5: The container sees the same data
 

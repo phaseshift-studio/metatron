@@ -47,13 +47,9 @@ mtron> noobj       [-- "no obj" (empty, none) --]
 mtron> [1, 2, 3]         [-- List of 3 ints --]
 ==>[1,2,3]
 mtron> [1, [2, 3]]       [-- Nested list --]
-==>[
-    1,
-    [2,3]]
+==>[1,[2,3]]
 mtron> [a=>1, b=>2]      [-- Record (key-value pairs) --]
-==>[
-    a=>1,
-    b=>2]
+==>[a=>1,b=>2]
 mtron> [,]               [-- Empty list --]
 ==>[,]
 ```
@@ -61,14 +57,9 @@ mtron> [,]               [-- Empty list --]
 
 ```mtron
 mtron> [name=>'marko', age=>29]
-==>[
-    name=>'marko',
-    age=>29]
+==>[name=>'marko',age=>29]
 mtron> [1=>2, 2=>3, 3=>4]
-==>[
-    1=>2,
-    2=>3,
-    3=>4]
+==>[1=>2,2=>3,3=>4]
 ```
 ### objs (`{ , }` — unordered, streamed and bulked)
 
@@ -86,7 +77,7 @@ mtron> {1,2,3}.isa?int{*}<=int{*}({3,1,2})      [-- streams are unordered --]
 ==>1
 ==>2
 ==>3
-mtron> {3,1,2,3}.isa?int{*}<=int{*}(
+mtron> {3,1,2,3}.isa?int{*}<=int{*}({1,{2}3,2}) [-- coefficients accounted for --]
 ==>{2}3
 ==>1
 ==>2
@@ -116,17 +107,13 @@ Objs can carry a **vid** (address URI) via `@`:
 
 ```mtron
 mtron> [a=>1]@a                 [-- rec anchored at uri myVid --]
-==>[
-    a=>1]@a
+==>[a=>1]@a
 mtron> [1,2,3,4]@b              [-- lst anchored at *a --]
 ==>[1,2,3,4]@b
 mtron> *a + [b=>2]
-==>[
-    a=>1,
-    b=>2]
+==>[a=>1,b=>2]
 mtron> *a
-==>[
-    a=>1]
+==>[a=>1]
 mtron> @b + [5,6]
 ==>[1,2,3,4,5,6]@b
 mtron> *b
@@ -229,8 +216,9 @@ mtron> {1,2,3,4,5}.is(gt(2))              [-- {3,4,5} --]
 mtron> {1,2,3,4,5}.is(and(gt(2),lt(5)))   [-- {3,4} --]
 ==>3
 ==>4
-mtron> {1,2,3,4,5}.is(?>2.?<5)            [-- {3,4} (using sugar'd syntax)--]
-==>fail{2}::[inst apply failure: unable to convert int::T to bool (at /m/inst/is@1) [Obj$ObjType<1427>]][unable to convert int::T to bool [Obj$ObjType<1427>]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/fail/_?incrq
+mtron> {1,2,3,4,5}.?>2.?<5                [-- {3,4} (using sugar'd syntax)--]
+==>3
+==>4
 mtron> 1.and(gt(2),lt(5))                 [-- false --]
 ==>false
 ```
@@ -310,13 +298,9 @@ mtron> "/a/b/c".as(uri::T)       [-- /a/b/c --]
 mtron> true.as(int::T)           [-- 1 --]
 ==>1
 mtron> [a=>1,b=>2].as(lst::T)    [-- [(0=>(a=>1)),(1=>(b=>2))] --]
-==>[
-    0=>a=>1,
-    1=>b=>2]
+==>[0=>a=>1,1=>b=>2]
 mtron> [a,b].as(rec::T)          [-- [0=>a,1=>b] --]
-==>[
-    0=>a,
-    1=>b]
+==>[0=>a,1=>b]
 ```
 Custom types, created with `tid::T[predicate][constructor]@vid` (see the *type system* doc):
 
@@ -356,26 +340,16 @@ mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (filter: keep the members the
 
 ```mtron
 mtron> [a=>1,b=>2,c=>3].select([_=>_])                            [-- [a=>1,b=>2,c=>3] --]
-==>[
-    a=>1,
-    b=>2,
-    c=>3]
+==>[a=>1,b=>2,c=>3]
 mtron> [a=>1,b=>2,c=>3]==[_=>_]                                   [-- syntax sugar for above --]
-==>[
-    a=>1,
-    b=>2,
-    c=>3]
+==>[a=>1,b=>2,c=>3]
 mtron> [a=>1,b=>2,c=>3]==[a=>_]                                   [-- [a=>1] --]
-==>[
-    a=>1]
+==>[a=>1]
 mtron> [a=>1,b=>2,c=>3]==[a=>+10]                                 [-- [a=>11] --]
-==>[
-    a=>11]
+==>[a=>11]
 mtron> {[a=>1],[a=>2],[a=>3]}==[a=>?>=2.+10]                      [-- {[a=>12],[a=>13]} --]
-==>[
-    a=>12]
-==>[
-    a=>13]
+==>[a=>12]
+==>[a=>13]
 mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
 ==>[1,7,3]
 ```
@@ -386,15 +360,11 @@ not. A rec predicate matches structurally — the value's field is checked again
 
 ```mtron
 mtron> {[a=>1],[a=>2],[a=>3]}?[a=>is(gt(1))]   [-- {[a=>2],[a=>3]}  (the rec predicate matches each rec's a-field) --]
-==>[
-    a=>2]
-==>[
-    a=>3]
+==>[a=>2]
+==>[a=>3]
 mtron> {[a=>1],[a=>2],[a=>3]}?[a=>is(lt(3))]   [-- {[a=>1],[a=>2]}  (the same shape admits the low fields) --]
-==>[
-    a=>1]
-==>[
-    a=>2]
+==>[a=>1]
+==>[a=>2]
 ```
 **`where()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
 fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
@@ -411,19 +381,9 @@ mtron> <//2024.12:25/09/00/00/000?tz=-0500>?where([host=>2024.12, port=>26])  [-
 
 ```mtron
 mtron> {1,2,3}.group([_=>+10])                [-- [1=>11, 2=>12, 3=>13] --]
-==>[
-    1=>11,
-    2=>12,
-    3=>13]
+==>[1=>11,2=>12,3=>13]
 mtron> [a=>1,b=>2,c=>3].group([_=>_])          [-- [[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]] --]
-==>[
-    [
-    a=>1,
-    b=>2,
-    c=>3]=>[
-     a=>1,
-     b=>2,
-     c=>3]]
+==>[[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]]
 ```
 ---
 
@@ -449,9 +409,7 @@ mtron> {1,2,3}>-1                           [-- {1,1,2,3}  (1 is added to the st
 ==>2
 ==>3
 mtron> [a=>1,b=>2]>-.>-[b=>2]              [-- [a=>1, b=>{2}2]  (the incoming 2 stacks under the existing 2 as a coefficient) --]
-==>[
-    a=>1,
-    b=>{2}2]
+==>[a=>1,b=>{2}2]
 ```
 ### Split (`-<`)
 
@@ -485,16 +443,13 @@ Traverse into structures:
 ```mtron
 mtron> [1,2,[a=>3],4]<<2                  [-- [[a=>3],4] --]
 mtron> [1,2,[a=>3],4]>>2                  [-- [1,2] --]
-==>[
-    a=>3]
+==>[a=>3]
 mtron> [1,2,[a=>3],4]>>(-2)               [-- [a=>3] (negative indicies) --]
-==>[
-    a=>3]
+==>[a=>3]
 mtron> [1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4} (selectors are uris) --]
 ==>1
 ==>2
-==>[
-    a=>3]
+==>[a=>3]
 ==>4
 ```
 ### On records
@@ -507,12 +462,9 @@ mtron> [a=>1,b=>2,c=>[d=>3]].dom()        [-- {a,b,c}           (extract keys) -
 mtron> [a=>1,b=>2,c=>[d=>3]].rng()        [-- {1,2,[d=>3]}      (extract values) --]
 ==>1
 ==>2
-==>[
-    d=>3]
+==>[d=>3]
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c      [-- [d=>[e=>3]]       (access by key) --]
-==>[
-    d=>[
-     e=>3]]
+==>[d=>[e=>3]]
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c/d/e  [-- 3                 (walk nested structure) --]
 ==>3
 ```
@@ -567,8 +519,7 @@ mtron> @xyz/c/d>>=10                           [-- write 10 to path --]
 mtron> [1,2]@a >>= [_,+4]                      [-- [1,6]@a  (second element +4) --]
 ==>[1,6]
 mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
-==>[
-    a=>1]
+==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
 ```
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
@@ -585,11 +536,9 @@ Lazy cross-reference via the Router:
 
 ```mtron
 mtron> [company=>!*db:companies/101]     [-- auto_from — resolved on access --]
-==>[
-    company=>!*db:companies/101]
+==>[company=>!*db:companies/101]
 mtron> [company=>!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
-==>[
-    company=>!@db:companies/101]
+==>[company=>!@db:companies/101]
 ```
 `!*` is sugar for `auto_from(uri)`. When you `.at(company)` on the record, the Router resolves `db:companies/101` and
 returns the target Obj.
@@ -683,8 +632,7 @@ mtron> int{?}::10                     [-- optional coefficient {0,1} --]
 
 ```mtron
 mtron> [a=>1,b=>2,c=>3]==[a=>_]     [-- select with pattern match --]
-==>[
-    a=>1]
+==>[a=>1]
 mtron> [a=>1,b=>2,c=>3]==[a=>is(gt(1))]  [-- select with filter --]
 ```
 ---

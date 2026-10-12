@@ -233,7 +233,17 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
      */
     @Override
     public Obj read(final fURI pattern) {
-        return this.read(pattern, new LinkedHashSet<>());
+        return this.read(pattern, new LinkedHashSet<>(), false);
+    }
+
+    /**
+     * The union walked with {@link InstSet#readDeclared(fURI)} — the form a FALLBACK read uses (the machine's
+     * instset hop), so asking the vocabulary after a data-memory miss cannot trigger a member's lazy
+     * materialization.
+     */
+    @Override
+    public Obj readDeclared(final fURI pattern) {
+        return this.read(pattern, new LinkedHashSet<>(), true);
     }
 
     /**
@@ -241,20 +251,20 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
      * than recursing forever. (A frame's {@code previous} chain is a tree; the imports are libraries, and a cycle
      * among them is a wiring mistake, not something to hang on.)
      */
-    private Obj read(final fURI pattern, final Set<InstSet> visiting) {
+    private Obj read(final fURI pattern, final Set<InstSet> visiting, final boolean declared) {
         if (!visiting.add(this))
             return noobj();
         try {
             final List<Obj> candidates = new ArrayList<>();
             final Set<String> seen = new LinkedHashSet<>();
-            this.gather(pattern, candidates, seen, visiting);
+            this.gather(pattern, candidates, seen, visiting, declared);
             // A SHORT NAME IS AN ADDRESS IN DISGUISE. Memory's small→big tables are what turn `plus` into
             // `/m/inst/plus`, and an ISA's tables are keyed by the FULL address — so asking only the pattern as
             // written answered full names and nothing else. Ask the routed spelling too (identity dedupe collapses
             // the overlap). Routing names stays Memory's job: a name is not something an ISA resolves about itself.
             final fURI routed = Machine.current().memory().redirect(pattern, true);
             if (!routed.equals(pattern))
-                this.gather(routed, candidates, seen, visiting);
+                this.gather(routed, candidates, seen, visiting, declared);
             return objs(candidates);
         } finally {
             visiting.remove(this);
@@ -262,13 +272,17 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
     }
 
     private void gather(final fURI pattern, final List<Obj> candidates, final Set<String> seen,
-                        final Set<InstSet> visiting) {
+                        final Set<InstSet> visiting, final boolean declared) {
         this.gather(super.read(pattern), candidates, seen);
         for (final InstSet isa : this.ownReferences())
-            this.gather(isa instanceof BasicInstSet basic ? basic.read(pattern, visiting) : isa.read(pattern),
+            this.gather(declared
+                            ? (isa instanceof BasicInstSet basic ? basic.read(pattern, visiting, true) : isa.readDeclared(pattern))
+                            : (isa instanceof BasicInstSet basic ? basic.read(pattern, visiting, false) : isa.read(pattern)),
                     candidates, seen);
         if (null != this.previous)
-            this.gather(this.previous instanceof BasicInstSet basic ? basic.read(pattern, visiting) : this.previous.read(pattern),
+            this.gather(this.previous instanceof BasicInstSet basic
+                            ? basic.read(pattern, visiting, declared)
+                            : (declared ? this.previous.readDeclared(pattern) : this.previous.read(pattern)),
                     candidates, seen);
     }
 

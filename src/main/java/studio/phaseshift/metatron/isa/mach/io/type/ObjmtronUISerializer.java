@@ -61,8 +61,12 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       {@code clip->lst}, {@code clip->str}, {@code clip->uri},
  *       {@code clip->bytes}, {@code clip->fail} (each an int), so a call site tunes the
  *       display without touching the class;</li>
- *   <li><b>indentation</b> — a nested poly longer than {@link #NESTED_STRING_THRESHOLD}
- *       columns breaks across indented lines, the way a reader of the console expects;</li>
+ *   <li><b>indentation</b> — a poly whose mtron text reads wider than
+ *       {@link #NESTED_STRING_THRESHOLD} columns breaks across lines: the first entry rides
+ *       the opening bracket and every entry after it starts a line of its own at the column
+ *       the first one begins, so the entries line up under the first.  A collection that
+ *       fits the threshold stays on one line — a short rec has nothing to gain from a stack
+ *       of newlines;</li>
  *   <li><b>{@code {{link}}} handling</b> — every uri the serializer writes is tagged as a
  *       link, which is how a renderer that can draw links (graphitty turns the rule into
  *       an OSC 8 hyperlink a click can resolve) learns the value is a uri.  Tagging uris
@@ -457,26 +461,47 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     // ── Nesting detection ────────────────────────────────────────
 
+    /**
+     * Whether a poly breaks across lines: it does when its mtron text reads wider than
+     * {@link #NESTED_STRING_THRESHOLD} columns, and a short collection —
+     * {@code [name=>'marko',age=>29]} — stays on one line, where the stack of newlines a
+     * break would add buys nothing.  A collection of fewer than two entries never breaks:
+     * there is no boundary between entries to break at, and its one entry rides the opening
+     * bracket either way.
+     * <p>
+     * The width is measured on the PLAIN serialization of the collection, not on its java
+     * {@code toString}: a rec of types is viewless in java — the predicates the types carry
+     * are exactly what a reader has to count — so the java form read short and the rec came
+     * out a wall.
+     */
     private boolean isNested(final Poly<?, ?> poly) {
         if (!poly.isLst() && !poly.isRec())
             return false;
-        final long count = poly.count();
-        if (count < 1) return false;
-        // whether an entry carries structure is the whole test for a one- or two-entry poly: a
-        // rec's java form is its MAP, so a two-entry rec is ~two keys there and never trips the
-        // width test below, yet a value like a six-field type draws as a wall.
-        final boolean structured = poly.elements().anyMatch(this::carriesStructure);
-        if (count < 2) return structured;
-        if (Graphitty.viewLength(poly.jvm().toString()) > NESTED_STRING_THRESHOLD)
-            return true;
-        // a rec whose entries hold values with structure — a type predicate rec (uri::T,
-        // [inst::T], ...), chiefly — reads as a flat wall at full width; entries like these
-        // get their own lines even when the entries themselves are short
-        return structured;
+        if (poly.count() < 2)
+            return false;
+        return Graphitty.viewLength(ObjmtronSerializer.single().write(poly)) > NESTED_STRING_THRESHOLD;
     }
 
-    private boolean carriesStructure(final Obj obj) {
-        return obj.isPoly() || obj.isType() || obj.isInst() || obj.isCode();
+    /**
+     * The display column the buffer's current line has reached — where the next thing
+     * written begins.  Measured through {@link Graphitty#viewLength}, because markup costs
+     * no columns: a {@code {{link}}} tag is many characters in the buffer and none on the
+     * screen, and an indent counted in buffer characters would push a continuation line
+     * past the entry it is meant to line up under.
+     */
+    private int lineWidth(final StringBuilder sb) {
+        return Graphitty.viewLength(sb.substring(sb.lastIndexOf("\n") + 1));
+    }
+
+    /**
+     * The column the entries after a collection's first one begin at: the first entry rides
+     * the opening bracket, so the rest line up under it.  Never less than one nesting level
+     * in — where a poly is rendered into a buffer of its own (an instruction argument, a
+     * type predicate), that buffer cannot know the column it will finally land in, and the
+     * depth is then the only measure of how deep the collection really sits.
+     */
+    private int entryIndent(final StringBuilder sb, final int depth) {
+        return Math.max(this.lineWidth(sb), (depth + 1) * INDENT_SIZE);
     }
 
     // ── List generation (clipped, nested) ────────────────────────
@@ -494,23 +519,25 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final int lstClip = this.clipLst();
             final boolean nested = this.isNested(lst);
             sb.append("[");
+            // the line every entry but the first begins: the first rides the '[', so this is
+            // what lines the rest up under it (measured only where it is used)
+            final int indent = nested ? this.entryIndent(sb, depth) : 0;
             if (lst.count() > lstClip) {
-                if (nested) sb.append("\n");
                 for (int i = 0; i < lstClip; i++) {
-                    if (nested) {
-                        sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
-                    }
+                    if (nested && i > 0)
+                        sb.append(" ".repeat(indent));
                     this.renderValue(sb, depth, lst.lstValue().get(i));
                     sb.append(",");
                     if (nested) sb.append("\n");
                 }
+                if (nested)
+                    sb.append(" ".repeat(indent));
                 sb.append("...(").append(lst.count() - lstClip).append(" more)]");
             } else {
-                if (nested) sb.append("\n");
+                final AtomicInteger counter = new AtomicInteger(0);
                 lst.jvm().forEach(v -> {
-                    if (nested) {
-                        sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
-                    }
+                    if (nested && counter.getAndIncrement() > 0)
+                        sb.append(" ".repeat(indent));
                     this.renderValue(sb, nested ? depth + 1 : 0, v);
                     sb.append(",");
                     if (nested) sb.append("\n");
@@ -540,13 +567,16 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final int recClip = this.clipRec();
             final boolean nested = this.isNested(rec);
             sb.append("[");
+            // the line every entry but the first begins: the first rides the '[', so this is
+            // what lines the rest up under it (measured only where it is used)
+            final int indent = nested ? this.entryIndent(sb, depth) : 0;
             if (rec.count() > recClip) {
                 final AtomicInteger counter = new AtomicInteger(0);
                 rec.indexedStream().forEach(kv -> {
-                    if (counter.getAndIncrement() < recClip) {
-                        if (nested) {
-                            sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
-                        }
+                    final int index = counter.getAndIncrement();
+                    if (index < recClip) {
+                        if (nested && index > 0)
+                            sb.append(" ".repeat(indent));
                         sb.append(this.write(kv.jvm().get0())).append("=>");
                         if (kv.jvm().get1() == rec)
                             throw MTronException.of("prevented infinite recursion on nested rec: key %s", kv.jvm().get0());
@@ -555,16 +585,14 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                         if (nested) sb.append("\n");
                     }
                 });
-                if (nested) {
-                    sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
-                }
+                if (nested)
+                    sb.append(" ".repeat(indent));
                 sb.append("...(").append(rec.count() - recClip).append(" more)]");
             } else {
-                if (nested) sb.append("\n");
+                final AtomicInteger counter = new AtomicInteger(0);
                 rec.jvm().forEach((k, v) -> {
-                    if (nested) {
-                        sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
-                    }
+                    if (nested && counter.getAndIncrement() > 0)
+                        sb.append(" ".repeat(indent));
                     sb.append(this.write(k)).append("=>");
                     if (v == rec)
                         throw MTronException.of("prevented infinite recursion on nested rec: key %s", k);

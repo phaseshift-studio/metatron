@@ -19,6 +19,23 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
+import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.type.MIME;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * One peer VM, in its own OS process: boot metatron, mount a store namespace, evaluate a provisioning script,
@@ -51,8 +68,7 @@ public final class PeerNode {
     }
 
     public static void main(final String[] args) throws Exception {
-        BootLoader.main(args);
-        /*final int index = Integer.parseInt(args[0]);
+        final int index = Integer.parseInt(args[0]);
         final int port = Integer.parseInt(args[1]);
         final String root = args[2];
         final Path script = args.length > 3 ? Path.of(args[3]) : null;
@@ -98,7 +114,7 @@ public final class PeerNode {
         trace("peer %d: serving ws://0.0.0.0:%d/mtron", index, port);
         System.out.println(READY + " " + index + " " + port);
         System.out.flush();
-        Thread.currentThread().join();*/
+        Thread.currentThread().join();
     }
 
     /**

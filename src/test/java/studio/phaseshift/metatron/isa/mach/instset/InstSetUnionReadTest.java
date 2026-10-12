@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.mach.instset;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+
+import java.util.concurrent.atomic.AtomicInteger;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -186,5 +188,32 @@ public class InstSetUnionReadTest extends AbstractMetatronTest {
                 "Machine.read answers a member ISA the data index never held: " + found);
         assertEquals(name, found.asInst().tid().basePath(),
                 "and it is the contract that ISA holds: " + found);
+    }
+
+    /**
+     * A FALLBACK READ MUST NOT CAUSE WORK. `Machine.read` asks instruction memory only after data memory has
+     * missed, and it asks with the DECLARED form — so a member whose `read` materializes something is not dragged
+     * into an unrelated lookup. Measured before the split: `SQLSchemaInstSet.read` populates a table's schema on
+     * demand (right for a deliberate read), and a logger's TYPE lookup during a tbleSpace's own construction
+     * walked into the catalog and hit a database connection that was not open yet — fourteen errors in
+     * SqliteTbleSpaceTest.
+     */
+    @Test
+    public void testTheFallbackReadAsksTheDeclaredFormOnly() {
+        final AtomicInteger eager = new AtomicInteger();
+        final InstSet eagerISA = new AbstractInstSet(mutableMap(uri(PATTERN), uri(ALL)), INSTSET_TID, f("/m/isoEager")) {
+            @Override
+            public Obj read(final fURI pattern) {
+                eager.incrementAndGet();   // a DELIBERATE read is what does the work ...
+                return super.read(pattern);
+            }
+        };
+        Machine.current().instset().refer(eagerISA);
+
+        Machine.read(f("/m/nothing/claims/this"));
+        assertEquals(0, eager.get(), "the fallback must not trigger a member's eager read");
+
+        eagerISA.read(f("/m/inst/whatever"));
+        assertTrue(eager.get() > 0, "... while reading the vocabulary directly still does");
     }
 }

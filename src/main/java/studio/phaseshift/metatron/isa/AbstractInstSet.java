@@ -219,6 +219,28 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     @Override
     public Obj read(final fURI pattern) {
+        return this.readTables(pattern);
+    }
+
+    /**
+     * THE DECLARED READ — this set's tables, and nothing else. A subclass may make {@link #read(fURI)} do
+     * more than answer: {@code SQLSchemaInstSet.read} populates a table's schema on demand, which is right
+     * for a DELIBERATE read of that schema. This form never does, and it is what a FALLBACK read uses,
+     * because a machine reaching for instruction memory after a data-memory miss must not cause work on
+     * the reader's behalf. Measured: a logger's type lookup during tbleSpace's own construction walked
+     * into schemaInstset -> ensureTables and hit a database connection that was not open yet.
+     */
+    public Obj readDeclared(final fURI pattern) {
+        return this.readTables(pattern);
+    }
+
+    /**
+     * THE TABLES, and nothing else — the one implementation both read forms share. It is PRIVATE on purpose:
+     * a virtual delegation from {@code read} to {@code readDeclared} let a {@code BasicInstSet} (which
+     * overrides the declared form with its union walk) re-enter the walk from its own own-level read, and the
+     * stack died. Both forms reach the tables through this, so an override of either cannot do that.
+     */
+    private Obj readTables(final fURI pattern) {
         if (Objects.equals(this.vid, pattern))
             return this;
         // dom admission: a contract's dom is admitted for a queried dom iff it lies
