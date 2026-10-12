@@ -190,7 +190,12 @@ public interface Machine extends Rec, AutoCloseable {
             return noobj();
         Helper.readingInstructionMemory(true);
         try {
-            return machine.instset().read(vid);
+            // readDeclared, NOT read: this is a FALLBACK, and a fallback must not cause work on the reader's
+            // behalf. A schema instset may implement read() as "materialize me, then answer"
+            // (SQLSchemaInstSet populates a table's schema on demand, which is right for a deliberate read of
+            // that schema) — asking that here triggered a catalog walk from a logger's type lookup while a
+            // tbleSpace was still constructing, and the database connection was not open yet.
+            return machine.instset().readDeclared(vid);
         } finally {
             Helper.readingInstructionMemory(false);
         }

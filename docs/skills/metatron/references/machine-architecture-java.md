@@ -142,7 +142,12 @@ BasicMemory.read(vid)     → ~ resolution → alignPrefix → stack check → r
 
 `Machine.read` is the language's one way in, and it asks **instruction memory** as its last source — guarded against
 re-entry by `Machine.Helper.READING_INSTRUCTION_MEMORY`, because answering a schema query resolves the pattern's
-dom/rng types and resolving a type is itself a read. `BasicMemory.read` is the address-space read, and it is where a
+dom/rng types and resolving a type is itself a read. It asks with the **declared** form (`readDeclared`): the tables,
+and nothing more, because a fallback must not cause work. A member's `read` may do more than answer — a schema instset
+populates a table's schema on demand, which is right for a *deliberate* read of that schema — and asking that from an
+unrelated lookup walked into a catalog during a `tbleSpace`'s own construction and hit a database connection that was
+not open yet. `AbstractInstSet` therefore keeps one private table read that both forms reach, so overriding either
+cannot make the other re-enter it. `BasicMemory.read` is the address-space read, and it is where a
 name becomes an address: `~` first, then the prefix alignment, the stack, and the space index — and a miss escalates
 small→big.
 

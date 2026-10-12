@@ -406,9 +406,7 @@ types, and <em>endpoint</em> types that provide the server logic. The two spaces
 <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@/sys/space/docker
 mtron&gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
-==&gt;mcp_server::[
-    tool=&gt;[
-     m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/web_basic
+==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]@/sys/space/mcp/web_basic
 mtron&gt; httpspace::[pattern=&gt; http://#,
                    host   =&gt; http://localhost:8777,
                    route  =&gt; [/mcp    =&gt; mcp_mtron,
@@ -448,16 +446,16 @@ mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-ins
        tool=&amp;gt;[
    ...
 mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;.as(html::T).as(rec::T)
-==&gt;[
-    html=&gt;[
-     head=&gt;[=&gt;],
-     body=&gt;[
-      out=&gt;[
-       [
-       tag=&gt;h1,
-       out=&gt;[
-        [
-         tag=&gt;code,
+==&gt;[html=&gt;[head=&gt;[=&gt;],
+           body=&gt;[out=&gt;[[tag=&gt;h1,
+                         out=&gt;[[tag=&gt;code,text=&gt;'/m/web']],
+                         text=&gt;'web instruction set ()'],
+                        [tag=&gt;p,
+                         out=&gt;[[tag=&gt;code,text=&gt;'/m/web'],
+                               [tag=&gt;em,text=&gt;'transport protocol'],
+                               [tag=&gt;em,text=&gt;'MIME'],
+                               [tag=&gt;em,text=&gt;'endpoint'],
+                               [tag=&gt;code,text=&gt;'/m/web'],
    ...
 </code></pre>
 <h3>the space these examples use</h3>
@@ -467,13 +465,11 @@ blocks are executed by the docs pipeline and inlined with their results; a plain
 <pre><code class="language-mtron">mtron&gt; [-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
 mtron&gt; memspace::[pattern=&gt;/usr/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/usr
 mtron&gt; person::[name=&gt;'marko',age=&gt;29]@/usr/person/1
-==&gt;person::[
-    name=&gt;'marko',
-    age=&gt;29]@/usr/person/1
+==&gt;person::[name=&gt;'marko',
+            age=&gt;29]@/usr/person/1
 mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/usr/person/2
-==&gt;person::[
-    name=&gt;'grant',
-    age=&gt;25]@/usr/person/2
+==&gt;person::[name=&gt;'grant',
+            age=&gt;25]@/usr/person/2
 </code></pre>
 <h3>types</h3>
 <table>
@@ -564,9 +560,7 @@ client, resolved <em>target</em>) — never per address, since a templated mount
 request while the same protocol engine serves them all.</li>
 </ul>
 <pre><code class="language-mtron">mtron&gt; */usr/person/1                                              [-- straight from the space --]
-==&gt;person::[
-    name=&gt;'marko',
-    age=&gt;29]
+==&gt;person::[name=&gt;'marko',age=&gt;29]
 mtron&gt; *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
 ==&gt;&quot;person::[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]

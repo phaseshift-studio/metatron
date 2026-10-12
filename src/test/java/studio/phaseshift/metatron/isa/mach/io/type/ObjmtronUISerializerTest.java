@@ -25,9 +25,11 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
@@ -55,6 +57,33 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertTrue(written.contains("{{link}}"), written);
         assertTrue(written.contains("{{/link}}"), written);
         assertTrue(written.contains("/a/b/c"), written);
+    }
+
+    @Test
+    public void testSmallRecStaysOnOneLine() {
+        // a rec whose mtron text is short reads on one line: the stack of newlines a break
+        // would add buys nothing
+        final Obj obj = ObjmtronSerializer.parse("[name=>'marko',age=>29]").apply();
+        final String written = ObjmtronUISerializer.blackWhite().write(obj);
+        LOG.debug("small rec => %s", written);
+        assertFalse(written.contains("\n"), String.format("a short rec belongs on one line: %s", written));
+        assertTrue(written.contains("name=>'marko'"), written);
+        assertTrue(written.contains("age=>29"), written);
+    }
+
+    @Test
+    public void testWideRecBreaksUnderItsFirstEntry() {
+        // a rec too wide for one line breaks, and the aligned model is what it breaks into: the
+        // first entry rides the opening bracket and every entry after it begins at the column
+        // the first one begins at
+        final Obj obj = ObjmtronSerializer.parse("[address/home/city=>'santa fe',address/work/city=>'nomansland']").apply();
+        final String written = ObjmtronUISerializer.blackWhite().write(obj);
+        LOG.debug("wide rec => %s", written);
+        final int newline = written.indexOf('\n');
+        assertTrue(newline > 0, String.format("a rec too wide for one line breaks: %s", written));
+        assertTrue(written.startsWith("[address/home/city=>"), String.format("the first entry rides the opening bracket: %s", written));
+        assertEquals(written.indexOf("address/home/city"), written.indexOf("address/work/city") - (newline + 1),
+                String.format("the second entry lines up under the first: %s", written));
     }
 
     @Test
@@ -163,12 +192,13 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         ObjmtronUISerializer.single().writeClip(sb, bigRec);
         final String written = sb.toString();
         LOG.debug("clipped rec => %s", written);
-        final int firstLine = written.indexOf('\n');
-        assertTrue(firstLine > 0, String.format("a long rec through the clip path must nest onto its own lines: %s", written));
-        assertFalse(written.substring(0, firstLine).contains("=>"), String.format("no entry may sit on the opening line: %s", written));
-        final int lastLine = written.lastIndexOf('\n');
-        assertTrue(written.substring(lastLine + 1).contains("=>") || written.substring(lastLine + 1).contains("]"),
-                String.format("the closing bracket follows the last entry: %s", written));
+        // the console instance writes markup, so the layout is read off the text a reader sees
+        final String flat = Graphitty.strip(written);
+        assertTrue(flat.contains("\n"), String.format("a long rec through the clip path must nest onto its own lines: %s", flat));
+        assertTrue(flat.startsWith("[entry0_key=>"), String.format("the first entry rides the opening bracket: %s", flat));
+        assertTrue(flat.contains("\n entry1_key=>"), String.format("the second entry starts its own line under the first: %s", flat));
+        assertFalse(flat.contains("\n  "), String.format("markup costs no columns, so every later entry stays at the first one's column: %s", flat));
+        assertTrue(flat.endsWith("]"), String.format("the closing bracket follows the last entry: %s", flat));
     }
 
     @Test
@@ -184,69 +214,82 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         ObjmtronUISerializer.single().writeClip(sb, typeRec);
         final String written = sb.toString();
         LOG.debug("type-value rec => %s", written);
-        assertTrue(written.contains("\n"), String.format("a rec of type values must nest onto its own lines: %s", written));
-        assertFalse(written.substring(0, written.indexOf('\n')).contains("=>"),
-                String.format("no entry may sit on the opening line: %s", written));
+        // a rec of types is viewless in java, so the nesting decision rests on the text the
+        // entries actually cost — and the break is the aligned one
+        final String flat = Graphitty.strip(written);
+        assertTrue(flat.contains("\n"), String.format("a rec of type values must nest onto its own lines: %s", flat));
+        assertTrue(flat.startsWith("[pattern=>"), String.format("the first entry rides the opening bracket: %s", flat));
+        assertTrue(flat.contains("\n const=>"), String.format("every later entry lines up under the first: %s", flat));
     }
 
     @Test
     public void testSingleEntryRecHoldingAStructuredValueNests() {
-        // a ONE-entry rec whose one value is a poly was never nested: the count guard returned
-        // before any entry was examined, so [docq::[…]] — the machine's own q slot, and the rec
-        // the type-violation diff ends on — opened and closed around an inline wall.  its entry
-        // now takes an indented line of its own
+        // [docq::[…]] — the machine's own q slot, and the rec the type-violation diff ends on.
+        // A one-entry rec has no boundary between entries to break at, so its entry rides the
+        // opening bracket; the rec it holds is wide enough to break, and that rec's entries line
+        // up under its own first entry rather than running to a wall
         final Obj longValue = rec(
                 "docq::[pattern=>docq,pre_read=>inst,obj=>memspace,inst=>instset]",
                 rec("pattern", str("docq"), "pre_read", str("inst"), "obj", str("memspace"), "inst", str("instset")));
         final Obj outer = rec(Map.of(uri("k"), (Obj) longValue));
         final String written = ObjmtronUISerializer.prettyPrint().write(outer);
         LOG.debug("single-entry rec => %s", written);
-        assertTrue(written.startsWith("[\n k=>"),
-                String.format("the one entry must open on its own indented line: %s", written));
-        assertFalse(written.contains("[k=>"),
-                String.format("the entry must not ride the opening bracket: %s", written));
+        final int newline = written.indexOf('\n');
+        assertTrue(newline > 0, String.format("the held rec's entries take their own lines: %s", written));
+        assertTrue(written.startsWith("[k=>[") && written.substring(0, newline).contains("[pattern=>'docq',"),
+                String.format("the q slot's one entry rides the opening bracket and its value breaks: %s", written));
+        assertEquals(written.indexOf("pattern=>'docq'"), written.indexOf("pre_read=>'inst'") - (newline + 1),
+                String.format("the held rec's later entries line up under its first: %s", written));
         final int longest = java.util.Arrays.stream(written.split("\n")).mapToInt(String::length).max().orElse(0);
         assertTrue(longest < 100, String.format("no line may run to the old wall width: %s", written));
     }
 
     @Test
     public void testNestedTypePredicateMaintainsDepth() {
-        // the *mach shape: a rec whose value is a type whose own predicate is a multi-entry rec.
-        // before the type path threaded depth, the inner predicate's entries came out at the same
-        // one-space indent as the outer rec's entries instead of one level deeper
+        // the *mach shape: a rec whose value is a type whose own predicate is a multi-entry rec
+        // wide enough to break.  before the type path threaded depth, the inner predicate's
+        // entries came out at the same one-space indent as the outer rec's entries instead of
+        // one level deeper
         final Type inner = Type.Builder.build()
                 .tid(REC_TID)
                 .isaPredicate(rec(
                         "p0", uri(f("/predicate/0")).type(),
                         "p1", uri(f("/predicate/1")).type(),
-                        "p2", uri(f("/predicate/2")).type()))
+                        "p2", uri(f("/predicate/2")).type(),
+                        "p3", uri(f("/predicate/3")).type(),
+                        "p4", uri(f("/predicate/4")).type()))
                 .create();
         final Obj outer = rec("child", inner, "other", str("leaf"));
         final String written = ObjmtronUISerializer.prettyPrint().write(outer);
         LOG.debug("nested type rec => %s", written);
+        assertTrue(written.startsWith("[child=>"), String.format("the outer entry rides the opening bracket: %s", written));
         // the outer rec's own entry sits at depth 1, the nested type's predicate at depth 2
-        assertTrue(written.contains("\n child=>"), String.format("the outer entry must be at depth 1: %s", written));
-        assertTrue(written.contains("\n  p0=>"), String.format("the nested type's predicate entries must be at depth 2: %s", written));
-        assertFalse(written.contains("\n p0=>"), String.format("the nested predicate must not reset to depth 1: %s", written));
+        assertTrue(written.contains("\n other=>"), String.format("the outer's later entry sits at depth 1: %s", written));
+        assertTrue(written.contains("\n  p1=>"), String.format("the nested type's predicate entries must be at depth 2: %s", written));
+        assertFalse(written.contains("\n p1=>"), String.format("the nested predicate must not reset to depth 1: %s", written));
     }
 
     @Test
     public void testDiagnosticInstanceNestsWithoutMarkup() {
         // the diagnostic instance: what a fail message renders through.  A type whose predicate
-        // is a rec of type values nests onto indented lines, its predicate one level deeper, and
-        // - because the message is read in a log, a test, or another process - it carries no
-        // {{link}} or color markup
+        // is a rec of type values wide enough to break nests onto indented lines, its predicate
+        // one level deeper, and - because the message is read in a log, a test, or another
+        // process - it carries no {{link}} or color markup
         final Type inner = Type.Builder.build()
                 .tid(REC_TID)
                 .isaPredicate(rec(
                         "p0", uri(f("/predicate/0")).type(),
-                        "p1", uri(f("/predicate/1")).type()))
+                        "p1", uri(f("/predicate/1")).type(),
+                        "p2", uri(f("/predicate/2")).type(),
+                        "p3", uri(f("/predicate/3")).type(),
+                        "p4", uri(f("/predicate/4")).type()))
                 .create();
         final Obj outer = rec("child", inner, "other", str("leaf"));
         final String written = ObjmtronUISerializer.diagnostic().write(outer);
         LOG.debug("diagnostic nested type rec => %s", written);
-        assertTrue(written.contains("\n child=>"), String.format("a diagnostic nests like any nested poly: %s", written));
-        assertTrue(written.contains("\n  p0=>"), String.format("its nested predicate sits one level deeper: %s", written));
+        assertTrue(written.startsWith("[child=>"), String.format("the outer entry rides the opening bracket: %s", written));
+        assertTrue(written.contains("\n other=>"), String.format("a diagnostic nests like any nested poly: %s", written));
+        assertTrue(written.contains("\n  p1=>"), String.format("its nested predicate sits one level deeper: %s", written));
         assertFalse(written.contains("{{"), String.format("a diagnostic carries no renderer markup: %s", written));
     }
 
@@ -267,12 +310,15 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
 
     @Test
     public void testUnlinkedInstanceNestsLikeTheConsole() {
-        // indentation is a display feature independent of linking: a nested poly still breaks
-        // across indented lines when the instance drops the link tags
-        final Obj obj = ObjmtronSerializer.parse("rec::[a=>[b=>[c=>42]]]").apply();
+        // indentation is a display feature independent of linking: a poly wide enough to break
+        // still spans indented lines when the instance drops the link tags
+        final Obj obj = ObjmtronSerializer.parse("rec::[a=>[bbbb=>1,cccc=>2,dddd=>3,eeee=>4,ffff=>5,gggg=>6]]").apply();
         final String written = ObjmtronUISerializer.unlinked().write(obj);
         LOG.debug("unlinked nested rec => %s", written);
-        assertTrue(written.contains("\n"), String.format("a nested poly should indent: %s", written));
+        final String flat = Graphitty.strip(written);
+        assertTrue(flat.contains("\n"), String.format("a nested poly should indent: %s", flat));
+        assertTrue(flat.startsWith("[a=>[bbbb=>1,"), String.format("the outer entry and the inner's first share the opening line: %s", flat));
+        assertTrue(flat.contains("\n     cccc=>2"), String.format("the inner's later entries line up under its first: %s", flat));
         assertFalse(written.contains("{{link}}"), written);
     }
 
@@ -295,7 +341,8 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertFalse(flat.contains("\n"), String.format("the plain serializer stays one-line data: %s", flat));
         assertTrue(written.split("\n").length > 2,
                 String.format("the diagnostic walks the diff across indented lines: %s", written));
-        assertTrue(written.contains("\n instset=>"), String.format("the failed slot owns its indented line: %s", written));
+        assertTrue(written.startsWith("[instset=>"), String.format("the first failed slot rides the opening bracket: %s", written));
+        assertTrue(written.contains("\n processor=>"), String.format("the second failed slot owns its indented line: %s", written));
         assertFalse(written.contains("{{"), String.format("no renderer markup in a fail message: %s", written));
     }
 }

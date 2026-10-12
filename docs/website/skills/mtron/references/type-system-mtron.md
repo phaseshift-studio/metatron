@@ -118,9 +118,7 @@ mtron> hundreds::150                  [-- 150, checked against the whole predica
 mtron> 23.as(posint::T)               [-- posint::23 --]
 ==>posint::23
 mtron> being::[name=>'marko',age=>29] [-- a rec built under its type --]
-==>being::[
-    name=>'marko',
-    age=>29]
+==>being::[name=>'marko',age=>29]
 mtron> int::42@the_answer             [-- a plain value, addressed in the space --]
 ==>42@the_answer
 ```
@@ -355,9 +353,7 @@ and the stamp records the fit:
 
 ```mtron
 mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- chicken::[name=>'fuzzy feet',age=>2]  (nominally a being: the stamp goes on) --]
-==>chicken::[
-    name=>'fuzzy feet',
-    age=>2]
+==>chicken::[name=>'fuzzy feet',age=>2]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
 ==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/fail/_?incrq
 ```

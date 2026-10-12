@@ -51,39 +51,35 @@ The signature is not a memory exercise; the inst carries its own doc:
 
 ```mtron
 mtron> *bash?docq
-==>docs::[
-    obj=>bash?rng=lst[str]&dom=#{?}(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},
-    dom=>'maybe an obj',
-    rng=>'a lst[str] of results',
-    args=>[
-     cmd=>'the terminal command to evaluate (...',
-     {?}timeout=>'a real number denoting timeout of ...'],
-    desc=>'evaluate bash command. *important*...',
-    example=>["bash('ls')                        ..."]]
+==>docs::[obj=>bash?rng=lst[str]&dom=#{?}(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},
+          dom=>'maybe an obj',
+          rng=>'a lst[str] of results',
+          args=>[{?}timeout=>'a real number denoting timeout of ...',
+                 cmd=>'the terminal command to evaluate (...'],
+          desc=>'evaluate bash command. *important*...',
+          example=>["bash('ls')                        ..."]]
 ```
 ```mtron
 mtron> bash('ls')
-==>[
-    'AGENTS.md',
+==>['AGENTS.md',
     'articles',
     'bin',
     'boot',
     'conf',
     'CONTRIBUTING.md',
     'Desktop',
-   ...(19 more)]
+    ...(19 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
-==>[
-    'Filesystem             Size  Used ...',
+==>['Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.3M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  521G ...',
     'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
-   ...(4 more)]
+    ...(4 more)]
 ```
 A timeout and a failed exit are both fails, and both are inspectable:
 
@@ -91,10 +87,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/fail/_?incrq
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]@/fail/_?incrq
@@ -106,44 +102,40 @@ the same `==` projection:
 
 ```mtron
 mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
-==>[
-    'ls'=>[
-     'AGENTS.md',
-     'articles',
-     'bin',
-     'boot',
-     'conf',
-     'CONTRIBUTING.md',
-     'Desktop',
-   ...(19 more)]]
-==>[
-    'whoami'=>['killswitch']]
+==>['ls'=>['AGENTS.md',
+           'articles',
+           'bin',
+           'boot',
+           'conf',
+           'CONTRIBUTING.md',
+           'Desktop',
+           ...(19 more)]]
+==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
-==>[
-    'AGENTS.md',
+==>['AGENTS.md',
     'articles',
     'bin',
     'boot',
     'conf',
     'CONTRIBUTING.md',
     'Desktop',
-   ...(20 more)]
+    ...(20 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
 
 ```mtron
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
-==>explanation::[
-    format=>!inst?rng=str&dom=#{?}(){<j>},
-    desc=>[
-     rng=><#>,
-     insts=>4],
-    per_inst=>[
-     [
-      op=>start,
-      rng=>lst,
-      args=>[
+==>explanation::[format=>!inst?rng=str&dom=#{?}(){<j>},
+                 desc=>[rng=><#>,insts=>4],
+                 per_inst=>[[op=>start,
+                             rng=>lst,
+                             args=>[['ls','whoami']],
+                             f=>'<j>',
+                             form=>initial,
+                             c_dom=>0,
+                             c_rng=>1],
+                            [op=>select,
    ...
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()>>format
 ==>"""
@@ -161,21 +153,20 @@ The projection can do the work: first stat line of each entry, nothing else:
 
 ```mtron
 mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `File:` line --]
-==>[
-    '  File: AGENTS.md',
+==>['  File: AGENTS.md',
     '  File: articles',
     '  File: bin',
     '  File: boot',
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: Desktop',
-   ...(19 more)]
+    ...(19 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
-==>[
-    '  File: AGENTS.md',
+==>['  File: AGENTS.md',
     '  Size: 37531     	Blocks: 80     ...',
     'Device: 259,5	Inode: 22852383    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
+    'Access: 2026-10-11 16:56:08.472354...',
    ...
 ```
 ### a shape of its own
@@ -186,15 +177,14 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[
-    bB::375,
+==>[bB::375,
     bB::409,
     bB::409,
     bB::409,
     bB::409,
     bB::698,
     bB::409,
-   ...(19 more)]
+    ...(19 more)]
 ```
 Unit values test against each other's units:
 
@@ -265,16 +255,13 @@ mtron> */sys/env/HOME
 mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
-==>[
-    total_mem_jvm=>mB::600,
-    free_mem_jvm=>mB::237.81936,
+==>[total_mem_jvm=>mB::472,
+    free_mem_jvm=>mB::297.46027,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::362.18063,
+    used_mem_jvm=>mB::174.53972,
     free_jvm=>percent::0,
     free_mach=>percent::0,
-    thread=>[
-     run=>0,
-     stop=>0]]
+    thread=>[run=>0,stop=>0]]
 ```
 # file system space (`fsspace::T`)
 
@@ -345,17 +332,14 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
      ^
      could not parse at '[']@/fail/_?incrq
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
-==>[
-    space=>/sys/space,
-    web=>[
-     http/host=>http://localhost:8777,
-     ws/host=>ws://localhost:8555],
-    typer/stage=>[
-     inst_dom=>true,
-     inst_rng=>true,
-     type_pred=>true,
-     obj_write=>true,
-     code_resolve=>false],
+==>[space=>/sys/space,
+    web=>[http/host=>http://localhost:8777,
+          ws/host=>ws://localhost:8555],
+    typer/stage=>[inst_dom=>true,
+                  inst_rng=>true,
+                  type_pred=>true,
+                  obj_write=>true,
+                  code_resolve=>false],
     header=>"""
    _,.---._      _,.----.    ,-,--.
    ..."""]
@@ -377,15 +361,14 @@ decides which pieces survive — here, everything before line 10:
 
 ```mtron
 mtron> *<mfs:AGENTS.md>.-<'\n'==[?>10 => none, _ => _]
-==>[
-    '# metatron — AGENTS.md',
+==>['# metatron — AGENTS.md',
     '',
     'A distributed data-oriented comput...',
     '',
     '- **metatron** (lowercase): the ru...',
     '- **mtron** (lowercase): the funct...',
     '',
-   ...(4 more)]
+    ...(4 more)]
 ```
 ## line addressing — on the scratch mount
 
@@ -415,8 +398,7 @@ lines:
 
 ```mtron
 mtron> read_file(file=><scratch:lines.txt>, min=>0, max=>2)
-==>[
-    [0,'the metatron docs pipeline'],
+==>[[0,'the metatron docs pipeline'],
     [1,'rewrote line two']]
 ```
 `edit_file` states the write as arguments — insert at `min`, replace the `min..max`
@@ -424,8 +406,7 @@ span when `max` is given — and answers with a status report:
 
 ```mtron
 mtron> edit_file(file=><scratch:lines.txt>, text=>'added by edit_file', min=>1, max=>1)
-==>[
-    status=>success,
+==>[status=>success,
     obj=>!*<scratch:lines.txt>,
     start_line_count=>4,
     inserted_line_count=>1,
@@ -435,13 +416,9 @@ A rec written as data and read back — the round trip closes the scratch story:
 
 ```mtron
 mtron> scratch:meta -> [doc => 'sys-instset', revision=>2]
-==>[
-    doc=>'sys-instset',
-    revision=>2]
+==>[doc=>'sys-instset',revision=>2]
 mtron> *scratch:meta
-==>[
-    doc=>'sys-instset',
-    revision=>2]
+==>[doc=>'sys-instset',revision=>2]
 ```
 ## a file as an instruction
 

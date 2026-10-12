@@ -1382,7 +1382,7 @@ public class Console extends MRec implements Closeable, Runnable {
             result.stream().takeWhile(o -> !this.jobs.interruptRequested())
                     .forEach(o -> {
                         this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                        this.write(Highlighter.format(this.serializer.write(o)));
+                        this.write(Highlighter.indentResult(Highlighter.format(this.serializer.write(o))));
                         this.write("\n");
                     });
             terminal.flush();

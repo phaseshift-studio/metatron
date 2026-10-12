@@ -501,9 +501,7 @@ it (<code>xxx::T[?]@yyy</code>) lands off the type hierarchy; types refine types
 mtron&gt; 23.as(posint::T)               [-- posint::23 --]
 ==&gt;posint::23
 mtron&gt; being::[name=&gt;'marko',age=&gt;29] [-- a rec built under its type --]
-==&gt;being::[
-    name=&gt;'marko',
-    age=&gt;29]
+==&gt;being::[name=&gt;'marko',age=&gt;29]
 mtron&gt; int::42@the_answer             [-- a plain value, addressed in the space --]
 ==&gt;42@the_answer
 </code></pre>
@@ -690,9 +688,7 @@ mtron&gt; -2.as(int::T[?&gt;0])  [-- fails: a lambda type, no constructor, nothi
 <p><code>.as()</code> is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
 and the stamp records the fit:</p>
 <pre><code class="language-mtron">mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)    [-- chicken::[name=&gt;'fuzzy feet',age=&gt;2]  (nominally a being: the stamp goes on) --]
-==&gt;chicken::[
-    name=&gt;'fuzzy feet',
-    age=&gt;2]
+==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
 ==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/fail/_?incrq
 </code></pre>

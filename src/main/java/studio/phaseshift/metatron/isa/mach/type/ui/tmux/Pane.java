@@ -243,7 +243,7 @@ public class Pane implements PaneNode, Stylable<Pane> {
     public void appendResult(final Obj result) {
         result.stream().forEach(o -> {
             // Use Highlighter for syntax highlighting
-            this.appendOutput(Graphitty.string("{{m}}=={{g}}>{{X}}") + Highlighter.format(o));
+            this.appendOutput(Graphitty.string("{{m}}=={{g}}>{{X}}") + Highlighter.indentResult(Highlighter.format(o)));
         });
     }
 

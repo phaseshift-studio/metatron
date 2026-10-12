@@ -425,15 +425,11 @@ links back to its containers.</p>
 <h3>Space Configuration</h3>
 <pre><code class="language-mtron">mtron&gt; dckrspace::T
 mtron&gt; !*dckrspace?docq
-==&gt;docs::[
-    obj=&gt;space::T[?[
-     {?}host=&gt;uri::T,
-     {?}progress=&gt;rec::T]][ctor?rng=dckrspace&amp;dom=#{?}(dckrspace::T){&lt;j&gt;}]@/m/dckr/space/dckrspace,
-    desc=&gt;'[structural] a docker daemon space',
-    example=&gt;[
-     'docker:compose/my-stack -&gt; [servic...',
-     '*docker:container/+',
-     '*docker:image/nginx/&lt;nginx:latest&gt;']]
+==&gt;docs::[obj=&gt;space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?rng=dckrspace&amp;dom=#{?}(dckrspace::T){&lt;j&gt;}]@/m/dckr/space/dckrspace,
+          desc=&gt;'[structural] a docker daemon space',
+          example=&gt;['docker:compose/my-stack -&gt; [servic...',
+                    '*docker:container/+',
+                    '*docker:image/nginx/&lt;nginx:latest&gt;']]
 </code></pre>
 <pre><code class="language-mtron">dckrspace::[pattern   =&gt; docker:#,
             route     =&gt; [docker: =&gt; &lt;&gt;],
@@ -614,104 +610,68 @@ mtron&gt; tblespace::[pattern =&gt; mydb:#,
 <h4>Step 3: Create tables and insert data</h4>
 <pre><code class="language-mtron">mtron&gt; [-- insert tble rows --]
 mtron&gt; mydb:people/1 -&gt; [name=&gt;'marko',role=&gt;architect]
-==&gt;[
-    name=&gt;'marko',
-    role=&gt;architect]
+==&gt;[name=&gt;'marko',role=&gt;architect]
 mtron&gt; mydb:people/2 -&gt; [name=&gt;'stynx',role=&gt;developer]
-==&gt;[
-    name=&gt;'stynx',
-    role=&gt;developer]
+==&gt;[name=&gt;'stynx',role=&gt;developer]
 mtron&gt; mydb:people/3 -&gt; [name=&gt;'metis',role=&gt;oracle]
-==&gt;[
-    name=&gt;'metis',
-    role=&gt;oracle]
+==&gt;[name=&gt;'metis',role=&gt;oracle]
 </code></pre>
 <h4>Step 4: Query from mtron</h4>
 <pre><code class="language-mtron">mtron&gt; *mydb:people/+                                           [-- all rows              --]
-==&gt;[
-    name=&gt;'marko',
-    role=&gt;architect]
-==&gt;[
-    name=&gt;'metis',
-    role=&gt;oracle]
-==&gt;[
-    name=&gt;'stynx',
-    role=&gt;developer]
+==&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;[name=&gt;'stynx',role=&gt;developer]
 mtron&gt; *mydb:people/+/                                          [-- all rows keyed by uri --]
-==&gt;mydb:people/1=&gt;[
-    name=&gt;'marko',
-    role=&gt;architect]
-==&gt;mydb:people/3=&gt;[
-    name=&gt;'metis',
-    role=&gt;oracle]
-==&gt;mydb:people/2=&gt;[
-    name=&gt;'stynx',
-    role=&gt;developer]
+==&gt;mydb:people/1=&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;mydb:people/3=&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;mydb:people/2=&gt;[name=&gt;'stynx',role=&gt;developer]
 mtron&gt; *mydb:people/+/name                                      [-- all names             --]
 ==&gt;'stynx'
 ==&gt;'marko'
 ==&gt;'metis'
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
-==&gt;[
-    name=&gt;'stynx']
+==&gt;[name=&gt;'stynx']
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
-==&gt;explanation::[
-    format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
-    desc=&gt;[
-     rng=&gt;&lt;#&gt;,
-     insts=&gt;3],
-    per_inst=&gt;[
-     [
-      op=&gt;from,
-      args=&gt;[mydb:people/+],
-      f=&gt;'&lt;j&gt;',
-      form=&gt;standard,
-      c_dom=&gt;0,
-      c_rng=&gt;0],
-     [
-      op=&gt;isa,
-      dom=&gt;&lt;#&gt;,
-      rng=&gt;&lt;#&gt;,
-      args=&gt;[
-       [
-        role=&gt;developer]],
-      form=&gt;mapper,
-      c_dom=&gt;1,
-      c_rng=&gt;1],
-     [
-      op=&gt;select,
-      dom=&gt;&lt;#&gt;,
-      rng=&gt;&lt;#&gt;,
-      args=&gt;[
-       [
-        name=&gt;id()]],
-      form=&gt;mapper,
-      c_dom=&gt;1,
-      c_rng=&gt;1]]]
+==&gt;explanation::[format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
+                 desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;3],
+                 per_inst=&gt;[[op=&gt;from,
+                             args=&gt;[mydb:people/+],
+                             f=&gt;'&lt;j&gt;',
+                             form=&gt;standard,
+                             c_dom=&gt;0,
+                             c_rng=&gt;0],
+                            [op=&gt;isa,
+                             dom=&gt;&lt;#&gt;,
+                             rng=&gt;&lt;#&gt;,
+                             args=&gt;[[role=&gt;developer]],
+                             form=&gt;mapper,
+                             c_dom=&gt;1,
+                             c_rng=&gt;1],
+                            [op=&gt;select,
+                             dom=&gt;&lt;#&gt;,
+                             rng=&gt;&lt;#&gt;,
+                             args=&gt;[[name=&gt;id()]],
+                             form=&gt;mapper,
+                             c_dom=&gt;1,
+                             c_rng=&gt;1]]]
 mtron&gt; *mydb:people/+.count()                                   [-- number of rows        --]
 ==&gt;3
 mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==&gt;explanation::[
-    format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
-    desc=&gt;[
-     rng=&gt;int,
-     insts=&gt;2],
-    per_inst=&gt;[
-     [
-      op=&gt;from,
-      args=&gt;[mydb:people/+],
-      f=&gt;'&lt;j&gt;',
-      form=&gt;standard,
-      c_dom=&gt;0,
-      c_rng=&gt;0],
-     [
-      op=&gt;count,
-      rng=&gt;int,
-      args=&gt;[,],
-      f=&gt;'&lt;j&gt;',
-      form=&gt;reducer,
-      c_dom=&gt;0,
-      c_rng=&gt;1]]]
+==&gt;explanation::[format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
+                 desc=&gt;[rng=&gt;int,insts=&gt;2],
+                 per_inst=&gt;[[op=&gt;from,
+                             args=&gt;[mydb:people/+],
+                             f=&gt;'&lt;j&gt;',
+                             form=&gt;standard,
+                             c_dom=&gt;0,
+                             c_rng=&gt;0],
+                            [op=&gt;count,
+                             rng=&gt;int,
+                             args=&gt;[,],
+                             f=&gt;'&lt;j&gt;',
+                             form=&gt;reducer,
+                             c_dom=&gt;0,
+                             c_rng=&gt;1]]]
 </code></pre>
 <h4>Step 5: The container sees the same data</h4>
 <p>The Docker container has the database mounted at <code>/data/mydb.sqlite</code>. Any process inside the container can read and

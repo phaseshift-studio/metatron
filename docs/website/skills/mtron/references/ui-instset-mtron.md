@@ -76,65 +76,50 @@ the same declarations the type checker uses:
 
 ```mtron
 mtron> */m/mach/ui/widget?docq
-==>docs::[ obj=>rec::T[?[
-     {?}style=>rec::T[?[   {?}border=>str::T,
-      {?}background=>str::T,
-      {?}foreground=>str::T,
-      {?}divider=>str::T,
-      {?}headerDivider=>str::T,
-      {?}pointer=>str::T,
-      {?}leftMargin=>int::T,
-      ...(12 more)]][ctor?rng=style&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/style]]@/m/mach/ui/widget,
-    args=>[
-     {?}style=>'the style specification for the wi...'],
-    desc=>'[structural] the base widget type',
-    accordion_widget=>docs::[
-     obj=>widget::T[?[
-      {?}title=>str::T,
-      {?}body=>str::T]][ctor?rng=accordion_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/accordion_widget,
-     dom=>'maybe an obj',
-     rng=>'an accordion obj',
-     args=>[
-      {?}body=>'the body content of the accordion',
-      {?}title=>'the title of the accordion'],
-     desc=>'[structural] an expandable/collaps...'],
-    progress_table_widget=>docs::[
-     obj=>widget::T[?[
-      {?}header=>lst::T,
-      {?}row=>lst::T]][ctor?rng=progress_table_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/progress_table_widget,
-     desc=>'[structural] a table of progress b...',
-     example=>["progress_table::[row=>[[text=>'lay..."]],
-    table_widget=>docs::[
-     obj=>widget::T[?[
-      {?}header=>lst::T,
+==>docs::[obj=>rec::T[?[{?}style=>rec::T[?[{?}border=>str::T,
+    {?}background=>str::T,
+    {?}foreground=>str::T,
+    {?}divider=>str::T,
+    {?}headerDivider=>str::T,
+    {?}pointer=>str::T,
+    {?}leftMargin=>int::T,
+    ...(12 more)]][ctor?rng=style&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/style]]@/m/mach/ui/widget,
+          args=>[{?}style=>'the style specification for the wi...'],
+          desc=>'[structural] the base widget type',
+          accordion_widget=>docs::[obj=>widget::T[?[{?}title=>str::T,{?}body=>str::T]][ctor?rng=accordion_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/accordion_widget,
+                                   dom=>'maybe an obj',
+                                   rng=>'an accordion obj',
+                                   args=>[{?}body=>'the body content of the accordion',
+                                          {?}title=>'the title of the accordion'],
+                                   desc=>'[structural] an expandable/collaps...'],
+          progress_table_widget=>docs::[obj=>widget::T[?[{?}header=>lst::T,{?}row=>lst::T]][ctor?rng=progress_table_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/progress_table_widget,
+                                        desc=>'[structural] a table of progress b...',
+                                        example=>["progress_table::[row=>[[text=>'lay..."]],
+          table_widget=>docs::[obj=>widget::T[?[{?}header=>lst::T,
       {?}row=>lst::T,
       {?}metadata=>lst::T]][ctor?rng=table_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/table_widget,
-     dom=>'maybe an obj',
-     rng=>'a table widget',
-     args=>[
-      {?}header=>'a lst of obj table headers',
-      {?}row=>'a lst of poly table rows',
-      {?}metadata=>'a lst of rows of data behind the d...'],
-     desc=>'[structural] a tabular data widget'],
-    tree_widget=>docs::[
-     obj=>widget::T[?[
-      root=>uri::T,
+                               dom=>'maybe an obj',
+                               rng=>'a table widget',
+                               args=>[{?}header=>'a lst of obj table headers',
+                                      {?}row=>'a lst of poly table rows',
+                                      {?}metadata=>'a lst of rows of data behind the d...'],
+                               desc=>'[structural] a tabular data widget'],
+          tree_widget=>docs::[obj=>widget::T[?[root=>uri::T,
       max=>int::T,
       {?}code=><#>::T,
       {?}flatten=>bool::T,
       {?}xref=>rec::T,
       {?}expand=>uri::T]][ctor?rng=tree_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/tree_widget,
-     dom=>'maybe an obj',
-     rng=>'a tree widget',
-     args=>[
-      {?}xref=>'xref=>[max=>N, code=><call>] cross...',
-      max=>'the max depth to traverse',
-      {?}flatten=>'fold single-folder chains into one...',
-      root=>'the root uri to traverse from',
-      {?}code=>'transform obj prior to insertion i...',
-      {?}expand=>'branch uris whose children are rea...'],
-     desc=>'[structural] the root uri space is...'],
-    ...(10 more)]
+                              dom=>'maybe an obj',
+                              rng=>'a tree widget',
+                              args=>[{?}code=>'transform obj prior to insertion i...',
+                                     {?}expand=>'branch uris whose children are rea...',
+                                     {?}xref=>'xref=>[max=>N, code=><call>] cross...',
+                                     max=>'the max depth to traverse',
+                                     {?}flatten=>'fold single-folder chains into one...',
+                                     root=>'the root uri to traverse from'],
+                              desc=>'[structural] the root uri space is...'],
+          ...(10 more)]
 ```
 | widget type                | keys it reads                                                 |
 |----------------------------|---------------------------------------------------------------|
@@ -158,34 +143,28 @@ and it is readable as data:
 ```mtron
 mtron> accordion_widget::[title=>'notes',
                           body=>"l01\nl02\nl03"]@/usr/uidoc/notes
-==>accordion_widget::[
-    title=>'notes',
-    body=>'l01
+==>accordion_widget::[title=>'notes',
+                      body=>'l01
    l02
    l03',
-    style=>style::[
-     border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
-     foreground=>'']]@/usr/uidoc/notes
+                      style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
+                                     foreground=>'']]@/usr/uidoc/notes
 mtron> @/usr/uidoc/notes >>= [body=>"l01\nl02\nl03\nl04"]              [-- the update carries the insts with it --]
-==>accordion_widget::[
-    style=>style::[
-     border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
-     foreground=>''],
-    body=>'l01
+==>accordion_widget::[style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
+                                     foreground=>''],
+                      body=>'l01
    l02
    l03
    l04',
-    title=>'notes']
+                      title=>'notes']
 mtron> */usr/uidoc/notes                                               [-- the widget, as the rec it is --]
-==>accordion_widget::[
-    style=>style::[
-     border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
-     foreground=>''],
-    body=>'l01
+==>accordion_widget::[style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
+                                     foreground=>''],
+                      body=>'l01
    l02
    l03
    l04',
-    title=>'notes']
+                      title=>'notes']
 ```
 ## a widget is a rec — state lives in the map
 
@@ -195,12 +174,10 @@ console is showing:
 
 ```mtron
 mtron> panel_widget::[title=>'note',body=>"alpha\nbeta"]@/usr/uidoc/panel
-==>panel_widget::[
-    title=>'note',
-    body=>'alpha
+==>panel_widget::[title=>'note',
+                  body=>'alpha
    beta',
-    style=>style::[
-     border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]@/usr/uidoc/panel
+                  style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]@/usr/uidoc/panel
 mtron> */usr/uidoc/panel/title
 ==>'note'
 mtron> */usr/uidoc/panel/body
@@ -210,15 +187,12 @@ The style is a key like any other, so a widget's look is set by writing one:
 
 ```mtron
 mtron> @/usr/uidoc/panel >>= [style=>[anchor=>top_left,width=>20,foreground=>'']]
-==>panel_widget::[
-    title=>'note',
-    body=>'alpha
+==>panel_widget::[title=>'note',
+                  body=>'alpha
    beta',
-    style=>style::[
-     border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]
+                  style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']]
 mtron> */usr/uidoc/panel/style
-==>style::[
-    border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']
+==>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤']
 ```
 ## rendering a widget inline
 
@@ -307,85 +281,71 @@ reads it again and draws it, so no per-cell repaint machinery is involved:
 
 ```mtron
 mtron> g10 -> [,].repeat(code=>+['.'],until=>loop()?>9)-<[_].repeat(code=>+(>>0.-<[_]),until=>loop()?>8).to(/usr/uidoc/g10)
-==>[
-    [
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-   ...(3 more)],
-    [
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-   ...(3 more)],
-    [
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-   ...(3 more)],
-    [
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-   ...(3 more)],
-    [
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-   ...(3 more)],
-    [
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-   ...(3 more)],
-    [
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-    '.',
-   ...(3 more)],
-   ...(3 more)]
+==>[['.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     ...(3 more)],
+    ['.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     ...(3 more)],
+    ['.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     ...(3 more)],
+    ['.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     ...(3 more)],
+    ['.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     ...(3 more)],
+    ['.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     ...(3 more)],
+    ['.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     '.',
+     ...(3 more)],
+    ...(3 more)]
 mtron> board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
 ==>fail::[unable to construct matrix_widget::T: fail::[inst apply failure: obj does not match /m/mach/ui/widget/matrix_widget::T
-     [[
-      grid=>!*/usr/uidoc/g10,
-      style=>[
-       anchor=>top_right,
-       border=>continuous]]@/usr/uidoc/board
+     [[grid=>!*/usr/uidoc/g10,
+      style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
          X=>
-     widget::T[?[
-      {?}grid=>lst::T,
-      {?}title=>str::T]][ctor?rng=matrix_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/matrix_widget
+     widget::T[?[{?}grid=>lst::T,{?}title=>str::T]][ctor?rng=matrix_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/matrix_widget
      ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [
-      grid=>(==>{?}grid)=>[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=>==>lst::T,
+     [grid=>(==>{?}grid)=>[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=>==>lst::T,
       noobj=>(==>{?}title)=>noobj=>/=>str::T,
       style=>(/=>{?}style)=>[anchor=>top_right,border=>continuous]=>X=>style::T]] (at /m/inst/ctor)]@/fail/_?incrq
    	while parsing: board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board]@/fail/_?incrq

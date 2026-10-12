@@ -865,59 +865,33 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
-==&gt;&lt;#&gt;=&gt;[
-    args=&gt;[
-     log=&gt;info,
-     boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
-     local=&gt;booger],
+==&gt;&lt;#&gt;=&gt;[args=&gt;[log=&gt;info,
+           boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
+           local=&gt;booger],
     file=&gt;/home/killswitch/software/metatron/boot/docs.mtron]
 ==&gt;&lt;#&gt;=&gt;plus?rng=int&amp;dom=int(fail::[unable to determine inst function:]@/fail/_?incrq){&lt;j&gt;}@&lt;/sys/space/cold/instset/1&gt;
-==&gt;&lt;#&gt;=&gt;rec::T[?[
-    name=&gt;str::T,
-    age=&gt;int::T]]@animal
+==&gt;&lt;#&gt;=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
 ==&gt;&lt;#&gt;=&gt;animal::T@chicken
-==&gt;&lt;#&gt;=&gt;rec::T[?[
-    model=&gt;uri::T,
-    year=&gt;int::T]]@equipment
-==&gt;&lt;#&gt;=&gt;rec::T[?[
-    __mtron_tid=&gt;str::T,
+==&gt;&lt;#&gt;=&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
+==&gt;&lt;#&gt;=&gt;rec::T[?[__mtron_tid=&gt;str::T,
     name=&gt;str::T,
     age=&gt;int::T,
     {?}shelter=&gt;rec::T]]@animals
-==&gt;&lt;#&gt;=&gt;vrtx::T[?[
-    name=&gt;uri::T,
-    age=&gt;int::T,
-    city=&gt;str::T]]@person
-==&gt;&lt;#&gt;=&gt;vrtx::T[?[
-    name=&gt;str::T,
-    lang=&gt;str::T]]@software
-==&gt;&lt;#&gt;=&gt;edge::T[?[
-    weight=&gt;real::T]]@knows
-==&gt;&lt;#&gt;=&gt;edge::T[?[
-    weight=&gt;real::T]]@created
-==&gt;&lt;#&gt;=&gt;[
-    name=&gt;'marko',
+==&gt;&lt;#&gt;=&gt;vrtx::T[?[name=&gt;uri::T,age=&gt;int::T,city=&gt;str::T]]@person
+==&gt;&lt;#&gt;=&gt;vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software
+==&gt;&lt;#&gt;=&gt;edge::T[?[weight=&gt;real::T]]@knows
+==&gt;&lt;#&gt;=&gt;edge::T[?[weight=&gt;real::T]]@created
+==&gt;&lt;#&gt;=&gt;[name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[
-     knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[
-     weight=&gt;0.2,
-     inV_=&gt;!*v3,
-     outV_=&gt;!*v1]]
-==&gt;&lt;#&gt;=&gt;[
-    name=&gt;'vadas']
-==&gt;&lt;#&gt;=&gt;[
-    name=&gt;'josh']
-==&gt;&lt;#&gt;=&gt;[
-    name=&gt;'lop']
-==&gt;&lt;#&gt;=&gt;[
-    name=&gt;'ripple',
-    lang=&gt;java]
-==&gt;&lt;#&gt;=&gt;[
-    name=&gt;'peter',
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+==&gt;&lt;#&gt;=&gt;[name=&gt;'vadas']
+==&gt;&lt;#&gt;=&gt;[name=&gt;'josh']
+==&gt;&lt;#&gt;=&gt;[name=&gt;'lop']
+==&gt;&lt;#&gt;=&gt;[name=&gt;'ripple',lang=&gt;java]
+==&gt;&lt;#&gt;=&gt;[name=&gt;'peter',
     age=&gt;35,
-    out_=&gt;[
-     created=&gt;!*v4]]
+    out_=&gt;[created=&gt;!*v4]]
 ==&gt;&lt;#&gt;=&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}</code></pre>
 </div>
 </div>
@@ -1511,8 +1485,7 @@ That is, given <code>rec</code> relations,</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [a=&gt;1,b=&gt;noobj,noobj=&gt;3]
-==&gt;[
-    a=&gt;1]</code></pre>
+==&gt;[a=&gt;1]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1525,10 +1498,8 @@ That is, given <code>rec</code> relations,</p>
 ==&gt;2
 mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
                     is(gte(2)) =&gt; plus(3)])
-==&gt;[
-    1=&gt;10]
-==&gt;[
-    2=&gt;5]
+==&gt;[1=&gt;10]
+==&gt;[2=&gt;5]
 mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
                     is(gte(2)) =&gt; plus(3)]).rshift()     ​2​
 ==&gt;10
@@ -1572,10 +1543,8 @@ mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]
-==&gt;[
-    1=&gt;10]
-==&gt;[
-    2=&gt;5]
+==&gt;[1=&gt;10]
+==&gt;[2=&gt;5]
 mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]&gt;&gt;
 ==&gt;10
 ==&gt;5</code></pre>
@@ -1609,12 +1578,8 @@ mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]&gt;&gt;
 ==&gt;[false,false]
 ==&gt;[true,false]
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]     ​2​
-==&gt;[
-    noobj,
-    noobj]
-==&gt;[
-    2,
-    noobj]
+==&gt;[noobj,noobj]
+==&gt;[2,noobj]
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]&gt;-     ​3​
 ==&gt;2</code></pre>
 </div>
@@ -1655,16 +1620,11 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <p>mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 &#8658; "${<em>} greater than 2",
                      ?&gt;5 &#8658; "${</em>} greater than 5",
                      _   &#8658; "${_} is something."]
-=&#8658;[
-    1&#8658;'1 is something.']
-=&#8658;[
-    2&#8658;'2 is something.']
-=&#8658;[
-    3&#8658;{'3 greater than 2','3 is something.'}]
-=&#8658;[
-    4&#8658;{'4 greater than 2','4 is something.'}]
-=&#8658;[
-    5&#8658;{'5 greater than 2','5 is something.'}]</p>
+=&#8658;[1&#8658;'1 is something.']
+=&#8658;[2&#8658;'2 is something.']
+=&#8658;[3&#8658;{'3 greater than 2','3 is something.'}]
+=&#8658;[4&#8658;{'4 greater than 2','4 is something.'}]
+=&#8658;[5&#8658;{'5 greater than 2','5 is something.'}]</p>
 </div>
 </div>
 </div>
@@ -1788,26 +1748,24 @@ Two example models are provided below.</p>
                protocol =&gt; ollama,
                host     =&gt; http://localhost:11434,
                llm      =&gt; &lt;qwen3.5:4b&gt;]
-==&gt;model::[
-    skill=&gt;[completion,vision,tools,thinking],
-    size=&gt;gB::3.15716,
-    context=&gt;262144,
-    provider=&gt;ollama,
-    protocol=&gt;ollama,
-    host=&gt;http://localhost:11434,
-    llm=&gt;&lt;qwen3.5:4b&gt;]
+==&gt;model::[skill=&gt;[completion,vision,tools,thinking],
+           size=&gt;gB::3.15716,
+           context=&gt;262144,
+           provider=&gt;ollama,
+           protocol=&gt;ollama,
+           host=&gt;http://localhost:11434,
+           llm=&gt;&lt;qwen3.5:4b&gt;]
 mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
                api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                provider =&gt; deepseek,
                protocol =&gt; openai,
                llm      =&gt; &lt;deepseek-v4-pro&gt;]
-==&gt;model::[
-    name=&gt;deepseek-v4-pro,
-    host=&gt;&lt;https://api.deepseek.com/v1&gt;,
-    api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
-    provider=&gt;deepseek,
-    protocol=&gt;openai,
-    llm=&gt;deepseek-v4-pro]</code></pre>
+==&gt;model::[name=&gt;deepseek-v4-pro,
+           host=&gt;&lt;https://api.deepseek.com/v1&gt;,
+           api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
+           provider=&gt;deepseek,
+           protocol=&gt;openai,
+           llm=&gt;deepseek-v4-pro]</code></pre>
 </div>
 </div>
 <!--
@@ -2813,21 +2771,14 @@ mtron&gt; nat::-4     ​4​
    	while parsing: nat::-4]@/fail/_?incrq
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken     ​5​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​6​
-==&gt;chicken::[
-    name=&gt;'snowbutt',
-    age=&gt;7]
+==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
 mtron&gt; chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
 ==&gt;fail::[obj does not match chicken::T
-     [[
-      name=&gt;'punky',
-      age=&gt;'four']
+     [[name=&gt;'punky',age=&gt;'four']
          X=&gt;
-     rec::T[?[
-      name=&gt;str::T,
-      age=&gt;int::T]]@chicken
-     ─────────────────────────────────────
-     [
-      name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
+     rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken
+     ───────────────────────────────────────────
+     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
       age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]]
    	while parsing: chicken::[name=&gt;'punky',age=&gt;'four']]@/fail/_?incrq</code></pre>
 </div>
@@ -2897,21 +2848,15 @@ mtron&gt; 121.as(int::T).as(nat::T).as(age::T)     ​5​
 ==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural] (at /m/inst/as@3)]@/fail/_?incrq
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
-==&gt;chicken::[
-    name=&gt;'snowbutt',
-    age=&gt;7]
+==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
 mtron&gt; chicken::[name=&gt;'punky',age=&gt;444]     ​8​
 ==&gt;fail::[obj does not match chicken::T
-     [[
-      name=&gt;'punky',
-      age=&gt;444]
+     [[name=&gt;'punky',age=&gt;444]
          X=&gt;
-     rec::T[?[
-      name=&gt;str::T,
+     rec::T[?[name=&gt;str::T,
       age=&gt;nat::T[is(lt(120))]@age]]@chicken
      ───────────────────────────────────────
-     [
-      name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
+     [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
       age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T]]
    	while parsing: chicken::[name=&gt;'punky',age=&gt;444]]@/fail/_?incrq</code></pre>
 </div>
@@ -2985,17 +2930,14 @@ An <code>int</code> is an <code>int</code> because it is named <code>int</code>.
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; str::T@re     ​1​
 mtron&gt; *select?&lt;=str&amp;docq     ​2​
-==&gt;docs::[
-    obj=&gt;select?rng=lst&amp;dom=str(str::T){&lt;j&gt;},
-    dom=&gt;'a str to split by regex',
-    rng=&gt;'the regex capture groups (or full ...',
-    args=&gt;[
-     0=&gt;'regex'],
-    desc=&gt;'[mapper] split the lhs str by rege...',
-    example=&gt;[
-     "'abc.cde'.regex('[^.]+') [-- ['abc...",
-     "'abc.cde'.regex('.\..') [-- ['c.c'...",
-     "'241G'.regex('(\d+)([KMGT])') [-- ..."]]
+==&gt;docs::[obj=&gt;select?rng=lst&amp;dom=str(str::T){&lt;j&gt;},
+          dom=&gt;'a str to split by regex',
+          rng=&gt;'the regex capture groups (or full ...',
+          args=&gt;[0=&gt;'regex'],
+          desc=&gt;'[mapper] split the lhs str by rege...',
+          example=&gt;["'abc.cde'.regex('[^.]+') [-- ['abc...",
+                    "'abc.cde'.regex('.\..') [-- ['c.c'...",
+                    "'241G'.regex('(\d+)([KMGT])') [-- ..."]]
 mtron&gt; 'marko'=='m.{3}o'     ​3​
 ==&gt;['marko']
 mtron&gt; 'marko'==re:'m.{3}o'     ​4​
@@ -3039,15 +2981,11 @@ For those situations when the value has no other discriminating qualities for a 
 mtron&gt; being::T@human     ​2​
 mtron&gt; being::T@chicken     ​3​
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)     ​4​
-==&gt;chicken::[
-    name=&gt;'marko',
-    age=&gt;29]
+==&gt;chicken::[name=&gt;'marko',age=&gt;29]
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
 ==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as@1)]@/fail/_?incrq
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
-==&gt;chicken::[
-    name=&gt;'fuzzy feet',
-    age=&gt;2]
+==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
 ==&gt;fail::[inst apply failure: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null (at /m/inst/as@1) [Rec$RecType&lt;385&gt;]][Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null [Rec$RecType&lt;385&gt;]]@/fail/_?incrq</code></pre>
 </div>
@@ -3189,7 +3127,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{m}}E{{g}}T{{g}}A{{c}}T{{y}}R{{g}}o{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}m{{y}}e{{m}}t{{y}}A{{b}}t{{y}}r{{g}}O{{m}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3459,14 +3397,9 @@ mtron&gt; [,]     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]     ​1​
-==&gt;[
-    a=&gt;1,
-    b=&gt;2,
-    c=&gt;3]
+==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
 mtron&gt; [name=&gt;'Alice',age=&gt;30]     ​2​
-==&gt;[
-    name=&gt;'Alice',
-    age=&gt;30]
+==&gt;[name=&gt;'Alice',age=&gt;30]
 mtron&gt; [=&gt;]     ​3​
 ==&gt;[=&gt;]</code></pre>
 </div>
@@ -3570,9 +3503,7 @@ mtron&gt; [a=&gt;1,b=&gt;2].rng()     ​5​
 ==&gt;1
 ==&gt;2
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([a=&gt;_,b=&gt;_])     ​6​
-==&gt;[
-    a=&gt;1,
-    b=&gt;2]</code></pre>
+==&gt;[a=&gt;1,b=&gt;2]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3680,15 +3611,9 @@ Functions can be composed using the ring multiplication operator (<code>.</code>
 mtron&gt; *x     ​2​
 ==&gt;42
 mtron&gt; y -&gt; [a=&gt;1,b=&gt;2,c=&gt;3]     ​3​
-==&gt;[
-    a=&gt;1,
-    b=&gt;2,
-    c=&gt;3]
+==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
 mtron&gt; *y     ​4​
-==&gt;[
-    a=&gt;1,
-    b=&gt;2,
-    c=&gt;3]</code></pre>
+==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3992,24 +3917,21 @@ mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
-==&gt;personx::[
-    name=&gt;'marko',
-    age=&gt;29,
-    knows=&gt;!*grant]
+==&gt;personx::[name=&gt;'marko',
+             age=&gt;29,
+             knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
-==&gt;personx::[
-    name=&gt;'grant',
-    age=&gt;23,
-    knows=&gt;!*marko]
+==&gt;personx::[name=&gt;'grant',
+             age=&gt;23,
+             knows=&gt;!*marko]
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;name
 ==&gt;'grant'
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows&gt;&gt;name
 ==&gt;'marko'
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
-==&gt;personx::[
-    name=&gt;'marko',
-    age=&gt;29,
-    knows=&gt;!*grant]</code></pre>
+==&gt;personx::[name=&gt;'marko',
+             age=&gt;29,
+             knows=&gt;!*grant]</code></pre>
 </div>
 </div>
 <h3 id="sec-isa-types" class="discrete">instruction set architecture types</h3>
@@ -4169,25 +4091,21 @@ mtron&gt; memspace::[
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; console::[=&gt;]@/usr/ui/console     ​1​
-==&gt;console::[
-    menu=&gt;[  console=&gt;console::[
-      command_palette=&gt;/m/mach/ui/console/command_palette::[    console=&gt;!*/usr/ui/console,
-       help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       redirect=&gt;[
-        input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
-       header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-       ...(30 more)]@/usr/ui/console/command_palette],
-     help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     redirect=&gt;[
-      input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
-     header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-     ...(30 more)]]@/usr/ui/console
+==&gt;console::[menu=&gt;[console=&gt;console::[command_palette=&gt;/m/mach/ui/console/command_palette::[console=&gt;!*/usr/ui/console,
+                                                                                             help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+                                                                                             header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                                                                                             ...(30 more)]@/usr/ui/console/command_palette],
+                    help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+                    header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    ...(30 more)]]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​
 ==&gt;fail::[unable to locate inst-f noobj::T =&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')]@/fail/_?incrq</code></pre>
@@ -4296,10 +4214,7 @@ together. Via the colocation of two objs within the confines of a <code>poly</co
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]     ​1​
-==&gt;[
-    1,
-    noobj,
-    noobj]
+==&gt;[1,noobj,noobj]
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     ​2​
 ==&gt;1
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     ​3​</code></pre>
@@ -4333,10 +4248,7 @@ mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+  
 mtron&gt; [a=&gt;{b,c},
         b=&gt;{a,c},
         c=&gt;{a,b}]     ​2​
-==&gt;[
-    a=&gt;{b,c},
-    b=&gt;{a,c},
-    c=&gt;{a,b}]
+==&gt;[a=&gt;{b,c},b=&gt;{a,c},c=&gt;{a,b}]
 mtron&gt; [a,b,c]     ​3​
 ==&gt;[a,b,c]</code></pre>
 </div>
@@ -4548,30 +4460,15 @@ a/b/c -&gt; [x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; g     -&gt; 'ping'     ​1​
 ==&gt;'ping'
 mtron&gt; a/b/c -&gt; [x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]     ​2​
-==&gt;[
-    x,
-    [
-     y=&gt;[
-      z=&gt;2,
-      zz=&gt;!*g]]]
+==&gt;[x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]
 mtron&gt; *a/b/c     ​3​
-==&gt;[
-    x,
-    [
-     y=&gt;[
-      z=&gt;2,
-      zz=&gt;!*g]]]
+==&gt;[x,[y=&gt;[z=&gt;2,zz=&gt;!*g]]]
 mtron&gt; *a/b/c/0     ​4​
 ==&gt;x
 mtron&gt; *a/b/c/1     ​5​
-==&gt;[
-    y=&gt;[
-     z=&gt;2,
-     zz=&gt;!*g]]
+==&gt;[y=&gt;[z=&gt;2,zz=&gt;!*g]]
 mtron&gt; *a/b/c/1/y     ​6​
-==&gt;[
-    z=&gt;2,
-    zz=&gt;!*g]
+==&gt;[z=&gt;2,zz=&gt;!*g]
 mtron&gt; *a/b/c/1/y/z     ​7​
 ==&gt;2
 mtron&gt; *a/b/c/1/y/zz     ​8​
@@ -4757,39 +4654,26 @@ a──c──⮞2</code></pre>
 <td class="tableblock halign-left valign-middle"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;1,c=&gt;2]]
-==&gt;[
-    a=&gt;[
-     b=&gt;1,
-     c=&gt;2]]
+==&gt;[a=&gt;[b=&gt;1,c=&gt;2]]
 mtron&gt; x1 -&gt; {[a=&gt;[b=&gt;1]],[a=&gt;[c=&gt;2]]}
-==&gt;[
-    a=&gt;[
-     b=&gt;1]]
-==&gt;[
-    a=&gt;[
-     c=&gt;2]]</code></pre>
+==&gt;[a=&gt;[b=&gt;1]]
+==&gt;[a=&gt;[c=&gt;2]]</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/b)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/c)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/+)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/+)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/b)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/c)]
-==&gt;{2}[
-    noobj]</code></pre>
+==&gt;{2}[noobj]</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -4868,21 +4752,10 @@ a \cdot \; &amp; ( b                 &amp; + \;\; &amp; c )                   \c
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; {[a=&gt;[b=&gt;[d=&gt;1]]],[a=&gt;[c=&gt;[d=&gt;2]]]}
-==&gt;[
-    a=&gt;[
-     b=&gt;[
-      d=&gt;1]]]
-==&gt;[
-    a=&gt;[
-     c=&gt;[
-      d=&gt;2]]]
+==&gt;[a=&gt;[b=&gt;[d=&gt;1]]]
+==&gt;[a=&gt;[c=&gt;[d=&gt;2]]]
 mtron&gt; x1 -&gt; [a=&gt;[b=&gt;[d=&gt;1],c=&gt;[d=&gt;2]]]
-==&gt;[
-    a=&gt;[
-     b=&gt;[
-      d=&gt;1],
-     c=&gt;[
-      d=&gt;2]]]
+==&gt;[a=&gt;[b=&gt;[d=&gt;1],c=&gt;[d=&gt;2]]]
 mtron&gt; x2 -&gt; [a=&gt;[b=&gt;!*d,[c=&gt;!*d]]];d-&gt;{1,2};
 ==&gt;1
 ==&gt;2
@@ -4894,29 +4767,21 @@ mtron&gt; x3 -&gt; {[a=&gt;[b=&gt;!*d]],[a=&gt;[c=&gt;!*d]]};d-&gt;{1,2}
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/b/d)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/b/+)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/+/+)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/+/+)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/+/d)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/c/d)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /+/c/+)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a/+/d)]
-==&gt;{2}[
-    noobj]</code></pre>
+==&gt;{2}[noobj]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5075,10 +4940,7 @@ mtron&gt; *m/+/0     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; m -&gt; [[0,1,2,3],
              [4,5,6,7],
              [8,9,10,11]]
-==&gt;[
-    [0,1,2,3],
-    [4,5,6,7],
-    [8,9,10,11]]
+==&gt;[[0,1,2,3],[4,5,6,7],[8,9,10,11]]
 mtron&gt; *m/0/0     ​1​
 ==&gt;0
 mtron&gt; *m/0/+     ​2​
@@ -5238,18 +5100,8 @@ Given this rule, the following metatron <code>rec</code></p>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x0 -&gt; [a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],
                   e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
               g=&gt;[b=&gt;[c=&gt;6]]]
-==&gt;[
-    a=&gt;[
-     b=&gt;[
-      c=&gt;1,
-      d=&gt;2],
-     e=&gt;[
-      c=&gt;3,
-      d=&gt;4,
-      f=&gt;5]],
-    g=&gt;[
-     b=&gt;[
-      c=&gt;6]]]</code></pre>
+==&gt;[a=&gt;[b=&gt;[c=&gt;1,d=&gt;2],e=&gt;[c=&gt;3,d=&gt;4,f=&gt;5]],
+    g=&gt;[b=&gt;[c=&gt;6]]]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5277,23 +5129,18 @@ mtron> x1 -> [a/b => [c=>1,d=>2],
               a/e/d => 4,
               a/e/f => 5,
               g/b => [c=>6]]
-==>[
-    a/b=>[
-     c=>1,
-     d=>2],
+==>[a/b=>[c=>1,d=>2],
     a/e/c=>3,
     a/e/d=>4,
     a/e/f=>5,
-    g/b=>[
-     c=>6]]
+    g/b=>[c=>6]]
 mtron> x2 -> [a/b/c => 1,
               a/b/d => 2,
               a/e/c => 3,
               a/e/d => 4,
               a/e/f => 5,
               g/b/c => 6]
-==>[
-    a/b/c=>1,
+==>[a/b/c=>1,
     a/b/d=>2,
     a/e/c=>3,
     a/e/d=>4,
@@ -5305,31 +5152,25 @@ mtron> x2 -> [a/b/c => 1,
 ----
 mtron> [x0,x1,x2]>-.-<[*(* a/b/c)]
 ==>{2}[1]
-==>[
-    noobj]
+==>[noobj]
 mtron> [x0,x1,x2]>-.-<[*(* a/b/+)]
 ==>{2}[{1,2}]
-==>[
-    noobj]
+==>[noobj]
 mtron> [x0,x1,x2]>-.-<[*(* a/+/+)]
 ==>{2}[{1,2,3,4,5}]
 ==>[{3,4,5}]
 mtron> [x0,x1,x2]>-.-<[*(* +/b/+)]
-==>{3}[
-    noobj]
+==>{3}[noobj]
 mtron> [x0,x1,x2]>-.-<[*(* +/b/c)]
-==>{3}[
-    noobj]
+==>{3}[noobj]
 mtron> [x0,x1,x2]>-.-<[*(* a/+/c)]
 ==>{2}[{1,3}]
 ==>[3]
 mtron> [x0,x1,x2]>-.-<[*(* +/+/c)]
-==>{3}[
-    noobj]
+==>{3}[noobj]
 mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
 ==>{2}[6]
-==>[
-    noobj]
+==>[noobj]
 mtron> -->
 ==>fail::[parse error at line 1, col 1:
      -->
@@ -5339,8 +5180,7 @@ mtron> ++++
 mtron> [discrete]
 ==>[discrete]
 mtron> [[sec-navigating-the-reference-structure]]
-==>[
-    [sec-navigating-the-reference-structure]]
+==>[[sec-navigating-the-reference-structure]]
 mtron> === Navigating the Reference Structure
 ==>fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
@@ -5544,30 +5384,15 @@ a/b/c -> [x,[y=>[z=>2,zz=>!*g]]]
 mtron> g     -> 'ping'     ​1​
 ==>'ping'
 mtron> a/b/c -> [x,[y=>[z=>2,zz=>!*g]]]     ​2​
-==>[
-    x,
-    [
-     y=>[
-      z=>2,
-      zz=>!*g]]]
+==>[x,[y=>[z=>2,zz=>!*g]]]
 mtron> *a/b/c     ​3​
-==>[
-    x,
-    [
-     y=>[
-      z=>2,
-      zz=>!*g]]]
+==>[x,[y=>[z=>2,zz=>!*g]]]
 mtron> *a/b/c/0     ​4​
 ==>x
 mtron> *a/b/c/1     ​5​
-==>[
-    y=>[
-     z=>2,
-     zz=>!*g]]
+==>[y=>[z=>2,zz=>!*g]]
 mtron> *a/b/c/1/y     ​6​
-==>[
-    z=>2,
-    zz=>!*g]
+==>[z=>2,zz=>!*g]
 mtron> *a/b/c/1/y/z     ​7​
 ==>2
 mtron> *a/b/c/1/y/zz     ​8​
@@ -5696,17 +5521,10 @@ a──c──⮞2
 [source,mtron]
 ----
 mtron> x0 -> [a=>[b=>1,c=>2]]
-==>[
-    a=>[
-     b=>1,
-     c=>2]]
+==>[a=>[b=>1,c=>2]]
 mtron> x1 -> {[a=>[b=>1]],[a=>[c=>2]]}
-==>[
-    a=>[
-     b=>1]]
-==>[
-    a=>[
-     c=>2]]
+==>[a=>[b=>1]]
+==>[a=>[c=>2]]
 ----
 
 🧱
@@ -5714,23 +5532,17 @@ mtron> x1 -> {[a=>[b=>1]],[a=>[c=>2]]}
 [source,mtron]
 ----
 mtron> [x0,x1]>-.-<[*(* /a/b)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /a/c)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /a/+)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /+/+)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /+/b)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /+/c)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 ----
 
 |===
@@ -5799,21 +5611,10 @@ Finally, the programmatic expression below captures the equivalent aforementione
 [source,mtron]
 ----
 mtron> x0 -> {[a=>[b=>[d=>1]]],[a=>[c=>[d=>2]]]}
-==>[
-    a=>[
-     b=>[
-      d=>1]]]
-==>[
-    a=>[
-     c=>[
-      d=>2]]]
+==>[a=>[b=>[d=>1]]]
+==>[a=>[c=>[d=>2]]]
 mtron> x1 -> [a=>[b=>[d=>1],c=>[d=>2]]]
-==>[
-    a=>[
-     b=>[
-      d=>1],
-     c=>[
-      d=>2]]]
+==>[a=>[b=>[d=>1],c=>[d=>2]]]
 mtron> x2 -> [a=>[b=>!*d,[c=>!*d]]];d->{1,2};
 ==>1
 ==>2
@@ -5825,29 +5626,21 @@ mtron> x3 -> {[a=>[b=>!*d]],[a=>[c=>!*d]]};d->{1,2}
 [source,mtron]
 ----
 mtron> [x0,x1]>-.-<[*(* /a/b/d)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /a/b/+)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /a/+/+)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /+/+/+)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /+/+/d)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /+/c/d)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /+/c/+)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 mtron> [x0,x1]>-.-<[*(* /a/+/d)]
-==>{2}[
-    noobj]
+==>{2}[noobj]
 ----
 
 A subsequent, practical entailment states that all ring-based addressing schemes can be transformed from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for its production requirements and the other subset can be contained in another space specialized accordingly to its requirements.
@@ -6008,10 +5801,7 @@ a🧱
 mtron> m -> [[0,1,2,3],
              [4,5,6,7],
              [8,9,10,11]]
-==>[
-    [0,1,2,3],
-    [4,5,6,7],
-    [8,9,10,11]]
+==>[[0,1,2,3],[4,5,6,7],[8,9,10,11]]
 mtron> *m/0/0     ​1​
 ==>0
 mtron> *m/0/+     ​2​
@@ -6091,18 +5881,8 @@ Given this rule, the following metatron `rec`
 mtron> x0 -> [a=>[b=>[c=>1,d=>2],
                   e=>[c=>3,d=>4,f=>5]],
               g=>[b=>[c=>6]]]
-==>[
-    a=>[
-     b=>[
-      c=>1,
-      d=>2],
-     e=>[
-      c=>3,
-      d=>4,
-      f=>5]],
-    g=>[
-     b=>[
-      c=>6]]]
+==>[a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],
+    g=>[b=>[c=>6]]]
 ----
 
 ...
@@ -6131,23 +5911,18 @@ mtron> x0 -> [a=>[b=>[c=>1,d=>2],
               a/e/d =&gt; 4,
               a/e/f =&gt; 5,
               g/b =&gt; [c=&gt;6]]
-==&gt;[
-    a/b=&gt;[
-     c=&gt;1,
-     d=&gt;2],
+==&gt;[a/b=&gt;[c=&gt;1,d=&gt;2],
     a/e/c=&gt;3,
     a/e/d=&gt;4,
     a/e/f=&gt;5,
-    g/b=&gt;[
-     c=&gt;6]]
+    g/b=&gt;[c=&gt;6]]
 mtron&gt; x2 -&gt; [a/b/c =&gt; 1,
               a/b/d =&gt; 2,
               a/e/c =&gt; 3,
               a/e/d =&gt; 4,
               a/e/f =&gt; 5,
               g/b/c =&gt; 6]
-==&gt;[
-    a/b/c=&gt;1,
+==&gt;[a/b/c=&gt;1,
     a/b/d=&gt;2,
     a/e/c=&gt;3,
     a/e/d=&gt;4,
@@ -6159,31 +5934,25 @@ mtron&gt; x2 -&gt; [a/b/c =&gt; 1,
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/b/c)]
 ==&gt;{2}[1]
-==&gt;[
-    noobj]
+==&gt;[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/b/+)]
 ==&gt;{2}[{1,2}]
-==&gt;[
-    noobj]
+==&gt;[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/+/+)]
 ==&gt;{2}[{1,2,3,4,5}]
 ==&gt;[{3,4,5}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/+)]
-==&gt;{3}[
-    noobj]
+==&gt;{3}[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/c)]
-==&gt;{3}[
-    noobj]
+==&gt;{3}[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/+/c)]
 ==&gt;{2}[{1,3}]
 ==&gt;[3]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/+/c)]
-==&gt;{3}[
-    noobj]
+==&gt;{3}[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* g/+/+)]
 ==&gt;{2}[6]
-==&gt;[
-    noobj]
+==&gt;[noobj]
 mtron&gt; --&gt;
 ==&gt;fail::[parse error at line 1, col 1:
      --&gt;
@@ -6193,8 +5962,7 @@ mtron&gt; ++++
 mtron&gt; [discrete]
 ==&gt;[discrete]
 mtron&gt; [[sec-navigating-the-reference-structure]]
-==&gt;[
-    [sec-navigating-the-reference-structure]]
+==&gt;[[sec-navigating-the-reference-structure]]
 mtron&gt; === Navigating the Reference Structure
 ==&gt;fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
@@ -6431,30 +6199,15 @@ a/b/c &#8594; [x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]
 <p>mtron&gt; g     &#8594; 'ping'     ​1​
 =&#8658;'ping'
 mtron&gt; a/b/c &#8594; [x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]     ​2​
-=&#8658;[
-    x,
-    [
-     y&#8658;[
-      z&#8658;2,
-      zz&#8658;!*g]]]
+=&#8658;[x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]
 mtron&gt; *a/b/c     ​3​
-=&#8658;[
-    x,
-    [
-     y&#8658;[
-      z&#8658;2,
-      zz&#8658;!*g]]]
+=&#8658;[x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]
 mtron&gt; *a/b/c/0     ​4​
 =&#8658;x
 mtron&gt; *a/b/c/1     ​5​
-=&#8658;[
-    y&#8658;[
-     z&#8658;2,
-     zz&#8658;!*g]]
+=&#8658;[y&#8658;[z&#8658;2,zz&#8658;!*g]]
 mtron&gt; *a/b/c/1/y     ​6​
-=&#8658;[
-    z&#8658;2,
-    zz&#8658;!*g]
+=&#8658;[z&#8658;2,zz&#8658;!*g]
 mtron&gt; *a/b/c/1/y/z     ​7​
 =&#8658;2
 mtron&gt; *a/b/c/1/y/zz     ​8​
@@ -6611,17 +6364,10 @@ On the other hand, the additive union of the uris is an **independent relationsh
 </div>
 <div class="paragraph">
 <p>mtron&gt; x0 &#8594; [a&#8658;[b&#8658;1,c&#8658;2]]
-=&#8658;[
-    a&#8658;[
-     b&#8658;1,
-     c&#8658;2]]
+=&#8658;[a&#8658;[b&#8658;1,c&#8658;2]]
 mtron&gt; x1 &#8594; {[a&#8658;[b&#8658;1]],[a&#8658;[c&#8658;2]]}
-=&#8658;[
-    a&#8658;[
-     b&#8658;1]]
-=&#8658;[
-    a&#8658;[
-     c&#8658;2]]</p>
+=&#8658;[a&#8658;[b&#8658;1]]
+=&#8658;[a&#8658;[c&#8658;2]]</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6632,23 +6378,17 @@ mtron&gt; x1 &#8594; {[a&#8658;[b&#8658;1]],[a&#8658;[c&#8658;2]]}
 </div>
 <div class="paragraph">
 <p>mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/b)]
-=&#8658;{2}[
-    noobj]
+=&#8658;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/c)]
-=&#8658;{2}[
-    noobj]
+=&#8658;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* //)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* //b)]
-=&#8658;{2}[
-    noobj]
+=&#8658;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /+/c)]
-=&#8658;{2}[
-    noobj]</p>
+=&#8658;{2}[noobj]</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6723,21 +6463,10 @@ Finally, the programmatic expression below captures the equivalent aforementione
 </div>
 <div class="paragraph">
 <p>mtron&gt; x0 &#8594; {[a&#8658;[b&#8658;[d&#8658;1]]],[a&#8658;[c&#8658;[d&#8658;2]]]}
-=&#8658;[
-    a&#8658;[
-     b&#8658;[
-      d&#8658;1]]]
-=&#8658;[
-    a&#8658;[
-     c&#8658;[
-      d&#8658;2]]]
+=&#8658;[a&#8658;[b&#8658;[d&#8658;1]]]
+=&#8658;[a&#8658;[c&#8658;[d&#8658;2]]]
 mtron&gt; x1 &#8594; [a&#8658;[b&#8658;[d&#8658;1],c&#8658;[d&#8658;2]]]
-=&#8658;[
-    a&#8658;[
-     b&#8658;[
-      d&#8658;1],
-     c&#8658;[
-      d&#8658;2]]]
+=&#8658;[a&#8658;[b&#8658;[d&#8658;1],c&#8658;[d&#8658;2]]]
 mtron&gt; x2 &#8594; [a&#8658;[b&#8658;!*d,[c&#8658;!*d]]];d&#8594;{1,2};
 =&#8658;1
 =&#8658;2
@@ -6752,29 +6481,21 @@ mtron&gt; x3 &#8594; {[a&#8658;[b&#8658;!*d]],[a&#8658;[c&#8658;!*d]]};d&#8594;{
 </div>
 <div class="paragraph">
 <p>mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/b/d)]
-=&#8658;{2}[
-    noobj]
+=&#8658;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/b/)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a//)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* ///)]
-=&#8658;{2}[
-    noobj]
+=&#8658;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> ///d)]
-=&#8658;{2}[
-    noobj]
+=&#8658;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> //c/d)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* //c/)]
-==&gt;{2}[
-    noobj]
+==&gt;{2}[noobj]
 mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a//d)]
-=&#8658;{2}[
-    noobj]</p>
+=&#8658;{2}[noobj]</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6963,10 +6684,7 @@ mtron&gt; *m/+/0     ​3​
 <p>mtron&gt; m &#8594; [[0,1,2,3],
              [4,5,6,7],
              [8,9,10,11]]
-=&#8658;[
-    [0,1,2,3],
-    [4,5,6,7],
-    [8,9,10,11]]
+=&#8658;[[0,1,2,3],[4,5,6,7],[8,9,10,11]]
 mtron&gt; *m/0/0     ​1​
 =&#8658;0
 mtron&gt; *m/0/+     ​2​
@@ -7049,18 +6767,8 @@ Given this rule, the following metatron `rec`
 <p>mtron&gt; x0 &#8594; [a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],
                   e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],
               g&#8658;[b&#8658;[c&#8658;6]]]
-=&#8658;[
-    a&#8658;[
-     b&#8658;[
-      c&#8658;1,
-      d&#8658;2],
-     e&#8658;[
-      c&#8658;3,
-      d&#8658;4,
-      f&#8658;5]],
-    g&#8658;[
-     b&#8658;[
-      c&#8658;6]]]</p>
+=&#8658;[a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],
+    g&#8658;[b&#8658;[c&#8658;6]]]</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -7090,23 +6798,18 @@ Common left side variables amongst summed components can be factored to the left
               a/e/d &#8658; 4,
               a/e/f &#8658; 5,
               g/b &#8658; [c&#8658;6]]
-=&#8658;[
-    a/b&#8658;[
-     c&#8658;1,
-     d&#8658;2],
+=&#8658;[a/b&#8658;[c&#8658;1,d&#8658;2],
     a/e/c&#8658;3,
     a/e/d&#8658;4,
     a/e/f&#8658;5,
-    g/b&#8658;[
-     c&#8658;6]]
+    g/b&#8658;[c&#8658;6]]
 mtron&gt; x2 &#8594; [a/b/c &#8658; 1,
               a/b/d &#8658; 2,
               a/e/c &#8658; 3,
               a/e/d &#8658; 4,
               a/e/f &#8658; 5,
               g/b/c &#8658; 6]
-=&#8658;[
-    a/b/c&#8658;1,
+=&#8658;[a/b/c&#8658;1,
     a/b/d&#8658;2,
     a/e/c&#8658;3,
     a/e/d&#8658;4,
@@ -7121,31 +6824,25 @@ mtron&gt; x2 &#8594; [a/b/c &#8658; 1,
 <div class="paragraph">
 <p>mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> a/b/c)]
 =&#8658;{2}[1]
-=&#8658;[
-    noobj]
+=&#8658;[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> a/b/)]
 ==&gt;{2}[{1,2}]
-==&gt;[
-    noobj]
+==&gt;[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a//)]
 ==&gt;{2}[{1,2,3,4,5}]
 ==&gt;[{3,4,5}]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/)]
-=&#8658;{3}[
-    noobj]
+=&#8658;{3}[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> /b/c)]
-==&gt;{3}[
-    noobj]
+==&gt;{3}[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a//c)]
 =&#8658;{2}[{1,3}]
 =&#8658;[3]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> //c)]
-=&#8658;{3}[
-    noobj]
+=&#8658;{3}[noobj]
 mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> g//)]
 =&#8658;{2}[6]
-=&#8658;[
-    noobj]
+=&#8658;[noobj]
 mtron&gt; -&#8594;
 =&#8658;fail::[parse error at line 1, col 1:
      -&#8594;
@@ -7155,8 +6852,7 @@ mtron&gt;
 mtron&gt; [discrete]
 =&#8658;[discrete]
 mtron&gt; <a id="sec-navigating-the-reference-structure"></a>
-=&#8658;[
-    [sec-navigating-the-reference-structure]]
+=&#8658;<a id="sec-navigating-the-reference-structure"></a>
 mtron&gt; === Navigating the Reference Structure
 =&#8658;fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
@@ -7309,13 +7005,11 @@ mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
-==&gt;docs::[
-    obj=&gt;as?rng=bytes&amp;dom=inst(bytes::T){&lt;j&gt;},
-    dom=&gt;'/m/inst',
-    rng=&gt;'/m/bytes',
-    args=&gt;[
-     0=&gt;'/m/bytes'],
-    desc=&gt;'&lt;no description&gt;']
+==&gt;docs::[obj=&gt;as?rng=bytes&amp;dom=inst(bytes::T){&lt;j&gt;},
+          dom=&gt;'/m/inst',
+          rng=&gt;'/m/bytes',
+          args=&gt;[0=&gt;'/m/bytes'],
+          desc=&gt;'&lt;no description&gt;']
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;fail::[inst apply failure: unable to convert qcollection$docs to widget (at /m/inst/as) [uiInstSet&lt;366&gt;]][unable to convert qcollection$docs to widget [uiInstSet&lt;366&gt;]][class studio.phaseshift.metatron.furi.q.QCollection$Docs cannot be cast to class studio.phaseshift.metatron.isa.mach.type.ui.Widget (studio.phaseshift.metatron.furi.q.QCollection$Docs and studio.phaseshift.metatron.isa.mach.type.ui.Widget are in unnamed module of loader 'app')]@/fail/_?incrq</code></pre>
 </div>
@@ -7364,14 +7058,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
 ==&gt;'tmpfs                    6355856       6428   6349428   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  546130368 364827456  60% /'
+==&gt;'/dev/nvme0n1p2         959786032  545980028 364977796  60% /'
 ==&gt;'tmpfs                   31779272       1056  31778216   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        240   6355612   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        244   6355608   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1346680092 574528452  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1346701588 574506956  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;articles
@@ -7400,7 +7094,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[mAChiNe FaIlED][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/fail/_?incrq</code></pre>
+==&gt;fail::[MACHIne FAiLed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/fail/_?incrq</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7588,7 +7282,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1205/24/34/429?tz=-0600
+==&gt;datetime:://2026.10:1206/01/35/715?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7773,50 +7467,25 @@ the demarcation of metatron path collections.</p>
            &lt;gremlin.graph&gt; =&gt; &lt;org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph&gt;]
          ]@&lt;/sys/space/grph/modern&gt;;     ​1​
 mtron&gt; *g:+     ​2​
-==&gt;edge::T[?[
-    weight=&gt;real::T]]@created
+==&gt;edge::T[?[weight=&gt;real::T]]@created
 ==&gt;V::T
-==&gt;vrtx::T[?[
-    name=&gt;str::T,
-    age=&gt;int::T]]@person
-==&gt;edge::T[?[
-    weight=&gt;real::T]]@knows
+==&gt;vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@person
+==&gt;edge::T[?[weight=&gt;real::T]]@knows
 ==&gt;E::T
-==&gt;vrtx::T[?[
-    name=&gt;str::T,
-    lang=&gt;str::T]]@software
+==&gt;vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@software
 mtron&gt; *g:V/+     ​3​
-==&gt;person::[
-    name=&gt;marko,
-    age=&gt;29]@g:V/1
-==&gt;person::[
-    age=&gt;32,
-    name=&gt;josh]@g:V/4
-==&gt;person::[
-    age=&gt;27,
-    name=&gt;vadas]@g:V/2
-==&gt;software::[
-    name=&gt;ripple,
-    lang=&gt;java]@g:V/5
-==&gt;software::[
-    lang=&gt;java,
-    name=&gt;lop]@g:V/3
-==&gt;person::[
-    age=&gt;35,
-    name=&gt;peter]@g:V/6
+==&gt;person::[name=&gt;marko,age=&gt;29]@g:V/1
+==&gt;person::[age=&gt;32,name=&gt;josh]@g:V/4
+==&gt;person::[age=&gt;27,name=&gt;vadas]@g:V/2
+==&gt;software::[name=&gt;ripple,
+              lang=&gt;java]@g:V/5
+==&gt;software::[lang=&gt;java,name=&gt;lop]@g:V/3
+==&gt;person::[age=&gt;35,name=&gt;peter]@g:V/6
 mtron&gt; *g:person/+     ​4​
-==&gt;person::[
-    name=&gt;marko,
-    age=&gt;29]@g:V/1
-==&gt;person::[
-    age=&gt;32,
-    name=&gt;josh]@g:V/4
-==&gt;person::[
-    age=&gt;27,
-    name=&gt;vadas]@g:V/2
-==&gt;person::[
-    age=&gt;35,
-    name=&gt;peter]@g:V/6</code></pre>
+==&gt;person::[name=&gt;marko,age=&gt;29]@g:V/1
+==&gt;person::[age=&gt;32,name=&gt;josh]@g:V/4
+==&gt;person::[age=&gt;27,name=&gt;vadas]@g:V/2
+==&gt;person::[age=&gt;35,name=&gt;peter]@g:V/6</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7883,23 +7552,15 @@ The same traversals expressed using both forms:</p>
 <div class="title">id-resolution traversals (path syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[
-    name=&gt;marko,
-    age=&gt;29]
+==&gt;person::[name=&gt;marko,age=&gt;29]
 mtron&gt; *g:V/1/OUT     ​2​
-==&gt;created::[
-    weight=&gt;0.4]@g:E/9
-==&gt;knows::[
-    weight=&gt;0.5]@g:E/7
-==&gt;knows::[
-    weight=&gt;1.0]@g:E/8
+==&gt;created::[weight=&gt;0.4]@g:E/9
+==&gt;knows::[weight=&gt;0.5]@g:E/7
+==&gt;knows::[weight=&gt;1.0]@g:E/8
 mtron&gt; *g:V/1/OUT/created     ​3​
-==&gt;created::[
-    weight=&gt;0.4]
+==&gt;created::[weight=&gt;0.4]
 mtron&gt; *g:V/1/OUT/created/IN     ​4​
-==&gt;software::[
-    lang=&gt;java,
-    name=&gt;lop]
+==&gt;software::[lang=&gt;java,name=&gt;lop]
 mtron&gt; *g:V/1/OUT/knows/IN/name     ​5​
 ==&gt;josh
 ==&gt;vadas
@@ -7913,9 +7574,7 @@ mtron&gt; *g:E/7/IN/name     ​7​
 <div class="title">instruction-call traversals (inst syntax)</div>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[
-    name=&gt;marko,
-    age=&gt;29]
+==&gt;person::[name=&gt;marko,age=&gt;29]
 mtron&gt; *g:V/1.outE()     ​2​
 ==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]][class java.util.LinkedHashMap cannot be cast to class studio.phaseshift.metatron.isa.grph.space.ElementMap (java.util.LinkedHashMap is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.grph.space.ElementMap is in unnamed module of loader 'app')]@/fail/_?incrq
 mtron&gt; *g:V/1.outE(created)     ​3​
@@ -8115,11 +7774,10 @@ The following examples demonstrate selection and filtering using multi-segment u
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1&gt;&gt;=+[address/home/city =&gt; 'santa fe',
                   address/work/city =&gt; 'nomansland']     ​1​
-==&gt;person::[
-    name=&gt;marko,
-    age=&gt;29,
-    address/home/city=&gt;'santa fe',
-    address/work/city=&gt;'nomansland']
+==&gt;person::[name=&gt;marko,
+            age=&gt;29,
+            address/home/city=&gt;'santa fe',
+            address/work/city=&gt;'nomansland']
 mtron&gt; *g:V/1/address/home/city     ​2​
 mtron&gt; *g:V/+.=?=[address/+/city =&gt; 'santa fe']     ​3​
 ==&gt;fail::[parse error at line 1, col 8:
@@ -8127,8 +7785,7 @@ mtron&gt; *g:V/+.=?=[address/+/city =&gt; 'santa fe']     ​3​
             ^
      could not parse at '=']@/fail/_?incrq
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
-==&gt;[
-    address/+/city/=&gt;{address/home/city=&gt;fail::[parse error at line 1, col 6:
+==&gt;[address/+/city/=&gt;{address/home/city=&gt;fail::[parse error at line 1, col 6:
      santa fe
           ^
      could not parse at ' ']@/fail/_?incrq,address/work/city=&gt;nomansland}]
@@ -8187,21 +7844,15 @@ mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1==[_=&gt;_]     ​1​
-==&gt;[
-    name=&gt;marko,
-    age=&gt;29]
+==&gt;[name=&gt;marko,age=&gt;29]
 mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]     ​2​
-==&gt;person::[
-    name=&gt;marko,
-    age=&gt;29,
-    address=&gt;[
-     home=&gt;[
-      city=&gt;'santa fe',
-      state=&gt;NM],
-     work=&gt;!*&lt;../home&gt;]]
+==&gt;person::[name=&gt;marko,
+            age=&gt;29,
+            address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+                      work=&gt;!*&lt;../home&gt;]]
 mtron&gt; *g:V/1/address/home/city     ​3​
 mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
 ==&gt;fail::[parse error at line 1, col 8:
@@ -8316,9 +7967,7 @@ To unify these two contrasting perspectives, metatron capitalizes on each&#8217;
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[
-    name=&gt;marko,
-    age=&gt;29]
+==&gt;person::[name=&gt;marko,age=&gt;29]
 mtron&gt; *acme:customers/357     ​2​
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
 ==&gt;consulted::[=&gt;]@g:E/29
@@ -8495,18 +8144,14 @@ mtron&gt; tblespace::[pattern =&gt; &lt;/te/cold/#&gt;,
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /te/hot/1/a  -&gt; [item   =&gt; 'laptop',
                        total=&gt;1200.0,
                        owner  =&gt; !*g:V/2]
-==&gt;[
-    item=&gt;'laptop',
+==&gt;[item=&gt;'laptop',
     total=&gt;120,
     owner=&gt;!*g:V/2]
 mtron&gt; /te/hot/1/b  -&gt; [item   =&gt; 'mouse',total=&gt;25.0]
-==&gt;[
-    item=&gt;'mouse',
-    total=&gt;25.0]
+==&gt;[item=&gt;'mouse',total=&gt;25.0]
 mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
                        seller =&gt; !*g:V/4]
-==&gt;[
-    item=&gt;'book',
+==&gt;[item=&gt;'book',
     total=&gt;15.0,
     seller=&gt;!*g:V/4]</code></pre>
 </div>
@@ -8531,17 +8176,11 @@ mtron&gt; *g:V/1/OUT/te:hot/a/item     ​2​
 ==&gt;'laptop'
 mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
 ==&gt;fail::[asRec onto a fail: inst apply failure: obj does not match person::T
-     [[
-      age=&gt;27,
-      name=&gt;vadas]
+     [[age=&gt;27,name=&gt;vadas]
          X=&gt;
-     vrtx::T[?[
-      name=&gt;uri::T,
-      age=&gt;int::T,
-      city=&gt;str::T]]@person
-     ────────────────────────────────────────────────────
-     [
-      name=&gt;(==&gt;name)=&gt;vadas=&gt;==&gt;uri::T,
+     vrtx::T[?[name=&gt;uri::T,age=&gt;int::T,city=&gt;str::T]]@person
+     ────────────────────────────────────────────────────────
+     [name=&gt;(==&gt;name)=&gt;vadas=&gt;==&gt;uri::T,
       age=&gt;(==&gt;age)=&gt;27=&gt;==&gt;int::T,
       noobj=&gt;(X=&gt;city)=&gt;noobj=&gt;X=&gt;str::T,
       noobj=&gt;(==&gt;{?}OUT)=&gt;noobj=&gt;/=&gt;[uri::T=&gt;edge{*}::T],
@@ -8647,35 +8286,24 @@ An example of such a graph is presented in the code and diagram below.</p>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [!*v2, !*v3, !*v4]
-==&gt;[
-    !*v2,
-    !*v3,
-    !*v4]
+==&gt;[!*v2,!*v3,!*v4]
 mtron&gt; v2 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v3 -&gt; [!*v4, !*v5]
-==&gt;[
-    !*v4,
-    !*v5]
+==&gt;[!*v4,!*v5]
 mtron&gt; v4 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v5 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v6 -&gt; [!*v4]
-==&gt;[
-    !*v4]
+==&gt;[!*v4]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    !*v2,
-    !*v3,
-    !*v4]
+==&gt;[!*v2,!*v3,!*v4]
 mtron&gt; *v1.&gt;&gt;
 ==&gt;{2}[,]
-==&gt;[
-    !*v4,
-    !*v5]
+==&gt;[!*v4,!*v5]
 mtron&gt; *v1.&gt;&gt;.&gt;&gt;
 ==&gt;{2}[,]</code></pre>
 </div>
@@ -8740,31 +8368,24 @@ Again, the code and diagram below exemplify this form.</p>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [knows=&gt;{!*v2, !*v3},created=&gt;!*v4]
-==&gt;[
-    knows=&gt;{!*v2,!*v3},
-    created=&gt;!*v4]
+==&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]
 mtron&gt; v2 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v3 -&gt; [created=&gt;{!*v4, !*v5}]
-==&gt;[
-    created=&gt;{!*v4,!*v5}]
+==&gt;[created=&gt;{!*v4,!*v5}]
 mtron&gt; v4 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v5 -&gt; [,]
 ==&gt;[,]
 mtron&gt; v6 -&gt; [created=&gt;{!*v4}]
-==&gt;[
-    created=&gt;!*v4]
+==&gt;[created=&gt;!*v4]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    knows=&gt;{!*v2,!*v3},
-    created=&gt;!*v4]
+==&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]
 mtron&gt; *v1.&gt;&gt;knows     ​3​
 ==&gt;[,]
-==&gt;[
-    created=&gt;{!*v4,!*v5}]
+==&gt;[created=&gt;{!*v4,!*v5}]
 mtron&gt; *v1.&gt;&gt;knows.&gt;&gt;created     ​4​
 ==&gt;{2}[,]</code></pre>
 </div>
@@ -8806,82 +8427,50 @@ knows              │
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [name=&gt;'marko',age=&gt;29,
               out_=&gt;[knows=&gt;{!*v2, !*v3},created=&gt;!*v4]]
-==&gt;[
-    name=&gt;'marko',
+==&gt;[name=&gt;'marko',
     age=&gt;29,
-    out_=&gt;[
-     knows=&gt;{!*v2,!*v3},
-     created=&gt;!*v4]]
+    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; v2 -&gt; [name=&gt;'vadas',age=&gt;27]
-==&gt;[
-    name=&gt;'vadas',
-    age=&gt;27]
+==&gt;[name=&gt;'vadas',age=&gt;27]
 mtron&gt; v3 -&gt; [name=&gt;'josh',age=&gt;32,
               out_=&gt;[created=&gt;{!*v4, !*v5}]]
-==&gt;[
-    name=&gt;'josh',
+==&gt;[name=&gt;'josh',
     age=&gt;32,
-    out_=&gt;[
-     created=&gt;{!*v4,!*v5}]]
+    out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; v4 -&gt; [name=&gt;'lop',lang=&gt;java]
-==&gt;[
-    name=&gt;'lop',
-    lang=&gt;java]
+==&gt;[name=&gt;'lop',lang=&gt;java]
 mtron&gt; v5 -&gt; [name=&gt;'ripple',lang=&gt;java]
-==&gt;[
-    name=&gt;'ripple',
-    lang=&gt;java]
+==&gt;[name=&gt;'ripple',lang=&gt;java]
 mtron&gt; v6 -&gt; [name=&gt;'peter',age=&gt;35,
               out_=&gt;[created=&gt;{!*v4}]]
-==&gt;[
-    name=&gt;'peter',
+==&gt;[name=&gt;'peter',
     age=&gt;35,
-    out_=&gt;[
-     created=&gt;!*v4]]
+    out_=&gt;[created=&gt;!*v4]]
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
+==&gt;[name=&gt;'marko',
     age=&gt;29,
-    out_=&gt;[
-     knows=&gt;{!*v2,!*v3},
-     created=&gt;!*v4]]
+    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows     ​3​
-==&gt;[
-    name=&gt;'vadas',
-    age=&gt;27]
-==&gt;[
-    name=&gt;'josh',
+==&gt;[name=&gt;'vadas',age=&gt;27]
+==&gt;[name=&gt;'josh',
     age=&gt;32,
-    out_=&gt;[
-     created=&gt;{!*v4,!*v5}]]
+    out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created     ​4​
-==&gt;[
-    name=&gt;'lop',
-    lang=&gt;java]
-==&gt;[
-    name=&gt;'ripple',
-    lang=&gt;java]
+==&gt;[name=&gt;'lop',lang=&gt;java]
+==&gt;[name=&gt;'ripple',lang=&gt;java]
 mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created.&gt;&gt;name     ​5​
 ==&gt;'lop'
 ==&gt;'ripple'
 mtron&gt; *v1.&gt;&gt;out_/knows     ​3​
-==&gt;[
-    name=&gt;'vadas',
-    age=&gt;27]
-==&gt;[
-    name=&gt;'josh',
+==&gt;[name=&gt;'vadas',age=&gt;27]
+==&gt;[name=&gt;'josh',
     age=&gt;32,
-    out_=&gt;[
-     created=&gt;{!*v4,!*v5}]]
+    out_=&gt;[created=&gt;{!*v4,!*v5}]]
 mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created     ​4​
-==&gt;[
-    name=&gt;'lop',
-    lang=&gt;java]
-==&gt;[
-    name=&gt;'ripple',
-    lang=&gt;java]
+==&gt;[name=&gt;'lop',lang=&gt;java]
+==&gt;[name=&gt;'ripple',lang=&gt;java]
 mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created.&gt;&gt;name     ​5​
 ==&gt;'lop'
 ==&gt;'ripple'</code></pre>
@@ -8918,12 +8507,9 @@ knows  vadas       │          ripple
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
+==&gt;[name=&gt;'marko',
     age=&gt;29,
-    out_=&gt;[
-     knows=&gt;{!*v2,!*v3},
-     created=&gt;!*v4]]
+    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
 mtron&gt; *v1.outE(knows)     ​3​
 mtron&gt; *v1.outE(knows).outE(created)     ​4​
 mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​</code></pre>
@@ -8953,41 +8539,26 @@ For the sake of brevity, only vertex 1 and its incident edges will be developed 
          outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2, outV_=&gt;!*v1],
                          [weight=&gt;0.5,inV_=&gt;!*v4, outV_=&gt;!*v1]}],
                  created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]
-==&gt;[
-    name=&gt;'marko',
+==&gt;[name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[
-     knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[
-     weight=&gt;0.2,
-     inV_=&gt;!*v3,
-     outV_=&gt;!*v1]]
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; v2 -&gt; [name=&gt;'vadas']
-==&gt;[
-    name=&gt;'vadas']
+==&gt;[name=&gt;'vadas']
 mtron&gt; v3 -&gt; [name=&gt;'josh']
-==&gt;[
-    name=&gt;'josh']
+==&gt;[name=&gt;'josh']
 mtron&gt; v4 -&gt; [name=&gt;'lop']
-==&gt;[
-    name=&gt;'lop']
+==&gt;[name=&gt;'lop']
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
+==&gt;[name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[
-     knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[
-     weight=&gt;0.2,
-     inV_=&gt;!*v3,
-     outV_=&gt;!*v1]]
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;inV_     ​3​
-==&gt;[
-    name=&gt;'vadas']
-==&gt;[
-    name=&gt;'lop']
+==&gt;[name=&gt;'vadas']
+==&gt;[name=&gt;'lop']
 mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;created.&gt;&gt;inV_     ​4​</code></pre>
 </div>
 </div></div></td>
@@ -9022,15 +8593,10 @@ knows     0.5    └────┘
 mtron&gt; v1     ​1​
 ==&gt;v1
 mtron&gt; *v1     ​2​
-==&gt;[
-    name=&gt;'marko',
+==&gt;[name=&gt;'marko',
     age=&gt;29,
-    outE_=&gt;[
-     knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[
-     weight=&gt;0.2,
-     inV_=&gt;!*v3,
-     outV_=&gt;!*v1]]
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.out(knows)     ​3​
 mtron&gt; *v1.out(knows).out(created)     ​4​
 mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
@@ -9495,8 +9061,7 @@ core::[code=&gt;expensive_computation]            [-- &lt;3&gt; --]</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/executor/run
 ==&gt;[,]
 mtron&gt; */sys/thread/executor/stop
-==&gt;[
-    !*/thread/main]
+==&gt;[!*/thread/main]
 mtron&gt; */sys/thread/executor/stop/+/source
 mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
 </div>
@@ -9524,17 +9089,16 @@ mtron&gt; virtual::[code  =&gt; @ab + 'A',
    loop  =&gt; second::1.0,
    yield =&gt; !*/sys/thread/b]@/sys/thread/a]@/fail/_?incrq
 mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
-==&gt;virtual::[ code=&gt;at(ab).plus('B'),
-    loop=&gt;second::1.0,
-    state=&gt;run,
-    source=&gt;!*/thread/main,
-    start=&gt;[
-     code=&gt;at(ab).plus('B'),
-     loop=&gt;second::1.0,
-     state=&gt;pause]@/sys/thread/b,
-    time=&gt;datetime:://2026.10:1205/24/37/899?tz=-0600,
-    runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
-    ...(2 more)]@/sys/thread/b
+==&gt;virtual::[code=&gt;at(ab).plus('B'),
+             loop=&gt;second::1.0,
+             state=&gt;run,
+             source=&gt;!*/thread/main,
+             start=&gt;[code=&gt;at(ab).plus('B'),
+                     loop=&gt;second::1.0,
+                     state=&gt;pause]@/sys/thread/b,
+             time=&gt;datetime:://2026.10:1206/01/39/517?tz=-0600,
+             runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+             ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
 mtron&gt; */sys/thread/b.stop()
 ==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[inst([code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;inst(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T])]@thread [stop?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/fail/_?incrq
@@ -9570,9 +9134,8 @@ mtron&gt; *ab
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; virtual::[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example     ​1​
-==&gt;virtual::[
-    code=&gt;print('.'),
-    loop=&gt;second::2.5]@/sys/thread/example
+==&gt;virtual::[code=&gt;print('.'),
+             loop=&gt;second::2.5]@/sys/thread/example
 mtron&gt; */sys/thread/example.pause()     ​2​
 ==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[inst([code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;inst(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T])]@thread [pause?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/fail/_?incrq
 mtron&gt; */sys/thread/example/state     ​3​
@@ -9616,8 +9179,7 @@ mtron&gt; */sys/thread/example/state     ​5​</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/thread/main
 mtron&gt; */sys/thread/main?docq
-==&gt;docs::[
-    desc=&gt;'no documentation available']</code></pre>
+==&gt;docs::[desc=&gt;'no documentation available']</code></pre>
 </div>
 </div>
 </div>
@@ -9713,115 +9275,79 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
 
 
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​3​
-==&gt;[
-    html=&gt;[
-     head=&gt;[
-      title=&gt;'PhaseShift Studio',
-      out=&gt;[
-       [
-        tag=&gt;link,
-        href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-        rel=&gt;'stylesheet'],
-       [
-        tag=&gt;link,
-        href=&gt;&lt;css/metatron.css&gt;,
-        rel=&gt;'stylesheet']]],
-     body=&gt;[
-      out=&gt;[
-       [
-        tag=&gt;p],
-       [
-        tag=&gt;h1,
-        style=&gt;'padding-left:125px;color:var(--pri...',
-        text=&gt;'PhaseShift Studio'],
-       [
-        tag=&gt;img,
-        style=&gt;'padding-left:100px',
-        src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-        width=&gt;'500px'],
-       [
-        tag=&gt;script,
-        type=&gt;'module',
-        src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
-        integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
-        data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
-        crossorigin=&gt;'anonymous']],
-      style=&gt;'background-color: black;']]]
+==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',
+                  out=&gt;[[tag=&gt;link,
+                         href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+                         rel=&gt;'stylesheet'],
+                        [tag=&gt;link,
+                         href=&gt;&lt;css/metatron.css&gt;,
+                         rel=&gt;'stylesheet']]],
+           body=&gt;[out=&gt;[[tag=&gt;p],
+                        [tag=&gt;h1,
+                         style=&gt;'padding-left:125px;color:var(--pri...',
+                         text=&gt;'PhaseShift Studio'],
+                        [tag=&gt;img,
+                         style=&gt;'padding-left:100px',
+                         src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+                         width=&gt;'500px'],
+                        [tag=&gt;script,
+                         type=&gt;'module',
+                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
+                         integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
+                         data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
+                         crossorigin=&gt;'anonymous']],
+                  style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)/html/head/title     ​4​
 ==&gt;fail::[parse error at line 1, col 51:
      ...haseshift.studio/splash.html&gt;.as(rec::T)/html/head/title
                                                 ^
      incomplete — binary operator '/' needs a right operand (e.g. 1 + 2)]@/fail/_?incrq
 mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;     ​5​
-==&gt;[
-    html=&gt;[
-     head=&gt;[
-      title=&gt;'PhaseShift Studio',
-      out=&gt;[
-       [
-        tag=&gt;link,
-        href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-        rel=&gt;'stylesheet'],
-       [
-        tag=&gt;link,
-        href=&gt;&lt;css/metatron.css&gt;,
-        rel=&gt;'stylesheet']]],
-     body=&gt;[
-      out=&gt;[
-       [
-        tag=&gt;p],
-       [
-        tag=&gt;h1,
-        style=&gt;'padding-left:125px;color:var(--pri...',
-        text=&gt;'PhaseShift Studio'],
-       [
-        tag=&gt;img,
-        style=&gt;'padding-left:100px',
-        src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-        width=&gt;'500px'],
-       [
-        tag=&gt;script,
-        type=&gt;'module',
-        src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
-        integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
-        data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
-        crossorigin=&gt;'anonymous']],
-      style=&gt;'background-color: black;']]]
+==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',
+                  out=&gt;[[tag=&gt;link,
+                         href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+                         rel=&gt;'stylesheet'],
+                        [tag=&gt;link,
+                         href=&gt;&lt;css/metatron.css&gt;,
+                         rel=&gt;'stylesheet']]],
+           body=&gt;[out=&gt;[[tag=&gt;p],
+                        [tag=&gt;h1,
+                         style=&gt;'padding-left:125px;color:var(--pri...',
+                         text=&gt;'PhaseShift Studio'],
+                        [tag=&gt;img,
+                         style=&gt;'padding-left:100px',
+                         src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+                         width=&gt;'500px'],
+                        [tag=&gt;script,
+                         type=&gt;'module',
+                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
+                         integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
+                         data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
+                         crossorigin=&gt;'anonymous']],
+                  style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
-==&gt;[
-    html=&gt;[
-     head=&gt;[
-      title=&gt;'PhaseShift Studio',
-      out=&gt;[
-       [
-        tag=&gt;link,
-        href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-        rel=&gt;'stylesheet'],
-       [
-        tag=&gt;link,
-        href=&gt;&lt;css/metatron.css&gt;,
-        rel=&gt;'stylesheet']]],
-     body=&gt;[
-      out=&gt;[
-       [
-        tag=&gt;p],
-       [
-        tag=&gt;h1,
-        style=&gt;'padding-left:125px;color:var(--pri...',
-        text=&gt;'PhaseShift Studio'],
-       [
-        tag=&gt;img,
-        style=&gt;'padding-left:100px',
-        src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-        width=&gt;'500px'],
-       [
-        tag=&gt;script,
-        type=&gt;'module',
-        src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
-        integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
-        data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
-        crossorigin=&gt;'anonymous']],
-      style=&gt;'background-color: black;']]]</code></pre>
+==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',
+                  out=&gt;[[tag=&gt;link,
+                         href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+                         rel=&gt;'stylesheet'],
+                        [tag=&gt;link,
+                         href=&gt;&lt;css/metatron.css&gt;,
+                         rel=&gt;'stylesheet']]],
+           body=&gt;[out=&gt;[[tag=&gt;p],
+                        [tag=&gt;h1,
+                         style=&gt;'padding-left:125px;color:var(--pri...',
+                         text=&gt;'PhaseShift Studio'],
+                        [tag=&gt;img,
+                         style=&gt;'padding-left:100px',
+                         src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+                         width=&gt;'500px'],
+                        [tag=&gt;script,
+                         type=&gt;'module',
+                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
+                         integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
+                         data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
+                         crossorigin=&gt;'anonymous']],
+                  style=&gt;'background-color: black;']]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -9872,18 +9398,18 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
 
 
 mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;     ​3​
-==&gt;[
-    models=&gt;[
-     [
-     name=&gt;'qwen3.5:4b',
-     model=&gt;'qwen3.5:4b',
+==&gt;[models=&gt;[[name=&gt;'qwen3.5:4b',
+              model=&gt;'qwen3.5:4b',
+              modified_at=&gt;'2026-10-02T01:56:52.3384474-06:00',
+              size=&gt;3389983735,
+              digest=&gt;'2a654d98e6fba55d452b7043684e9b57a9...',
    ...
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
-==&gt;[
-    models=&gt;[
-     [
-     name=&gt;&lt;qwen3.5:4b&gt;,
-     model=&gt;&lt;qwen3.5:4b&gt;,
+==&gt;[models=&gt;[[name=&gt;&lt;qwen3.5:4b&gt;,
+              model=&gt;&lt;qwen3.5:4b&gt;,
+              modified_at=&gt;&lt;2026-10-02T01:56:52.3384474-06:00&gt;,
+              size=&gt;3389983735,
+              digest=&gt;&lt;2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd&gt;,
    ...</code></pre>
 </div>
 </div>
@@ -9978,8 +9504,7 @@ Note that <code>localhost</code> can be set to any hostname or IP address that i
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; wsclient::[host=&gt;&lt;ws://localhost:8555/mtron&gt;]@/usr/ui/console/remote     ​1​
-==&gt;wsclient::[
-    host=&gt;ws://localhost:8555/mtron]@/usr/ui/console/remote</code></pre>
+==&gt;wsclient::[host=&gt;ws://localhost:8555/mtron]@/usr/ui/console/remote</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10185,15 +9710,9 @@ the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</
 mtron&gt; chicken   -&gt; animal::T@chicken     ​2​
 mtron&gt; equipment -&gt; rec::T[?[model=&gt;uri::T, year=&gt;int::T]]@equipment     ​3​
 mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset     ​4​
-==&gt;farmset::[
-    type=&gt;[
-     rec::T[?[
-      name=&gt;str::T,
-      age=&gt;int::T]]@animal,
-     rec::T[?[
-      model=&gt;uri::T,
-      year=&gt;int::T]]@equipment,
-     animal::T@chicken]]@/m/dcmnt/schema/farmset</code></pre>
+==&gt;farmset::[type=&gt;[rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal,
+                    rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment,
+                    animal::T@chicken]]@/m/dcmnt/schema/farmset</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10239,13 +9758,9 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; 'a chicken named trill'     ​1​
 ==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals]] at root; got str::T]@/fail/_?incrq
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
-==&gt;chicken::[
-    name=&gt;'trill',
-    age=&gt;7]
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​3​
-==&gt;chicken::[
-    name=&gt;'trill',
-    age=&gt;7]</code></pre>
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10273,13 +9788,9 @@ identity. metatron preserves type information transparently on the way in and re
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​1​
-==&gt;chicken::[
-    name=&gt;'trill',
-    age=&gt;7]
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​2​
-==&gt;chicken::[
-    name=&gt;'trill',
-    age=&gt;7]
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1/name     ​3​
 ==&gt;'trill'</code></pre>
 </div>
@@ -10322,31 +9833,22 @@ on read, the <code>loc:</code> scheme is detected and the reference is routed to
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern =&gt; loc:#]@/sys/space/loc     ​1​
 mtron&gt; loc:barns/1 -&gt; [label=&gt;'old_red_barn',capacity=&gt;12]     ​2​
-==&gt;[
-    label=&gt;'old_red_barn',
-    capacity=&gt;12]
+==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]
 mtron&gt; farm:animals/1 &gt;&gt;= [shelter=&gt;!*loc:barns/1]     ​3​
-==&gt;[
-    shelter=&gt;!*loc:barns/1]
+==&gt;[shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/1     ​4​
-==&gt;chicken::[
-    name=&gt;'trill',
-    age=&gt;7]
+==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1/shelter     ​5​
 mtron&gt; farm:animals/2 -&gt; chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]     ​6​
-==&gt;chicken::[
-    name=&gt;'cluck',
-    age=&gt;3,
-    shelter=&gt;!*loc:barns/1]
+==&gt;chicken::[name=&gt;'cluck',
+             age=&gt;3,
+             shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/2     ​7​
-==&gt;chicken::[
-    name=&gt;'cluck',
-    age=&gt;3,
-    shelter=&gt;!*loc:barns/1]
+==&gt;chicken::[name=&gt;'cluck',
+             age=&gt;3,
+             shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/2/shelter     ​8​
-==&gt;[
-    label=&gt;'old_red_barn',
-    capacity=&gt;12]</code></pre>
+==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10492,21 +9994,15 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
                    driver  =&gt; &lt;org.sqlite.JDBC&gt;,
                    route   =&gt; [lite:=&gt;&lt;&gt;]]@/sys/space/lite     ​1​
 mtron&gt; lite:person/1 -&gt; [name=&gt;'marko', age=&gt;29]     ​2​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29]
+==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
-==&gt;[
-    name=&gt;'grant',
-    age=&gt;25]
+==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
-==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -10551,25 +10047,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rec::T[?[
-    {?}name=&gt;str::T,
-    location=&gt;isa(area:V/+/id).!*id(),
-    {?}parent=&gt;auto_from::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[
-    {?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id(),
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[
-    {?}player=&gt;str::T,
-    {?}points=&gt;int::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[
-    {?}name=&gt;str::T,
-    {?}age=&gt;int::T,
-    {?}skill=&gt;uri::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10578,29 +10056,8 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
-==&gt;[
-    name=&gt;'alex',
-    age=&gt;25,
-    skill=&gt;graph]
-mtron&gt; *lite:+
-==&gt;rec::T[?[
-    {?}name=&gt;str::T,
-    location=&gt;isa(area:V/+/id).!*id(),
-    {?}parent=&gt;auto_from::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[
-    {?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id(),
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[
-    {?}player=&gt;str::T,
-    {?}points=&gt;int::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[
-    {?}name=&gt;str::T,
-    {?}age=&gt;int::T,
-    {?}skill=&gt;uri::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
+mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 </div>
@@ -10665,30 +10122,14 @@ mtron&gt; *lite:kv/single
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:kv/nest -&gt; [a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
-==&gt;[
-    a=&gt;[
-     b=&gt;[
-      c=&gt;2,
-      d=&gt;!*lite:kv/nest]]]
+==&gt;[a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
 mtron&gt; *lite:kv/nest
-==&gt;[
-    a=&gt;[
-     b=&gt;[
-      c=&gt;2,
-      d=&gt;!*lite:kv/nest]]]
+==&gt;[a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
 mtron&gt; *lite:kv/nest/a/b/+
-==&gt;[
-    a=&gt;[
-     b=&gt;[
-      c=&gt;2,
-      d=&gt;!*lite:kv/nest]]]
+==&gt;[a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
 ==&gt;2
 mtron&gt; *lite:kv/nest/a/b/d
-==&gt;[
-    a=&gt;[
-     b=&gt;[
-      c=&gt;2,
-      d=&gt;!*lite:kv/nest]]]</code></pre>
+==&gt;[a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]</code></pre>
 </div>
 </div>
 </div>
@@ -10726,12 +10167,9 @@ code''' └────────────────┘ └────�
 mtron&gt; *lite:person/+/name.count()     ​2​
 ==&gt;3
 mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
-==&gt;[
-    name=&gt;'alex']
-==&gt;[
-    name=&gt;'grant']
-==&gt;[
-    name=&gt;'marko']</code></pre>
+==&gt;[name=&gt;'alex']
+==&gt;[name=&gt;'grant']
+==&gt;[name=&gt;'marko']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10756,15 +10194,9 @@ mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")     ​1​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29]
-==&gt;[
-    name=&gt;'grant',
-    age=&gt;25]
-==&gt;[
-    name=&gt;'alex',
-    age=&gt;25]
+==&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;[name=&gt;'grant',age=&gt;25]
+==&gt;[name=&gt;'alex',age=&gt;25]
 mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum()     ​2​
 ==&gt;79</code></pre>
 </div>
@@ -10815,27 +10247,17 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score]]     ​1​
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
-==&gt;[
-    player=&gt;'marko',
-    points=&gt;42]
+==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
-==&gt;[
-    player=&gt;'grant',
-    points=&gt;99]
+==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+.=?=[player=&gt;'marko']     ​4​
 ==&gt;fail::[parse error at line 1, col 15:
      *lite:score/+.=?=[player=&gt;'marko']
                    ^
      could not parse at '=']@/fail/_?incrq
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29,
-    points=&gt;42]
-==&gt;[
-    name=&gt;'grant',
-    age=&gt;25,
-    points=&gt;99]</code></pre>
+==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
+==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10871,24 +10293,18 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score,award]];     ​1​
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     ​2​
-==&gt;[
-    trophy=&gt;'gold',
+==&gt;[trophy=&gt;'gold',
     recipient=&gt;!*lite:person/1]
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     ​3​
-==&gt;[
-    trophy=&gt;'silver',
+==&gt;[trophy=&gt;'silver',
     recipient=&gt;!*lite:person/2]
 mtron&gt; *lite:award/+     ​4​
-==&gt;[
-    trophy=&gt;'gold',
+==&gt;[trophy=&gt;'gold',
     recipient=&gt;!*lite:person/1]
-==&gt;[
-    trophy=&gt;'silver',
+==&gt;[trophy=&gt;'silver',
     recipient=&gt;!*lite:person/2]
 mtron&gt; *lite:award/1/recipient     ​5​
-==&gt;[
-    name=&gt;'marko',
-    age=&gt;29]</code></pre>
+==&gt;[name=&gt;'marko',age=&gt;29]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10924,23 +10340,17 @@ Below, a <code>memspace</code> holds a venue <code>rec</code>, and a <code>lite:
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern =&gt; area:#]@/sys/space/area     ​1​
 mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     ​2​
-==&gt;[
-    label=&gt;'downtown',
-    capacity=&gt;5000]
+==&gt;[label=&gt;'downtown',capacity=&gt;5000]
 mtron&gt; @/sys/space/lite &gt;&gt;= [table=&gt;[person,score,award,venue]];     ​3​
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1,parent=&gt;none]     ​4​
-==&gt;[
-    name=&gt;'main_stage',
+==&gt;[name=&gt;'main_stage',
     location=&gt;!*area:V/1,
     parent=&gt;none]
 mtron&gt; *lite:venue/1     ​5​
-==&gt;[
-    name=&gt;'main_stage',
+==&gt;[name=&gt;'main_stage',
     location=&gt;!*area:V/1]
 mtron&gt; *lite:venue/1/location     ​6​
-==&gt;[
-    label=&gt;'downtown',
-    capacity=&gt;5000]</code></pre>
+==&gt;[label=&gt;'downtown',capacity=&gt;5000]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10978,13 +10388,11 @@ pointing back at the row&#8217;s own table.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:venue/2 -&gt; [name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]     ​1​
-==&gt;[
-    name=&gt;'side_hall',
+==&gt;[name=&gt;'side_hall',
     location=&gt;!*g:V/1,
     parent=&gt;!*lite:venue/1]
 mtron&gt; *lite:venue/2     ​2​
-==&gt;[
-    name=&gt;'side_hall',
+==&gt;[name=&gt;'side_hall',
     location=&gt;!*area:V/1,
     parent=&gt;1]
 mtron&gt; *lite:venue/2/parent/location     ​3​
@@ -11230,10 +10638,9 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/+
-==&gt;[
-    allow=&gt;[&lt;#&gt;],
+==&gt;[allow=&gt;[&lt;#&gt;],
     disallow=&gt;[,]]@/sys/rewriter
-==&gt;[ &lt;+1&gt;=&gt;'👍',
+==&gt;[&lt;+1&gt;=&gt;'👍',
     -1=&gt;'👎',
     &lt;100&gt;=&gt;'💯',
     &lt;1234&gt;=&gt;'🔢',
@@ -11241,33 +10648,23 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
     &lt;2nd_place_medal&gt;=&gt;'🥈',
     &lt;3rd_place_medal&gt;=&gt;'🥉',
     ...(1848 more)]
-==&gt;/m/mach/log::[
-    level=&gt;[
-     info=&gt;[&lt;#&gt;]]]@/sys/log
-==&gt;[
-    name=&gt;'local',
+==&gt;/m/mach/log::[level=&gt;[info=&gt;[&lt;#&gt;]]]@/sys/log
+==&gt;[name=&gt;'local',
     peer=&gt;!*/sys/peer,
     status=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]
-==&gt;[
-    code_resolve=&gt;false,
+==&gt;[code_resolve=&gt;false,
     inst_rng=&gt;false,
     type_pred=&gt;true,
     obj_write=&gt;true,
     inst_dom=&gt;true]@/sys/typer
-==&gt;tracer::[
-    stack=&gt;[
-     mtron_stack=&gt;false,
-     java_stack=&gt;false]]
-==&gt;[
-    total_mem_jvm=&gt;mB::616,
-    free_mem_jvm=&gt;mB::410.67863,
+==&gt;tracer::[stack=&gt;[mtron_stack=&gt;false,java_stack=&gt;false]]
+==&gt;[total_mem_jvm=&gt;mB::616,
+    free_mem_jvm=&gt;mB::398.76105,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::205.32136,
+    used_mem_jvm=&gt;mB::217.23894,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
-    thread=&gt;[
-     run=&gt;1,
-     stop=&gt;0]]
+    thread=&gt;[run=&gt;1,stop=&gt;0]]
 ==&gt;"""
    use /sys/tmp as a temporary location for objs.
    note that /sys/tmp can be automatically garbage collected at any time.

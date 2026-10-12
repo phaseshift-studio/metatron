@@ -18,9 +18,7 @@ types, and *endpoint* types that provide the server logic. The two spaces of `/m
 mtron> dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
 mtron> [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
-==>mcp_server::[
-    tool=>[
-     m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]]@/sys/space/mcp/web_basic
+==>mcp_server::[tool=>[m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]]@/sys/space/mcp/web_basic
 mtron> httpspace::[pattern=> http://#,
                    host   => http://localhost:8777,
                    route  => [/mcp    => mcp_mtron,
@@ -62,16 +60,16 @@ mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-m
        tool=&gt;[
    ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
-==>[
-    html=>[
-     head=>[=>],
-     body=>[
-      out=>[
-       [
-       tag=>h1,
-       out=>[
-        [
-         tag=>code,
+==>[html=>[head=>[=>],
+           body=>[out=>[[tag=>h1,
+                         out=>[[tag=>code,text=>'/m/web']],
+                         text=>'web instruction set ()'],
+                        [tag=>p,
+                         out=>[[tag=>code,text=>'/m/web'],
+                               [tag=>em,text=>'transport protocol'],
+                               [tag=>em,text=>'MIME'],
+                               [tag=>em,text=>'endpoint'],
+                               [tag=>code,text=>'/m/web'],
    ...
 ```
 ## the space these examples use
@@ -84,13 +82,11 @@ blocks are executed by the docs pipeline and inlined with their results; a plain
 mtron> [-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
 mtron> memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
 mtron> person::[name=>'marko',age=>29]@/usr/person/1
-==>person::[
-    name=>'marko',
-    age=>29]@/usr/person/1
+==>person::[name=>'marko',
+            age=>29]@/usr/person/1
 mtron> person::[name=>'grant',age=>25]@/usr/person/2
-==>person::[
-    name=>'grant',
-    age=>25]@/usr/person/2
+==>person::[name=>'grant',
+            age=>25]@/usr/person/2
 ```
 ## types
 
@@ -192,9 +188,7 @@ binding step, and a route is debuggable by looking at the request uri.
 
 ```mtron
 mtron> */usr/person/1                                              [-- straight from the space --]
-==>person::[
-    name=>'marko',
-    age=>29]
+==>person::[name=>'marko',age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
 ==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]

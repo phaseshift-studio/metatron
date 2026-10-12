@@ -19,11 +19,9 @@ mtron> """
         }
        }
        """.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
-==>[
-    type=>streamable-http,
+==>[type=>streamable-http,
     url=><http://127.0.0.1:64342/stream>,
-    headers=>[
-     IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron]]
+    headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron]]
 ```
 If the snippet provided has an `mcpServer` outer wrapping, then do:
 
@@ -38,11 +36,9 @@ mtron> """
           }
         }}}
        """.as(json::T).as(rec::T)>>mcpServers/intellij.as(json::T).as(mcp_client::T)
-==>[
-    type=>streamable-http,
+==>[type=>streamable-http,
     url=><http://127.0.0.1:64342/stream>,
-    headers=>[
-     IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron]]
+    headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron]]
 ```
 Moreover, if the `mcpServer` snippet has multiple inner servers endpoints defined, to load all of them, do:
 

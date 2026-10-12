@@ -54,7 +54,7 @@ noobj       [-- "no obj" (empty, none) --]
 {1,2,3}.isa({1,2,3})                     [-- wrong assumption: checks 1, then 2, then 3 against isa arg --]
 {1,2,3}.isa?int{*}<=int{*}({1,2,3})      [-- isa now a barrier and checks stream against stream --]
 {1,2,3}.isa?int{*}<=int{*}({3,1,2})      [-- streams are unordered --]
-{3,1,2,3}.isa?int{*}<=int{*}({{2}3,1,2}) [-- coefficients accounted for --]
+{3,1,2,3}.isa?int{*}<=int{*}({1,{2}3,2}) [-- coefficients accounted for --]
 ```
 
 ### Indexing / Access
@@ -149,7 +149,7 @@ int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 3.is(true)                         [-- 3 --]
 {1,2,3,4,5}.is(gt(2))              [-- {3,4,5} --]
 {1,2,3,4,5}.is(and(gt(2),lt(5)))   [-- {3,4} --]
-{1,2,3,4,5}.is(?>2.?<5)            [-- {3,4} (using sugar'd syntax)--]
+{1,2,3,4,5}.?>2.?<5                [-- {3,4} (using sugar'd syntax)--]
 1.and(gt(2),lt(5))                 [-- false --]
 ```
 

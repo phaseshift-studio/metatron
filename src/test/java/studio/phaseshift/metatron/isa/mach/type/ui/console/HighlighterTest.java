@@ -225,6 +225,20 @@ public class HighlighterTest extends AbstractMetatronTest {
     }
 
     /**
+     * A result is written after the {@code ==>} prompt, so its continuation lines are shifted
+     * past that prompt: the entries then line up under the value's first line rather than under
+     * the prompt — the alignment the console and the docs pipeline both show.
+     */
+    @Test
+    void testResultContinuationLinesClearThePrompt() {
+        assertEquals("[\n   a=>1,\n   b=>2]", Highlighter.indentResult("[\na=>1,\nb=>2]"),
+                "each continuation line shifts past the three-column result prompt");
+        assertEquals("==>12", Highlighter.indentResult("==>12"),
+                "a single-line result is left alone");
+        assertNull(Highlighter.indentResult(null), "a null result stays null");
+    }
+
+    /**
      * A markdown fence routes the string through Graphitty — the same pass that renders
      * {@code {{syntax:…}}} blocks — so its code is colorized from the nanorc file rather
      * than left to the mtron highlighter, and it measures as it renders.
