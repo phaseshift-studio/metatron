@@ -73,12 +73,22 @@ mtron> [1=>2, 2=>3, 3=>4]
 ### objs (`{ , }` — unordered, streamed and bulked)
 
 ```mtron
-mtron> {1,2,3} [-- equivalent to {2,1,3} (unordered) --]
+mtron> {1,2,3}                                  [-- equivalent to {2,1,3} (unordered) --]
 ==>1
 ==>2
 ==>3
-mtron> {1,1,2} [-- becomes 
-==>{2}1
+mtron> {1,2,3}.isa({1,2,3})                     [-- wrong assumption: checks 1, then 2, then 3 against isa arg --]
+mtron> {1,2,3}.isa?int{*}<=int{*}({1,2,3})      [-- isa now a barrier and checks stream against stream --]
+==>1
+==>2
+==>3
+mtron> {1,2,3}.isa?int{*}<=int{*}({3,1,2})      [-- streams are unordered --]
+==>1
+==>2
+==>3
+mtron> {3,1,2,3}.isa?int{*}<=int{*}(
+==>{2}3
+==>1
 ==>2
 ```
 ### Indexing / Access
@@ -129,16 +139,16 @@ mtron> *b
 Every obj has a coefficient. Shorthand is `{n}obj` -- standing for `type{n}::obj`:
 
 ```mtron
-mtron> 3                      [-- coefficient {1} (default) --]
+mtron> 3                                        [-- coefficient {1} (default) --]
 ==>3
-mtron> {0}3                   [-- equivalent to noobj (0 3s) --]
-mtron> int{5}::3              [-- coefficient {5} represents 5 3s --]
+mtron> {0}3                                     [-- equivalent to noobj (0 3s) --]
+mtron> int{5}::3                                [-- coefficient {5} represents 5 3s --]
 ==>{5}3
-mtron> {5}3                   [-- shorthand for the previous example (5 3s) --]
+mtron> {5}3                                     [-- shorthand for the previous example (5 3s) --]
 ==>{5}3
-mtron> {1,2,3}.sum{2}()       [-- two parallel sums yields {2}6 --]
+mtron> {1,2,3}.sum{2}()                         [-- two parallel sums yields {2}6 --]
 ==>{2}6
-mtron> {1,2,3}.sum{2}().sum() [-- {2}6 merged by sum is 12 --]
+mtron> {1,2,3}.sum{2}().sum()                   [-- {2}6 merged by sum is 12 --]
 ==>{2}6
 ```
 Coefficients propagate through arithmetic and affect count, sum, repeat:
@@ -202,18 +212,26 @@ mtron> {1,2,3}.inst?int<=int(a=>plus(2)){ plus(*a) }     [-- {4,8,18} --]
 ### Boolean logic
 
 ```mtron
-mtron> 3.is(gt(2))                 [-- 3  (filters: passes lhs through if true, noobj if false) --]
+mtron> 3.is(gt(2))                        [-- 3  (filters: passes lhs through if true, noobj if false) --]
 ==>3
-mtron> 3.is(true)                  [-- 3 --]
+mtron> 3.is(eq(3))                        [-- 3  (filter based on equality) --]
 ==>3
-mtron> {1,2,3,4,5}.is(gt(2))       [-- {3,4,5} --]
+mtron> 3.isa(3)                           [-- 3  (filter based on value-value testing) --]
+==>3
+mtron> 3.isa(int::T)                      [-- 3  (filter based on value-type testing) --]
+==>3
+mtron> 3.is(true)                         [-- 3 --]
+==>3
+mtron> {1,2,3,4,5}.is(gt(2))              [-- {3,4,5} --]
 ==>3
 ==>4
 ==>5
 mtron> {1,2,3,4,5}.is(and(gt(2),lt(5)))   [-- {3,4} --]
 ==>3
 ==>4
-mtron> 1.and(gt(2),lt(5))          [-- false --]
+mtron> {1,2,3,4,5}.is(?>2.?<5)            [-- {3,4} (using sugar'd syntax)--]
+==>fail{2}::[inst apply failure: unable to convert int::T to bool (at /m/inst/is@1) [Obj$ObjType<1427>]][unable to convert int::T to bool [Obj$ObjType<1427>]][class studio.phaseshift.metatron.isa.m.type.impl.MInt cannot be cast to class studio.phaseshift.metatron.isa.m.type.Bool (studio.phaseshift.metatron.isa.m.type.impl.MInt and studio.phaseshift.metatron.isa.m.type.Bool are in unnamed module of loader 'app')]@/fail/_?incrq
+mtron> 1.and(gt(2),lt(5))                 [-- false --]
 ==>false
 ```
 ---
@@ -221,20 +239,24 @@ mtron> 1.and(gt(2),lt(5))          [-- false --]
 ## 5. String Operations
 
 ```mtron
-mtron> "goodbye".plus(" nowhere")     [-- "goodbye nowhere" --]
+mtron> "goodbye".plus(" nowhere")                    [-- "goodbye nowhere" --]
 ==>'goodbye nowhere'
-mtron> "goodbye" + " nowhere"         [-- sugar sytnax for previous --]
+mtron> "goodbye" + " nowhere"                        [-- sugar sytnax for previous --]
 ==>'goodbye nowhere'
-mtron> 'a b c'.split(' ')             [-- ["a", "b", "c"] --]
+mtron> 'a b c'.split(' ')                            [-- ["a", "b", "c"] --]
 ==>['a','b','c']
-mtron> 'a b c'-<' '                   [-- sugar syntax for previous --]
+mtron> 'a b c'-<' '                                  [-- sugar syntax for previous --]
 ==>['a','b','c']
-mtron> {"a","b","c"}>-' '             [-- "a b c"  (merge with separator) --]
+mtron> {"a","b","c"}>-' '                            [-- "a b c"  (merge with separator) --]
 ==>'a b c'
-mtron> 'ab3cd'.select('\d+')          [-- ['3'] --]
+mtron> 'ab3cd'.select('\d+')                         [-- ['3'] --]
 ==>['3']
-mtron> 'ab3cd'.select('\d{2}')        [-- [,]  (no match — empty pair) --]
+mtron> 'ab3cd'.select('\d{2}')                       [-- [,]  (no match — empty pair) --]
 ==>[,]
+mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']               [-- 'AXc' (update sugar syntax) --]
+==>'AXc'
+mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']=='[A-Z]{2,3}' [-- ['AX'] (update and select sugar syntax) --]
+==>['AX']
 ```
 ---
 
@@ -679,26 +701,26 @@ mtron> ?int::T    [-- check if type is int --]
 
 ## 22. Sugar & Syntax Summary
 
-| Sugar      | Expansion        | Use                      |
-|------------|------------------|--------------------------|
-| `*uri`     | `from(uri)`      | Dereference URI          |
-| `!*uri`    | `auto_from(uri)` | Lazy cross-ref           |
-| `@uri`     | `at(uri)`        | Anchor to URI location   |
-| `_`        | `id()`           | Identity function        |
-| `>>=`      | `update()`       | Update-and-write-back    |
-| `>>`       | `rshift()`       | Right-shift (drop last)  |
-| `<<`       | `lshift()`       | Left-shift (drop first)  |
-| `>-`       | `merge()`        | Flatten / merge barrier  |
-| `-<`       | `split()`        | Distribute into branches |
-| `\|`       | `barrier()`      | Monadic barrier          |
-| `_/...\\_` | `within()`       | Structural within-block  |
-| `.`        | `.plus(1)`       | Dot-instruction call     |
-| `=>`       | `rel()`          | Key → value relation     |
-| `->`       | `ref()`          | Write to URI reference   |
-| `;`        | `end()`          | Sequence separator       |
-| `?pred`    | `is(pred)`       | Type/condition check     |
+| Sugar      | Expansion        | Use                        |
+|------------|------------------|----------------------------|
+| `*uri`     | `from(uri)`      | Dereference URI            |
+| `!*uri`    | `auto_from(uri)` | Lazy cross-ref             |
+| `@uri`     | `at(uri)`        | Anchor to URI location     |
+| `_`        | `id()`           | Identity function          |
+| `>>=`      | `update()`       | Update-and-write-back      |
+| `>>`       | `rshift()`       | Right-shift (drop last)    |
+| `<<`       | `lshift()`       | Left-shift (drop first)    |
+| `>-`       | `merge()`        | Flatten / merge barrier    |
+| `-<`       | `split()`        | Distribute into branches   |
+| `\|`       | `barrier()`      | Monadic barrier            |
+| `_/...\\_` | `within()`       | Structural within-block    |
+| `.`        | `.plus(1)`       | Dot-instruction call       |
+| `=>`       | `rel()`          | Key → value relation       |
+| `->`       | `ref()`          | Write to URI reference     |
+| `;`        | `end()`          | Sequence separator         |
+| `?pred`    | `is(pred)`       | Type/condition check       |
 | `lhs ? p`  | `lhs.isa(p)`     | Filter: keep if `p` admits |
-| `==`       | `select()`       | Structural select        |
+| `==`       | `select()`       | Structural select          |
 
 ---
 

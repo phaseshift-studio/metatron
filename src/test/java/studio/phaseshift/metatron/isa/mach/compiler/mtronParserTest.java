@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.compiler.parser;
+package studio.phaseshift.metatron.isa.mach.compiler;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -30,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -74,7 +76,7 @@ public class mtronParserTest extends AbstractMetatronTest {
         assertTrue(ObjmtronSerializer.parse("5").isInt(), "the grammar reads a literal as itself");
         assertTrue(ObjmtronSerializer.parse("[a=>1]").isRec(), "the grammar reads a rec literal as a rec");
         for (final String source : List.of("6.plus(1)", "plus(1)", "5", "[a=>1]")) {
-            assertTrue(mtronParser.single().apply(str(source)).isCode(),
+            Assertions.assertTrue(mtronParser.single().apply(str(source)).isCode(),
                     "the stage emits code for '" + source + "' whatever the grammar produced");
         }
     }

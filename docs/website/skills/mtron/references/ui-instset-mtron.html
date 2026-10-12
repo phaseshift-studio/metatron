@@ -298,6 +298,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -476,8 +477,8 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'an accordion obj',
      args=&gt;[
-      {?}title=&gt;'the title of the accordion',
-      {?}body=&gt;'the body content of the accordion'],
+      {?}body=&gt;'the body content of the accordion',
+      {?}title=&gt;'the title of the accordion'],
      desc=&gt;'[structural] an expandable/collaps...'],
     progress_table_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -493,9 +494,9 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a table widget',
      args=&gt;[
-      {?}metadata=&gt;'a lst of rows of data behind the d...',
       {?}header=&gt;'a lst of obj table headers',
-      {?}row=&gt;'a lst of poly table rows'],
+      {?}row=&gt;'a lst of poly table rows',
+      {?}metadata=&gt;'a lst of rows of data behind the d...'],
      desc=&gt;'[structural] a tabular data widget'],
     tree_widget=&gt;docs::[
      obj=&gt;widget::T[?[
@@ -508,12 +509,12 @@ the same declarations the type checker uses:</p>
      dom=&gt;'maybe an obj',
      rng=&gt;'a tree widget',
      args=&gt;[
-      {?}code=&gt;'transform obj prior to insertion i...',
-      {?}expand=&gt;'branch uris whose children are rea...',
       {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
       max=&gt;'the max depth to traverse',
       {?}flatten=&gt;'fold single-folder chains into one...',
-      root=&gt;'the root uri to traverse from'],
+      root=&gt;'the root uri to traverse from',
+      {?}code=&gt;'transform obj prior to insertion i...',
+      {?}expand=&gt;'branch uris whose children are rea...'],
      desc=&gt;'[structural] the root uri space is...'],
     ...(10 more)]
 </code></pre>

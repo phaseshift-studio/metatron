@@ -19,23 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
-import studio.phaseshift.metatron.isa.web.type.MIME;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * One peer VM, in its own OS process: boot metatron, mount a store namespace, evaluate a provisioning script,
@@ -58,7 +41,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public final class PeerNode {
 
-    /** printed once the node is serving, so {@link PeerCluster} can stop polling */
+    /**
+     * printed once the node is serving, so {@link PeerCluster} can stop polling
+     */
     public static final String READY = "PEER_READY";
 
     private PeerNode() {
@@ -66,7 +51,8 @@ public final class PeerNode {
     }
 
     public static void main(final String[] args) throws Exception {
-        final int index = Integer.parseInt(args[0]);
+        BootLoader.main(args);
+        /*final int index = Integer.parseInt(args[0]);
         final int port = Integer.parseInt(args[1]);
         final String root = args[2];
         final Path script = args.length > 3 ? Path.of(args[3]) : null;
@@ -76,6 +62,7 @@ public final class PeerNode {
         // boot at warn: a forked JVM does not inherit the parent's -Dlogback.configurationFile, so without this
         // it logs at default DEBUG and three concurrent chatty boots will not be ready before the test does
         BootLoader.load(rec(uri("log"), uri("warn")));
+        memSpace.of(rec(uri(PATTERN), uri("/sys/#")), null);
         InstSet.importInstSet(IO_ISA_TID);
         InstSet.importInstSet(f("/m/web"));
         trace("peer %d: booted (root=%s, port=%d)", index, root, port);
@@ -111,10 +98,12 @@ public final class PeerNode {
         trace("peer %d: serving ws://0.0.0.0:%d/mtron", index, port);
         System.out.println(READY + " " + index + " " + port);
         System.out.flush();
-        Thread.currentThread().join();
+        Thread.currentThread().join();*/
     }
 
-    /** a peer trace line — stdout, which {@link PeerCluster} captures per peer */
+    /**
+     * a peer trace line — stdout, which {@link PeerCluster} captures per peer
+     */
     private static void trace(final String format, final Object... args) {
         System.out.printf("[peer] " + format + "%n", args);
         System.out.flush();

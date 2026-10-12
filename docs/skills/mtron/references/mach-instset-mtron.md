@@ -13,16 +13,16 @@ A **machine** is metatron's unit of process: everything runs in one, and `/` is 
 
 | slot        | what it holds                                                       |
 |-------------|---------------------------------------------------------------------|
-| `instset`   | the vocabulary this frame sees: its own declarations over an ordered list of imported sets |
 | `compiler`  | the source to `code::T` converter                                   |
 | `memory`    | the address space: relative uris (stack) and absolute uris (spaces) |
+| `instset`   | the machine's instruction set architecture (types and insts)        |
 | `network`   | the peers a machine indexes and maintains shared state              |
 | `processor` | the runtime that executes `code::T` over the metatron graph         |
 
 Machines **nest**: a pushed child machine reads through to its parent's state, so a child is a nested frame of
-reference rather than a copy of the world. What follows is the compiler, then the processor, then the other slots.
+reference rather than a copy of the world.
 
-## the compiler — four stages
+## the compiler (from language to code)
 
 `compiler::T` is a **composition**, not an algorithm. Four atomic stages, each an optional rec entry with a default:
 `compiler.apply` runs them in order — `parse → rewrite → resolve → type` — handing each the whole of what the last one
@@ -139,7 +139,7 @@ for compile-time typing only), a **gather/barrier**, or an **initial** inst seed
 argument, and a cast whose range is rebound to the named type. An inst that cannot be resolved is left in place for
 **runtime** resolution: a semi-resolved code, not a failed one.
 
-## type — the fourth stage
+### type — the fourth stage
 
 The last stage is the machine's own type assertion. `typer::T` is where a frame holds *how much* checking it wants,
 in the same style as the other three: a rec entry, optional, defaulting.
@@ -147,6 +147,100 @@ in the same style as the other three: a rec entry, optional, defaulting.
 **Not yet wired**: `typer.apply` is the identity today, and enforcement still reads the global registry — the
 `TypeCheck` flags mirrored at `/sys/typer/stage`, which a boot profile sets through its `typer/stage` rec. Moving
 those flags into the machine is what the `typer::T` stage is for.
+
+## the instset — a union of references
+
+`instset` is the frame's **visible vocabulary**: the types, instructions, rewrites and sugars a program compiled here
+can see. It is a union in two directions at once — this frame's own structure layered over an arbitrary number of
+**imported** sets, and that whole stack layered over the **enclosing machine's** instset. Memory and the network are a
+two-level walk (a frame over its parent); the vocabulary is that *and* an ordered list.
+
+| part          | what it is                                                                                                                                                          |
+|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| own structure | the `type` / `inst` / `rewrite` / `sugar` entries written in this frame                                                                                             |
+| `reference`   | an ORDERED list of the vids of the instruction sets this frame imported — held by reference, never copied                                                           |
+| `previous`    | the enclosing machine's instset — inherited **lazily**, so a child that imported nothing still sees what its parent imported, even an import the parent makes later |
+
+Two rules are the whole point:
+
+* **an import is a reference, never a copy** — the library out in space is shared by every machine that imported it,
+  and is never mutated by any of them;
+* **resolution is own-first** — a declaration made here outranks a name from any set this one refers to, and among the
+  references **import order is precedence**.
+
+The membership lives in the rec under `reference` — singular, like `pattern`, `type` and `inst`, holding a list —
+so the vocabulary reads from mtron as itself rather than as an opaque template. Importing is the `import`
+instruction, which takes the ISA's uri.
+
+The rec records the **vids**; the frame holds the sets **by object**. That split is what makes the membership
+reflective *and* independent: printing the rec never inlines a library, and resolution reads the objects, so belonging
+to a machine does not depend on the address index at all.
+
+### what a read is
+
+Reading the vocabulary is not a lookup that stops at the first frame that answers. It is a walk of the whole union —
+own structure, then each reference in import order, then the enclosing frame — collecting **candidates**, and the
+rules are per **identity** rather than per name:
+
+* an identity a nearer level already answered is **shadowed** — own-first, and the reason a local redeclaration wins;
+* an identity not yet answered is **added alongside** — a set that overloads a name does not erase the name, so `plus`
+  is a family rather than a slot.
+
+Identity is the schema's own: an **inst or rewrite by its `tid`**, a **type or const by its `vid`**.
+
+Because the union is schema, a read is a **query**. The dom/rng in the pattern are type constraints: a candidate whose
+domain the query's domain refines is admitted, walking the refinement lattice — `*plus?nat<=nat` answers with the
+`int` contract, since nat's path is nat → int → #, while `*plus` answers with the whole family. A query that names a
+dom ranks candidates closest-to-the-token first; one that does not is unranked.
+
+A short name is an address in disguise, and it is **data memory** that resolves it — the small→big tables turn
+`plus` into `/m/inst/plus` — after which instruction memory answers the address. The division is deliberate: a name is
+not something an instruction set resolves about itself.
+
+The vocabulary belongs to the **machine**, so every thread of that machine sees the same one — per-thread state lives
+on the stack, not in a component. The behaviour above is pinned by tests: `InstSetUnionReadTest` (identity shadowing,
+adding alongside, a member that is not a space), `LatticeReadTest` (dom/rng admission down the lattice),
+`InstSetIsolationScriptTest` (own, inherit, no leak up, no leak across).
+
+### instruction set architecture (machine schema)
+
+<!-- figure source: assets/tikz/mach-instset.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
+<img src="../assets/mach-instset.png" alt="one machine, two memories, one read, drawn as two boxes headed by their types, memory::T and instset::T. An instruction set joins the machine twice: the machine::T vertex sends membership (solid) into instset::T and registration (dashed) into memory::T. memory::T does two things, one row each — a value at an address (/usr/marko/age, value, 29) and a route (the name plus, route, the address /m/inst/plus) — and a dotted line carries that same address across the gap into instset::T. There the query ?nat<=nat admits the int contract (drawn solid) while the address's other candidates, real and str, sit dotted inside a group bracket labelled off nat's path, because the query's domain only reaches down nat's path. Beneath both boxes one read runs — mtron's *id, then network, then memory, then instset (on a miss) — with dotted lines tying each hop to the box it asks. The tags under each header give the two lenses: INSTANCES / data and SCHEMA / inst" width="100%" style="margin:0.3em 0 0 0"/>
+
+An ISA is also a `space::T`, and that is now down to **one remaining dependency**. Belonging to a machine has two
+halves:
+
+| half         | what it is                                                                                                                                                                         |
+|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| membership   | the ISA is held **by object** in the frame that referred it — this is the vocabulary, and it needs no address space at all                                                         |
+| registration | the ISA is also entered in the machine's **address index** — the only reason it is a `space::T`, and today the only reason its content is reached by asking for it *as* an address |
+
+Both halves happen in one place (`InstSet.mount`), so neither can be had without the other by accident. Only
+membership is what the union needs: a machine can already hold a member that is **not** one of its spaces, and a read
+reaches it through instruction memory. Removing the registration is the step that finishes the sentence — and it is
+blocked on three
+things, each of them measured rather than assumed:
+
+* **migration writes** — an instruction set's setup hands a declaration that falls outside its own pattern to the set
+  that owns it by writing to an *address*, which only works while the owner can be found in the address index;
+* **declining spaces** — the catch-all space matches every address, so a space must answer `noobj` for a vid it cannot
+  interpret rather than throw, or an odd query string becomes a boot failure;
+* **documentation ownership** — a set's setup wraps each declaration in its documentation, and resolving *which space
+  owns an id* goes through the address index: with the registration gone that resolution falls through to the
+  enclosing space, and a setup goes from ~0.1s to ~4.2s (measured: a 13-test class went from 4.0s to 200.5s).
+
+**Not yet**: the vocabulary a frame sees is meant to be the union of the sets it imported *and* the declarations made
+under its own `~` — `~/type/friend`, `~/inst/purchase` — for those same four kinds. `const` is deliberately excluded
+from that projection, and the reason is the point: `~` is the frame's whole address space, so a projection that
+admitted consts would union the frame's **memory** into its instruction set. (A few consts do still sit in the
+instruction sets' own tables; that is the one place the schema/instance split is blurred, and gutting them is a
+separate pass.)
+
+A frame's own declarations are visible from that frame because the read asks data memory before instruction memory;
+moving them into the frame's own ISA structure is the write path that makes the projection real, and it comes first.
+The projection also needs `~` to be the current machine — it resolves to `Machine.current().vid()` and does **not**
+fall through to an enclosing frame, so inheriting a parent's `~`-addressed vocabulary has to be *built* (re-bind `~`
+at each level of the walk, or walk frames in the projection); it does not come free with the address walk.
 
 ## the processor — the sibling
 
@@ -162,55 +256,21 @@ axes of a machine.
 
 ## the other slots
 
-* **`memory::T`** — the address space. Its relative bindings *are* the rec, and the index of absolute spaces is the
-  `space` entry inside it, so a memory reads from mtron like any other rec. A child machine reads through to its
-  parent's memory; that walk is what makes a machine a frame of reference.
+* **`memory::T`** — **data memory**: the address space of *instances*. Its relative bindings *are* the rec, and the
+  index of absolute spaces is the `space` entry inside it, so a memory reads from mtron like any other rec. A child
+  machine reads through to its parent's memory; that walk is what makes a machine a frame of reference.
 * **`network::T`** — the peers a frame can reach. A `peer::T` is one roster entry — an `authority`, an optional
   `name`, and an optional `transport` — and a peer that crossed a wire is *known but unreachable*: one type, two
   honest states.
-* **`instset`** — the frame's visible vocabulary, imported by reference; see below.
+* **`instset`** — **instruction memory**: the *schema* — the visible vocabulary, imported by reference; see below.
 
-## the instset — a union of references
-
-`instset` is the frame's **visible vocabulary**: the types, instructions, rewrites and sugars a program compiled here
-can see. Unlike every other component it is an **n-ary union** rather than a two-level walk — memory and the network
-are a frame over its parent, while an ISA is a LIST: this frame's own structure layered over an arbitrary number of
-imported sets.
-
-That it is also a `space::T` is an **accident worth naming**: importing an ISA mounts it into memory, so an ISA had to
-be a space to be reachable at all. Frame-scoped importing removes the need, and the declaration is where the two
-descriptions meet in the meantime.
-
-| part          | what it is                                                                                                    |
-|---------------|---------------------------------------------------------------------------------------------------------------|
-| own structure | the `type` / `inst` / `rewrite` / `sugar` entries written in this frame                                        |
-| `reference`   | an ORDERED list of the vids of the instruction sets this frame imported — held by reference, never copied      |
-
-Two rules fall out, and they are the whole point:
-
-* **an import is a reference, never a copy** — the library out in space is shared by every machine that imported it,
-  and is never mutated by any of them;
-* **resolution is own-first** — a type, inst, const or rewrite written here SHADOWS a name from any set this one
-  refers to, and among the references **import order is precedence**.
-
-The membership lives in the rec under `reference` — singular, like `pattern`, `type` and `inst`, holding a list — so
-the vocabulary reads from mtron as itself rather than as an opaque template. Importing is the `import` instruction,
-which takes the ISA's uri.
-
-**Not yet**: the vocabulary a frame sees is meant to be the union of the instruction sets it imported *and* the
-declarations made under its own `~` — `~/type/friend`, `~/inst/purchase` — for those same four kinds. `const` is
-deliberately excluded, and the reason is the point: `~` is the frame's whole address space, so a projection that
-admitted consts would union the frame's **memory** into its instruction set.
-
-Two measured facts stand in the way, and both are the sort that flatter a design that assumes them:
-
-* `~` is the current machine — it resolves to `Machine.current().vid()` — and it does **not** fall through to an
-  enclosing frame. A parent's `~/person` is invisible from a child, so inheriting a parent's `~`-addressed vocabulary
-  has to be *built* (re-bind `~` at each level of the walk, or walk frames in the projection); it does not come free
-  with the address walk.
-* importing currently does **both** — it mounts the ISA into memory *and* records the reference — so the mount can
-  only go once the union alone carries a frame's vocabulary. A machine created with no inherited vocabulary is a
-  machine whose code cannot run, which is why that order is not negotiable.
+**Two memories, one read.** `memory` holds instances and `instset` holds schema, and a read is the language's single
+way in: `Machine.read` asks three sources in order — the **network** (an address carrying an authority a peer declared
+is that peer's to answer), then **data memory**, then **instruction memory** if data memory missed. The division of
+labor between the memories is clean, and worth holding on to: **data memory routes names to addresses** (its
+small→big tables are what turn `plus` into `/m/inst/plus`) and **instruction memory answers addresses**. A read
+made *from inside* an instruction-set read is a data read — answering a schema query resolves the dom/rng types of the
+pattern, and resolving a type is itself a read — so instruction memory is not re-entered from there.
 
 ## threads
 

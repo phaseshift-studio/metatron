@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type;
+package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -24,19 +24,12 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.network.PeerCluster;
+import studio.phaseshift.metatron.isa.mach.type.*;
 
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.AUTHORITY;
-import static studio.phaseshift.metatron.Tokens.COMPILER;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.MEMORY;
-import static studio.phaseshift.metatron.Tokens.NETWORK;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.PEER;
-import static studio.phaseshift.metatron.Tokens.PROCESSOR;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;

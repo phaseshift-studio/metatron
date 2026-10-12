@@ -78,6 +78,12 @@ public abstract class AbstractMachine extends MRec implements Machine {
         return this.resolvedMemory;
     }
 
+    /**
+     * Bind this machine's memory. FIELD ONLY — never {@code at()}: a rec write on a machine rec fails its own type
+     * check ({@code objCheckAndSave} -> {@code Lst.test}, a null list element), which is why a component is seeded
+     * through the constructor map or written straight into {@code jvm()} — see {@link Machine#push(fURI)}, which
+     * rebinds the child's memory and instset and puts both into the child's own rec.
+     */
     @Override
     public Machine memory(final Memory memory) {
         this.resolvedMemory = memory;
@@ -96,6 +102,18 @@ public abstract class AbstractMachine extends MRec implements Machine {
         if (null == this.resolvedInstSet)
             this.resolvedInstSet = Machine.super.instset();
         return this.resolvedInstSet;
+    }
+
+    /**
+     * Bind this machine's instruction set. FIELD ONLY — never {@code at()}, for the same reason as
+     * {@link #memory(Memory)}: the rec write fails its own type check. {@link Machine#push(fURI)} also puts the
+     * child's ISA into the child's own rec, so an ADDRESS read of the slot answers with the same object the accessor
+     * returns.
+     */
+    @Override
+    public Machine instset(final InstSet instset) {
+        this.resolvedInstSet = instset;
+        return this;
     }
 
     public AbstractMachine(final fURI vid) {
@@ -139,6 +157,9 @@ public abstract class AbstractMachine extends MRec implements Machine {
         // would leave the memory's own machine() answering mach0().
         this.memory().parent(this);
         this.network().parent(this);
+        // the ISA is the machine's own component too, so it must be parented like the other two: `Component.machine()`
+        // walks parent(), and a shared component that cannot name its owner cannot resolve against it.
+        this.instset().parent(this);
         // DO NOT mount the machine's own ISA overlay into the memory index. A BasicInstSet claims `/m/#` -- the SAME
         // pattern the library space claims -- so mounting it creates a same-pattern collision and `mostSpecific`
         // breaks the tie arbitrarily: writes land in the empty overlay while the library is what should answer.
@@ -210,7 +231,16 @@ public abstract class AbstractMachine extends MRec implements Machine {
     public Machine clone(final Object jvm, final fURI tid, final fURI vid) {
         // set the fields on the COPY, never on this: that is what distinguishes vid() (copy then set) from
         // selfVID() (set in place), and the difference is the whole point of the pair.
-        return (Machine) this.clone().self(jvm, tid, vid);
+        // A null jvm keeps the copy's OWN map (a clone() copies it), which is what makes a machine's rec the
+        // machine's: Machine.push(fURI) passes null so a child can neither answer a slot read with its parent's
+        // component nor write one into the parent's rec.
+        final Machine copy = (Machine) this.clone().self(jvm, tid, vid);
+        // A COPIED CACHE WOULD ANSWER FOR THE WRONG MACHINE: the field is copied too, so a clone would report
+        // whatever its source had resolved with. push() rebinds memory and instset explicitly; clearing here means a
+        // clone can never be answered by a stale component.
+        if (copy instanceof AbstractMachine abstractCopy)
+            abstractCopy.resolvedInstSet = null;
+        return copy;
     }
 
 }

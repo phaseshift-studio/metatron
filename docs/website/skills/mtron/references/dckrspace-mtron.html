@@ -298,6 +298,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -658,15 +659,25 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
     format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
     desc=&gt;[
      rng=&gt;&lt;#&gt;,
-     insts=&gt;2],
+     insts=&gt;3],
     per_inst=&gt;[
      [
-      op=&gt;sql_where,
-      args=&gt;[people/+,&quot;role = 'developer'&quot;],
+      op=&gt;from,
+      args=&gt;[mydb:people/+],
       f=&gt;'&lt;j&gt;',
-      form=&gt;initial,
+      form=&gt;standard,
       c_dom=&gt;0,
       c_rng=&gt;0],
+     [
+      op=&gt;isa,
+      dom=&gt;&lt;#&gt;,
+      rng=&gt;&lt;#&gt;,
+      args=&gt;[
+       [
+        role=&gt;developer]],
+      form=&gt;mapper,
+      c_dom=&gt;1,
+      c_rng=&gt;1],
      [
       op=&gt;select,
       dom=&gt;&lt;#&gt;,
@@ -684,14 +695,21 @@ mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewri
     format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
     desc=&gt;[
      rng=&gt;int,
-     insts=&gt;1],
+     insts=&gt;2],
     per_inst=&gt;[
      [
-      op=&gt;sql_count,
-      rng=&gt;int,
-      args=&gt;[people/+],
+      op=&gt;from,
+      args=&gt;[mydb:people/+],
       f=&gt;'&lt;j&gt;',
-      form=&gt;initial,
+      form=&gt;standard,
+      c_dom=&gt;0,
+      c_rng=&gt;0],
+     [
+      op=&gt;count,
+      rng=&gt;int,
+      args=&gt;[,],
+      f=&gt;'&lt;j&gt;',
+      form=&gt;reducer,
       c_dom=&gt;0,
       c_rng=&gt;1]]]
 </code></pre>

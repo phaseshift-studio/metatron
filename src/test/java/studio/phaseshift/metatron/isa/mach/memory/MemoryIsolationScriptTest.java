@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type;
+package studio.phaseshift.metatron.isa.mach.memory;
 
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.StatefulCSVSource;
@@ -132,6 +132,12 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
 
     @StatefulParametrizedTest
     @StatefulCSVSource({
+            // `~` is the frame base and `/.` is the root (Marko: "~ is the new ."), so these pairs assert that the
+            // two spellings denote the same place AT THE ROOT — where they coincide by construction. Inside a frame
+            // they must DIVERGE, and the `% false` rows in the child block below pin that: a component belongs to the
+            // machine that holds it, so BOTH the accessor and an address read of the slot answer with that machine's
+            // component — the frame's, not the root's. MachineInstSetIsolationTest proves the same property at the
+            // component level (no leak up, no leak across).
             "*</.>     % *<~>                 % true",
             "*~/memory % *</./memory> % true",
             "*~/instset % *</./instset> % true",
@@ -151,6 +157,15 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
             "*~/network % *</xyz/network> % true",
             "*~/compiler % *</xyz/compiler> % true",
             "*~/processor % *</xyz/processor> % true",
+            // THE FRAME'S COMPONENT IS NOT THE ROOT'S. A slot read is per-machine now rather than an alias of the
+            // parent's — for the two components a machine actually mints (memory and the instruction set). The other
+            // three are still the enclosing machine's INSTANCE: the network's roster is shared by design today (the
+            // open shadow-and-deny question), and compiler/processor are stateless axes whose accessors clone per
+            // fetch, so a row for them would assert the aliasing rather than the ownership.
+            "*~/memory % *</memory> % false",
+            "*</xyz/memory> % *</memory> % false",
+            "*~/instset % *</instset> % false",
+            "*</xyz/instset> % *</instset> % false",
             "*</.>     % *<~>                 % false",
             /*"~/memory() % /memory() % false",
             "*~/memory % *</memory> % false",

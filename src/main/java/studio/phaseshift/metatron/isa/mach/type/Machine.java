@@ -55,28 +55,36 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_MACHIN
  * Three names, three questions: {@link #jvmRoot()} is this JVM's bootstrap; {@link #root()} is the top of the
  * containment this thread is in, and is what resolution reads; {@link #current()} is where the thread stands.
  * <p>
- * This interface carries four roles, and the source is grouped in this order:
+ * There is no separate Frame object: <b>the machine IS the frame</b>. {@code push()} clones a child that owns its own
+ * rec and its own component levels, and the enclosing machine is reached through each accumulating component's
+ * {@code previous} link.
+ * <p>
+ * The members, by role:
  * <ol>
- *     <li><b>identity and place</b> -- {@code jvmRoot}, {@code root}, {@code mach0}, {@code defaultMachine},
- *     {@code descendsFrom}: where things are and who contains whom.</li>
- *     <li><b>the perspective</b> -- {@code CURRENT} with {@code current()} and the two {@code withPerspective} forms.</li>
- *     <li><b>the entry point</b> -- {@code read}, {@code write}, {@code loaded}.</li>
- *     <li><b>the space contract and its index</b> -- {@code spaces}, {@code pattern}, {@code read}, {@code write},
- *     {@code addSpace}, {@code removeSpace}, {@code getSpace}, {@code getSpaceFor}, {@code mount}, and the route
- *     table's {@code register*}: three registries -- spaces, frames, routes.</li>
- *     <li><b>execution</b> -- {@code apply}, {@code move}, {@code push}, {@code pop}.</li>
+ *     <li><b>identity and place</b> -- {@code jvmRoot}, {@code root}, {@code mach0}, {@code defaultMachine}: where
+ *     things are and who contains whom.</li>
+ *     <li><b>the perspective</b> -- {@code CURRENT}, {@code current()}, {@code relativeToCurrent}: where THIS thread
+ *     stands, which is what lets the machine be the frame.</li>
+ *     <li><b>the address surface</b> -- {@code read}, {@code write}, {@code loaded}: the one way in, asking the
+ *     network, then data memory, then instruction memory.</li>
+ *     <li><b>the component contract</b> -- {@link Component} and its {@code machine()} walk.</li>
+ *     <li><b>execution</b> -- {@code push}, {@code pop}, {@code move}. {@code apply} is inherited identity here: the
+ *     re-homing of {@code CURRENT} as an apply side effect is disabled, so dereference stays pure and {@code move} is
+ *     the only context switch.</li>
  *     <li><b>components</b> -- {@code compiler}, {@code processor}, {@code instset}, {@code memory}, {@code network},
- *     each in a frame-aware form and an {@code own*} slot form.</li>
- *     <li><b>frames</b> -- {@code FRAME} (the cursor) and {@code FRAMES} (the address index), with {@code frameAt},
- *     {@code frameRegister}, {@code forget}, and the non-allocating {@code *View} and
- *     {@code inherited*} accessors.</li>
- *     <li><b>reachability</b> -- {@code own}, {@code isPeer}, {@code selfAuthorities}.</li>
- *     <li><b>inner types</b> -- {@code Frame}, {@code Machine0}, {@code Component}.</li>
+ *     each with its setter and its {@code bootstrap}.</li>
+ *     <li><b>inner types</b> -- {@link Component}, {@link Helper}, and {@link Helper.Machine0}, the zero machine.</li>
  * </ol>
+ * <p>
+ * The concrete machine is an address space ({@code AbstractMachine extends AbstractSpace}), but the space contract --
+ * {@code addSpace}, {@code removeSpace}, {@code getSpaceFor}, {@code spaces}, and the route table -- is
+ * {@link Memory}'s, reached through {@code memory()}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Machine extends Rec, AutoCloseable {
+
+    // ======================== identity and place ========================
 
     static Machine mach0() {
         return Helper.Machine0.single();
@@ -85,7 +93,6 @@ public interface Machine extends Rec, AutoCloseable {
     /**
      * The machine ROOT — always, whatever perspective this thread is standing in. The bootstrap constant.
      */
-    // ======================== identity and place ========================
     static Machine jvmRoot() {
         return null == ROOT_MACHINE ? mach0() : ROOT_MACHINE;
     }
@@ -97,6 +104,8 @@ public interface Machine extends Rec, AutoCloseable {
     static Machine root() {
         return null == ROOT_MACHINE ? mach0() : ROOT_MACHINE;
     }
+
+    // ======================== the perspective ========================
 
     /**
      * Where this thread stands: the machine it is evaluating in, or {@link #root()} when nothing moved it.
@@ -116,20 +125,15 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
-     * The frame of reference, per thread.
-     */
-    ThreadLocal<Machine> CURRENT = new ThreadLocal<>();
-
-    /**
      * The frame of reference, per thread: the machine this thread is evaluating in, or {@link #root()} when nothing
      * moved it. A worker starts where its caller stood and publishes where it ended.
      */
+    ThreadLocal<Machine> CURRENT = new ThreadLocal<>();
 
     /**
      * Evaluate a fragment in another machine's frame of reference, restoring this thread's on the way out.
      * The scoped form: in at the dereference, out when the fragment that followed it ends.
      */
-    // ======================== the perspective ========================
     static Obj current(final Machine machine, final java.util.function.Supplier<Obj> fragment) {
         final Machine previous = CURRENT.get();
         CURRENT.set(machine);
@@ -152,6 +156,11 @@ public interface Machine extends Rec, AutoCloseable {
         return machine;
     }
 
+    // ======================== the address surface ========================
+    // The one way in. A read asks the network, then data memory, then instruction memory; a write mirrors it. The
+    // space contract itself -- addSpace/removeSpace/getSpaceFor/spaces and the route table -- is Memory's, reached
+    // through memory().
+
     static Obj read(final fURI vid) {
         if (null == ROOT_MACHINE)
             return noobj();
@@ -165,7 +174,26 @@ public interface Machine extends Rec, AutoCloseable {
             return dispatched;
         // Local routing (~ resolution, relative→stack, absolute→space) lives in Memory.read, so there is exactly one
         // place a read is turned into an address.
-        return machine.memory().read(vid);
+        final Obj inMemory = machine.memory().read(vid);
+        if (!inMemory.isNoObj())
+            return inMemory;
+        // ... AND A READ READS INSTRUCTION MEMORY. A read is the language's ONE way in, so it answers from the
+        // machine's own instset when data memory has nothing: that is where an instruction, a type or a declared
+        // name comes from once it is not also mounted as a space, and it is what makes a local declaration shadow an
+        // import. Fetched through here, NOT by a caller reaching for instset() directly — a selector may do that as
+        // an optimization, but the way instructions are fetched is this read.
+        // It is asked on a MISS rather than before memory because an ISA read scans that ISA's tables and walks the
+        // frame chain, and every read in the VM comes through this method. Once the ISA mounts are dropped (nothing
+        // of an instruction set is in the data index) this becomes the only source for its jurisdiction, and the
+        // order stops mattering.
+        if (Helper.isReadingInstructionMemory())
+            return noobj();
+        Helper.readingInstructionMemory(true);
+        try {
+            return machine.instset().read(vid);
+        } finally {
+            Helper.readingInstructionMemory(false);
+        }
     }
 
     static Obj read(final String vid) {
@@ -202,15 +230,12 @@ public interface Machine extends Rec, AutoCloseable {
         return root();
     }
 
-    // ======================== the address surface ========================
-    // A Machine IS the address space, so these are the machine's own contract: declared here rather than inherited.
-
     static boolean loaded() {
         return null != ROOT_MACHINE;
     }
 
 
-    // ======================== the space contract and its index ========================
+    // ======================== the component contract ========================
 
     interface Component extends Rec {
         default Machine machine() {
@@ -269,15 +294,19 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     // ======================== components ========================
+    /**
+     * The machine's instruction set: instruction memory, and the ONE locus for every instset the machine uses.
+     * <p>
+     * The slot holds the ISA as <b>itself</b> — an instance bound at construction, the way {@link #memory()} and
+     * {@link #network()} are, and never a template the accessor applies. That reversal is the point: an ISA is a
+     * component the machine owns, so it is created WITH the machine rather than materialized from a lambda.
+     * <p>
+     * A machine with no ISA yet gets a stable empty one ({@code AbstractMachine} memoizes it) rather than a slot
+     * write: a pushed child shares its parent's rec map, and a rec write on a machine rec fails its own type check.
+     */
     default InstSet instset() {
-        final Obj proto = this.at(uri(INSTSET));
-        if (proto.isNoObj())
-            return new BasicInstSet();
-        // apply the slot's proto whenever it is an INST -- an instLambda is an Inst but isCall() is false for it,
-        // so `proto.isCall() ? proto.apply() : proto` never evaluated the seed and instset() fell through to
-        // a throwaway on every call. Obj.apply() is the no-arg form that runs the lambda and yields the ISA.
-        final Obj resolved = (proto.isInst() || proto.isCall()) ? proto.apply() : proto;
-        return null == resolved || resolved.isNoObj() || !(resolved instanceof InstSet) ? new BasicInstSet() : (InstSet) resolved;
+        final Obj proto = this.atDirect(uri(INSTSET));
+        return proto instanceof InstSet isa ? isa : new BasicInstSet();
     }
 
     /**
@@ -339,7 +368,13 @@ public interface Machine extends Rec, AutoCloseable {
      * Push a child machine and make it current, returning the child.
      */
     default Machine push() {
-        return this.push(CommonUtil.mintShortUUID(this.vid(), false));
+        // A BARE SEGMENT, minted with NO base. push(extension) already anchors the child under this machine
+        // (childVID = parentVID.extend(extension)), so seeding the base with this.vid() applied the parent's vid
+        // TWICE: the child resolved to /parent/parent/<segment>, which the descendant check below rejects. The
+        // result was that any push past depth 0 threw, while the first push from the root worked — because
+        // mintShortUUID treats a null or /. base as "mint absolutely" and yields the segment alone. Passing null
+        // asks for exactly that, so depth 0 is unchanged and the nest now goes as deep as the frame stack.
+        return this.push(CommonUtil.mintShortUUID(null, false));
     }
 
     /**
@@ -394,18 +429,38 @@ public interface Machine extends Rec, AutoCloseable {
             // failed. A frame's address must strictly extend its parent's, and now the message shows both sides.
             throw MTronException.of("push(%s) does not descend from %s: resolved %s is not a strict descendant of %s",
                     extension, parentVID, childVID, parentVID.resolve());
-        final Machine child = (Machine) this.clone(this.jvm(), this.tid(), childVID);
+        // THE CHILD OWNS ITS REC. Passing null keeps the clone's OWN copy of the map instead of handing the child
+        // this machine's map object. While the map was shared, `machine.at(<component key>)` — which is how an
+        // ADDRESS read of `/xyz/instset` is answered — reported the ENCLOSING machine's component, while the
+        // accessor (instset()) reported the child's: the same slot read two ways, disagreeing. A component belongs to
+        // the machine that holds it, so the rec holding it must be the machine's too. The child still starts with a
+        // SNAPSHOT of this machine's keys (clone() copies them), which is all the machine rec ever offered — `at()`
+        // does not walk the parent chain.
+        final Machine child = (Machine) this.clone(null, this.tid(), childVID);
         if (child == this)
             throw MTronException.of("push(%s) cannot mint a child: clone() returned this machine, so the child would BE the parent", extension);
         child.parent(this);
         // The child's memory is a union over this machine's memory: its own fresh level over the enclosing one.
         // Parent the union to the CHILD (not to the parent machine): Component.machine() walks parent(), and the
         // read path's getSpaceFor/readAbsolute/writeAbsolute use it to decide whether the machine answers for its
-        // own rec keys. AbstractMachine.memory(Memory) stores only the resolvedMemory field (never at(), so the
-        // shared jvm stays untouched), which is why the parent link must be set explicitly here.
+        // own rec keys. AbstractMachine.memory(Memory) stores only the resolvedMemory field, which is why the
+        // parent link must be set explicitly here.
         final MemoryUnion memory = new MemoryUnion(this.memory());
         memory.parent(child);
         child.memory(memory);
+        // The child's instruction set is its OWN level over this machine's — the same move as the memory union
+        // above, and for the same reason: a component belongs to the machine that holds it, so a declaration or an
+        // import made while standing in the child lands in the CHILD's level and the enclosing machine's vocabulary
+        // is untouched.
+        final BasicInstSet childInstSet = new BasicInstSet(this.instset());
+        child.instset(childInstSet);
+        // ... and the child's own components go into ITS rec, so that an ADDRESS read of a component slot
+        // (`*</xyz/instset`) answers with the child's component exactly as the accessor does. Written into the map
+        // directly rather than through at(): a rec write on a machine rec fails its own type check (objCheckAndSave
+        // -> Lst.test, a null list element), which is why every component is seeded through the constructor map —
+        // see AbstractMachine.withMemory — rather than assigned into a live machine.
+        child.jvm().put(uri(MEMORY), memory);
+        child.jvm().put(uri(INSTSET), childInstSet);
         child.bootstrap();
         // register the child rec in the ROOT's space (global): read(childVID) from ANY machine reaches it, so
         // move(childVID) works from a sibling at any depth. the child's data stays in its own infra, so isolation holds.
@@ -467,13 +522,9 @@ public interface Machine extends Rec, AutoCloseable {
      * @return this machine with the given instruction set bound
      */
     default Machine instset(final InstSet instset) {
-        CommonUtil.close(this.atDirect(uri(INSTSET)));
+        // NO close of the outgoing value: it is a COMPONENT now rather than a template, and on a pushed child the
+        // value being replaced is the ENCLOSING machine's ISA — closing it would release the parent's vocabulary.
         return this.at(uri(INSTSET), instset, MUTABLE).as();
-    }
-
-    default Machine instset(final Call instsetReference) {
-        CommonUtil.close(this.atDirect(uri(INSTSET)));
-        return this.at(uri(INSTSET), instsetReference, MUTABLE).as();
     }
 
     /**
@@ -521,6 +572,23 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     class Helper {
+
+        /**
+         * INSTRUCTION MEMORY IS BEING READ — this thread is inside the instset hop of {@link Machine#read(fURI)}. A
+         * read made FROM an ISA read is a data read: answering one resolves the dom/rng types of the pattern, and
+         * resolving a type is itself a read, so without this the hop re-entered itself until the stack died
+         * (measured: seven StackOverflowErrors in MachPushTest, where reads happen while a frame is mid-construction
+         * and memory has not been populated yet).
+         */
+        private static final ThreadLocal<Boolean> READING_INSTRUCTION_MEMORY = ThreadLocal.withInitial(() -> false);
+
+        static boolean isReadingInstructionMemory() {
+            return READING_INSTRUCTION_MEMORY.get();
+        }
+
+        static void readingInstructionMemory(final boolean reading) {
+            READING_INSTRUCTION_MEMORY.set(reading);
+        }
 
         /**
          * The zero machine: no spaces, components or route table, and every mutator a no-op, so nothing written

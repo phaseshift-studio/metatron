@@ -93,15 +93,34 @@ public class LatticeReadTest extends AbstractInstSetTest {
     }
 
     /**
-     * the insts admitted by the family read {@code plus?dom=<dom>}
+     * the insts admitted by the family read {@code plus?dom=<dom>} — asked THROUGH THE MACHINE'S OWN INSTRUCTION
+     * SET, not through Memory: dom admission lives in the union, and that is the read the resolver uses.
      */
     private static List<Inst> admitted(final fURI dom) {
-        final Obj result = Machine.read(f("plus").dom(dom));
+        return admitted(Machine.current().instset().read(f("plus").dom(dom)));
+    }
+
+    private static List<Inst> admitted(final Obj result) {
         return result.stream()
                 .map(o -> o.isInst() ? o : o.isRel() ? o.asRel().second() : o)
                 .filter(Obj::isInst)
                 .map(Obj::asInst)
                 .toList();
+    }
+
+    /**
+     * the same family read on the {@code rng} axis: {@code plus?dom=nat&rng=int} admits the int contract, and
+     * nothing off nat's path.
+     */
+    @Test
+    public void admittedForNatAndIntRngIsTheIntContract() {
+        final List<Inst> admitted = admitted(Machine.current().instset()
+                .read(f("plus").dom(f(NAT_TID.name())).rng(f(INT_TID.name()))));
+        assertFalse(admitted.isEmpty(),
+                "*plus?<=nat&rng=int must admit a contract (the int one); admitted=" + admitted);
+        final Type nat = T(f(NAT_TID.name()));
+        assertTrue(admitted.stream().allMatch(i -> nat.pathIncludes(i.dom())),
+                "and nothing off nat's path (nat -> int -> #); admitted=" + admitted);
     }
 
     @Test

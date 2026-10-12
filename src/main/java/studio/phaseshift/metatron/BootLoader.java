@@ -544,12 +544,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // Machine.authority().registerRedirect(f("stdout"), f("/sys/io/stdout"));
             // Machine.authority().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
+            // InstSet.mount is the ONE door: an ISA is registered for address AND referred into the machine's own
+            // instset. Hand-registering these three with addSpace alone is why `instset()` could not answer for
+            // /m — the base language — while it answered for every ISA imported later through `import`.
             final InstSet m = new mInstSet();
-            Machine.current().memory().addSpace(m);  // explicit registration after full construction
+            InstSet.mount(m);
             m.setup();
             //
             final InstSet sys = new sysInstSet();
-            Machine.current().memory().addSpace(sys);
+            InstSet.mount(sys);
             sys.setup();
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
@@ -559,7 +562,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
             //
             final InstSet mach = new machInstSet();
-            Machine.current().memory().addSpace(mach);  // explicit registration after full construction
+            InstSet.mount(mach);
             mach.setup();
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Machine.write(f("boot/args"), args);

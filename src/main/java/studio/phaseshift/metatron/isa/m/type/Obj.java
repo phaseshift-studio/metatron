@@ -1000,6 +1000,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return false;
             if (lhs.isUri() && rhs.isUri())
                 return lhs.uriValue().big().test(rhs.uriValue().big());
+            if (lhs.isObjs() && rhs.isObjs()) {
+                return Objects.equals(
+                        IteratorUtil.set(lhs.objsValue().iterator()),
+                        IteratorUtil.set(rhs.objsValue().iterator()));
+            }
             return Objects.equals(lhs.jvm(), rhs.jvm());
         }
 
@@ -1452,7 +1457,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
                     docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(B.maybeSome()), lst(URI_TYPE), (lhs, inst) -> {
                                 final Obj readObj = Machine.read(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
-                                return readObj.isType() || readObj.isMachine() ? readObj : readObj.clone().selfVID(null);
+                                // A COMPONENT IS ITS LOCUS, so a dereference hands it back AS ITSELF. Types, machines
+                                // and SPACES are exempt from the detaching copy: everything else may be copied and
+                                // have its address stripped (a dereferenced value is a value, not a place), but a
+                                // component read through an address is the ONE object stored there. Copying one made
+                                // every dereference of `*~/instset` a different object from `*</instset>` — two
+                                // reads of one slot that could not be compared — and no identity-stable read of a
+                                // memory, an ISA or a mounted space was possible at all.
+                                return readObj.isType() || readObj.isMachine() || readObj.isSpace()
+                                        ? readObj
+                                        : readObj.clone().selfVID(null);
                             }), // TODO: only resolves when explicit mono args (not code args)
                             "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
                             "*abc        [-- obj at abc                            --]",

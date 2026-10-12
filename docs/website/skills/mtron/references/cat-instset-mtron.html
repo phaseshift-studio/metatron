@@ -298,6 +298,7 @@
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
@@ -696,9 +697,15 @@ shape per line — so you can always see what a rewrite did:</p>
 ==&gt;3
 mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-    op     dom          rng     args  f    desc     c_dom  c_rng 
-    start  noobj{0}::T  int::T  6     &lt;j&gt;  initial  {0}    {1}   
-    minus  int::T       int::T  3     &lt;j&gt;  mapper   {1}    {1}   
+    op     dom          rng     args     f    desc     c_dom  c_rng 
+    start  noobj{0}::T  int::T  6        &lt;j&gt;  initial  {0}    {1}   
+    plus   int::T       int::T  0        &lt;j&gt;  mapper   {1}    {1}   
+    mult   int::T       int::T  1        &lt;j&gt;  mapper   {1}    {1}   
+    neg    int::T       int::T           &lt;j&gt;  mapper   {1}    {1}   
+    neg    int::T       int::T           &lt;j&gt;  mapper   {1}    {1}   
+    plus   int::T       int::T  map.neg  &lt;j&gt;  mapper   {1}    {1}   
+    mult   int::T       int::T  2        &lt;j&gt;  mapper   {1}    {1}   
+    div    int::T       int::T  2        &lt;j&gt;  mapper   {1}    {1}   
    &quot;&quot;&quot;
 </code></pre>
 <p>Reading the two rows that survive: <code>plus(0)</code> and <code>mult(1)</code> are the int ring's units (<code>theory_unit_removal</code>),

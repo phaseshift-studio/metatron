@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;

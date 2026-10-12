@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.memory;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
@@ -132,6 +133,14 @@ public class BasicMemory extends MRec implements Memory {
 
     @Override
     public void addSpace(final Space space) {
+        // MOUNTING AN INSTRUCTION SET IS JOINING THE MACHINE — the address entry AND membership in the machine's own
+        // instset, decided HERE so no caller can do one without the other. It is how a hand-mounted schema instset
+        // used to end up reachable by address while `instset()` knew nothing about it. The guard is the root's own
+        // construction: ROOT_MACHINE is assigned after it returns, and no ISA is mounted before that.
+        // REMOVING THE ADDRESS ENTRY is the step that makes an ISA "vocabulary, not a place" — it needs the migration
+        // and doc-owner paths reworked first (see the session note); this remains the one door until then.
+        if (space instanceof InstSet isa && null != isa.vid() && Machine.loaded())
+            Machine.current().instset().refer(isa);
         // A space with no vid is managed by the object that created it, not by the memory's index: it is reached
         // through its creator's own reference (a field, a closure), never by resolving an address. Indexing one by
         // its pattern would let an anonymous catch-all (the arg stack's +/#, the qproc-internal # spaces) shadow the

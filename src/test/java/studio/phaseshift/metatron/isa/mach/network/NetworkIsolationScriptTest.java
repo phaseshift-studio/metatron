@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type;
+package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -26,14 +26,12 @@ import studio.phaseshift.metatron.StatefulParametrizedTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.network.PeerCluster;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.KIND;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.STATUS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
