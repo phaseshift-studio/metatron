@@ -112,7 +112,8 @@ public class dckrSpace extends AbstractMemorySpace {
                 : this.at(uri(HOST)).uriValue().toString();
         if (this.dockerHost != null)
             LOG.info("docker host {{y}}%s", this.dockerHost);
-        this.cache = memSpace.of(f("#"), null);
+        // unregistered: a private cache mirroring this space's q-procs, not a `#` mount of its own
+        this.cache = memSpace.unregistered(f("#"), null);
         this.qs().lstValue().forEach(qq -> this.cache.addQ(qq.as()));
         final Obj pw = this.at(uri("progress"));
         this.progressWidget = (!pw.isNoObj() && pw instanceof ProgressTableWidget)

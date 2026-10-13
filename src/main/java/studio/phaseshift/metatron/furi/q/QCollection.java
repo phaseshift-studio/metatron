@@ -387,7 +387,8 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static QProc typeQ() {
-        final memSpace TYPE_SPACE = memSpace.of(rec(uri(PATTERN), uri("#")), null);
+        // unregistered: a PRIVATE cache for this q-proc, not a mount — `of` would self-register a vid-less `#`
+        final memSpace TYPE_SPACE = memSpace.unregistered(rec(uri(PATTERN), uri("#")), null);
         return QProc.Helper.build(TYPEQ_TID, TYPEQ_PATTERN)
                 .obj(f(SPACE), TYPE_SPACE)
                 .preWrite((vid, obj) -> {
@@ -496,7 +497,8 @@ public final class QCollection {
     }
 
     public static QProc docQ(final Obj initialDocs) {
-        final memSpace OBJ_DOCS = memSpace.of(ALL, null);
+        // unregistered: a private doc cache, and a registered `#` catch-all would answer every address
+        final memSpace OBJ_DOCS = memSpace.unregistered(ALL, null);
         final InstSet INST_DOCS = new DocInstSet();
         final QProc docq = QProc.Helper.build(DOCQ_TID, DOCQ_PATTERN)
                 .obj(f(INST), INST_DOCS)
@@ -799,7 +801,12 @@ public final class QCollection {
             return new Docs("nothing").c(cInt.ZERO()).as();
         }
         final Docs doc = Docs.doc(obj, domDesc, rngDesc, argDescription, description, examples);
-        final Space objSpace = Machine.current().memory().getSpaceFor(objID);
+        // objID is an ID, not an address: for an inst it is its tid, which during an ISA's own setup can be generic
+        // (`#`) — getSpaceFor THROWS on an uncovered id, and a doc for such an id has nowhere to go anyway
+        final Space objSpace = Machine.current().memory().hasSpaceFor(objID)
+                ? Machine.current().memory().getSpaceFor(objID) : null;
+        if (null == objSpace)
+            return doc;
         final Optional<QProc> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<QProc>as).findAny();
         if (docq.isEmpty()) {
             if (objSpace.hasVID())// && !obj.tid().equals(NOOBJ_TID))

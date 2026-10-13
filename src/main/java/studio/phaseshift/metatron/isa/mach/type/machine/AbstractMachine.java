@@ -148,7 +148,7 @@ public abstract class AbstractMachine extends MRec implements Machine {
     public AbstractMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(withMemory(jvm), tid, vid);
         // Mount this machine's own infra space (pattern <vid>/#) and embed the machine rec in it. Mounted FIRST so a
-        // fail thrown during component adoption (below) already has a space to land in (~/fail).
+        // fail thrown during component adoption (below) already has a space to land in (~/sys/fail).
         this.bootstrap();
         // Adopt the components. `at` is what sets a value's parent to the rec holding it, and
         // Machine.Component.machine() walks exactly that — seeding through the constructor map alone would leave

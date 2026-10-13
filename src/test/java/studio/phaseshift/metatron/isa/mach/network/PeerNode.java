@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -78,13 +79,11 @@ public final class PeerNode {
         // boot at warn: a forked JVM does not inherit the parent's -Dlogback.configurationFile, so without this
         // it logs at default DEBUG and three concurrent chatty boots will not be ready before the test does
         BootLoader.load(rec(uri("log"), uri("warn")));
-        memSpace.of(rec(uri(PATTERN), uri("/sys/#")), null);
+        memSpace.unregistered(rec(uri(PATTERN), uri("/sys/#")), null).addQ(QCollection.incrQ());
         InstSet.importInstSet(IO_ISA_TID);
         InstSet.importInstSet(f("/m/web"));
         trace("peer %d: booted (root=%s, port=%d)", index, root, port);
         // the namespace this peer owns — what makes it addressable for data rather than merely reachable
-        memSpace.of(rec(uri(PATTERN), uri(root + "/#")), f("/sys/space/peer/store"));
-        trace("peer %d: store mounted at %s/#", index, root);
         // the provisioning script: spaces and data, already modulated to this peer by the cluster.
         // Statement by statement, split on ';' and newline, because `exec` parses a SINGLE expression — the `;`
         // sugar belongs to the console's end()-splitting entry point, so a multi-statement script handed to

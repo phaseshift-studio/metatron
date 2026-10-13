@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
@@ -368,5 +369,36 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         final Compiler compiler = BasicCompiler.defaults();
         machine.compiler(compiler);
         assertSame(machine, compiler.machine(), "a bound compiler resolves its machine through the parent nest");
+    }
+
+    // ======================== bootstrap: the machine's own system state ========================
+
+    /**
+     * {@link Machine#bootstrap()} seeds the machine's log sink through its OWN memory at a resolved address, because it runs before the machine is reachable.
+     */
+    @Test
+    public void testBootstrapSeedsMachineLogSink() {
+        final Obj sink = Machine.read(Machine.Helper.LOG_SINK);
+        assertInstanceOf(Rec.class, sink, "~/sys/log is seeded by Machine.bootstrap() as a LogObj rec");
+        assertInstanceOf(Rec.class, sink.asRec().at(uri(LEVEL)),
+                "the sink carries its levels under `level`, which is where LogObj.check reads them");
+        // STORED absolutely but READ ~-relatively, since a stored vid beginning with ~ is self-referential
+        assertEquals(Machine.root().vid().resolve().extend(Machine.Helper.SYS_DIR.extend(LOGG)), sink.vid(),
+                "the sink is stored at an absolute vid; only the logger's read address is ~-relative");
+        // ~ resolves to / for the root, so the machine-local spelling and the absolute one name the same sink
+        assertInstanceOf(Rec.class, Machine.read(f("/sys/log")), "/sys/log reaches the root's sink absolutely");
+    }
+
+    /**
+     * The rest of the machine's own level must stay covered by the infra space, because a narrowed pattern de-homes {@code ~/sys/fail}, {@code ~/thread} and {@code /sys/cluster} silently.
+     */
+    @Test
+    public void testBootstrapInfraSpaceCoversTheMachinesOwnLevel() {
+        assertNotNull(Machine.root().memory().findSpace(f("/sys/fail/_")),
+                "~/sys/fail must stay covered by the machine's infra space");
+        assertNotNull(Machine.root().memory().findSpace(f("/thread/main")),
+                "~/thread must stay covered by the machine's infra space");
+        assertInstanceOf(Rec.class, Machine.read(Network.CLUSTER_PATH),
+                "the cluster view registers at /sys/cluster, which only the catch-all pattern answers");
     }
 }

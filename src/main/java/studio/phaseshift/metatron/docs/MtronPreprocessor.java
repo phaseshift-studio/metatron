@@ -279,8 +279,8 @@ public final class MtronPreprocessor {
                 } else if (!result.isNoObj() && input.isType()) {
                     outputs.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
                 }
-                // Clear fail stack so errors don't leak across blocks
-                if (!hidden) SER.inputBytes("/sys/fail/+ -> noobj").apply();
+                // clear the fail stack so errors don't leak across blocks
+                if (!hidden) SER.inputBytes("~/sys/fail/+ -> noobj").apply();
             } catch (final Exception e) {
                 if (!hidden) outputs.add("==>ERROR: " + e.getMessage());
             }

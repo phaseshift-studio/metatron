@@ -64,7 +64,8 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
      * The Java exception at this fail level.
      */
     default String message() {
-        return this.jvm().getMessage();
+        // a raw java throwable's text names classes, modules and loaders; mtron's own translation is the message
+        return MTronException.translateMessage(this.jvm());
     }
 
     /**

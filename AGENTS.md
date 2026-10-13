@@ -145,6 +145,58 @@ bin/metatron-docker dev [--no-build]                # dev loop: package in docke
   `fail::` lines in the processed output are broken examples.
 - Never kill the live server's java process or the `metatron` dev container.
 
+#### Running the loop from inside the dev container (verified 2026-10-12)
+
+Works with **no setup at all**: `bin/metatron-docker` finds the docker CLI itself (it puts
+`/opt/dsh-tools/bin` on `PATH` when the binary is not already there) and derives the host repo path
+from the mount table, so a plain `bin/metatron-docker build test …` works from inside this container.
+The deployment's compose exports both as well — `PATH` and `METATRON_HOST_REPO` — which is the
+explicit form. Verified here with a plain invocation, nothing exported:
+
+    bin/metatron-docker build test -Dtest=fURIAwareIndexedSchemaTest
+    → 441 main + 270 test sources compiled, Tests run: 24, Failures: 0, Errors: 0, BUILD SUCCESS (13.9 s)
+
+- **Two repo paths, and they are not the same thing here.** `REPO` is local (`$(pwd)` = `/workspace`)
+  and is used for the build context, `mkdir` and `cp`; `HOST_REPO` is what the *daemon* resolves
+  (`METATRON_HOST_REPO`, `/home/killswitch/software/metatron`) and is what goes into `-v`. Because
+  `docker run -v` is resolved by the daemon, one path for both binds a non-existent host directory:
+  the loop then compiles an empty tree and can still report BUILD SUCCESS. On a host both are
+  `$(pwd)`. `HOST_REPO` is derived from the mount table (field 4 of the `/proc/self/mountinfo` entry
+  whose mount point is the repo — field 9 is the backing device, not the path) and `METATRON_HOST_REPO`
+  overrides it. **If `DRY_RUN=1` shows `-v /workspace:/work`, the derivation found no bind mount and
+  `METATRON_HOST_REPO` must be set by hand — that mount is wrong.**
+- **`.mavenrc` is `$HOME`-relative** for the same reason: the loop runs the container with
+  `HOME=/work`, so the toolchain shim resolves to `/work/.build/…` — the same tree under a different
+  prefix. Absolute `/workspace/…` paths name a directory that does not exist there and the build dies
+  before Maven starts. The log line `Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=/work/.build/m2/tmp`
+  is this working.
+- **The build/test container also gets the docker socket** (`-v /var/run/docker.sock` plus
+  `--group-add <socket gid>`) **and `TESTCONTAINERS_HOST_OVERRIDE`**, so the `tble`/`dcmnt`/`vec`
+  TestContainers classes run inside the loop. The nested containers publish to the *host*, so that
+  override is what makes their ports reachable — `localhost` would be the build container itself.
+
+Container facts that otherwise read as a broken build:
+
+- **The filesystem is read-only except `/workspace`, `/opt/dsh-tools` and tmpfs.** `mkdir` on a host
+  path from inside here fails with `Read-only file system`; that is the container, not a missing
+  checkout. Anything a job needs to write must land under the repo or `/opt/dsh-tools`.
+- The docker CLI is `/opt/dsh-tools/bin/docker` (static binary on the host-shared mount, added to
+  `PATH` by the compose). The socket is mounted and usable as the `node` user (gid 127), so both the
+  CLI and the HTTP API work.
+- `docker ps` costs nothing — prove the socket before blaming a test.
+- `DRY_RUN=1 bin/metatron-docker <anything>` prints the exact `docker run`; read its `-v` paths and
+  its `-e` flags before trusting any result from the loop.
+- **`Tests run: 0` is not a pass, and neither is an empty method name.** Surefire exits 0 and Maven
+  prints BUILD SUCCESS when `-Dtest=` selects nothing — including when the method you named is real
+  but is not a test (a `@BeforeAll` such as `setupMySQLDatabase` will do it). Worse, `-Dtest=Class#`
+  with an EMPTY method drops the method filter entirely and silently runs the whole suite (1986 tests
+  and two minutes here, with unrelated failures). Read the `Tests run:` line, not the exit code.
+- **A TestContainers class can fail to acquire the daemon during a full-suite run** with
+  `Could not find a valid Docker environment` (the `tble` MariaDB and PostgreSQL classes did, while
+  MySQL ran 652 tests against a live container in the same run). The socket and
+  `TESTCONTAINERS_HOST_OVERRIDE` are correct — re-run the affected class alone
+  (`bin/metatron-docker build test -Dtest=MariaDBTbleSpaceTest`) before calling it a wiring problem.
+
 ### Driving the console in a pty (`bin/metatron-console`)
 
 Some behaviour only exists on a terminal: raw-mode keystrokes (`alt+b`, `ctrl-c`, arrows), the jline

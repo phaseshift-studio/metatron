@@ -420,13 +420,13 @@ public interface Network extends Machine.Component, Closeable {
          * The <b>local address</b> of the frame that stands in a peer:
          * {@code <base>/network/peer/<scheme>/<host>/<port>/<namespace>}. Derived from the authority, which is what
          * makes a peer's address a path in THIS machine rather than a remote uri — so the frame registers itself
-         * where every machine does, {@code ~}-relative state ({@code ~/fail}, {@code ~/thread}) stays local, and a
+         * where every machine does, {@code ~}-relative state ({@code ~/sys/fail}, {@code ~/thread}) stays local, and a
          * plain local read reaches it. Scheme and port are segments because neither may carry its own punctuation in
          * a path.
          * <p>
          * ANCHORED ON {@code base}, never spelled {@code ~}. A vid that itself begins with {@code ~} is
          * self-referential: {@code Memory.write} expands {@code ~} against {@code Machine.current().vid()}, so such
-         * a frame would resolve {@code ~/fail} to another {@code ~}-prefixed address against itself — recursing
+         * a frame would resolve {@code ~/sys/fail} to another {@code ~}-prefixed address against itself — recursing
          * until the stack dies.
          */
         public static fURI peerPath(final fURI base, final fURI authority) {

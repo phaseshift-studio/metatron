@@ -141,12 +141,17 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
         final Machine parent = Machine.defaultMachine();
         final Machine child = parent.push();
         try {
-            // ~ resolves to the current machine's vid (~ → /xyz → the machine rec), before the relative/absolute split.
-            assertEquals(child, Machine.read(f("~")), "~ resolves to the current machine");
+            // ~ resolves to the current machine's vid (~ → /xyz → the machine rec), before the relative/absolute split
+            // compared by vid and tid, not whole-rec equality: the address view also carries the machine's space embeddings
+            final Obj tilde = Machine.read(f("~"));
+            assertEquals(child.vid().resolve(), tilde.vid().resolve(), "~ resolves to the current machine");
+            assertEquals(child.tid(), tilde.tid(), "~ reads the machine itself, not a stranger at its address");
         } finally {
             child.pop();
         }
-        assertEquals(parent, Machine.read(f("~")), "and ~ resolves to the root once the frame is popped");
+        final Obj root = Machine.read(f("~"));
+        assertEquals(parent.vid().resolve(), root.vid().resolve(), "and ~ resolves to the root once the frame is popped");
+        assertEquals(parent.tid(), root.tid(), "and what it reads is the root machine");
     }
 
     @Test

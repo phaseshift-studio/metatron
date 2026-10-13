@@ -46,7 +46,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.LOG_ENTRY_TID;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
@@ -280,7 +279,8 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
                 paneWriter.accept(effectivePaneId(), formatPaneMessage(level, f, args));
             } else {
                 this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
-                final Obj roots = Machine.read(SYS.extend(LOGG).extend(ROOT));
+                // the mirror roots live in the same sink GraphittyObjLogger reads
+                final Obj roots = Machine.read(Machine.Helper.LOG_SINK.extend(ROOT));
                 roots.stream().filter(Obj::isUri).forEach(root -> {
                     rec(mutableMap(
                             uri(TIME), mathInstSet.nowDatetime(),

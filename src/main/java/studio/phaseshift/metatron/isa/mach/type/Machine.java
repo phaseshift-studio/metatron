@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -31,6 +32,8 @@ import studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyObjLogger;
+import studio.phaseshift.metatron.isa.sys.LogObj;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -299,6 +302,7 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     // ======================== components ========================
+
     /**
      * The machine's instruction set: instruction memory, and the ONE locus for every instset the machine uses.
      * <p>
@@ -344,9 +348,11 @@ public interface Machine extends Rec, AutoCloseable {
 
     /**
      * Mount this machine's own infra space and embed the machine rec in it. The space has pattern {@code <vid>/#},
-     * so {@code ~/thread}, {@code ~/fail}, {@code ~/log} (and the rec's own entries — {@code ~/memory},
+     * so {@code ~/thread}, {@code ~/sys/fail}, {@code ~/sys/log} (and the rec's own entries — {@code ~/memory},
      * {@code ~/processor} …) all resolve here as space values, not through any vid intercept. Called for the root
      * in {@link AbstractMachine}'s constructor and for each child in {@link #push(fURI)}.
+     * <p>
+     * Everything here goes through {@code this.memory()} at a resolved address, because bootstrap runs before the machine is reachable through {@code Machine.write} or {@code ~}.
      */
     default Machine bootstrap() {
         if (this.hasVID()) {
@@ -354,31 +360,46 @@ public interface Machine extends Rec, AutoCloseable {
             // everything. But the machine rec is written at the UNRESOLVED node vid (/.): a rec at a node is a
             // single value, whereas at the branch / it would fan out into /q, /instset, … entries.
             final fURI resolved = this.vid().resolve();
-            final memSpace infra = memSpace.unregistered(resolved.extend(ALL), resolved.extend("space"));
-            infra.addQ(QCollection.docQ());
-            infra.addQ(QCollection.incrQ());
-            infra.addQ(QCollection.subQ());
-            this.memory().addSpace(infra);
+            final memSpace sysSpace = memSpace.unregistered(resolved.extend("sys").extend(ALL), resolved.extend("sys").extend(SPACE));
+            sysSpace.addQ(QCollection.docQ());
+            sysSpace.addQ(QCollection.subQ());
+            sysSpace.addQ(QCollection.incrQ());
+            sysSpace.addQ(QCollection.mimeQ());
+            sysSpace.addQ(QCollection.lockQ());
+            this.memory().addSpace(sysSpace);
+            // This machine's OWN address space, at <vid>/# (the root's is /#): what a vid-less `#` cache used to
+            // claim by accident, before it was made unregistered. It must be PER MACHINE — a single root /# also
+            // matches /xyz/iso, so a child's write would land in the root and outlive its frame. The vid-scoped
+            // pattern is more specific than /# and less specific than every mounted space, so mostSpecific gives
+            // each frame its own level: own, no leak up, no leak across — by construction rather than by accident.
+            final memSpace machineSpace = memSpace.unregistered(resolved.extend(ALL), resolved.extend(SPACE));
+            // The machine's own address space carries the same q-processors as its infra space: an address that
+            // lands here (a frame that mints no infra of its own — a peer frame, say — resolves ~/sys/fail into
+            // this catch-all) must still find the processor its ?q names, or the write is refused as unattached.
+            machineSpace.addQ(QCollection.docQ());
+            machineSpace.addQ(QCollection.subQ());
+            machineSpace.addQ(QCollection.incrQ());
+            machineSpace.addQ(QCollection.mimeQ());
+            machineSpace.addQ(QCollection.lockQ());
+            this.memory().addSpace(machineSpace);
             // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.
             this.memory().write(this.vid(), this);
+            // this machine's log sink: a frame with none answers noobj, and GraphittyObjLogger.doLog then logs every level
+            final fURI vid = this.vid().resolve().extend(Helper.SYS_DIR.extend(LOGG));
+            GraphittyObjLogger.setLogger(Helper.LOG_SINK);
+            this.memory().write(vid, LogObj.sink(Helper.logLevels(this), vid));
         }
         return this;
     }
 
     /**
-     * This thread's frame stack, not initialised eagerly: until {@link #push()} is used there is no frame, and every
+     * This thread's frame stack, not initialized eagerly: until {@link #push()} is used there is no frame, and every
      * component accessor falls through to the machine's own slot.
      */
     /**
      * Push a child machine and make it current, returning the child.
      */
     default Machine push() {
-        // A BARE SEGMENT, minted with NO base. push(extension) already anchors the child under this machine
-        // (childVID = parentVID.extend(extension)), so seeding the base with this.vid() applied the parent's vid
-        // TWICE: the child resolved to /parent/parent/<segment>, which the descendant check below rejects. The
-        // result was that any push past depth 0 threw, while the first push from the root worked — because
-        // mintShortUUID treats a null or /. base as "mint absolutely" and yields the segment alone. Passing null
-        // asks for exactly that, so depth 0 is unchanged and the nest now goes as deep as the frame stack.
         return this.push(CommonUtil.mintShortUUID(null, false));
     }
 
@@ -400,7 +421,7 @@ public interface Machine extends Rec, AutoCloseable {
             final fURI peer = PeerSpawn.resolve(extension);
             // THE FRAME SPAWNS ITSELF, and it LIVES AT A LOCAL ADDRESS derived from the peer and anchored on the
             // ROOT: <root>/network/peer/<scheme>/<host>/<port>/<namespace>. Because the address is a path in THIS
-            // machine, the frame registers where every machine does, ~-relative state (~/fail, ~/thread) stays
+            // machine, the frame registers where every machine does, ~-relative state (~/sys/fail, ~/thread) stays
             // local, and a plain local read reaches it — no remote uri is ever written through the wire.
             //
             // ANCHORED ON THE ROOT, not on the current frame: a peer is a machine-level entity, and anchoring on
@@ -466,11 +487,16 @@ public interface Machine extends Rec, AutoCloseable {
         // see AbstractMachine.withMemory — rather than assigned into a live machine.
         child.jvm().put(uri(MEMORY), memory);
         child.jvm().put(uri(INSTSET), childInstSet);
+        // THE CHILD IS CURRENT WHILE IT BOOTSTRAPS. bootstrap writes the child's own infra (the machine rec at
+        // its vid, the per-machine log sink, ~-relative state), and every one of those writes belongs to the
+        // CHILD's level. Left on the parent, each self-write landed in the parent's catch-all space instead,
+        // so the parent answered for the child's own address with a synthesized rec — and a sibling could not
+        // read the child back at its vid, which is what `move(<child>)` resolves.
+        CURRENT.set(child);
         child.bootstrap();
         // register the child rec in the ROOT's space (global): read(childVID) from ANY machine reaches it, so
         // move(childVID) works from a sibling at any depth. the child's data stays in its own infra, so isolation holds.
         Machine.root().memory().write(childVID, child);
-        CURRENT.set(child);
         return child;
     }
 
@@ -493,6 +519,7 @@ public interface Machine extends Rec, AutoCloseable {
 
     @Override
     default void close() {
+        this.logger().info("closing machine %s", this.vid());
         this.pop();
     }
 
@@ -577,6 +604,32 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     class Helper {
+
+        /**
+         * The machine-local system directory: {@code ~/sys}, one level below the component slots so {@code ~}'s direct children stay the components.
+         */
+        public static final fURI SYS_DIR = f("sys");
+
+        /**
+         * The {@code ~}-relative log sink, left unexpanded so {@code GraphittyObjLogger} reads each frame's own.
+         */
+        public static final fURI LOG_SINK = f("~/sys/log");
+
+        /**
+         * The levels a machine's log sink starts with — the enclosing machine's, else the boot profile's default.
+         */
+        static Rec logLevels(final Machine machine) {
+            final Obj parent = machine.parent();
+            if (parent instanceof Machine enclosing && enclosing.hasVID()) {
+                final Obj sink = enclosing.memory().read(enclosing.vid().resolve().extend(SYS_DIR.extend(LOGG)));
+                if (sink.isRec()) {
+                    final Obj levels = sink.asRec().at(uri(LEVEL));
+                    if (levels.isRec())
+                        return levels.asRec();
+                }
+            }
+            return BootLoader.LOG_LEVELS;
+        }
 
         /**
          * INSTRUCTION MEMORY IS BEING READ — this thread is inside the instset hop of {@link Machine#read(fURI)}. A

@@ -406,7 +406,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default fURI extend(final fURI segments) {
-        return this.extend(null == segments ? null : segments.toString());
+        // return this.extend(null == segments ? null : segments.toString());
+        return this.extend(segments.pathString()).addQ(segments.qMap());
     }
 
     fURI head(final int steps);
@@ -582,6 +583,12 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     Map<String, String> qMap();
 
     fURI q(final Map<String, String> query);
+
+    default fURI addQ(final Map<String, String> query) {
+        final Map<String, String> map = new LinkedHashMap<>(this.qMap());
+        map.putAll(query);
+        return this.q(map);
+    }
 
     default fURI qLess() {
         return this.q(Map.of());
