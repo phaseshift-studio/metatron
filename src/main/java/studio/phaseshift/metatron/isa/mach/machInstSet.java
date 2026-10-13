@@ -44,6 +44,7 @@ import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -73,6 +74,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @JREService(vid = "/m/mach")
 public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
+    public static final fURI ROOT_MACHINE_VID = f("/.");
     /**
      * The remote frame's own type — a <em>refinement</em> of {@code machine}, not the machine type itself. It has
      * to be named separately because {@code machine::T} carries a constructor ({@code arg -> BasicMachine.of(...)}):
@@ -621,15 +623,12 @@ public class machInstSet extends AbstractInstSet {
                         instC(PUSH_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> Machine.current().push(inst.arg(0).uriValue())),
                         instC(POP_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(MACH_MACHINE_TYPE), (lhs, inst) -> inst.arg(0).asMachine().pop()),
                         instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> {
-                            return Machine.current(inst.arg(0).uriValue().equals(f("/.")) ? Machine.root() : Machine.read(inst.arg(0).uriValue()).asMachine());
-                            
-                          /*  final fURI target = lhs.isUri() ? lhs.uriValue() : inst.arg(0).uriValue();
-                            final Obj found = Machine.read(target);
-                            // a branch vid (the root's /) reads back as a rel; unwrap to the machine it embeds
-                            final Machine machine = found.isMachine() ? found.asMachine()
-                                    : found.isRel() && found.asRel().second().isMachine() ? found.asRel().second().asMachine()
-                                    : null;
-                            return null != machine ? Machine.current(machine) : noobj();*/
+                            if (inst.arg(0).uriValue().equals(ROOT_MACHINE_VID))
+                                return Machine.current(Machine.root());
+                            final Obj moveMachine = Machine.read(inst.arg(0).uriValue());
+                            if (moveMachine.isNoObj() || !moveMachine.isMachine())
+                                throw MTronException.of("unable to move to a non-existent machine at %s: %s", inst.arg(0), moveMachine);
+                            return Machine.current(moveMachine.asMachine());
                         }),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             ((AbstractThread) lhs).stop();

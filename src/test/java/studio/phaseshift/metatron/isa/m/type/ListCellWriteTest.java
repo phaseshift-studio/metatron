@@ -50,17 +50,17 @@ public class ListCellWriteTest extends AbstractMetatronTest {
      */
     @Test
     void shouldSetACellOfAListStoredInASpace() {
-        final fURI spaceVid = f("~/usr/deepwrite");
-        final memSpace space = memSpace.of(rec(uri(Tokens.PATTERN), uri("~/usr/deepwrite/#")), spaceVid);
+        final fURI spaceVid = f("~/sys/deepwrite");
+        final memSpace space = memSpace.of(rec(uri(Tokens.PATTERN), uri("~/sys/deepwrite/#")), spaceVid);
         Machine.current().memory().addSpace(space);
         try {
-            Machine.write(f("/usr/deepwrite/grid"),
+            Machine.write(f("~/sys/deepwrite/grid"),
                     lst(lst(str("a"), str("b"), str("c")), lst(str("d"), str("e"), str("f"))));
-            Machine.write(f("/usr/deepwrite/grid/0/1"), str("Z"));
+            Machine.write(f("~/sys/deepwrite/grid/0/1"), str("Z"));
             assertEquals(lst(lst(str("a"), str("Z"), str("c")), lst(str("d"), str("e"), str("f"))),
-                    Machine.read(f("/usr/deepwrite/grid")),
+                    Machine.read(f("~/sys/deepwrite/grid")),
                     "a deep write sets the addressed cell and leaves every other cell alone");
-            assertFalse(Machine.read(f("/usr/deepwrite")).isObjs(),
+            assertFalse(Machine.read(f("~/sys/deepwrite")).isObjs(),
                     "and it does not leave the parent holding the grid beside the written value");
         } finally {
             Machine.current().memory().removeSpace(spaceVid);

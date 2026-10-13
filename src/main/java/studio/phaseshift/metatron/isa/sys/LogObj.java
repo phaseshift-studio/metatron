@@ -62,6 +62,17 @@ public class LogObj extends MRec {
         return new LogObj(levels, vid);
     }
 
+    /**
+     * A sink rec bound to {@code vid} <em>without</em> re-pointing the (JVM-global) logger — for a caller whose
+     * stored address and whose read address are not the same spelling. A per-machine sink is exactly that: it is
+     * STORED absolutely ({@code <vid>/sys/log}), because a stored vid beginning with {@code ~} is self-referential
+     * (its entries inherit it, and expanding it re-reads against whatever machine is current), while {@link
+     * GraphittyObjLogger} holds the {@code ~}-relative form so every frame reads its own.
+     */
+    public static LogObj sink(final Rec levels, final fURI vid) {
+        return new LogObj(levels, vid);
+    }
+
     public static Level getSLF4J() {
         final ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         return org.slf4j.event.Level.valueOf(root.getLevel().toString());

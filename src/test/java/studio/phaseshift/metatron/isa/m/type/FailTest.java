@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.io.FileNotFoundException;
@@ -77,10 +78,10 @@ public class FailTest extends AbstractObjTest {
     @ParameterizedTest
     @TestData(value = {"1.plus(b)"}, oneTime = true)
     @CsvSource(value = {
-            "*~/fail/+.count().to(xyzabc).gt(0)                                                                % true",
-            "*~/fail/+.count()                                                                                 % *xyzabc",
-            "*~/fail/+.catch(_).count().eq(*xyzabc)                                                            % true",
-            //"*~/fail/+.catch(_).count()                                                                        % 0",
+            "*~/sys/fail/+.count().to(xyzabc).gt(0)                                                            % true",
+            "*~/sys/fail/+.count()                                                                             % *xyzabc",
+            "*~/sys/fail/+.catch(_).count().eq(*xyzabc)                                                        % true",
+            //"*~/sys/fail/+.catch(_).count()                                                                    % 0",
     }, delimiter = '%')
     public void testFailStackAndCatch(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -224,6 +225,30 @@ public class FailTest extends AbstractObjTest {
         assertFalse(ran.get(), "an uncaught fail lhs is propagated, skipping the inst lambda");
         probe.apply(fail("bad").caught());
         assertTrue(ran.get(), "a caught fail lhs runs the inst lambda");
+    }
+
+    /**
+     * Each fail takes exactly ONE counter value — a double write showed as a stack holding only even addresses.
+     */
+    @Test
+    public void testEachFailConsumesOneIncrqValue() {
+        final Obj first = fail("incrq probe one");
+        final Obj second = fail("incrq probe two");
+        assertEquals(Integer.parseInt(first.vid().name()) + 1, Integer.parseInt(second.vid().name()),
+                "consecutive fails must land on consecutive incrq addresses");
+    }
+
+    /**
+     * Reading the fail stack must not append to it — a conversion of one fail can otherwise stack another, and the very read that enumerates them runs the rewrite that converts.
+     */
+    @Test
+    public void testReadingTheFailStackDoesNotGrowIt() {
+        fail("loop probe: reading the stack must not stack");
+        final long before = ObjmtronSerializer.parse("*~/sys/fail/+").apply().stream().count();
+        for (int i = 0; i < 3; i++)
+            ObjmtronSerializer.parse("*~/sys/fail/").apply();
+        assertEquals(before, ObjmtronSerializer.parse("*~/sys/fail/+").apply().stream().count(),
+                "reading the fail stack must not append to it");
     }
 
 }

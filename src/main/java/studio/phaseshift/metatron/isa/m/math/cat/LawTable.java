@@ -198,6 +198,8 @@ public abstract class LawTable {
      * dispatcher that lets several sibling law tables share the category without one knowing the others.
      */
     public static Rec typeLawsOf(final Type type) {
+        if (null == type.vid())
+            return rec0();                      // a type with no address is listed in no table
         final String vid = type.vid().basePath().toString();
         LawTable owner = null;
         int best = -1;

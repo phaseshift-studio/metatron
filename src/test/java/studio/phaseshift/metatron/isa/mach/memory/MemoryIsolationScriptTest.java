@@ -213,33 +213,33 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
     @StatefulParametrizedTest
     @StatefulCSVSource({
             // build a 7-machine hierarchy — root → {a→{a1,a2}, b→{b1}, c} — each machine stamps its root frame with `who`
-            "[STATE] ~/who -> 0; who -> 0;",
-            "[STATE] *~.push(a)", "[STATE] ~/who -> 1; who -> 11",
-            "[STATE] *~.push(a1)", "[STATE] ~/who -> 2; who -> 22",
+            "[STATE] ~/sys/who -> 0; who -> 0;",
+            "[STATE] *~.push(a)", "[STATE] ~/sys/who -> 1; who -> 11",
+            "[STATE] *~.push(a1)", "[STATE] ~/sys/who -> 2; who -> 22",
             "[STATE] move(/a)",
-            "[STATE] *~.push(a2)", "[STATE] ~/who -> 3; who -> 33",
+            "[STATE] *~.push(a2)", "[STATE] ~/sys/who -> 3; who -> 33",
             "[STATE] move(/.)",
-            "[STATE] *~.push(b)", "[STATE] ~/who -> 4; who -> 44",
-            "[STATE] *~.push(b1)", "[STATE] ~/who -> 5; who -> 55",
+            "[STATE] *~.push(b)", "[STATE] ~/sys/who -> 4; who -> 44",
+            "[STATE] *~.push(b1)", "[STATE] ~/sys/who -> 5; who -> 55",
             "[STATE] move(/.)",
-            "[STATE] *~.push(c)", "[STATE] ~/who -> 6; who -> 66",
+            "[STATE] *~.push(c)", "[STATE] ~/sys/who -> 6; who -> 66",
             "[STATE] move(/.)",
             // downward: root → a → a1
-            "[STATE] move(/a)", "*~/who % 1 % true", "*who % 11 % true",
-            "[STATE] move(/a/a1)", "*~/who % 2 % true", "*who % 22 % true",
+            "[STATE] move(/a)", "*~/sys/who % 1 % true", "*who % 11 % true",
+            "[STATE] move(/a/a1)", "*~/sys/who % 2 % true", "*who % 22 % true",
             // horizontal (sibling): a1 → a2
-            "[STATE] move(/a/a2)", "*~/who % 3 % true", "*who % 33 % true",
+            "[STATE] move(/a/a2)", "*~/sys/who % 3 % true", "*who % 33 % true",
             // upward: a2 → a → root
-            "[STATE] move(/a)", "*~/who % 1 % true", "*who % 11 % true",
-            "[STATE] move(/.)", "*~/who % 0 % true", "*who % 0 % true",
+            "[STATE] move(/a)", "*~/sys/who % 1 % true", "*who % 11 % true",
+            "[STATE] move(/.)", "*~/sys/who % 0 % true", "*who % 0 % true",
             // horizontal (other branch): root → b → b1
-            "[STATE] move(/b)", "*~/who % 4 % true", "*who % 44 % true",
-            "[STATE] move(/b/b1)", "*~/who % 5 % true", "*who % 55 % true",
+            "[STATE] move(/b)", "*~/sys/who % 4 % true", "*who % 44 % true",
+            "[STATE] move(/b/b1)", "*~/sys/who % 5 % true", "*who % 55 % true",
             // deep cross-branch: b1 → c
-            "[STATE] move(/c)", "*~/who % 6 % true", "*who % 66 % true",
+            "[STATE] move(/c)", "*~/sys/who % 6 % true", "*who % 66 % true",
             // deep horizontal: c → a1 → b1
-            "[STATE] move(/a/a1)", "*~/who % 2 % true", "*who % 22 % true",
-            "[STATE] move(/b/b1)", "*~/who % 5 % true", "*who % 55 % true",
+            "[STATE] move(/a/a1)", "*~/sys/who % 2 % true", "*who % 22 % true",
+            "[STATE] move(/b/b1)", "*~/sys/who % 5 % true", "*who % 55 % true",
     })
     void testHierarchyMoves() {
     }

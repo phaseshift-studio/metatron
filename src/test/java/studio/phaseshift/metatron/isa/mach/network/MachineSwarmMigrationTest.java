@@ -1,6 +1,7 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -39,6 +40,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
  * bounded wait whose catch dumps the mailboxes and what each machine halted with, which is what turns a hang into a
  * diagnosis instead of a wait nobody can explain.
  */
+@Isolated
 public class MachineSwarmMigrationTest extends AbstractMetatronTest {
 
     private static Machine newMachineAt(final studio.phaseshift.metatron.furi.fURI vid) {

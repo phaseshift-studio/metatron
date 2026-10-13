@@ -40,8 +40,8 @@ public class MFail extends MObj implements Fail {
      * The per-machine fail stack: a fail lands under the machine it executes in.
      */
     public static fURI failStackPattern() {
-        // ~/fail: machine-agnostic — resolved to the current machine's vid (<vid>/fail/_) when written.
-        return f("~/fail").extend("_").addQ(INCRQ);
+        // ~/sys/fail: resolved to the current machine's vid (<vid>/sys/fail/_) when written.
+        return f("~/sys/fail").extend("_").addQ(INCRQ);
     }
 
     /**
@@ -57,7 +57,9 @@ public class MFail extends MObj implements Fail {
     protected static Fail incrStackWrap(final Fail fail, final fURI pattern) {
         if (null != fail.vid() && !fail.isNoObj())
             return fail;
-        final Obj o = Machine.write(fail.vid(pattern));
+        // write AT the pattern: `fail.vid(pattern)` is a tagged clone, which writes itself to that vid on
+        // construction, so stamping first consumed a second counter value per fail (the stack held only evens)
+        final Obj o = Machine.write(pattern, fail);
         if (o.isFail())
             return o.as();
         else

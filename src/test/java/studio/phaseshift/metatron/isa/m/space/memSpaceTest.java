@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.TestReport;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.IncrQTest;
 import studio.phaseshift.metatron.furi.q.LineQTest;
 import studio.phaseshift.metatron.furi.q.LockQTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -45,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 @TestReport
-public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest, LockQTest {
+public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTest, LockQTest, IncrQTest {
 
     public memSpaceTest() {
         super(() -> {
@@ -58,6 +59,11 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest, LineQTe
             space.addQ(QCollection.lockQ());
             return space;
         });
+    }
+
+    @Override
+    public fURI incrQBaseURI() {
+        return f(this.baseURI.toString() + "/incrq");
     }
 
     @Test

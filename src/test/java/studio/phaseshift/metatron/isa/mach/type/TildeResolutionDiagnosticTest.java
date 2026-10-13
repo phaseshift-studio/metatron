@@ -47,18 +47,18 @@ public class TildeResolutionDiagnosticTest extends AbstractMetatronTest {
     public void tildeInAChildDoesNotSeeAParentsTildeAddress() {
         final Machine root = Machine.current();
         final fURI rootVID = root.vid();
-        Machine.write(f("~/person"), jnt(7));
-        final fURI rootAddress = null == rootVID ? null : rootVID.extend(f("person")).resolve();
+        Machine.write(f("~/sys/person"), jnt(7));
+        final fURI rootAddress = null == rootVID ? null : rootVID.extend(f("/sys/person")).resolve();
 
         final Machine child = root.push(f("diag"));
         final fURI childVID = child.vid();
-        final fURI childAddress = null == childVID ? null : childVID.extend(f("person")).resolve();
+        final fURI childAddress = null == childVID ? null : childVID.extend(f("/sys/person")).resolve();
 
         // the test logger prints the message verbatim (no slf4j {} substitution), so every line is concatenated
         LOG.info("TILDEDIAG rootVID=" + rootVID + " childVID=" + childVID + " currentVID=" + Machine.current().vid());
-        LOG.info("TILDEDIAG tildeInChildResolvesTo=" + Machine.current().vid().extend(f("person")).resolve());
-        LOG.info("TILDEDIAG read(~/person)=" + Machine.read(f("~/person"))
-                + " read(/person)=" + Machine.read(rootAddress)
+        LOG.info("TILDEDIAG tildeInChildResolvesTo=" + Machine.current().vid().extend(f("/sys/person")).resolve());
+        LOG.info("TILDEDIAG read(~/sys/person)=" + Machine.read(f("~/sys/person"))
+                + " read(/sys/person)=" + Machine.read(rootAddress)
                 + " read(childAddress)=" + (null == childAddress ? "n/a" : Machine.read(childAddress)));
 
         // THE FINDING, pinned as an invariant. `~` resolves against Machine.current().vid() and the result is then
@@ -66,8 +66,8 @@ public class TildeResolutionDiagnosticTest extends AbstractMetatronTest {
         // value is INVISIBLE from a child. Inheritance therefore has to be BUILT — re-bind ~ at each level of the
         // walk, or walk frames in the projection — and does not come for free with the address walk. This test
         // must change when that lands, which is exactly its job.
-        assertEquals(noobj(), Machine.read(f("~/person")),
-                "in the child, ~/person resolves to this level's own /diag/person and MISSES — no fall-through");
+        assertEquals(noobj(), Machine.read(f("~/sys/person")),
+                "in the child, ~/sys/person resolves to this level's own /diag/sys/person and MISSES — no fall-through");
         assertEquals(jnt(7), Machine.read(rootAddress),
                 "the value is only at the address the WRITING frame's ~ resolved to: " + rootAddress);
     }

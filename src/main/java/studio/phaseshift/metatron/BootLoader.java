@@ -21,11 +21,8 @@ package studio.phaseshift.metatron;
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -37,7 +34,6 @@ import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.EmojiTable;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.LogObj;
@@ -56,30 +52,27 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
 
-import static ch.qos.logback.classic.Level.TRACE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TYPER_TYPE_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_INST_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -110,6 +103,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
     private static final GraphittyLogger LOG;
     public static volatile Machine ROOT_MACHINE = null;
     public static Rec ARGS;
+    /** The levels every machine's log sink starts with, published to {@link Machine#bootstrap()} before the root is minted. */
+    public static Rec LOG_LEVELS = rec(uri(TRACE), lst(uri(ALL)));
     /**
      * Tracks the currently executing metatron thread on this Java thread.
      */
@@ -493,7 +488,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             else {
                 args.at(LOCAL, uri(hostname), MUTABLE);
             }
-            final fURI SYS_VID = f("/sys");
+            /*final fURI SYS_VID = f("/sys");
             final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
             sysSpace.addQ(QCollection.docQ());
             sysSpace.addQ(QCollection.subQ());
@@ -506,7 +501,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
             sysSpace.write(f("~/space?docq"), QCollection.Docs.doc("local system space mounts"));
             sysSpace.write("/sys/info", auto_(instB(SYS_INST_TID.extend("sys_stat"), lst())).tryToInst());
             sysSpace.write(f("/sys/info?docq"), QCollection.Docs.doc("local physical machine information"));
-            sysSpace.write(f("~/thread?docq"), QCollection.Docs.doc("metatron threads globally"));
+            sysSpace.write(f("~/thread?docq"), QCollection.Docs.doc("metatron threads globally"));*/
+            // published before the root is minted: bootstrap seeds the sink during construction, so [log=>…] must be readable by then
+            LOG_LEVELS = rec(args.at(LOGG).orElse(uri(TRACE)), lst(uri(ALL)));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
             // minted from the template at /sys/mach, so the root has all five slots. Built by the
             // pattern/vid constructor it had only pattern, primary, memory and network — an address space
@@ -517,9 +514,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // `*` reaches it instead, through Memory's fallback to the machine's own rec.
             ROOT_MACHINE = BasicMachine.of(MACH_MACHINE_TID, f("/."));
             Machine.current(Machine.root());   // the boot runs as root: every library registers where it is written
-            Machine.current().memory().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
+            //Machine.current().memory().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROOT_MACHINE.vid());
-            sysSpace.write(Machine.relativeToCurrent("/sys/typer/stage"), typerRec);
+           /* sysSpace.write(Machine.relativeToCurrent("/sys/typer/stage"), typerRec);
             sysSpace.write(Machine.relativeToCurrent("/sys/tracer"), tracer);
             sysSpace.write(Machine.relativeToCurrent("/sys/rewriter"), rewriter);
             sysSpace.write(Machine.relativeToCurrent("/sys/tmp"), str("""
@@ -528,7 +525,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                                                                       note that /sys/tmp can be automatically garbage collected at any time.
                                                                       
                                                                       """));
-            sysSpace.write(Machine.relativeToCurrent("/sys/emoji"), EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));
+            sysSpace.write(Machine.relativeToCurrent("/sys/emoji"), EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));*/
             // LOAD STDIO INSTRUCTIONS
            /* sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                 final Object arg = inst.arg(0).jvm();
@@ -555,10 +552,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             InstSet.mount(sys);
             sys.setup();
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
-            System.getenv().entrySet().stream()
+            /*System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
                     .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::name)))
-                    .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()));
+                    .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()));*/
 
             //
             final InstSet mach = new machInstSet();
@@ -624,9 +621,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     LOG.error("unable to attach the default mcp stdio carrier: %s", null == e.getMessage() ? e.getClass().getName() : e.getMessage());
                 }
             }
-            final Obj log = Machine.write(LogObj.of(rec(args.at(LOGG).orElse(uri(TRACE.levelStr)), lst(uri(ALL))), SYS_VID.extend(LOGG)));
-            LOG.info("logging now handled by %s", log);
-            ///////////////////////////////////////////////////////////////
+            // the log sink is no longer written here: Machine.bootstrap() seeds one per machine at <vid>/sys/log
+            // from LOG_LEVELS (published above), and GraphittyObjLogger reads it ~-relative per frame.
+            /////////////////////////////////////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
             BOOTING = false;
             System.gc();

@@ -56,6 +56,35 @@ set -eu
 cd "$(dirname "$(readlink -f "$0")")/.."
 REPO="$(pwd)"
 
+# Two paths, because they are not the same thing inside a dev container. REPO is where THIS
+# process sees the checkout (build context for `docker build`, mkdir, cp); HOST_REPO is the
+# path the DAEMON resolves, and it is the one that must go into -v mounts. Mounted at
+# /workspace inside the harness but living at /home/killswitch/software/metatron on the host,
+# a single path would either bind a non-existent host directory (silently testing nothing) or
+# fail the local mkdir. Set METATRON_HOST_REPO to the host path; on the host it is unset and
+# both are the same.
+HOST_REPO="${METATRON_HOST_REPO:-}"
+
+# Fallback for when the deployment does not export METATRON_HOST_REPO (or an agent runs this
+# before the compose change lands): a bind mount's source IS the host path, and the mount
+# table is the only place inside the container that knows it. mountinfo fields are
+# "id parent major:minor root mountpoint opts... - fstype source ...", so the source is the
+# field after the fstype, past the "-" separator. Non-absolute sources (overlay, tmpfs) are
+# container-internal and not usable as a daemon-side path.
+if [ -z "$HOST_REPO" ]; then
+    # Field 4 is the mount ROOT, which for a bind mount is the host directory; field 5 is the
+    # mount point and the post-"-" source is the backing DEVICE (/dev/nvme0n1p2), not the path.
+    HOST_REPO="$(awk -v t="$REPO" '$5 == t && $4 ~ /^\// { print $4; exit }' /proc/self/mountinfo 2>/dev/null)"
+fi
+[ -n "$HOST_REPO" ] || HOST_REPO="$REPO"
+
+# A deployment may provide the docker CLI off-PATH (this one keeps it in the host-shared
+# /opt/dsh-tools/bin so it survives container recreates). Put it on PATH for this process.
+case ":${PATH}:" in
+    *":/opt/dsh-tools/bin:"*) ;;
+    *) [ -x /opt/dsh-tools/bin/docker ] && PATH="/opt/dsh-tools/bin:${PATH}" && export PATH ;;
+esac
+
 APP_IMAGE="${METATRON_IMAGE:-metatron:dev}"
 BUILD_IMAGE="${METATRON_BUILD_IMAGE:-metatron-build:24}"
 BUILD_NAME="${METATRON_BUILD_NAME:-metatron-build}-$(date +%s)-$$"
@@ -74,6 +103,20 @@ JVM_FLAGS="--enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector
 --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED \
 --add-opens java.base/sun.nio.cs=ALL-UNNAMED"
 DRY="${DRY_RUN:-0}"
+
+# The isolated build/test container gets the docker socket too: the tble/dcmnt/vec test classes
+# start TestContainers, and without it they cannot run inside the loop at all. The isolation
+# that matters here is ports and throwaway images, not the daemon.
+SOCKET_ARGS=""
+if [ -S /var/run/docker.sock ]; then
+    SOCKET_ARGS="-v /var/run/docker.sock:/var/run/docker.sock --group-add $(stat -c '%g' /var/run/docker.sock)"
+fi
+# TestContainers inside that container must reach published ports through the host rather than
+# localhost. The harness sets TESTCONTAINERS_HOST_OVERRIDE; pass it through when present.
+ENV_FLAGS=""
+if [ -n "${TESTCONTAINERS_HOST_OVERRIDE:-}" ]; then
+    ENV_FLAGS="-e TESTCONTAINERS_HOST_OVERRIDE=$TESTCONTAINERS_HOST_OVERRIDE"
+fi
 
 command -v docker >/dev/null 2>&1 || { echo "error: docker not found on PATH" >&2; exit 1; }
 
@@ -103,9 +146,11 @@ build_run() {
     D docker run --rm --name "$BUILD_NAME" \
         --user "$(id -u):$(id -g)" \
         $EP_FLAGS \
+        $SOCKET_ARGS \
+        $ENV_FLAGS \
         -e HOME=/work \
-        -v "$REPO":/work -w /work \
-        -v "$REPO/$BUILD_TARGET":/work/target \
+        -v "$HOST_REPO":/work -w /work \
+        -v "$HOST_REPO/$BUILD_TARGET":/work/target \
         "$BUILD_IMAGE" "$@"
 }
 
@@ -154,9 +199,9 @@ metatron-docker: $BOOT_FILE
         --user "$(id -u):$(id -g)" \
         -v /var/run/docker.sock:/var/run/docker.sock \
         --group-add "$(stat -c '%g' /var/run/docker.sock)" \
-        -v "$REPO":/work \
-        -v "$REPO/boot":/app/boot:ro \
-        -v "$REPO/conf":/app/conf:ro \
+        -v "$HOST_REPO":/work \
+        -v "$HOST_REPO/boot":/app/boot:ro \
+        -v "$HOST_REPO/conf":/app/conf:ro \
         -w /work \
         "$APP_IMAGE" "$ARGS"
     if [ "$DRY" = "1" ]; then printf '+ %s\n' "$*"; else exec "$@"; fi
@@ -210,8 +255,8 @@ cmd_dev() {
         -p 8555:8555 -p 8777:8777 \
         -v /var/run/docker.sock:/var/run/docker.sock \
         --group-add "$(stat -c '%g' /var/run/docker.sock)" \
-        -v "$REPO/boot:/app/boot:ro" \
-        -v "$REPO/conf:/app/conf:ro" \
+        -v "$HOST_REPO/boot:/app/boot:ro" \
+        -v "$HOST_REPO/conf:/app/conf:ro" \
         "$APP_IMAGE" \
         "[boot=><boot/docker.boot.mtron>,user=><$USER_NAME>,web=>[http=><http://0.0.0.0:8777>,ws=><ws://0.0.0.0:8555>],log=>info]"
     if [ "$DRY" = "1" ]; then printf '+ %s\n' "$*"; else "$@"; fi

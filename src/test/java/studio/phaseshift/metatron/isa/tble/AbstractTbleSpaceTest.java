@@ -98,6 +98,13 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     @Override
+    public fURI incrQSecondCollectionURI() {
+        // A SIBLING TABLE, not a path beneath the first: incrQ here is AUTO INCREMENT per table, so `incrq/a` is
+        // a row of the incrq table (which is why writing a rec at `incrq/a/_` fails on a column the row can't have)
+        return f(getSpace().pattern().scheme() + ":incrqb");
+    }
+
+    @Override
     protected fURI deducedBaseUri() {
         return f("db:scratch");
     }

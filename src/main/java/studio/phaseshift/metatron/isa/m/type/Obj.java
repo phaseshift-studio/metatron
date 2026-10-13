@@ -1227,6 +1227,63 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 CLONE_DEPTH.set(depth - 1);
             }
         }
+
+        /**
+         * A DEEP clone of {@code obj}, unbounded — see {@link #deepClone(Obj, long)}.
+         */
+        public static Obj deepClone(final Obj obj) {
+            return deepClone(obj, Long.MAX_VALUE);
+        }
+
+        /**
+         * A deep copy of {@code obj} to {@code depth} container levels, with NO vid — one that kept it would overwrite the original at that address, which is the {@code *} (anonymous copy) side rather than the {@code @} (write-back) side.
+         */
+        public static Obj deepClone(final Obj obj, final long depth) {
+            if (null == obj)
+                return noobj();
+            final int nested = DEEP_CLONE_DEPTH.get() + 1;
+            if (nested > MAX_DEEP_CLONE_DEPTH)
+                // name the obj by tid and vid: rendering a cyclic obj trips the serializer's own guard in place of this one
+                throw MTronException.of("deep clone depth limit exceeded (%d) — self-referential obj %s@%s",
+                        MAX_DEEP_CLONE_DEPTH, obj.tid(), obj.vid());
+            DEEP_CLONE_DEPTH.set(nested);
+            try {
+                if (obj.isObjs())
+                    // materialized, not lazy: the stream must be consumed inside this thread-local frame
+                    return objs(obj.stream().map(member -> deeper(member, depth)).toList());
+                if (obj.isRec()) {
+                    // raw recValue, not elements(): elements() multiplies each child's coefficient by the container's
+                    final Map<Obj, Obj> container = new LinkedHashMap<>();
+                    obj.recValue().forEach((key, value) -> container.put(key, deeper(value, depth - 1)));
+                    return obj.clone().self(container, obj.tid(), null);
+                }
+                if (obj.isLst()) {
+                    final List<Obj> container = new ArrayList<>(obj.lstValue().size());
+                    obj.lstValue().forEach(member -> container.add(deeper(member, depth - 1)));
+                    return obj.clone().self(container, obj.tid(), null);
+                }
+                if (obj.isRel()) {
+                    final Pair<Obj, Obj> sides = obj.relValue();
+                    return obj.clone().self(Pair.with(deeper(sides.get0(), depth - 1), deeper(sides.get1(), depth - 1)),
+                            obj.tid(), null);
+                }
+                return null == obj.vid() ? obj.clone() : obj.clone().selfVID(null);
+            } finally {
+                DEEP_CLONE_DEPTH.set(nested - 1);
+            }
+        }
+
+        /** the bound an unbounded deep clone descends before the structure is a cycle rather than a nesting */
+        private static final int MAX_DEEP_CLONE_DEPTH = 128;
+        private static final ThreadLocal<Integer> DEEP_CLONE_DEPTH = ThreadLocal.withInitial(() -> 0);
+
+        /**
+         * One level down: {@code depth} goes negative at the bound, and a negative depth means the recursion has
+         * bottomed out there, so the child is shared as it stands rather than rebuilt.
+         */
+        private static Obj deeper(final Obj obj, final long depth) {
+            return depth < 0 ? obj : deepClone(obj, depth);
+        }
     }
 
     final class ObjType {

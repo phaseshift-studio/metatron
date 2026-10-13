@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -233,6 +234,11 @@ public class catInstSet extends AbstractInstSet {
                                         .constructor(arg -> {
                                             final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                                             final Obj obj = object.at(OBJ);
+                                            // a type with no address models no object: answer noobj (the caller's
+                                            // orElse already means "no theories"), never raise — a fail here is
+                                            // stacked into fail space AND, mid-rewrite, aborts the rewrite that asked
+                                            if (!obj.isType() || null == obj.vid())
+                                                return noobj();
                                             object.at(LAW, LawTable.typeLawsOf(obj.asType()), MUTABLE);
                                             object.at(MORPHED_TO, auto_(instLambda((ignore, i) -> {
                                                 final Obj insts = Machine.read(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
