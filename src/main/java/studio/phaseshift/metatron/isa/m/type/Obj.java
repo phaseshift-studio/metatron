@@ -1305,7 +1305,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             }
         }
 
-        /** the bound an unbounded deep clone descends before the structure is a cycle rather than a nesting */
+        /**
+         * the bound an unbounded deep clone descends before the structure is a cycle rather than a nesting
+         */
         private static final int MAX_DEEP_CLONE_DEPTH = 128;
         private static final ThreadLocal<Integer> DEEP_CLONE_DEPTH = ThreadLocal.withInitial(() -> 0);
 
@@ -1498,6 +1500,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_FALSE)).anyMatch(Obj::boolValue))),
                             "any objs", "true if any objs are true", Map.of(), "logical \\(\\texttt{or}\\) function \\(f(X)\\to \\tt{true}\\) if any \\(X\\) are true"),
                     docWrap(instC(APPLY_INST_TID.dom(INST_TID).rng(ALL_STAR), rec(uri(LHS).maybe().asUri(), T(ALL_STAR), uri(ARGS).maybe(), LST_TYPE.maybe()), (lhs, inst) -> (inst.args().count() == 1 ? lhs.asInst() : lhs.asInst().args(inst.arg(1).asPoly())).apply(inst.arg(0))), "the lhs inst obj", "the result of the lhs inst application", Map.of(uri(LHS), "the obj to apply the lhs inst to", uri(ARGS), "the inst args (optional)"), "an apply function \\(f(x) \\nearrow x'\\): applies the lhs inst to the given obj with the given args"),
+                    instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(ALL_MAYBE_TYPE), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     docWrap(instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs).booleanCheck() ? lhs : noobj()), "any obj", "the lhs if the arg predicate holds, noobj otherwise", Map.of(jnt(0), "the predicate to apply to the lhs"), "a filter function \\(f(x) \\nearrow \\{x \\mid \\emptyset\\}\\): the lhs mapped if the arg predicate passes"),
                     docWrap(instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),

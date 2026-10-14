@@ -105,13 +105,22 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
     /**
      * The message ledger root — stable across providers ({@code message}, not the provider's
      * own tid segment {@code window}/{@code token}).
+     *
+     * <p>Both resolutions end at the ledger, so that the append path
+     * ({@code getRoot(agent) + "/_" + incrq}) and the read path
+     * ({@link SpaceChatSessionStore}, whose ledger is
+     * {@code <session home>/message}) are one collection.  A feature that sets its own
+     * {@code root} names the message home, not the ledger itself, and the session home is
+     * {@code agent.root()} — never this field.  Resolving the field bare put every user
+     * message <em>beside</em> the ledger, so the model window never held a prompt again.
+     * A root that already names the ledger is left alone, so the field is idempotent.
      */
     @Override
     public fURI getRoot(final Agent agent) {
         if (this.has(ROOT))
             return this.at(ROOT).uriValue();
         if (agent.has(ROOT))
-            return agent.at(ROOT).uriValue().extend("message");
+            return agent.at(ROOT).uriValue().extend(MESSAGE);
         throw MTronException.of("no root uri found on feature nor agent: %s", this.tid());
     }
 
