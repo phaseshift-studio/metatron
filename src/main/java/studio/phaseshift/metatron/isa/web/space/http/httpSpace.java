@@ -180,8 +180,13 @@ public class httpSpace extends AbstractSpace<HttpServer> {
      */
     private void handleRequest(final HttpExchange exchange, final fURI mount, final Obj routeValue,
                                final RouteLane fixed) throws IOException {
+        // the FULL connection uri — scheme + the server's own authority + the dialed path and its
+        // ?q processors (?clientq=<name> is the dialer's identity) — defined once at the request
+        // boundary so the co-mount and the handlers see what the client actually dialed.
+        final fURI connection = f(exchange.getRequestURI().toString()).scheme("http")
+                .host(exchange.getLocalAddress().getHostString()).port(exchange.getLocalAddress().getPort());
         final RouteLane lane = null != fixed ? fixed
-                : this.resolveRoute(routeValue, f(exchange.getRequestURI().toString()));
+                : this.resolveRoute(routeValue, connection.localize());
         if (RouteLane.Kind.NONE == lane.kind()) {
             LOG.warn("no lane for %s => %s", exchange.getRequestURI(), routeValue.toShortString());
             exchange.sendResponseHeaders(500, -1);

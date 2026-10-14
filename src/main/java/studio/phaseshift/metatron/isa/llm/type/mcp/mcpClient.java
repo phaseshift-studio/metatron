@@ -73,6 +73,11 @@ public class mcpClient extends MRec implements AutoCloseable {
 
     public mcpClient(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+        // THE CLIENT IS A SPACE: `pattern` is its claim -- the remote address space this client is a
+        // local cache/view of -- and the host is DERIVED from it by retracting the pattern segments
+        // (ws://localhost:8555/mcp/# -> ws://localhost:8555/mcp). `url`/`host` remain as the explicit
+        // spellings for a client constructed without a claim.
+        final Obj pattern = this.at(uri(PATTERN));
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
                 .clientVersion(METATRON_VERSION)
@@ -82,7 +87,9 @@ public class mcpClient extends MRec implements AutoCloseable {
                 .transport(createTransport(
                         this.at(TRANSPORT).orElse(this.at(TYPE)),
                         this.at(uri(HEADERS)).orElse(rec()).jvm(),
-                        Str.Helper.toUriOrStr(Str.Helper.cleanString(this.at(URL).orElse(this.at(uri(HOST)).orElse(uri("")))), true),
+                        Str.Helper.toUriOrStr(Str.Helper.cleanString(pattern.isUri()
+                                ? uri(pattern.uriValue().retractPattern())
+                                : this.at(URL).orElse(this.at(uri(HOST)).orElse(uri("")))), true),
                         this.at(COMMAND).orElse(lst()).jvm()))
                 .autoHealthCheck(false)
                 .cacheToolList(true)
