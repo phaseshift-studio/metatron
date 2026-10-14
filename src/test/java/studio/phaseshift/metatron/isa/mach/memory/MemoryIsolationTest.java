@@ -53,7 +53,7 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
 
     @Test
     public void testOwnAndInherit() {
-        final Machine parent = Machine.defaultMachine();
+        final Machine parent = Machine.current();
         final Space outer = space("/mem/outer");
         parent.memory().addSpace(outer);
 
@@ -71,7 +71,7 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
 
     @Test
     public void testNoLeakUpAndNoLeakAcross() {
-        final Machine parent = Machine.defaultMachine();
+        final Machine parent = Machine.current();
         final Space outer = space("/mem/outer");
         parent.memory().addSpace(outer);
 
@@ -100,7 +100,7 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
 
     @Test
     public void testFrameMemoryIsOwnedByFrameMachine() {
-        final Machine parent = Machine.defaultMachine();
+        final Machine parent = Machine.current();
         final Machine child = parent.push();
         try {
             // The frame's memory is the frame machine's own component: machine() walks parent() and must land on
@@ -119,7 +119,7 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
 
     @Test
     public void testArgStackIsNotAMachineSpace() {
-        final Machine parent = Machine.defaultMachine();
+        final Machine parent = Machine.current();
         final Machine child = parent.push();
         try {
             // The arg stack is the thread's local variables, reached via Memory.argStack(), not a machine space.
@@ -138,7 +138,7 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
 
     @Test
     public void testTildeResolvesToCurrentMachine() {
-        final Machine parent = Machine.defaultMachine();
+        final Machine parent = Machine.current();
         final Machine child = parent.push();
         try {
             // ~ resolves to the current machine's vid (~ → /xyz → the machine rec), before the relative/absolute split
@@ -156,7 +156,7 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
 
     @Test
     public void testRoutesInheritedAcrossPush() {
-        final Machine child = Machine.defaultMachine().push();
+        final Machine child = Machine.current().push();
         try {
             // a short instruction name (count) is routed small→big by the PARENT's tables; the union must fall
             // through to previous when current has no route, else instruction resolution dies after push.
@@ -178,7 +178,7 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
         final long rootViaTilde = evalCount("*~/thread/+.count()");
         assertEquals(root, rootViaTilde, "/thread and ~/thread are the same set at the root");
 
-        final Machine child = Machine.defaultMachine().push();
+        final Machine child = Machine.current().push();
         try {
             // after push, ~/thread is the child's own (fresh) set; /thread is still the root's.
             final long rootAfterPush = evalCount("*/thread/+.count()");
@@ -198,7 +198,7 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
 
     @Test
     public void testShadowingDoesNotEvict() {
-        final Machine parent = Machine.defaultMachine();
+        final Machine parent = Machine.current();
         final Space outer = space("/mem/outer");
         parent.memory().addSpace(outer);
 

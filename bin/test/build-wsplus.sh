@@ -24,7 +24,10 @@ trap 'rm -rf "$TMP"' EXIT
 python3 bin/build-wsplus.py "$TMP" >/dev/null
 
 [ -f "$TMP/wsplus" ] || { echo "FAIL: no wsplus written to $TMP"; exit 1; }
-[ -x "$TMP/wsplus" ] || { echo "FAIL: wsplus is not executable"; exit 1; }
+# Assert the MODE, not access(X_OK): /tmp is mounted noexec here, and [ -x ] fails there
+# even for a file that IS rwxr-xr-x. stat reports what the bundler actually set.
+[ "$(stat -c '%a' "$TMP/wsplus" 2>/dev/null)" = "755" ] \
+    || { echo "FAIL: wsplus is not mode 755"; exit 1; }
 
 python3 - "$TMP" <<'PY' || { echo "FAIL: bundle behavior check failed"; exit 1; }
 import sys, ast
@@ -43,4 +46,13 @@ out = hl.highlight_block("int::5 + /usr/x -> 3.14; 's'; true; [a=>b]")
 assert "\x1b[" in out, "no ANSI escape in highlight output"
 print("build-wsplus: OK (syntax=%r, rules=%d, ansi=yes)" % (hl.syntax.name, len(hl.syntax.rules)))
 PY
+# --check must accept a fresh bundle and reject a drifted one (both directions).
+python3 bin/build-wsplus.py --check "$TMP" >/dev/null \
+    || { echo "FAIL: --check rejected a freshly bundled file"; exit 1; }
+printf '\n# drift\n' >> "$TMP/wsplus"
+if python3 bin/build-wsplus.py --check "$TMP" >/dev/null 2>&1; then
+    echo "FAIL: --check did not notice a stale bundle"; exit 1
+fi
+rm -f "$TMP/wsplus"
+
 echo "build-wsplus: all checks passed."

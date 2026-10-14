@@ -158,11 +158,18 @@ def _usage():
         "usage: build-wsplus.py <output-dir> [<output-dir> ...]\n"
         "\n"
         "bundle bin/wsplus + its bin/lib deps + conf/nanorc/mtron.nanorc into a\n"
-        "self-contained <output-dir>/wsplus (runs without any files next to it)\n")
+        "self-contained <output-dir>/wsplus (runs without any files next to it)\n"
+        "\n"
+        "  --check         verify each <output-dir>/wsplus matches bin/wsplus; write nothing,\n"
+        "                  exit 1 if any copy is stale or missing (for tests and CI)\n")
 
 
 def main(argv):
-    out_dirs = argv[1:]
+    args = argv[1:]
+    check = bool(args) and args[0] == "--check"
+    if check:
+        args = args[1:]
+    out_dirs = args
     if not out_dirs or out_dirs[0] in ("-h", "--help"):
         _usage()
         return 2
@@ -188,17 +195,26 @@ def main(argv):
     content = _build(body, deps, NANORC.read_text(encoding="utf-8"))
     compile(content, "<generated:wsplus>", "exec")   # syntax self-check, stdlib-only
 
+    stale = 0
     for d in out_dirs:
         d = Path(d)
-        d.mkdir(parents=True, exist_ok=True)
         target = d / "wsplus"
+        if check:
+            # Report only: a check must never create a directory or touch a file.
+            if target.exists() and target.read_text(encoding="utf-8") == content:
+                print("ok " + str(target))
+            else:
+                print("STALE " + str(target) + (" (missing)" if not target.exists() else ""))
+                stale += 1
+            continue
+        d.mkdir(parents=True, exist_ok=True)
         if target.exists() and target.read_text(encoding="utf-8") == content:
             print("unchanged " + str(target))
             continue
         target.write_text(content, encoding="utf-8")
         target.chmod(0o755)
         print("wrote " + str(target) + " (deps: " + (", ".join(sorted(names)) or "none") + ")")
-    return 0
+    return 1 if stale else 0
 
 
 if __name__ == "__main__":

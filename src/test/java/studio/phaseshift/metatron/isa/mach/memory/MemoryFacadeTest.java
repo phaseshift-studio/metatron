@@ -47,7 +47,7 @@ public class MemoryFacadeTest extends AbstractMetatronTest {
             + "for frames. Enable when that walk lands")
     @Test
     public void testAnInstSetIsReachableThroughMemory() {
-        final Machine machine = Machine.defaultMachine();
+        final Machine machine = Machine.current();
         final Obj plus = machine.memory().read(f("/m/inst/plus"));
         assertEquals(false, plus.isNoObj(), "the ISA answers for its own addresses THROUGH memory");
     }

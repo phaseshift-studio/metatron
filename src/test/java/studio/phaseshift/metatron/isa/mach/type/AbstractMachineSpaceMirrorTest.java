@@ -2,21 +2,10 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.util.MTronException;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * The general form of SPACE MIRRORING, parameterized over WHICH Space is mounted.
@@ -60,7 +49,7 @@ public abstract class AbstractMachineSpaceMirrorTest extends AbstractMetatronTes
 
     @Test
     public void testAMirroredSpaceShadowsAndStaysLocal() {
-        final Machine parent = Machine.defaultMachine();
+        final Machine parent = Machine.current();
         mountInto(parent, "/mirror/#", "/mirror/x", value(1));
         assertEquals(value(1), readThrough(parent, "/mirror/x"), "the machine reads its own mounted space");
 

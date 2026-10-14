@@ -67,7 +67,7 @@ public abstract class AbstractMachineIsolationTest extends AbstractMetatronTest 
 
     @Test
     public void testComponentIsolation() {
-        final Machine parent = Machine.defaultMachine();
+        final Machine parent = Machine.current();
         writeInto(parent, "outer", value(1));
 
         // own + inherit: the first frame is a child of the machine, so its view is the machine's over its own

@@ -98,7 +98,7 @@ public abstract class AbstractMetatronTest {
         // compare by vid, not object identity: after a scripted push/pop the current machine can be a distinct
         // instance that still names the root (/.); popping a root whose parent isn't a Machine is a no-op, so an
         // identity check would spin forever.
-        final fURI rootVID = Machine.defaultMachine().vid();
+        final fURI rootVID = Machine.root().vid();
         while (Machine.current() != null && !Machine.current().vid().equals(rootVID))
             Machine.current().pop();
     }

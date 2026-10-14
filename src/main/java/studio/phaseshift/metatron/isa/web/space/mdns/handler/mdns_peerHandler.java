@@ -41,14 +41,10 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.*;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.HashSet;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -60,10 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <ul>
  *   <li><b>admission is explicit.</b> Discovery is not membership — a responder is only written once it passes
  *       {@link #ours}, so a uri cannot make itself a peer merely by being heard.</li>
- *   <li><b>the callback thread is not the handler's.</b> JmDNS delivers on its own thread, so the roster write
- *       runs inside {@link Machine#current(Machine, java.util.function.Supplier)} against the machine that started
- *       the handler. A {@code ~}-relative address there would resolve against whatever machine that thread happens
- *       to stand in, silently.</li>
+ *   <li><b>the callback thread is not the handler's.</b> JmDNS delivers on its own thread.</li>
  * </ul>
  */
 public class mdns_peerHandler extends MRec implements Closeable {
@@ -144,7 +137,9 @@ public class mdns_peerHandler extends MRec implements Closeable {
         return declared.isNoObj() ? DEFAULT_SERVICE : declared.uriValue();
     }
 
-    /** the mDNS HOST name of this machine — what JmDNS names the interface, not a registered service */
+    /**
+     * the mDNS HOST name of this machine — what JmDNS names the interface, not a registered service
+     */
     private String hostName() {
         return Machine.current().network().name().orElse("metatron");
     }
@@ -263,7 +258,9 @@ public class mdns_peerHandler extends MRec implements Closeable {
         return f("").scheme(scheme(info.getPropertyString(SCHEME))).host(segment(info.getServer()));
     }
 
-    /** the roster as a mutable map. A rec cannot be ADDRESSED by a uri key, so it is read, amended, written back */
+    /**
+     * the roster as a mutable map. A rec cannot be ADDRESSED by a uri key, so it is read, amended, written back
+     */
     private Map<Obj, Obj> entries() {
         final Obj current = Machine.read(Network.ROOT_ROSTER);
         return new LinkedHashMap<>(current.isRec() ? current.asRec().jvm() : Map.of());
@@ -345,7 +342,9 @@ public class mdns_peerHandler extends MRec implements Closeable {
         final List<fURI> gone = new ArrayList<>();
         for (final InetAddress address : info.getInet4Addresses())
             gone.add(dialable(address, info.getPort(), scheme, route));
-        Machine.current(this.owner, () -> {
+        final Machine current = Machine.current();
+        try {
+            Machine.current(this.owner);
             final Map<Obj, Obj> entries = this.entries();
             entries.entrySet().stream()
                     .filter(entry -> entry.getKey().isUri() && key.equals(entry.getKey().uriValue().toString()))
@@ -360,8 +359,9 @@ public class mdns_peerHandler extends MRec implements Closeable {
                             entries.put(entry.getKey(), objs(kept.toArray(Obj[]::new)));
                     });
             Machine.write(Network.ROOT_ROSTER, rec(entries));
-            return noobj();
-        });
+        } finally {
+            Machine.current(current);
+        }
     }
 
     private final class PeerListener implements ServiceListener {

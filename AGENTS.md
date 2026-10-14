@@ -589,10 +589,14 @@ Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatr
 ## MCP (Model Context Protocol)
 
 - WebSocket handler: `mcp_mtron_wsHandler`
-- Test client: `bin/wsplus` — REPL + `-e` one-shot (the *website* copy is bundled: its `bin/lib` deps and
-  `conf/nanorc/mtron.nanorc` are inlined by `bin/build-wsplus.py` into
-  `docs/website/skills/{mtron,metatron}/scripts/wsplus` on site build). "Bundled" does NOT cover its one
-  third-party dependency: `bin/wsplus` imports `websockets` at runtime.
+- Test client: `bin/wsplus` — REPL + `-e` one-shot. **`bin/wsplus` is the only wsplus anyone edits.** The
+  copies at `docs/website/skills/{mtron,metatron}/scripts/wsplus` are build products: `bin/build-wsplus.py`
+  emits a bootstrap (inlining `bin/lib` and `conf/nanorc/mtron.nanorc`) followed by the unmodified body of
+  `bin/wsplus`, because that artifact is downloaded from the website and must run with nothing next to it.
+  They are refreshed by **every** build (the pom binds the bundler to `generate-resources`, and it skips
+  identical content), and `python3 bin/build-wsplus.py --check <dirs>` reports drift — printing `ok` or
+  `STALE` and exiting 1 — without writing a byte; `sh bin/test/build-wsplus.sh` runs it both ways.
+  "Bundled" does NOT cover its one third-party dependency: `bin/wsplus` imports `websockets` at runtime.
 
 ### Python packages in this container
 
