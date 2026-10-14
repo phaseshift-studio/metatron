@@ -773,7 +773,12 @@
                     </execution>
                     <execution>
                         <id>bundle-site-scripts</id>
-                        <phase>pre-site</phase>
+                                                <!-- generate-resources, not pre-site: the website copies of wsplus are build
+                             products of bin/wsplus, and pre-site runs only for a site build, so they
+                             silently went stale. The bundler skips identical content (no mtime churn) and
+                             costs ~50ms, so every build can refresh them. Drift is also caught by
+                             sh bin/test/build-wsplus.sh, whose check mode runs in both directions. -->
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -1095,13 +1100,16 @@
                     <artifactId>maven-project-info-reports-plugin</artifactId>
                     <version>3.9.0</version>
                 </plugin>
-                <!-- <plugin>
-                     <artifactId>maven-jar-plugin</artifactId>
-                     <configuration>
-                         <classifier>${os.detected.classifier}</classifier>
-                     </configuration>
-                     <version>3.5.1</version>
-                 </plugin>-->
+                <plugin>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <!-- Pinned explicitly. With no version anywhere Maven resolves whatever
+                         the repositories offer at build time and warns that the build is
+                         fragile — it picked 3.5.0 while 3.5.1 was already cached in the
+                         local repository. Version only: the classifier variant that used
+                         to be commented out here needs os-maven-plugin, which this build
+                         does not use. The plugin's <configuration> stays in build/plugins. -->
+                    <version>3.5.1</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>

@@ -125,36 +125,11 @@ public interface Machine extends Rec, AutoCloseable {
         return null != machine ? machine : root();
     }
 
-    static fURI relativeToCurrent(final fURI furi) {
-        return Machine.current().vid().extend(furi);
-    }
-
-    static fURI relativeToCurrent(final String furi) {
-        return Machine.relativeToCurrent(f(furi));
-    }
-
     /**
      * The frame of reference, per thread: the machine this thread is evaluating in, or {@link #root()} when nothing
      * moved it. A worker starts where its caller stood and publishes where it ended.
      */
     ThreadLocal<Machine> CURRENT = new ThreadLocal<>();
-
-    /**
-     * Evaluate a fragment in another machine's frame of reference, restoring this thread's on the way out.
-     * The scoped form: in at the dereference, out when the fragment that followed it ends.
-     */
-    static Obj current(final Machine machine, final java.util.function.Supplier<Obj> fragment) {
-        final Machine previous = CURRENT.get();
-        CURRENT.set(machine);
-        try {
-            return fragment.get();
-        } finally {
-            if (null == previous)
-                CURRENT.remove();
-            else
-                CURRENT.set(previous);
-        }
-    }
 
     /**
      * Move this thread's perspective and leave it there -- no lambda, no restore. Use this form when the move IS the
@@ -248,14 +223,6 @@ public interface Machine extends Rec, AutoCloseable {
 
     static Obj write(final Obj obj) {
         return Machine.write(obj.vid(), obj);
-    }
-
-    /**
-     * The {@code /sys/mach} constant bootstrapped by {@code machInstSet.setup()}, falling back to {@link #mach0()}
-     * before the constant is loaded.
-     */
-    static Machine defaultMachine() {
-        return root();
     }
 
     static boolean loaded() {
