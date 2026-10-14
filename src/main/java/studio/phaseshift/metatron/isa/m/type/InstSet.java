@@ -110,6 +110,21 @@ public interface InstSet extends Space, Machine.Component {
         return this;
     }
 
+    /**
+     * The instruction sets this vocabulary is composed of — for a plain store, itself and nothing else. The
+     * machine's own instset (a union) walks its levels: this level, its imports in import order, then the
+     * enclosing machine's, each ISA once.
+     * <p>
+     * THIS IS THE ENUMERATION, and {@code Machine.current().instset()} is its door: a consumer that wants "every
+     * instruction set this machine uses" (a rewriter collecting rules, the category graph collecting morphisms, a
+     * reflector listing the vocabulary) asks it HERE rather than scanning {@code memory().spaces()} for
+     * {@code instanceof InstSet} — the vocabulary is the machine's, not the data index's, and the index entry is
+     * the half of the old Router model that is slated to go.
+     */
+    default List<InstSet> members() {
+        return List.of(this);
+    }
+
     @Override
     fURI pattern();
 

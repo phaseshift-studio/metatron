@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -73,7 +74,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Network extends Machine.Component, Closeable {
+public interface Network extends Addressable, Machine.Component, Closeable {
 
     /**
      * this machine's connections, and the root's — {@code ~} follows {@code move}.

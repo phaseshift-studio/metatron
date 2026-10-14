@@ -1012,15 +1012,15 @@ public class catInstSet extends AbstractInstSet {
         final List<Inst> cached = CACHED_INSTS;
         if (null != cached)
             return cached;
-        final List<Inst> all = new ArrayList<>();
-        for (final Obj obj : Machine.current().memory().spaces().values().toList()) {
-            final Space space = obj.as();
-            if (!(space instanceof InstSet instSet))
-                continue;
-            // new-style instsets serve their registrations from the table
-            all.addAll(instSet.insts());
-            // old-style instsets (e.g. mInstSet) hold their insts in the jvm map under /inst —
-            // read the map directly, since space.at() routes through the table-backed read
+        // INSTRUCTION MEMORY IS THE SOURCE, not the data index: the machine's own instset is the union of every
+        // ISA this frame uses, and insts() already merges the members' tables by tid identity, nearest level
+        // first. (The scan over memory().spaces() for instanceof InstSet was the old Router-era route, and it is
+        // exactly the binding the instruction-memory/data-memory split removes.)
+        final InstSet union = Machine.current().instset();
+        final List<Inst> all = new ArrayList<>(union.insts());
+        for (final InstSet instSet : union.members()) {
+            // old-style instsets (e.g. mInstSet) hold their insts in the jvm map under /inst — their insts()
+            // answers empty, so read the map directly, as the table-backed merge cannot see them
             final Obj live = instSet.jvm().get(uri(INST));
             if (null != live && live.isLst())
                 live.lstValue().stream().filter(Obj::isObjInst).map(Obj::<Inst>as).forEach(all::add);
