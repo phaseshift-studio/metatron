@@ -43,14 +43,19 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   [in => 4413, out => 66, max => 100000,
  *    est => [system => 622, ai => 170, user => 409, tool => 334]]
  * </pre>  Each {@code est} category — the estimated composition of what went
- * into the window — is a colored section sized as its share of {@code max} (the
- * window's size), smallest first, largest last, an empty category skipped.
- * The bar IS the truth and the label fits it: a section is never below one
- * column, and a section narrower than its label is clipped to its width —
- * never grown to fit the label — so a wider bar is always the wider share.
- * The percent is {@code in} over {@code max}, painted where the used part
- * ends; the blank tail is the window's unused part; the trailing size
- * ({@code 100k}) is the window itself.  The colors and labels
+ * into the window — is a colored section of the window's fill (smallest first,
+ * largest last, an empty category skipped), and the fill is that composition's
+ * share of {@code max} — or {@code in}'s when the provider counted more than
+ * the estimate reached.  {@code in} is the provider's count of the rendered
+ * prompt and {@code est} is a chars/4 estimate of the messages; they do not
+ * agree, and the bar trusts whichever is further along rather than drawing a
+ * fill shorter than the percent beside it.  The bar IS the truth and the label
+ * fits it: a section is never below one column, and a section narrower than its
+ * label is clipped to its width — never grown to fit the label — so a wider bar
+ * is always the wider share.  The percent is the fill over {@code max}, painted
+ * where the used part ends (the same number as the fill, so the label can never
+ * describe a different bar); the blank tail is the window's unused part; the
+ * trailing size ({@code 100k}) is the window itself.  The colors and labels
  * ({@code sys}, {@code ai}, {@code usr}, {@code tool}) are the tool's own —
  * the general bar's configurability does not reach in here.
  */
@@ -170,28 +175,49 @@ public class TokenCounterTool extends StackBarWidget {
                 .toList();
         final long estSum = segments.stream().mapToLong(Section::value).sum();
 
-        // the window to measure against: max when the rec says so — the
-        // sections are sized against it, the pct is in over it, the tail and
-        // the size label come from it
+        // the window to measure against: max when the rec says so — the tail
+        // and the size label come from it, and the fill and the percent are
+        // both the fill's number over it, so the label always describes the
+        // bar under it
         final boolean windowed = max > 0;
-        final long denominator = windowed ? max : estSum;
+        final int pctLen0 = windowed
+                ? ((int) Math.clamp(Math.round(Math.max(in, estSum) * 100.0 / max), 0, 100) + "%").length()
+                : 0;
+
+        // How far the window is filled: the percent's own number (in over max)
+        // when there is one, else the estimate's.  The two streams deliberately
+        // do not agree — est is a chars/4 estimate of the request's messages and
+        // in is the provider's count of the rendered prompt, which carries
+        // overhead this side never sees — so the fill takes whichever is
+        // further along.  Sizing the fill on est alone under-paints by the
+        // overhead gap (a full window reading 100% over a bar that stops half
+        // way, which is what a window grown past its estimate looked like);
+        // sizing it on in alone leaves nothing to paint at all when the
+        // provider reports no usage, which is the live widget's own shape.
+        final int budget = canvas - pctLen0;
+        final long fillWanted = Math.max(in, estSum);
+        final int fill = !windowed
+                ? canvas
+                : (int) Math.clamp(Math.round(fillWanted * (double) canvas / max), 0, Math.max(0, budget));
+        // one number drives both, so the label can never disagree with the bar
         final String pct = windowed
-                ? (int) Math.clamp(Math.round(in * 100.0 / max), 0, 100) + "%"
+                ? (int) Math.clamp(Math.round(fillWanted * 100.0 / max), 0, 100) + "%"
                 : null;
         final int pctLen = null == pct ? 0 : pct.length();
-
-        // each section is its share of the whole: value/denominator * canvas
-        // columns, floor one.  The label never sets the floor — the bar is the
-        // truth, and a section narrower than its label is clipped in the paint
-        // below, never grown to fit the label
+        final long shareDenominator = Math.max(1L, estSum);
+        // each section is its share of the estimate *within* the fill, so the
+        // composition is preserved and the colored region stops where the fill
+        // says.  Floor one column: the label never sets the floor, and a section
+        // narrower than its label is clipped in the paint below.
         final List<Section> painted = segments.stream()
                 .map(s -> new Section(s.label(), s.color(),
-                        Math.max(1L, (int) Math.round(s.value() * (double) canvas / denominator))))
+                        windowed
+                                ? Math.max(1L, (int) Math.round(s.value() * (double) fill / shareDenominator))
+                                : Math.max(1L, Math.round(s.value() * (double) canvas / shareDenominator))))
                 .toList();
         final int used = painted.stream().mapToInt(s -> (int) s.value()).sum();
-        final int budget = canvas - pctLen;
-        final List<Section> fitted = used > budget   // near-full window: shrink the sections, never the pct
-                ? painted.stream().map(s -> new Section(s.label(), s.color(), Math.max(1L, s.value() * budget / used))).toList()
+        final List<Section> fitted = used > fill   // a crowd of one-column sections: shrink them, never the pct
+                ? painted.stream().map(s -> new Section(s.label(), s.color(), Math.max(1L, s.value() * fill / used))).toList()
                 : painted;
         final int usedW = fitted.stream().mapToInt(s -> (int) Math.max(1L, s.value())).sum();
 

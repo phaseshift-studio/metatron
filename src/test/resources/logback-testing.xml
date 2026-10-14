@@ -33,4 +33,5 @@
     <logger name="cch.qos.logback" level="WARN">
         <appender-ref ref="STDOUT"/>
     </logger>
+    <logger name="dev.langchain4j.skills" level="OFF"/>
 </configuration>

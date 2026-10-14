@@ -298,11 +298,11 @@ agent::[
  desc     => 'the agent dr.stynx is here to be of use in the metatron',
  root     => !*boot/args/internal/agent_home,
  feature  => [
-  window_message_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
+  token_message_feature::::[on_agent_ctor => inst(a=>agent::T){ *</usr/dr/session/1>.else(
                                          session::[agent     => !*boot/args/internal/agent_home,
                                                    user      => !*boot/args/internal/user_home,
                                                    name      => 'general chat',
-                                                   algorithm => [name=><message_window>, max=>20]]
+                                                   algorithm => [max=>262144]]
                                                          ==[_=>_].to(/usr/dr/session/1)).
                                           map(token_counter_tool::[style=>[anchor=>top_right,width=>50]]@<token_widget>)},
                              to            => inst(tok=>rec::T) { @token_widget>>=(==[style=>_] + *tok).display()  },
