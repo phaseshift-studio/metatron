@@ -43,13 +43,16 @@ mtron> int::T.as(object::T)
                                       mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
                                       zero=>0,
                                       one=>1],
-                  add_group=>group_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
-                                            id=>0,
-                                            inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int],
-                  add_monoid=>monoid_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
-                                              id=>0],
-                  mult_monoid=>monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
-                                               id=>1]],
+                  add_group=>group_theory::[
+                   op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                   id=>0,
+                   inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int],
+                  add_monoid=>monoid_theory::[
+                   op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                   id=>0],
+                  mult_monoid=>monoid_theory::[
+                   op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
+                   id=>1]],
             morphed_to=>!inst?rng=#{*}&dom=#{?}(){<j>},
             morphed_from=>!inst?rng=#{*}&dom=#{?}(){<j>}]
 mtron> |plus?int<=int(int::T).as(morphism::T)

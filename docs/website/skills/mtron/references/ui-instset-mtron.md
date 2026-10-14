@@ -112,12 +112,12 @@ mtron> */m/mach/ui/widget?docq
       {?}expand=>uri::T]][ctor?rng=tree_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/tree_widget,
                               dom=>'maybe an obj',
                               rng=>'a tree widget',
-                              args=>[{?}code=>'transform obj prior to insertion i...',
-                                     {?}expand=>'branch uris whose children are rea...',
+                              args=>[{?}expand=>'branch uris whose children are rea...',
                                      {?}xref=>'xref=>[max=>N, code=><call>] cross...',
                                      max=>'the max depth to traverse',
                                      {?}flatten=>'fold single-folder chains into one...',
-                                     root=>'the root uri to traverse from'],
+                                     root=>'the root uri to traverse from',
+                                     {?}code=>'transform obj prior to insertion i...'],
                               desc=>'[structural] the root uri space is...'],
           ...(10 more)]
 ```
@@ -339,18 +339,9 @@ mtron> g10 -> [,].repeat(code=>+['.'],until=>loop()?>9)-<[_].repeat(code=>+(>>0.
      ...(3 more)],
     ...(3 more)]
 mtron> board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
-==>fail::[unable to construct matrix_widget::T: fail::[inst apply failure: obj does not match /m/mach/ui/widget/matrix_widget::T
-     [[grid=>!*/usr/uidoc/g10,
-      style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
-         X=>
-     widget::T[?[{?}grid=>lst::T,{?}title=>str::T]][ctor?rng=matrix_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/matrix_widget
-     ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [grid=>(==>{?}grid)=>[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=>==>lst::T,
-      noobj=>(==>{?}title)=>noobj=>/=>str::T,
-      style=>(/=>{?}style)=>[anchor=>top_right,border=>continuous]=>X=>style::T]] (at /m/inst/ctor)]@/fail/_?incrq
-   	while parsing: board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board]@/fail/_?incrq
+==>fail::[unable to construc...border=>continuous]]@/usr/uidoc/board]@/sys/fail/517
 mtron> @/usr/uidoc/board.display()             [-- pin it once --]
-==>fail::[lhs range does not match inst domain: rec::T => rec::T[?[{?}style=>rec::T[?[{?}border=>str::T,{?}background=>str::T,{?}foreground=>str::T,{?}divider=>str::T,{?}headerDivider=>str::T,{?}pointer=>str::T,{?}leftMargin=>int::T,{?}rightMargin=>int::T,{?}topMargin=>int::T,{?}bottomMargin=>int::T,{?}anchor=>uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=>int::T,{?}height=>int::T,{?}top=>int::T,{?}left=>int::T,{?}zIndex=>int::T,{?}scroll=><#>::T,{?}scrollX=>int::T,{?}scrollY=>int::T]][ctor?rng=style&dom=#{?}(<#{*}>::T){<j>}]@style]]@widget [display?rng=noobj{0}&dom=widget(){<j>}@<1>]]@/fail/_?incrq
+==>fail::[lhs range does not...y?rng=noobj{0}&dom=widget(){<j>}@<1>]]@/sys/fail/518
 mtron> @/usr/uidoc/g10/1/0 >>= '@'             [-- one cell of the REFERENT --]
 ==>'@'
 mtron> @/usr/uidoc/g10/+/0 >>= ''             [-- every row's column 0 --]

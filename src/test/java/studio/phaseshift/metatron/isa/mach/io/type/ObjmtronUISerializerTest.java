@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_AT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -84,6 +85,94 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertTrue(written.startsWith("[address/home/city=>"), String.format("the first entry rides the opening bracket: %s", written));
         assertEquals(written.indexOf("address/home/city"), written.indexOf("address/work/city") - (newline + 1),
                 String.format("the second entry lines up under the first: %s", written));
+    }
+
+    @Test
+    public void testWideTypePrefixDropsTheEntriesToTheirOwnLines() {
+        // a type name that is a path — the console's /m/mach/ui/console/command_palette::[…] —
+        // is wide before the first entry is even written, so nothing is carried on the opening
+        // line: the entries take lines of their own and line up with each other
+        final Obj obj = ObjmtronSerializer.parse("/m/mach/ui/console/command_palette::[console=>2,help=>3,quit=>4,reset=>5]").apply();
+        final String written = ObjmtronUISerializer.blackWhite().write(obj);
+        LOG.debug("wide type prefix => %s", written);
+        final int firstLine = written.indexOf('\n');
+        assertTrue(firstLine > 0, String.format("a wide type prefix drops the entries to their own lines: %s", written));
+        assertTrue(written.substring(0, firstLine).endsWith("::["),
+                String.format("nothing is carried on the opening line: %s", written));
+        final int secondLine = firstLine + 1;
+        final int thirdLine = written.indexOf('\n', secondLine) + 1;
+        assertEquals(written.indexOf("console=>") - secondLine, written.indexOf("help=>") - thirdLine,
+                String.format("the entries line up with each other: %s", written));
+    }
+
+    @Test
+    public void testDeepEntryColumnDropsTheEntriesToTheirOwnLines() {
+        // the guard behind the type-prefix rule: once the column an entry would begin at runs
+        // past MAX_ENTRY_COLUMN — here a long entry key rather than a type name — the entries
+        // take their own lines too
+        final Obj inner = rec("console", uri(f("/usr/marko/console")),
+                "help", uri(f("/m/help")),
+                "quit", uri(f("/m/quit")));
+        final Obj outer = rec("command_palette_definition_and_helpers", inner, "other", str("x"));
+        final String written = ObjmtronUISerializer.blackWhite().write(outer);
+        LOG.debug("deep entry column => %s", written);
+        final int firstLine = written.indexOf('\n');
+        assertTrue(firstLine > 0, String.format("an entry past the column limit takes its own lines: %s", written));
+        assertTrue(written.substring(0, firstLine).endsWith("=>["),
+                String.format("nothing is carried on the opening line: %s", written));
+        final int secondLine = firstLine + 1;
+        final int thirdLine = written.indexOf('\n', secondLine) + 1;
+        assertEquals(written.indexOf("console=>") - secondLine, written.indexOf("help=>") - thirdLine,
+                String.format("the entries line up with each other: %s", written));
+    }
+
+    @Test
+    public void testLongFailMessageIsClippedKeepingItsFrame() {
+        // a fail's message can carry a whole obj — the inst apply failure: machine::[…] of a type
+        // mismatch — and it used to print at whatever length it was.  The in-flow rendering is
+        // bounded, and it is clipped from the MIDDLE: the head names the context and the tail
+        // carries the reason and the (at <uri>) frame, with the dumped obj elided between them
+        final String message = "inst apply failure: machine::[pattern=><#>,q=>[docq::[pattern=>docq,"
+                + "pre_read=>inst,obj=>memspace,inst=>instset]]] unable to convert uri::T (at /m/mach/inst/move@0)";
+        final String written = ObjmtronUISerializer.blackWhite().write(fail(message));
+        LOG.debug("long fail => %s", written);
+        assertFalse(written.contains(message), String.format("the whole message must not be printed: %s", written));
+        assertTrue(written.length() < message.length() / 2, String.format("the rendering is bounded: %s", written));
+        assertTrue(written.contains("inst apply failure"),
+                String.format("the head is kept, so the context still reads: %s", written));
+        assertTrue(written.contains("uri::T (at /m/mach/inst/move@0)"),
+                String.format("the tail is kept, so the reason and its frame survive: %s", written));
+    }
+
+    @Test
+    public void testFailStackBlockIsBounded() {
+        // the [msg][cause][cause] stack block is a fail's stack: the levels that fit within
+        // clip->fail are shown, and the block is ellipsed rather than running on
+        final String shortChain = ObjmtronUISerializer.blackWhite().write(
+                fail(new RuntimeException("outer context", new RuntimeException("inner cause"))));
+        LOG.debug("short fail chain => %s", shortChain);
+        assertTrue(shortChain.contains("outer context"), shortChain);
+        assertTrue(shortChain.contains("inner cause"), String.format("a chain that fits is shown whole: %s", shortChain));
+        assertFalse(shortChain.contains("[...]"), String.format("nothing was left out of it: %s", shortChain));
+
+        final String longChain = ObjmtronUISerializer.blackWhite().write(
+                ObjmtronSerializer.parse("fail::[alpha][bravo][charlie][delta][echo][foxtrot][golf][hotel][india][juliet]").apply());
+        LOG.debug("long fail chain => %s", longChain);
+        assertTrue(longChain.contains("[...]"), String.format("a chain past the budget is ellipsed: %s", longChain));
+        assertFalse(longChain.contains("juliet"), String.format("a level that did not fit is not printed: %s", longChain));
+    }
+
+    @Test
+    public void testNestedFailIsBoundedLikeATopLevelOne() {
+        // the same bounded stack block wherever a fail is rendered: nested, a message that dumped
+        // an obj into its bracket would otherwise break the line the fail sits in
+        final String message = "inst apply failure: machine::[pattern=><#>,q=>[docq::[pattern=>docq,"
+                + "pre_read=>inst,obj=>memspace,inst=>instset]]] unable to convert uri::T (at /m/mach/inst/move@0)";
+        final String written = ObjmtronUISerializer.blackWhite().write(lst(fail(message)));
+        LOG.debug("nested fail => %s", written);
+        assertFalse(written.contains(message), String.format("the whole message must not be printed: %s", written));
+        assertTrue(written.contains("uri::T (at /m/mach/inst/move@0)"),
+                String.format("the nested fail keeps its reason and frame: %s", written));
     }
 
     @Test
@@ -226,20 +315,24 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     public void testSingleEntryRecHoldingAStructuredValueNests() {
         // [docq::[…]] — the machine's own q slot, and the rec the type-violation diff ends on.
         // A one-entry rec has no boundary between entries to break at, so its entry rides the
-        // opening bracket; the rec it holds is wide enough to break, and that rec's entries line
-        // up under its own first entry rather than running to a wall
+        // opening bracket; the rec it holds is wide enough to break, and its own opening line
+        // has long run past MAX_ENTRY_COLUMN by then, so its entries take lines of their own
+        // rather than being dragged out to that column
         final Obj longValue = rec(
                 "docq::[pattern=>docq,pre_read=>inst,obj=>memspace,inst=>instset]",
                 rec("pattern", str("docq"), "pre_read", str("inst"), "obj", str("memspace"), "inst", str("instset")));
         final Obj outer = rec(Map.of(uri("k"), (Obj) longValue));
         final String written = ObjmtronUISerializer.prettyPrint().write(outer);
         LOG.debug("single-entry rec => %s", written);
-        final int newline = written.indexOf('\n');
-        assertTrue(newline > 0, String.format("the held rec's entries take their own lines: %s", written));
-        assertTrue(written.startsWith("[k=>[") && written.substring(0, newline).contains("[pattern=>'docq',"),
-                String.format("the q slot's one entry rides the opening bracket and its value breaks: %s", written));
-        assertEquals(written.indexOf("pattern=>'docq'"), written.indexOf("pre_read=>'inst'") - (newline + 1),
-                String.format("the held rec's later entries line up under its first: %s", written));
+        final int firstLine = written.indexOf('\n');
+        assertTrue(firstLine > 0, String.format("the held rec's entries take their own lines: %s", written));
+        assertTrue(written.startsWith("[k=>["), String.format("the q slot's one entry rides the opening bracket: %s", written));
+        assertTrue(written.substring(0, firstLine).endsWith("=>["),
+                String.format("no entry is carried on the held rec's wide opening line: %s", written));
+        final int secondLine = firstLine + 1;
+        final int thirdLine = written.indexOf('\n', secondLine) + 1;
+        assertEquals(written.indexOf("pattern=>'docq'") - secondLine, written.indexOf("pre_read=>'inst'") - thirdLine,
+                String.format("the held rec's entries line up with each other: %s", written));
         final int longest = java.util.Arrays.stream(written.split("\n")).mapToInt(String::length).max().orElse(0);
         assertTrue(longest < 100, String.format("no line may run to the old wall width: %s", written));
     }

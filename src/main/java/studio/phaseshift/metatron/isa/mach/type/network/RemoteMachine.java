@@ -93,18 +93,6 @@ public class RemoteMachine extends MRec implements Machine {
         this.parent(parent);
     }
 
-    /**
-     * The connection this frame stands in — the entry of its own {@code network.peer}: a {@code peer::T} rec
-     * carrying the authority it was pushed for and the transport that reaches it. A remote frame IS a connection,
-     * so it has exactly one, and the single entry is the answer.
-     */
-    private Rec connection() {
-        return Network.Helper.connections(this.atDirect(uri(NETWORK))).jvm().values().stream()
-                .filter(Obj::isRec)
-                .map(Obj::asRec)
-                .findFirst()
-                .orElseThrow(() -> MTronException.of("remote frame %s carries no peer connection", this.vid()));
-    }
 
     /**
      * The inst that reaches the peer — message in, that peer's answer out. It rides in the connection this frame
@@ -119,6 +107,15 @@ public class RemoteMachine extends MRec implements Machine {
      */
     public fURI authority() {
         return this.connection().at(uri(AUTHORITY)).uriValue();
+    }
+
+    /**
+     * The connection this frame stands in — the single value of its own {@code network.peer}, which is
+     * {@code <service-uri> => peer::T}. A remote frame IS its connection, so it has exactly one.
+     */
+    private Rec connection() {
+        return this.network().peers().values().findFirst()
+                .orElseThrow(() -> MTronException.of("remote frame %s carries no peer connection", this.vid())).asRec();
     }
 
     /**

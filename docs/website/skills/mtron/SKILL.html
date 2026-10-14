@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -733,10 +749,10 @@ the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p
           args=&gt;[0=&gt;'/m/real'],
           desc=&gt;'[mapper] add two distances of the ...',
           example=&gt;['foot::12.0 + foot::36.0   [-- foot...']]
-==&gt;docs::[obj=&gt;plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
+==&gt;docs::[obj=&gt;plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},
           dom=&gt;'a complex number \(z = a + bi\)',
           rng=&gt;'the complex sum \(z + w\)',
-          args=&gt;[lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx=&gt;'the complex addend \(w = c + di\)'],
+          args=&gt;[lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx=&gt;'the complex addend \(w = c + di\)'],
           desc=&gt;'[mapper] complex addition: \((a+bi...',
           example=&gt;['cmplx::[1.0,2.0] + cmplx::[3.0,4.0...']]
 ==&gt;docs::[obj=&gt;plus?rng=datetime&amp;dom=datetime(real::T@/m/math/time){&lt;j&gt;},
@@ -809,7 +825,8 @@ map, <code>as?str&lt;=widget(str::T)</code> to render one inline anywhere a str 
 anchor, <code>top</code>/<code>left</code>, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
 marker to reshape), and the three insts <code>display</code>/<code>nano</code>/<code>less</code>.</li>
 <li><a href="references/dckrspace-mtron.html">dckrSpace</a> -- Docker as a space: containers, images, volumes, networks, compose,
-remote hosts, and an end-to-end SQLite container + tbleSpace walkthrough.</li>
+remote hosts, <code>owner</code>-labelled ownership with <code>on_close</code> reaping, and an end-to-end SQLite container + tbleSpace
+walkthrough.</li>
 <li><a href="references/connecting-datasources.html">Connecting Data Sources</a> -- the pattern + route model, discovering a space's
 prefixes from <code>*/sys/space/...</code>, <code>!*</code> lazy references, validation, and common failures.</li>
 </ul>

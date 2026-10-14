@@ -34,9 +34,13 @@ import studio.phaseshift.metatron.isa.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.isa.sys.LogObj;
+import studio.phaseshift.metatron.isa.web.space.mdns.handler.mdns_peerHandler;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
@@ -46,8 +50,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.*;
+import static studio.phaseshift.metatron.isa.web.space.mdns.handler.mdns_peerHandler.DEFAULT_SERVICE;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Machine: a SPACE OF SPACES -- the address space resolution happens in. Its members ({@code instset}, {@code memory},
@@ -388,6 +394,15 @@ public interface Machine extends Rec, AutoCloseable {
             final fURI vid = this.vid().resolve().extend(Helper.SYS_DIR.extend(LOGG));
             GraphittyObjLogger.setLogger(Helper.LOG_SINK);
             this.memory().write(vid, LogObj.sink(Helper.logLevels(this), vid));
+            // DISCOVERY SOURCES come up with the ROOT, once, and only after its infra exists: a source is a
+            // handler that announces this machine and writes what it hears into the roster. Guarded on the root's
+            // VID rather than ROOT_MACHINE — that constant is assigned AFTER this constructor returns, so it is
+            // still null here. One responder per host, not per frame: the roster is read at the root.
+            if (ROOT_MACHINE_VID.equals(this.vid())) {
+                //this.at(NETWORK).asRec().at(uri(SOURCE), rec(uri(webInstSet.MDNS_TID.name()), uri(webInstSet.MDNS_TID)), MUTABLE);
+                //this.logger().error("starting sources: %s", this.network().source());
+                //   Helper.startSources(this);
+            }
         }
         return this;
     }
@@ -434,25 +449,31 @@ public interface Machine extends Rec, AutoCloseable {
             // goes and what namespace the node mounts. The reach (the transport) is filled in by the frame's own
             // constructor, and the level is built HERE rather than in that constructor because constructing a
             // component inside a frame re-enters type resolution while that frame is current.
-            final BasicNetwork network = new BasicNetwork(CommonUtil.mutableMap(
-                    uri(PEER), rec(CommonUtil.mutableMap(
+            final BasicNetwork network = new BasicNetwork(mutableMap(
+                    uri(PEER), rec(mutableMap(
                             PeerSpawn.service(peer),
                             rec(uri(AUTHORITY), uri(peer.toString()))))));
             return Machine.current(new RemoteMachine(
-                    CommonUtil.mutableMap(
+                    mutableMap(
                             uri(PATTERN), uri(ALL),
                             uri(NETWORK), network),
-                    MACH_REMOTE_MACHINE_TID, Network.Helper.peerPath(Machine.root().vid(), peer)));
+                    MACH_REMOTE_MACHINE_TID, Network.Helper.peerPath(peer)));
         }
         final fURI parentVID = this.vid();
-        // A machine with NO vid (test machines, and any rootless construct) has no address to extend, so the
-        // extension becomes the child's address outright — and the descendant rule below does not apply, because
-        // there is nothing to descend from. Only when there IS a parent address does a frame have to stay under it.
-        final fURI childVID = ((null == parentVID) ? extension.resolve() : parentVID.resolve().extend(extension).resolve());
-        if (null != parentVID && !childVID.removeSubpath(parentVID.resolve()).asNode().pathString().equals(childVID.name()))
+        // The ADDRESS ARITHMETIC IS SHARED with move and pop (Helper.frameAddress): `.`, `..` and `~` mean the
+        // same thing to all three, so a spelling cannot mean "up" to one instruction and something else to
+        // another. What differs is only what the instruction then DOES with the address — push mints it, move
+        // walks to it, pop discards it. A machine with NO vid (test machines, and any rootless construct) has no
+        // address to extend, so the extension becomes the child's address outright and the descendant rule below
+        // does not apply: only a frame that HAS a parent address has to stay under it.
+        final fURI childVID = Helper.frameAddress(this, extension);
+        if (null != parentVID && !Helper.descends(parentVID, childVID))
             // print the RESOLVED forms, because the raw ones are what made this message hard to act on: the check
             // compares resolved segment lists, so a raw `/.` and a raw `aaa` say nothing about which comparison
             // failed. A frame's address must strictly extend its parent's, and now the message shows both sides.
+            // This is the guard for a caller that hands push an escape DIRECTLY: the push INSTRUCTION no longer
+            // reaches it for `..`, because it resolves the address and mints the leaf from the address's parent
+            // (push(<../b>) == move(<..>).push(<b>)). So the caller here is Java, not a frame address.
             throw MTronException.of("push(%s) does not descend from %s: resolved %s is not a strict descendant of %s",
                     extension, parentVID, childVID, parentVID.resolve());
         // THE CHILD OWNS ITS REC. Passing null keeps the clone's OWN copy of the map instead of handing the child
@@ -520,6 +541,9 @@ public interface Machine extends Rec, AutoCloseable {
     @Override
     default void close() {
         this.logger().info("closing machine %s", this.vid());
+        this.memory().close();
+        this.instset().close();
+        this.network().close();
         this.pop();
     }
 
@@ -535,6 +559,11 @@ public interface Machine extends Rec, AutoCloseable {
      * kept this slot a template.
      */
     default Network network() {
+        /*final Obj protoNetwork = this.atDirect(NETWORK).orThrow(MTronException.of("machine has no network: %s", this.type().vid()));
+        if (protoNetwork.isCall())
+            return protoNetwork.apply().as();
+        return protoNetwork.clone().as();*/
+
         final Obj proto = this.atDirect(uri(NETWORK));
         if (proto.isNoObj()) {
             final Network network = new BasicNetwork();
@@ -609,6 +638,113 @@ public interface Machine extends Rec, AutoCloseable {
          * The machine-local system directory: {@code ~/sys}, one level below the component slots so {@code ~}'s direct children stay the components.
          */
         public static final fURI SYS_DIR = f("sys");
+
+        /**
+         * every started discovery source, closed with the VM
+         */
+        private static final List<Closeable> SOURCES = new ArrayList<>();
+
+        /**
+         * Start the discovery handlers the root network declares ({@link Network#source()}). A handler that is
+         * never started is a roster that never fills, so this is what makes a source mean anything at all.
+         */
+        private static volatile boolean SOURCES_CLOSED = false;
+
+        static Machine startSources(final Machine machine) {
+            InstSet.importInstSet(WEB_ISA_TID);
+            machine.network().source().elements().toList().forEach(entry -> {
+                machine.logger().error("loading source: %s", entry);
+                Machine.write(machine.vid().extend(NETWORK).extend(SOURCE).extend("mdns"), new mdns_peerHandler(mutableMap(uri(SERVICE), uri(DEFAULT_SERVICE)), null));
+            });
+            return machine;
+        }
+
+        /**
+         * stop every discovery source — a responder that outlives the VM keeps announcing a dead address
+         */
+        public static void closeSources() {
+            synchronized (SOURCES) {
+                SOURCES_CLOSED = true;
+                SOURCES.forEach(CommonUtil::close);
+                SOURCES.clear();
+            }
+        }
+
+        /**
+         * Resolve a frame ADDRESS against the frame it is written in — the ONE definition of what {@code .},
+         * {@code ..} and {@code ~} mean to a frame instruction, shared by {@link Machine#push(fURI) push},
+         * {@code move} and {@code pop} so the three cannot drift apart.
+         * <p>
+         * The arithmetic is fURI's, deliberately. {@code .} and {@code ..} are kept at parse and folded HERE,
+         * because this is the first place the BASE is known: {@code ..} reduces (it pops a segment of the frame's
+         * address), so {@code ../b} is the sibling {@code b}, {@code ~/..} is the parent frame, and {@code .} is
+         * the frame itself.
+         * <p>
+         * {@code ~} is consumed BEFORE the fold rather than left inside it: the fold pops whatever precedes a
+         * {@code ..}, so a base left in the path would be eaten by its own displacement ({@code ~/..} would
+         * collapse to the empty path instead of naming the parent).
+         * <p>
+         * An absolute base popped PAST the root <b>saturates</b> — it stays AT the root — rather than becoming a
+         * displacement. A displacement ({@code ../../..}) is a direction, not a place, and a frame instruction
+         * has to stand somewhere; saturation is also exactly the no-op {@link Machine#pop()} already performs
+         * when a frame has no parent. A machine with no vid (a test machine, any rootless construct) has nothing
+         * to descend from, so there the target becomes the address outright — which is what makes
+         * {@code push(<a/b>)} mint a two-segment address on a vid-less machine.
+         *
+         * @param here   the frame the address is written in — the base for a relative target
+         * @param target the address as spelled, with {@code .}/{@code ..}/{@code ~} still in it
+         * @return the resolved address, or {@code here}'s own vid when the target is null
+         */
+        public static fURI frameAddress(final Machine here, final fURI target) {
+            if (null == target)
+                return null == here ? null : here.vid();
+            // a wire address names a peer across a process boundary, not a place in this tree: taken as written
+            if (target.hasScheme() || target.hasHost())
+                return target;
+            final fURI home = null == here ? null : here.vid();
+            final boolean fromHome = target.hasPrefix(f("~"));
+            if (fromHome && target.equals(f("~")))
+                return null == home ? f("/") : home.resolve();
+            if (!fromHome && target.isAbsolute())
+                return target.resolve();
+            if (null == home)
+                return target.resolve(); // no address to descend from: the extension IS the address
+            final fURI base = home.resolve();
+            final fURI composed = base.extend(fromHome ? target.pretract(1) : target).resolve();
+            // saturation: an absolute base popped past the root is the root, never a displacement
+            if (base.isAbsolute() && (composed.isEmpty() || composed.isRelative()))
+                return f("/");
+            return composed;
+        }
+
+        /**
+         * Whether {@code candidate} is a STRICT DESCENDANT of {@code ancestor} — the candidate's segments begin
+         * with the ancestor's and go at least one deeper. (Descendant rather than child, deliberately: the
+         * extension is an expression, so {@code a/b} and {@code a/../b} both mint through the same path arithmetic,
+         * and a multi-segment extension addresses a deeper node of the SAME branch.)
+         * <p>
+         * Expressed in fURI's own terms — {@code resolve()}, {@code asNode()}, {@code pathLength()} and
+         * {@code hasPrefix()} — and that is the point: the string form this replaces
+         * ({@code child.removeSubpath(parent).pathString().equals(child.name())}) answers TRUE for a
+         * single-segment escape — {@code /esc-b} under {@code /esc-a} — because the failed replacement leaves the
+         * WHOLE path to be compared against its own last segment, and they agree. The segment-wise test also keeps
+         * {@code a/../b} legal (it reduces back inside the parent).
+         * <p>
+         * WHO THIS GUARDS NOW. A frame address that crosses a level is no longer a caller error: the push
+         * INSTRUCTION resolves the address and mints its leaf from the frame at the address's PARENT, so
+         * {@code push(<../b>) == move(<..>).push(<b>)} and never arrives here. This is the guard for
+         * {@link Machine#push(fURI)} called DIRECTLY, where a single machine must still be the parent of what it
+         * mints and an escape has no parent to be re-homed to.
+         * <p>
+         * {@code asNode()} on both sides, because the root's address is the bare absolute marker ({@code /} is the
+         * one-element path {@code [""]}) whose empty segment is the branch slash rather than a segment; as a node it
+         * has NO segments, which is what makes every real address its descendant.
+         */
+        public static boolean descends(final fURI ancestor, final fURI candidate) {
+            final fURI base = ancestor.resolve().asNode();
+            final fURI child = candidate.resolve().asNode();
+            return child.pathLength() > base.pathLength() && child.hasPrefix(base);
+        }
 
         /**
          * The {@code ~}-relative log sink, left unexpanded so {@code GraphittyObjLogger} reads each frame's own.

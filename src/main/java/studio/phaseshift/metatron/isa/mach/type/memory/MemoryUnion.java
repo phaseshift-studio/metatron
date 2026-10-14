@@ -194,8 +194,8 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
     }
 
     @Override
-    public Rec rootFrame() {
-        return null != this.current ? this.current.rootFrame() : this.previous.rootFrame();
+    public Rec stackBaseFrame() {
+        return null != this.current ? this.current.stackBaseFrame() : this.previous.stackBaseFrame();
     }
 
     @Override

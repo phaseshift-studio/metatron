@@ -24,11 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -45,7 +41,6 @@ import static studio.phaseshift.metatron.isa.m.type.Inst.ARGS_FURI;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -126,9 +121,11 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
         return obj;
     }
 
-    /** the machine-scoped persistent bindings, shared across threads and dropped with the machine */
+    /**
+     * the machine-scoped persistent bindings, shared across threads and dropped with the machine
+     */
     private static Rec rootFrame() {
-        return Machine.current().memory().rootFrame();
+        return Machine.current().memory().stackBaseFrame();
     }
 
     public Obj peek() {

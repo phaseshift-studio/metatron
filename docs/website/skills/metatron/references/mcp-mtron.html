@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -434,17 +450,9 @@
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
          &quot;intellij&quot;: {
          }
-==&gt;fail::[parse error at line 1, col 1:
-     {&quot;mcpServers&quot;: {
-            &quot;intellij&quot;: {
-   ...
-     ^
-     unclosed '{' — missing '}'?]@/fail/_?incrq
+==&gt;fail::[parse error at lin......   ^   unclosed '{' — missing '}'?]@/sys/fail/179
 mtron&gt; }}
-==&gt;fail::[parse error at line 1, col 1:
-     }}
-     ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/fail/_?incrq
+==&gt;fail::[parse error at lin...' — missing opening '{' or extra '}'?]@/sys/fail/180
 </code></pre>
 <p>For <code>STDIO</code> transport MCP servers, the same process works:</p>
 <pre><code>mcp_client::[command=&gt;[&lt;/home/killswitch/.local/bin/codegraph&gt;,'serve', '--mcp']]@codegraph;
@@ -457,13 +465,12 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]][][]@/fail/_?incrq
-   	while parsing: mcp_client::[host=&gt;http://localhost:8777/mcp]@a]@/fail/_?incrq
+==&gt;fail::[unable to construc...::[host=&gt;http://localhost:8777/mcp]@a]@/sys/fail/182
 mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate inst-f noobj::T =&gt; a/tool/m_inst_eval_mtron/inst('1+2')]@/fail/_?incrq
+==&gt;fail::[unable to locate i... a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/187
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>

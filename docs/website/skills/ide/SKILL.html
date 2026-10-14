@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -466,7 +482,7 @@ asserted in the acceptance test).</p>
 an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
 maven build commands are attached to the <code>project::T</code> for each of access.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
-==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/fail/_?incrq
+==&gt;fail::[inst apply failure...ec::T (at /m/inst/as@1) [Project&lt;84&gt;]][...]@/sys/fail/172
 </code></pre>
 <p>Now that the project is stored in space, build commands can be added and the project can be built.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
@@ -486,9 +502,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
               mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::795,
+            runtime=&gt;millis::823,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/1f06a76f]
+            output=&gt;!*/sys/tmp/a0488b9e]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -534,23 +550,23 @@ mtron&gt; */dev/scratch/code/0
           classes=&gt;[Echo=&gt;[[kind=&gt;class_declaration,
                             name=&gt;'Echo',
                             header=&gt;'public class Echo {',
-                            members=&gt;[[PREFIX=&gt;[kind=&gt;field,
-                                                text=&gt;&quot;&quot;&quot;
+                            members=&gt;[[PREFIX=&gt;[
+                             kind=&gt;field,
+                             text=&gt;&quot;&quot;&quot;
    
        public static final String P...&quot;&quot;&quot;,
-                                                name=&gt;'PREFIX']],
-                                      [name=&gt;[kind=&gt;field,
-                                              text=&gt;&quot;&quot;&quot;
+                             name=&gt;'PREFIX']],
+                                      [name=&gt;[
+                                       kind=&gt;field,
+                                       text=&gt;&quot;&quot;&quot;
    
        private final String name;&quot;&quot;&quot;,
-                                              name=&gt;'name']],
-                                      [Echo=&gt;[kind=&gt;constructor,
-                                              name=&gt;'Echo',
-                                              signature=&gt;'Echo(String name)',
-                                              header=&gt;&quot;&quot;&quot;
-   
-       public Echo(String name) &quot;&quot;&quot;,
-                                              body=&gt;&quot;&quot;&quot;{
+                                       name=&gt;'name']],
+                                      [Echo=&gt;[
+                                       kind=&gt;constructor,
+                                       name=&gt;'Echo',
+                                       signature=&gt;'Echo(String name)',
+                                       header=&gt;&quot;&quot;&quot;
    ...
 mtron&gt; */dev/scratch/idx/Echo
 ==&gt;[field=&gt;[PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,

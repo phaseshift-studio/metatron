@@ -429,20 +429,16 @@ public class Highlighter implements org.jline.reader.Highlighter {
     }
 
     /**
-     * The columns the {@code ==>} result prompt occupies.
-     */
-    public static final int RESULT_PROMPT_WIDTH = 3;
-
-    /**
      * Shift a multi-line result past the {@code ==>} prompt it is written after, so its
-     * continuation lines begin under the value's first line instead of under the prompt.
-     * A result is written as {@code ==>value}, and only the value's first line sits one past
-     * the prompt — without this shift every later line starts at the value's own indent and
-     * the entries no longer line up.  The docs pipeline ({@code MtronPreprocessor}) and the
-     * websocket REPL ({@code bin/wsplus}) apply the same shift.
+     * continuation lines begin at the value's own column rather than at the prompt's.  A
+     * result is written as {@code ==>value}, and only the value's first line sits one past
+     * the prompt — without this shift every later line starts three columns to its left, and
+     * the entries no longer line up.  The width is {@link Graphitty#RESULT_PROMPT_WIDTH};
+     * the docs pipeline ({@code MtronPreprocessor}) and the websocket REPL ({@code bin/wsplus})
+     * apply the same shift.
      */
     public static String indentResult(final String result) {
-        return null == result ? null : result.replace("\n", "\n" + " ".repeat(RESULT_PROMPT_WIDTH));
+        return null == result ? null : result.replace("\n", "\n" + " ".repeat(Graphitty.RESULT_PROMPT_WIDTH));
     }
 
     /**

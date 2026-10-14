@@ -75,6 +75,7 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
 import static studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.STDIO_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_emulator_wsHandler.WS_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.mdns.handler.mdns_peerHandler.MDNS_PEER_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
 import static studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder.MCP_MTRON_SERVER_TYPE;
@@ -243,6 +244,8 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI MTRON_TID = WEB_ISA_TID.extend("mtron");
     public static final fURI STREAM_TID = WEB_ISA_TID.extend("stream");
     public static final fURI SSE_TID = WEB_ISA_TID.extend("sse");
+    public static final fURI DISCOVERY_TID = WEB_ISA_TID.extend("discovery");
+    public static final fURI MDNS_TID = WEB_ISA_TID.extend("mdns");
     public static final fURI ROUTE_TID = WEB_ISA_TID.extend("route");
     public static Type PROTOCOL_TYPE;
     public static Type HTTP_TYPE;
@@ -252,6 +255,8 @@ public class webInstSet extends AbstractInstSet {
     public static Type MTRON_TYPE;
     public static Type STREAM_TYPE;
     public static Type SSE_TYPE;
+    public static Type DISCOVERY_TYPE;
+    public static Type MDNS_TYPE;
     public static Type ROUTE_TYPE;
 
 
@@ -488,14 +493,29 @@ public class webInstSet extends AbstractInstSet {
                                         .create(),
                                 "the server-sent-events surface — a chunked text/event-stream response over an http handler",
                                 "sse::T refines stream::T; an mcp http GET opens an sse stream to push server notifications"),
+                        docWrap(DISCOVERY_TYPE = Type.Builder.build()
+                                        .tid(PROTOCOL_TID)
+                                        .vid(DISCOVERY_TID)
+                                        .create(),
+                                "the discovery surface — a protocol whose product is a peer list rather than an answer to one address",
+                                "where the message surfaces answer \"what is at this address\", a discovery surface answers \"who is out there\""),
+                        docWrap(MDNS_TYPE = Type.Builder.build()
+                                        .tid(DISCOVERY_TID)
+                                        .vid(MDNS_TID)
+                                        .create(),
+                                "the multicast-dns discovery surface — service registration and browsing on 224.0.0.251:5353, interoperable with Bonjour and avahi",
+                                "mdns::T refines discovery::T; its peers are found by a DNS-SD browse and advertised as _metatron._tcp.local"),
+                        docWrap(MDNS_PEER_HANDLER_TYPE,
+                                "the mdns peer handler — announces the authorities this machine answers to and writes what it hears into the roster",
+                                "mdns_peer::[service=>'_metatron._tcp.local.']"),
                         // declared *after* its members so their Type objects exist when the union is built
                         docWrap(PROTOCOL_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(PROTOCOL_TID)
-                                        .isaPredicate(union_(HTTP_TYPE, WS_TYPE, MCP_TYPE, REST_TYPE, MTRON_TYPE, STREAM_TYPE).tryToInst())
+                                        .isaPredicate(union_(HTTP_TYPE, WS_TYPE, MCP_TYPE, REST_TYPE, MTRON_TYPE, STREAM_TYPE, DISCOVERY_TYPE).tryToInst())
                                         .create(),
                                 "the protocol-surface umbrella — the union of the protocol types, so it *classifies* rather than labels",
-                                "a value is protocol::T iff it is an http::T, ws::T, rest::T, mcp::T, mtron::T or stream::T",
+                                "a value is protocol::T iff it is an http::T, ws::T, rest::T, mcp::T, mtron::T, stream::T or discovery::T",
                                 "without the union, protocol::T would be purely nominal and could not decide an arbitrary rec"),
                         docWrap(MCP_CLIENT_TYPE = Type.Builder.build()
                                         .tid(REC_TID)

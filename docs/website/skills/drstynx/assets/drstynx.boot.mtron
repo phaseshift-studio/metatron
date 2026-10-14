@@ -102,9 +102,17 @@ httpspace::[host     => !*<boot/args/external/web/http>,
         [=====================]
         [======= DOCKER ======]
         [=====================]
+[== owner: everything this space creates is labelled with the deployment identity, so a
+     reaper can ask the daemon "what belongs to me?" instead of guessing.
+     on_close: reap the sqlite holder this boot pulls.  It is decorative — the VM opens the
+     sqlite files through its own bind mount of ~/.metatron — so removing it at shutdown is
+     safe, and the next boot re-pulls it (it is named `dr_sqlite`, the name the guard above
+     probes, so a later boot adopts it instead of re-upping). ==]
 dckrspace::[host     => <unix:///var/run/docker.sock>,
             pattern  => docker:#,
             q        => [mimeq::[=>]],
+            owner    => !*boot/args/internal/user_home,
+            on_close => *docker:compose/dr_sqlite.ref(noobj),
             progress => progress_table::[style => style::[body          => "{{y}}={{g}}",
                                                           pointer       => "{{g}}>{{X}}",
                                                           border        => continuous,

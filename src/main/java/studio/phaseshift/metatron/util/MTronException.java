@@ -226,9 +226,12 @@ public class MTronException extends RuntimeException {
         if (null == carrier || carrier.mtronTraceEmitted)
             return;
         carrier.mtronTraceEmitted = true;
-        lastMtronTrace = carrier.mtronTrace;
+        // the trace's staircase is content -- three columns per frame, the outermost at column
+        // zero -- and this is the boundary that knows it is reported under the '==>' result
+        // prompt, so the shift past that prompt is applied here and nowhere downstream
+        lastMtronTrace = CommonUtil.indent(carrier.mtronTrace, Graphitty.RESULT_PROMPT_WIDTH);
         mtronTracesEmitted.incrementAndGet();
-        Graphitty.log(MFail.fail(carrier)).none("%s", CommonUtil.indent(carrier.mtronTrace, 2));
+        Graphitty.log(MFail.fail(carrier)).none("%s", lastMtronTrace);
     }
 
     /**

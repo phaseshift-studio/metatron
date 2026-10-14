@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -607,14 +623,15 @@ httpspace::[pattern =&gt;http://#,
              host    =&gt;http://localhost:8765,
              route   =&gt;[/            =&gt;local:]]@/sys/space/http;
 console::[=&gt;]@/usr/ui/console;
-==&gt;console::[menu=&gt;[console=&gt;console::[command_palette=&gt;/m/mach/ui/console/command_palette::[console=&gt;!*/usr/ui/console,
-                                                                                             help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                                                                                             redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
-                                                                                             header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                                                                                             quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                                                                                             reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                                                                                             clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                                                                                             ...(30 more)]@/usr/ui/console/command_palette],
+==&gt;console::[menu=&gt;[console=&gt;console::[command_palette=&gt;/m/mach/ui/console/command_palette::[
+    console=&gt;!*/usr/ui/console,
+    help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+    redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+    header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+    quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+    reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+    clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+    ...(30 more)]@/usr/ui/console/command_palette],
                     help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
                     redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
                     header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},

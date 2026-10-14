@@ -100,9 +100,12 @@ public class MTronExceptionTest extends AbstractMetatronTest {
         ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.apply_inst, "/m/inst/as?rng=/m/lst&dom=/m/int"));
         ExecutionStack.push(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst_args, "/m/inst/is?rng=/m/uri{?}&dom=/m/uri{?}"));
         final MTronException deep = MTronException.of("conversion failed");
+        // the captured trace is content: the outermost frame at column zero, each frame below
+        // it three columns further in.  The shift past the ==> result prompt it is reported
+        // under is the reporting boundary's, so it is not part of what was captured
         final String expected = String.join("\n",
                 "\\_resolve_inst_args: /m/inst/is?rng=/m/uri{?}&dom=/m/uri{?}",
-                "    \\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int");
+                "   \\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int");
         assertEquals(expected, deep.mtronTrace());
         assertEquals(before, MTronException.mtronTracesEmitted(), "emission waits for the report");
     }
@@ -134,7 +137,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
         MTronException.emitStackTrace(outer);
         MTronException.emitStackTrace(outer);   // re-reporting the same chain stays quiet
         assertEquals(before + 1, MTronException.mtronTracesEmitted());
-        assertEquals("\\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
+        assertEquals("   \\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
     }
 
     @Test
@@ -154,8 +157,8 @@ public class MTronExceptionTest extends AbstractMetatronTest {
         MTronException.emitStackTrace(asWrap);
         assertEquals(before + 1, MTronException.mtronTracesEmitted());
         final String expected = String.join("\n",
-                "\\_apply_inst: /m/inst/ctor?rng=/m/web/mcp/mcp_client&dom=#{?}",
-                "    \\_apply_inst: /m/inst/as?rng=/m/web/mcp/mcp_client&dom=/m/rec");
+                "   \\_apply_inst: /m/inst/ctor?rng=/m/web/mcp/mcp_client&dom=#{?}",
+                "      \\_apply_inst: /m/inst/as?rng=/m/web/mcp/mcp_client&dom=/m/rec");
         assertEquals(expected, MTronException.lastMtronTrace());
     }
 
@@ -209,7 +212,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
         } catch (final MTronException e) {
             MTronException.emitStackTrace(e);   // an uncaught escape is itself the report
             assertEquals(before + 1, MTronException.mtronTracesEmitted());
-            assertEquals("\\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
+            assertEquals("   \\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
             return;
         }
         if (!result.isFail())
@@ -219,7 +222,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
             throw new AssertionError("fail lost its message: " + rendered);
         MTronException.emitStackTrace(result.asFail().jvm());   // the report boundary emits the trace
         assertEquals(before + 1, MTronException.mtronTracesEmitted(), "one logical failure → one mtron stack trace");
-        assertEquals("\\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
+        assertEquals("   \\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
     }
 
     // ==================================================================

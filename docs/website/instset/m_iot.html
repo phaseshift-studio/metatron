@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -470,7 +486,8 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
  {?}pre_read=&gt;inst::T,
  {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+ {?}schema=&gt;instset::T,
+ {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
@@ -489,7 +506,8 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
  {?}pre_read=&gt;inst::T,
  {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
- {?}schema=&gt;instset::T]</code></div></div>
+ {?}schema=&gt;instset::T,
+ {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     
 </div>
 </div><div class="container-xxl py-3 text-center">

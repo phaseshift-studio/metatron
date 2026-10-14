@@ -236,6 +236,7 @@ public final class Tokens {
     public static final String SUPER = "super";
     public static final String ROUTE = "route";
     public static final String PEER = "peer";
+    public static final String ROSTER = "roster";
     public static final String NETWORK = "network";
     public static final String CACHE = "cache";
     public static final String CONST = "const";
@@ -266,6 +267,11 @@ public final class Tokens {
     public static final String SERIALIZER = "serializer";
     public static final String LOGG = "log";
     public static final String DRIVER = "driver";
+    /**
+     * The scope that owns what a space creates — a label on docker objects, and the selection key a
+     * reaper uses to answer "what belongs to me?" (see dckrSpace).
+     */
+    public static final String OWNER = "owner";
     public static final String SEND = "send";
     public static final String SEND_RECV = "send_recv";
     public static final String CLOSE = "close";
@@ -309,6 +315,9 @@ public final class Tokens {
      * that carries a message to it).
      */
     public static final String HANDLER = "handler";
+    public static final String SERVICE = "service";
+    public static final String VERSION = "version";
+    public static final String INTERFACE = "interface";
     public static final String COMMAND = "command";
     public static final String SERVER = "server";
     public static final String LOCAL = "local";

@@ -54,28 +54,28 @@ mtron> *bash?docq
 ==>docs::[obj=>bash?rng=lst[str]&dom=#{?}(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
-          args=>[{?}timeout=>'a real number denoting timeout of ...',
-                 cmd=>'the terminal command to evaluate (...'],
+          args=>[cmd=>'the terminal command to evaluate (...',
+                 {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
 ```mtron
 mtron> bash('ls')
 ==>['AGENTS.md',
-    'articles',
     'bin',
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'Desktop',
-    ...(19 more)]
+    'dist',
+    'docs',
+    ...(16 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.3M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  521G ...',
+    '/dev/nvme0n1p2         916G  524G ...',
     'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -85,15 +85,9 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/fail/_?incrq
+==>fail::[inst apply failure...ms. (at /m/sys/inst/bash) [Proc<155>]][...]@/sys/fail/471
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
-     $ bash -c 'ls /no/such/directory'
-     STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
-     $ bash -c 'ls /no/such/directory'
-     STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/fail/_?incrq
+==>fail::[inst apply failure... /m/sys/inst/bash) [ProcBuilder<228>]][...]@/sys/fail/472
 ```
 ### batch
 
@@ -103,23 +97,23 @@ the same `==` projection:
 ```mtron
 mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
 ==>['ls'=>['AGENTS.md',
-           'articles',
            'bin',
            'boot',
            'conf',
            'CONTRIBUTING.md',
-           'Desktop',
-           ...(19 more)]]
+           'dist',
+           'docs',
+           ...(16 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
-    'articles',
     'bin',
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'Desktop',
-    ...(20 more)]
+    'dist',
+    'docs',
+    ...(17 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -154,19 +148,19 @@ The projection can do the work: first stat line of each entry, nothing else:
 ```mtron
 mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `File:` line --]
 ==>['  File: AGENTS.md',
-    '  File: articles',
     '  File: bin',
     '  File: boot',
     '  File: conf',
     '  File: CONTRIBUTING.md',
-    '  File: Desktop',
-    ...(19 more)]
+    '  File: dist',
+    '  File: docs',
+    ...(16 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
-    '  Size: 37531     	Blocks: 80     ...',
-    'Device: 259,5	Inode: 22852383    L...',
+    '  Size: 43160     	Blocks: 88     ...',
+    'Device: 259,5	Inode: 26352425    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-11 16:56:08.472354...',
+    'Access: 2026-10-12 22:58:16.632414...',
    ...
 ```
 ### a shape of its own
@@ -177,14 +171,14 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::375,
-    bB::409,
+==>[bB::431,
     bB::409,
     bB::409,
     bB::409,
     bB::698,
     bB::409,
-    ...(19 more)]
+    bB::409,
+    ...(16 more)]
 ```
 Unit values test against each other's units:
 
@@ -218,9 +212,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/fail/_?incrq
+==>fail::[inst apply failure...31min \brm\b (at /m/sys/inst/bash)]@/sys/fail/477
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/fail/_?incrq
+==>fail::[inst apply failure...ot in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/478
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -251,14 +245,13 @@ One read each: the environment, the thread count, and the executor's own summary
 
 ```mtron
 mtron> */sys/env/HOME
-==>'/home/killswitch'
 mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::472,
-    free_mem_jvm=>mB::297.46027,
+==>[total_mem_jvm=>mB::600,
+    free_mem_jvm=>mB::424.05744,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::174.53972,
+    used_mem_jvm=>mB::175.94255,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[run=>0,stop=>0]]
@@ -327,10 +320,7 @@ is doing — the sugar is short precisely because it is legible once:
 
 ```mtron
 mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
-==>fail::[parse error at line 1, col 1:
-     [MAX_OUTPUT 5] *<mfs:README.md?mimeq=tex...
-     ^
-     could not parse at '[']@/fail/_?incrq
+==>fail::[parse error at lin...q=tex...   ^   could not parse at '[']@/sys/fail/479
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ==>[space=>/sys/space,
     web=>[http/host=>http://localhost:8777,

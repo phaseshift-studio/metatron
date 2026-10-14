@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -779,9 +795,9 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/29
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/31
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/30
+==&gt;[body=&gt;'another one']@tbledoc:note/32
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
@@ -791,12 +807,14 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;27
 ==&gt;4
 ==&gt;6
+==&gt;31
 ==&gt;16
 ==&gt;3
 ==&gt;24
 ==&gt;28
 ==&gt;20
 ==&gt;7
+==&gt;32
 ==&gt;29
 ==&gt;15
 ==&gt;19

@@ -15,6 +15,12 @@ ENDPOINTS (once running)
   http://<host>:8777/mcp    mcp over http (post json-rpc)
   http://<host>:8777/       web root (index page)
 
+COMPOSE (dist/docker/compose.yaml — a template naming every knob, with defaults)
+  cd dist/docker
+  docker compose up -d                              boot + healthcheck
+  docker compose --profile repl run --rm repl       wsplus REPL against it
+  docker compose -f compose.yaml -f compose.infra.yaml up -d   optional space backends
+
 CONSOLE
   docker exec -it metatron wsplus ws://localhost:8555/mtron
 

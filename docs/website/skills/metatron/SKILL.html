@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -407,23 +423,13 @@ access to an mtron virtual machine. The <code>tool_feature::T</code> of the <cod
 instructions and MCP servers. A general purpose instruction is <code>eval?#{*}&lt;=#{?}(#::T)</code>. The following agent definition
 snippet is sufficient for the spawned agent to execute mtron code.</p>
 <pre><code class="language-mtron">mtron&gt; ... [-- larger agent definition --]
-==&gt;fail::[parse error at line 1, col 2:
-     ... 
-      ^
-     could not parse at '.']@/fail/_?incrq
+==&gt;fail::[parse error at lin...   ...     ^   could not parse at '.']@/sys/fail/176
 mtron&gt; feature=&gt;[
         tool_feature::[tool=&gt;[!*eval]]
         ... [-- other features attached to agent --]
-==&gt;fail::[parse error at line 1, col 8:
-     feature=&gt;[
-           tool_feature::[tool=&gt;[!*eval...
-            ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/fail/_?incrq
+==&gt;fail::[parse error at lin...=' needs a right operand (e.g. 1 + 2)]@/sys/fail/177
 mtron&gt; ]
-==&gt;fail::[parse error at line 1, col 1:
-     ]
-     ^
-     unexpected ']' — missing opening '[' or extra ']'?]@/fail/_?incrq
+==&gt;fail::[parse error at lin...' — missing opening '[' or extra ']'?]@/sys/fail/178
 </code></pre>
 <h3>References</h3>
 <ul>

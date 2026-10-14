@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.dckr;
 
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -32,14 +34,12 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.ProgressTableWidget;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -56,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -91,6 +92,14 @@ public class dckrSpace extends AbstractMemorySpace {
     private static final Path COMPOSE_DIR = Path.of("/tmp", "metatron-docker");
     private static final ObjYAMLSerializer YAML_SERIALIZER = ObjYAMLSerializer.single();
     private static final ObjDockerSerializer DOCKER_SERIALIZER = ObjDockerSerializer.single();
+    /**
+     * The docker label this space stamps on everything it creates when its config declares an
+     * {@code owner}.  It is what makes reaping ownership-driven rather than time-based: the label
+     * outlives the VM, so a later boot -- or the close of the frame that asked for it -- can ask
+     * "what belongs to me?" ({@code *docker:container/+.?[owner=></usr/avatar>]}) instead of
+     * guessing from age or state.
+     */
+    public static final String OWNER_LABEL = "com.phaseshift.metatron.owner";
 
     private final memSpace cache;
     private volatile ProgressTableWidget pullWidget;
@@ -203,6 +212,14 @@ public class dckrSpace extends AbstractMemorySpace {
             containers.asRec().jvm().forEach((name, obj) -> {
                 if (!obj.isRec()) return;
                 final Rec c = obj.asRec();
+                // Surface the owner label as a first-class field, so a reaper selects on it directly
+                // (`*docker:container/+.?[owner=></usr/avatar>]`) instead of digging through labels.
+                final Obj labels = c.at(uri("labels"));
+                if (labels.isRec()) {
+                    final Obj owner = labels.asRec().at(uri(OWNER_LABEL));
+                    if (!owner.isNoObj())
+                        c.jvm().put(uri("owner"), uri(objToString(owner)));
+                }
                 final String imageName = c.at(uri("image")).isNoObj() ? null : objToString(c.at(uri("image")));
                 if (imageName != null) {
                     // Replace string image name with !* ref into dckrSpace image
@@ -553,7 +570,7 @@ public class dckrSpace extends AbstractMemorySpace {
             final Path dir = COMPOSE_DIR.resolve(name);
             Files.createDirectories(dir);
             final Path yamlFile = dir.resolve("docker-compose.yml");
-            Files.writeString(yamlFile, YAML_SERIALIZER.write(config), StandardCharsets.UTF_8);
+            Files.writeString(yamlFile, YAML_SERIALIZER.write(this.withContainerName(name, this.withOwnerLabels(config))), StandardCharsets.UTF_8);
             LOG.info("wrote compose file {{y}}%s", yamlFile);
             // --wait: block until the stack reports healthy (per-service
             // healthchecks) so a boot file can register spaces that must be
@@ -576,26 +593,159 @@ public class dckrSpace extends AbstractMemorySpace {
         }
     }
 
+    /**
+     * The scope that owns what this space creates, from the config's {@code owner} field.  Absent
+     * means unowned: nothing is labelled, and nothing is ever reaped on this space's behalf.
+     */
+    private Obj owner() {
+        return this.at(uri(OWNER));
+    }
+
+    /**
+     * A copy of a compose config with this space's {@code owner} label added to every service.
+     * <p>
+     * Copied rather than mutated: the rec belongs to the caller that wrote it, and a space reaching
+     * into it would change the caller's value under it.  Services that are not recs pass through.
+     */
+    private Rec withOwnerLabels(final Rec config) {
+        if (this.owner().isNoObj() || !config.has("services"))
+            return config;
+        return withServices(config, (service, copy) -> {
+            final Rec labels = rec();
+            if (copy.has("labels") && copy.at(uri("labels")).isRec())
+                labels.jvm().putAll(copy.at(uri("labels")).asRec().jvm());
+            labels.jvm().put(uri(OWNER_LABEL), this.owner());
+            copy.jvm().put(uri("labels"), labels);
+        });
+    }
+
+    /**
+     * A copy of a compose config whose single service is named exactly the stack.
+     * <p>
+     * The adoption guard a boot writes is {@code from(docker:container/<stack>).else(… up …)}, and
+     * compose's default naming — {@code <stack>-<service>-1} — can never match it.  The guard then
+     * misses the stack it just created, so every boot re-runs the {@code up}, and a drifted config
+     * hash turns that into the Recreate path: slow, and deadlocked by a second concurrent compose run
+     * on the same project.  Naming the container after the stack lets the second boot adopt it.
+     * <p>
+     * Only for a single-service stack (a multi-service stack has no one name to be asked for), and a
+     * {@code container_name} the caller set itself wins.
+     */
+    private Rec withContainerName(final String stack, final Rec config) {
+        if (!config.has("services") || !config.at(uri("services")).isRec())
+            return config;
+        if (config.at(uri("services")).asRec().jvm().size() != 1)
+            return config;
+        return withServices(config, (service, copy) -> {
+            if (!copy.has("container_name"))
+                copy.jvm().put(uri("container_name"), str(stack));
+        });
+    }
+
+    /**
+     * Copy a compose config, handing each service rec (already copied) to {@code edit}.  The caller's
+     * recs are never touched — a space that mutated them would change the value its writer still holds.
+     */
+    private Rec withServices(final Rec config, final BiConsumer<Obj, Rec> edit) {
+        final Rec out = rec();
+        out.jvm().putAll(config.jvm());
+        final Rec services = rec();
+        config.at(uri("services")).asRec().jvm().forEach((service, value) -> {
+            if (!value.isRec()) {
+                services.jvm().put(service, value);
+                return;
+            }
+            final Rec copy = rec();
+            copy.jvm().putAll(value.asRec().jvm());
+            edit.accept(service, copy);
+            services.jvm().put(service, copy);
+        });
+        out.jvm().put(uri("services"), services);
+        return out;
+    }
+
+    /**
+     * Tear a stack down.  The compose file is only one of two ways to reach it: it lives under
+     * {@link #COMPOSE_DIR} ({@code /tmp/metatron-docker}), which does not survive a VM restart --
+     * nor a container recreate, where {@code /tmp} belongs to the container.  A stack brought up
+     * by an earlier run therefore has no yaml left to {@code -p <name> down} with, and leaving its
+     * containers running while the write reports {@code noobj} is the worst possible answer: the
+     * caller believes the stack is gone.  So the yaml path is an optimization and the labels
+     * compose stamps on the objects themselves are the durable one.
+     */
     private void composeDown(final String name) {
         try {
             final Path yamlFile = COMPOSE_DIR.resolve(name).resolve("docker-compose.yml");
+            boolean composedDown = false;
             if (Files.exists(yamlFile)) {
-                exec(dockerCmd("compose", "-f", yamlFile.toString(), "-p", name, "down"));
-                LOG.info("compose {{b}}%s{{X}} down", name);
-                Files.deleteIfExists(yamlFile);
-                Files.deleteIfExists(yamlFile.getParent());
+                try {
+                    exec(dockerCmd("compose", "-f", yamlFile.toString(), "-p", name, "down"));
+                    composedDown = true;
+                    LOG.info("compose {{b}}%s{{X}} down", name);
+                } catch (final Exception e) {
+                    // fall through to the label sweep -- it tears down what the yaml described
+                    LOG.warn("compose %s down failed (%s) — falling back to compose labels", name, e.getMessage());
+                }
+            } else {
+                LOG.info("no compose file for {{b}}%s{{X}} (ephemeral /tmp) — tearing down by compose labels", name);
             }
+            // Sweep only when compose could not: a successful `down` has already removed the stack, and a
+            // docker CLI spawned from this JVM is not cheap here, so do not spawn two more queries for a
+            // stack that is provably gone.  The sweep is the fix for the missing-file case, and it is idempotent.
+            if (!composedDown)
+                composeDownByLabel(name);
+            Files.deleteIfExists(yamlFile);
+            Files.deleteIfExists(yamlFile.getParent());
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
     }
 
+    /**
+     * Remove every container and network compose stamped {@code com.docker.compose.project=<name>}.
+     * <p>
+     * Volumes are deliberately kept, matching {@code docker compose down} without {@code -v}: a
+     * stack's data outlives its containers.  Idempotent, so it can follow a successful
+     * {@code compose down} as well as replace a missing compose file.
+     */
+    private void composeDownByLabel(final String name) {
+        final String project = "com.docker.compose.project=" + name;
+        final List<String> containers = execLines(dockerCmd("ps", "-aq", "--filter", "label=" + project));
+        if (!containers.isEmpty()) {
+            final List<String> cmd = dockerCmd("rm", "-f");
+            cmd.addAll(containers);
+            exec(cmd);
+            LOG.info("removed %d container(s) of compose stack {{b}}%s{{X}}", containers.size(), name);
+        }
+        for (final String network : execLines(dockerCmd("network", "ls", "-q", "--filter", "label=" + project))) {
+            try {
+                exec(dockerCmd("network", "rm", network));
+                LOG.info("removed network {{b}}%s{{X}} of compose stack {{b}}%s{{X}}", network, name);
+            } catch (final Exception e) {
+                LOG.warn("network rm %s: %s", network, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * The non-blank stdout lines of a docker command — an id list, one id per line.
+     */
+    private List<String> execLines(final List<String> cmd) {
+        return exec(cmd).stdout().lines().map(String::trim).filter(line -> !line.isEmpty()).toList();
+    }
+
     private void containerRun(final String name, final Rec config) {
-        this.pullWidget = this.progressWidget != null
-                ? this.progressWidget : new ProgressTableWidget();
+        // headless (no terminal) means nothing to draw on: composeUp already guards this way, and
+        // a widget constructed with nowhere to render is exactly what breaks a headless docker space
+        this.pullWidget = Console.getTerminal() == null ? null :
+                (this.progressWidget != null ? this.progressWidget : new ProgressTableWidget());
         final String image = objToString(config.at(uri("image"))
                 .orThrow(MTronException.of("container config must have an 'image' field")));
-        final List<String> cmd = dockerCmdList("run", "-d", "--name", name);
+        final List<String> cmd = dockerCmd("run", "-d", "--name", name);
+        if (!this.owner().isNoObj()) {
+            cmd.add("--label");
+            cmd.add(OWNER_LABEL + "=" + objToString(this.owner()));
+        }
         if (config.has("user")) {
             cmd.add("--user");
             cmd.add(objToString(config.at(uri("user"))));
@@ -664,7 +814,7 @@ public class dckrSpace extends AbstractMemorySpace {
             }
         }
         try {
-            exec(cmd.toArray(new String[0]));
+            exec(cmd);
             LOG.info("container {{b}}%s{{X}} started from {{y}}%s", name, image);
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -677,13 +827,13 @@ public class dckrSpace extends AbstractMemorySpace {
     }
 
     private void volumeCreate(final String name, final Rec config) {
-        final List<String> cmd = dockerCmdList("volume", "create", name);
+        final List<String> cmd = dockerCmd("volume", "create", name);
         if (config.has("driver")) {
             cmd.add("-d");
             cmd.add(objToString(config.at(uri("driver"))));
         }
         try {
-            exec(cmd.toArray(new String[0]));
+            exec(cmd);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -698,13 +848,13 @@ public class dckrSpace extends AbstractMemorySpace {
     }
 
     private void networkCreate(final String name, final Rec config) {
-        final List<String> cmd = dockerCmdList("network", "create", name);
+        final List<String> cmd = dockerCmd("network", "create", name);
         if (config.has("driver")) {
             cmd.add("-d");
             cmd.add(objToString(config.at(uri("driver"))));
         }
         try {
-            exec(cmd.toArray(new String[0]));
+            exec(cmd);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -737,7 +887,11 @@ public class dckrSpace extends AbstractMemorySpace {
     // Process execution
     // ===================================================================
 
-    private String[] dockerCmd(final String subcommand, final String... args) {
+    /**
+     * The docker command line, host prefix included.  A List rather than an array because half the
+     * callers append to it (a `--label`, container ids to `rm`) before running it.
+     */
+    private List<String> dockerCmd(final String subcommand, final String... args) {
         final List<String> cmd = new ArrayList<>();
         cmd.add("docker");
         if (this.dockerHost != null) {
@@ -746,18 +900,6 @@ public class dckrSpace extends AbstractMemorySpace {
         }
         cmd.add(subcommand);
         for (final String a : args) cmd.add(a);
-        return cmd.toArray(new String[0]);
-    }
-
-    private List<String> dockerCmdList(final String subcommand, final String... initialArgs) {
-        final List<String> cmd = new ArrayList<>();
-        cmd.add("docker");
-        if (this.dockerHost != null) {
-            cmd.add("-H");
-            cmd.add(this.dockerHost);
-        }
-        cmd.add(subcommand);
-        for (final String a : initialArgs) cmd.add(a);
         return cmd;
     }
 
@@ -805,63 +947,50 @@ public class dckrSpace extends AbstractMemorySpace {
     private record ProcessResult(String stdout, String stderr) {
     }
 
-    private ProcessResult exec(final String... cmd) {
+    private ProcessResult exec(final List<String> cmd) {
         return exec(300, cmd);  // default 5 min for long-running pulls
     }
 
-    private ProcessResult exec(final int timeoutSecs, final String... cmd) {
+    /**
+     * Run a docker command, capturing stdout and streaming stderr.
+     * <p>
+     * zt-exec rather than a hand-rolled {@link ProcessBuilder}: the previous version drained stderr on
+     * a thread of its own — rendering a progress widget from it whenever a terminal existed — and then
+     * blocked in {@code readAllBytes()} on stdout.  A drain that dies or blocks leaves the child writing
+     * into a full pipe with the caller waiting forever, which is exactly how a boot came to hang on
+     * {@code Container … Recreate} and how a test run wedged on {@code docker network ls}.  A progress
+     * bar is not worth a shutdown: {@code ProcessExecutor} owns both streams and the timeout, and kills
+     * the child when it expires.
+     * <p>
+     * stderr is streamed line by line (so it is always being read) and kept only for the failure
+     * message.  Docker writes progress there, and layer-progress lines are noise we drop.
+     */
+    private ProcessResult exec(final int timeoutSecs, final List<String> cmd) {
+        final StringBuilder stderr = new StringBuilder();
         try {
-            final ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(false);
-            final Process p = pb.start();
-            // Stream stderr (Docker progress) in real-time
-            // Progress lines update in-place via \r; non-progress lines log normally
-            final StringBuilder stderrBuf = new StringBuilder();
-            final Thread stderrThread = new Thread(() -> {
-                final Map<String, Obj> layerRows = new LinkedHashMap<>();
-                try (final BufferedReader reader = new java.io.BufferedReader(
-                        new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        // stderrBuf.append(line).append('\n');
-                        final String trimmed = line.trim();
-                        if (trimmed.matches("^[0-9a-f]{12} .*")) {
-                            final String layer = trimmed.substring(0, 12);
-                            layerRows.put(layer, parseDockerProgress(layer, trimmed));
-                            if (Console.getTerminal() != null) {
-                                if (pullWidget == null)
-                                    pullWidget = this.progressWidget != null ? this.progressWidget : new ProgressTableWidget();
-                                layerRows.values().forEach(r ->
-                                        pullWidget.addProgressRow(r.asRec()));
-                                pullWidget.run();
-                            }
-                            //pullWidget.close();
-                        } else {
-                            LOG.info("{{y}}%s", trimmed);
+            final org.zeroturnaround.exec.ProcessResult result = new ProcessExecutor()
+                    .command(cmd)
+                    .readOutput(true)
+                    .exitValueAny()
+                    .timeout(timeoutSecs, TimeUnit.SECONDS)
+                    .redirectError(new LogOutputStream() {
+                        @Override
+                        protected void processLine(final String line) {
+                            stderr.append(line).append('\n');
+                            final String trimmed = line.trim();
+                            // `a1b2c3d4e5f6 Pulling fs layer` is pull progress, not news
+                            if (!trimmed.isEmpty() && !trimmed.matches("^[0-9a-f]{12} .*"))
+                                LOG.info("{{y}}%s", trimmed);
                         }
-                    }
-                    if (null != pullWidget)
-                        this.pullWidget.close();
-                } catch (final IOException ignored) { /* stream closed */ }
-            }, "docker-stderr");
-            stderrThread.setDaemon(true);
-            stderrThread.start();
-            // Read stdout synchronously
-            final String stdout = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            final boolean completed = p.waitFor(timeoutSecs, TimeUnit.SECONDS);
-            if (!completed) {
-                p.destroyForcibly();
-                throw MTronException.of("command timed out: %s", String.join(" ", cmd));
-            }
-            stderrThread.join(5000);
-            final String stderr = stderrBuf.toString();
-            if (p.exitValue() != 0)
-                throw MTronException.of("exit %d: %s\n%s", p.exitValue(), String.join(" ", cmd), stderr);
-            return new ProcessResult(stdout, stderr);
-        } catch (final IOException e) {
-            throw MTronException.of("docker cli not found: %s", e.getMessage());
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw MTronException.of(e);
+                    })
+                    .execute();
+            if (result.getExitValue() != 0)
+                throw MTronException.of("exit %d: %s\n%s", result.getExitValue(), String.join(" ", cmd), stderr);
+            return new ProcessResult(result.outputUTF8(), stderr.toString());
+        } catch (final MTronException e) {
+            throw e;
+        } catch (final Exception e) {
+            throw MTronException.of("docker cli failed: %s", e.getMessage());
         }
     }
 }

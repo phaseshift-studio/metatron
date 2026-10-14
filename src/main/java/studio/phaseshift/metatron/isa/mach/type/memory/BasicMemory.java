@@ -120,7 +120,7 @@ public class BasicMemory extends MRec implements Memory {
      * This machine's persistent relative bindings — shared across threads, dropped with the machine.
      */
     @Override
-    public Rec rootFrame() {
+    public Rec stackBaseFrame() {
         return this.rootFrame;
     }
 
@@ -157,7 +157,7 @@ public class BasicMemory extends MRec implements Memory {
         this.spaces().jvm().keySet().stream()
                 .filter(k -> k.isUri() && k.uriValue().test(pattern))
                 .toList()
-                .forEach(k -> this.spaces().jvm().remove(k));
+                .forEach(k -> Space.Helper.spaceCloseLog(this, (Space) this.spaces().jvm().remove(k)));
     }
 
     // ======================== lookup ========================
@@ -190,6 +190,7 @@ public class BasicMemory extends MRec implements Memory {
                 .filter(v -> v instanceof AutoCloseable)
                 .forEach(CommonUtil::close);
         this.spaces().jvm().clear();
+        LOG.info("closing memory for machine %s", this.machine().vid());
     }
 
     @Override

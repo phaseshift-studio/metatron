@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -442,8 +458,8 @@ mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-ins
    &lt;pre&gt;&lt;code class=&quot;language-mtron&quot;&gt;mtron&amp;gt; dckrspace::[pattern =&amp;gt; docker:#, route =&amp;gt; [docker: =&amp;gt; &amp;lt;&amp;gt;]]@/sys/space/docker
    mtron&amp;gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
    mtron&amp;gt; mcp_server::[tool =&amp;gt; [!*eval]]@/sys/space/mcp/web_basic
-   ==&amp;gt;mcp_server::[
-       tool=&amp;gt;[
+   ==&amp;gt;mcp_server::[tool=&amp;gt;[m_inst_eval=&amp;gt;eval?rng=#{*}&amp;amp;dom=#{?}(&amp;lt;#&amp;gt;::T){&amp;lt;j&amp;gt;}]]@/sys/space/mcp/web_basic
+   mtron&amp;gt; httpspace::[pattern=&amp;gt; http://#,
    ...
 mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;.as(html::T).as(rec::T)
 ==&gt;[html=&gt;[head=&gt;[=&gt;],
@@ -564,9 +580,9 @@ request while the same protocol engine serves them all.</li>
 mtron&gt; *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
 ==&gt;&quot;person::[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/fail/_?incrq
+==&gt;fail::[inst apply failure...web/http [http://#] (at /m/inst/from)]@/sys/fail/521
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/fail/_?incrq
+==&gt;fail::[inst apply failure...web/http [http://#] (at /m/inst/from)]@/sys/fail/522
 </code></pre>
 <p><code>/person/1</code> serves that obj and <code>/person/2</code> serves the other, through the <em>same</em> handler — and <code>/person/3</code> is a 404,
 because the space is live rather than a lookup table of two.</p>

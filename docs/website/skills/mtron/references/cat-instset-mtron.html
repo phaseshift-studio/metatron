@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -422,13 +438,16 @@ instruction from being evaluated.</p>
                                       mul=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                                       zero=&gt;0,
                                       one=&gt;1],
-                  add_group=&gt;group_theory::[op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
-                                            id=&gt;0,
-                                            inv=&gt;!*/m/inst/neg?rng=/m/int&amp;dom=/m/int],
-                  add_monoid=&gt;monoid_theory::[op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
-                                              id=&gt;0],
-                  mult_monoid=&gt;monoid_theory::[op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
-                                               id=&gt;1]],
+                  add_group=&gt;group_theory::[
+                   op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                   id=&gt;0,
+                   inv=&gt;!*/m/inst/neg?rng=/m/int&amp;dom=/m/int],
+                  add_monoid=&gt;monoid_theory::[
+                   op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                   id=&gt;0],
+                  mult_monoid=&gt;monoid_theory::[
+                   op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
+                   id=&gt;1]],
             morphed_to=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
             morphed_from=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}]
 mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)

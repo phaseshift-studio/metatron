@@ -589,7 +589,27 @@ Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatr
 ## MCP (Model Context Protocol)
 
 - WebSocket handler: `mcp_mtron_wsHandler`
-- Test client: `bin/wsplus` — self-contained REPL + `-e` one-shot (bundled, with its `bin/lib` deps and `conf/nanorc/mtron.nanorc` inlined by `bin/build-wsplus.py`, into `docs/website/skills/{mtron,metatron}/scripts/wsplus` on site build)
+- Test client: `bin/wsplus` — REPL + `-e` one-shot (the *website* copy is bundled: its `bin/lib` deps and
+  `conf/nanorc/mtron.nanorc` are inlined by `bin/build-wsplus.py` into
+  `docs/website/skills/{mtron,metatron}/scripts/wsplus` on site build). "Bundled" does NOT cover its one
+  third-party dependency: `bin/wsplus` imports `websockets` at runtime.
+
+### Python packages in this container
+
+- **`bin/wsplus` works out of the box here** (verified 2026-10-13). Its dependency `websockets` 17.2 — the
+  pure-Python wheel, so there is no ABI to match — is installed in the user site,
+  `/workspace/.local/lib/python3.13/site-packages`. It got there without pip, because pip was not
+  available and the system site is not writable: **a wheel is a zip**, so
+  `python3 -m zipfile -e PKG.whl "$(python3 -c 'import site; print(site.getusersitepackages())')"` is the
+  pip-free install. Python finds it automatically (`$HOME` is `/workspace` there and the user site is
+  enabled), so nothing needs exporting, and it lives under the repo mount — gitignored — so it survives
+  container recreates. Proof: `bin/wsplus -e '1 + 2' ws://192.168.1.61:8555/mtron` → `==>3`.
+- **pip is installed too** (26.2.1, same user site): `python3 -m pip install --user PKG`. This image's
+  Python is externally managed (PEP 668) and its system site is read-only, so `--user` is **required** and
+  both `/workspace/.pip/pip.conf` and `~/.config/pip/pip.conf` set `break-system-packages = true` (pip
+  actually reads the first for this container's `HOME`, which resolves `XDG_CONFIG_HOME` to
+  `/tmp/.config`). Check with `python3 -m pip config debug`. If a PEP 668 error appears anyway, prefix
+  `PIP_BREAK_SYSTEM_PACKAGES=1`.
 
 ## Skill Reference Docs
 

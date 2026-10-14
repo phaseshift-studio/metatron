@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -469,7 +485,7 @@ large language model think and reason within the metatron</p>
    kind=&gt;union(decision,problem,solution,observation),
    {?}source=&gt;[&lt;#&gt;::T],
    {?}concept=&gt;[&lt;#&gt;::T],
-   {?}tier=&gt;isa(int::T[inst(inst(0))]@nat).else(1)]]@/m/llm/claim,
+   {?}tier=&gt;isa(int::T[is(gt(0))]@nat).else(1)]]@/m/llm/claim,
                  rec::T[?[title=&gt;str::T,
    desc=&gt;str::T,
    status=&gt;union(open,in_progress,resolved,abandoned),
@@ -841,9 +857,9 @@ large language model think and reason within the metatron</p>
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
+  <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__agent_concept_feature">
@@ -996,7 +1012,7 @@ large language model think and reason within the metatron</p>
  kind=&gt;union(decision,problem,solution,observation),
  {?}source=&gt;[&lt;#&gt;::T],
  {?}concept=&gt;[&lt;#&gt;::T],
- {?}tier=&gt;isa(int::T[inst(inst(0))]@nat).else(1)]]@/m/llm/claim</code></pre></div>
+ {?}tier=&gt;isa(int::T[is(gt(0))]@nat).else(1)]]@/m/llm/claim</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a distilled claim with provenance — the proposition layer above concept nouns</p>
@@ -1094,9 +1110,9 @@ large language model think and reason within the metatron</p>
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'the concept name'" class="text-info">&#39;the concept name&#39;</a>
-  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related concepts'" class="text-info">&#39;a lst of related concepts&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related concepts'" class="text-info">&#39;a lst of related concepts&#39;</a>
   <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related messages'" class="text-info">&#39;a lst of related messages&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'the concept name'" class="text-info">&#39;the concept name&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__cost_feature">
@@ -1364,7 +1380,7 @@ large language model think and reason within the metatron</p>
  {?}prompt=&gt;&lt;#&gt;::T]][ctor?rng=mcp_message&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/mcp/mcp_message</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web.html#__m__web__mcp__mcp_server" class="code inherited-link">mcp_server::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],
  {?}resource=&gt;&lt;#&gt;::T,
- {?}prompt=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web.html#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@/m/web/http,protocol::T@/m/web/ws,protocol::T@/m/web/mcp,http::T@/m/web/http/rest,protocol::T@/m/web/mtron,protocol::T@/m/web/stream)</code></div></div>
+ {?}prompt=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web.html#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(protocol::T@/m/web/http,protocol::T@/m/web/ws,protocol::T@/m/web/mcp,http::T@/m/web/http/rest,protocol::T@/m/web/mtron,protocol::T@/m/web/stream,protocol::T@/m/web/discovery)</code></div></div>
     
 </div><div class="card mb-3" id="__m__llm__message">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1427,14 +1443,14 @@ large language model think and reason within the metatron</p>
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
-  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
   <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
   <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
   <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
   <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
   <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
+  <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1712,12 +1728,12 @@ reference to artifacts in metatron can be attached.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}reference" class="text-light">{?}reference</a> <span class="text-light">=&gt;</span> <a href="#'artifacts associated with todo'" class="text-info">&#39;artifacts associated with todo&#39;</a>
-  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the todo information'" class="text-info">&#39;the todo information&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the todo information'" class="text-info">&#39;the todo information&#39;</a>
   <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'concepts associated with todo'" class="text-info">&#39;concepts associated with todo&#39;</a>
   <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'messages associated with todo'" class="text-info">&#39;messages associated with todo&#39;</a>
   <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'current status of todo (default: open)'" class="text-info">&#39;current status of todo (default: open)&#39;</a>
   <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'datetime of todo creation (default: datetime_now())'" class="text-info">&#39;datetime of todo creation (default: datetime_now())&#39;</a>
+  <a href="#{?}reference" class="text-light">{?}reference</a> <span class="text-light">=&gt;</span> <a href="#'artifacts associated with todo'" class="text-info">&#39;artifacts associated with todo&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1818,10 +1834,10 @@ reference to artifacts in metatron can be attached.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a tool specification" class="text-info">a tool specification</a> <span class="text-light">=&gt;</span> ?</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
   <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
   <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__tool_feature">

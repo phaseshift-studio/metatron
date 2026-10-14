@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -103,7 +102,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
     private static final GraphittyLogger LOG;
     public static volatile Machine ROOT_MACHINE = null;
     public static Rec ARGS;
-    /** The levels every machine's log sink starts with, published to {@link Machine#bootstrap()} before the root is minted. */
+    /**
+     * The levels every machine's log sink starts with, published to {@link Machine#bootstrap()} before the root is minted.
+     */
     public static Rec LOG_LEVELS = rec(uri(TRACE), lst(uri(ALL)));
     /**
      * Tracks the currently executing metatron thread on this Java thread.
@@ -581,13 +582,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
             systemThread.applyAsync();
             Machine.write("~/thread/main", systemThread);
             BootLoader.CURRENT_THREAD.set(systemThread);
-            /// /// SET THE CLUSTER SINGLETON /// ///
-            // Installed HERE, not with the other /sys registries earlier in boot: at that point the space that
-            // serves /sys/* is not yet mounted, so a write is claimed by a catch-all whose writer is the no-op
-            // (k, v) -> v and vanishes WITHOUT A WORD. /sys/thread/main lands because it is written after the
-            // boot profile has been evaluated, so the cluster goes beside it.
-            Machine.write(Network.CLUSTER_PATH, Machine.root().network().cluster());
-            LOG.info("{{c}}cluster{{X}} registered: %s", Machine.read(Network.CLUSTER_PATH));
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
                 LOG.info("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
@@ -651,8 +645,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             SHUTDOWN_LATCH.countDown();  // release headless main-thread park (no-op if already 0)
             if (!ONE_SHOT)
                 LOG.none("\n");
-            if (Machine.loaded())
-                Machine.root().close();
+            Machine.Helper.closeSources();
+            Machine.root().close();
             ROOT_MACHINE = null;
             ARGS = null;
             ThreadExecutor.instance().shutdown();

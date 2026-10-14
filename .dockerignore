@@ -19,3 +19,7 @@ target/*
 !docs/website/skills/metatron/
 !bin/
 !bin/wsplus
+# wsplus's sibling package (bin/wsplus does `from lib.nanorc_highlight import ...`),
+# COPYed to /app/bin/lib by dist/docker/Dockerfile
+!bin/lib/
+!bin/lib/**

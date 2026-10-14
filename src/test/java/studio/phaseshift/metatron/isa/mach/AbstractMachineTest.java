@@ -21,16 +21,14 @@ package studio.phaseshift.metatron.isa.mach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
@@ -49,14 +47,11 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.*;
-import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -390,7 +385,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     }
 
     /**
-     * The rest of the machine's own level must stay covered by the infra space, because a narrowed pattern de-homes {@code ~/sys/fail}, {@code ~/thread} and {@code /sys/cluster} silently.
+     * The rest of the machine's own level must stay covered by the infra space, because a narrowed pattern de-homes {@code ~/sys/fail}, {@code ~/thread} and {@code /network/roster} silently.
      */
     @Test
     public void testBootstrapInfraSpaceCoversTheMachinesOwnLevel() {
@@ -398,7 +393,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
                 "~/sys/fail must stay covered by the machine's infra space");
         assertNotNull(Machine.root().memory().findSpace(f("/thread/main")),
                 "~/thread must stay covered by the machine's infra space");
-        assertInstanceOf(Rec.class, Machine.read(Network.CLUSTER_PATH),
-                "the cluster view registers at /sys/cluster, which only the catch-all pattern answers");
+        assertInstanceOf(Rec.class, Machine.root().network().roster(),
+                "the roster registers at /network/roster, which only the catch-all pattern answers");
     }
 }

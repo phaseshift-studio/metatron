@@ -46,17 +46,9 @@ Moreover, if the `mcpServer` snippet has multiple inner servers endpoints define
 mtron> {"mcpServers": {
          "intellij": {
          }
-==>fail::[parse error at line 1, col 1:
-     {"mcpServers": {
-            "intellij": {
-   ...
-     ^
-     unclosed '{' — missing '}'?]@/fail/_?incrq
+==>fail::[parse error at lin......   ^   unclosed '{' — missing '}'?]@/sys/fail/179
 mtron> }}
-==>fail::[parse error at line 1, col 1:
-     }}
-     ^
-     unexpected '}' — missing opening '{' or extra '}'?]@/fail/_?incrq
+==>fail::[parse error at lin...' — missing opening '{' or extra '}'?]@/sys/fail/180
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -74,13 +66,12 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][][]@/fail/_?incrq
-   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]@/fail/_?incrq
+==>fail::[unable to construc...::[host=>http://localhost:8777/mcp]@a]@/sys/fail/182
 mtron> *a>>tool
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')]@/fail/_?incrq
+==>fail::[unable to locate i... a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/187
 mtron> [-- => 3 --]
 ```
 ### WebSocket

@@ -40,7 +40,6 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -131,6 +130,18 @@ public interface Space extends Rec, Closeable {
     @Override
     default void close() {
         try {
+            // A space's own farewell must never abandon the teardown around it: on_close is arbitrary
+            // mtron -- a reaper that dials a daemon, say -- so its failure is reported and swallowed.
+            // Closing sjvm is ours, so a failure there is still a real error.
+            try {
+                final Obj farewell = this.at(Tokens.ON_CLOSE).apply();
+                if (null != farewell && farewell.isFail())
+                    this.logger().warn("on_close failed for %s: %s (close continues)",
+                            this.hasVID() ? this.vid() : "<no-vid>", farewell);
+            } catch (final Exception e) {
+                this.logger().warn("on_close failed for %s: %s (close continues)",
+                        this.hasVID() ? this.vid() : "<no-vid>", e.getMessage());
+            }
             CommonUtil.close(this.sjvm());
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -176,9 +187,9 @@ public interface Space extends Rec, Closeable {
 
         public static void spaceCloseLog(final Obj source, final Space space) {
             if (space instanceof InstSet)
-                source.logger().info("closed inst set {{b}}%s", space.vid());
+                source.logger().info("closed instset {{b}}%s", space.vid());
             else
-                source.logger().info("closed space {{b}}%s {{g}}[{{c}}pattern: {{b}}%s{{g}}]", space.vid(), space.pattern());
+                source.logger().info("closed space {{b}}%s {{g}}[{{c}}pattern: {{b}}%s{{g}}]", space.hasVID() ? space.vid() : "<no-vid>", space.pattern());
         }
 
         public static void spaceOpenLog(final Obj source, final Space space) {
@@ -388,8 +399,7 @@ public interface Space extends Rec, Closeable {
                                                 ? base.poly().asLst().at(relative, obj, MUTABLE)
                                                 : base.poly().asLst().append(obj),
                                         directWriter, directReader);
-                            }
-                            else {
+                            } else {
                                 writeComplete(obj, base.poly());
                                 return directWriter.apply(vid, obj);
                             }
@@ -416,10 +426,12 @@ public interface Space extends Rec, Closeable {
         }
 
         public static void closeSpace(final Space space) {
+            // UNREGISTER ONLY.  This is close()'s last step (its finally), so calling space.close() here
+            // recurses: close -> closeSpace -> close -> StackOverflowError on every single space close,
+            // which takes Machine.close()/pop() and therefore shutdown down with it.  The close log lives
+            // in Memory.removeSpace (spaceCloseLog), so there is nothing left to do here but unregister.
             if (Machine.loaded()) {
-                // Machine.authority().removeSpace(space.pattern());
                 Machine.current().memory().removeSpace(space.vid());
-                // 
             }
         }
 

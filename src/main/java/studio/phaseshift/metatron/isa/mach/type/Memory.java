@@ -34,8 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -78,7 +77,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
      */
     @Override
     default fURI pattern() {
-        return studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+        return ALL;
     }
 
     /**
@@ -261,7 +260,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * are dropped when the machine itself is reset. Not the per-thread arg frames: those live in
      * {@link #argStack()}'s {@code sjvm}.
      */
-    Rec rootFrame();
+    Rec stackBaseFrame();
 
     /**
      * The relative projection: the bindings in scope, walking the <em>same</em> chain and calling {@code stack()}
@@ -311,6 +310,8 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * whether <em>this level</em> holds a space covering {@code vid}.
      */
     boolean hasSpaceFor(final fURI vid);
+
+    void close();
 
     /**
      * The space covering {@code vid}: each level in turn via {@link #findSpace}, then the stack, then the
