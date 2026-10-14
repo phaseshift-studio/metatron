@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
 import studio.phaseshift.metatron.isa.mach.type.compiler.parser.mtronParser;
@@ -58,8 +59,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
@@ -92,6 +92,7 @@ public class machInstSet extends AbstractInstSet {
      * when that authority is on this same physical machine (see {@code PeerSpawn}), and merely declared otherwise.
      */
     public static final fURI PUSH_INST_TID = MACH_INST_TID.extend("push");
+    public static final fURI CONNECT_INST_TID = MACH_INST_TID.extend("connect");
 
     /**
      * The other two frame-choosing instructions: {@code pop()} leaves the frame it is handed, {@code move(<uri>)}
@@ -178,6 +179,8 @@ public class machInstSet extends AbstractInstSet {
     /// /// PEERS AND THE NETWORK /// ///
     public static final fURI PEER_TID = MACH_ISA_TID.extend("peer");
     public static Type PEER_TYPE;
+    public static final fURI ID_CLIENT_TID = MACH_ISA_TID.extend("id_client");
+    public static Type ID_CLIENT_TYPE;
 
     public static final Type FACTORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -461,6 +464,35 @@ public class machInstSet extends AbstractInstSet {
                                 .vid(MACH_MEMORY_TID)
                                 .constructor(arg -> new BasicMemory(arg.asRec().jvm(), arg.vid()))
                                 .create(),
+                        // THE IDENTITY CLIENT — the identity element of the protocol-client family: its
+                        // constructor is the dial (as every client's is) and its send_recv applies the
+                        // shipped message against the LOCAL machine, so a read through a loop: peer IS the
+                        // local read of the localized address. It lives HERE rather than /m/web because the
+                        // identity transport needs no wire — it is what makes the self-similarity contract
+                        // executable without a socket, and what keeps Helper.dial free of scheme branches:
+                        // loop:'s default dialer is this type, resolved through the one dial path.
+                        docWrap(ID_CLIENT_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(ID_CLIENT_TID)
+                                        .isaPredicate(rec(
+                                                uri(HOST).maybe().asUri(), URI_TYPE,
+                                                uri(SEND_RECV).maybe().asUri(), INST_TYPE,
+                                                uri(CLOSE).maybe().asUri(), INST_TYPE))
+                                        .constructor(arg -> rec(
+                                                uri(HOST), arg.asRec().at(uri(HOST)),
+                                                uri(SEND_RECV), instLambda((lhs, inst) -> inst.arg(0).apply(lhs)),
+                                                uri(CLOSE), instLambda((lhs, inst) -> noobj())))
+                                        .create(), null, null,
+                                Map.of(uri(HOST), "the dialed uri (identity: the local machine answers)",
+                                        uri(SEND_RECV), "applies the shipped message against the local machine — the identity transport",
+                                        uri(CLOSE), "nothing to hang up"),
+                                """
+                                the identity client — the identity element of the protocol-client family:
+                                dialing loop://<name> constructs one, and its send_recv evaluates the shipped
+                                message against the local machine. the executable form of the self-similarity
+                                contract: a read through a loop peer equals the local read.
+                                """,
+                                "*~/network.connect(<loop://self>) [-- the identity peer: reads and writes answer locally --]"),
                         // network — a machine's reachable peers, read through to the ones it inherited
                         docWrap(PEER_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -676,6 +708,23 @@ public class machInstSet extends AbstractInstSet {
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@~/thread/ping")),
                 uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
+                        // CONNECT — the network's mount op, mtron-facing: ensure-peered (a dialed authority
+                        // answers its existing peer::T, never a second socket), rng peer{?} because an
+                        // authority with no dialer answers noobj (known, not reachable from here). Two
+                        // arities: the one-arg form dials schemes with a default dialer (loop: -> id_client);
+                        // the two-arg form names the DIALER — a protocol client type's vid, resolved through
+                        // instruction memory at dial time (ws_client, mcp_client: the constructor IS the dial).
+                        docWrap(instC(CONNECT_INST_TID.dom(MACH_NETWORK_TID).rng(PEER_TID.maybe()), lst(URI_TYPE),
+                                        (lhs, inst) -> lhs.<Network>as().connect(inst.arg(0).uriValue())),
+                                "a network", "the live peer, or noobj when nothing knows how to dial the scheme",
+                                Map.of(jnt(0), "the dial uri, protocol route included: ws://host:port/mtron"),
+                                "the network's mount op: dial the authority once (ensure-peered) and answer its peer::T"),
+                        docWrap(instC(CONNECT_INST_TID.dom(MACH_NETWORK_TID).rng(PEER_TID.maybe()), lst(URI_TYPE, URI_TYPE),
+                                        (lhs, inst) -> lhs.<Network>as().connect(inst.arg(0).uriValue(), inst.arg(1).uriValue())),
+                                "a network", "the live peer, or noobj when the handler declines",
+                                Map.of(jnt(0), "the dial uri, protocol route included",
+                                        jnt(1), "the dialer: a protocol client type's vid (</m/web/ws/ws_client>), resolved at dial time"),
+                                "the network's mount op with an explicit dialer — a protocol client type whose constructor takes [host=>...]"),
                         instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("~/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));

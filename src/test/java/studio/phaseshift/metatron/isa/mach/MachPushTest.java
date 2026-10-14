@@ -72,7 +72,7 @@ public class MachPushTest extends AbstractMetatronTest {
     @Test
     void testPushSpawnsAPeerAndDispatchesAcrossIt() {
         final int port = freePort();
-        final fURI authority = f("ws://localhost:" + port + "/worker");
+        final fURI authority = f("").scheme("ws").host("localhost").port(port).extend("worker");
         final Machine parent = Machine.current();
         final Machine frame = parent.push(authority);
         try {
@@ -104,15 +104,15 @@ public class MachPushTest extends AbstractMetatronTest {
     @Test
     void testPushInstForksAnAuthority() {
         final int port = freePort();
-        final String address = "ws://localhost:" + port + "/worker";
+        final fURI address = f("").scheme("ws").host("localhost").port(port).extend("worker");
         final Obj pushed = ObjmtronSerializer.parse("*~.push(<" + address + ">)").apply();
         assertTrue(pushed.isMachine(), "the push inst must hand back a machine");
         try {
-            assertTrue(PeerSpawn.alive(f(address)), "the inst must fork the node");
+            assertTrue(PeerSpawn.alive(address), "the inst must fork the node");
         } finally {
             ObjmtronSerializer.parse("*~.pop(_)").apply();
         }
-        assertFalse(PeerSpawn.alive(f(address)), "the pop inst must reap the node");
+        assertFalse(PeerSpawn.alive(address), "the pop inst must reap the node");
     }
 
     /**
@@ -123,7 +123,7 @@ public class MachPushTest extends AbstractMetatronTest {
     @Test
     void testMoveExecutesCodeOnThePeer() {
         final int port = freePort();
-        final fURI authority = f("ws://localhost:" + port + "/worker");
+        final fURI authority = f("").scheme("ws").host("localhost").port(port).extend("worker");
         Machine.current().push(authority);
         try {
             final fURI d = authority.extend("d");
@@ -150,7 +150,7 @@ public class MachPushTest extends AbstractMetatronTest {
     @Test
     void testMoveInstEntersThePeerFrame() {
         final int port = freePort();
-        final fURI authority = f("ws://localhost:" + port + "/worker");
+        final fURI authority = f("").scheme("ws").host("localhost").port(port).extend("worker");
         Machine.current().push(authority);
         try {
             // MOVE TO THE FRAME'S OWN ADDRESS. A ws:// uri is a wire address, not a place in this machine, so the
@@ -169,7 +169,7 @@ public class MachPushTest extends AbstractMetatronTest {
 
     @Test
     void testPushingTheSameAuthorityTwiceFindsThePeerItAlreadyDeclared() {
-        final fURI authority = f("ws://localhost:" + freePort() + "/worker");
+        final fURI authority = f("").scheme("ws").host("localhost").port(freePort()).extend("worker");
         final Machine first = Machine.current().push(authority);
         try {
             // the constructor's PEER guard, and an idempotent spawn: a second frame for a declared address
@@ -185,7 +185,7 @@ public class MachPushTest extends AbstractMetatronTest {
 
     @Test
     void testPushWithNoPortAllocatesOne() {
-        final Machine frame = Machine.current().push(f("ws://localhost/worker"));
+        final Machine frame = Machine.current().push(f("").scheme("ws").host("localhost").extend("worker"));
         try {
             // the FRAME's vid is a local path (/network/peer/ws/localhost/<port>/worker), so the allocated port is
             // on the CONNECTION's authority — which is what names the wire address — not on the path.
@@ -229,7 +229,7 @@ public class MachPushTest extends AbstractMetatronTest {
      */
     @Test
     void testAFailIsNeverShipped() {
-        final fURI authority = f("ws://localhost:" + freePort() + "/worker");
+        final fURI authority = f("").scheme("ws").host("localhost").port(freePort()).extend("worker");
         final Machine frame = Machine.current().push(authority);
         try {
             final Obj failure = fail(MTronException.of("boom"));
