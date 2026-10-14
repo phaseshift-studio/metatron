@@ -103,7 +103,19 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) -> {
                         try {
-                            return new WebSocketRecClient(new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()));
+                            // THE IDIOMATIC DIAL: ws_client::[pattern=><ws://host:port/mtron?clientq=me>] —
+                            // the claim derives the host (pattern retracted), the constructor connects, and
+                            // on success the client indexes itself into the network as a space's constructor
+                            // indexes into Memory. Indexing is a BACKGROUND behavior: it never fails the
+                            // construction, and connect() remains sugar that converges on the same peer.
+                            final java.util.Map<studio.phaseshift.metatron.isa.m.type.Obj, studio.phaseshift.metatron.isa.m.type.Obj> config =
+                                    new java.util.LinkedHashMap<>(inst.arg(0).asRec().jvm());
+                            final studio.phaseshift.metatron.isa.m.type.Obj pattern = config.get(uri(PATTERN));
+                            if (null != pattern && pattern.isUri() && !config.containsKey(uri(HOST)))
+                                config.put(uri(HOST), uri(pattern.uriValue().retractPattern()));
+                            final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(config, inst.arg(0).vid()));
+                            studio.phaseshift.metatron.isa.mach.type.Network.Helper.index(client);
+                            return client;
                         } catch (final Exception e) {
                             throw MTronException.of(e);
                         }

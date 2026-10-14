@@ -289,9 +289,35 @@ public interface Memory extends Space, Machine.Component, Closeable {
     void addSpace(final Space space);
 
     /**
+     * {@link studio.phaseshift.metatron.isa.Addressable#index} — memory's arm of the one indexing verb: a
+     * SPACE that exists enters this jurisdiction. The space analog of the network indexing a protocol
+     * client; {@code addSpace} remains the typed workhorse underneath.
+     */
+    @Override
+    default Obj index(final Obj member) {
+        if (member instanceof Space space) {
+            this.addSpace(space);
+            return member;
+        }
+        return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
+    }
+
+    /**
      * deregister the spaces at this level matching {@code pattern}.
      */
     void removeSpace(final fURI pattern);
+
+    /**
+     * {@link studio.phaseshift.metatron.isa.Addressable#drop} — memory's arm of the one retraction verb:
+     * {@code id -> noobj} over the space index, with {@code removeSpace} the typed workhorse underneath.
+     * Answers the space that held the claim, or {@code noobj} when nothing did.
+     */
+    @Override
+    default Obj drop(final fURI id) {
+        final Obj held = this.getSpaceFor(id) instanceof Obj space ? (Obj) space : studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
+        this.removeSpace(id);
+        return held;
+    }
 
     /**
      * The most specific space at <b>this level</b> covering {@code vid}, or {@code null} when none does.

@@ -1996,11 +1996,11 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
  desc     =&gt; 'the agent dr.stynx is here to be of use in the metatron',
  root     =&gt; !*boot/args/internal/agent_home,
  feature  =&gt; [
-  window_message_feature::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){ *&lt;/usr/dr/session/1&gt;.else(
+  token_message_feature::::[on_agent_ctor =&gt; inst(a=&gt;agent::T){ *&lt;/usr/dr/session/1&gt;.else(
                                          session::[agent     =&gt; !*boot/args/internal/agent_home,
                                                    user      =&gt; !*boot/args/internal/user_home,
                                                    name      =&gt; 'general chat',
-                                                   algorithm =&gt; [name=&gt;&lt;message_window&gt;, max=&gt;20]]
+                                                   algorithm =&gt; [max=&gt;262144]]
                                                          ==[_=&gt;_].to(/usr/dr/session/1)).
                                           map(token_counter_tool::[style=&gt;[anchor=&gt;top_right,width=&gt;50]]@&lt;token_widget&gt;)},
                              to            =&gt; inst(tok=&gt;rec::T) { @token_widget&gt;&gt;=(==[style=&gt;_] + *tok).display()  },
@@ -3096,7 +3096,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}m{{r}}e{{c}}T{{g}}A{{g}}T{{c}}R{{g}}O{{m}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{b}}m{{b}}E{{m}}t{{g}}A{{m}}T{{g}}r{{g}}O{{g}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -6972,16 +6972,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6520   6349336   1% /run'
+==&gt;'tmpfs                    6355856       6616   6349240   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  549590680 361367144  61% /'
-==&gt;'tmpfs                   31779272       1056  31778216   1% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032  549761892 361195932  61% /'
+==&gt;'tmpfs                   31779272     133820  31645452   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        272   6355580   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        288   6355564   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1348579976 572628568  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1348726492 572482052  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -6992,6 +6992,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;docs
 ==&gt;dsh-plugins
 ==&gt;'dsh-usage-boot.log'
+==&gt;dsh-usage-data
 ==&gt;'hs_err_pid210432.log'
 ==&gt;'hs_err_pid3714434.log'
 ==&gt;'language.properties'
@@ -7005,7 +7006,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[MACHiNE FailED][infinite fail-loop detected][...]@/sys/fail/63</code></pre>
+==&gt;fail::[mACHInE failEd][infinite fail-loop detected][...]@/sys/fail/63</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7193,7 +7194,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1403/54/31/745?tz=-0600
+==&gt;datetime:://2026.10:1417/13/54/612?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -8974,7 +8975,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              start=&gt;[code=&gt;at(ab).plus('B'),
                      loop=&gt;second::1.0,
                      state=&gt;pause]@/sys/thread/b,
-             time=&gt;datetime:://2026.10:1403/54/34/396?tz=-0600,
+             time=&gt;datetime:://2026.10:1417/13/57/249?tz=-0600,
              runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
@@ -9015,10 +9016,10 @@ mtron&gt; *ab
 ==&gt;virtual::[code=&gt;print('.'),
              loop=&gt;second::2.5]@/sys/thread/example
 mtron&gt; */sys/thread/example.pause()     ​2​
-==&gt;fail::[inst apply failure...mach/inst/pause@1) [machInstSet&lt;760&gt;]][...]@/sys/fail/225
+==&gt;fail::[inst apply failure...mach/inst/pause@1) [machInstSet&lt;807&gt;]][...]@/sys/fail/225
 mtron&gt; */sys/thread/example/state     ​3​
 mtron&gt; */sys/thread/example.resume()     ​4​
-==&gt;fail::[inst apply failure...ach/inst/resume@1) [machInstSet&lt;764&gt;]][...]@/sys/fail/226
+==&gt;fail::[inst apply failure...ach/inst/resume@1) [machInstSet&lt;811&gt;]][...]@/sys/fail/226
 mtron&gt; */sys/thread/example/state     ​5​</code></pre>
 </div>
 </div>

@@ -68,15 +68,15 @@ mtron> bash('ls')
     'CONTRIBUTING.md',
     'dist',
     'docs',
-    ...(14 more)]
+    ...(15 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.4M ...',
+    'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  525G ...',
-    'tmpfs                   31G  1.1M ...',
+    'tmpfs                   31G  131M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -103,7 +103,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'CONTRIBUTING.md',
            'dist',
            'docs',
-           ...(14 more)]]
+           ...(15 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
@@ -113,7 +113,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'CONTRIBUTING.md',
     'dist',
     'docs',
-    ...(15 more)]
+    ...(16 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -154,7 +154,7 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: CONTRIBUTING.md',
     '  File: dist',
     '  File: docs',
-    ...(14 more)]
+    ...(15 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
     '  Size: 43651     	Blocks: 88     ...',
@@ -178,7 +178,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::698,
     bB::409,
     bB::409,
-    ...(14 more)]
+    ...(15 more)]
 ```
 Unit values test against each other's units:
 
@@ -249,9 +249,9 @@ mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::600,
-    free_mem_jvm=>mB::324.89624,
+    free_mem_jvm=>mB::392.96514,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::275.10375,
+    used_mem_jvm=>mB::207.03485,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[run=>0,stop=>0]]

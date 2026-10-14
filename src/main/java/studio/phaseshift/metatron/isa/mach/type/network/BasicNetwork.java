@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type.network;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Network;
@@ -25,6 +26,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.STATUS;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_NETWORK_TID;
@@ -68,5 +70,10 @@ public class BasicNetwork extends MRec implements Network {
     public void close() {
         this.jvm().values().forEach(CommonUtil::close);
         this.jvm().clear();
+    }
+
+    @Override
+    public fURI pattern() {
+        return this.at(PATTERN).uriValue();
     }
 }
