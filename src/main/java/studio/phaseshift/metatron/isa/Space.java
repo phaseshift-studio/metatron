@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 
-public interface Space extends Rec, Closeable {
+public interface Space extends Addressable, Rec, Closeable {
 
     @Override
     default boolean isResolved(final boolean nested) {
@@ -78,16 +78,12 @@ public interface Space extends Rec, Closeable {
 
     Stats stats();
 
-    default Obj read(final String vid) {
-        return this.read(f(vid));
-    }
-
+    // read(fURI)/write(fURI, Obj) and their String overloads are the Addressable contract: a Space is the
+    // storage-shaped Addressable (pattern, q-procs, routes) among the machine's uniform read/write sources.
+    @Override
     Obj read(final fURI vid);
 
-    default Obj write(final String vid, final Obj obj) {
-        return this.write(f(vid), obj);
-    }
-
+    @Override
     Obj write(final fURI vid, final Obj obj);
 
     /**

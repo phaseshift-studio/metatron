@@ -313,6 +313,36 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         return super.write(vid, obj);
     }
 
+    /**
+     * Every instruction set this machine's vocabulary is composed of: this level, the ISAs it imported (in import
+     * order), then the enclosing machine's levels, recursively — each ISA once, nearest first. The walk carries
+     * the visiting set the union read carries, and for the same reason: an import cycle answers a shorter list
+     * rather than recursing forever.
+     */
+    @Override
+    public List<InstSet> members() {
+        final List<InstSet> members = new ArrayList<>();
+        this.members(members, new LinkedHashSet<>());
+        return List.copyOf(members);
+    }
+
+    private void members(final List<InstSet> members, final Set<InstSet> visiting) {
+        if (!visiting.add(this))
+            return;
+        members.add(this);
+        for (final InstSet isa : this.ownReferences())
+            if (isa instanceof BasicInstSet basic)
+                basic.members(members, visiting);
+            else if (visiting.add(isa))
+                members.add(isa);
+        if (null != this.previous) {
+            if (this.previous instanceof BasicInstSet basic)
+                basic.members(members, visiting);
+            else if (visiting.add(this.previous))
+                members.add(this.previous);
+        }
+    }
+
     // ---- the kind accessors merge by the SAME identity rule, so enumeration sees what resolution sees ----
 
     @Override

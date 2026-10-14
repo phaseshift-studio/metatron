@@ -77,10 +77,11 @@ public class FixPointRewriter extends MRec implements Rewriter {
         int hash = c.hashCode();
         int done = this.at(MAX).orElse(jnt(2)).intValue().intValue();
         while (done != 0) {
-            Machine.current().memory().spaces()
-                    .elements()
-                    .filter(r -> r.second() instanceof InstSet)
-                    .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
+            // THE RULES COME FROM INSTRUCTION MEMORY, not from the data index: the machine's own instset is the
+            // union of every ISA this frame uses (own level, its imports, the enclosing machine's), so a rewrite
+            // declared in a child applies in that child and dies with its frame — and an ISA no longer has to be
+            // a registered space for its rules to fire. rewrites() merges by tid identity, nearest level first.
+            Machine.current().instset().rewrites()
                     .forEach(r -> {
                         final long t0 = System.nanoTime();
                         final Code before = rewritten.get();

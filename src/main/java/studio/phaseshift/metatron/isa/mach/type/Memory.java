@@ -314,8 +314,11 @@ public interface Memory extends Space, Machine.Component, Closeable {
     void close();
 
     /**
-     * The space covering {@code vid}: each level in turn via {@link #findSpace}, then the stack, then the
-     * boot/no-boot fallback. This is the address-resolution contract.
+     * The space covering {@code vid}: each level in turn via {@link #findSpace}, then the noobj space. This is
+     * the address-resolution contract, and it DECLINES RATHER THAN THROWS: "no space contains this address" is an
+     * ordinary answer on the read path — {@code Machine.read} falls through to instruction memory on it — so the
+     * miss is a sentinel value ({@code noobjSpace}, whose every read answers {@code noobj}), never a control-flow
+     * event. A caller that must distinguish a miss asks {@link #hasSpaceFor}.
      */
     default <SPACE extends Space> SPACE getSpaceFor(final fURI vid) {
         if (vid.test(NOOBJ))
@@ -325,8 +328,6 @@ public interface Memory extends Space, Machine.Component, Closeable {
             return space;
         // The machine's own keys (/processor, /memory, …) are the read/write path's fallback, handled in
         // readAbsolute/writeAbsolute — never returned here as a cast-to-Space machine (Machine is a Rec, not a Space).
-        if (!BOOTING)
-            throw MTronException.of("no active space supports pattern %s", vid.toUri(false));
         return noobjSpace.single();
     }
 
