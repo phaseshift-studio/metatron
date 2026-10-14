@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -440,12 +440,12 @@ mtron&gt; model::[provider=&gt; ollama,
 <p>Create a workspace for the agent. Create a model for the agent to use for chatting. Create the agent by composing
 the workspace and a chat feature. Then:</p>
 <pre><code class="language-mtron">mtron&gt; [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
-==&gt;fail::[parse error at lin... is t...   ^   could not parse at '[']@/sys/fail/430
+==&gt;fail::[parse error at lin... is t...   ^   could not parse at '[']@/sys/fail/383
 </code></pre>
 <p>The <code>/usr/chatter/#</code> space serves a the default location for features to store their various constructions.</p>
 <pre><code class="language-mtron">mtron&gt; */usr/chatter/chat_result/+
 mtron&gt; [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
-==&gt;fail::[parse error at lin...resul...   ^   could not parse at '[']@/sys/fail/431
+==&gt;fail::[parse error at lin...resul...   ^   could not parse at '[']@/sys/fail/384
 </code></pre>
 <p><strong>A tool is an instruction.</strong> There is no tool registry to populate: anything callable <em>is</em> a tool, and <code>mTool</code>
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a <code>tool_feature</code> can

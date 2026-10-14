@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -448,14 +448,32 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">1</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">haos&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#__m__iot__haos__space__haos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">haos</small></div><div class="d-flex flex-wrap"><a href="#__m__iot__haos__button" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">button</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__iot__haos__entity" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">entity</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__iot__haos__light" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">light</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__iot__haos__number" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">number</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__iot__haos__sensor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sensor</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__iot__haos__switch" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">switch</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">haos&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#__m__iot__haos__space__haos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">haos</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
@@ -468,8 +486,62 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">1</span></h3>
-    <div class="card mb-3" id="__m__iot__haos__space__haos">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">7</span></h3>
+    <div class="card mb-3" id="__m__iot__haos__button">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">button::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+        </span>
+        <small class="text-muted code">/m/iot/haos/button</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/iot/haos/entity::T@/m/iot/haos/button</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
+ {?}icon=&gt;uri::T,
+ {?}name=&gt;str::T,
+ {?}unique_id=&gt;uri::T,
+ {?}state_topic=&gt;uri::T,
+ state=&gt;&lt;#&gt;::T,
+ {?}availability_topic=&gt;uri::T,
+ {?}stat_t=&gt;uri::T,
+ {?}cmd_t=&gt;uri::T,
+ {?}retain=&gt;else(true),
+ {?}last_updated=&gt;str::T,
+ {?}last_changed=&gt;str::T,
+ {?}device=&gt;[{?}configuration_url=&gt;uri::T,
+             {?}connections=&gt;lst::T,
+             {?}hw_version=&gt;str::T,
+             {?}identifiers=&gt;lst::T,
+             {?}name=&gt;str::T]]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__iot__haos__entity">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">entity::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/iot/haos/entity</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}entity_category=&gt;&lt;#&gt;::T,
+ {?}icon=&gt;uri::T,
+ {?}name=&gt;str::T,
+ {?}unique_id=&gt;uri::T,
+ {?}state_topic=&gt;uri::T,
+ state=&gt;&lt;#&gt;::T,
+ {?}availability_topic=&gt;uri::T,
+ {?}stat_t=&gt;uri::T,
+ {?}cmd_t=&gt;uri::T,
+ {?}retain=&gt;else(true),
+ {?}last_updated=&gt;str::T,
+ {?}last_changed=&gt;str::T,
+ {?}device=&gt;[{?}configuration_url=&gt;uri::T,
+             {?}connections=&gt;lst::T,
+             {?}hw_version=&gt;str::T,
+             {?}identifiers=&gt;lst::T,
+             {?}name=&gt;str::T]]]@/m/iot/haos/entity</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="__m__iot__haos__space__haos">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">haos::T</span>
@@ -488,6 +560,126 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__iot__haos__light">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">light::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+        </span>
+        <small class="text-muted code">/m/iot/haos/light</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/iot/haos/entity::T[?[{?}payload_on=&gt;&lt;#&gt;::T,
+ {?}payload_off=&gt;&lt;#&gt;::T,
+ {?}command_topic=&gt;uri::T]]@/m/iot/haos/light</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
+ {?}icon=&gt;uri::T,
+ {?}name=&gt;str::T,
+ {?}unique_id=&gt;uri::T,
+ {?}state_topic=&gt;uri::T,
+ state=&gt;&lt;#&gt;::T,
+ {?}availability_topic=&gt;uri::T,
+ {?}stat_t=&gt;uri::T,
+ {?}cmd_t=&gt;uri::T,
+ {?}retain=&gt;else(true),
+ {?}last_updated=&gt;str::T,
+ {?}last_changed=&gt;str::T,
+ {?}device=&gt;[{?}configuration_url=&gt;uri::T,
+             {?}connections=&gt;lst::T,
+             {?}hw_version=&gt;str::T,
+             {?}identifiers=&gt;lst::T,
+             {?}name=&gt;str::T]]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__iot__haos__number">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">number::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+        </span>
+        <small class="text-muted code">/m/iot/haos/number</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/iot/haos/entity::T[?[platform=&gt;number,
+ payload_off=&gt;&lt;#&gt;::T,
+ {?}enabled=&gt;bool::T,
+ {?}optimistic=&gt;bool::T,
+ {?}command_topic=&gt;uri::T]]@/m/iot/haos/number</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
+ {?}icon=&gt;uri::T,
+ {?}name=&gt;str::T,
+ {?}unique_id=&gt;uri::T,
+ {?}state_topic=&gt;uri::T,
+ state=&gt;&lt;#&gt;::T,
+ {?}availability_topic=&gt;uri::T,
+ {?}stat_t=&gt;uri::T,
+ {?}cmd_t=&gt;uri::T,
+ {?}retain=&gt;else(true),
+ {?}last_updated=&gt;str::T,
+ {?}last_changed=&gt;str::T,
+ {?}device=&gt;[{?}configuration_url=&gt;uri::T,
+             {?}connections=&gt;lst::T,
+             {?}hw_version=&gt;str::T,
+             {?}identifiers=&gt;lst::T,
+             {?}name=&gt;str::T]]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__iot__haos__sensor">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">sensor::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+        </span>
+        <small class="text-muted code">/m/iot/haos/sensor</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/iot/haos/entity::T[?[device_class=&gt;is(or(uri::T,str::T)),
+ unit_of_measurement=&gt;&lt;#&gt;::T,
+ {?}command_topic=&gt;uri::T]]@/m/iot/haos/sensor</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
+ {?}icon=&gt;uri::T,
+ {?}name=&gt;str::T,
+ {?}unique_id=&gt;uri::T,
+ {?}state_topic=&gt;uri::T,
+ state=&gt;&lt;#&gt;::T,
+ {?}availability_topic=&gt;uri::T,
+ {?}stat_t=&gt;uri::T,
+ {?}cmd_t=&gt;uri::T,
+ {?}retain=&gt;else(true),
+ {?}last_updated=&gt;str::T,
+ {?}last_changed=&gt;str::T,
+ {?}device=&gt;[{?}configuration_url=&gt;uri::T,
+             {?}connections=&gt;lst::T,
+             {?}hw_version=&gt;str::T,
+             {?}identifiers=&gt;lst::T,
+             {?}name=&gt;str::T]]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__iot__haos__switch">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">switch::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+        </span>
+        <small class="text-muted code">/m/iot/haos/switch</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/iot/haos/entity::T[?[{?}payload_on=&gt;&lt;#&gt;::T,
+ {?}payload_off=&gt;&lt;#&gt;::T,
+ {?}enabled=&gt;bool::T,
+ {?}optimistic=&gt;bool::T,
+ {?}command_topic=&gt;uri::T]]@/m/iot/haos/switch</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
+ {?}icon=&gt;uri::T,
+ {?}name=&gt;str::T,
+ {?}unique_id=&gt;uri::T,
+ {?}state_topic=&gt;uri::T,
+ state=&gt;&lt;#&gt;::T,
+ {?}availability_topic=&gt;uri::T,
+ {?}stat_t=&gt;uri::T,
+ {?}cmd_t=&gt;uri::T,
+ {?}retain=&gt;else(true),
+ {?}last_updated=&gt;str::T,
+ {?}last_changed=&gt;str::T,
+ {?}device=&gt;[{?}configuration_url=&gt;uri::T,
+             {?}connections=&gt;lst::T,
+             {?}hw_version=&gt;str::T,
+             {?}identifiers=&gt;lst::T,
+             {?}name=&gt;str::T]]</code></div></div>
     
 </div>
 </div><div class="container-xxl mb-4" id="spaces">

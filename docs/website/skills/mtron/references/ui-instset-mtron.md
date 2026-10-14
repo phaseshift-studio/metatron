@@ -100,8 +100,8 @@ mtron> */m/mach/ui/widget?docq
       {?}metadata=>lst::T]][ctor?rng=table_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/table_widget,
                                dom=>'maybe an obj',
                                rng=>'a table widget',
-                               args=>[{?}header=>'a lst of obj table headers',
-                                      {?}row=>'a lst of poly table rows',
+                               args=>[{?}row=>'a lst of poly table rows',
+                                      {?}header=>'a lst of obj table headers',
                                       {?}metadata=>'a lst of rows of data behind the d...'],
                                desc=>'[structural] a tabular data widget'],
           tree_widget=>docs::[obj=>widget::T[?[root=>uri::T,
@@ -112,11 +112,11 @@ mtron> */m/mach/ui/widget?docq
       {?}expand=>uri::T]][ctor?rng=tree_widget&dom=#{?}(<#>::T){<j>}]@/m/mach/ui/widget/tree_widget,
                               dom=>'maybe an obj',
                               rng=>'a tree widget',
-                              args=>[{?}expand=>'branch uris whose children are rea...',
-                                     {?}xref=>'xref=>[max=>N, code=><call>] cross...',
-                                     max=>'the max depth to traverse',
+                              args=>[root=>'the root uri to traverse from',
                                      {?}flatten=>'fold single-folder chains into one...',
-                                     root=>'the root uri to traverse from',
+                                     max=>'the max depth to traverse',
+                                     {?}xref=>'xref=>[max=>N, code=><call>] cross...',
+                                     {?}expand=>'branch uris whose children are rea...',
                                      {?}code=>'transform obj prior to insertion i...'],
                               desc=>'[structural] the root uri space is...'],
           ...(10 more)]
@@ -339,9 +339,9 @@ mtron> g10 -> [,].repeat(code=>+['.'],until=>loop()?>9)-<[_].repeat(code=>+(>>0.
      ...(3 more)],
     ...(3 more)]
 mtron> board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
-==>fail::[unable to construc...border=>continuous]]@/usr/uidoc/board]@/sys/fail/517
+==>fail::[unable to construc...border=>continuous]]@/usr/uidoc/board]@/sys/fail/431
 mtron> @/usr/uidoc/board.display()             [-- pin it once --]
-==>fail::[lhs range does not...y?rng=noobj{0}&dom=widget(){<j>}@<1>]]@/sys/fail/518
+==>fail::[lhs range does not...y?rng=noobj{0}&dom=widget(){<j>}@<1>]]@/sys/fail/432
 mtron> @/usr/uidoc/g10/1/0 >>= '@'             [-- one cell of the REFERENT --]
 ==>'@'
 mtron> @/usr/uidoc/g10/+/0 >>= ''             [-- every row's column 0 --]

@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -439,7 +439,7 @@ relational tables, typed rows, and SQL rewrites within the metatron</p>
                      pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          const=&gt;[[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/web/helper],
+          const=&gt;[[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/tble/helper],
           type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
           inst=&gt;[sql?rng=rec{*}&amp;dom=tblespace(str::T){&lt;j&gt;}],
           rewrite=&gt;[/m/tble/inst/rewrite/sql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
@@ -560,7 +560,7 @@ relational tables, typed rows, and SQL rewrites within the metatron</p>
         <span class="code text-secondary fw-bold">helper</span>
         <small class="text-muted code">/m/tble/helper</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/web/helper</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/tble/helper</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> a collection of tble related utilities</p>
 </div>

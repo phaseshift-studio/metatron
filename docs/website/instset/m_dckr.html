@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -456,7 +456,7 @@ an instruction set to manipulate docker and docker compose</p>
                  resource::T[?[{?}driver=&gt;uri::T,
    {?}scope=&gt;uri::T,
    {?}container=&gt;&lt;#&gt;::T]]@/m/dckr/networks,
-                 rec::T[?[services=&gt;[=&gt;]]]@/m/inst/compose]]@/m/dckr</code></pre>
+                 rec::T[?[services=&gt;[=&gt;]]]@/m/dckr/compose]]@/m/dckr</code></pre>
                     </div>
                 </div>
             </div>
@@ -464,12 +464,18 @@ an instruction set to manipulate docker and docker compose</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
+    <h6 class="text-primary mb-2">constants</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__dckr__serializer__obj_docker" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">obj_docker</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a></div>
+</div><div class="mb-3">
     <h6 class="text-primary mb-2">types</h6>
     <div class="d-flex flex-wrap"><a href="#__m__dckr__compose" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">compose</span>
@@ -501,6 +507,16 @@ an instruction set to manipulate docker and docker compose</p>
 </a></div>
 </div></div>
     </div>
+</div><div class="container-xxl mb-4" id="consts">
+    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">1</span></h3>
+    <div class="card mb-3" id="__m__dckr__serializer__obj_docker">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">obj_docker</span>
+        <small class="text-muted code">/m/dckr/serializer/obj_docker</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dckr/serializer/obj_docker::[=&gt;]@/m/dckr/serializer/obj_docker</code></pre></div>
+    
+</div>
 </div><div class="container-xxl mb-4" id="types">
     <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">7</span></h3>
     <div class="card mb-3" id="__m__dckr__compose">
@@ -511,7 +527,7 @@ an instruction set to manipulate docker and docker compose</p>
         </span>
         <small class="text-muted code">/m/dckr/compose</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[services=&gt;[=&gt;]]]@/m/inst/compose</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[services=&gt;[=&gt;]]]@/m/dckr/compose</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a docker compose stack — refines rec::T</p>

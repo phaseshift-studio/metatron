@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -563,7 +563,7 @@ the reflective instruction set of metatron featuring process, monad, and code in
    {?}yield=&gt;thread::T,
    {?}loop=&gt;real::T@/m/math/time,
    {?}state=&gt;union(stop,run,pause),
-   {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread,
+   {?}result=&gt;&lt;#&gt;::T]]@/m/inst/thread,
                  thread::T[][ctor?rng=core&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/core,
                  thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/thread/virtual],
           inst=&gt;[/m/inst/thread?rng=thread&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
@@ -746,10 +746,10 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the compiler contract of machine::T — a machine&#39;s lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler IS its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=&gt;] is the default compiler.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#'the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry'" class="text-info">&#39;the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry&#39;</a>
-  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
   <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
-  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
+  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
+  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#'the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry'" class="text-info">&#39;the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -952,11 +952,11 @@ of the metatron graph (/.) is the root machine.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'referential access to processing threads and computational state'" class="text-info">&#39;referential access to processing threads and computational state&#39;</a>
-  <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#'peers and shared peer state'" class="text-info">&#39;peers and shared peer state&#39;</a>
-  <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#'machine instruction set architecture'" class="text-info">&#39;machine instruction set architecture&#39;</a>
-  <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#'a frame of reference in space constrained by parent machine'" class="text-info">&#39;a frame of reference in space constrained by parent machine&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#'peers and shared peer state'" class="text-info">&#39;peers and shared peer state&#39;</a>
+  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'referential access to processing threads and computational state'" class="text-info">&#39;referential access to processing threads and computational state&#39;</a>
   <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'parser, rewriter, resolver, and typer'" class="text-info">&#39;parser, rewriter, resolver, and typer&#39;</a>
+  <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#'a frame of reference in space constrained by parent machine'" class="text-info">&#39;a frame of reference in space constrained by parent machine&#39;</a>
+  <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#'machine instruction set architecture'" class="text-info">&#39;machine instruction set architecture&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__memory">
@@ -1044,11 +1044,11 @@ source and cannot drift.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#"machine's own connections: <service-uri> => peer::T"" class="text-info">&quot;machine&#39;s own connections: &lt;service-uri&gt; =&gt; peer::T&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method: peer => status'" class="text-info">&#39;the health method: peer =&gt; status&#39;</a>
   <a href="#{?}name" class="text-light">{?}name</a> <span class="text-light">=&gt;</span> <a href="#'a human friendly name for the nested network'" class="text-info">&#39;a human friendly name for the nested network&#39;</a>
-  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method: peer => status'" class="text-info">&#39;the health method: peer =&gt; status&#39;</a>
-  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism'" class="text-info">&#39;the roster generation mechanism: &lt;mechanism&gt; =&gt; &lt;handler tid as a uri&gt;, one entry per mechanism&#39;</a>
+  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#"machine's own connections: <service-uri> => peer::T"" class="text-info">&quot;machine&#39;s own connections: &lt;service-uri&gt; =&gt; peer::T&quot;</a>
   <a href="#{?}roster" class="text-light">{?}roster</a> <span class="text-light">=&gt;</span> <a href="#'known machines, connectionless: <machine> => uri{+} — every address that machine answers at'" class="text-info">&#39;known machines, connectionless: &lt;machine&gt; =&gt; uri{+} — every address that machine answers at&#39;</a>
+  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism'" class="text-info">&#39;the roster generation mechanism: &lt;mechanism&gt; =&gt; &lt;handler tid as a uri&gt;, one entry per mechanism&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1090,12 +1090,12 @@ reference that crossed a wire, known here and not reachable from here.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health report computed for this peer — computed on call, never stored'" class="text-info">&#39;the health report computed for this peer — computed on call, never stored&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#handler" class="text-light">handler</a> <span class="text-light">=&gt;</span> <a href="#'the protocol surface at that endpoint, named as a uri: <__m__web__ws__mtron_ws>, <__m__web__http__mtron_http>, <__m__web__mcp__mcp_ws>'" class="text-info">mcp_ws&gt;&#39;</a>
   <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#"the peer's service uri, scheme:____host:port — the connection key, and the one field a peer cannot do without"" class="text-info">host:port — the connection key, and the one field a peer cannot do without&quot;</a>
-  <a href="#handler" class="text-light">handler</a> <span class="text-light">=&gt;</span> <a href="#'the protocol surface at that endpoint, named as a uri: <__m__web__ws__mtron_ws>, <__m__web__http__mtron_http>, <__m__web__mcp__mcp_ws>'" class="text-info">mcp_ws&gt;&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the machine's name in the distributed expression that means it — a bare name, never an address"" class="text-info">&quot;the machine&#39;s name in the distributed expression that means it — a bare name, never an address&quot;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
+  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health report computed for this peer — computed on call, never stored'" class="text-info">&#39;the health report computed for this peer — computed on call, never stored&#39;</a>
   <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#"the reach: an inst that ships a message to this peer and answers with the peer's result"" class="text-info">&quot;the reach: an inst that ships a message to this peer and answers with the peer&#39;s result&quot;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the machine's name in the distributed expression that means it — a bare name, never an address"" class="text-info">&quot;the machine&#39;s name in the distributed expression that means it — a bare name, never an address&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1207,8 +1207,8 @@ constructor would rebuild it here, the one thing it must not be.
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the processor of a frame that executes elsewhere: applying code here ships it to the peer and answers with what the peer computed</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#'the reach the code is shipped through'" class="text-info">&#39;the reach the code is shipped through&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to hand to the peer'" class="text-info">&#39;the code to hand to the peer&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to hand to the peer'" class="text-info">&#39;the code to hand to the peer&#39;</a>
+  <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#'the reach the code is shipped through'" class="text-info">&#39;the reach the code is shipped through&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__resolver">
@@ -1226,8 +1226,8 @@ constructor would rebuild it here, the one thing it must not be.
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the resolution contract of compiler::T — the stage that turns a generic instruction chain into a typed one, and the compiler&#39;s widest-reaching stage: it threads each inst&#39;s range into the next inst&#39;s domain and, per inst, delegates to a selector (fetch and order the candidates) and a binder (make the chosen candidate concrete, or reject it), so which concrete inst a call becomes — and with it whether the inst is a filter, a gather/barrier, or an initial — is settled here, per element type. What it settles is what the processor then runs (a filter&#39;s {0,1} wing dropped for compile-time typing, an initial inst seeding the element type from its own argument, a cast&#39;s range rebound to the named type), and an inst it cannot resolve is left in place for runtime resolution — a semi-resolved code, not a failed one. Structural, not nominal: its two collaborators are rec fields, both optional and both defaulting, so a resolver is its walk plus whichever strategies it names. Its members are scoring_resolver::T (the default pair), firstfind_resolver::T (first match, no scoring) and identity_resolver::T (the no-op)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}selector" class="text-light">{?}selector</a> <span class="text-light">=&gt;</span> <a href="#'the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)'" class="text-info">&#39;the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)&#39;</a>
-  <a href="#{?}binder" class="text-light">{?}binder</a> <span class="text-light">=&gt;</span> <a href="#"the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"" class="text-info">&quot;the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call&#39;s arguments)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}binder" class="text-light">{?}binder</a> <span class="text-light">=&gt;</span> <a href="#"the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"" class="text-info">&quot;the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call&#39;s arguments)&quot;</a>
+  <a href="#{?}selector" class="text-light">{?}selector</a> <span class="text-light">=&gt;</span> <a href="#'the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)'" class="text-info">&#39;the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1325,18 +1325,18 @@ scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code
  {?}yield=&gt;thread::T,
  {?}loop=&gt;real::T@/m/math/time,
  {?}state=&gt;union(stop,run,pause),
- {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread</code></pre></div>
+ {?}result=&gt;&lt;#&gt;::T]]@/m/inst/thread</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
-  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
   <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">

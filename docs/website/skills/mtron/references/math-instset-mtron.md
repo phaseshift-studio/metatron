@@ -76,7 +76,7 @@ under `/m/math/+` and available via the standard type resolution system.
 ```mtron
 mtron> [-- current system time --]
 mtron> datetime_now()
-==>datetime:://2026.10:1318/01/09/449?tz=-0600
+==>datetime:://2026.10:1403/55/21/907?tz=-0600
 mtron> [-- from record (goes through .as(uri::T) first) --]
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
@@ -241,13 +241,13 @@ Time units require a real-backed value — an int-backed time is a type violatio
 
 ```mtron
 mtron> day::2.as(millis::T)         [-- int-backed time (bad) --]
-==>fail::[2 is not a time::T... 	while parsing: day::2.as(millis::T)]@/sys/fail/467
+==>fail::[2 is not a time::T... 	while parsing: day::2.as(millis::T)]@/sys/fail/389
 mtron> hour::2.as(minute::T)        [-- int-backed time (bad) --]
-==>fail::[2 is not a time::T...	while parsing: hour::2.as(minute::T)]@/sys/fail/468
+==>fail::[2 is not a time::T...	while parsing: hour::2.as(minute::T)]@/sys/fail/390
 mtron> nanos::2.as(millis::T)       [-- int-backed time (bad) --]
-==>fail::[2 is not a time::T...while parsing: nanos::2.as(millis::T)]@/sys/fail/469
+==>fail::[2 is not a time::T...while parsing: nanos::2.as(millis::T)]@/sys/fail/391
 mtron> micros::2.as(millis::T)      [-- int-backed time (bad) --]
-==>fail::[2 is not a time::T...hile parsing: micros::2.as(millis::T)]@/sys/fail/470
+==>fail::[2 is not a time::T...hile parsing: micros::2.as(millis::T)]@/sys/fail/392
 ```
 #### relational operators
 

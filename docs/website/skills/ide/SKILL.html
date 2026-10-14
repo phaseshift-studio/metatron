@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -482,7 +482,7 @@ asserted in the acceptance test).</p>
 an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
 maven build commands are attached to the <code>project::T</code> for each of access.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
-==&gt;fail::[inst apply failure...ec::T (at /m/inst/as@1) [Project&lt;84&gt;]][...]@/sys/fail/172
+==&gt;fail::[inst apply failure...ec::T (at /m/inst/as@1) [Project&lt;84&gt;]][...]@/sys/fail/139
 </code></pre>
 <p>Now that the project is stored in space, build commands can be added and the project can be built.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
@@ -502,9 +502,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
               mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::823,
+            runtime=&gt;millis::725,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/a0488b9e]
+            output=&gt;!*/sys/tmp/50c140a3]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>

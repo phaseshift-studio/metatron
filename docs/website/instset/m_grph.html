@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -483,7 +483,7 @@ from vertex to vertex, the edge of the metatron is traversed</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">13</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">7</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">8</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">13</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">7</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -501,6 +501,18 @@ from vertex to vertex, the edge of the metatron is traversed</p>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">schema</small></div><div class="d-flex flex-wrap"><a href="#__m__grph__schema__modern" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">modern</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">schema&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">modern</small></div></div><div class="d-flex flex-wrap"><a href="#__m__grph__schema__modern__created" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">created</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__grph__schema__modern__knows" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">knows</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__grph__schema__modern__person" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">person</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__grph__schema__modern__software" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">software</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
@@ -578,8 +590,22 @@ from vertex to vertex, the edge of the metatron is traversed</p>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">4</span></h3>
-    <div class="card mb-3" id="__m__grph__edge">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">8</span></h3>
+    <div class="card mb-3" id="__m__grph__schema__modern__created">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">created::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__edge" class="instset-doc-small-code text-info code">/m/grph/edge::T</a></span>
+        </span>
+        <small class="text-muted code">/m/grph/schema/modern/created</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/created</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__grph__edge" class="code inherited-link">edge::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
+ IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__grph__edge">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">edge::T</span>
@@ -608,6 +634,20 @@ from vertex to vertex, the edge of the metatron is traversed</p>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> a key/value attributed element that is refined by vrtx::T and edge::T</p>
 </div>
+</div><div class="card mb-3" id="__m__grph__schema__modern__knows">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">knows::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__edge" class="instset-doc-small-code text-info code">/m/grph/edge::T</a></span>
+        </span>
+        <small class="text-muted code">/m/grph/schema/modern/knows</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/knows</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__grph__edge" class="code inherited-link">edge::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
+ IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]</code></div></div>
+    
 </div><div class="card mb-3" id="__m__grph__schema__modern">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -621,6 +661,30 @@ from vertex to vertex, the edge of the metatron is traversed</p>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> a schema for the modern graph dataset</p>
 </div>
+</div><div class="card mb-3" id="__m__grph__schema__modern__person">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">person::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__vrtx" class="instset-doc-small-code text-info code">/m/grph/vrtx::T</a></span>
+        </span>
+        <small class="text-muted code">/m/grph/schema/modern/person</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@/m/grph/schema/modern/person</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__grph__vrtx" class="code inherited-link">vrtx::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__grph__schema__modern__software">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">software::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__vrtx" class="instset-doc-small-code text-info code">/m/grph/vrtx::T</a></span>
+        </span>
+        <small class="text-muted code">/m/grph/schema/modern/software</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@/m/grph/schema/modern/software</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__grph__vrtx" class="code inherited-link">vrtx::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}OUT=&gt;[uri::T=&gt;edge::T],
+ {?}IN=&gt;[uri::T=&gt;edge::T]]</code></div></div>
+    
 </div><div class="card mb-3" id="__m__grph__vrtx">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>

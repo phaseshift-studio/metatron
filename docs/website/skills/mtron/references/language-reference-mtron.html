@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -669,7 +669,7 @@ mtron&gt; [a,b].as(rec::T)          [-- [0=&gt;a,1=&gt;b] --]
 mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate lets it through) --]
 ==&gt;posint::2
 mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
-==&gt;fail::[-1 is not a int::T...))]@posint 	while parsing: posint::-1]@/sys/fail/307
+==&gt;fail::[-1 is not a int::T...))]@posint 	while parsing: posint::-1]@/sys/fail/268
 </code></pre>
 <hr />
 <h3>8. Mapping &amp; Filtering</h3>
