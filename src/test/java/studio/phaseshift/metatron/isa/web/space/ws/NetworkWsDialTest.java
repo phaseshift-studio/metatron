@@ -25,6 +25,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -66,8 +67,14 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
     }
 
     @AfterEach
-    void retractPeer() {
-        Machine.current().network().disconnect(this.service());
+    void retractPeer() throws Exception {
+        final Network network = Machine.current().network();
+        network.disconnect(this.service());
+        // the dial's close reaches the listener async; wait for the co-mounted inbound to retract so
+        // each test starts with an empty reach
+        final long deadline = System.currentTimeMillis() + 2000;
+        while (System.currentTimeMillis() < deadline && network.peers().elements().count() > 0)
+            Thread.sleep(50);
     }
 
     @Test
@@ -95,6 +102,25 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
         Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
         Machine.write(f("ws://localhost:" + wsPort + "/t/wire/y"), jnt(7));
         assertEquals(jnt(7), Machine.read(f("/t/wire/y")), "a write through the peer lands at the far side");
+    }
+
+    @Test
+    void testInboundConnectIsCoMounted() throws Exception {
+        final Network network = Machine.current().network();
+        network.connect(this.dialURI(), WS_CLIENT_TID);
+        // both ends live in this JVM, so the SAME network holds the dialed service peer AND — once the
+        // listener's co-mount lands (the accept runs on the server's worker thread) — an inbound peer
+        // keyed by the client's ephemeral authority
+        final long deadline = System.currentTimeMillis() + 2000;
+        long inbound = 0;
+        while (System.currentTimeMillis() < deadline && 0 == inbound) {
+            inbound = network.peers().elements()
+                    .filter(kv -> kv.first().isUri() && !kv.first().uriValue().equals(this.service()))
+                    .count();
+            if (0 == inbound)
+                Thread.sleep(50);
+        }
+        assertEquals(1L, inbound, "the listener co-mounts an inbound peer::T for the connection");
     }
 
     @Test

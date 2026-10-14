@@ -188,17 +188,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         if (dialed.isNoObj() || dialed.isFail())
             return noobj();
         // a dialer answers either the transport itself (loop) or a protocol CLIENT whose send_recv is the
-        // transport (the client is kept on the peer so disconnect can hang up). THE TRANSPORT CONVENTION
-        // IS LHS-IS-THE-MESSAGE — probe() and the read/write arms apply the message as the lhs — while a
-        // protocol client's send_recv takes it as arg(0): adapt HERE, once, so every client protocol
-        // inherits the convention without knowing it (unadapted, send_recv shipped an empty arg and
-        // answered noobj — measured).
-        final Obj reach = dialed.isRec() ? dialed.asRec().<Obj>at(uri(SEND_RECV)) : noobj();
-        final Obj transport = dialed.isObjInst() ? dialed
-                : reach.isObjInst() ? instLambda(message ->
-                        reach.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(message)).apply(noobj()))
-                : dialed.isRec() ? dialed.asRec().<Obj>at(uri(TRANSPORT))
-                : noobj();
+        // transport (the client is kept on the peer so disconnect can hang up) -- adapted to the
+        // transport convention in ONE place, Helper.asTransport.
+        final Obj transport = Helper.asTransport(dialed);
         if (!transport.isObjInst()) {
             CommonUtil.close(dialed);
             return noobj();
@@ -211,6 +203,36 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             peer.asRec().at(uri(HANDLER), uri(handler), MUTABLE);
         if (dialed.isRec() && dialed != transport)
             peer.asRec().at(uri(CLIENT), dialed, MUTABLE);
+        peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
+        this.at(uri(PEER), this.peers().plus(rec(uri(service), peer)), MUTABLE);
+        return peer;
+    }
+
+    /**
+     * ACCEPT — the CO-MOUNT: the listener's half of {@link #connect(fURI)}. An INBOUND connection mints a
+     * peer exactly as an outbound dial does (server : peer :: constructor : instance), keyed by the
+     * remote's socket authority, with the session's reply channel as the transport. The inbound peer is
+     * ANONYMOUS until an identity exchange upgrades it — no {@code host} field, because an ephemeral
+     * client port is not a place to dial back to: reach lives exactly as long as the socket, and the
+     * listener retracts it with {@link #disconnect(fURI)} when the socket closes.
+     */
+    default Obj accept(final fURI remote, final Obj session) {
+        final fURI service = remote.path(List.of());
+        final Obj existing = this.peers().elements()
+                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
+                .map(Rel::second)
+                .filter(Obj::isRec)
+                .findFirst().orElse(noobj());
+        if (!existing.isNoObj())
+            return existing;
+        final Obj transport = Helper.asTransport(session);
+        if (!transport.isObjInst())
+            return noobj();
+        final Obj peer = rec(
+                uri(AUTHORITY), uri(service),
+                uri(TRANSPORT), transport);
+        if (session.isRec() && session != transport)
+            peer.asRec().at(uri(CLIENT), session, MUTABLE);
         peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
         this.at(uri(PEER), this.peers().plus(rec(uri(service), peer)), MUTABLE);
         return peer;
@@ -387,6 +409,23 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                     || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
         }
 
+
+        /**
+         * A SESSION'S REACH, adapted to the transport convention: a transport is applied with the message
+         * as the LHS — the MONAD seat, code riding quoted in the arg seat (x.send_recv(|f)) — while a
+         * protocol session's send_recv takes its payload as arg(0). One adapter serves both directions of
+         * the dial: connect's client and accept's inbound session. Unadapted, send_recv shipped an empty
+         * arg and answered noobj — measured.
+         */
+        public static Obj asTransport(final Obj session) {
+            if (session.isObjInst())
+                return session;
+            final Obj reach = session.isRec() ? session.asRec().<Obj>at(uri(SEND_RECV)) : noobj();
+            if (reach.isObjInst())
+                return instLambda(message ->
+                        reach.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(message)).apply(noobj()));
+            return session.isRec() ? session.asRec().<Obj>at(uri(TRANSPORT)) : noobj();
+        }
 
         /**
          * THE DIAL TABLE, scheme- then handler-routed — the step a description takes to become a peer.
