@@ -262,6 +262,7 @@ public final class Tokens {
     public static final String SCHEME = "scheme";
     public static final String AUTHORITY = "authority";
     public static final String SUB = "sub";
+    public static final String CLIENTQ = "clientq";
     public static final String SUBQ = "subq";
     public static final String PATTERN = "pattern";
     public static final String SERIALIZER = "serializer";

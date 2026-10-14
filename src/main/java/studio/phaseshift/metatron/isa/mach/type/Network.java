@@ -176,7 +176,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     default Obj connect(final fURI dialURI, final fURI handler) {
-        final fURI service = dialURI.path(List.of());
+        // the service KEY is the bare authority with ?clientq retracted: the identity processor is
+        // consumed by the connection itself, while every OTHER ?q processor is left for downstream
+        // processing — only the one the dial spent comes off.
+        final fURI service = dialURI.path(List.of()).removeQ(CLIENTQ);
         final Obj existing = this.peers().elements()
                 .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
                 .map(Rel::second)
@@ -192,7 +195,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // transport convention in ONE place, Helper.asTransport.
         final Obj transport = Helper.asTransport(dialed);
         if (!transport.isObjInst()) {
-            CommonUtil.close(dialed);
+            Helper.writeComplete(noobj(), dialed);
             return noobj();
         }
         final Obj peer = rec(
@@ -217,7 +220,11 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * listener retracts it with {@link #disconnect(fURI)} when the socket closes.
      */
     default Obj accept(final fURI remote, final Obj session) {
-        final fURI service = remote.path(List.of());
+        // IDENTITY RIDES THE DIAL: ws://host:port/mtron?clientq=builder2 — the ?clientq processor on
+        // the connection uri IS the identity exchange (no announce message, no anonymous state to
+        // upgrade), so a server that exposes the full connection uri mints a NAMED peer on accept.
+        final String name = remote.q(CLIENTQ);
+        final fURI service = remote.path(List.of()).removeQ(CLIENTQ);
         final Obj existing = this.peers().elements()
                 .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
                 .map(Rel::second)
@@ -231,6 +238,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         final Obj peer = rec(
                 uri(AUTHORITY), uri(service),
                 uri(TRANSPORT), transport);
+        if (null != name && !name.isEmpty())
+            peer.asRec().at(uri(NAME), str(name), MUTABLE);
         if (session.isRec() && session != transport)
             peer.asRec().at(uri(CLIENT), session, MUTABLE);
         peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
@@ -245,7 +254,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * an absent one (the component predicate's map idiom rejects the empty rec's noobj entry — measured).
      */
     default Obj disconnect(final fURI authority) {
-        final fURI service = authority.path(List.of());
+        final fURI service = authority.path(List.of()).removeQ(CLIENTQ);
         final Rec peers = this.peers();
         final Obj keyed = peers.elements()
                 .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
@@ -254,9 +263,11 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         if (keyed.isNoObj())
             return noobj();
         final Obj peer = keyed.asRel().second();
+        // the member is a rec and a rec is not closeable -- its VALUES hold the closeables (the
+        // protocol client), so the displaced values are what the contract receives, then the peer.
         if (peer.isRec())
-            peer.asRec().jvm().values().forEach(CommonUtil::close);
-        CommonUtil.close(peer);
+            peer.asRec().values().forEach(v -> Helper.writeComplete(noobj(), v));
+        Helper.writeComplete(noobj(), peer);
         final List<Obj> kept = peers.elements().filter(kv -> !kv.equals(keyed)).map(kv -> (Obj) kv).toList();
         this.at(uri(PEER), kept.isEmpty() ? noobj() : rec(kept.stream().map(Obj::asRel)), MUTABLE);
         return peer;
@@ -417,6 +428,19 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * the dial: connect's client and accept's inbound session. Unadapted, send_recv shipped an empty
          * arg and answered noobj — measured.
          */
+        /**
+         * THE CLOSE-BEFORE-CLEAR CONTRACT, the network's copy of {@code Space.Helper.writeComplete}:
+         * writing {@code noobj} over a live value closes what it displaces, so "write to noobj" IS the
+         * universal hang-up and no separate disconnect machinery exists. Today the Java-side retraction
+         * paths route through it; once the peer map is mounted as a writable space, the space write path
+         * calls its own copy and a match-write ({@code ==[<x> => close()]}) hangs up the same way.
+         */
+        public static Obj writeComplete(final Obj newObj, final Obj currentObj) {
+            if (newObj.isNoObj())
+                currentObj.stream().forEach(CommonUtil::close);
+            return currentObj;
+        }
+
         public static Obj asTransport(final Obj session) {
             if (session.isObjInst())
                 return session;

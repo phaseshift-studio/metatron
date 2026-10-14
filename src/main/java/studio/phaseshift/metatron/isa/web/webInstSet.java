@@ -521,6 +521,7 @@ public class webInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(MCP_CLIENT_TID)
                                         .isaPredicate(rec(
+                                                uri(PATTERN).maybe().asUri(), URI_TYPE,
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(TRANSPORT).maybe(), URI_TYPE,
                                                 uri(COMMAND).maybe(), LST_TYPE,
@@ -531,6 +532,7 @@ public class webInstSet extends AbstractInstSet {
                                                 (x, inst) -> new mcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
                                         .create(), "an mcp client type specification", "a connection to an existing mcp server",
                                 Map.of(
+                                        uri(PATTERN).maybe(), "the client's claim as a Space: the remote address space it caches, host derived by retracting the pattern (ws://host:port/mcp/#)",
                                         uri(HOST).maybe(), "the mcp server endpoint (optional for stdio)",
                                         uri(TRANSPORT).maybe(), "specify the transport if host schema resolution isn't sufficient",
                                         uri(COMMAND).maybe(), "only necessary for stdio mcp servers, where the client is the server",

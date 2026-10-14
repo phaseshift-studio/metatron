@@ -30,18 +30,20 @@ import studio.phaseshift.metatron.isa.mach.type.Network;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 
 /**
- * NETWORK CONNECT OVER A REAL WIRE — the loop test\u0027s equality carried one transport out: the dial
- * constructs a {@code ws_client} (the client type\u0027s constructor IS the dialer), its {@code send_recv}
- * becomes the peer\u0027s transport, and a read through the peer must answer exactly what the far side\u0027s
- * local read answers. The far side here is this same JVM\u0027s machine behind a real websocket, so the
+ * NETWORK CONNECT OVER A REAL WIRE — the loop test's equality carried one transport out: the dial
+ * constructs a {@code ws_client} (the client type's constructor IS the dialer), its {@code send_recv}
+ * becomes the peer's transport, and a read through the peer must answer exactly what the far side's
+ * local read answers. The far side here is this same JVM's machine behind a real websocket, so the
  * equality is checkable without a second process.
  */
 @Isolated
@@ -128,5 +130,30 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
         final Obj first = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
         final Obj second = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
         assertEquals(first, second, "connect is ensure-peered: a dialed service answers its existing peer, never a second socket");
+    }
+
+    @Test
+    void testClientqNamesTheInboundPeer() throws Exception {
+        final Network network = Machine.current().network();
+        final Obj dialed = network.connect(this.dialURI().q(CLIENTQ, "builder2"), WS_CLIENT_TID);
+        // IDENTITY RIDES THE DIAL: the ?clientq processor on the connection uri IS the exchange — no
+        // announce message, no anonymous-then-upgrade — so the listener's co-mount mints a NAMED peer
+        // the moment the socket opens (the accept runs on the server's worker thread, hence the wait).
+        final long deadline = System.currentTimeMillis() + 2000;
+        Obj inbound = noobj();
+        while (System.currentTimeMillis() < deadline && !inbound.isRec()) {
+            inbound = network.peers().elements()
+                    .filter(kv -> kv.first().isUri() && !kv.first().uriValue().equals(this.service()))
+                    .map(kv -> (Obj) kv.second())
+                    .filter(Obj::isRec)
+                    .findFirst().orElse(noobj());
+            if (!inbound.isRec())
+                Thread.sleep(50);
+        }
+        assertEquals(str("builder2"), inbound.asRec().<Obj>at(uri(NAME)),
+                "the ?clientq processor names the inbound peer on accept");
+        // and the ?q processor never leaks into the roster: the dial's own peer keys on the BARE authority
+        assertEquals(this.service(), dialed.asRec().<Obj>at(uri(AUTHORITY)).uriValue(),
+                "service keys are q-stripped — the dial's processors belong to the dial, not the key");
     }
 }

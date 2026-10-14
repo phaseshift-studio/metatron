@@ -214,6 +214,33 @@ public class httpSpaceTest extends AbstractSpaceTest {
     }
 
     @Test
+    public void testQueryParamsReachTheServerSide() throws Exception {
+        // THE CONNECTION URI CARRIES ITS ?q PROCESSORS TO THE SERVER. A RAW jdk http client makes the
+        // proof decisive: no client-side space exists to consume the processor, so whatever changes in
+        // the response changed on the SERVER, driven solely by the query param. The contract being
+        // pinned is the handler's: web_httpHandler reads with qprocLess() and spends ?mimeq on the
+        // RESPONSE — the processor negotiates the serialization, it never alters the far side's read.
+        // (?clientq rides the connection uri the same way and is spent by the network's accept.)
+        final java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+        final java.net.http.HttpResponse<String> plain = client.send(
+                java.net.http.HttpRequest.newBuilder()
+                        .uri(java.net.URI.create(f(BASE_URL).extend("index.html").toString())).GET().build(),
+                java.net.http.HttpResponse.BodyHandlers.ofString());
+        final java.net.http.HttpResponse<String> typed = client.send(
+                java.net.http.HttpRequest.newBuilder()
+                        .uri(java.net.URI.create(f(BASE_URL).extend("index.html")
+                                .q(QCollection.MIMEQ_PATTERN.toString(), MIME.MIMEType.APPLICATION_MTRON.value).toString())).GET().build(),
+                java.net.http.HttpResponse.BodyHandlers.ofString());
+        assertTrue(plain.body().contains("<html"), "without a query the route serves the html source");
+        final String plainType = plain.headers().firstValue(MIME.MIMEType.VALUE).orElse("");
+        final String typedType = typed.headers().firstValue(MIME.MIMEType.VALUE).orElse("");
+        assertTrue(typedType.startsWith(MIME.MIMEType.APPLICATION_MTRON.value),
+                "?mimeq on the connection uri reached the server and picked the response serializer, got: " + typedType);
+        assertNotEquals(plainType, typedType, "the query param changed the server's response content-type");
+        assertNotEquals(plain.body(), typed.body(), "the query param changed the server's serialization of the same obj");
+    }
+
+    @Test
     public void testFsSpaceDirectRead() {
         final Obj direct = Machine.read("local:web/test.txt");
         assertNotEquals(noobj(), direct, "direct fsSpace read should not be noobj");
