@@ -102,6 +102,9 @@ public class mcpClient extends MRec implements AutoCloseable {
                 return BOOL_FALSE;
             }
         })));
+        // indexing is a BACKGROUND behavior upon successful construction: the connected client
+        // writes itself into the network's index, as a space's constructor indexes into Memory
+        studio.phaseshift.metatron.isa.mach.type.Network.Helper.index(this);
         final Rec tools = rec();
         this.client.listTools().forEach(t -> {
             try {

@@ -109,7 +109,8 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
      */
     @Override
     protected Map<String, Directive> directives() {
-        return Map.of(
+        // Map.of caps at ten pairs, which this suite has reached — the overflow lives in a mutable copy
+        final Map<String, Directive> all = new java.util.LinkedHashMap<>(Map.<String, Directive>of(
                 "ROSTER_CLEAR", args -> Machine.write(Network.ROOT_ROSTER, rec(mutableMap())),
                 "CLUSTER", args -> {
                     this.closeCluster();
@@ -129,7 +130,17 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
                     final Obj first = report.stream().findFirst().orElse(noobj());
                     final Obj peerStatus = first.isRec() ? (Obj) first.asRec().at(uri(STATUS)) : noobj();
                     this.probe("status", peerStatus.isRec() ? (Obj) peerStatus.asRec().at(uri(KIND)) : noobj());
-                });
+                }));
+        all.put("PROBE_PEERCOUNT", args -> {
+            LOG.debug("probe peercount machine=%s net=%s count=%s", System.identityHashCode(Machine.current()), System.identityHashCode(this.network()), this.network().peers().elements().count());
+            this.probe("peercount", jnt(this.network().peers().elements().count()));
+        });
+        all.put("DISCONNECT", args -> this.network().disconnect(f(args[0])));
+        // the java face of connect: the mtron inst resolves in NetworkWireScriptTest's boot but not in
+        // this suite's (suite-dependent inst resolution -- an open item pinned there, not here), and this
+        // test's subject is reach-vs-knowledge across frames, so the dial goes through the proven path.
+        all.put("CONNECT", args -> this.network().connect(f(args[0])));
+        return all;
     }
 
     @AfterEach
@@ -327,5 +338,46 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
         final Obj candidate = ObjmtronSerializer.parse(shape);
         LOG.debug("testing %s against peer::T [expected:%s]", candidate, accepted);
         assertEquals(accepted, candidate.test(peer), why);
+    }
+
+    /**
+     * REACH AND KNOWLEDGE ACROSS THE FRAME STACK — the network\u0027s two laws, asserted where they live.
+     * REACH IS NEVER SHARED: push mints the child its own {@code NetworkUnion} level (the same parade as
+     * MemoryUnion and the child instset), peers are neither inherited from the parent (not even shadowed)
+     * nor shared with children, a pop drops exactly the popped machine\u0027s dials, and a sibling never sees
+     * them. KNOWLEDGE IS SHARED: the roster is ONE listing at the root address — like Memory\u0027s base
+     * frame, but machine-global — so a declaration made standing anywhere is every frame\u0027s fact.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[ROSTER_CLEAR]",
+            "[CONNECT loop://root-self]",
+            "[PROBE_PEERCOUNT]",
+            "*/m/networkProbe/peercount % 1                  [-- root\u0027s own reach: one identity peer --]",
+            "[STATE] *~.push(machine_b)",
+            "*~/network.?/m/mach/component/network::T.count() % 1      [-- the child has a network LEVEL of its own --]",
+            "[PROBE_PEERCOUNT]",
+            "*/m/networkProbe/peercount % 0                  [-- REACH IS NOT INHERITED: the parent\u0027s dials are not the child\u0027s --]",
+            "[CONNECT loop://machine_b]",
+            "[PROBE_PEERCOUNT]",
+            "*/m/networkProbe/peercount % 1                  [-- the child\u0027s dial lands on the child\u0027s level --]",
+            "[DECLARE_SILENT ws://declared-inside-b:1111]",
+            "[PROBE_ROSTER]",
+            "*/m/networkProbe/roster % 1                     [-- knowledge declared while standing in machine_b --]",
+            "[STATE] *~.pop(_)",
+            "[PROBE_PEERCOUNT]",
+            "*/m/networkProbe/peercount % 1                  [-- pop dropped exactly machine_b\u0027s dials; the root\u0027s stand --]",
+            "[STATE] *~.push(machine_a)",
+            "[PROBE_PEERCOUNT]",
+            "*/m/networkProbe/peercount % 0                  [-- a sibling never sees another machine\u0027s reach --]",
+            "[PROBE_ROSTER]",
+            "*/m/networkProbe/roster % 1                     [-- but knowledge IS shared: one roster, whoever declared it --]",
+            "[STATE] *~.pop(_)",
+            "[DISCONNECT loop://root-self]",
+            "[PROBE_PEERCOUNT]",
+            "*/m/networkProbe/peercount % 0",
+            "[ROSTER_CLEAR]"
+    })
+    void testReachIsFrameLocalAndKnowledgeIsShared() {
     }
 }

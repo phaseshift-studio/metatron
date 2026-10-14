@@ -478,12 +478,16 @@ the reflective instruction set of metatron featuring process, monad, and code in
                  selector::T[][ctor?rng=firstfind_selector&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/selector/firstfind_selector,
                  component::T[][ctor?rng=typer&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/typer,
                  component::T[][ctor?rng=memory&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/memory,
+                 rec::T[?[{?}host=&gt;uri::T,
+   {?}send_recv=&gt;inst::T,
+   {?}close=&gt;inst::T]][ctor?rng=id_client&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/id_client,
                  rec::T[?[authority=&gt;uri::T,
    {?}host=&gt;uri::T,
    {?}handler=&gt;uri::T,
    {?}name=&gt;str::T,
    {?}status=&gt;rec::T,
-   {?}transport=&gt;inst::T]]@/m/mach/peer,
+   {?}transport=&gt;inst::T,
+   {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer,
                  component::T[?[{?}name=&gt;str::T,
    {?}roster=&gt;[uri::T=&gt;uri::T],
    {?}peer=&gt;[uri::T=&gt;rec::T[?[authority=&gt;uri::T,
@@ -491,14 +495,10 @@ the reflective instruction set of metatron featuring process, monad, and code in
  {?}handler=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer],
+ {?}transport=&gt;inst::T,
+ {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
    {?}source=&gt;[uri::T=&gt;uri::T],
-   {?}status=&gt;[rec::T[?[authority=&gt;uri::T,
- {?}host=&gt;uri::T,
- {?}handler=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer=&gt;uri::T]]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
+   {?}status=&gt;inst::T]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
                  rec::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,
     {?}const=&gt;[&lt;#&gt;::T],
     {?}type=&gt;{?}[&lt;#&gt;::T],
@@ -518,14 +518,10 @@ the reflective instruction set of metatron featuring process, monad, and code in
  {?}handler=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer],
+ {?}transport=&gt;inst::T,
+ {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
     {?}source=&gt;[uri::T=&gt;uri::T],
-    {?}status=&gt;[rec::T[?[authority=&gt;uri::T,
- {?}host=&gt;uri::T,
- {?}handler=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer=&gt;uri::T]]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
+    {?}status=&gt;inst::T]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
    {?}processor=&gt;component::T[?[{?}state=&gt;union(stop,run,pause),
     {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?rng=machine&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine,
                  machine::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,
@@ -547,14 +543,10 @@ the reflective instruction set of metatron featuring process, monad, and code in
  {?}handler=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer],
+ {?}transport=&gt;inst::T,
+ {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
     {?}source=&gt;[uri::T=&gt;uri::T],
-    {?}status=&gt;[rec::T[?[authority=&gt;uri::T,
- {?}host=&gt;uri::T,
- {?}handler=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer=&gt;uri::T]]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
+    {?}status=&gt;inst::T]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
    {?}processor=&gt;processor::T[?[{?}transport=&gt;inst::T]][ctor?rng=remote&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine/remote]][ctor?rng=remote&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine/remote,
                  rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor,
                  rec::T[?[code=&gt;&lt;#&gt;::T,
@@ -581,7 +573,7 @@ the reflective instruction set of metatron featuring process, monad, and code in
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">32</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">6</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">1</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">33</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">6</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">1</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -593,6 +585,9 @@ the reflective instruction set of metatron featuring process, monad, and code in
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__factory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">factory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__id_client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">id_client</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__mach__machine" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">machine</span>
@@ -715,7 +710,7 @@ the reflective instruction set of metatron featuring process, monad, and code in
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">32</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">33</span></h3>
     <div class="card mb-3" id="__m__mach__component__binder">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -747,9 +742,9 @@ the reflective instruction set of metatron featuring process, monad, and code in
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
-  <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
-  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
   <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#'the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry'" class="text-info">&#39;the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry&#39;</a>
+  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
+  <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -870,6 +865,34 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">generic_binder::[=&gt;]   [-- the default binder::T --]</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__mach__id_client">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">id_client::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/mach/id_client</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}host=&gt;uri::T,
+ {?}send_recv=&gt;inst::T,
+ {?}close=&gt;inst::T]][ctor?rng=id_client&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/id_client</code></pre></div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the identity client — the identity element of the protocol-client family:
+dialing loop://&lt;name&gt; constructs one, and its send_recv evaluates the shipped
+message against the local machine. the executable form of the self-similarity
+contract: a read through a loop peer equals the local read.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
+  <a href="#send_recv" class="text-light">send_recv</a> <span class="text-light">=&gt;</span> <a href="#'applies the shipped message against the local machine — the identity transport'" class="text-info">&#39;applies the shipped message against the local machine — the identity transport&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*~/network.connect(&lt;loop://self&gt;) [-- the identity peer: reads and writes answer locally --]</code></pre>
+</div>
 </div><div class="card mb-3" id="__m__mach__component__resolver__identity_resolver">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -930,14 +953,10 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
  {?}handler=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer],
+ {?}transport=&gt;inst::T,
+ {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
   {?}source=&gt;[uri::T=&gt;uri::T],
-  {?}status=&gt;[rec::T[?[authority=&gt;uri::T,
- {?}host=&gt;uri::T,
- {?}handler=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer=&gt;uri::T]]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
+  {?}status=&gt;inst::T]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
  {?}processor=&gt;component::T[?[{?}state=&gt;union(stop,run,pause),
   {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?rng=machine&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
     
@@ -953,10 +972,10 @@ of the metatron graph (/.) is the root machine.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#'peers and shared peer state'" class="text-info">&#39;peers and shared peer state&#39;</a>
-  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'referential access to processing threads and computational state'" class="text-info">&#39;referential access to processing threads and computational state&#39;</a>
-  <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'parser, rewriter, resolver, and typer'" class="text-info">&#39;parser, rewriter, resolver, and typer&#39;</a>
-  <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#'a frame of reference in space constrained by parent machine'" class="text-info">&#39;a frame of reference in space constrained by parent machine&#39;</a>
   <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#'machine instruction set architecture'" class="text-info">&#39;machine instruction set architecture&#39;</a>
+  <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#'a frame of reference in space constrained by parent machine'" class="text-info">&#39;a frame of reference in space constrained by parent machine&#39;</a>
+  <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'parser, rewriter, resolver, and typer'" class="text-info">&#39;parser, rewriter, resolver, and typer&#39;</a>
+  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'referential access to processing threads and computational state'" class="text-info">&#39;referential access to processing threads and computational state&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__memory">
@@ -1024,14 +1043,10 @@ of the metatron graph (/.) is the root machine.
  {?}handler=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer],
+ {?}transport=&gt;inst::T,
+ {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
  {?}source=&gt;[uri::T=&gt;uri::T],
- {?}status=&gt;[rec::T[?[authority=&gt;uri::T,
- {?}host=&gt;uri::T,
- {?}handler=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer=&gt;uri::T]]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network</code></pre></div>
+ {?}status=&gt;inst::T]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a machine&#39;s network: the endpoints the system knows about, the peers the
@@ -1044,11 +1059,11 @@ source and cannot drift.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method: peer => status'" class="text-info">&#39;the health method: peer =&gt; status&#39;</a>
-  <a href="#{?}name" class="text-light">{?}name</a> <span class="text-light">=&gt;</span> <a href="#'a human friendly name for the nested network'" class="text-info">&#39;a human friendly name for the nested network&#39;</a>
-  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#"machine's own connections: <service-uri> => peer::T"" class="text-info">&quot;machine&#39;s own connections: &lt;service-uri&gt; =&gt; peer::T&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism'" class="text-info">&#39;the roster generation mechanism: &lt;mechanism&gt; =&gt; &lt;handler tid as a uri&gt;, one entry per mechanism&#39;</a>
   <a href="#{?}roster" class="text-light">{?}roster</a> <span class="text-light">=&gt;</span> <a href="#'known machines, connectionless: <machine> => uri{+} — every address that machine answers at'" class="text-info">&#39;known machines, connectionless: &lt;machine&gt; =&gt; uri{+} — every address that machine answers at&#39;</a>
-  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism'" class="text-info">&#39;the roster generation mechanism: &lt;mechanism&gt; =&gt; &lt;handler tid as a uri&gt;, one entry per mechanism&#39;</a>
+  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#"machine's own connections: <service-uri> => peer::T"" class="text-info">&quot;machine&#39;s own connections: &lt;service-uri&gt; =&gt; peer::T&quot;</a>
+  <a href="#{?}name" class="text-light">{?}name</a> <span class="text-light">=&gt;</span> <a href="#'a human friendly name for the nested network'" class="text-info">&#39;a human friendly name for the nested network&#39;</a>
+  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method — an auto inst closing over this network, one peer::T report per declared peer'" class="text-info">&#39;the health method — an auto inst closing over this network, one peer::T report per declared peer&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1081,7 +1096,8 @@ network::[peer=&gt;[&lt;ws://localhost:39111&gt;=&gt;[authority=&gt;&lt;ws://loc
  {?}handler=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer</code></pre></div>
+ {?}transport=&gt;inst::T,
+ {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> one metatron machine this machine can reach — the value of a network peer
@@ -1090,12 +1106,13 @@ reference that crossed a wire, known here and not reachable from here.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#handler" class="text-light">handler</a> <span class="text-light">=&gt;</span> <a href="#'the protocol surface at that endpoint, named as a uri: <__m__web__ws__mtron_ws>, <__m__web__http__mtron_http>, <__m__web__mcp__mcp_ws>'" class="text-info">mcp_ws&gt;&#39;</a>
-  <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#"the peer's service uri, scheme:____host:port — the connection key, and the one field a peer cannot do without"" class="text-info">host:port — the connection key, and the one field a peer cannot do without&quot;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#"the peer's service uri, scheme:____host:port — the connection key, and the one field a peer cannot do without"" class="text-info">host:port — the connection key, and the one field a peer cannot do without&quot;</a>
   <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health report computed for this peer — computed on call, never stored'" class="text-info">&#39;the health report computed for this peer — computed on call, never stored&#39;</a>
+  <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed — held so disconnect can hang up; absent for connectionless transports'" class="text-info">&#39;the protocol client the dial constructed — held so disconnect can hang up; absent for connectionless transports&#39;</a>
   <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#"the reach: an inst that ships a message to this peer and answers with the peer's result"" class="text-info">&quot;the reach: an inst that ships a message to this peer and answers with the peer&#39;s result&quot;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the machine's name in the distributed expression that means it — a bare name, never an address"" class="text-info">&quot;the machine&#39;s name in the distributed expression that means it — a bare name, never an address&quot;</a>
+  <a href="#handler" class="text-light">handler</a> <span class="text-light">=&gt;</span> <a href="#'the protocol surface at that endpoint, named as a uri: <__m__web__ws__mtron_ws>, <__m__web__http__mtron_http>, <__m__web__mcp__mcp_ws>'" class="text-info">mcp_ws&gt;&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1141,14 +1158,10 @@ peer::[authority=&gt;&lt;ws://192.168.1.42:8555&gt;,name=&gt;&#39;builder-2&#39;
  {?}handler=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer],
+ {?}transport=&gt;inst::T,
+ {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
   {?}source=&gt;[uri::T=&gt;uri::T],
-  {?}status=&gt;[rec::T[?[authority=&gt;uri::T,
- {?}host=&gt;uri::T,
- {?}handler=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer=&gt;uri::T]]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
+  {?}status=&gt;inst::T]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
  {?}processor=&gt;processor::T[?[{?}transport=&gt;inst::T]][ctor?rng=remote&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine/remote]][ctor?rng=remote&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/machine/remote</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__machine" class="code inherited-link">machine::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,
   {?}const=&gt;[&lt;#&gt;::T],
@@ -1169,14 +1182,10 @@ peer::[authority=&gt;&lt;ws://192.168.1.42:8555&gt;,name=&gt;&#39;builder-2&#39;
  {?}handler=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer],
+ {?}transport=&gt;inst::T,
+ {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
   {?}source=&gt;[uri::T=&gt;uri::T],
-  {?}status=&gt;[rec::T[?[authority=&gt;uri::T,
- {?}host=&gt;uri::T,
- {?}handler=&gt;uri::T,
- {?}name=&gt;str::T,
- {?}status=&gt;rec::T,
- {?}transport=&gt;inst::T]]@/m/mach/peer=&gt;uri::T]]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
+  {?}status=&gt;inst::T]][ctor?rng=network&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/component/network,
  {?}processor=&gt;component::T[?[{?}state=&gt;union(stop,run,pause),
   {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]</code></div></div>
     <div class="card-body border-top py-2">
@@ -1207,8 +1216,8 @@ constructor would rebuild it here, the one thing it must not be.
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the processor of a frame that executes elsewhere: applying code here ships it to the peer and answers with what the peer computed</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to hand to the peer'" class="text-info">&#39;the code to hand to the peer&#39;</a>
-  <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#'the reach the code is shipped through'" class="text-info">&#39;the reach the code is shipped through&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#transport" class="text-light">transport</a> <span class="text-light">=&gt;</span> <a href="#'the reach the code is shipped through'" class="text-info">&#39;the reach the code is shipped through&#39;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to hand to the peer'" class="text-info">&#39;the code to hand to the peer&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__resolver">
@@ -1226,8 +1235,8 @@ constructor would rebuild it here, the one thing it must not be.
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the resolution contract of compiler::T — the stage that turns a generic instruction chain into a typed one, and the compiler&#39;s widest-reaching stage: it threads each inst&#39;s range into the next inst&#39;s domain and, per inst, delegates to a selector (fetch and order the candidates) and a binder (make the chosen candidate concrete, or reject it), so which concrete inst a call becomes — and with it whether the inst is a filter, a gather/barrier, or an initial — is settled here, per element type. What it settles is what the processor then runs (a filter&#39;s {0,1} wing dropped for compile-time typing, an initial inst seeding the element type from its own argument, a cast&#39;s range rebound to the named type), and an inst it cannot resolve is left in place for runtime resolution — a semi-resolved code, not a failed one. Structural, not nominal: its two collaborators are rec fields, both optional and both defaulting, so a resolver is its walk plus whichever strategies it names. Its members are scoring_resolver::T (the default pair), firstfind_resolver::T (first match, no scoring) and identity_resolver::T (the no-op)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}binder" class="text-light">{?}binder</a> <span class="text-light">=&gt;</span> <a href="#"the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"" class="text-info">&quot;the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call&#39;s arguments)&quot;</a>
-  <a href="#{?}selector" class="text-light">{?}selector</a> <span class="text-light">=&gt;</span> <a href="#'the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)'" class="text-info">&#39;the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}selector" class="text-light">{?}selector</a> <span class="text-light">=&gt;</span> <a href="#'the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)'" class="text-info">&#39;the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)&#39;</a>
+  <a href="#{?}binder" class="text-light">{?}binder</a> <span class="text-light">=&gt;</span> <a href="#"the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"" class="text-info">&quot;the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call&#39;s arguments)&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1331,12 +1340,12 @@ scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
-  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
-  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
-  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">

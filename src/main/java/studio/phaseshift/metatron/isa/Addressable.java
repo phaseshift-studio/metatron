@@ -40,6 +40,35 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 public interface Addressable {
 
     /**
+     * The JURISDICTION: the abstract pattern of addresses this source answers for. A {@link Space}'s is a path
+     * (`/usr/#`), an instruction set's is its tid prefix (`/m/math/cat/#`), a network's is the authorities it can
+     * reach. Dispatch anywhere is "the most specific jurisdiction covering the vid" — one algorithm over uniform
+     * sources.
+     */
+    fURI pattern();
+
+    /**
+     * INDEX a constructed obj into this source — the one verb for "a thing that exists enters the
+     * jurisdiction": Memory indexes a space, Network indexes a protocol client, an instruction set indexes
+     * an inst family. Construction is decoupled from infrastructure indexing (an obj exists whether or not
+     * an index observed it), so indexing is a BACKGROUND behavior upon successful construction and this
+     * method must never be load-bearing for the obj's own validity. Default: this source does not index.
+     */
+    default Obj index(final Obj member) {
+        return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
+    }
+
+    /**
+     * DROP a member from this source — the dual of {@link #index}: {@code id -> noobj}, the universal
+     * close. What indexing granted, dropping retracts: Memory drops a space's claim, Network hangs up a
+     * peer. Answers what was dropped, or {@code noobj} when the id held nothing here. Default: this
+     * source drops nothing.
+     */
+    default Obj drop(final fURI id) {
+        return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
+    }
+
+    /**
      * read the obj at {@code vid}, or {@code noobj} when this source does not answer for it.
      */
     Obj read(final fURI vid);

@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Supplier;
@@ -126,6 +127,29 @@ public abstract class AbstractMetatronTest {
     }
 
     /**
+     * SCRIPT VARIABLES — the bridge between a directive that creates a DYNAMIC fact (an allocated port, an
+     * ephemeral authority) and the static script lines that must speak it. A directive binds a name and every
+     * later line has {@code {{name}}} replaced before it is parsed — directive lines included, so one directive's
+     * fact can feed another's arguments. Empty by default: a suite that binds nothing runs byte-identically.
+     */
+    private final Map<String, String> scriptVars = new LinkedHashMap<>();
+
+    /**
+     * Bind a script variable: every {@code {{name}}} in later lines becomes {@code value}.
+     */
+    protected void bind(final String name, final String value) {
+        this.scriptVars.put(name, value);
+    }
+
+    private String substitute(String line) {
+        if (!line.contains("{{"))
+            return line;
+        for (final Map.Entry<String, String> var : this.scriptVars.entrySet())
+            line = line.replace("{{" + var.getKey() + "}}", var.getValue());
+        return line;
+    }
+
+    /**
      * Run one directive call: the first token names the directive (in CAPS), the rest are its arguments.
      */
     private void directive(final String call) {
@@ -165,7 +189,7 @@ public abstract class AbstractMetatronTest {
      */
     protected void script(final String... lines) {
         for (int i = 0; i < lines.length; i++) {
-            final String line = lines[i].trim();
+            final String line = this.substitute(lines[i].trim());
             if (line.isEmpty() || line.startsWith("//"))
                 continue;
             try {

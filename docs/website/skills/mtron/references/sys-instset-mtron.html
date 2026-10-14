@@ -466,15 +466,15 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'CONTRIBUTING.md',
     'dist',
     'docs',
-    ...(14 more)]
+    ...(15 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.4M ...',
+    'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  525G ...',
-    'tmpfs                   31G  1.1M ...',
+    'tmpfs                   31G  131M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -496,7 +496,7 @@ the same <code>==</code> projection:</p>
            'CONTRIBUTING.md',
            'dist',
            'docs',
-           ...(14 more)]]
+           ...(15 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
@@ -506,7 +506,7 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'CONTRIBUTING.md',
     'dist',
     'docs',
-    ...(15 more)]
+    ...(16 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -542,7 +542,7 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: CONTRIBUTING.md',
     '  File: dist',
     '  File: docs',
-    ...(14 more)]
+    ...(15 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
     '  Size: 43651     	Blocks: 88     ...',
@@ -563,7 +563,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
     bB::698,
     bB::409,
     bB::409,
-    ...(14 more)]
+    ...(15 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -620,9 +620,9 @@ mtron&gt; */sys/thread/+.count()
 ==&gt;1
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::600,
-    free_mem_jvm=&gt;mB::324.89624,
+    free_mem_jvm=&gt;mB::392.96514,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::275.10375,
+    used_mem_jvm=&gt;mB::207.03485,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[run=&gt;0,stop=&gt;0]]

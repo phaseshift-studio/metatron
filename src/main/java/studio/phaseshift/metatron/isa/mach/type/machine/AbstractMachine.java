@@ -90,6 +90,18 @@ public abstract class AbstractMachine extends MRec implements Machine {
         return this;
     }
 
+    /**
+     * FIELD ONLY, exactly as {@link #memory(Memory)}: the rec write fails the machine rec's own type
+     * check, and {@link Machine#push} puts the component into the child's rec itself. Clearing through
+     * the setter is also what defeats the clone-carried cache: a pushed child's {@code resolvedNetwork}
+     * arrives pointing at the PARENT's component until this rebinds it.
+     */
+    @Override
+    public Machine network(final Network network) {
+        this.resolvedNetwork = network;
+        return this;
+    }
+
     @Override
     public Network network() {
         if (null == this.resolvedNetwork)

@@ -92,7 +92,6 @@ public class machInstSet extends AbstractInstSet {
      * when that authority is on this same physical machine (see {@code PeerSpawn}), and merely declared otherwise.
      */
     public static final fURI PUSH_INST_TID = MACH_INST_TID.extend("push");
-    public static final fURI CONNECT_INST_TID = MACH_INST_TID.extend("connect");
 
     /**
      * The other two frame-choosing instructions: {@code pop()} leaves the frame it is handed, {@code move(<uri>)}
@@ -478,10 +477,16 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(SEND_RECV).maybe().asUri(), INST_TYPE,
                                                 uri(CLOSE).maybe().asUri(), INST_TYPE))
-                                        .constructor(arg -> rec(
-                                                uri(HOST), arg.asRec().at(uri(HOST)),
-                                                uri(SEND_RECV), instLambda((lhs, inst) -> inst.arg(0).apply(lhs)),
-                                                uri(CLOSE), instLambda((lhs, inst) -> noobj())))
+                                        .constructor(arg -> {
+                                            final Obj client = rec(
+                                                    uri(HOST), arg.asRec().at(uri(HOST)),
+                                                    uri(SEND_RECV), instLambda((lhs, inst) -> inst.arg(0).apply(lhs)),
+                                                    uri(CLOSE), instLambda((lhs, inst) -> noobj()));
+                                            // indexing is a BACKGROUND behavior upon successful construction:
+                                            // the client exists as an obj either way, the index merely observes
+                                            Network.Helper.index(client);
+                                            return client;
+                                        })
                                         .create(), null, null,
                                 Map.of(uri(HOST), "the dialed uri (identity: the local machine answers)",
                                         uri(SEND_RECV), "applies the shipped message against the local machine — the identity transport",
@@ -493,7 +498,7 @@ public class machInstSet extends AbstractInstSet {
                                 contract: a read through a loop peer equals the local read.
                                 """,
                                 "*~/network.connect(<loop://self>) [-- the identity peer: reads and writes answer locally --]"),
-                        // network — a machine's reachable peers, read through to the ones it inherited
+                        // network — a machine's OWN reachable peers: never inherited, never shared with children
                         docWrap(PEER_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(PEER_TID)
@@ -708,24 +713,7 @@ public class machInstSet extends AbstractInstSet {
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@~/thread/ping")),
                 uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
-                        // CONNECT — the network's mount op, mtron-facing: ensure-peered (a dialed authority
-                        // answers its existing peer::T, never a second socket), rng peer{?} because an
-                        // authority with no dialer answers noobj (known, not reachable from here). Two
-                        // arities: the one-arg form dials schemes with a default dialer (loop: -> id_client);
-                        // the two-arg form names the DIALER — a protocol client type's vid, resolved through
-                        // instruction memory at dial time (ws_client, mcp_client: the constructor IS the dial).
-                        docWrap(instC(CONNECT_INST_TID.dom(MACH_NETWORK_TID).rng(PEER_TID.maybe()), lst(URI_TYPE),
-                                        (lhs, inst) -> lhs.<Network>as().connect(inst.arg(0).uriValue())),
-                                "a network", "the live peer, or noobj when nothing knows how to dial the scheme",
-                                Map.of(jnt(0), "the dial uri, protocol route included: ws://host:port/mtron"),
-                                "the network's mount op: dial the authority once (ensure-peered) and answer its peer::T"),
-                        docWrap(instC(CONNECT_INST_TID.dom(MACH_NETWORK_TID).rng(PEER_TID.maybe()), lst(URI_TYPE, URI_TYPE),
-                                        (lhs, inst) -> lhs.<Network>as().connect(inst.arg(0).uriValue(), inst.arg(1).uriValue())),
-                                "a network", "the live peer, or noobj when the handler declines",
-                                Map.of(jnt(0), "the dial uri, protocol route included",
-                                        jnt(1), "the dialer: a protocol client type's vid (</m/web/ws/ws_client>), resolved at dial time"),
-                                "the network's mount op with an explicit dialer — a protocol client type whose constructor takes [host=>...]"),
-                        instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
+instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("~/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
                             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();

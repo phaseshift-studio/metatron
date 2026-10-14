@@ -334,6 +334,16 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
+     * Bind this machine's network — used by {@link #push(fURI)} to hand a child frame its own
+     * {@link studio.phaseshift.metatron.isa.mach.type.network.NetworkUnion} level. The close on the
+     * displaced value is the close-before-clear contract: whatever reach the old level held hangs up.
+     */
+    default Machine network(final Network network) {
+        CommonUtil.close(this.atDirect(uri(NETWORK)));
+        return this.at(uri(NETWORK), network, MUTABLE).as();
+    }
+
+    /**
      * Mount this machine's own infra space and embed the machine rec in it. The space has pattern {@code <vid>/#},
      * so {@code ~/thread}, {@code ~/sys/fail}, {@code ~/sys/log} (and the rec's own entries — {@code ~/memory},
      * {@code ~/processor} …) all resolve here as space values, not through any vid intercept. Called for the root
@@ -487,8 +497,21 @@ public interface Machine extends Rec, AutoCloseable {
         // directly rather than through at(): a rec write on a machine rec fails its own type check (objCheckAndSave
         // -> Lst.test, a null list element), which is why every component is seeded through the constructor map —
         // see AbstractMachine.withMemory — rather than assigned into a live machine.
+        // The child's NETWORK is its OWN level too — the same move a third time, under the network's two
+        // laws: KNOWLEDGE IS SHARED by addressing (every level reads the one roster at the root address, so
+        // no plumbing here), and REACH IS NOT — peers are neither inherited from the parent (not even
+        // shadowed) nor shared with children. A connection belongs to exactly the machine that dialed it,
+        // so a pop retracts precisely this machine's dials and a sibling never sees them.
+        final studio.phaseshift.metatron.isa.mach.type.network.NetworkUnion childNetwork =
+                new studio.phaseshift.metatron.isa.mach.type.network.NetworkUnion();
+        childNetwork.parent(child);
+        // the SETTER, not just the rec: AbstractMachine caches resolvedNetwork, and the child's clone
+        // carries the parent's cached field — without the setter the accessor answers the parent's
+        // component forever and the rec slot is dead weight (measured: net= identity equal across push).
+        child.network(childNetwork);
         child.jvm().put(uri(MEMORY), memory);
         child.jvm().put(uri(INSTSET), childInstSet);
+        child.jvm().put(uri(NETWORK), childNetwork);
         // THE CHILD IS CURRENT WHILE IT BOOTSTRAPS. bootstrap writes the child's own infra (the machine rec at
         // its vid, the per-machine log sink, ~-relative state), and every one of those writes belongs to the
         // CHILD's level. Left on the parent, each self-write landed in the parent's catch-all space instead,

@@ -76,6 +76,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public interface Network extends Addressable, Machine.Component, Closeable {
 
+    studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger WIRE_LOG = studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.log(Network.class);
+
     /**
      * this machine's connections, and the root's — {@code ~} follows {@code move}.
      */
@@ -176,39 +178,70 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     default Obj connect(final fURI dialURI, final fURI handler) {
-        // the service KEY is the bare authority with ?clientq retracted: the identity processor is
-        // consumed by the connection itself, while every OTHER ?q processor is left for downstream
-        // processing — only the one the dial spent comes off.
-        final fURI service = dialURI.path(List.of()).removeQ(CLIENTQ);
-        final Obj existing = this.peers().elements()
-                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
-                .map(Rel::second)
-                .filter(Obj::isRec)
-                .findFirst().orElse(noobj());
+        // CONNECT IS SUGAR. The idiomatic act is CONSTRUCTION: ws_client::[pattern=><ws://host/mtron?clientq=me>]
+        // — the client's constructor dials, and on success REGISTERS ITSELF with the network, exactly as a
+        // space's constructor indexes itself into Memory (memspace::[pattern=>xyz/#]). connect() remains for
+        // the caller that has a uri and a dialer vid rather than a type literal: it constructs through
+        // Helper.dial and lets register() do what the constructor would have done (register is ensure-peered,
+        // so a self-registered client is found, not double-minted).
+        final fURI service = Helper.serviceOf(dialURI);
+        final Obj existing = this.peerOf(service);
         if (!existing.isNoObj())
             return existing;
         final Obj dialed = Helper.dial(dialURI, handler);
+        WIRE_LOG.debug("connect %s handler=%s net=%s dialed=%s", dialURI, handler, System.identityHashCode(this), dialed);
         if (dialed.isNoObj() || dialed.isFail())
             return noobj();
-        // a dialer answers either the transport itself (loop) or a protocol CLIENT whose send_recv is the
-        // transport (the client is kept on the peer so disconnect can hang up) -- adapted to the
-        // transport convention in ONE place, Helper.asTransport.
-        final Obj transport = Helper.asTransport(dialed);
-        if (!transport.isObjInst()) {
-            Helper.writeComplete(noobj(), dialed);
+        final Obj peer = this.index(dialed, dialURI);
+        if (peer.isRec() && null != handler)
+            peer.asRec().at(uri(HANDLER), uri(handler), MUTABLE);
+        return peer;
+    }
+
+    /**
+     * INDEX — {@link studio.phaseshift.metatron.isa.Addressable#index}, the network's arm: a protocol client that has CONNECTED
+     * writes itself here, and the peer::T is minted FROM the client. Ensure-peered: an authority already
+     * held answers its existing peer, so a constructor's background indexing and a connect() over the same
+     * client converge on one entry. The claim is read from the client itself — {@code pattern} (retracted)
+     * first, {@code host} second — so {@code index(client)} needs nothing but the client.
+     */
+    @Override
+    default Obj index(final Obj client) {
+        final fURI claim = Helper.claimOf(client);
+        return null == claim ? noobj() : this.index(client, claim);
+    }
+
+    default Obj index(final Obj client, final fURI dialURI) {
+        final fURI service = Helper.serviceOf(dialURI);
+        final Obj existing = this.peerOf(service);
+        if (!existing.isNoObj())
+            return existing;
+        // a client answers either the transport itself or a rec whose send_recv is the transport (the
+        // client is kept on the peer so disconnect can hang up) -- adapted in ONE place, Helper.asTransport.
+        final Obj transport = Helper.asTransport(client);
+        WIRE_LOG.debug("index %s transport=%s isObjInst=%s", dialURI, transport, transport.isObjInst());
+        if (!transport.isObjInst())
             return noobj();
-        }
         final Obj peer = rec(
                 uri(AUTHORITY), uri(service),
                 uri(HOST), uri(dialURI),
                 uri(TRANSPORT), transport);
-        if (null != handler)
-            peer.asRec().at(uri(HANDLER), uri(handler), MUTABLE);
-        if (dialed.isRec() && dialed != transport)
-            peer.asRec().at(uri(CLIENT), dialed, MUTABLE);
+        if (client.isRec() && client != transport)
+            peer.asRec().at(uri(CLIENT), client, MUTABLE);
         peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
         this.at(uri(PEER), this.peers().plus(rec(uri(service), peer)), MUTABLE);
         return peer;
+    }
+
+    /**
+     * The peer this level holds for a service, or noobj — the ensure-peered scan, in one place.
+     */
+    default Obj peerOf(final fURI service) {
+        return this.peers().elements()
+                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
+                .map(Rel::second)
+                .filter(Obj::isRec)
+                .findFirst().orElse(noobj());
     }
 
     /**
@@ -223,7 +256,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // IDENTITY RIDES THE DIAL: ws://host:port/mtron?clientq=builder2 — the ?clientq processor on
         // the connection uri IS the identity exchange (no announce message, no anonymous state to
         // upgrade), so a server that exposes the full connection uri mints a NAMED peer on accept.
-        final String name = remote.q(CLIENTQ);
+        final String name = remote.qMap().get(CLIENTQ);
         final fURI service = remote.path(List.of()).removeQ(CLIENTQ);
         final Obj existing = this.peers().elements()
                 .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
@@ -253,6 +286,15 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * Nothing left dialed removes the {@code peer} field entirely: an EMPTY rec is not the same value as
      * an absent one (the component predicate's map idiom rejects the empty rec's noobj entry — measured).
      */
+    /**
+     * {@link studio.phaseshift.metatron.isa.Addressable#drop} — the network's arm of the one retraction
+     * verb: {@code id -> noobj} over the peer map, with {@code disconnect} the typed workhorse underneath.
+     */
+    @Override
+    default Obj drop(final fURI id) {
+        return this.disconnect(id);
+    }
+
     default Obj disconnect(final fURI authority) {
         final fURI service = authority.path(List.of()).removeQ(CLIENTQ);
         final Rec peers = this.peers();
@@ -326,6 +368,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         if (null == vid.host())
             return noobj();
         final Obj transport = this.transportOf(vid.path(List.of()));
+        WIRE_LOG.debug("read %s net=%s transport=%s", vid, System.identityHashCode(this), transport.isNoObj() ? "NONE" : "inst");
         if (transport.isNoObj())
             return noobj(); // authority not declared: not a peer this frame may reach
         // A ws:// ADDRESS IS A WIRE ADDRESS, NOT A PLACE IN THIS MACHINE. Reading one asks the PEER for that path —
@@ -333,7 +376,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // derived on push), and moving to it is an ordinary local read of a machine. So nothing here maps an
         // authority to a frame: this is the data path, and only the data path.
         final Obj message = from_(vid.localize().toUri()).tryToInst();
-        return transport.apply(message);
+        final Obj answer = transport.apply(message);
+        WIRE_LOG.debug("read %s message=%s answer=%s", vid, message, answer);
+        return answer;
     }
 
     /**
@@ -415,6 +460,45 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         /**
          * Two uris denote the same service: the same authority, or two loopback aliases at the same port.
          */
+        /**
+         * INDEXING IS A BACKGROUND BEHAVIOR. Network, Memory and InstSet are INDICES over objs that have
+         * their own existence — a client is an obj whether or not any index observed it — so a protocol
+         * client's constructor calls this after a successful construction and nothing else: indexing can
+         * never fail the construction, and an environment with no machine (early boot, a bare test rig)
+         * simply has no index watching. The space analog is a space's constructor indexing into Memory.
+         */
+        public static void index(final Obj client) {
+            try {
+                final Machine machine = Machine.current();
+                if (null != machine && null != machine.network())
+                    machine.network().index(client);
+            } catch (final Exception e) {
+                // the obj exists either way; the index just didn't observe it
+            }
+        }
+
+        /**
+         * The service KEY for any client-facing uri: bare authority, with exactly the processor the dial
+         * spends (?clientq) retracted — every other ?q rides through.
+         */
+        public static fURI serviceOf(final fURI uri) {
+            return uri.path(java.util.List.of()).removeQ(studio.phaseshift.metatron.Tokens.CLIENTQ);
+        }
+
+        /**
+         * A client's CLAIM, read from the client itself: {@code pattern} (retracted to the dialable
+         * address) first, {@code host} second — the same precedence mcpClient dials by.
+         */
+        public static fURI claimOf(final Obj client) {
+            if (!client.isRec())
+                return null;
+            final Obj pattern = client.asRec().at(uri(studio.phaseshift.metatron.Tokens.PATTERN));
+            if (pattern.isUri())
+                return pattern.uriValue().retractPattern();
+            final Obj host = client.asRec().at(uri(HOST));
+            return host.isUri() ? host.uriValue() : null;
+        }
+
         public static boolean sameService(final fURI a, final fURI b) {
             return a.authority().equals(b.authority())
                     || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
@@ -481,6 +565,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             if (null == dialer)
                 return noobj();
             final Obj resolved = Machine.read(dialer);
+            WIRE_LOG.debug("dial %s dialer=%s resolved=%s isType=%s hasCtor=%s", dialURI, dialer, resolved.toShortString(), resolved.isType(), resolved.isType() && resolved.asType().hasConstructor());
             if (resolved.isType() && resolved.asType().hasConstructor())
                 return resolved.asType().constructor().asInst()
                         .args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(rec(uri(HOST), uri(dialURI))))

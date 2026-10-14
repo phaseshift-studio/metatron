@@ -181,8 +181,8 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
      * declaration the parent reads.
      * <p>
      * That is now the deliberate difference between the two homes: the CONNECTIONS a machine holds live on the
-     * component's {@code peer} field (which is why a {@code NetworkUnion} is what will make them
-     * inherited-but-not-shared), while the known servers stay one list for the whole system. Pinned so the split
+     * component's {@code peer} field (which is what {@code NetworkUnion} makes
+     * frame-local: never inherited, never shared), while the known servers stay one list for the whole system. Pinned so the split
      * stays a decision rather than an accident.
      */
     @Test
