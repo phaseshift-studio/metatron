@@ -230,6 +230,12 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         protected wsSpace space;
         protected final fURI baseURI;
         protected final AtomicInteger counter = new AtomicInteger(0);
+        /**
+         * the inbound peers this listener CO-MOUNTED, by connection — the remote socket authority each
+         * accept was keyed under, kept Java-side because {@code getRemoteSocketAddress()} is gone by the
+         * time {@code onClose} needs it for the retraction.
+         */
+        protected final Map<WebSocket, fURI> accepted = java.util.Collections.synchronizedMap(new LinkedHashMap<>());
         protected final GraphittyLogger LOG = Graphitty.log(this);
 
         public mWebSocketServer(final String host, final int port) {
@@ -317,6 +323,26 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             return Optional.of((WebSocketRec) session);
         }
 
+        /**
+         * THE CO-MOUNT — the listener's half of the dial (see {@code Network#accept}): an inbound
+         * connection mints a {@code peer::T} on this machine's network exactly as {@code connect} does on
+         * the dialer's, keyed by the remote socket authority, transport = this session's reply channel.
+         * Never breaks the accept path: a declined co-mount is a connection without a peer record, not a
+         * dropped connection.
+         */
+        private void accept(final WebSocket conn, final WebSocketRec session) {
+            try {
+                final InetSocketAddress remote = (InetSocketAddress) conn.getRemoteSocketAddress();
+                if (null == remote)
+                    return;
+                final fURI authority = f("/").scheme("ws").host(remote.getHostString()).port(remote.getPort());
+                if (!Machine.current().network().accept(authority, session).isNoObj())
+                    this.accepted.put(conn, authority);
+            } catch (final Exception e) {
+                LOG.debug("inbound peer co-mount declined: %s", e);
+            }
+        }
+
         private boolean ignore(final WebSocket conn) {
             return null == conn || conn.isClosed() || conn.getAttachment() == null;
         }
@@ -338,6 +364,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                         server.setWebSocket(conn);
                         this.space.cache.write(server.getThisVID(), server);
                         server.onOpen(conn, handshake);
+                        this.accept(conn, server);
                     }
                 }
             } catch (final Exception e) {
@@ -365,6 +392,10 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onClose(conn, code, reason, remote);
                 this.space.cache.write(session.getThisVID(), noobj());
+                // the co-mount dies with the socket: reach is a capability, retracted with the connection
+                final fURI acceptedRemote = this.accepted.remove(conn);
+                if (null != acceptedRemote)
+                    Machine.current().network().disconnect(acceptedRemote);
             } catch (final Exception e) {
                 LOG.status(DEBUG, e);
             } catch (final Throwable e) {
