@@ -129,10 +129,15 @@ public final class TypeGraph {
         }
         this.misses.incrementAndGet();
         final long gen = this.generation.get();
+        // WATCH BEFORE RESOLVING: a registration that lands while resolve runs must not lose to it. with
+        // the watch in place first, that write's onWrite finds the key watched and bumps the generation,
+        // so the stale result -- an ephemeral husk for the very name just registered -- is returned to
+        // this caller but never cached. watching early costs at most one spurious invalidation; caching
+        // a husk costs every later check of the real type.
+        this.watch(key);
         final Type type = resolve.get();
         if (null != type && gen == this.generation.get()) {
             this.resolved.put(key, new Entry(type, gen));
-            this.watch(key);
         }
         return type;
     }

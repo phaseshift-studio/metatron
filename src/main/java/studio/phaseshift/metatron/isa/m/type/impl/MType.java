@@ -29,7 +29,9 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.BASE_TYPES;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
@@ -80,6 +82,13 @@ public class MType extends MObj implements Type {
         return Machine.current().memory().typeGraph().memo(key, () -> T0(tid, vid, predicate, constructor));
     }
 
+    /**
+     * the names THIS thread is resolving through the registry right now -- the in-flight brake's state,
+     * see the comment at the registry read in {@code T0}. per thread because the recursion it breaks is
+     * a single call stack; two threads resolving the same name are independent and both read.
+     */
+    private static final ThreadLocal<Set<String>> RESOLVING = ThreadLocal.withInitial(LinkedHashSet::new);
+
     private static Type T0(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
         final fURI bigTID = null == tid ? vid.big() : tid.big();
         final fURI bigVID = null == vid ? null : vid.big();
@@ -89,36 +98,47 @@ public class MType extends MObj implements Type {
             return new MType(Tuple.Pair.with(null, null), checkID, checkID);
         if (!checkID.poly().isEmpty() && !checkID.basePath().equals(Tokens.REL_TID) && !checkID.basePath().equals(Tokens.LST_TID) && !checkID.basePath().equals(REC_TID))
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
-        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
-            Obj obj = Machine.read(checkID);
-            // clone before re-typing: self() mutates in place, and the obj just read is the SHARED
-            // registered type (often also referenced from another type's predicate). Re-typing it with
-            // this request's coefficient would rewrite that shared type -- e.g. resolving the two-being
-            // multiplicity being{2} would rewrite the registered being, and team's member=>being{+}
-            // predicate with it.
-            obj = obj.clone().selfTID(obj.tid().c(checkID.c()));
-            if (obj.isType()) {
-                if (checkID.c().equals(obj.c()) &&
-                        Objects.equals(obj.asType().predicate(), predicate) &&
-                        Objects.equals(obj.asType().constructor(), constructor))
-                    return obj.asType();
-                else {
-                    // A request that names BOTH a base type and a vid (X::T@name) wins over the
-                    // registered form: a re-registration may rebase a name onto a different type
-                    // (mortal -> person::T[...]@mortal after mortal was human::T[...]@mortal), and
-                    // taking the stored obj's ids would silently keep the old base. A name-only
-                    // request -- T(vid) or X::T with no @vid -- falls back to the registered ids,
-                    // since there the "tid" argument is the name being looked up.
-                    final boolean useRequested = null != tid && null != vid;
-                    final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
-                    final fURI derivedVID = useRequested ? bigVID : obj.vid();
-                    // The coefficient is folded into the tid BEFORE construction so the constructor's
-                    // canonical-only registration rule sees the final coefficient -- a variant must not
-                    // register itself after the fact.
-                    return new MType(Tuple.Pair.with(
-                            null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), derivedTID, derivedVID).as(); // coefficient specific type doesn't exist, create it
+        // THE IN-FLIGHT BRAKE. the registry read below can re-enter this very resolution: a space read
+        // walks its q-proc list, which constructs objs whose type checks resolve this same name, which
+        // reads the registry, which walks the q-proc list... the memoized first lap broke that cycle BY
+        // ACCIDENT (the second lap hit the cache); this is the same brake made deliberate and scoped: a
+        // re-entered name answers the label immediately and nothing is stored, so the brake holds even
+        // when a racing write keeps the first lap out of the cache.
+        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()
+                && RESOLVING.get().add(checkID.toString())) { // TODO: remove the pattern constraint - why not a type be the set of other types?
+            try {
+                Obj obj = Machine.read(checkID);
+                // clone before re-typing: self() mutates in place, and the obj just read is the SHARED
+                // registered type (often also referenced from another type's predicate). Re-typing it with
+                // this request's coefficient would rewrite that shared type -- e.g. resolving the two-being
+                // multiplicity being{2} would rewrite the registered being, and team's member=>being{+}
+                // predicate with it.
+                obj = obj.clone().selfTID(obj.tid().c(checkID.c()));
+                if (obj.isType()) {
+                    if (checkID.c().equals(obj.c()) &&
+                            Objects.equals(obj.asType().predicate(), predicate) &&
+                            Objects.equals(obj.asType().constructor(), constructor))
+                        return obj.asType();
+                    else {
+                        // A request that names BOTH a base type and a vid (X::T@name) wins over the
+                        // registered form: a re-registration may rebase a name onto a different type
+                        // (mortal -> person::T[...]@mortal after mortal was human::T[...]@mortal), and
+                        // taking the stored obj's ids would silently keep the old base. A name-only
+                        // request -- T(vid) or X::T with no @vid -- falls back to the registered ids,
+                        // since there the "tid" argument is the name being looked up.
+                        final boolean useRequested = null != tid && null != vid;
+                        final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
+                        final fURI derivedVID = useRequested ? bigVID : obj.vid();
+                        // The coefficient is folded into the tid BEFORE construction so the constructor's
+                        // canonical-only registration rule sees the final coefficient -- a variant must not
+                        // register itself after the fact.
+                        return new MType(Tuple.Pair.with(
+                                null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
+                                null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), derivedTID, derivedVID).as(); // coefficient specific type doesn't exist, create it
+                    }
                 }
+            } finally {
+                RESOLVING.get().remove(checkID.toString());
             }
         }
         // final boolean isBaseType = ;

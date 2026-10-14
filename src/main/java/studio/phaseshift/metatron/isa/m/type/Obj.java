@@ -1089,8 +1089,39 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (!obj.isType() && obj.tid().isGeneric())
                 throw new TypeMismatchException(obj, obj.type(), "%s value can not be typed generic %s::T", obj.jvm(), obj.tid());
             if (TypeCheck.type_pred.enabled()) {
-                if (Machine.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
+                // ONE resolution serves the verdict AND the message. obj.type() is a live registry read, so a
+                // second call can answer a DIFFERENT type than the one the verdict was computed against -- the
+                // error then prints a type the verdict never saw, and its field diff shows no mismatch.
+                final Type objType = Machine.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() ?
+                        obj.type() : null;
+                // AN EPHEMERAL LABEL CANNOT CONVICT. the resolution answers a label (tid==vid, no predicate)
+                // exactly when the registered form is unreachable at this instant -- a forward reference still
+                // being declared, or a resolution racing the registration. testing a structural instance
+                // against the label rejects it for a reason no diff can show, so a label's verdict is
+                // "unverifiable", never "mismatch" -- the leniency the nominal fallthrough already gives these.
+                if (null != objType && !objType.isEphemeral() && !obj.test(objType)) {
                     if (obj.isPoly()) {
+                        // THE VERDICT EXECUTES, THE DIFF COMPARES. the test path runs the type's predicate call
+                        // through the processor (Type.apply -> obj.test(predicate().apply(obj))), while the
+                        // recursion diff below only matches shapes -- so when predicate EXECUTION is what failed
+                        // (an unresolved isa/matches inst, a deref the resolver cannot reach), the diff shows
+                        // every field matching and the real reason lives in the apply result: a fail carries the
+                        // resolver's own exception, which the boolean verdict swallows. re-run the apply here,
+                        // for the message alone.
+                        String applyNote = "";
+                        try {
+                            final Obj applied = objType.apply(obj);
+                            if (applied.isFail() && null != applied.failValue())
+                                applyNote = "\n" + indent("predicate apply failed: " + applied.failValue().getMessage(), 2);
+                            else if (applied.isNoObj())
+                                applyNote = "\n" + indent("predicate apply answered noobj on re-run: the mismatch is in predicate execution, not the fields", 2);
+                            else if (!obj.test(applied))
+                                applyNote = "\n" + indent("predicate apply answered a coerced obj the original does not test against: " + applied, 2);
+                            else
+                                applyNote = "\n" + indent("predicate apply PASSED on re-run: the failing verdict was computed under a different registry state than this message", 2);
+                        } catch (final RuntimeException whyless) {
+                            applyNote = "\n" + indent("predicate apply threw on re-run: " + whyless.getMessage(), 2);
+                        }
                         // the type and the walk that failed are the whole content of this message, and both are
                         // deep structures.  Rendered through toString() each collapsed onto ONE line — the type
                         // ran to ~600 columns and its diff to a run-on of nested parens — so the console showed a
@@ -1098,8 +1129,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         // serializer (legal mtron, deliberately one line); the diagnostic instance nests and
                         // indents, and — this text travels to logs, tests and other processes — carries no link
                         // or color markup.
-                        final String matchDiffString = ObjmtronUISerializer.diagnostic().write(Poly.Helper.diffTypeRecursion(obj, obj.type()));
-                        final String objTypeString = ObjmtronUISerializer.diagnostic().write(obj.type());
+                        final String matchDiffString = ObjmtronUISerializer.diagnostic().write(Poly.Helper.diffTypeRecursion(obj, objType));
+                        final String objTypeString = ObjmtronUISerializer.diagnostic().write(objType);
                         final String objTidString = ObjmtronUISerializer.diagnostic().write(obj.tid(obj.baseTypeID()));
                         final int width = Math.max(Math.max(
                                 CommonUtil.width(matchDiffString),
@@ -1107,19 +1138,20 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         // the bracketed wrapper is what makes indent() reach the FIRST line too: indent() leaves
                         // line one alone, so an unwrapped type would hang at column 0 while its every
                         // continuation sat at column 2.
-                        throw new TypeMismatchException(obj, obj.type(),
-                                "obj does not match %s::T\n%s\n%s\n%s\n%s\n%s",
+                        throw new TypeMismatchException(obj, objType,
+                                "obj does not match %s::T\n%s\n%s\n%s\n%s\n%s%s",
                                 obj.tid(),
                                 indent("[" + objTidString, 2),
                                 indent("X=>", 6),
                                 indent(objTypeString, 2),
                                 indent("─".repeat(width), 2),
-                                indent(matchDiffString + "]", 2));
+                                indent(matchDiffString + "]", 2),
+                                applyNote);
                     } else {
                         // name the level that rejected the value, not just the leaf. A type's constraints are
                         // its whole predicate stack, so for a nested stack the leaf may be the very predicate
                         // that PASSED — young::-3 fails nat's ?>=0 while young's own ?<25 accepts it.
-                        final Type attemptedType = obj.type();
+                        final Type attemptedType = objType;
                         final Type rejectedAt = Type.Helper.rejectedBy(obj, attemptedType);
                         final String level = (null == rejectedAt || rejectedAt.equals(attemptedType)) ? "" :
                                 "%n\trejected at the %s level of the predicate stack (%s)".formatted(
