@@ -214,12 +214,25 @@ public interface InstSet extends Space, Machine.Component {
     static Stream<InstSet> importInstSetStream(final fURI vid, final fURI prefix) {
         if (null != prefix)
             Machine.current().memory().registerPrefix(prefix, vid);
+        // IMPORT IS "ENSURE MOUNTED" -- AN OPTIMIZATION, NEVER A PROTECTION. a provider whose
+        // instruction set is already mounted in scope is skipped BEFORE it is instantiated (the
+        // service annotation carries the vid), so re-running an import is observationally identical
+        // to skipping it. that identity is what makes the skip sound: a mounted ISA's vocabulary is
+        // not something a re-import may change -- a user redefinition belongs at the redefiner's own
+        // level, shadowing the import, never written into it (seal-and-shadow) -- so there is nothing
+        // a reload could restore. a caller that wants a FRESH instance unmounts the old one first,
+        // which removes it from scope and makes the import real. the probe walks the index of spaces
+        // in scope, so a frame sees its enclosing machine's mounts.
+        final Set<fURI> mounted = Machine.current().memory().spaces().elements()
+                .map(e -> e.isRel() ? e.asRel().second() : e)
+                .filter(Obj::isInstSet)
+                .map(PlatonicObj::vid)
+                .collect(java.util.stream.Collectors.toSet());
         return loadInstSetProvider(vid)
-                .map(ServiceLoader.Provider::get)///  new
+                .filter(p -> !mounted.contains(JREService.Helper.vid(p.type())))
+                .map(ServiceLoader.Provider::get)
                 .peek(InstSet::mount)
                 .peek(InstSet::setup); // setup
-
-        //.peek(InstSet::setup); // setup
     }
 
     static void importInstSet(final fURI vid, final fURI prefix) {

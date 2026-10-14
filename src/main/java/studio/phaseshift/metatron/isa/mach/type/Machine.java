@@ -178,12 +178,22 @@ public interface Machine extends Rec, AutoCloseable {
         // answers noobj for an address with no authority, or one whose authority is not in the roster, so the local
         // path is untouched (an empty roster is the normal case).
         final Machine machine = Machine.current();
-        final Obj dispatched = machine.network().read(vid);
+        // THE ROUTER OF ROUTERS ALIGNS THE NAME ONCE. a prefixed spelling (ide:command) names the same
+        // resource as its aligned form (/m/ide/inst/command), and each component keys by the canonical
+        // form -- network authority, memory's index, the instset tables -- so the gatekeeper aligns HERE,
+        // once, and every dispatch below sees one name. memory also aligns internally (it owns the
+        // tables, for now), which is idempotent; the fallback to instruction memory does not, and a raw
+        // spelling can never match tables keyed by full identity. a scheme-less vid passes through
+        // untouched: alignPrefix normalizes to coefficient one, which must not be imposed on an ordinary
+        // read, and a RELATIVE name stays relative -- "in the frame" is memory's contract to interpret.
+        final fURI aligned = vid.hasScheme() ? machine.memory().alignPrefix(vid) : vid;
+        final fURI name = aligned.equals(vid.one()) ? vid : aligned;
+        final Obj dispatched = machine.network().read(name);
         if (!dispatched.isNoObj())
             return dispatched;
         // Local routing (~ resolution, relative→stack, absolute→space) lives in Memory.read, so there is exactly one
         // place a read is turned into an address.
-        final Obj inMemory = machine.memory().read(vid);
+        final Obj inMemory = machine.memory().read(name);
         if (!inMemory.isNoObj())
             return inMemory;
         // ... AND A READ READS INSTRUCTION MEMORY. A read is the language's ONE way in, so it answers from the
@@ -204,7 +214,7 @@ public interface Machine extends Rec, AutoCloseable {
             // (SQLSchemaInstSet populates a table's schema on demand, which is right for a deliberate read of
             // that schema) — asking that here triggered a catalog walk from a logger's type lookup while a
             // tbleSpace was still constructing, and the database connection was not open yet.
-            return machine.instset().readDeclared(vid);
+            return machine.instset().readDeclared(name);
         } finally {
             Helper.readingInstructionMemory(false);
         }
@@ -221,11 +231,15 @@ public interface Machine extends Rec, AutoCloseable {
         // Network.write answers noobj for an undeclared authority, so the local path is untouched — but a declared
         // peer that is silent answers a fail, which must NOT be swallowed by the local fall-through.
         final Machine machine = Machine.current();
-        final Obj dispatched = machine.network().write(vid, obj);
+        // aligned once at the gatekeeper, exactly as read -- a prefixed spelling must land where its
+        // aligned form lands, on the wire and in the index alike.
+        final fURI alignedW = vid.hasScheme() ? machine.memory().alignPrefix(vid) : vid;
+        final fURI name = alignedW.equals(vid.one()) ? vid : alignedW;
+        final Obj dispatched = machine.network().write(name, obj);
         if (!dispatched.isNoObj())
             return dispatched;
         // Local pass-through to Memory (see read).
-        return machine.memory().write(vid, obj);
+        return machine.memory().write(name, obj);
     }
 
     static Obj write(final String vid, final Obj obj) {
