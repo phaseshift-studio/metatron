@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -423,13 +423,13 @@ access to an mtron virtual machine. The <code>tool_feature::T</code> of the <cod
 instructions and MCP servers. A general purpose instruction is <code>eval?#{*}&lt;=#{?}(#::T)</code>. The following agent definition
 snippet is sufficient for the spawned agent to execute mtron code.</p>
 <pre><code class="language-mtron">mtron&gt; ... [-- larger agent definition --]
-==&gt;fail::[parse error at lin...   ...     ^   could not parse at '.']@/sys/fail/176
+==&gt;fail::[parse error at lin...   ...     ^   could not parse at '.']@/sys/fail/143
 mtron&gt; feature=&gt;[
         tool_feature::[tool=&gt;[!*eval]]
         ... [-- other features attached to agent --]
-==&gt;fail::[parse error at lin...=' needs a right operand (e.g. 1 + 2)]@/sys/fail/177
+==&gt;fail::[parse error at lin...=' needs a right operand (e.g. 1 + 2)]@/sys/fail/144
 mtron&gt; ]
-==&gt;fail::[parse error at lin...' — missing opening '[' or extra ']'?]@/sys/fail/178
+==&gt;fail::[parse error at lin...' — missing opening '[' or extra ']'?]@/sys/fail/145
 </code></pre>
 <h3>References</h3>
 <ul>

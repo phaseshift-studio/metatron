@@ -15,13 +15,13 @@ snippet is sufficient for the spawned agent to execute mtron code.
 
 ```mtron
 mtron> ... [-- larger agent definition --]
-==>fail::[parse error at lin...   ...     ^   could not parse at '.']@/sys/fail/176
+==>fail::[parse error at lin...   ...     ^   could not parse at '.']@/sys/fail/143
 mtron> feature=>[
         tool_feature::[tool=>[!*eval]]
         ... [-- other features attached to agent --]
-==>fail::[parse error at lin...=' needs a right operand (e.g. 1 + 2)]@/sys/fail/177
+==>fail::[parse error at lin...=' needs a right operand (e.g. 1 + 2)]@/sys/fail/144
 mtron> ]
-==>fail::[parse error at lin...' — missing opening '[' or extra ']'?]@/sys/fail/178
+==>fail::[parse error at lin...' — missing opening '[' or extra ']'?]@/sys/fail/145
 ```
 ## References
 

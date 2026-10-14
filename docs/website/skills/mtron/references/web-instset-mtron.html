@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -580,9 +580,9 @@ request while the same protocol engine serves them all.</li>
 mtron&gt; *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
 ==&gt;&quot;person::[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==&gt;fail::[inst apply failure...web/http [http://#] (at /m/inst/from)]@/sys/fail/521
+==&gt;fail::[inst apply failure...web/http [http://#] (at /m/inst/from)]@/sys/fail/435
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==&gt;fail::[inst apply failure...web/http [http://#] (at /m/inst/from)]@/sys/fail/522
+==&gt;fail::[inst apply failure...web/http [http://#] (at /m/inst/from)]@/sys/fail/436
 </code></pre>
 <p><code>/person/1</code> serves that obj and <code>/person/2</code> serves the other, through the <em>same</em> handler — and <code>/person/3</code> is a 404,
 because the space is live rather than a lookup table of two.</p>

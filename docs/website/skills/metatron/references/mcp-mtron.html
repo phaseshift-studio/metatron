@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -427,9 +427,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         }
        }
        &quot;&quot;&quot;.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
-==&gt;[type=&gt;streamable-http,
-    url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-    headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron]]
 </code></pre>
 <p>If the snippet provided has an <code>mcpServer</code> outer wrapping, then do:</p>
 <pre><code class="language-mtron">mtron&gt; &quot;&quot;&quot;
@@ -442,17 +439,24 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
           }
         }}}
        &quot;&quot;&quot;.as(json::T).as(rec::T)&gt;&gt;mcpServers/intellij.as(json::T).as(mcp_client::T)
-==&gt;[type=&gt;streamable-http,
-    url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-    headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron]]
+==&gt;mcp_client::[type=&gt;streamable-http,
+                url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
+                headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron],
+                host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
+                status=&gt;!inst?rng=bool&amp;dom=#{?}(){&lt;j&gt;},
+                tool=&gt;[execute_tool=&gt;tool::[
+                 inst=&gt;inst?rng=#{*}&amp;dom=#{?}(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
+                 name=&gt;execute_tool,
+                 desc=&gt;'Universal tool executor that can i...',
+                 arg=&gt;[command=&gt;'Command-line string with tool name...']]]]
 </code></pre>
 <p>Moreover, if the <code>mcpServer</code> snippet has multiple inner servers endpoints defined, to load all of them, do:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
          &quot;intellij&quot;: {
          }
-==&gt;fail::[parse error at lin......   ^   unclosed '{' — missing '}'?]@/sys/fail/179
+==&gt;fail::[parse error at lin......   ^   unclosed '{' — missing '}'?]@/sys/fail/146
 mtron&gt; }}
-==&gt;fail::[parse error at lin...' — missing opening '{' or extra '}'?]@/sys/fail/180
+==&gt;fail::[parse error at lin...' — missing opening '{' or extra '}'?]@/sys/fail/147
 </code></pre>
 <p>For <code>STDIO</code> transport MCP servers, the same process works:</p>
 <pre><code>mcp_client::[command=&gt;[&lt;/home/killswitch/.local/bin/codegraph&gt;,'serve', '--mcp']]@codegraph;
@@ -465,12 +469,12 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;fail::[unable to construc...::[host=&gt;http://localhost:8777/mcp]@a]@/sys/fail/182
+==&gt;fail::[unable to construc...::[host=&gt;http://localhost:8777/mcp]@a]@/sys/fail/149
 mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate i... a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/187
+==&gt;fail::[unable to locate i... a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/150
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>

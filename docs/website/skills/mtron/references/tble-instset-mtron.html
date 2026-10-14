@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -691,7 +691,7 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
                                     pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
                                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-                         const=&gt;[[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/web/helper],
+                         const=&gt;[[llm_chat_schema=&gt;inst?rng=#{*}&amp;dom=#{*}(){&lt;j&gt;}]@/m/tble/helper],
                          type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
                          inst=&gt;[sql?rng=rec{*}&amp;dom=tblespace(str::T){&lt;j&gt;}],
                          rewrite=&gt;[/m/tble/inst/rewrite/sql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
@@ -795,9 +795,9 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/31
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/33
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/32
+==&gt;[body=&gt;'another one']@tbledoc:note/34
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
@@ -821,6 +821,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;23
 ==&gt;2
 ==&gt;8
+==&gt;33
 ==&gt;1
 ==&gt;13
 ==&gt;22
@@ -830,6 +831,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;18
 ==&gt;5
 ==&gt;9
+==&gt;34
 ==&gt;30
 </code></pre>
 <h3>taking the space down</h3>

@@ -299,7 +299,7 @@ mtron> */m/tble?docq
                                     pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},
                                     obj=>memspace::[pattern=><#>],
                                     inst=>instset::[pattern=><#>]]],
-                         const=>[[llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]@/m/web/helper],
+                         const=>[[llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]@/m/tble/helper],
                          type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@/m/tble/space/tblespace],
                          inst=>[sql?rng=rec{*}&dom=tblespace(str::T){<j>}],
                          rewrite=>[/m/tble/inst/rewrite/sql_count?rng=code{?}&dom=code(){<j>},
@@ -426,9 +426,9 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/31
+==>[body=>'a note with a database-assigned key']@tbledoc:note/33
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/32
+==>[body=>'another one']@tbledoc:note/34
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>12
 ==>17
@@ -452,6 +452,7 @@ mtron> *tbledoc:note/+/id                                    [-- the keys the ba
 ==>23
 ==>2
 ==>8
+==>33
 ==>1
 ==>13
 ==>22
@@ -461,6 +462,7 @@ mtron> *tbledoc:note/+/id                                    [-- the keys the ba
 ==>18
 ==>5
 ==>9
+==>34
 ==>30
 ```
 ## taking the space down

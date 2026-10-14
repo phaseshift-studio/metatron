@@ -309,7 +309,7 @@ mtron> int::T[is(gt(0))]@posint     [-- a new type: positive integers --]
 mtron> posint::2                    [-- posint::2  (admitted: the predicate lets it through) --]
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
-==>fail::[-1 is not a int::T...))]@posint 	while parsing: posint::-1]@/sys/fail/307
+==>fail::[-1 is not a int::T...))]@posint 	while parsing: posint::-1]@/sys/fail/268
 ```
 ---
 

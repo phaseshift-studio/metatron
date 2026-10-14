@@ -773,11 +773,11 @@
                     </execution>
                     <execution>
                         <id>bundle-site-scripts</id>
-                                                <!-- generate-resources, not pre-site: the website copies of wsplus are build
-                             products of bin/wsplus, and pre-site runs only for a site build, so they
-                             silently went stale. The bundler skips identical content (no mtime churn) and
-                             costs ~50ms, so every build can refresh them. Drift is also caught by
-                             sh bin/test/build-wsplus.sh, whose check mode runs in both directions. -->
+                        <!-- generate-resources, not pre-site: the website copies of wsplus are build
+     products of bin/wsplus, and pre-site runs only for a site build, so they
+     silently went stale. The bundler skips identical content (no mtime churn) and
+     costs ~50ms, so every build can refresh them. Drift is also caught by
+     sh bin/test/build-wsplus.sh, whose check mode runs in both directions. -->
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>exec</goal>
@@ -950,7 +950,6 @@
                                     <directory>${project.basedir}/dist/docker</directory>
                                     <includes>
                                         <include>compose.yaml</include>
-                                        <include>compose.infra.yaml</include>
                                     </includes>
                                 </resource>
                             </resources>

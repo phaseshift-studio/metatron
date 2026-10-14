@@ -145,7 +145,7 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker</span>
                             <pre><code class="language-bash">docker run -d --name metatron \
   -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -159,7 +159,7 @@
                              practice -- without it dckrspace cannot open the socket, so the VM boots
                              healthy but blind to every container it was supposed to manage. -->
                         <div class="click-to-copy" title="click to copy">
-                            <span class="badge bg-danger">only linux tested</span>
+                            <span class="badge bg-primary">docker compose</span>
                             <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
 METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
@@ -485,7 +485,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime:://2026.10:1318/01/09/449?tz=-0600
+==&gt;datetime:://2026.10:1403/55/21/907?tz=-0600
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -634,13 +634,13 @@ mtron&gt; nanos::1000000.0.as(millis::T).matches(millis::T)
 </code></pre>
 <p>Time units require a real-backed value — an int-backed time is a type violation:</p>
 <pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
-==&gt;fail::[2 is not a time::T... 	while parsing: day::2.as(millis::T)]@/sys/fail/467
+==&gt;fail::[2 is not a time::T... 	while parsing: day::2.as(millis::T)]@/sys/fail/389
 mtron&gt; hour::2.as(minute::T)        [-- int-backed time (bad) --]
-==&gt;fail::[2 is not a time::T...	while parsing: hour::2.as(minute::T)]@/sys/fail/468
+==&gt;fail::[2 is not a time::T...	while parsing: hour::2.as(minute::T)]@/sys/fail/390
 mtron&gt; nanos::2.as(millis::T)       [-- int-backed time (bad) --]
-==&gt;fail::[2 is not a time::T...while parsing: nanos::2.as(millis::T)]@/sys/fail/469
+==&gt;fail::[2 is not a time::T...while parsing: nanos::2.as(millis::T)]@/sys/fail/391
 mtron&gt; micros::2.as(millis::T)      [-- int-backed time (bad) --]
-==&gt;fail::[2 is not a time::T...hile parsing: micros::2.as(millis::T)]@/sys/fail/470
+==&gt;fail::[2 is not a time::T...hile parsing: micros::2.as(millis::T)]@/sys/fail/392
 </code></pre>
 <h5>relational operators</h5>
 <p><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>lte</code>, and <code>gte</code> auto-convert across units before comparing:</p>

@@ -19,9 +19,6 @@ mtron> """
         }
        }
        """.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
-==>[type=>streamable-http,
-    url=><http://127.0.0.1:64342/stream>,
-    headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron]]
 ```
 If the snippet provided has an `mcpServer` outer wrapping, then do:
 
@@ -36,9 +33,16 @@ mtron> """
           }
         }}}
        """.as(json::T).as(rec::T)>>mcpServers/intellij.as(json::T).as(mcp_client::T)
-==>[type=>streamable-http,
-    url=><http://127.0.0.1:64342/stream>,
-    headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron]]
+==>mcp_client::[type=>streamable-http,
+                url=><http://127.0.0.1:64342/stream>,
+                headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron],
+                host=><http://127.0.0.1:64342/stream>,
+                status=>!inst?rng=bool&dom=#{?}(){<j>},
+                tool=>[execute_tool=>tool::[
+                 inst=>inst?rng=#{*}&dom=#{?}(command=>'Command-line string with tool name and arguments'){<j>},
+                 name=>execute_tool,
+                 desc=>'Universal tool executor that can i...',
+                 arg=>[command=>'Command-line string with tool name...']]]]
 ```
 Moreover, if the `mcpServer` snippet has multiple inner servers endpoints defined, to load all of them, do:
 
@@ -46,9 +50,9 @@ Moreover, if the `mcpServer` snippet has multiple inner servers endpoints define
 mtron> {"mcpServers": {
          "intellij": {
          }
-==>fail::[parse error at lin......   ^   unclosed '{' — missing '}'?]@/sys/fail/179
+==>fail::[parse error at lin......   ^   unclosed '{' — missing '}'?]@/sys/fail/146
 mtron> }}
-==>fail::[parse error at lin...' — missing opening '{' or extra '}'?]@/sys/fail/180
+==>fail::[parse error at lin...' — missing opening '{' or extra '}'?]@/sys/fail/147
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -66,12 +70,12 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>fail::[unable to construc...::[host=>http://localhost:8777/mcp]@a]@/sys/fail/182
+==>fail::[unable to construc...::[host=>http://localhost:8777/mcp]@a]@/sys/fail/149
 mtron> *a>>tool
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate i... a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/187
+==>fail::[unable to locate i... a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/150
 mtron> [-- => 3 --]
 ```
 ### WebSocket
