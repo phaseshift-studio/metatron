@@ -224,7 +224,14 @@ public class BasicMemory extends MRec implements Memory {
             return;
         this.smallToBigRoutes.computeRaw(small, (k, v) -> {
             if (null == v) {
-                final Set<fURI> set = Collections.synchronizedSet(new TreeSet<>(Comparator.comparingInt(fURI::pathLength)));
+                // ORDERED SHORTEST-FIRST, DISTINCT BY PATH. the comparator must not stop at pathLength: a
+                // TreeSet treats compare==0 as "already present", so a length-only comparator silently DROPS
+                // every same-length route for the name -- which route survived depended on registration order,
+                // and the contains() guard below (same comparator) suppressed even the warning. the toString
+                // tiebreak keeps shortest-first iteration (redirect() prefers the primary prefix, then the
+                // first = shortest) while letting same-length routes coexist, loudly.
+                final Set<fURI> set = Collections.synchronizedSet(new TreeSet<>(
+                        Comparator.comparingInt(fURI::pathLength).thenComparing(fURI::toString)));
                 set.add(big.basePath());
                 return set;
             } else {
@@ -328,8 +335,14 @@ public class BasicMemory extends MRec implements Memory {
         final Obj obj = this.readAbsolute(readableVID);
         if (obj.isNoObj()) {
             final fURI bigVID = readableVID.big();
-            if (!bigVID.equals(readableVID))
-                return this.read(bigVID.q(vid.qMap()));
+            // compare the RECONSTRUCTED retry against what was already tried: big() answers the base
+            // path with the q dropped, so a q-carrying miss compared big-to-readable is NEVER equal,
+            // and the raw comparison retried the same address forever -- a StackOverflowError at this
+            // line, armed by any q-read that misses every space. the retry must carry the q back
+            // BEFORE deciding whether it is new.
+            final fURI retryVID = bigVID.q(vid.qMap());
+            if (!retryVID.equals(readableVID) && !retryVID.equals(vid))
+                return this.read(retryVID);
         }
         // todo c(mult vid.c())
         return obj;
