@@ -43,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -198,7 +197,7 @@ public final class PeerSpawn {
         try {
             // the 2-arg (timeout) sendRecv lives on the WebSocketObj the client drives, so build the rec first
             final WebSocketRec wsRec = new WebSocketRec(mutableMap(
-                    uri(HOST), uri(keyOf(authority) + MachNode.MTRON_ROUTE + "?out=" + MIME.MIMEType.APPLICATION_MTRON.value),
+                    uri(HOST), uri(keyOf(authority) + MachNode.MTRON_ROUTE),
                     uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
                     uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null);
             client = new WebSocketRecClient(wsRec);

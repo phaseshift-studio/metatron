@@ -422,6 +422,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 return session;
             final Obj reach = session.isRec() ? session.asRec().<Obj>at(uri(SEND_RECV)) : noobj();
             if (reach.isObjInst())
+                // the message rides as send_recv's ARG: a bare inst survives computeArgs raw (it is
+                // not an obj-call, so percolation hands it back untouched) and the client's
+                // send_recv applies or ships it whole. a user's `|` quoting percolates against the
+                // REAL monad lhs before this adapter ever runs -- so the adapter adds nothing.
                 return instLambda(message ->
                         reach.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(message)).apply(noobj()));
             return session.isRec() ? session.asRec().<Obj>at(uri(TRANSPORT)) : noobj();
@@ -442,16 +446,22 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * stays known rather than reachable.
          */
         public static Obj dial(final fURI dialURI, final fURI handler) {
-            if ("loop".equals(dialURI.scheme()))
-                return instLambda(message -> message.isCall() ? message.apply(noobj()) : noobj());
-            if (null == handler)
+            // ONE dial path for every protocol: resolve the DIALER through instruction memory, and a
+            // protocol client type's constructor IS the dial ([host=>...] in, live client out). The only
+            // scheme default the table carries is loop: -> id_client::T, the identity element of the
+            // client family (its send_recv applies the shipped message against the local machine) --
+            // discovery supplies dialers per description for everything else (step 5).
+            final fURI dialer = null != handler ? handler
+                    : "loop".equals(dialURI.scheme()) ? studio.phaseshift.metatron.isa.mach.machInstSet.ID_CLIENT_TID
+                    : null;
+            if (null == dialer)
                 return noobj();
-            final Obj dialer = Machine.read(handler);
-            if (dialer.isType() && dialer.asType().hasConstructor())
-                return dialer.asType().constructor().asInst()
+            final Obj resolved = Machine.read(dialer);
+            if (resolved.isType() && resolved.asType().hasConstructor())
+                return resolved.asType().constructor().asInst()
                         .args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(rec(uri(HOST), uri(dialURI))))
                         .apply(noobj());
-            return dialer.isObjInst() ? dialer.asInst().apply(uri(dialURI)) : noobj();
+            return resolved.isObjInst() ? resolved.asInst().apply(uri(dialURI)) : noobj();
         }
 
         /**
