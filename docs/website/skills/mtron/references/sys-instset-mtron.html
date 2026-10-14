@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -437,27 +453,27 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
 ==&gt;docs::[obj=&gt;bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
-          args=&gt;[{?}timeout=&gt;'a real number denoting timeout of ...',
-                 cmd=&gt;'the terminal command to evaluate (...'],
+          args=&gt;[cmd=&gt;'the terminal command to evaluate (...',
+                 {?}timeout=&gt;'a real number denoting timeout of ...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; bash('ls')
 ==&gt;['AGENTS.md',
-    'articles',
     'bin',
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'Desktop',
-    ...(19 more)]
+    'dist',
+    'docs',
+    ...(16 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.3M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  521G ...',
+    '/dev/nvme0n1p2         916G  524G ...',
     'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -465,38 +481,32 @@ mtron&gt; bash('df -h')
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/fail/_?incrq
+==&gt;fail::[inst apply failure...ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][...]@/sys/fail/471
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
-     $ bash -c 'ls /no/such/directory'
-     STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
-     $ bash -c 'ls /no/such/directory'
-     STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/fail/_?incrq
+==&gt;fail::[inst apply failure... /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][...]@/sys/fail/472
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
 the same <code>==</code> projection:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;ls&quot;, &quot;whoami&quot;}.-&lt;[_ =&gt; _]==[_ =&gt; bash(_)]   [-- rec of cmds =&gt; rec of result lsts --]
 ==&gt;['ls'=&gt;['AGENTS.md',
-           'articles',
            'bin',
            'boot',
            'conf',
            'CONTRIBUTING.md',
-           'Desktop',
-           ...(19 more)]]
+           'dist',
+           'docs',
+           ...(16 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
-    'articles',
     'bin',
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'Desktop',
-    ...(20 more)]
+    'dist',
+    'docs',
+    ...(17 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -526,19 +536,19 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum().
 The projection can do the work: first stat line of each entry, nothing else:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash(&quot;stat ${_}&quot;)&gt;&gt;0]          [-- each entry =&gt; its `File:` line --]
 ==&gt;['  File: AGENTS.md',
-    '  File: articles',
     '  File: bin',
     '  File: boot',
     '  File: conf',
     '  File: CONTRIBUTING.md',
-    '  File: Desktop',
-    ...(19 more)]
+    '  File: dist',
+    '  File: docs',
+    ...(16 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
-    '  Size: 37531     	Blocks: 80     ...',
-    'Device: 259,5	Inode: 22852383    L...',
+    '  Size: 43160     	Blocks: 88     ...',
+    'Device: 259,5	Inode: 26352425    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-11 16:56:08.472354...',
+    'Access: 2026-10-12 22:58:16.632414...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -546,14 +556,14 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
 <code>Size</code>, extracted and typed <code>bB::T</code>, then converted to <code>kB::T</code> — the unit system
 converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du</code>:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash('stat ${_} | sed -n &quot;s/.*Size: \([0-9]*\).*/\1/p&quot;')&gt;&gt;0.as?int&lt;=str(int::T).as(bB::T)]
-==&gt;[bB::375,
-    bB::409,
+==&gt;[bB::431,
     bB::409,
     bB::409,
     bB::409,
     bB::698,
     bB::409,
-    ...(19 more)]
+    bB::409,
+    ...(16 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -583,9 +593,9 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/fail/_?incrq
+==&gt;fail::[inst apply failure...31min \brm\b (at /m/sys/inst/bash)]@/sys/fail/477
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/fail/_?incrq
+==&gt;fail::[inst apply failure...ot in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/478
 </code></pre>
 <p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:</p>
@@ -606,14 +616,13 @@ no input to take, so it is shown rather than run:</p>
 <p>One read each: the environment, the thread count, and the executor's own summary —
 <code>sys_stat</code> answers with running vs stopped, no introspection ceremony:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
-==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
 ==&gt;1
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::472,
-    free_mem_jvm=&gt;mB::297.46027,
+==&gt;[total_mem_jvm=&gt;mB::600,
+    free_mem_jvm=&gt;mB::424.05744,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::174.53972,
+    used_mem_jvm=&gt;mB::175.94255,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[run=&gt;0,stop=&gt;0]]
@@ -667,10 +676,7 @@ tag <em>is</em> the predicate validation — and, for <code>application/x-mtron<
 into its structural form. Where in doubt, <code>?docq</code> and <code>.explain()</code> say what an inst
 is doing — the sugar is short precisely because it is legible once:</p>
 <pre><code class="language-mtron">mtron&gt; [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
-==&gt;fail::[parse error at line 1, col 1:
-     [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=tex...
-     ^
-     could not parse at '[']@/fail/_?incrq
+==&gt;fail::[parse error at lin...q=tex...   ^   could not parse at '[']@/sys/fail/479
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
 ==&gt;[space=&gt;/sys/space,
     web=&gt;[http/host=&gt;http://localhost:8777,

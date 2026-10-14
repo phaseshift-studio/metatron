@@ -273,11 +273,11 @@ public final class MtronPreprocessor {
                     //System.exit(1);
                 }
                 if (!hidden && !noOutput && !result.isNoObj()) {
-                    result.stream().forEach(o -> outputs.add("==>" + SER.write(o).replace("\n", "\n   ")));
+                    result.stream().forEach(o -> outputs.add(resultLine(SER.write(o))));
                 } else if (noOutput) {
                     outputs.add("...");
                 } else if (!result.isNoObj() && input.isType()) {
-                    outputs.add("==>" + SER.write(input).replace("\n", "\n   ")); // replacement so second+ lines are indented past the result prompt
+                    outputs.add(resultLine(SER.write(input)));
                 }
                 // clear the fail stack so errors don't leak across blocks
                 if (!hidden) SER.inputBytes("~/sys/fail/+ -> noobj").apply();
@@ -314,6 +314,15 @@ public final class MtronPreprocessor {
             return new EvalResult(all, noHeader);
         }
         return new EvalResult(lines, noHeader);
+    }
+
+    /**
+     * One result line: the {@code ==>} prompt, then the rendered value with each of its
+     * continuation lines shifted past that prompt ({@link Graphitty#RESULT_PROMPT_WIDTH}) so
+     * they read under the value rather than under the prompt.
+     */
+    private static String resultLine(final String written) {
+        return "==>" + written.replace("\n", "\n" + " ".repeat(Graphitty.RESULT_PROMPT_WIDTH));
     }
 
     /**

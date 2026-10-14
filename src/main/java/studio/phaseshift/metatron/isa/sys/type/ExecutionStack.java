@@ -178,7 +178,10 @@ public class ExecutionStack {
     private static void appendLine(final StringBuilder builder, final int level, final String text) {
         if (!builder.isEmpty())
             builder.append('\n');
-        builder.repeat("    ", Math.max(0, level));
+        // content only: the outermost frame starts at column zero and every frame below it steps
+        // three columns in.  Where this block lands -- past the '==>' result prompt it is reported
+        // under -- is the writer's business, not the stack's (see Graphitty.RESULT_PROMPT_WIDTH)
+        builder.repeat(" ", 3 * Math.max(0, level));
         builder.append("\\_").append(text);
     }
 

@@ -23,7 +23,7 @@ RX_SYNTAX = 'syntax\\s+"?([^"\\s]+)"?\\s+"(.+)"'
 RX_COLOR = '(i?color)\\s+([^\\s]+)\\s+(.*)'
 RX_STARTEND = 'start="([^"]*)"\\s+end="([^"]*)"'
 RX_QUOTED = '"((?:[^"\\\\]|\\\\.)*)"'
-NANORC_PAYLOAD = 'eNqFVl9v2zYQf/enuChdLNmWnD7Os+TkoQVWdEBR9CGbJAe0TNtqZVIl6bRuVGAfYp9wn2R3lBRbSoAlCEORxx+Pd7/7c3kJe26YUVLA6+DaZ0W5Y3D5vz+DS7hhB7OTCv5g6ouE2wA+yrXKtwf+A+Y7Y8rZdLqnLdUuB5ncRwM6minODF/DBo+/e58LDoIJCfooDPsOu3y7K/DPcIWyIEVxhEwWUk0gb/4zsW6lEXSPnxr0oSylQlg6tOY63wooVS6yvCz4DGj1BA1MAwOdi23B4aByi2h2XCCeeODKINyKsEspuDAacmEk7KXioPgGNV6DXH0+4WkLL3jGtWbqWMMTbo4TcYSSKc3xAmZwRQwRXu45SLxRWSBzLPlg0DzJ2ZM/HHCCURK49sN75QzwCqb1Ac9x1PBodqi9xaeLBtYysCoOnM45A3QSfNXN8pEXhfwGTrJA1GSJwxVKwAbcz5P9ZOH1xR6D5KfTLCp8K64kC1oiVDRFT9699irXX8Sv/V/T+BqHkUfw5BrklT5s8fXNka3iaGQnDma/TcZVeJH8cpOiOvM5DlFEsxCHkGY+DZFPs7nTuzEepbUyyKRikPfUcU+ajL3qeuwlQf3hvon9cbpodhbnShp1yMxBsQKM/MJFT98kJsORpolLg0fDIw1kFKsF8O81WZ6pkwSVvdEbn19P54ghumB6Byivsx3fs/Z07Ul3Wrkx83+g6hhPnlfZD8+1EPVHhfB+de+hhFdDj9ypt6iPVdMquW9uH9WaZlPFC3vzF36Ef//+B1hZFjl6mW0w5GDLBVd5BvOojjpi2YrjS7oWQRdZB6yOhuv+k6+/txre+m+tnht8fdeJk4NYc1VQ9KN8DUZazaMOl+N5Gi+jdBRHqdPVwFKG3vT1g5IZveZJj+zIUOBq4VaXVTJu7IRGqiyz0VRXVVjNQ89dXERI1Y7Jw8Zy9QPQuPd4cmqB6AmdG9x5WF15nQMvSjfOPJdrZWaz3rOI/7SI1EQH8M0mz3JKQc9j9PH1T6QfTWu3Txr3t4G6YXkxOFc3Se5JherW/6u6T8edCA/v+jGWBPTb14783pWbnpYs0l1LDSwQEpe0LB5478xFMkLFL2w2oqmVx4fMP0enzNPG3mP1wlr7yGfJL176qSVNmLrEHI+oQ4tLN4y8tOeTeIIGQavdT/30uS+sH4jkUhb9nLes4uUUQxETB682rNAciYAr1SvvROY2xCRmbJVjVeqEFzllxTdUVcKoy6z5dOHOq6jqUobINSNGXxIxE+2NokSPyN6dw81ZK/ciQOCNmnM9l79CLi1/WgrZVNznkXVwl8feiPZPpqtF0NSLu+cX2PVpS5C6MtTVvMm/vOX5nqGlDGtqQVsGiIA43E8dy2b6XoS2dIT9q2whuerz5pS9nzL6pFZGSCrE/dvtai1ga3Rvezb7VG/ePOTrngI3c8zeZCoMtzaX2HQE6AKbjBZVsvTG9L6bnuisljyTaixmVL8SJg6yG4cRzZ7VySFuDnFv2N/ShikTOon9dYCL9dPHk8nYEc1IMdT4i2rlWSqyAi1O7PsNiu+nzosS5DorEYYoMbCQyBG0psl2QM0ilp8H7LXWeEm+yTlyA+VtmyPgDlwebAP48PHN29/xmIcZ8tOOn3JOi8BWGG3UGO05E8Y2meQ6v76mlDo3uRTaNofUhWJPxgYU41iQqHdzc0EK4M46Z1shtckzPYEY7/gz9QKAW3GmInzbSU0NLPVl1IfmAsGGd0O8mAyNMKsjDMNoCG6r+gT2R3pB3b2VBcPnYWF+yhbYFoJRGFX09DuE2x+0QYIawAgh0TVq8Z5RtVaHApPKt1xMsKXEnRKxUMzqpEsmSB+Lh/g+4lNZoRyBjScHlymFVMCgM5LMiOmaRG1YQhPNdbdMnYEXdIpJHM9YIQ77WYql5CzUzwN38B9LmtOk'
+NANORC_PAYLOAD = 'eNqFVl9v2zYQf/enuChdLNmWnD7Os+TkoQU2dEBR9CGbJAe0TdtqJVIl6bRu1GEfYp9wn2R3lBRbSoAlCEORxx+Pd7/7c3kJBTfMKCngdXDts7zcM7j835/BJdywg9lLBb8z9VnCbQAf5EZluwP/DvO9MeVsOi1oS7XLwVoW0YCOrhVnhm9gi8d/e5cJDoIJCfooDPsG+2y3z/HPcIWyIEV+hLXMpZpA1vxnYtNKI2iBnxr0oSylQlg6tOE62wkoVSbWWZnzGdDqCRqYBgY6E7ucw0FlFtHsuUA88cCVQbgVYZdScGE0ZMJIKKTioPgWNd6AXH064WkLL/iaa83UsYYn3Awn4gglU5rjBczgihgivCw4SLxRWSBzLPlg0DzJKcgfDjjBKAlc++G9cgZ4BdP6gOc4ang0e9Te4tNFA2sZWOUHTuecAToJvuhm+cjzXH4FJ1kgarLE4QolYAvup0kxWXh9sccg+eE0iwrfiivJgpYIFU3Rk3evvcr1F/Fr/+c0vsZh5BE8uQZ5pQ87fH1zZKc4GtmJg9kvk3EVXiQ/3aSoznyOQxTRLMQhpJlPQ+TTbO70boxHaa0MMikfZD113JMmY6+6HntJUH+4b2J/nC6ancW5kkYd1uagWA5Gfuaip28Sk+FI08SlwaPhkQYyitUC+LeaLM/USYLK3uiNz6+nc8QQnTO9B5TX6z0vWHu69qQ7rdyY+d9RdYwnz6vsh+daiPqjQni/uvdQwquhR+7UW9THqmmV3De3j2pN11PFc3vzZ36Ef//+B1hZ5hl6mW0x5GDHBVfZGuZRHXXEshXHl3Qtgi6yDlgdDdf9J19/azW89d9aPbf4+q4TJwex4Sqn6Ef5Goy0mkcdLsfzNF5G6SiOUqergaUMvenLeyXX9JonPdZHhgJXC7e6rJJxYyc0UmWZjaa6qsJqHnru4iJCqnZMHjaWqx+Axr3Hk1MLRE/o3ODOw+rK6xx4Ubpx5rlcKzOb9Z5F/KdFpCY6gG+32TqjFPQ8Rh9f/0D60bR2+6RxfxuoW5blnSBO7kmD6tb/E9WcpeNOiId3/SBLAvrtq0eO78pNT0sW6a7lBlYIiUta5g+8d+YiGaHmFzYd0dTK40vmn6JT6mmD77F6Ya195bPsFy/91LImTF2ijkfcocWlG0Ze2nNKPEGToNnup3763BnWEcRyKfN+0ltW8XKKsYiZg1dblmuOTMCV6pV3YnMbYxJTtsqwLHXii0i04lsqK2HUpdZ8unDnVVR1OUPsmhGlL4mZifZGUaJHZO/O4easlXsRIPBGzbmey18hmZY/LIdsLn6RSF0ieyPaP5muFkFTL+6eX2DXpy1B6tJQl/MmAfOW6AVDSxnWFIO2DhABcbifOpbP9L0Ibe0I+1fZSnLV580pfT+l9EmtjJBUifu329VawBbp3vZs9rHevHnINj0FbuaYvslUGHBtMrH5CNAFlI3+qpJFlSy9Mb3wpic8q2U7co3VjOqXw8RBhuMwotmzYjnEzSHuDftb2jBlQiexvw5wsXn6eDIbO6IpKY4an1HBPMtHVqDFiX2/QfH91HlRgtxnJcIQJQYWEnmCFjXrPVDHiDXoARuuDV6SbTOO/EB52+sIuAOXB7sA3n948/ZXPOZhmvy456e80yKwFUYcdUcFZ8LYTpPc59fXlFJnJpNC2w6RWlFszNiA4hyrEjVwbiZIAdzZZGwnpDbZWk8gxjv+SL0A4FacqQhf91JTF0vNGTWjmUCw4d0QLyZDI8zqCMMwGoLbqj6B4kgvqFu4Mmf4PKzOTxkDe0MwCiOLnn6HcMVBGySpAYwSEt2gFu8YlWx1yDGxfM3EBPtK3CkRC8WsTrpkgvSxeIjvIz7VFsoT2H1ycJlSSAUMPCPJjJiySdSGJjQRXbfM1B54weA80cTxjOXiUMzS+3R8Fu7nwTv4DxBf1d4='
 
 def _parse_nanorc_from_string(text):
     ns = _M_nanorc_highlight.__dict__
@@ -131,6 +131,11 @@ STRIKETHROUGH = '\u001b[9m'
 
 NC = '\u001b[0m'
 
+# the columns the '==>' result prompt this client writes occupies: a multi-line result shifts
+# its continuation lines past it, so they read under the value rather than under the prompt.
+# the Java writers name the same width Graphitty.RESULT_PROMPT_WIDTH
+RESULT_PROMPT_WIDTH = 3
+
 try:
     import websockets
 except ImportError:
@@ -200,7 +205,7 @@ async def repl(url):
                 text = result.decode() if isinstance(result, bytes) else str(result)
                 if not text.strip() or text.strip() == "noobj":  # silent for empty/noobj results
                     continue
-                print(GREEN + "==>" + NC + hl.highlight_block(text.replace("\n", "\n   ")))
+                print(GREEN + "==>" + NC + hl.highlight_block(text.replace("\n", "\n" + " " * RESULT_PROMPT_WIDTH)))
             except asyncio.TimeoutError:
                 print(RED + "==>ERROR: " + NC + "timed out")
                 continue
@@ -217,7 +222,7 @@ async def oneshot(url, exprs):
                 text = result.decode() if isinstance(result, bytes) else str(result)
                 text = text.strip()
                 if text and text != "noobj":
-                    print(GREEN + "==>" + NC + text.replace("\n", "\n   "))
+                    print(GREEN + "==>" + NC + text.replace("\n", "\n" + " " * RESULT_PROMPT_WIDTH))
             except asyncio.TimeoutError:
                 print(RED + "==>ERROR: " + NC + "timed out")
                 code = 2

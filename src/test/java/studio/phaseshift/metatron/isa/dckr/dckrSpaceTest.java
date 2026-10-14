@@ -25,18 +25,24 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.ON_CLOSE;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -123,6 +129,23 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         final Process p = new ProcessBuilder("/bin/sh", "-c", "docker " + args)
                 .redirectErrorStream(true).start();
         p.waitFor(10, TimeUnit.SECONDS);
+    }
+
+    /**
+     * The non-blank output lines of a docker command — an id/name list for assertions that must see
+     * the daemon directly rather than through the space under test.
+     */
+    private static List<String> dockerLines(final String args) throws Exception {
+        final Process p = new ProcessBuilder("/bin/sh", "-c", "docker " + args)
+                .redirectErrorStream(true).start();
+        final List<String> lines = new ArrayList<>();
+        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null)
+                if (!line.isBlank()) lines.add(line.trim());
+        }
+        p.waitFor(10, TimeUnit.SECONDS);
+        return lines;
     }
 
     // ===================================================================
@@ -288,6 +311,97 @@ public class dckrSpaceTest extends AbstractSpaceTest {
         space.write(f("dtest:compose/" + stackName),
                 noobj());
         assertFalse(Files.exists(yamlFile), "compose file cleaned up");
+    }
+
+    /**
+     * A stack outlives the compose file that described it: {@code /tmp/metatron-docker} is wiped by
+     * a VM restart, and inside a container it belongs to that container.  {@code docker:compose/<name>
+     * -> noobj} must still tear the stack down (it did report {@code noobj} while leaving the
+     * containers running, which is how orphaned stacks accumulate), so it falls back to the
+     * {@code com.docker.compose.project} labels compose stamped on the objects.
+     */
+    @Test
+    @Order(4)
+    void testComposeDownWithoutComposeFile() throws Exception {
+        assumeDockerAvailable();
+        final String stackName = "mtron-test-cdn-" + System.currentTimeMillis() % 100000;
+
+        space.write(f("dtest:compose/" + stackName), rec(uri("services"),
+                rec(uri("nginx"), rec(uri("image"), str("nginx:alpine")))));
+
+        final Path yamlFile = Path.of("/tmp", "metatron-docker", stackName, "docker-compose.yml");
+        assertTrue(Files.exists(yamlFile), "compose file written");
+        assertFalse(dockerLines("ps -aq --filter label=com.docker.compose.project=" + stackName).isEmpty(),
+                "stack container is up");
+
+        // what a restart leaves behind: no compose file, the objects still labelled
+        Files.delete(yamlFile);
+        Files.delete(yamlFile.getParent());
+
+        space.write(f("dtest:compose/" + stackName), noobj());
+
+        assertTrue(dockerLines("ps -aq --filter label=com.docker.compose.project=" + stackName).isEmpty(),
+                "no container of the stack survives a down with no compose file");
+        assertTrue(dockerLines("network ls -q --filter label=com.docker.compose.project=" + stackName).isEmpty(),
+                "no network of the stack survives a down with no compose file");
+    }
+
+    /**
+     * The declared {@code on_close} instruction is applied when the space closes — the hook every
+     * reaper is written against.  Deliberately docker-free: the contract is that the instruction
+     * runs, and that it runs <em>before</em> the space is released (so it can still route through
+     * it).  The probe lives in its own memSpace because the bare VM the harness boots
+     * ({@code BootLoader.load(rec())}) mounts neither {@code /sys} nor {@code /usr} for writing.
+     */
+    @Test
+    @Order(6)
+    void testOnCloseRunsWhenTheSpaceCloses() {
+        memSpace.of(f("dtocprobe:#"), f("/sys/space/dtocprobe"));
+        final dckrSpace closing = dckrSpace.of(rec(
+                        uri(PATTERN), uri("dtoc:#"),
+                        uri(ROUTE), rec(uri("dtoc:"), uri("")),
+                        uri(ON_CLOSE), mParser.parse("dtocprobe:reaped -> 42")),
+                f("/sys/space/docker_onclose"));
+
+        closing.close();
+
+        checkCodeParseApply(LOG, "*dtocprobe:reaped", "42");
+    }
+
+    /**
+     * An {@code owner} on the space is stamped on everything it creates, and the declared
+     * {@code on_close} reaps what that owner marks.  This is the whole point of the label: the
+     * question "what belongs to me?" is answered by the daemon, not by the VM's short-lived cache.
+     */
+    @Test
+    @Order(5)
+    void testOwnerLabelAndReapOnClose() throws Exception {
+        assumeDockerAvailable();
+        final String stack = "mtron-test-reap-" + System.currentTimeMillis() % 100000;
+        final String owner = "/usr/mtron-test";
+        final dckrSpace owned = dckrSpace.of(rec(
+                        uri(PATTERN), uri("ddown:#"),
+                        uri(ROUTE), rec(uri("ddown:"), uri("")),
+                        uri("owner"), uri(owner),
+                        uri(ON_CLOSE), mParser.parse("ddown:compose/" + stack + " -> noobj")),
+                f("/sys/space/docker_owned"));
+
+        owned.write(f("ddown:compose/" + stack), rec(uri("services"),
+                rec(uri("probe"), rec(uri("image"), str("alpine:latest"),
+                        uri("command"), lst(str("sleep"), str("60"))))));
+
+        assertFalse(dockerLines("ps -aq --filter label=" + dckrSpace.OWNER_LABEL + "=" + owner).isEmpty(),
+                "a service of the stack carries the owner label");
+        // compose would name this …-probe-1; a single-service stack is named after the stack instead, so a
+        // boot's `from(docker:container/<stack>).else(… up …)` guard adopts it rather than re-upping (and
+        // re-upping is the Recreate path a second concurrent compose run deadlocks on)
+        assertTrue(dockerLines("ps -a --format {{.Names}}").contains(stack),
+                "a single-service stack's container is named the stack");
+
+        owned.close();
+
+        assertTrue(dockerLines("ps -aq --filter label=" + dckrSpace.OWNER_LABEL + "=" + owner).isEmpty(),
+                "on_close reaps the stack the owner label marks");
     }
 
     @Test

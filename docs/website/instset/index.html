@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -470,7 +486,7 @@
                 <p class="text-muted splash-desc">the reflective instruction set of metatron featuring process, monad, and code introspection</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">33</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">32</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">insts</span><span class="stat-val">6</span></div>
                     <div><span class="stat-label">rewrites</span><span class="stat-val">1</span></div>
@@ -550,7 +566,7 @@
                 <p class="text-muted splash-desc">the world of the web widens metatron</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">8</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">43</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">46</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">2</span></div>
                     <div><span class="stat-label">insts</span><span class="stat-val">2</span></div>
                     <div><span class="stat-label">rewrites</span><span class="stat-val">0</span></div>

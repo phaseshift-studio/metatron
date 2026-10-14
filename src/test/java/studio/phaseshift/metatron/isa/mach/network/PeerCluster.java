@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -39,11 +38,7 @@ import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -63,10 +58,14 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public final class PeerCluster implements AutoCloseable {
 
-    /** the namespace every peer owns */
+    /**
+     * the namespace every peer owns
+     */
     public static final String DEFAULT_ROOT = "/n";
 
-    /** the mtron_ws endpoint the peers serve */
+    /**
+     * the mtron_ws endpoint the peers serve
+     */
     public static final String MTRON_ROUTE = "/mtron";
 
     /**
@@ -84,27 +83,37 @@ public final class PeerCluster implements AutoCloseable {
 
     private static volatile PeerCluster active;
 
-    /** the cluster running in this JVM, or {@code null} */
+    /**
+     * the cluster running in this JVM, or {@code null}
+     */
     public static PeerCluster active() {
         return active;
     }
 
-    /** the value at {@code <root>/a} on peer {@code i} under {@link #DEFAULT_SEED_MATRIX} */
+    /**
+     * the value at {@code <root>/a} on peer {@code i} under {@link #DEFAULT_SEED_MATRIX}
+     */
     public static int seedA(final int i) {
         return i;
     }
 
-    /** the value at {@code <root>/b} on peer {@code i} under {@link #DEFAULT_SEED_MATRIX} */
+    /**
+     * the value at {@code <root>/b} on peer {@code i} under {@link #DEFAULT_SEED_MATRIX}
+     */
     public static int seedB(final int i) {
         return i * 10;
     }
 
-    /** the value at {@code <root>/c} on peer {@code i} under {@link #DEFAULT_SEED_MATRIX} */
+    /**
+     * the value at {@code <root>/c} on peer {@code i} under {@link #DEFAULT_SEED_MATRIX}
+     */
     public static int seedC(final int i) {
         return i * 100;
     }
 
-    /** the value at {@code <root>/probe} on peer {@code i} under {@link #DEFAULT_SEED_MATRIX} */
+    /**
+     * the value at {@code <root>/probe} on peer {@code i} under {@link #DEFAULT_SEED_MATRIX}
+     */
     public static String probe(final int i) {
         return "peer-" + i + "-store-probe";
     }
@@ -129,13 +138,17 @@ public final class PeerCluster implements AutoCloseable {
             this.count = count;
         }
 
-        /** the namespace every peer owns (default {@value #DEFAULT_ROOT}); also supplied as {@code $root} */
+        /**
+         * the namespace every peer owns (default {@value #DEFAULT_ROOT}); also supplied as {@code $root}
+         */
         public Builder store(final String root) {
             this.root = root;
             return this;
         }
 
-        /** data writes, evaluated on every peer after its spaces exist */
+        /**
+         * data writes, evaluated on every peer after its spaces exist
+         */
         public Builder seed(final String... templates) {
             Collections.addAll(this.seeds, templates);
             return this;
@@ -189,7 +202,9 @@ public final class PeerCluster implements AutoCloseable {
         return new PeerCluster(ports, root, false);
     }
 
-    /** handles to every peer */
+    /**
+     * handles to every peer
+     */
     public List<Peer> peers() {
         return List.copyOf(this.peers);
     }
@@ -229,23 +244,31 @@ public final class PeerCluster implements AutoCloseable {
         return this.ports.size();
     }
 
-    /** the store root every peer owns */
+    /**
+     * the store root every peer owns
+     */
     public String root() {
         return this.root;
     }
 
-    /** is the i-th peer's process still alive? */
+    /**
+     * is the i-th peer's process still alive?
+     */
     public boolean alive(final int oneBased) {
         final Process process = this.processes.isEmpty() ? null : this.processes.get(oneBased - 1);
         return null != process && process.isAlive();
     }
 
-    /** the mtron port of the i-th peer (1-based) */
+    /**
+     * the mtron port of the i-th peer (1-based)
+     */
     public int port(final int oneBased) {
         return this.ports.get(oneBased - 1);
     }
 
-    /** the i-th peer's connectable data-root prefix: {@code ws://localhost:<port><root>} */
+    /**
+     * the i-th peer's connectable data-root prefix: {@code ws://localhost:<port><root>}
+     */
     public fURI prefix(final int oneBased) {
         return f("ws://localhost:" + this.port(oneBased)).extend(this.root);
     }
@@ -263,7 +286,7 @@ public final class PeerCluster implements AutoCloseable {
         final Map<Obj, Obj> roster = new LinkedHashMap<>();
         for (int i = 1; i <= this.size(); i++)
             roster.put(uri("ws://localhost:" + this.port(i)), this.transport(i));
-        Machine.write(Network.Helper.peerRosterPath(), rec(roster));
+        Machine.write(f("~/network/roster"), rec(roster));
         LOG.warn("roster declared (%d peer(s)): %s", roster.size(),
                 roster.keySet().stream().map(Object::toString).reduce((a, b) -> a + ", " + b).orElse("<empty>"));
         return this;
@@ -302,7 +325,9 @@ public final class PeerCluster implements AutoCloseable {
         }
     }
 
-    /** a trivial round trip that needs no store at all, so it separates "nothing there" from "not answering" */
+    /**
+     * a trivial round trip that needs no store at all, so it separates "nothing there" from "not answering"
+     */
     private boolean answers(final int oneBased) {
         return !this.rawSend(oneBased, ObjmtronSerializer.parse("1.plus(1)")).isNoObj();
     }

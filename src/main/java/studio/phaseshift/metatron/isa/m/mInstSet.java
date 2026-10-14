@@ -245,8 +245,8 @@ public class mInstSet extends AbstractInstSet {
                     uri(PATTERN), URI_TYPE,
                     uri(QPROC).maybe(), lst(QPROC_TYPE.maybe().asType()),
                     uri(ROUTE).maybe(), rec(T(URI_TID.maybe()), URI_TYPE),
-                    uri(SCHEMA).maybe(), T(INSTSET_TID) // nominal-only: avoids structural recursion in InstSet
-            )).create();
+                    uri(SCHEMA).maybe(), T(INSTSET_TID), // nominal-only: avoids structural recursion in InstSet
+                    uri(ON_CLOSE).maybe(), ALL_TYPE)).create();
 
     public static final Type REWRITER_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -513,7 +513,8 @@ public class mInstSet extends AbstractInstSet {
                                         uri(PATTERN), "the uri address region the space will manage",
                                         uri(QPROC).maybe(), "query processors (qproc) that augment space capabilities",
                                         uri(ROUTE).maybe(), "a secondary router after global router for inter and intra-space redirects",
-                                        uri(SCHEME).maybe(), "an instset defining the type structure of the space objs"),
+                                        uri(SCHEME).maybe(), "an instset defining the type structure of the space objs",
+                                        uri(ON_CLOSE).maybe(), "an optional shutdown down hook"),
                                 "storage systems structured as uri addressed objs",
                                 "memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@/sys/space/usr/marko"),
                         docWrap(MEM_SPACE_TYPE = Type.Builder.build()

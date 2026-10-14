@@ -43,6 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -107,7 +108,7 @@ public final class PeerSpawn {
         // A PEER IS DECLARED ONCE. Hand back the reach that already exists.
         if (FORKED.containsKey(key) || DECLARED.contains(key))
             return transport(authority);
-        final boolean here = Network.Helper.isLoopbackHost(Network.Helper.hostOf(authority.authority()));
+        final boolean here = Network.Helper.isLoopbackHost(authority.host());
         try {
             if (here) {
                 final Path log = Files.createTempFile("metatron-node-" + authority.port() + "-", ".log");
@@ -157,7 +158,7 @@ public final class PeerSpawn {
         // entry's `authority` is what keys the process table. NOT the frame's vid: that is a local path
         // (/network/peer/<scheme>/<host>/<port>/…), so it carries no authority — the earlier version tested the VID
         // for one, returned early, and left every forked node running.
-        Network.Helper.connections(network).jvm().values().stream()
+        network.<Network>as().peers().jvm().values().stream()
                 .filter(Obj::isRec)
                 .map(connection -> connection.asRec().<Obj>atDirect(uri(AUTHORITY)))
                 .filter(Obj::isUri)
@@ -222,20 +223,20 @@ public final class PeerSpawn {
     // ========================================================================
 
     private static void declare(final String key, final Obj transport) {
-        final Obj current = Machine.read(Network.Helper.peerRosterPath());
+        final Obj current = Machine.read(Network.ROOT_ROSTER);
         final Map<Obj, Obj> roster = new LinkedHashMap<>(current.isRec() ? current.asRec().jvm() : Map.of());
         roster.put(uri(key), transport);
-        Machine.write(Network.Helper.peerRosterPath(), rec(roster));
+        Machine.write(Network.ROOT_ROSTER, rec(roster));
         DECLARED.add(key);
     }
 
     private static void undeclare(final String key) {
-        final Obj current = Machine.read(Network.Helper.peerRosterPath());
+        final Obj current = Machine.read(Network.ROOT_ROSTER);
         if (!current.isRec())
             return;
         final Map<Obj, Obj> roster = new LinkedHashMap<>(current.asRec().jvm());
         roster.keySet().removeIf(k -> k.isUri() && key.equals(k.uriValue().toString()));
-        Machine.write(Network.Helper.peerRosterPath(), rec(roster));
+        Machine.write(Network.ROOT_ROSTER, rec(roster));
     }
 
     // ========================================================================
@@ -333,7 +334,7 @@ public final class PeerSpawn {
      * the roster key and the wire origin: {@code scheme://host:port}, with no path
      */
     private static String keyOf(final fURI authority) {
-        return (null == authority.scheme() ? "ws" : authority.scheme()) + "://" + authority.authority();
+        return authority.path(List.of()).toString();
     }
 
     /**

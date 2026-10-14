@@ -34,11 +34,9 @@ docker build -f dist/docker/Dockerfile -t metatron:0.1-SNAPSHOT .
 
 There is no staging copy of the jar: `dist/docker/Dockerfile` COPYs
 `target/metatron-*-jar-with-dependencies.jar`, and `.dockerignore` whitelists exactly that file (plus
-`boot/`, `conf/`, `dist/docker/`, the two skills trees and `bin/wsplus`) into the build context — so the
-context stays small even though the repo is huge, and a plain `docker build` works right after `mvn package`.
-
-The build context is whitelisted by `.dockerignore` (jar + `boot/` + `conf/`), so the context stays small even though
-the repo is huge.
+`boot/`, `conf/`, `dist/docker/`, the two skills trees, and `bin/wsplus` with its sibling `bin/lib` package) into the
+build context — so the context stays small even though the repo is huge, and a plain `docker build` works right after
+`mvn package`.
 
 ## Run
 
@@ -60,6 +58,55 @@ docker run -d --name metatron \
 # quick interactive shell (the bin/metatron-docker wrapper does this):
 ./bin/metatron-docker
 ```
+
+## Compose
+
+`dist/docker/compose.yaml` is a ready-to-run deployment template. It names every knob the image honours, with the
+default as the value, so it doubles as the reference for what can be changed:
+
+```bash
+cd dist/docker
+docker compose up -d                              # boot (ws 8555 / http 8777) + healthcheck
+docker compose logs -f metatron
+docker compose --profile repl run --rm repl       # a wsplus REPL against the server
+docker compose -f compose.yaml -f compose.infra.yaml up -d   # optional mariadb / gremlin / chroma backends
+docker compose down                               # keep VM state
+```
+
+There are two layers of configuration and they are **not** interchangeable:
+
+| Layer | Where | Drives |
+|-------|-------|--------|
+| host-side | `$VAR` in `compose.yaml`, resolved from your shell or a `.env` beside the file | ports, mounts, the boot-args string |
+| container-side | the service's `environment:` block | the JVM's own options (`JAVA_TOOL_OPTIONS`), `TZ`, ... |
+
+The boot-args string (the container `command`) is where the VM itself is configured: `boot`, `log`, `user`, `console`,
+`data`, the `web/http` + `web/ws` URIs, the `typer/stage` flags and the `tracer/stack` flags. Compose assembles it from
+host-side variables, so a whole run can be re-pointed from the shell:
+
+```bash
+METATRON_LOG=debug METATRON_USER=marko METATRON_CONSOLE=true docker compose up -d
+```
+
+Every port is one variable used on both sides (host mapping, container bind, boot-args URI and healthcheck), so the
+four cannot drift apart. The file also documents the alternatives as commented-out blocks: building from a checkout,
+mounting a custom boot file or `conf/`, a read-only rootfs, log rotation, resource limits, watchtower labels, a
+bind-mounted state volume, and host aliases/DNS.
+
+**State.** VM state lives in the named volume `metatron-state` mounted at `/home/metatron` (the sqlite tble space at
+`METATRON_DATA`, default `/home/metatron`). The volume root is deliberately the image's `/home/metatron`: docker seeds
+an empty named volume from the image path, and that path is owned by uid 10001, so it is writable with no `chown` step.
+A fresh volume at an arbitrary path such as `/data` comes up root-owned and the sqlite space fails to open its file.
+
+**The socket.** Compose mounts `/var/run/docker.sock` and `group_add`s `METATRON_DOCKER_GID`
+(`export METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)`) so `dckrspace::T` can drive the host daemon. The
+default boot only uses it to look up the sqlite container, so a socket it cannot open degrades (logged) instead of
+failing the boot; a boot that binds mariadb / gremlin / chroma genuinely needs it.
+
+The space backends live in [compose.infra.yaml](compose.infra.yaml) rather than in `compose.yaml`, so the shipped file
+stays one service: `docker compose -f compose.yaml -f compose.infra.yaml up -d`. They are the alternative to the boot
+modules pulling their own containers — the same images, ports and volume names as `boot/space/*`, so a boot that binds
+those spaces finds them instead of composing its own.
 
 ## Console
 

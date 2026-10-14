@@ -79,7 +79,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]][class studio.phaseshift.metatron.isa.m.type.impl.MCode cannot be cast to class studio.phaseshift.metatron.isa.m.type.Rec (studio.phaseshift.metatron.isa.m.type.impl.MCode and studio.phaseshift.metatron.isa.m.type.Rec are in unnamed module of loader 'app')]@/fail/_?incrq
+==>fail::[inst apply failure...ec::T (at /m/inst/as@1) [Project<84>]][...]@/sys/fail/172
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -101,9 +101,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
               mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>millis::795,
+            runtime=>millis::823,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/1f06a76f]
+            output=>!*/sys/tmp/a0488b9e]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -157,23 +157,23 @@ mtron> */dev/scratch/code/0
           classes=>[Echo=>[[kind=>class_declaration,
                             name=>'Echo',
                             header=>'public class Echo {',
-                            members=>[[PREFIX=>[kind=>field,
-                                                text=>"""
+                            members=>[[PREFIX=>[
+                             kind=>field,
+                             text=>"""
    
        public static final String P...""",
-                                                name=>'PREFIX']],
-                                      [name=>[kind=>field,
-                                              text=>"""
+                             name=>'PREFIX']],
+                                      [name=>[
+                                       kind=>field,
+                                       text=>"""
    
        private final String name;""",
-                                              name=>'name']],
-                                      [Echo=>[kind=>constructor,
-                                              name=>'Echo',
-                                              signature=>'Echo(String name)',
-                                              header=>"""
-   
-       public Echo(String name) """,
-                                              body=>"""{
+                                       name=>'name']],
+                                      [Echo=>[
+                                       kind=>constructor,
+                                       name=>'Echo',
+                                       signature=>'Echo(String name)',
+                                       header=>"""
    ...
 mtron> */dev/scratch/idx/Echo
 ==>[field=>[PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,

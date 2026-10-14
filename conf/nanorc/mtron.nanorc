@@ -46,7 +46,7 @@ color green "=" "::"
 # c coefficients
 color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
 ### fail
-color cyan "\\_[a-z|A-Z|_]+"
+color red "\\_[a-z|A-Z|_|:]+"
 color red "=X"
 color yellow "\.\.\."
 color green "==>"

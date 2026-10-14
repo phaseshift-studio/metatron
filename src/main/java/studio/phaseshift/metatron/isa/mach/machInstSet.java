@@ -71,7 +71,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@JREService(vid = "/m/mach")
+@InstSet.JREService(vid = "/m/mach")
 public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
     public static final fURI ROOT_MACHINE_VID = f("/.");
@@ -99,9 +99,27 @@ public class machInstSet extends AbstractInstSet {
      * test: these three choose where code runs, so a remote frame runs them where the choice is made, and the
      * compiled form no longer carries the {@code rng=machine} that used to say so (see
      * {@code RemoteProcessor.frameInstruction}).
+     * <p>
+     * All three SPEAK ONE ADDRESS DIALECT, and it is the {@code ..} motif: {@code ~} is the frame you stand in,
+     * {@code ~/a} (or plain {@code a}) is its child, {@code ..} is its parent, {@code ../b} is the sibling
+     * {@code b}, and {@code ../../..} walks as far up as asked. The arithmetic lives in ONE place —
+     * {@link Machine.Helper#frameAddress} — so the three cannot drift; they differ only in what they DO with the
+     * address they are handed. {@code push} MINTS the address, {@code move} WALKS to it without closing anything,
+     * {@code pop} DISCARDS it.
+     * <p>
+     * MINTS the address, and that is licence to cross as well as descend: {@code push(<t>)} resolves {@code t} and
+     * mints its LEAF from the frame at {@code t}'s PARENT — so {@code push(<../b>) == move(<..>).push(<b>)}, and a
+     * sibling is minted from the shared parent rather than from beside it. An address that names a PROCESS
+     * boundary is not split that way: its authority IS its identity, so it is handed to {@code push} whole (see
+     * {@link Machine#push(fURI)}).
      */
     public static final fURI POP_INST_TID = MACH_INST_TID.extend("pop");
     public static final fURI MOVE_INST_TID = MACH_INST_TID.extend("move");
+
+    /**
+     * The one spelling of "up", so {@code move()} and {@code move(<..>)} cannot come to mean different things.
+     */
+    private static final fURI UP = f("..");
 
     /**
      * This machine's own name in a cluster roster. The home is IN the roster -- it is one of the machines -- but
@@ -157,12 +175,9 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_CORE_THREAD_TID = MACH_THREAD_TID.extend("core");
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
     public static final fURI THREAD_EXECUTOR_TID = MACH_ISA_TID.extend("thread_executor");
-    /// /// CLUSTER AWARENESS /// ///
+    /// /// PEERS AND THE NETWORK /// ///
     public static final fURI PEER_TID = MACH_ISA_TID.extend("peer");
-    public static final fURI CLUSTER_TID = MACH_ISA_TID.extend("cluster");
-    public static final fURI CLUSTER_STATUS_INST_TID = MACH_INST_TID.extend("status");
     public static Type PEER_TYPE;
-    public static Type CLUSTER_TYPE;
 
     public static final Type FACTORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -446,47 +461,51 @@ public class machInstSet extends AbstractInstSet {
                                 .vid(MACH_MEMORY_TID)
                                 .constructor(arg -> new BasicMemory(arg.asRec().jvm(), arg.vid()))
                                 .create(),
-                        // network — a frame's reachable peers, read through to the ones it inherited
-                        /// /// CLUSTER AWARENESS /// ///
+                        // network — a machine's reachable peers, read through to the ones it inherited
                         docWrap(PEER_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(PEER_TID)
+                                        // ONE TYPE, TWO HONEST STATES — and the difference is which fields are
+                                        // filled, never which type it is. An authority alone is a peer we know
+                                        // of but cannot reach from here, which is what a peer reference looks
+                                        // like after it has crossed a wire; an authority with a transport is a
+                                        // peer the current machine can ship to.
                                         .isaPredicate(rec(
+                                                // THE KEY, and the one field a peer cannot do without: a roster
+                                                // lookup matches on this same service uri.
                                                 uri(AUTHORITY), URI_TYPE,
                                                 // the endpoint and the SURFACE, in webSpace's own vocabulary: a
                                                 // space's `host` names where to dial and the handler refines the
-                                                // scheme into a protocol (mtron_ws, mcp_ws, …). Both absent ⇒ a peer
-                                                // we know about but cannot reach from here — which is what a peer
-                                                // reference looks like after it has crossed a wire. One type, two
-                                                // honest states.
+                                                // scheme into a protocol (mtron_ws, mcp_ws, …). Named as a uri
+                                                // rather than a web type because this instruction set sits below
+                                                // /m/web and does not import it — the same reason `source` on the
+                                                // network is a uri. Both absent ⇒ known, not reachable from here.
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(HANDLER).maybe().asUri(), URI_TYPE,
+                                                // a name is how a distributed expression says WHICH machine it
+                                                // means: the rewrite mints one per peer as a path segment
+                                                // (/usr/compute/a/barrier/b), so this is the field mapping such a
+                                                // name onto a discovered authority. Not decoration.
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(STATUS).maybe().asUri(), REC_TYPE,
                                                 // THE REACH: the inst that ships a message to this peer and answers
                                                 // with what it computed. It is what makes a connection a connection
-                                                // rather than a known address — a peer rec without one is a machine
-                                                // we know about but cannot reach from here.
+                                                // rather than a known address.
                                                 uri(TRANSPORT).maybe().asUri(), INST_TYPE))
                                         .create(), null, null,
-                                Map.of(uri(AUTHORITY), "the peer address, scheme://host:port; the connection key is this same service uri",
-                                        uri(HOST), "the wire endpoint, including its route: ws://host:port/mtron",
-                                        uri(HANDLER), "the protocol surface at that endpoint: mtron_ws, mtron_http, mcp_ws, …",
-                                        uri(NAME), "a simple name for the peer",
+                                Map.of(uri(AUTHORITY), "the peer's service uri, scheme://host:port — the connection key, and the one field a peer cannot do without",
+                                        uri(HOST), "where to dial it from here, route included: ws://host:port/mtron",
+                                        uri(HANDLER), "the protocol surface at that endpoint, named as a uri: </m/web/ws/mtron_ws>, </m/web/http/mtron_http>, </m/web/mcp/mcp_ws>",
+                                        uri(NAME), "the machine's name in the distributed expression that means it — a bare name, never an address",
                                         uri(STATUS), "the health report computed for this peer — computed on call, never stored",
-                                        uri(TRANSPORT), "the reach: an inst that ships a message to the peer and answers with the peer's result"),
-                                "one metatron machine this machine can reach: the value of a network peer connection"),
-                        docWrap(CLUSTER_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(CLUSTER_TID)
-                                        .isaPredicate(rec(
-                                                uri(PEER).maybe().asUri(), ALL_TYPE,
-                                                uri(STATUS).maybe().asUri(), INST_TYPE,
-                                                uri(NAME).maybe().asUri(), STR_TYPE))
-                                        .create(), null, null,
-                                Map.of(uri(PEER).maybe(), "the declared roster — an auto, never a stale copy",
-                                        uri(STATUS).maybe(), "the health method: peer => status"),
-                                "this VM's static view of its cluster (fields + methods)"),
+                                        uri(TRANSPORT), "the reach: an inst that ships a message to this peer and answers with the peer's result"),
+                                """
+                                one metatron machine this machine can reach — the value of a network peer
+                                connection. `host` and `handler` absent is not a broken peer: it is a peer
+                                reference that crossed a wire, known here and not reachable from here.
+                                """,
+                                "peer::[authority=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>,handler=></m/web/ws/mtron_ws>,name=>'builder-2'] [-- a peer the current machine can ship to --]",
+                                "peer::[authority=><ws://192.168.1.42:8555>,name=>'builder-2'] [-- known, and not reachable from here --]"),
                         MACH_NETWORK_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_MACHINE_COMPONENT_TID)
                                         .vid(MACH_NETWORK_TID)
@@ -497,26 +516,62 @@ public class machInstSet extends AbstractInstSet {
                                         // map-only predicate is a different test, and on a slot that still holds
                                         // its default it fails machine construction outright. Measured.
                                         //
-                                        // The roster is the `peer` field: <service-uri> => peer::T, which a
-                                        // fixed-key rec cannot describe, so the map idiom is the positional
-                                        // (keyType, valueType) pair — the same one a space's `route` uses. It
-                                        // lives at /sys/peer today and reaches the component through
-                                        // Network.roster(); the field is what it becomes.
+                                        // THREE FIELDS, THREE QUESTIONS, deliberately not one map: `roster` is
+                                        // what the system KNOWS (connectionless — a name and where it is, at
+                                        // the ROOT so every machine reads the one listing), `peer` is what the
+                                        // CURRENT MACHINE has DIALED (at ~, so a child's reach is its own and a
+                                        // pop retracts exactly what that machine dialed), and `source` is HOW
+                                        // the roster is produced. Knowledge is inherited and reach is not, which
+                                        // is why the two are addressed at different scopes rather than told apart
+                                        // by the Java-side set (PeerSpawn.DECLARED) this replaces.
+                                        //
+                                        // A roster is a map, which a fixed-key rec cannot describe, so the map
+                                        // idiom is the positional (keyType, valueType) pair — the same one a
+                                        // space's `route` uses. Both fields are reached through Network: the
+                                        // roster at /network/roster (an address, so an entry may be written one
+                                        // at a time), the connections at the machine's own ~/network/peer.
+                                        //
+                                        // `source` names an implementation and stops there. Values are handler
+                                        // tids AS URIS (`</m/web/mdns>`), never web types: this instruction set
+                                        // sits below /m/web and does not import it, which is also why peer::T's
+                                        // `handler` is a uri. The key is a free mechanism label rather than the
+                                        // protocol's own tid, because discovering several segments independently
+                                        // is a real deployment — this host carries a physical LAN and a dozen
+                                        // docker bridges — so two mDNS sources with different interfaces and
+                                        // different trust must be able to sit side by side.
+                                        //
+                                        // CONFIGURATION IS NOT CARRIED HERE, because it is already carried
+                                        // elsewhere: a handler type's predicate supplies its defaults and boot
+                                        // args supply the deployment's values, exactly as every boot profile
+                                        // binds a `host` and lets `.else()` fill the rest. If a source ever does
+                                        // need an instance configured inline, take the route table's shape (a
+                                        // uri, a type reference, or an instruction) rather than widening this
+                                        // value to a bare rec — which reads stricter than ALL_TYPE while
+                                        // admitting any rec at all.
                                         .isaPredicate(rec(
-                                                uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID))))
+                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(ROSTER).maybe().asUri(), rec(URI_TYPE, T(URI_TID.some())),
+                                                uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID)),
+                                                uri(SOURCE).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
+                                                uri(STATUS).maybe().asUri(), rec(T(PEER_TID), URI_TYPE)))
                                         .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
                                         .create(),
-                                Map.of(uri(PEER).maybe(), "the roster — <service-uri> => peer::T",
-                                        uri(NAME), "a name for this network",
-                                        uri(STATUS), "the health method: peer => status"),
+                                Map.of(uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
+                                        uri(ROSTER).maybe(), "known machines, connectionless: <machine> => uri{+} — every address that machine answers at",
+                                        uri(PEER).maybe(), "machine's own connections: <service-uri> => peer::T",
+                                        uri(SOURCE).maybe(), "the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism",
+                                        uri(STATUS).maybe(), "the health method: peer => status"),
                                 """
-                                a machine's network: the peers this frame can reach, one roster entry per service
-                                uri. membership is declared, never emergent — a uri must not be able to make
-                                itself a peer merely by being addressed — and it is accumulating, so a child frame
-                                unions its own level over its parent's. the authorities this machine answers to
-                                are derived from the `host` every mounted space
-                                declares, so identity has exactly one source and cannot drift.
-                                """),
+                                a machine's network: the endpoints the system knows about, the peers the
+                                current machine has dialed, and the handlers that discover them. membership is
+                                declared, never emergent — a uri must not be able to make itself a peer merely
+                                by being addressed — and it is accumulating, so a child machine unions its own
+                                level over its parent's. the authorities this machine answers to are derived
+                                from the host every mounted space declares, so identity has exactly one
+                                source and cannot drift.
+                                """,
+                                "network::[name=>'local',roster=>[b=><ws://192.168.1.42:8555>],source=>[mdns=></m/web/mdns>]] [-- a network that knows a peer before dialing it --]",
+                                "network::[peer=>[<ws://localhost:39111>=>[authority=><ws://localhost:39111/worker>]]] [-- a machine whose reach is the one node it pushed --]"),
                         MACH_MACHINE_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MACH_MACHINE_TID)
@@ -620,16 +675,83 @@ public class machInstSet extends AbstractInstSet {
                             thread.applyAsync(lhs);
                             return thread;
                         }),
-                        instC(PUSH_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> Machine.current().push(inst.arg(0).uriValue())),
-                        instC(POP_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(MACH_MACHINE_TYPE), (lhs, inst) -> inst.arg(0).asMachine().pop()),
-                        instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(URI_TYPE), (lhs, inst) -> {
-                            if (inst.arg(0).uriValue().equals(ROOT_MACHINE_VID))
-                                return Machine.current(Machine.root());
-                            final Obj moveMachine = Machine.read(inst.arg(0).uriValue());
-                            if (moveMachine.isNoObj() || !moveMachine.isMachine())
-                                throw MTronException.of("unable to move to a non-existent machine at %s: %s", inst.arg(0), moveMachine);
-                            return Machine.current(moveMachine.asMachine());
-                        }),
+                        // PUSH AT AN ADDRESS IS move-to-its-PARENT then push-its-NAME — the algebra Marko gave:
+                        // push(<../b>) == move(<..>).push(<b>). So the frame that HOLDS the new machine is the one
+                        // at the address's parent, and only the LEAF is minted: a sibling comes from the shared
+                        // parent, never from beside it. Nothing in Machine.push had to change for this — it mints
+                        // a child of the machine it is CALLED ON, so the memory and instset unions it builds come
+                        // from that parent, which is exactly where the new frame belongs.
+                        docWrap(instC(PUSH_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) -> {
+                                    final Machine here = Machine.current();
+                                    if (inst.arg(0).isNoObj())
+                                        return here.push();
+                                    final fURI target = Machine.Helper.frameAddress(here, inst.arg(0).uriValue());
+                                    // a wire address names a PROCESS boundary, not a place in this tree: it is not split
+                                    // into container + leaf, because the authority IS the frame's identity
+                                    if (target.hasHost() || target.hasScheme())
+                                        return here.push(target);
+                                    // the container is the frame the target is a CHILD of — the target's PARENT ADDRESS.
+                                    // An EMPTY address here is not "nowhere": it is the ROOT's own address, and frameAt
+                                    // answers the root for it. (Reading it as "stay where you are" is what minted
+                                    // /sib-a/sib-b for push(<../sib-b>) instead of the sibling /sib-b.)
+                                    final fURI containerAddress = target.asNode().retract(1);
+                                    final Machine container = containerAddress.equals(here.vid())
+                                            ? here // the common case: a plain child of where we already stand — no read
+                                            : Helper.frameAt(here, containerAddress, "push");
+                                    return container.push(f(target.name()));
+                                }),
+                                "the lhs is not consulted: push acts on the FRAME the code is running in, and carries the value flowing through untouched",
+                                "the machine just minted and entered \\(c\\)",
+                                Map.of(jnt(0), "\\(t\\), the address to MINT. Its PARENT frame is what holds the new machine and only the \\(\\mathrm{name}(t)\\) is newly made, so \\(\\mathrm{push}(t) = \\mathrm{move}(\\mathrm{parent}(t)) \\cdot \\mathrm{push}(\\mathrm{name}(t))\\); absent, an anonymous child is minted instead"),
+                                "mint a machine at an address in the frame tree and make it current. CONSTRUCTIVE — it ADDS a frame, where move only chooses one. Because the leaf is minted FROM the address's parent, push can CROSS a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying an authority is a different boundary: a peer is forked when that authority is local and merely declared otherwise, and the frame that enters it runs its code on the peer.",
+                                "push(xyz)                              [-- mint /xyz --]",
+                                "push(<../b>)                           [-- the sibling b, minted from the shared parent: = move(<..>).push(b) --]",
+                                "push(<a/b>)                            [-- the descendant /a/b, minted from the frame at /a --]",
+                                "push()                                 [-- an anonymous child, \\(c = \\mathrm{mintShortUUID}(\\mathrm{vid}(\\mathrm{here}))\\) --]",
+                                "push(<ws://localhost:8555/worker>)     [-- a process boundary, not a place in this tree --]"),
+                        // POP NAMES THE FRAME YOU STAND IN. `pop()` and `pop(<~>)` are ONE instruction, and an
+                        // addressed pop must still RESOLVE to where you stand: the motif is understood (`..`
+                        // folds, `~` is the base) but a frame you can only reach by ADDRESS is not yours to
+                        // discard from here — the stack discipline says a frame is discarded by the one that
+                        // holds it, which is why `pop(<..>)` (the parent) is refused too, not just a sibling.
+                        // Reaching a frame you OWN but have stepped out of needs the downward link the frame
+                        // tree does not have yet (t-murdnd40-rpdahi), and closing an address-read handle would
+                        // silently do nothing — so it is refused loudly rather than appearing to work.
+                        docWrap(instC(POP_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(ALL.maybe())), (lhs, inst) -> {
+                                    final Machine here = Machine.current();
+                                    if (here == Machine.root())
+                                        throw MTronException.of("the root machine can not be closed via pop");
+                                    if (inst.arg(0).isNoObj())
+                                        return here.pop();
+                                    final Machine named = inst.arg(0).isMachine() ? inst.arg(0).asMachine() : Helper.frameAt(here, inst.arg(0).uriValue(), "pop");
+                                    if (Helper.sameFrame(named, here))
+                                        return here.pop();
+                                    throw MTronException.of("pop(%s) is not the frame you stand in (%s): a frame is discarded by the one that holds it — pop() where you stand, or move(<%s>) there first",
+                                            inst.arg(0), here.vid(), inst.arg(0));
+                                }),
+                                "the lhs is not consulted: pop acts on the FRAME the code is running in",
+                                "the frame that HELD the one discarded — \\(\\mathrm{pop}(f) \\mapsto \\mathrm{parent}(f)\\), so the cursor lands on \\(f\\)'s \\(..\\)",
+                                Map.of(jnt(0), "the frame to discard, which must resolve relative to the current machine: it is admitted only when \\(t \\sim \\mathrm{here}\\), so `pop(<../b>)` from \\(a\\) is refused. Absent, \\(t = \\mathrm{here}\\) — and `pop()` = `pop(<~>)` = `pop(_)`"),
+                                "DESTRUCTIVE — the one frame instruction that closes what it leaves, where move leaves it standing and reachable by address. It discards the frame you stand in and lands on that frame's \\(..\\). A frame is discarded by the one that HOLDS it, so an address that does not resolve to where you stand is refused rather than silently ignored, and the ROOT has no \\(..\\) to land on: it owns the address space, so closing it is the shutdown path and a reset is the honest instruction. Because \\(\\mathrm{move}\\) keeps no history and the containment link is what \\(\\mathrm{pop}\\) follows, a frame you only MOVED into has nowhere to return to.",
+                                "pop()               [-- discard where you stand, land on its .. --]",
+                                "pop(<~>)            [-- the same instruction: ~ IS where you stand --]",
+                                "pop(_)              [-- and the same again with the lhs as the argument --]",
+                                "pop(<../b>)         [-- refused: b is not the frame you stand in --]",
+                                "pop()               [-- at the root: refused, reset metatron instead --]"),
+                        // move() is move(<..>): the NON-destructive way up, and the whole point of the motif —
+                        // pop() destroys the frame it leaves, move() leaves it standing and reachable by address
+                        docWrap(instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) ->
+                                        Machine.current(Helper.frameAt(Machine.current(), inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue(), "move"))),
+                                "the lhs is not consulted: move chooses the FRAME the next code runs in",
+                                "the frame moved to — \\(\\mathrm{move}(t) \\mapsto f\\) where \\(f\\) is the machine \\(t\\) addresses",
+                                Map.of(jnt(0), "\\(t\\), the address to stand in: `~` is the frame you are in, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling \\(b\\), and `../../..` walks up. Absent, \\(t = \\;..\\) — bare `move()` IS `move(<..>)`"),
+                                "choose where next inst will evaluate, and close nothing. The address is folded against the current machine and an address popped past root is a fail::T.",
+                                "move(<..>)          [-- up: the parent frame, WITHOUT closing this one --]",
+                                "move()              [-- the same instruction --]",
+                                "move(<../b>)        [-- across, to the sibling b --]",
+                                "move(<a/c>)         [-- down a composed path in one step --]",
+                                "move(<~/..>)        [-- ~ is the frame base, consumed before the fold: the parent --]",
+                                "move(<../../..>)    [-- past the root: saturates at the root --]"),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             ((AbstractThread) lhs).stop();
                             return lhs;
@@ -798,5 +920,46 @@ public class machInstSet extends AbstractInstSet {
     @Override
     public Set<Sugar> sugars() {
         return new LinkedHashSet<>();
+    }
+
+    public static class Helper {
+        private Helper() {
+            // do nothing
+        }
+
+        /**
+         * The frame a frame instruction ADDRESSES: the {@code ..} arithmetic first (one definition, shared with
+         * push), then a read. The address is resolved before it is read — never matched — because these instructions
+         * name a PLACE, and a place with a {@code ..} in it is an expression rather than a key.
+         * <p>
+         * The root is answered directly: {@code read("/")} has no space to reach it through (the absolute marker is
+         * not a mounted namespace), and {@code /.}, {@code /} and the saturated {@code ..} are one address
+         * canonically, so the equality check catches every spelling of it. Anything that resolves to something other
+         * than a frame is refused BY ADDRESS, so the message names what was asked for rather than what was found.
+         */
+        public static Machine frameAt(final Machine here, final fURI target, final String instruction) {
+            final fURI address = Machine.Helper.frameAddress(here, target);
+            if (null == address || address.isEmpty() || address.equals(ROOT_MACHINE_VID))
+                return Machine.root();
+            final Obj found = Machine.read(address);
+            if (!found.isMachine())
+                throw MTronException.of("%s(%s) found no frame: resolved %s is %s",
+                        instruction, target, address, found.isNoObj() ? "empty" : "a " + found.tid());
+            return found.asMachine();
+        }
+
+        /**
+         * Whether two handles name the SAME frame. A machine's identity is its ADDRESS, not its object identity: a
+         * read that answers with a machine can hand back an equal-but-distinct instance (verified — a read of a
+         * frame's address is {@code .eq} to the machine {@code push(a)} returned while {@code ==} is false), so
+         * comparing references makes {@code pop(<~>)} silently do nothing instead of popping.
+         */
+        public static boolean sameFrame(final Machine one, final Machine two) {
+            if (one == two)
+                return true;
+            final fURI oneVID = one.vid();
+            final fURI twoVID = two.vid();
+            return null != oneVID && oneVID.equals(twoVID);
+        }
     }
 }

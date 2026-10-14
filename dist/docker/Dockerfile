@@ -62,7 +62,13 @@ COPY --chown=metatron:metatron boot/ /app/boot/
 COPY --chown=metatron:metatron conf/ /app/conf/
 # wsplus console client — talk to the headless server's /mtron endpoint:
 #   docker exec -it metatron wsplus ws://localhost:8555/mtron
+# bin/wsplus is the script and bin/lib is its sibling package (it does
+# `from lib.nanorc_highlight import ...`, so the package must land at
+# /app/bin/lib, next to the script — NOT under a bin/wsplus/ dir, which is a
+# file here).  bin/lib is whitelisted in .dockerignore for this COPY, and the
+# nanorc it parses comes from the conf/ copy above.
 COPY --chown=metatron:metatron bin/wsplus /app/bin/wsplus
+COPY --chown=metatron:metatron bin/lib /app/bin/lib
 ENV PATH="/app/bin:${PATH}"
 # entrypoint: `docker run <image> --help` prints usage, otherwise runs the VM
 COPY --chown=metatron:metatron dist/docker/entrypoint.sh dist/docker/usage.txt /app/

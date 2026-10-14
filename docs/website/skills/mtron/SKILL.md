@@ -373,10 +373,10 @@ mtron> *plus?docq
           args=>[0=>'/m/real'],
           desc=>'[mapper] add two distances of the ...',
           example=>['foot::12.0 + foot::36.0   [-- foot...']]
-==>docs::[obj=>plus?rng=cmplx&dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){<j>},
+==>docs::[obj=>plus?rng=cmplx&dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){<j>},
           dom=>'a complex number \(z = a + bi\)',
           rng=>'the complex sum \(z + w\)',
-          args=>[lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx=>'the complex addend \(w = c + di\)'],
+          args=>[lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx=>'the complex addend \(w = c + di\)'],
           desc=>'[mapper] complex addition: \((a+bi...',
           example=>['cmplx::[1.0,2.0] + cmplx::[3.0,4.0...']]
 ==>docs::[obj=>plus?rng=datetime&dom=datetime(real::T@/m/math/time){<j>},
@@ -451,7 +451,8 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   anchor, `top`/`left`, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
   marker to reshape), and the three insts `display`/`nano`/`less`.
 * [dckrSpace](references/dckrspace-mtron.md) -- Docker as a space: containers, images, volumes, networks, compose,
-  remote hosts, and an end-to-end SQLite container + tbleSpace walkthrough.
+  remote hosts, `owner`-labelled ownership with `on_close` reaping, and an end-to-end SQLite container + tbleSpace
+  walkthrough.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model, discovering a space's
   prefixes from `*/sys/space/...`, `!*` lazy references, validation, and common failures.
 

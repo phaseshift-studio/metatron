@@ -1,0 +1,364 @@
+# =============================================================================
+#  metatron — Docker Compose deployment template
+#  PhaseShift Studio, LLC
+# =============================================================================
+#  A ready-to-run, fully-commented deployment of the distribution image
+#  (dist/docker/Dockerfile, published as ghcr.io/phaseshift-studio/metatron).
+#  Every knob the image actually honors is named here with its default, so this
+#  file is also the reference for "what can be tweaked" — copy it, edit, deploy.
+#
+#  There are THREE kinds of knob, and they are NOT interchangeable:
+#
+#    1. HOST-SIDE  `$VAR` written in this file.  Resolved by the compose CLI
+#       from your shell environment and/or a `.env` file sitting next to this
+#       file, BEFORE anything is created.  These drive ports, mounts, and the
+#       boot-args string.
+#         export METATRON_LOG=debug          # or: echo METATRON_LOG=debug > .env
+#
+#    2. CONTAINER-SIDE  the `environment:` block.  Variables the process inside
+#       the container sees (JVM options, TZ, ...).  The JVM reads some of these
+#       itself — see the comments there.
+#
+#    3. BOOT ARGS  the container `command` — one mtron rec, assembled below from
+#       host-side variables.  This is where the VM itself is configured: which
+#       boot profile, the log level, the deployment identity, the ports/URIs it
+#       binds, the type-checker stages, the tracers.  See boot/docker.boot.mtron
+#       and `docker run <image> --help`.
+#
+#  SHAPE — one compose to rule them all
+#    The default profile starts ONE service: this VM.  It owns the interior — which
+#    containers a deployment needs is its boot file's business, and it pulls them
+#    itself through the mounted host socket (dckrspace::T).  Compose owns the boundary
+#    only: the process and its host couplings (image, uid, HOME, mounts, ports,
+#    healthcheck, limits, logging) plus the pointer to the boot file below.
+#
+#    To ship a deployment, point METATRON_BOOT at your profile (mount it — see the
+#    volumes below) and let that file declare its own interior: backend containers,
+#    spaces, the lot.  Two optional extras stay out of the default path:
+#      --profile repl          a wsplus console sidecar for this server
+#      -f compose.infra.yaml   space backends (mariadb / gremlin / chroma), for when
+#                              compose should own them instead of the boot
+#
+#    ONE RULE, or the knobs below will lie to you: a deployment-varying value must be
+#    read by the boot file from `boot/args` (`.else(<dev default>)`).  If a boot file
+#    hardcodes it in its own `[== boot args ==]` header, the HEADER WINS and anything
+#    set on the command line for that key is silently ignored.
+#
+#  QUICK START
+#    docker compose up -d                 # boot, wait for the healthcheck
+#    docker compose logs -f metatron
+#    docker compose --profile repl run --rm repl   # a wsplus REPL against the server
+#    docker compose down                  # keep the state volume
+#    docker compose down -v               # ... or wipe it too
+#
+#  CONFIGURATION INDEX (host-side variable / default / effect)
+#    METATRON_IMAGE              ghcr.io/phaseshift-studio/metatron:latest  image to run
+#    METATRON_BIND_IP            0.0.0.0    host interface the ports bind to
+#    METATRON_WS_PORT            8555       ws   port (host AND container, see below)
+#    METATRON_HTTP_PORT          8777       http port (host AND container, see below)
+#    METATRON_BOOT               boot/docker.boot.mtron   boot profile in the image
+#    METATRON_LOG                info       VM log level (error|warn|info|debug|trace)
+#    METATRON_USER               avatar     deployment identity -> /usr/<user>/#
+#    METATRON_CONSOLE            false      true mounts the full console::T
+#    METATRON_DATA               /home/metatron   sqlite tble-space storage dir
+#    METATRON_TYPER_*            see below  type-checker stages
+#    METATRON_TRACER_*           false      stack tracing on fail objects
+#    METATRON_JAVA_TOOL_OPTIONS  -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError
+#    METATRON_TZ                 UTC        container timezone
+#    METATRON_CPUS / _MEMORY     2.0 / 2g   deploy limits (heap = 75% of memory)
+#    METATRON_DOCKER_GID         0          host docker-socket group (dckrspace)
+#    METATRON_STATE_VOLUME       metatron-state   named volume for VM state
+#    METATRON_NETWORK            netatron     compose network
+#    METATRON_CONTAINER          metatron   container name
+#    METATRON_RESTART            unless-stopped
+#    COMPOSE_PROJECT_NAME        metatron   compose project name
+#
+#  THE IMAGE CONTRACT (dist/docker/README.md)
+#    * The container command IS the boot-args string passed to BootLoader.
+#    * Ports: 8555 (ws: mtron + mcp), 8777 (http: mcp + web root).
+#    * Healthcheck: GET http://localhost:8777/ must be 2xx.
+#    * Runs as uid/gid 10001 (`metatron`); HOME is /home/metatron.
+#    * dckrspace::T drives the HOST docker daemon over the mounted socket.
+# =============================================================================
+
+name: ${COMPOSE_PROJECT_NAME:-metatron}
+
+# -----------------------------------------------------------------------------
+# Reusable fragments.  `x-` keys are ignored by compose and exist purely so the
+# YAML anchors below can be shared (a template device, not configuration).
+# -----------------------------------------------------------------------------
+
+x-logging: &default-logging
+  driver: ${METATRON_LOG_DRIVER:-json-file}
+  options:
+    # Rotate, or a long-lived server eventually fills the disk:
+    max-size: "${METATRON_LOG_MAX_SIZE:-10m}"
+    max-file: "${METATRON_LOG_MAX_FILE:-3}"
+    # driver: syslog / fluentd / gelf — swap in the endpoint here:
+    # syslog-address: "udp://${METATRON_SYSLOG_HOST:-127.0.0.1}:514"
+
+# The boot-args rec.  `>-` folds it into ONE line (a single argv entry — the
+# entrypoint passes "$@" straight to BootLoader, and BootLoader wants the whole
+# rec as one positional argument, so a list of one is required).
+# Everything after `boot=>` is optional: each module in boot/space/ applies its
+# own `.else()` default, so name only what you want to override.
+x-metatron-command: &metatron-command >-
+  [boot=><${METATRON_BOOT:-boot/docker.boot.mtron}>,
+  user=><${METATRON_USER:-avatar}>,
+  console=>${METATRON_CONSOLE:-false},
+  log=>${METATRON_LOG:-info},
+  data=><${METATRON_DATA:-/home/metatron}>,
+  web=>[http=><http://0.0.0.0:${METATRON_HTTP_PORT:-8777}>,
+  ws=><ws://0.0.0.0:${METATRON_WS_PORT:-8555}>],
+  typer/stage=>[inst_dom=>${METATRON_TYPER_INST_DOM:-true},
+  inst_rng=>${METATRON_TYPER_INST_RNG:-true},
+  type_pred=>${METATRON_TYPER_TYPE_PRED:-true},
+  obj_write=>${METATRON_TYPER_OBJ_WRITE:-true},
+  code_resolve=>${METATRON_TYPER_CODE_RESOLVE:-false}],
+  tracer/stack=>[mtron_stack=>${METATRON_TRACER_MTRON_STACK:-false},
+  java_stack=>${METATRON_TRACER_JAVA_STACK:-false}]]
+
+services:
+
+  # ===========================================================================
+  #  THE SERVER — the metatron VM, serving ws 8555 / http 8777
+  # ===========================================================================
+  metatron:
+    image: ${METATRON_IMAGE:-ghcr.io/phaseshift-studio/metatron:latest}
+    # Build from a checkout instead of pulling.  Needs the packaged uber-jar in
+    # target/; `bin/metatron-docker image` packages it and builds this image in
+    # one command (docker is the only host requirement):
+    # build:
+    #   context: ${METATRON_BUILD_CONTEXT:-../..}
+    #   dockerfile: dist/docker/Dockerfile
+    #   args:
+    #     METATRON_VERSION: ${METATRON_VERSION:-0.1-SNAPSHOT}
+    # pull_policy: ${METATRON_PULL_POLICY:-missing}   # always | missing | never
+
+    # The name matches `bin/metatron-docker dev`'s default (METATRON_CONTAINER)
+    # and the `docker exec -it metatron wsplus ...` spelling in the docs.
+    # (boot/space/tble/sqlite.mtron also probes for a container named `metatron`
+    # before composing its own sqlite container; either way the tble space opens
+    # METATRON_DATA inside THIS container — see the volume note below.)
+    container_name: ${METATRON_CONTAINER:-metatron}
+    hostname: ${METATRON_HOSTNAME:-metatron}
+    # tiny init as PID 1 so signals/zombies are reaped cleanly around the JVM
+    init: ${METATRON_INIT:-true}
+    restart: ${METATRON_RESTART:-unless-stopped}
+    # Grace period for the JVM shutdown hook after SIGTERM (BootLoader.close):
+    stop_grace_period: ${METATRON_STOP_GRACE_PERIOD:-30s}
+
+    # --- the boot-args string: the VM's own configuration -------------------
+    command:
+      - *metatron-command
+
+    # --- published ports ----------------------------------------------------
+    # One variable drives host AND container side (and the boot-args URIs, and
+    # the healthcheck) so they cannot drift apart.  The image EXPOSEs 8555/8777
+    # as documentation; moving the container-side port only requires this file.
+    ports:
+      - "${METATRON_BIND_IP:-0.0.0.0}:${METATRON_WS_PORT:-8555}:${METATRON_WS_PORT:-8555}"
+      - "${METATRON_BIND_IP:-0.0.0.0}:${METATRON_HTTP_PORT:-8777}:${METATRON_HTTP_PORT:-8777}"
+      # long form, when you need protocol/mode:
+      # - target: 8555
+      #   published: "${METATRON_WS_PORT:-8555}"
+      #   host_ip: "${METATRON_BIND_IP:-0.0.0.0}"
+      #   protocol: tcp
+      #   mode: host
+    # publish nothing (server reachable only from the compose network):
+    # expose:
+    #   - "8555"
+    #   - "8777"
+
+    # --- mounts -------------------------------------------------------------
+    volumes:
+      # 1. the host docker daemon.  dckrspace::T (boot/space/dckr/socket.mtron)
+      #    looks up / pulls the space-backend containers through it.  The default
+      #    boot only uses it for the sqlite container, so a socket it cannot open
+      #    degrades (logged) instead of failing the boot; a boot that binds
+      #    mariadb / gremlin / chroma genuinely needs it.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 2. persistent VM state: the sqlite tble space (METATRON_DATA, below)
+      #    plus ~/.metatron.  A NAMED volume is used deliberately — docker seeds
+      #    an empty volume from the image path, and the image's /home/metatron
+      #    is owned by uid 10001, so it is writable with no chown step.  (An
+      #    arbitrary path like /data would come up root-owned and unwritable.)
+      - metatron-state:/home/metatron
+      # 3. dev loop — a checkout's boot/ and conf/ override the baked copies
+      #    (`bin/metatron-docker run` does the same).  Uncomment for a working
+      #    tree; the paths are relative to this file (dist/docker -> repo root):
+      # - ${METATRON_REPO:-../..}/boot:/app/boot:ro
+      # - ${METATRON_REPO:-../..}/conf:/app/conf:ro
+      # 4. any other profile, mounted in and named in the boot args:
+      # - ./my.boot.mtron:/app/boot/my.boot.mtron:ro
+      # 5. a second data dir, if you point METATRON_DATA outside /home/metatron
+      #    (it must be an existing writable directory — the sqlite driver does
+      #    not create parent directories):
+      # - ./data:/srv/metatron
+      # 6. hand the VM its docker credentials instead of the socket:
+      # - ${HOME}/.docker/config.json:/home/metatron/.docker/config.json:ro
+
+    # The runtime is uid 10001 and belongs to no host group, while the socket is
+    # root:docker — add its gid, else the CLI is denied:
+    #   export METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+    group_add:
+      - "${METATRON_DOCKER_GID:-0}"
+
+    # --- container-side environment -----------------------------------------
+    environment:
+      # The java launcher reads these itself; no entrypoint change is needed.
+      # 75% of the memory limit below is the heap ceiling; OOM should restart
+      # the container rather than limp along.
+      JAVA_TOOL_OPTIONS: "${METATRON_JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError}"
+      # Prepended to the app's command line instead (must not clash with the
+      # image's own flags — see dist/docker/entrypoint.sh):
+      # JDK_JAVA_OPTIONS: "${METATRON_JDK_JAVA_OPTIONS:-}"
+      TZ: "${METATRON_TZ:-UTC}"
+      # Keep the image's default locale/encoding for the terminal layout:
+      # LANG: "${METATRON_LANG:-C.UTF-8}"
+      # Extra variables for a custom boot profile (they are NOT read by the
+      # default one — the boot args in `command` are):
+      # METATRON_FEATURE_FLAG: "on"
+      # METATRON_API_KEY: "${METATRON_API_KEY:?set METATRON_API_KEY}"
+    # Bulk-load the same variables from a file instead:
+    # env_file:
+    #   - ${METATRON_ENV_FILE:-./metatron.env}
+
+    # --- healthcheck ---------------------------------------------------------
+    # Same probe the image ships; spelled out here so the timings are knobs.
+    # It assumes the boot serves http on the (container-side) http port.
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:${METATRON_HTTP_PORT:-8777}/ >/dev/null || exit 1" ]
+      interval: ${METATRON_HEALTH_INTERVAL:-30s}
+      timeout: ${METATRON_HEALTH_TIMEOUT:-5s}
+      retries: ${METATRON_HEALTH_RETRIES:-3}
+      # The VM binds its ports only after the boot file has been evaluated:
+      start_period: ${METATRON_HEALTH_START_PERIOD:-20s}
+
+    # --- resources -----------------------------------------------------------
+    # Compose v2 applies these on `up` (no --compatibility needed).
+    deploy:
+      resources:
+        limits:
+          cpus: "${METATRON_CPUS:-2.0}"
+          memory: ${METATRON_MEMORY:-2g}
+        reservations:
+          memory: ${METATRON_MEMORY_RESERVATION:-256m}
+        # GPUs need the NVIDIA container toolkit on the host:
+        # gpus: all
+      # replicas: 1   # >1 collides with container_name and the state volume
+
+    # --- logs ----------------------------------------------------------------
+    logging: *default-logging
+
+    # --- hardening -----------------------------------------------------------
+    # The JVM needs no capabilities at all, and must not gain any:
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # A read-only root filesystem works, with one subtlety: the tree-sitter
+    # native library is extracted to /tmp on EVERY boot and mmapped, so /tmp must
+    # be a writable, EXECutable tmpfs (the default tmpfs options are noexec):
+    # read_only: true
+    # tmpfs:
+    #   - /tmp:rw,exec,size=256m
+    # userns_mode: "host"
+    # AppArmor/SELinux: label the state volume instead of disabling confinement
+    # security_opt:
+    #   - label=type:container_runtime_t
+
+    # --- kernel/process limits (uncomment as needed) -------------------------
+    # ulimits:
+    #   nofile: { soft: 65535, hard: 65535 }
+    #   core: { soft: 0, hard: 0 }
+    # shm_size: "${METATRON_SHM_SIZE:-64mb}"
+    # sysctls:
+    #   net.core.somaxconn: "1024"
+    #   net.ipv4.tcp_keepalive_time: "60"
+    # pids_limit: 512
+
+    # --- name resolution -----------------------------------------------------
+    # The compose network resolves service names; add host aliases for boots that
+    # dial something off-network:
+    # extra_hosts:
+    #   - "ginger.local:${METATRON_GINGER_IP:-192.168.1.61}"
+    # dns:
+    #   - ${METATRON_DNS:-1.1.1.1}
+    # dns_search:
+    #   - ${METATRON_DNS_SEARCH:-lan}
+
+    # --- metadata ------------------------------------------------------------
+    labels:
+      com.phaseshift.metatron.role: "server"
+      com.phaseshift.metatron.boot: "${METATRON_BOOT:-boot/docker.boot.mtron}"
+      com.phaseshift.metatron.user: "${METATRON_USER:-avatar}"
+      # Let a watchtower-style updater redeploy this service:
+      # com.centurylinklabs.watchtower.enable: "true"
+
+    networks:
+      - netatron
+
+  # ===========================================================================
+  #  THE REPL — a wsplus console as a side service (profile: repl)
+  # ===========================================================================
+  #   docker compose --profile repl run --rm repl
+  #   docker compose --profile repl run --rm -T --entrypoint /app/bin/wsplus \
+  #     repl -e '1 + 2' ws://metatron:8555/mtron        # one-shot evaluation
+  repl:
+    profiles: [ "repl" ]
+    image: ${METATRON_IMAGE:-ghcr.io/phaseshift-studio/metatron:latest}
+    container_name: ${METATRON_CONTAINER:-metatron}-repl
+    # Skip the VM entrypoint: wsplus is the client, not a second server.
+    entrypoint: [ "/app/bin/wsplus" ]
+    command:
+      - "ws://${METATRON_HOSTNAME:-metatron}:${METATRON_WS_PORT:-8555}/mtron"
+    # A REPL needs a terminal; `run` allocates one.
+    stdin_open: true
+    tty: true
+    restart: "no"
+    depends_on:
+      metatron:
+        condition: service_healthy
+    networks:
+      - netatron
+
+  # ===========================================================================
+  #  SPACE BACKENDS — deliberately not in this file
+  # ===========================================================================
+  #  mariadb / gremlin / chroma are the "compose owns the backends" alternative
+  #  to the boot modules pulling them through dckrspace, so they live in their
+  #  own override file and this one stays one service:
+  #      docker compose -f compose.yaml -f compose.infra.yaml up -d
+  #  The modules probe for those container names before composing their own, so
+  #  either way a boot reuses what is already there.
+  # ---------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Networks and volumes.  Both support a `name:` override so the docker objects
+# can be named independently of the compose project.
+# -----------------------------------------------------------------------------
+networks:
+  netatron:
+    name: ${METATRON_NETWORK:-netatron}
+    driver: ${METATRON_NETWORK_DRIVER:-bridge}
+    # internal: true          # no egress: only in-network traffic
+    # attachable: true        # let standalone containers join later
+    # ipam:
+    #   config:
+    #     - subnet: ${METATRON_SUBNET:-172.28.0.0/16}
+
+volumes:
+  # VM state: the sqlite file (METATRON_DATA) and ~/.metatron.  Survives
+  # `docker compose down`; removed only by `down -v` / `docker volume rm`.
+  metatron-state:
+    name: ${METATRON_STATE_VOLUME:-metatron-state}
+    # Bind it to a host directory instead (remember uid 10001 owns the image's
+    # /home/metatron, so chown the host dir to 10001:10001):
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: ${METATRON_STATE_DIR:-./state}
+    # external: true        # manage the volume outside compose
+  # The space backends' volumes (metatron_mariadb, metatron_gremlin,
+  # metatron_chroma) live in compose.infra.yaml with the services that use them.

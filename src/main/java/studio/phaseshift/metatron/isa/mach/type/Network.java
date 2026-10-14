@@ -22,19 +22,20 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
-import studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.Closeable;
-
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -42,23 +43,20 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 
 /**
  * The <b>Network</b> component of a Machine: the peers this frame can reach, and the authority arithmetic that
  * decides what "reachable" and "mine" mean.
  * <p>
- * It is a {@link Rec} — a map of authority to transport, which is exactly the shape the declared roster already
- * has ({@code /sys/peer}). Like Memory and the ISA it is <em>meant</em> to accumulate, so that a frame wraps it
- * with a {@link ComponentUnion} rather than replacing it and a frame that dials a peer adds to its own
- * {@code current()} while inheriting the rest.
+ * It carries two maps, deliberately not one: {@code roster} is what the system <b>knows</b> — connectionless
+ * endpoints, read at {@link #ROOT_ROSTER} so every machine reads the one listing — and {@code peer} is what
+ * <b>this</b> machine has dialed. Knowledge is inherited, reach is not.
  * <p>
- * <b>It does not accumulate yet, and the union cannot be the first step.</b> The roster lives in a shared space
- * addressed {@code /sys/peer}, so this component's own level is empty and a union over it would compose nothing: a
- * peer declared while standing in a child IS the parent's declaration, because the address is one address at every
- * depth. The roster has to move home — onto {@code peer}, the field the declared type already carries — in the
- * SAME change as the union, because either half alone is worse than neither: moving it without the union leaves a
- * child's inherited membership unreachable, and the union without the move composes an empty component.
+ * Like Memory and the ISA it is <em>meant</em> to accumulate, so that a frame wraps it with a
+ * {@link ComponentUnion} rather than replacing it and a frame that dials a peer adds to its own level while
+ * inheriting the rest. <b>It does not accumulate yet</b>: a declaration made while standing in a child is written
+ * at the address, and the address is one address at every depth, so the child's is the parent's. The union is the
+ * change that gives a child a level of its own.
  * <p>
  * Membership is also a <em>capability</em>, unlike an address or a vocabulary. Memory's union is sound because an
  * address means the same thing at every depth, so inheriting is pure extension; read-through on a roster instead
@@ -78,100 +76,58 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS;
 public interface Network extends Machine.Component, Closeable {
 
     /**
-     * The KNOWN-SERVER roster: {@code <service-uri> => <transport>} at {@code /sys/peer}, the machines the system
-     * knows about. It is one shared address rather than per-machine state, and it is what {@link #isPeer(fURI)} and
-     * dispatch fall back to — a declared server is reachable even before this machine holds a connection to it.
-     * Declared, never emergent: a uri must not make itself known merely by being addressed.
-     * <p>
-     * NOT this machine's own reach — that is {@link #connections()}, the connections the frame carries. Read as a
-     * value, never copied into a field, so mtron sees exactly what the boundary acts on.
+     * this machine's connections, and the root's — {@code ~} follows {@code move}.
      */
+    fURI CURRENT_PEER = f("~/network/peer");
+    fURI ROOT_PEER = f("/network/peer");
+    /**
+     * known endpoints: knowledge is the root's, reach is this machine's.
+     */
+    fURI CURRENT_ROSTER = f("~/network/roster");
+    fURI ROOT_ROSTER = f("/network/roster");
+
+    /**
+     * where a machine DECLARES its discovery sources: {@code <mechanism> => <handler vid>}
+     */
+    fURI ROOT_SOURCE = f("/network/source");
+
+    default Optional<String> name() {
+        return Optional.ofNullable(this.at(NAME).isNoObj() ? null : this.at(NAME).strValue());
+    }
+
     default Rec roster() {
-        final Obj declared = Machine.read(Helper.peerRosterPath());
-        return declared.isRec() ? declared.asRec() : rec();
+        return Machine.read(ROOT_ROSTER).orElse(rec());
     }
 
     /**
-     * The connections <b>this machine</b> has to other machines: {@code <service-uri> => peer::T} — the
-     * component's own {@code peer} field. This is the machine's reach: what it has dialed, not what the system
-     * knows about.
-     * <p>
-     * Deliberately NOT {@link #roster()}. {@code /sys/peer} is the whole system's list of known servers, one
-     * shared address rather than per-machine state; membership here is the connection the frame carries, so a
-     * frame's reach can differ from its parent's and a pop retracts exactly what it dialed.
+     * The discovery sources this machine declares: {@code <mechanism> => <handler vid>}. A source is how knowledge
+     * arrives without anyone dialing anything — and nothing here starts them; {@link Machine#bootstrap()} does,
+     * for the root, once.
      */
-    default Rec connections() {
-        return Helper.connections(this);
+    default Rec source() {
+        return this.at(SOURCE).orElse(rec());
+    }
+
+    default Rec peers() {
+        return this.at(PEER).orElse(rec());
     }
 
     /**
-     * The peer authorities this machine holds a <b>connection</b> to — the connection keys. Deliberately NOT the
-     * same question as {@link #authorities()}, which asks which authorities are <em>mine</em>.
+     * Is this address a <b>peer</b>? A connection this machine holds, or one the roster declares.
      */
-    default Set<String> peers() {
-        final Set<String> peers = new LinkedHashSet<>();
-        this.connections().jvm().keySet().stream()
-                .filter(Obj::isUri)
-                .map(key -> key.uriValue().authority())
-                .filter(authority -> null != authority)
-                .forEach(peers::add);
-        return peers;
-    }
-
-    /**
-     * The authorities THIS machine answers to. <b>Derived, never declared twice</b>: every mounted space that names
-     * a {@code host} contributes it, with the loopback aliases collapsed — a server bound to {@code 0.0.0.0} is
-     * reachable as {@code localhost}. This is the other half of {@link #own(fURI)}, and it is why there is no
-     * self-authority field to go stale: identity has exactly one source, the config that was actually mounted.
-     * <p>
-     * The frame chain is walked, because a level lists only its own index — a child's mounted spaces live in its
-     * own level, its servers in the root's.
-     */
-    default Set<String> authorities() {
-        final Set<String> mine = new LinkedHashSet<>();
-        for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous())
-            for (final Obj declared : memory.spaces().jvm().values()) {
-                // A space's DECLARED CONFIG is read off the space itself, the same act its own constructor
-                // performs (a space is an MRec, and dckrSpace reads its host this way). It is NOT addressable as
-                // <vid>/host: the space's own pattern claims that path and answers from its store, which is empty
-                // of config. Measured — routing this through Machine.read returned no authorities at all.
-                if (!(declared instanceof Rec space))
-                    continue;
-                // the host may be a literal uri or an auto pointer at the boot args — resolve both
-                final Obj host = space.at(uri(HOST));
-                final Obj resolved = host.isUri() ? host : (host.isInst() ? host.apply() : noobj());
-                if (!resolved.isUri())
-                    continue;
-                final String authority = resolved.uriValue().authority();
-                if (null != authority)
-                    mine.add(authority);
-            }
-        return mine;
+    default boolean isPeer(final fURI vid) {
+        return vid.hasAuthority()
+                && (Helper.peerAuthorities(this).stream().anyMatch(peer -> Helper.sameService(peer, vid))
+                || Stream.concat(this.roster().keys(), this.roster().values())
+                .filter(Obj::isUri).map(Obj::uriValue).anyMatch(known -> Helper.sameService(known, vid)));
     }
 
     /**
      * Is this address <b>mine</b>? Alias-aware, because the boot binds a wildcard while a caller addresses
-     * loopback — and getting that wrong makes the boundary forward a request to <em>itself</em>. This is a loop
-     * guard, not a nicety.
+     * loopback — and getting that wrong makes the boundary forward a request to itself.
      */
     default boolean own(final fURI vid) {
-        return null != vid.authority() && this.authorities().stream()
-                .anyMatch(authority -> Helper.sameAuthority(authority, vid.authority()));
-    }
-
-    /**
-     * Is this address a <b>peer</b>? Two honest ways to be one: this machine holds a connection to it, or the
-     * known-server roster declares it. Membership is never traffic either way.
-     */
-    default boolean isPeer(final fURI vid) {
-        if (null == vid.authority())
-            return false;
-        if (this.peers().stream().anyMatch(authority -> Helper.sameAuthority(authority, vid.authority())))
-            return true;
-        return this.roster().jvm().keySet().stream()
-                .filter(Obj::isUri)
-                .map(key -> key.uriValue().authority())
-                .anyMatch(authority -> null != authority && Helper.sameAuthority(authority, vid.authority()));
+        return vid.hasAuthority() && Helper.authorities().stream().anyMatch(mine -> Helper.sameService(mine, vid));
     }
 
     /**
@@ -180,49 +136,23 @@ public interface Network extends Machine.Component, Closeable {
      * transport. {@code noobj} means the authority is neither dialed nor declared, and the caller falls through to
      * local memory.
      */
-    default Obj transportOf(final String authority) {
-        final Obj connection = Helper.entry(this.connections(), authority);
-        if (connection.isRec()) {
-            final Obj reach = connection.asRec().at(uri(TRANSPORT));
-            if (reach.isObjInst())
-                return reach;
-        }
-        return Helper.entry(this.roster(), authority);
+    default Obj transportOf(final fURI authority) {
+        final Obj declared = Stream.concat(this.peers().elements(), this.roster().elements())
+                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), authority))
+                .map(Rel::second)
+                .map(reach -> reach.isRec() ? reach.asRec().at(TRANSPORT) : reach)
+                .filter(reach -> !reach.isNoObj())
+                .findFirst().orElse(noobj());
+        if (!declared.isNoObj())
+            return declared;
+        // a DISCOVERED machine is keyed by the machine, so its addresses are the VALUES — one or more of them
+        return this.roster().elements().flatMap(kv -> kv.second().stream())
+                .filter(Obj::isUri)
+                .filter(address -> Helper.sameService(address.uriValue(), authority)
+                        && java.util.Objects.equals(address.uriValue().scheme(), authority.scheme()))
+                .findFirst().orElse(noobj());
     }
 
-    /**
-     * where the cluster view lives — a sibling of {@code /sys/peer}, {@code /sys/thread} and {@code /sys/typer},
-     * and deliberately <em>not</em> under {@code /sys/mach}: the Machine claims that address and
-     * {@code AbstractSpace}'s default writer is a no-op, so anything written there is silently dropped.
-     */
-    fURI CLUSTER_PATH = f("/sys/cluster");
-
-    /**
-     * The local cluster: a rec of fields and methods over <em>this</em> network's declared roster — the awareness
-     * half of distribution, and deliberately a <b>view</b> rather than a second registry. Its {@code peer} field
-     * is an auto pointer to the roster, so there is exactly one source of truth for membership and no copy to
-     * drift.
-     * <p>
-     * It lives on the component rather than in a class of its own because every input it takes is this
-     * component's: the roster, and the transports the roster declares. A separate class could do nothing but read
-     * the network and report on it.
-     * <p>
-     * Two invariants the shape protects:
-     * <ul>
-     *   <li><b>Membership is declared, never emergent.</b> Nothing here adds a peer; it only asks after the ones
-     *       that were configured. A healthy cluster is one whose declared peers answer.</li>
-     *   <li><b>Tools compute on call.</b> No status is stored — a remembered status would make transient state
-     *       look like declared state, and "is the cluster up?" would answer from a stale read.</li>
-     * </ul>
-     * Usage (all three spellings work): {@code /sys/cluster/status()}, {@code /sys/cluster.status()},
-     * {@code *&#47;sys/cluster/status.apply()}.
-     */
-    default Rec cluster() {
-        return rec(
-                uri(NAME), str("local"),
-                uri(PEER), auto_from_(Helper.peerRosterPath()).tryToInst(),
-                uri(STATUS), this.status());
-    }
 
     /**
      * the {@code status} method, as an <b>auto</b> inst that closes over <em>this</em> network.
@@ -230,16 +160,17 @@ public interface Network extends Machine.Component, Closeable {
      * A static method reference would report on whatever network happened to be global; closing over the receiver
      * means the view reports on the component it was minted from.
      * <p>
-     * The tid has to be {@link studio.phaseshift.metatron.isa.m.mInstSet#AUTO_INST_TID}: a field holding a plain
-     * inst holds a <em>value</em> and is handed back unevaluated, while an auto inst is evaluated on access
-     * ({@code Obj.Helper.isAuto}). That is what makes the field behave as a method rather than as data, so
-     * {@code *x/status} and {@code *x.status()} reach it while the same inst built with a plain tid sits inert.
+     * An {@code auto} inst, so the field behaves as a method rather than as data: dereferencing it evaluates it
+     * ({@code *x/status} yields the report). The <em>fluent</em> spelling does not work for a stored instance —
+     * {@code *x.status()} goes through the resolver, which looks for an {@code inst-f} on the stored inst and
+     * reports {@code unable to locate inst-f}. That is not a tid choice: it fails identically with a plain inst
+     * (measured). Invoke it from Java, or read it by path.
      * <p>
      * rng is {@code ALL_STAR}, not {@code peer::T}: the report is a <em>multiplicity</em> of peers, one per
      * declared peer, and a single-peer rec rng fails the range check as soon as a second peer is declared.
      */
     default Inst status() {
-        return auto_(instLambda(lhs -> this.status(lhs))).tryToInst().asInst();
+        return auto_(instLambda(this::status)).tryToInst().asInst();
     }
 
     /**
@@ -256,8 +187,8 @@ public interface Network extends Machine.Component, Closeable {
         if (!roster.isRec())
             return noobj(); // nothing declared: an empty cluster, not an error
         return objs(roster.asRec().jvm().entrySet().stream()
-                .filter(e -> e.getKey().isUri())
-                .map(e -> (Obj) Helper.probe(e.getKey(), e.getValue())));
+                .filter(e -> e.getKey().isUri() && !e.getValue().isNoObj())   // a hollow key is not a machine
+                .map(e -> Helper.probe(e.getKey(), e.getValue())));
     }
 
     /**
@@ -269,14 +200,14 @@ public interface Network extends Machine.Component, Closeable {
     default Obj read(final fURI vid) {
         if (!vid.hasAuthority())
             return noobj();
-        final Obj transport = this.transportOf(vid.scheme() + "://" + vid.authority());
+        final Obj transport = this.transportOf(vid.path(List.of()));
         if (transport.isNoObj())
             return noobj(); // authority not declared: not a peer this frame may reach
         // A ws:// ADDRESS IS A WIRE ADDRESS, NOT A PLACE IN THIS MACHINE. Reading one asks the PEER for that path —
         // the frame that stands in the peer has a local address of its own (/network/peer/<scheme>/<host>/<port>/<ns>,
         // derived on push), and moving to it is an ordinary local read of a machine. So nothing here maps an
         // authority to a frame: this is the data path, and only the data path.
-        final Obj message = ObjmtronSerializer.parse("from(<" + vid.localize() + ">)");
+        final Obj message = from_(vid.localize().toUri()).tryToInst();
         return transport.apply(message);
     }
 
@@ -292,17 +223,21 @@ public interface Network extends Machine.Component, Closeable {
         // raised it besides. Answering noobj sends the write down the local path, which is where a fail belongs.
         if (obj.isFail())
             return noobj();
-        final Obj transport = this.transportOf(vid.scheme() + "://" + vid.authority());
+        final Obj transport = this.transportOf(vid.path(List.of()));
         if (transport.isNoObj())
             return noobj();
         final Obj message;
         try {
-            message = ObjmtronSerializer.parse(ObjmtronSerializer.single().write(obj) + ".to(<" + vid.localize() + ">)");
+            message = start_(obj).to_(vid.localize().toUri()).tryToInst();
         } catch (final Exception e) {
             // not mtron-parseable source: there is nothing to ship, so it is not a peer's to answer
             return noobj();
         }
         return transport.apply(message);
+    }
+
+    default void close() {
+        this.peers().values().forEach(CommonUtil::close);
     }
 
     class Helper {
@@ -316,34 +251,49 @@ public interface Network extends Machine.Component, Closeable {
             // static only
         }
 
-        /**
-         * Host component of an authority ({@code "localhost:8555"} to {@code "localhost"}), handling the
-         * bracketed IPv6 form ({@code "[::1]:8555"} to {@code "[::1]"}).
-         */
-        public static String hostOf(final String authority) {
-            if (null == authority)
-                return null;
-            if (authority.startsWith("[")) {
-                final int close = authority.indexOf(']');
-                return close < 0 ? authority : authority.substring(0, close + 1);
-            }
-            final int colon = authority.lastIndexOf(':');
-            return colon < 0 ? authority : authority.substring(0, colon);
+        public static Set<fURI> peerAuthorities(final Network network) {
+            return network.peers().keys().map(Obj::uriValue).collect(Collectors.toSet());
+        }
+
+        public static Set<fURI> peerAuthorities() {
+            return Helper.peerAuthorities(Machine.current().network());
         }
 
         /**
-         * Port component of an authority, or {@code null} when none was given.
+         * The authorities this machine <b>answers to</b>, from the {@code host} every mounted space declares.
+         * The announce side, and the other half of {@link Network#own(fURI)} — deliberately NOT
+         * {@link #peerAuthorities()}: that is who we have dialed, this is who we are.
          */
-        public static String portOf(final String authority) {
-            if (null == authority)
-                return null;
-            if (authority.startsWith("[")) {
-                final int close = authority.indexOf(']');
-                return close < 0 || close + 1 >= authority.length() ? null : authority.substring(close + 2);
-            }
-            final int colon = authority.lastIndexOf(':');
-            return colon < 0 || colon + 1 >= authority.length() ? null : authority.substring(colon + 1);
+        public static Set<fURI> authorities() {
+            final Set<fURI> mine = new LinkedHashSet<>();
+            for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous())
+                memory.spaces().jvm().values().stream()
+                        .filter(Obj::isRec)
+                        .map(space -> space.asRec().<Obj>at(uri(HOST)))
+                        .map(host -> host.isUri() ? host : (host.isInst() ? host.apply() : noobj()))
+                        .filter(Obj::isUri)
+                        .map(Obj::uriValue)
+                        .forEach(mine::add);
+            return mine;
         }
+
+        /**
+         * The local address of the machine that stands in a peer, anchored on the root.
+         */
+        public static fURI peerPath(final fURI authority) {
+            final fURI base = ROOT_PEER.extend(authority.scheme() == null ? "ws" : authority.scheme())
+                    .extend(authority.host()).extend(authority.port());
+            return authority.localize().isEmpty() ? base : base.extend(authority.localize());
+        }
+
+        /**
+         * Two uris denote the same service: the same authority, or two loopback aliases at the same port.
+         */
+        public static boolean sameService(final fURI a, final fURI b) {
+            return a.authority().equals(b.authority())
+                    || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
+        }
+
 
         /**
          * True when {@code host} names this machine. A server declared as {@code 0.0.0.0:8555} (all local
@@ -356,115 +306,35 @@ public interface Network extends Machine.Component, Closeable {
         }
 
         /**
-         * True when two authorities denote the same service. Ports must agree when both are present; hosts
-         * match exactly, or by loopback aliasing. This is the ownership test the authority guard runs before it
-         * will delegate anywhere.
-         */
-        public static boolean sameAuthority(final String a, final String b) {
-            if (null == a || null == b)
-                return false;
-            if (a.equals(b))
-                return true;
-            final String aPort = portOf(a);
-            final String bPort = portOf(b);
-            if (null != aPort && null != bPort && !aPort.equals(bPort))
-                return false;
-            final String aHost = hostOf(a);
-            final String bHost = hostOf(b);
-            return aHost.equals(bHost) || (isLoopbackHost(aHost) && isLoopbackHost(bHost));
-        }
-
-        /**
          * the liveness payload — cheap, total, and free of side effects.
          */
-        private static final Obj PROBE = ObjmtronSerializer.parse("1.plus(1)");
+        private static final Obj PROBE = start_(jnt(1)).plus_(jnt(2));
 
         /**
          * one declared peer, asked once: {@code [authority, transport, status=>[kind=>up|down, time=>ms]]}
          */
         static Rec probe(final Obj authority, final Obj transport) {
             final long start = System.currentTimeMillis();
-            boolean up;
-            try {
-                // a silent peer does NOT answer noobj — the declared transports report it as a fail, so both
-                // spellings of "nothing came back" have to count as down or a dead peer reads as healthy
-                final Obj answer = transport.isObjInst() ? transport.apply(PROBE) : noobj();
-                up = !answer.isNoObj() && !answer.isFail();
-            } catch (final Exception ex) {
-                up = false;
+            // AN ADDRESS IS NOT A TRANSPORT. A discovered machine is written as a uri (or a uri{+}), so applying
+            // the PROBE inst to it answers noobj and reports a LIVE machine down. It has simply not been dialed:
+            // that is "known", and "down" stays reserved for a transport that was tried and did not answer.
+            final boolean address = !transport.isNoObj() && !transport.isObjInst();
+            boolean up = false;
+            if (!address) {
+                try {
+                    // a silent peer does NOT answer noobj — the declared transports report it as a fail, so both
+                    // spellings of "nothing came back" have to count as down or a dead peer reads as healthy
+                    final Obj answer = transport.isObjInst() ? transport.apply(PROBE) : noobj();
+                    up = !answer.isNoObj() && !answer.isFail();
+                } catch (final Exception ex) {
+                    up = false;
+                }
             }
             final long time = System.currentTimeMillis() - start;
             return rec(
                     uri(AUTHORITY), authority,
                     uri(TRANSPORT), transport,
-                    uri(STATUS), rec(uri(KIND), str(up ? "up" : "down"), uri(TIME), jnt(time)));
-        }
-
-        /**
-         * The declared peer roster: a rec of {@code <authority-uri> => <transport-inst>}. The value is the
-         * transport — an inst that takes the message ({@code from(localized)} for a read,
-         * {@code start(localized).ref(obj)} for a write) and returns the peer's response. Keeping it an inst
-         * is what keeps the machine free of any transport dependency: swapping ws for http, mqtt or a gRPC
-         * client is a roster change.
-         * <p>
-         * It lives at {@code /sys/peer}, beside {@code /sys/thread}, and <em>not</em> under {@code /sys/mach}:
-         * the machine claims {@code /sys/mach} and {@code AbstractSpace}'s default writer is a no-op, so a
-         * roster written there is silently dropped — a failure mode worth remembering, because the symptom is
-         * a peer that quietly resolves to the local wildcard-host space and <em>appears to work</em>.
-         */
-        public static fURI peerRosterPath() {
-            return SYS.extend(PEER);
-        }
-
-        /**
-         * The <b>local address</b> of the frame that stands in a peer:
-         * {@code <base>/network/peer/<scheme>/<host>/<port>/<namespace>}. Derived from the authority, which is what
-         * makes a peer's address a path in THIS machine rather than a remote uri — so the frame registers itself
-         * where every machine does, {@code ~}-relative state ({@code ~/sys/fail}, {@code ~/thread}) stays local, and a
-         * plain local read reaches it. Scheme and port are segments because neither may carry its own punctuation in
-         * a path.
-         * <p>
-         * ANCHORED ON {@code base}, never spelled {@code ~}. A vid that itself begins with {@code ~} is
-         * self-referential: {@code Memory.write} expands {@code ~} against {@code Machine.current().vid()}, so such
-         * a frame would resolve {@code ~/sys/fail} to another {@code ~}-prefixed address against itself — recursing
-         * until the stack dies.
-         */
-        public static fURI peerPath(final fURI base, final fURI authority) {
-            fURI path = (null == base ? f("/") : base).resolve()
-                    .extend("network").extend(PEER)
-                    .extend(null == authority.scheme() ? "ws" : authority.scheme())
-                    .extend(authority.host());
-            if (authority.hasPort())
-                path = path.extend(String.valueOf(authority.port()));
-            return (authority.localize().isEmpty() ? path : path.extend(authority.localize())).resolve();
-        }
-
-        /**
-         * The connections a network rec carries: its {@code peer} field when that field holds a rec, and an empty
-         * rec otherwise. Read off the <b>rec</b> rather than through {@link Network#connections()}, so it answers
-         * for a machine whose network came back from memory as a plain rec instead of the bound component — the
-         * callers that must not lose a frame's own reach (reap, the frame's own connection) go through here.
-         */
-        public static Rec connections(final Obj network) {
-            if (!network.isRec())
-                return rec();
-            final Obj field = network.asRec().atDirect(uri(PEER));
-            return field.isRec() ? field.asRec() : rec();
-        }
-
-        /**
-         * The entry a service uri resolves to in a rec of {@code <uri> => <value>}, or {@code noobj}. Looked up
-         * by <em>authority string</em> rather than {@code rec.at(uri(...))}: a uri key that has round-tripped
-         * through a space's serializer may carry a different vid than a freshly minted {@code uri(...)}, so key
-         * equality fails where the address itself is identical. Used for both homes — a connection map
-         * ({@code peer::T} values) and the known-server roster (transport values).
-         */
-        public static Obj entry(final Rec rec, final String authority) {
-            return rec.jvm().entrySet().stream()
-                    .filter(e -> e.getKey().isUri() && authority.equals(e.getKey().uriValue().toString()))
-                    .map(java.util.Map.Entry::getValue)
-                    .findFirst()
-                    .orElse(noobj());
+                    uri(STATUS), rec(uri(KIND), str(address ? "known" : up ? "up" : "down"), uri(TIME), jnt(time)));
         }
     }
 }

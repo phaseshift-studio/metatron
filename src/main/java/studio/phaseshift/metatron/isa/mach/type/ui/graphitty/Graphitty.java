@@ -359,6 +359,16 @@ public class Graphitty {
         return ret.toString();
     }
 
+    /**
+     * The columns the {@code ==>} result prompt occupies.  A result is written after it, so
+     * text that continues under a result — the value's own later lines, or the execution trace
+     * reported below a failure — shifts by this many columns to sit under the value rather than
+     * under the prompt.  The shift belongs to whoever WRITES the text, not to its producer: a
+     * trace's staircase is relative, and this is the one place that says how wide the prompt it
+     * lands under is.
+     */
+    public static final int RESULT_PROMPT_WIDTH = 3;
+
     public static String strip(final String string) {
         if (null == string || string.isEmpty()) return "";
         // Fast path: a line with no DSL codes, no ANSI escapes and nothing

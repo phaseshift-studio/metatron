@@ -45,7 +45,6 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -60,13 +59,18 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       size.  Every limit is a key in the instance's own rec: {@code clip->rec},
  *       {@code clip->lst}, {@code clip->str}, {@code clip->uri},
  *       {@code clip->bytes}, {@code clip->fail} (each an int), so a call site tunes the
- *       display without touching the class;</li>
+ *       display without touching the class.  A fail's limit bounds the whole bracket chain
+ *       it prints — its message and the levels of its stack block (see
+ *       {@link #writeFail(Fail)});</li>
  *   <li><b>indentation</b> — a poly whose mtron text reads wider than
  *       {@link #NESTED_STRING_THRESHOLD} columns breaks across lines: the first entry rides
  *       the opening bracket and every entry after it starts a line of its own at the column
  *       the first one begins, so the entries line up under the first.  A collection that
  *       fits the threshold stays on one line — a short rec has nothing to gain from a stack
- *       of newlines;</li>
+ *       of newlines.  When the opening line has already run wide — a type name that is a path
+ *       ({@code /m/mach/ui/console/command_palette::[…]}) or an entry column past
+ *       {@link #MAX_ENTRY_COLUMN} — the first entry is not carried on it at all: the entries
+ *       take their own lines, one level in from the line's own indent;</li>
  *   <li><b>{@code {{link}}} handling</b> — every uri the serializer writes is tagged as a
  *       link, which is how a renderer that can draw links (graphitty turns the rule into
  *       an OSC 8 hyperlink a click can resolve) learns the value is a uri.  Tagging uris
@@ -102,6 +106,24 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     public static final int INDENT_SIZE = 1;
     public static final int NESTED_STRING_THRESHOLD = 40;
+
+    /**
+     * The column past which a collection no longer carries its first entry on the opening
+     * line.  A poly whose {@code [} lands further right than this — deep nesting, a run of
+     * long entry keys — starts its entries on lines of their own, one level in from the
+     * line's own indent, instead of dragging them out to a column no reader can follow.
+     */
+    public static final int MAX_ENTRY_COLUMN = 40;
+
+    /**
+     * The width of a collection's own type prefix — the {@code name::} it writes before its
+     * bracket, so {@code /m/mach/ui/console/command_palette::[} is 37 columns — past which the
+     * first entry is not carried on the opening line either.  A prefix that wide is a path
+     * rather than a name, and it leaves no room for an entry after it; the entries take their
+     * own lines.  The console's {@code *mach} output is the shape this is for: without it the
+     * entry columns there reach a hundred-odd.
+     */
+    public static final int MAX_TYPE_PREFIX = 24;
 
     // ── Config key URIs ───────────────────────────────────────────
     private static final fURI KEY_CLIP = f("clip");
@@ -392,6 +414,71 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.postWrite(this.generateString(str, false));
     }
 
+    // ── Fail writer: the bounded stack block ─────────────────────
+
+    /**
+     * A fail rendered for a reader: its bracket chain — the {@code [msg][cause][cause]} stack
+     * block — bounded by {@link #clipFail()} columns.  A fail's message can carry a whole obj
+     * (the {@code inst apply failure: machine::[…]} of a type mismatch) and its cause chain can
+     * run several levels deep, so left alone it prints a wall; here the levels the plain
+     * renderer would emit share one budget, and {@code [...]} stands in for the levels that no
+     * longer fit.  The full text is still what the fail holds and what
+     * {@link ObjmtronSerializer} writes — this is the rendering, not the record.
+     * <p>
+     * A message is clipped from the middle rather than the end: its head names the context
+     * ({@code inst apply failure: …}) while its tail carries the reason and the
+     * {@code (at <uri>)} frame a failure is marked with — the parts a reader needs, with the
+     * obj the message dumped sitting between them.
+     */
+    @Override
+    public String writeFail(final Fail fail) {
+        final int max = this.clipFail();
+        final StringBuilder sb = new StringBuilder();
+        // handleIds' composition: a bracket for the fail, then one per distinct cause, then the
+        // fail's own tid/vid -- which a fail rendered from a message alone would lose
+        this.handleTID(sb, fail, !fail.isObjInst());
+        Fail current = fail;
+        String above = null;
+        int left = max;
+        while (current != null) {
+            // one line per level: a newline inside a message is not a layout this renderer owns
+            final String message = null == current.message() ? "" : current.message().replace('\n', ' ');
+            final Fail next = current.cause().orElse(null);
+            // a level whose text is already inside the level above's is the same failure framed
+            // twice, not a second cause — the plain renderer drops it and so does this
+            if (null == above || !(message.length() > 0 && above.length() > message.length() && above.contains(message))) {
+                if (message.length() + 2 <= left) {
+                    sb.append("[").append(message).append("]");
+                    left -= message.length() + 2;
+                } else if (current == fail) {
+                    // the fail's own message is what the reader came for: clipped to the budget, never dropped
+                    sb.append("[").append(elide(message, Math.max(3, left - 2))).append("]");
+                    left = 0;
+                } else {
+                    // a cause level that does not fit: the stack block is ellipsed here
+                    sb.append("[...]");
+                    break;
+                }
+            }
+            above = message;
+            current = next;
+        }
+        this.handleVID(sb, fail);
+        return this.postWrite(sb.toString());
+    }
+
+    /**
+     * {@code message} cut to at most {@code max} columns with its middle elided: the head and
+     * the tail are kept and {@code ...} — three columns, the width every other clip here uses —
+     * stands between them.  The tail takes the larger share, because it is the end of a failure
+     * that carries the reason and the {@code (at <uri>)} frame.
+     */
+    private static String elide(final String message, final int max) {
+        final int kept = Math.max(0, max - 3);
+        final int head = kept / 3;
+        return message.substring(0, head) + "..." + message.substring(message.length() - (kept - head));
+    }
+
     // ── Inst writer: the pointer styles ──────────────────────────
 
     /**
@@ -494,14 +581,30 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     /**
-     * The column the entries after a collection's first one begin at: the first entry rides
-     * the opening bracket, so the rest line up under it.  Never less than one nesting level
-     * in — where a poly is rendered into a buffer of its own (an instruction argument, a
-     * type predicate), that buffer cannot know the column it will finally land in, and the
-     * depth is then the only measure of how deep the collection really sits.
+     * The column the buffer's current line begins its own content at — its own leading
+     * spaces, the anchor a break falls back to when the opening line has already run too wide
+     * to carry the first entry.
      */
-    private int entryIndent(final StringBuilder sb, final int depth) {
-        return Math.max(this.lineWidth(sb), (depth + 1) * INDENT_SIZE);
+    private int lineIndent(final StringBuilder sb) {
+        final int start = sb.lastIndexOf("\n") + 1;
+        int i = start;
+        while (i < sb.length() && sb.charAt(i) == ' ')
+            i++;
+        return i - start;
+    }
+
+    /**
+     * The column a broken collection's entries begin at.  With the first entry carried on the
+     * opening line, they line up under it — at the column it begins at.  With the first entry
+     * dropped to a line of its own, they sit one level in from the line's own indent.  Either
+     * way never less than one nesting level in: where a poly is rendered into a buffer of its
+     * own (an instruction argument, a type predicate), that buffer cannot know the column it
+     * will finally land in, and the depth is then the only measure of how deep the collection
+     * really sits.
+     */
+    private int entryIndent(final StringBuilder sb, final int depth, final boolean carried) {
+        return Math.max(carried ? this.lineWidth(sb) : this.lineIndent(sb) + INDENT_SIZE,
+                (depth + 1) * INDENT_SIZE);
     }
 
     // ── List generation (clipped, nested) ────────────────────────
@@ -512,6 +615,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
+        final int prefixFrom = this.lineWidth(sb);
         this.handleTID(sb, lst, true);
         if (lst.isEmpty()) {
             sb.append("[,]");
@@ -519,12 +623,19 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final int lstClip = this.clipLst();
             final boolean nested = this.isNested(lst);
             sb.append("[");
-            // the line every entry but the first begins: the first rides the '[', so this is
-            // what lines the rest up under it (measured only where it is used)
-            final int indent = nested ? this.entryIndent(sb, depth) : 0;
+            // the first entry rides the opening bracket and the rest line up under it — unless
+            // that line has already run too wide to carry it, in which case the entries all take
+            // their own lines one level in from the line's own indent
+            final int entryColumn = this.lineWidth(sb);
+            final boolean carried = nested
+                    && entryColumn - prefixFrom <= MAX_TYPE_PREFIX
+                    && entryColumn <= MAX_ENTRY_COLUMN;
+            final int indent = nested ? this.entryIndent(sb, depth, carried) : 0;
             if (lst.count() > lstClip) {
+                if (nested && !carried)
+                    sb.append("\n");
                 for (int i = 0; i < lstClip; i++) {
-                    if (nested && i > 0)
+                    if (nested && (i > 0 || !carried))
                         sb.append(" ".repeat(indent));
                     this.renderValue(sb, depth, lst.lstValue().get(i));
                     sb.append(",");
@@ -534,9 +645,11 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                     sb.append(" ".repeat(indent));
                 sb.append("...(").append(lst.count() - lstClip).append(" more)]");
             } else {
+                if (nested && !carried)
+                    sb.append("\n");
                 final AtomicInteger counter = new AtomicInteger(0);
                 lst.jvm().forEach(v -> {
-                    if (nested && counter.getAndIncrement() > 0)
+                    if (nested && (counter.getAndIncrement() > 0 || !carried))
                         sb.append(" ".repeat(indent));
                     this.renderValue(sb, nested ? depth + 1 : 0, v);
                     sb.append(",");
@@ -560,6 +673,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
+        final int prefixFrom = this.lineWidth(sb);
         this.handleTID(sb, rec, true);
         if (rec.isEmpty()) {
             sb.append("[=>]");
@@ -567,15 +681,22 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final int recClip = this.clipRec();
             final boolean nested = this.isNested(rec);
             sb.append("[");
-            // the line every entry but the first begins: the first rides the '[', so this is
-            // what lines the rest up under it (measured only where it is used)
-            final int indent = nested ? this.entryIndent(sb, depth) : 0;
+            // the first entry rides the opening bracket and the rest line up under it — unless
+            // that line has already run too wide to carry it, in which case the entries all take
+            // their own lines one level in from the line's own indent
+            final int entryColumn = this.lineWidth(sb);
+            final boolean carried = nested
+                    && entryColumn - prefixFrom <= MAX_TYPE_PREFIX
+                    && entryColumn <= MAX_ENTRY_COLUMN;
+            final int indent = nested ? this.entryIndent(sb, depth, carried) : 0;
             if (rec.count() > recClip) {
+                if (nested && !carried)
+                    sb.append("\n");
                 final AtomicInteger counter = new AtomicInteger(0);
                 rec.indexedStream().forEach(kv -> {
                     final int index = counter.getAndIncrement();
                     if (index < recClip) {
-                        if (nested && index > 0)
+                        if (nested && (index > 0 || !carried))
                             sb.append(" ".repeat(indent));
                         sb.append(this.write(kv.jvm().get0())).append("=>");
                         if (kv.jvm().get1() == rec)
@@ -589,9 +710,11 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                     sb.append(" ".repeat(indent));
                 sb.append("...(").append(rec.count() - recClip).append(" more)]");
             } else {
+                if (nested && !carried)
+                    sb.append("\n");
                 final AtomicInteger counter = new AtomicInteger(0);
                 rec.jvm().forEach((k, v) -> {
-                    if (nested && counter.getAndIncrement() > 0)
+                    if (nested && (counter.getAndIncrement() > 0 || !carried))
                         sb.append(" ".repeat(indent));
                     sb.append(this.write(k)).append("=>");
                     if (v == rec)
@@ -690,12 +813,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             else
                 sb.append(this.writeUri(obj.asUri()));
         } else if (obj.isFail()) {
-            final int max = this.clipFail();
-            String message = obj.asFail().message().split("\n")[0];
-            message = message.length() > max ? (message.substring(0, max - 1) + "...") : message;
-            sb.append(this.writeFail(fail(message)));
-            if (obj.asFail().jvm().getCause() != null)
-                sb.append("[...]");
+            // the same bounded stack block the top level gets: a nested fail is a fail rendered
+            // for the same reader, and a message that dumped an obj into its bracket would break
+            // the line it sits in
+            sb.append(this.writeFail(obj.asFail()));
         } else if (obj.isType()) {
             // through the type renderer, not toShortString(): a type written as a pre-rendered string
             // is a type the serializer never "wrote", so a renderer could not tag it -- which is why

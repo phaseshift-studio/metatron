@@ -65,6 +65,11 @@ STRIKETHROUGH = '\u001b[9m'
 
 NC = '\u001b[0m'
 
+# the columns the '==>' result prompt this client writes occupies: a multi-line result shifts
+# its continuation lines past it, so they read under the value rather than under the prompt.
+# the Java writers name the same width Graphitty.RESULT_PROMPT_WIDTH
+RESULT_PROMPT_WIDTH = 3
+
 try:
     import websockets
 except ImportError:
@@ -134,7 +139,7 @@ async def repl(url):
                 text = result.decode() if isinstance(result, bytes) else str(result)
                 if not text.strip() or text.strip() == "noobj":  # silent for empty/noobj results
                     continue
-                print(GREEN + "==>" + NC + hl.highlight_block(text.replace("\n", "\n   ")))
+                print(GREEN + "==>" + NC + hl.highlight_block(text.replace("\n", "\n" + " " * RESULT_PROMPT_WIDTH)))
             except asyncio.TimeoutError:
                 print(RED + "==>ERROR: " + NC + "timed out")
                 continue
@@ -151,7 +156,7 @@ async def oneshot(url, exprs):
                 text = result.decode() if isinstance(result, bytes) else str(result)
                 text = text.strip()
                 if text and text != "noobj":
-                    print(GREEN + "==>" + NC + text.replace("\n", "\n   "))
+                    print(GREEN + "==>" + NC + text.replace("\n", "\n" + " " * RESULT_PROMPT_WIDTH))
             except asyncio.TimeoutError:
                 print(RED + "==>ERROR: " + NC + "timed out")
                 code = 2

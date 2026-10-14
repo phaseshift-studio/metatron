@@ -35,12 +35,7 @@ import java.net.ServerSocket;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.AUTHORITY;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -66,7 +61,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class MachPushTest extends AbstractMetatronTest {
 
-    /** keep a failed test from leaking a forked node into the rest of the class's shared VM */
+    /**
+     * keep a failed test from leaking a forked node into the rest of the class's shared VM
+     */
     @AfterEach
     void backToTheRoot() {
         this.resetToRoot();
@@ -79,13 +76,14 @@ public class MachPushTest extends AbstractMetatronTest {
         final Machine parent = Machine.current();
         final Machine frame = parent.push(authority);
         try {
-            assertEquals(Network.Helper.peerPath(Machine.root().vid(), authority), frame.vid(),
+            assertEquals(Network.Helper.peerPath(authority), frame.vid(),
                     "the frame lives at the LOCAL address derived from the pushed authority");
             assertInstanceOf(RemoteMachine.class, frame, "a pushed peer is a remote frame, not a local machine copy");
             assertTrue(PeerSpawn.alive(authority), "the pushed authority must be served by a forked process");
             assertTrue(rosterAuthorities().contains("localhost:" + port), "the push must declare the peer");
-            assertTrue(Machine.current().network().peers().contains("localhost:" + port),
-                    "the frame's network holds the connection it stands in: " + Machine.current().network().peers());
+            assertTrue(Network.Helper.peerAuthorities(Machine.current().network()).stream()
+                            .anyMatch(peer -> peer.port() == port && "localhost".equals(peer.host())),
+                    "the frame's network holds the connection it stands in: " + Network.Helper.peerAuthorities(Machine.current().network()));
             // a write crosses the socket
             final fURI address = authority.extend("d");
             Machine.write(address, jnt(42));
@@ -100,7 +98,9 @@ public class MachPushTest extends AbstractMetatronTest {
                 "popping the frame must retract the roster entry it declared");
     }
 
-    /** the {@code push} INST is the contract — this drives it as mtron rather than through the Java API. */
+    /**
+     * the {@code push} INST is the contract — this drives it as mtron rather than through the Java API.
+     */
     @Test
     void testPushInstForksAnAuthority() {
         final int port = freePort();
@@ -144,7 +144,9 @@ public class MachPushTest extends AbstractMetatronTest {
         assertFalse(PeerSpawn.alive(authority), "leaving the frame must reap the node");
     }
 
-    /** {@code move()} enters the peer's frame from the ROSTER entry, never from a machine in local memory. */
+    /**
+     * {@code move()} enters the peer's frame from the ROSTER entry, never from a machine in local memory.
+     */
     @Test
     void testMoveInstEntersThePeerFrame() {
         final int port = freePort();
@@ -153,7 +155,7 @@ public class MachPushTest extends AbstractMetatronTest {
         try {
             // MOVE TO THE FRAME'S OWN ADDRESS. A ws:// uri is a wire address, not a place in this machine, so the
             // frame's address is the local path push derived — and moving to it is an ordinary read of a machine.
-            final fURI local = Network.Helper.peerPath(Machine.root().vid(), authority);
+            final fURI local = Network.Helper.peerPath(authority);
             final Obj moved = ObjmtronSerializer.parse("move(<" + local + ">)").apply();
             assertTrue(moved.isMachine(), "move() answers the machine it moved to");
             assertInstanceOf(RemoteMachine.class, Machine.current(), "move() stands in the peer's frame");
@@ -203,8 +205,9 @@ public class MachPushTest extends AbstractMetatronTest {
             assertEquals("metatron.invalid:9", authorityOf(frame).authority());
             assertTrue(rosterAuthorities().contains("metatron.invalid:9"),
                     "an authority on another machine is declared as a peer");
-            assertTrue(Machine.current().network().peers().contains("metatron.invalid:9"),
-                    "and it is still a connection this frame holds: " + Machine.current().network().peers());
+            assertTrue(Network.Helper.peerAuthorities().stream()
+                            .anyMatch(peer -> "metatron.invalid".equals(peer.host()) && peer.port() == 9),
+                    "and it is still a connection this frame holds: " + Network.Helper.peerAuthorities());
             assertFalse(PeerSpawn.alive(foreign), "an authority on another machine must not be forked");
         } finally {
             frame.pop();
@@ -246,7 +249,7 @@ public class MachPushTest extends AbstractMetatronTest {
      * connection rec does ({@code network.peer} is {@code <service-uri> => peer::T[authority, transport]}).
      */
     private static fURI authorityOf(final Machine frame) {
-        return frame.network().connections().jvm().values().stream()
+        return frame.network().peers().jvm().values().stream()
                 .filter(Obj::isRec)
                 .map(connection -> connection.asRec().<Obj>at(uri(AUTHORITY)))
                 .filter(Obj::isUri)
@@ -256,7 +259,7 @@ public class MachPushTest extends AbstractMetatronTest {
     }
 
     private static Set<String> rosterAuthorities() {
-        final Obj roster = Machine.read(Network.Helper.peerRosterPath());
+        final Obj roster = Machine.read(Network.ROOT_ROSTER);
         if (!roster.isRec())
             return Set.of();
         return roster.asRec().jvm().keySet().stream()

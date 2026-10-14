@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -395,7 +411,7 @@
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">dckrspace</h1>
-        <small>manipulating docker's graph of images, containers, volumes, networks</small><br/>
+        <small>manipulating docker's graph of images, containers, volumes, networks, and the lifecycle of what it creates</small><br/>
         <a href="dckrspace-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>dckrspace-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -433,8 +449,10 @@ mtron&gt; !*dckrspace?docq
 </code></pre>
 <pre><code class="language-mtron">dckrspace::[pattern   =&gt; docker:#,
             route     =&gt; [docker: =&gt; &lt;&gt;],
-            host      =&gt; &lt;tcp://192.168.1.100:2375&gt;,   [-- optional remote host --]
-            progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker
+            host      =&gt; &lt;tcp://192.168.1.100:2375&gt;,          [-- optional remote host --]
+            owner     =&gt; /usr/avatar,                          [-- optional: who owns what this space creates --]
+            on_close  =&gt; docker:compose/session-db -&gt; noobj,   [-- optional: run when the space closes --]
+            progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker   [-- console only: see Gotchas --]
 </code></pre>
 <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern   =&gt; docker:#,
                    route     =&gt; [docker: =&gt; &lt;&gt;],
@@ -447,10 +465,49 @@ mtron&gt; !*dckrspace?docq
 <tbody>
 <tr><td><code>pattern</code></td><td>yes</td><td>URI prefix for this space</td></tr>
 <tr><td><code>route</code></td><td>yes</td><td>Maps pattern prefix into space</td></tr>
-<tr><td><code>host</code></td><td>no</td><td>Remote Docker daemon (<code>tcp://</code>, <code>unix://</code>). Omit for local socket.</td></tr>
-<tr><td><code>progress_table</code></td><td>no</td><td><code>ProgressTableWidget</code> for live pull-progress display</td></tr>
+<tr><td><code>host</code></td><td>no</td><td>Remote Docker daemon (<code>tcp://</code>, <code>unix://</code>, <code>ssh://</code>). Omit for the local socket.</td></tr>
+<tr><td><code>owner</code></td><td>no</td><td>The scope that owns what this space creates — the docker label plus the <code>owner</code> field (see below).</td></tr>
+<tr><td><code>on_close</code></td><td>no</td><td>An instruction applied when the space closes (see Ownership &amp; Reaping).</td></tr>
+<tr><td><code>progress</code></td><td>no</td><td><code>progress_table::T</code> for live pull progress — <strong>console only</strong>; omit it headless (see Gotchas).</td></tr>
 </tbody>
 </table>
+<h3>Ownership &amp; Reaping</h3>
+<p><code>dckrspace::T</code> provisions on demand — <code>from(docker:container/x).else(… up …)</code> — which raises a question the daemon can
+answer but the VM's cache cannot: <strong>what did this space create, and is its creator still alive?</strong></p>
+<p>Two config fields answer it.</p>
+<p><code>owner</code> names the scope that owns everything this space creates. It is stamped on the objects themselves as the docker
+label <code>com.phaseshift.metatron.owner=&lt;owner&gt;</code>:</p>
+<ul>
+<li>a container run (<code>docker:container/&lt;name&gt; -&gt; […]</code>) gets <code>--label com.phaseshift.metatron.owner=&lt;owner&gt;</code>;</li>
+<li>a compose stack (<code>docker:compose/&lt;stack&gt; -&gt; [services =&gt; […]]</code>) gets it in the <code>labels:</code> of <strong>every</strong> service, in a
+copy of the config — the rec you wrote is never mutated.</li>
+</ul>
+<p>The label then travels with the objects (it outlives the VM), and every container rec carries it as a first-class
+<code>owner</code> field, so &quot;what belongs to me?&quot; is a read:</p>
+<pre><code class="language-mtron">*docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;]      [-- everything this owner created --]
+</code></pre>
+<p><code>on_close</code> is the other half: an instruction applied when the space closes. The web/ws/http spaces already take
+lifecycle hooks this way (<code>on_open</code>, <code>on_message</code>, <code>on_error</code>); <code>on_close</code> gives <em>any</em> space an mtron-controllable
+shutdown hook, which is what makes reaping declarative rather than hard-coded in Java.</p>
+<pre><code class="language-mtron">[-- a space that reaps what it owns when it goes away --]
+dckrspace::[pattern  =&gt; docker:#,
+            route    =&gt; [docker: =&gt; &lt;&gt;],
+            owner    =&gt; /usr/avatar,
+            on_close =&gt; *docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;] -&gt; noobj]@/sys/space/docker
+</code></pre>
+<p><strong>When it runs.</strong> <code>close()</code> is the space's farewell, and it is called wherever a space is released:
+<code>Machine.close()</code> closes a level's memory (so a frame's spaces go with it), <code>Machine.pop()</code> gives a frame back, and the
+shutdown hook closes the root. That is exactly the scoping a reaper wants — <em>what a frame created, that frame's close
+collects</em> — and it is the same lifetime model as a forked peer (<code>PeerSpawn</code>), applied to containers.</p>
+<p><strong>Order.</strong> <code>on_close</code> is applied <em>before</em> the space is released, so the instruction can still route through the space
+it is closing (<code>sjvm</code> is closed after it, and unregistration after that).</p>
+<p><strong>Reap by name, or by owner.</strong> A stack the boot knows by name is the simplest — and this is the form the test suite
+exercises against a live daemon:</p>
+<pre><code class="language-mtron">on_close =&gt; docker:compose/session-db -&gt; noobj
+</code></pre>
+<p>The owner query is for the general case: select what the label marks, then force each match to <code>noobj</code>
+(<code>x -&gt; noobj</code> is the write that stops and removes a container). Note that a failing <code>on_close</code> should be treated as a
+warning, not a reason to abandon the rest of a shutdown.</p>
 <h3>URI Address Space</h3>
 <pre><code>docker:image/&lt;repository:tag&gt;        -- image by repo:tag
 docker:image/&lt;hash&gt;                  -- image by Docker hash (if available)
@@ -475,7 +532,8 @@ docker:container/web -&gt; [/
   network     =&gt; mynet]
 </code></pre>
 <p>Image pull happens automatically via <code>docker run</code>. Pull progress streams through the <code>progress_table::T</code> widget if
-configured.</p>
+configured (<strong>console only</strong> — see Gotchas). When the space declares an <code>owner</code>, the container is also labelled
+<code>com.phaseshift.metatron.owner=&lt;owner&gt;</code> on the way up, which is what makes it reapable later (see Ownership &amp; Reaping).</p>
 <table>
 <thead>
 <tr><th>Field</th><th>Type</th><th>Docker flag</th><th>Example</th></tr>
@@ -554,9 +612,27 @@ their referent upon access.</p>
 ]
 </code></pre>
 <p>Compose YAML is generated to <code>/tmp/metatron-docker/&lt;name&gt;/docker-compose.yml</code> and
-<code>docker compose up -d</code> is executed. Progress streams through the widget.</p>
+<code>docker compose up -d --wait --timeout 600</code> is executed, so the write returns once the stack reports healthy (per
+service healthchecks) — a boot can therefore bind a space that must be accepting connections immediately after the
+<code>up</code> returns. Progress streams through the widget when there is a console.</p>
+<p>Two things about that file and those names are worth knowing before you guard a stack with <code>from(…).else(…)</code>:</p>
+<ul>
+<li><strong>The file is ephemeral.</strong> It lives in <code>/tmp/metatron-docker</code>, which does not survive a VM restart — nor a container
+recreate, where <code>/tmp</code> belongs to the container. <code>-&gt; noobj</code> therefore tears a stack down in two ways: <code>docker compose -p &lt;name&gt; down</code> when the file is still there, and otherwise a sweep of the objects compose labelled
+<code>com.docker.compose.project=&lt;name&gt;</code> (containers removed, then the network). Volumes are kept either way, matching
+<code>down</code> without <code>-v</code> — a stack's data outlives its containers.</li>
+<li><strong>Naming, and why it matters for a guard.</strong> A <strong>single-service</strong> stack's container is named exactly the stack
+(<code>container_name: &lt;stack&gt;</code>), so a guard written as <code>from(docker:container/&lt;stack&gt;).else(… up …)</code> adopts it on the
+next boot instead of re-running the <code>up</code>. A multi-service stack keeps compose's default naming
+(<code>&lt;stack&gt;-&lt;service&gt;-1</code>) — there is no single name for the guard to ask for — and a <code>container_name</code> you set in the
+config yourself wins either way. Without that parity the guard never matches the stack it just created: <strong>every</strong>
+boot re-runs the <code>up</code>, and once the config hash drifts that becomes a <strong>Recreate</strong> — the slow path, and the one a
+second concurrent compose run on the same project will deadlock against.</li>
+</ul>
+<p>Each service takes docker compose's own fields — <code>labels</code> (a map), <code>healthcheck</code>, <code>restart</code>, <code>volumes</code>, <code>command</code>, …
+— and when the space declares an <code>owner</code> its label is added to every service's <code>labels</code>.</p>
 <h4>Stop a stack</h4>
-<pre><code class="language-mtron">docker:compose/my-stack -&gt; noobj     [-- docker compose down + cleanup --]
+<pre><code class="language-mtron">docker:compose/my-stack -&gt; noobj     [-- compose down if the file is there, label sweep if it is not --]
 </code></pre>
 <h4>Read compose config</h4>
 <pre><code class="language-mtron">*docker:compose/my-stack/services/web/image    [-- nginx:alpine --]
@@ -567,6 +643,27 @@ their referent upon access.</p>
 <pre><code class="language-mtron">dckrspace::[host =&gt; &lt;tcp://192.168.1.100:2375&gt;, ...]@/sys/space/remote
 </code></pre>
 <p>All Docker CLI commands are prefixed with <code>-H &lt;host&gt;</code>. Supports <code>tcp://</code>, <code>unix://</code>, and <code>ssh://</code> schemes.</p>
+<h3>Gotchas</h3>
+<ul>
+<li><strong>Reads are read-through.</strong> A read refreshes from the daemon before it answers — images, networks, volumes and
+containers, up to four <code>docker … ls --format json</code> calls. That is what keeps <code>*docker:container/+</code> honest with no
+watcher, and it is also why a read is not free (a remote <code>host</code> pays for the round trip each time).</li>
+<li><strong>Reading over a console needs the mtron mime type.</strong> The <code>/mtron</code> websocket defaults to JSON out, which cannot
+represent the richer objs here (<code>datetime::</code>, unit types like <code>bB::0.0</code>, uri-valued keys, <code>!*</code> auto-refs) and answers
+them blank. Use <code>ws://&lt;host&gt;:8555/mtron?out=application/x-mtron</code> (or the MCP eval tool's native flag) before
+concluding that a read found nothing.</li>
+<li><strong>A path handed to the daemon is a HOST path.</strong> <code>volumes =&gt; ['/data:/db']</code> is resolved by the daemon, not by the VM;
+when the VM itself runs in a container (docker-outside-of-docker) it will not see <code>/data</code> unless the same absolute
+path is mounted into it too.</li>
+<li><strong><code>progress</code> wants a terminal.</strong> A <code>progress_table::T</code> in the config of a space with no console was observed to leave
+its reads returning <code>noobj</code>; omit <code>progress</code> on a headless server.</li>
+<li><strong>Ordering and teardown.</strong> A container rec's <code>image</code>, <code>networks</code> and <code>mounts</code> are lazy <code>!*</code> refs (resolve on access);
+<code>labels</code> is a rec keyed by label name; and a stack's teardown depends on a file under <code>/tmp</code> (see Docker Compose).</li>
+<li><strong>Implementation note (maintainers).</strong> A docker command is a child process, and a child whose stderr stops being
+read blocks on a full pipe with the caller waiting forever. <code>exec</code> drives zt-exec's <code>ProcessExecutor</code> with
+<code>readOutput(true)</code> and <code>redirectError(…)</code> so both streams are always consumed, and it touches no UI — a hand-rolled
+<code>ProcessBuilder</code> drain thread, or rendering a widget from one, reintroduces that deadlock.</li>
+</ul>
 <h3>End-to-End: SQLite Container + tbleSpace</h3>
 <p>This example pulls a SQLite Docker image, runs it with a bind-mounted data directory, and exposes the database through
 <code>tblespace::T</code> — all from mtron. The daemon-facing steps (1 and 6) are <em>shown</em>; the data steps (2 through 4) run in
@@ -710,6 +807,9 @@ mtron write.</p>
 <tr><td>Run with env</td><td><code>[image =&gt; 'img', environment =&gt; [KEY =&gt; val]]</code></td></tr>
 <tr><td>Run with volume</td><td><code>[image =&gt; 'img', volumes =&gt; ['vol:/path']]</code></td></tr>
 <tr><td>Run with network</td><td><code>[image =&gt; 'img', network =&gt; netname]</code></td></tr>
+<tr><td>Own what you create</td><td>Add <code>owner =&gt; /usr/avatar</code> to the space config (label <code>com.phaseshift.metatron.owner</code>)</td></tr>
+<tr><td>What an owner created</td><td><code>*docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;]</code></td></tr>
+<tr><td>Reap on close</td><td>Add <code>on_close =&gt; docker:compose/&lt;name&gt; -&gt; noobj</code> to the space config</td></tr>
 <tr><td>Stop container</td><td><code>docker:container/&lt;name&gt; -&gt; noobj</code></td></tr>
 <tr><td>List images</td><td><code>*docker:image/+</code></td></tr>
 <tr><td>List containers</td><td><code>*docker:container/+</code></td></tr>
@@ -727,6 +827,8 @@ mtron write.</p>
 <tr><td>Remove network</td><td><code>docker:network/&lt;name&gt; -&gt; noobj</code></td></tr>
 <tr><td>Start compose stack</td><td><code>docker:compose/&lt;name&gt; -&gt; [services =&gt; [...]]</code></td></tr>
 <tr><td>Stop compose stack</td><td><code>docker:compose/&lt;name&gt; -&gt; noobj</code></td></tr>
+<tr><td>Stack container name</td><td><code>&lt;name&gt;</code> for a single-service stack, so its own guard can adopt it</td></tr>
+<tr><td>Teardown without yaml</td><td>Automatic: the sweep by <code>com.docker.compose.project</code> label</td></tr>
 <tr><td>Remote host</td><td>Add <code>host =&gt; &lt;tcp://host:port&gt;</code> to space config</td></tr>
 </tbody>
 </table>

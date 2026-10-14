@@ -313,7 +313,8 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   anchor, `top`/`left`, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
   marker to reshape), and the three insts `display`/`nano`/`less`.
 * [dckrSpace](references/dckrspace-mtron.md) -- Docker as a space: containers, images, volumes, networks, compose,
-  remote hosts, and an end-to-end SQLite container + tbleSpace walkthrough.
+  remote hosts, `owner`-labelled ownership with `on_close` reaping, and an end-to-end SQLite container + tbleSpace
+  walkthrough.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model, discovering a space's
   prefixes from `*/sys/space/...`, `!*` lazy references, validation, and common failures.
 

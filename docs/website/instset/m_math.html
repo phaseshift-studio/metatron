@@ -145,7 +145,23 @@
                     </li>
                     <li>
                         <div class="click-to-copy" title="click to copy">
-                            <pre><code class="language-bash">docker pull ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">docker run -d --name metatron \
+  -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
                         </div>
                     </li>
                 </ul>
@@ -424,8 +440,8 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
           type=&gt;[int::T[?is(gte(0)).is(lte(100))][ctor?rng=percent&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/percent,
-                 int::T[inst(inst(0))]@/m/math/nat,
-                 lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx,
+                 int::T[is(gt(0))]@/m/math/nat,
+                 lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
                  real::T@/m/math/datasize,
                  uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime,
                  datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/bB,
@@ -461,11 +477,11 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                  plus?rng=metric&amp;dom=metric(real::T@/m/math/metric){&lt;j&gt;},
                  plus?rng=imperial&amp;dom=imperial(real::T@/m/math/imperial){&lt;j&gt;},
                  as?rng=time&amp;dom=time(real::T@/m/math/time){&lt;j&gt;},
-                 plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
-                 mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
-                 minus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
+                 plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},
+                 mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},
+                 minus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},
                  conjugate?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
-                 div?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},
+                 div?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},
                  neg?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
                  inv?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
                  zero?rng=cmplx&amp;dom=cmplx(){&lt;j&gt;},
@@ -730,11 +746,11 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">cmplx::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst[__m__real,__m__real]" class="instset-doc-small-code text-info code">/m/lst[/m/real,/m/real]::T</a></span><span class="theory-chip theory-field">field<span class="chip-tip"><span class="chip-tip-name">field</span><span class="chip-tip-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0), inv = inv</span></span></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0), inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0)</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0)</span></span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst[__m__real,__m__real]" class="instset-doc-small-code text-info code">/m/lst[/m/real,/m/real]::T</a></span><span class="theory-chip theory-field">field<span class="chip-tip"><span class="chip-tip-name">field</span><span class="chip-tip-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0), inv = inv</span></span></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0), inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0)</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</span><span class="chip-tip-roles">add = {plus?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},plus?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, mul = {mult?rng=cmplx&amp;dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){&lt;j&gt;},mult?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0)</span></span></span>
         </span>
         <small class="text-muted code">/m/math/cmplx</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst[real,real]::T[inst([real::T,real::T])]@/m/math/cmplx</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a complex number contains a real and imaginary component \(\mathbb{C}\)</p>
@@ -1033,7 +1049,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/nat</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[inst(inst(0))]@/m/math/nat</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[is(gt(0))]@/m/math/nat</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a positive integer greater than 0 \(\mathbb{N}\)</p>

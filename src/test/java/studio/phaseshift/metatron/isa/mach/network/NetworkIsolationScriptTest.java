@@ -19,6 +19,9 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.StatefulCSVSource;
@@ -26,11 +29,15 @@ import studio.phaseshift.metatron.StatefulParametrizedTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -55,11 +62,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   [MOUNT_AUTHORITY vid host]     mount a space claiming an authority (the only source of "mine")
  *   [DECLARE_SILENT uri]           declare one peer that can never answer — no socket is opened
  *   [PROBE_ROSTER] [PROBE_PEER uri] [PROBE_OWN uri] [PROBE_MINE authority] [PROBE_STATUS]
- *                                  write a Java-side answer to /sys/network/probe/&lt;name&gt;, so the script can
+ *                                  write a Java-side answer to /m/networkProbe/&lt;name&gt;, so the script can
  *                                  assert on a fact mtron cannot yet see
  * </pre>
  * <p>
- * These scripts drive the KNOWN-SERVER ROSTER ({@code /sys/peer}) — the list of machines the system knows about,
+ * These scripts drive the KNOWN-SERVER ROSTER ({@code /network/roster}) — the list of machines the system knows about,
  * one shared address rather than per-machine state. The CONNECTIONS a machine holds are a different question and
  * live on the component ({@code network.peer}); that is what {@code MachPushTest} pins.
  * <p>
@@ -82,7 +89,7 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     /**
      * where a PROBE directive leaves its answer, so a Java-side fact becomes a mtron observation.
      */
-    private static final fURI PROBE = f("/sys/network/probe");
+    private static final fURI PROBE = f("/m/networkProbe");
 
     /**
      * the detached cluster a script started, if any — closed after each script so no roster leaks onward
@@ -103,21 +110,22 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     @Override
     protected Map<String, Directive> directives() {
         return Map.of(
-                "ROSTER_CLEAR", args -> Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap())),
+                "ROSTER_CLEAR", args -> Machine.write(Network.ROOT_ROSTER, rec(mutableMap())),
                 "CLUSTER", args -> {
                     this.closeCluster();
                     this.cluster = PeerCluster.detached(Integer.parseInt(args[0]), "/n", Integer.parseInt(args[1])).connect();
                 },
                 "CLUSTER_CLOSE", args -> this.closeCluster(),
                 "MOUNT_AUTHORITY", args -> mountAuthority(f(args[0]), f(args[1])),
-                "DECLARE_SILENT", args -> Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap(
+                "DECLARE_SILENT", args -> Machine.write(Network.ROOT_ROSTER, rec(mutableMap(
                         uri(args[0]), noAnswerTransport()))),
                 "PROBE_ROSTER", args -> this.probe("roster", jnt(this.network().roster().jvm().size())),
                 "PROBE_PEER", args -> this.probe("peer", jnt(this.network().isPeer(f(args[0])) ? 1 : 0)),
                 "PROBE_OWN", args -> this.probe("own", jnt(this.network().own(f(args[0])) ? 1 : 0)),
-                "PROBE_MINE", args -> this.probe("mine", jnt(this.network().authorities().contains(args[0]) ? 1 : 0)),
+                "PROBE_MINE", args -> this.probe("mine", jnt(Network.Helper.authorities().stream()
+                        .anyMatch(mine -> args[0].equals(mine.authority())) ? 1 : 0)),
                 "PROBE_STATUS", args -> {
-                    final Obj report = this.network().status(Machine.read(Network.CLUSTER_PATH));
+                    final Obj report = this.network().status(noobj());
                     final Obj first = report.stream().findFirst().orElse(noobj());
                     final Obj peerStatus = first.isRec() ? (Obj) first.asRec().at(uri(STATUS)) : noobj();
                     this.probe("status", peerStatus.isRec() ? (Obj) peerStatus.asRec().at(uri(KIND)) : noobj());
@@ -127,6 +135,37 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     @AfterEach
     public void clearNetwork() {
         this.closeCluster();
+        // the roster is an ADDRESS, not a Java field, so a test that wrote into it clears it by address too
+        Machine.write(ROSTER_PATH, rec(mutableMap()));
+    }
+
+    /**
+     * the roster's home as an address — read through the accessor so a re-point cannot leave this test behind
+     */
+    private static final fURI ROSTER_PATH = Network.ROOT_ROSTER;
+
+    /**
+     * A REC IN SPACE IS ITS PARTS. The roster is an address rather than a field on the component, so a
+     * discovery handler declares a peer by writing {@code <roster>/<name>} and the roster reads back as the
+     * map — the same "a read recurses into what was written underneath and rebuilds the tree" that a
+     * distributed row depends on. Both spellings must land in ONE map, or a handler writing entry-by-entry
+     * would be invisible to a reader that got the whole rec.
+     * <p>
+     * This is pinned rather than assumed because the competing behaviour is SILENT: a writer that no-ops
+     * (the machine claims part of /sys and its default writer drops writes) leaves a roster that reads
+     * empty forever, with nothing to see in a log.
+     */
+    @Test
+    void testTheRosterIsAnAddressAndItsPartsAreItsFields() {
+        Machine.write(ROSTER_PATH, rec(uri("whole"), uri("ws://192.168.1.42:8555")));
+        Machine.write(ROSTER_PATH.extend("byfield"), uri("ws://192.168.1.43:8555"));
+        final Obj roster = Machine.read(ROSTER_PATH);
+        LOG.debug("roster at %s is %s", ROSTER_PATH, roster);
+        assertTrue(roster.isRec(), "reading the roster must reconstruct the rec, got " + roster);
+        assertEquals(uri("ws://192.168.1.42:8555"), roster.asRec().at(uri("whole")),
+                "the entry written as a whole rec is a field of the roster");
+        assertEquals(uri("ws://192.168.1.43:8555"), roster.asRec().at(uri("byfield")),
+                "and the entry written by address lands in the SAME map");
     }
 
     private void closeCluster() {
@@ -134,7 +173,7 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
             this.cluster.close();
             this.cluster = null;
         }
-        Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap()));
+        Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));
     }
 
     private void probe(final String name, final Obj value) {
@@ -172,13 +211,13 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[ROSTER_CLEAR]",
             "[PROBE_ROSTER]",
-            "*/sys/network/probe/roster % 0               [-- nothing declared: no known servers --]",
+            "*/m/networkProbe/roster % 0               [-- nothing declared: no known servers --]",
             "[CLUSTER 2 21001]                             [-- two server addresses, declared by the cluster --]",
             "[PROBE_ROSTER]",
-            "*/sys/network/probe/roster % 2              [-- the roster's keys ARE the declared servers --]",
+            "*/m/networkProbe/roster % 2              [-- the roster's keys ARE the declared servers --]",
             "[CLUSTER_CLOSE]                               [-- and un-declaring removes them --]",
             "[PROBE_ROSTER]",
-            "*/sys/network/probe/roster % 0"
+            "*/m/networkProbe/roster % 0"
     })
     void testMembershipIsDeclared() {
     }
@@ -192,29 +231,13 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
             "[ROSTER_CLEAR]",
             "[STATE] *<ws://never-declared:19999/x>        [-- address a host nobody declared --]",
             "[PROBE_ROSTER]",
-            "*/sys/network/probe/roster % 0               [-- addressing it did not declare it --]",
+            "*/m/networkProbe/roster % 0               [-- addressing it did not declare it --]",
             "[PROBE_PEER ws://never-declared:19999/x]",
-            "*/sys/network/probe/peer % 0",
+            "*/m/networkProbe/peer % 0",
             "[PROBE_OWN ws://never-declared:19999/x]",
-            "*/sys/network/probe/own % 0                   [-- nor is it mine --]"
+            "*/m/networkProbe/own % 0                   [-- nor is it mine --]"
     })
     void testMembershipIsNeverEmergent() {
-    }
-
-    /**
-     * The cluster's {@code peer} field is a live pointer at the roster, not a copy — so a peer declared AFTER the
-     * view was first read is visible through it. A snapshot would show the empty roster forever.
-     */
-    @StatefulParametrizedTest
-    @StatefulCSVSource({
-            "[ROSTER_CLEAR]",
-            "*/sys/cluster/peer % */sys/peer % true        [-- the field IS the roster, not a copy of it --]",
-            "[CLUSTER 1 21003]",
-            "*/sys/cluster/peer % */sys/peer % true        [-- still the same thing, now populated --]",
-            "[PROBE_ROSTER]",
-            "*/sys/network/probe/roster % 1               [-- and the view saw the later declaration --]"
-    })
-    void testClusterViewIsLive() {
     }
 
     /**
@@ -226,10 +249,9 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[DECLARE_SILENT ws://silent-host:21005]       [-- declared, and it can never answer --]",
             "[PROBE_ROSTER]",
-            "*/sys/network/probe/roster % 1               [-- declared, so it is known --]",
-            "*/sys/cluster/status.count() % 1              [-- and the report names it rather than dropping it --]",
+            "*/m/networkProbe/roster % 1               [-- declared, so it is known --]",
             "[PROBE_STATUS]",
-            "*/sys/network/probe/status % \"down\"           [-- DOWN, not absent --]"
+            "*/m/networkProbe/status % \"down\"           [-- DOWN, not absent --]"
     })
     void testStatusReportsASilentPeer() {
     }
@@ -242,17 +264,68 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[MOUNT_AUTHORITY /sys/space/network-script/one ws://0.0.0.0:19191]",
             "[PROBE_MINE 0.0.0.0:19191]",
-            "*/sys/network/probe/mine % 1                  [-- a mounted host IS an authority I answer to --]",
+            "*/m/networkProbe/mine % 1                  [-- a mounted host IS an authority I answer to --]",
             "[PROBE_OWN ws://localhost:19191/x]",
-            "*/sys/network/probe/own % 1                   [-- localhost and 0.0.0.0 are one service --]",
+            "*/m/networkProbe/own % 1                   [-- localhost and 0.0.0.0 are one service --]",
             "[PROBE_OWN ws://localhost:19192/x]",
-            "*/sys/network/probe/own % 0                   [-- a different port is a different service --]",
+            "*/m/networkProbe/own % 0                   [-- a different port is a different service --]",
             "[CLUSTER 1 21007]",
             "[PROBE_PEER ws://localhost:21007/x]",
-            "*/sys/network/probe/peer % 1                  [-- declared, so a peer --]",
+            "*/m/networkProbe/peer % 1                  [-- declared, so a peer --]",
             "[PROBE_OWN ws://localhost:21007/x]",
-            "*/sys/network/probe/own % 0                   [-- and NOT mine: the two never both answer yes --]"
+            "*/m/networkProbe/own % 0                   [-- and NOT mine: the two never both answer yes --]"
     })
     void testMineIsDerivedAndDisjointFromPeers() {
+    }
+
+    /**
+     * A COMPONENT PREDICATE CONSTRAINS WHAT IS PRESENT AND NOTHING MORE, so every partial shape passes.
+     * This is worth rows of its own because the failure it guards is not a wrong answer but a machine that
+     * cannot be constructed at all: with `name` and `status` declared without {@code .maybe()}, the empty
+     * rec a deferred component slot holds was rejected, and MachPushTest lost 8 of its 9 rows — every one
+     * of them reporting {@code obj does not match /m/mach/component/network::T}. A row here names the
+     * shape that broke, in one place, instead of surfacing eight tests away.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // shape                                                                        % accepted % why
+            "[=>]                                                                            % true  % the empty rec a deferred slot holds",
+            "[name => 'local']                                                               % true  % a name alone",
+            "[roster => [b => <ws://192.168.1.42:8555>]]                                     % true  % known endpoints alone",
+            "[source => [mdns => </m/web/mdns>]]                                             % true  % a discovery source alone",
+            "[source => [mdns-lan => </m/web/mdns>, mdns-bridge => </m/web/mdns>]]            % true  % ONE MECHANISM, TWO SEGMENTS: the key is a free label, so a source per LAN segment (different interfaces, different trust) sits side by side",
+            "[peer => [<ws://192.168.1.42:8555> => [authority => <ws://192.168.1.42:8555>]]] % true  % a connection alone",
+            "[name => 'local', roster => [b => <ws://192.168.1.42:8555>], source => [mdns => </m/web/mdns>]] % true % name, roster and source together",
+            "[name => 5]                                                                     % false % a name that is not a str",
+            "[source => [mdns => 5]]                                                         % false % a source names a handler tid, not a value",
+    }, delimiter = '%')
+    void testTheNetworkPredicateConstrainsOnlyWhatIsPresent(final String shape, final boolean accepted,
+                                                            final String why) {
+        final Obj network = Machine.read(machInstSet.MACH_NETWORK_TID);
+        assertTrue(network.isType(), "the network type must be reachable from its instruction set, got " + network);
+        final Obj candidate = ObjmtronSerializer.parse(shape);
+        LOG.debug("testing %s against network::T [expected:%s]", candidate, accepted);
+        assertEquals(accepted, candidate.test(network), why);
+    }
+
+    /**
+     * ONE TYPE, TWO HONEST STATES: the authority is the whole requirement and it is sufficient. A peer
+     * whose host, handler and transport are all absent is a reference that crossed a wire — known here
+     * and not reachable from here — not a broken peer, which is why none of them is required.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // peer                                                                                                                                    % accepted % why
+            "[authority => <ws://192.168.1.42:8555>]                                                                                                  % true  % known: the authority is the connection key",
+            "[authority => <ws://192.168.1.42:8555>, host => <ws://192.168.1.42:8555/mtron>, handler => </m/web/ws/mtron_ws>, name => 'builder-2']    % true  % reachable: host and surface filled in",
+            "[name => 'builder-2']                                                                                                                    % false % a peer with no authority is not a peer",
+    }, delimiter = '%')
+    void testThePeerPredicateIsAnAuthorityAndNothingMore(final String shape, final boolean accepted,
+                                                         final String why) {
+        final Obj peer = Machine.read(machInstSet.PEER_TID);
+        assertTrue(peer.isType(), "the peer type must be reachable from its instruction set, got " + peer);
+        final Obj candidate = ObjmtronSerializer.parse(shape);
+        LOG.debug("testing %s against peer::T [expected:%s]", candidate, accepted);
+        assertEquals(accepted, candidate.test(peer), why);
     }
 }

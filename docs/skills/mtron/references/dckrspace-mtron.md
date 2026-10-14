@@ -1,7 +1,7 @@
 ---
 name: dckrspace
 description: |
-  manipulating docker's graph of images, containers, volumes, networks
+  manipulating docker's graph of images, containers, volumes, networks, and the lifecycle of what it creates
 ---
 
 # dckrspace
@@ -43,8 +43,10 @@ dckrspace::T
 ```mtron
 dckrspace::[pattern   => docker:#,
             route     => [docker: => <>],
-            host      => <tcp://192.168.1.100:2375>,   [-- optional remote host --]
-            progress  => progress_table::[=>]]@/sys/space/docker
+            host      => <tcp://192.168.1.100:2375>,          [-- optional remote host --]
+            owner     => /usr/avatar,                          [-- optional: who owns what this space creates --]
+            on_close  => docker:compose/session-db -> noobj,   [-- optional: run when the space closes --]
+            progress  => progress_table::[=>]]@/sys/space/docker   [-- console only: see Gotchas --]
 ```
 
 ```mtron_pre
@@ -53,12 +55,67 @@ dckrspace::[pattern   => docker:#,/
             progress  => progress_table::[=>]]@/sys/space/docker
 ```
 
-| Field            | Required | Description                                                        |
-|------------------|----------|--------------------------------------------------------------------|
-| `pattern`        | yes      | URI prefix for this space                                          |
-| `route`          | yes      | Maps pattern prefix into space                                     |
-| `host`           | no       | Remote Docker daemon (`tcp://`, `unix://`). Omit for local socket. |
-| `progress_table` | no       | `ProgressTableWidget` for live pull-progress display               |
+| Field     | Required | Description                                                                                        |
+|-----------|----------|----------------------------------------------------------------------------------------------------|
+| `pattern` | yes      | URI prefix for this space                                                                          |
+| `route`   | yes      | Maps pattern prefix into space                                                                     |
+| `host`    | no       | Remote Docker daemon (`tcp://`, `unix://`, `ssh://`). Omit for the local socket.                   |
+| `owner`   | no       | The scope that owns what this space creates — the docker label plus the `owner` field (see below). |
+| `on_close`| no       | An instruction applied when the space closes (see Ownership & Reaping).                            |
+| `progress`| no       | `progress_table::T` for live pull progress — **console only**; omit it headless (see Gotchas).     |
+
+## Ownership & Reaping
+
+`dckrspace::T` provisions on demand — `from(docker:container/x).else(… up …)` — which raises a question the daemon can
+answer but the VM's cache cannot: **what did this space create, and is its creator still alive?**
+
+Two config fields answer it.
+
+`owner` names the scope that owns everything this space creates. It is stamped on the objects themselves as the docker
+label `com.phaseshift.metatron.owner=<owner>`:
+
+* a container run (`docker:container/<name> -> […]`) gets `--label com.phaseshift.metatron.owner=<owner>`;
+* a compose stack (`docker:compose/<stack> -> [services => […]]`) gets it in the `labels:` of **every** service, in a
+  copy of the config — the rec you wrote is never mutated.
+
+The label then travels with the objects (it outlives the VM), and every container rec carries it as a first-class
+`owner` field, so "what belongs to me?" is a read:
+
+```mtron
+*docker:container/+.?[owner=></usr/avatar>]      [-- everything this owner created --]
+```
+
+`on_close` is the other half: an instruction applied when the space closes. The web/ws/http spaces already take
+lifecycle hooks this way (`on_open`, `on_message`, `on_error`); `on_close` gives *any* space an mtron-controllable
+shutdown hook, which is what makes reaping declarative rather than hard-coded in Java.
+
+```mtron
+[-- a space that reaps what it owns when it goes away --]
+dckrspace::[pattern  => docker:#,
+            route    => [docker: => <>],
+            owner    => /usr/avatar,
+            on_close => *docker:container/+.?[owner=></usr/avatar>] -> noobj]@/sys/space/docker
+```
+
+**When it runs.** `close()` is the space's farewell, and it is called wherever a space is released:
+`Machine.close()` closes a level's memory (so a frame's spaces go with it), `Machine.pop()` gives a frame back, and the
+shutdown hook closes the root. That is exactly the scoping a reaper wants — *what a frame created, that frame's close
+collects* — and it is the same lifetime model as a forked peer (`PeerSpawn`), applied to containers.
+
+**Order.** `on_close` is applied *before* the space is released, so the instruction can still route through the space
+it is closing (`sjvm` is closed after it, and unregistration after that).
+
+**Reap by name, or by owner.** A stack the boot knows by name is the simplest — and this is the form the test suite
+exercises against a live daemon:
+
+```mtron
+on_close => docker:compose/session-db -> noobj
+```
+
+The owner query is for the general case: select what the label marks, then force each match to `noobj`
+(`x -> noobj` is the write that stops and removes a container). Note that a failing `on_close` should be treated as a
+warning, not a reason to abandon the rest of a shutdown.
+
 
 ## URI Address Space
 
@@ -92,7 +149,8 @@ docker:container/web -> [/
 ```
 
 Image pull happens automatically via `docker run`. Pull progress streams through the `progress_table::T` widget if
-configured.
+configured (**console only** — see Gotchas). When the space declares an `owner`, the container is also labelled
+`com.phaseshift.metatron.owner=<owner>` on the way up, which is what makes it reapable later (see Ownership & Reaping).
 
 | Field         | Type           | Docker flag    | Example          |
 |---------------|----------------|----------------|------------------|
@@ -204,12 +262,32 @@ docker:compose/my-stack -> [/
 ```
 
 Compose YAML is generated to `/tmp/metatron-docker/<name>/docker-compose.yml` and
-`docker compose up -d` is executed. Progress streams through the widget.
+`docker compose up -d --wait --timeout 600` is executed, so the write returns once the stack reports healthy (per
+service healthchecks) — a boot can therefore bind a space that must be accepting connections immediately after the
+`up` returns. Progress streams through the widget when there is a console.
+
+Two things about that file and those names are worth knowing before you guard a stack with `from(…).else(…)`:
+
+* **The file is ephemeral.** It lives in `/tmp/metatron-docker`, which does not survive a VM restart — nor a container
+  recreate, where `/tmp` belongs to the container. `-> noobj` therefore tears a stack down in two ways: `docker
+  compose -p <name> down` when the file is still there, and otherwise a sweep of the objects compose labelled
+  `com.docker.compose.project=<name>` (containers removed, then the network). Volumes are kept either way, matching
+  `down` without `-v` — a stack's data outlives its containers.
+* **Naming, and why it matters for a guard.** A **single-service** stack's container is named exactly the stack
+  (`container_name: <stack>`), so a guard written as `from(docker:container/<stack>).else(… up …)` adopts it on the
+  next boot instead of re-running the `up`. A multi-service stack keeps compose's default naming
+  (`<stack>-<service>-1`) — there is no single name for the guard to ask for — and a `container_name` you set in the
+  config yourself wins either way. Without that parity the guard never matches the stack it just created: **every**
+  boot re-runs the `up`, and once the config hash drifts that becomes a **Recreate** — the slow path, and the one a
+  second concurrent compose run on the same project will deadlock against.
+
+Each service takes docker compose's own fields — `labels` (a map), `healthcheck`, `restart`, `volumes`, `command`, …
+— and when the space declares an `owner` its label is added to every service's `labels`.
 
 ### Stop a stack
 
 ```mtron
-docker:compose/my-stack -> noobj     [-- docker compose down + cleanup --]
+docker:compose/my-stack -> noobj     [-- compose down if the file is there, label sweep if it is not --]
 ```
 
 ### Read compose config
@@ -228,6 +306,27 @@ dckrspace::[host => <tcp://192.168.1.100:2375>, ...]@/sys/space/remote
 ```
 
 All Docker CLI commands are prefixed with `-H <host>`. Supports `tcp://`, `unix://`, and `ssh://` schemes.
+
+## Gotchas
+
+* **Reads are read-through.** A read refreshes from the daemon before it answers — images, networks, volumes and
+  containers, up to four `docker … ls --format json` calls. That is what keeps `*docker:container/+` honest with no
+  watcher, and it is also why a read is not free (a remote `host` pays for the round trip each time).
+* **Reading over a console needs the mtron mime type.** The `/mtron` websocket defaults to JSON out, which cannot
+  represent the richer objs here (`datetime::`, unit types like `bB::0.0`, uri-valued keys, `!*` auto-refs) and answers
+  them blank. Use `ws://<host>:8555/mtron?out=application/x-mtron` (or the MCP eval tool's native flag) before
+  concluding that a read found nothing.
+* **A path handed to the daemon is a HOST path.** `volumes => ['/data:/db']` is resolved by the daemon, not by the VM;
+  when the VM itself runs in a container (docker-outside-of-docker) it will not see `/data` unless the same absolute
+  path is mounted into it too.
+* **`progress` wants a terminal.** A `progress_table::T` in the config of a space with no console was observed to leave
+  its reads returning `noobj`; omit `progress` on a headless server.
+* **Ordering and teardown.** A container rec's `image`, `networks` and `mounts` are lazy `!*` refs (resolve on access);
+  `labels` is a rec keyed by label name; and a stack's teardown depends on a file under `/tmp` (see Docker Compose).
+* **Implementation note (maintainers).** A docker command is a child process, and a child whose stderr stops being
+  read blocks on a full pipe with the caller waiting forever. `exec` drives zt-exec's `ProcessExecutor` with
+  `readOutput(true)` and `redirectError(…)` so both streams are always consumed, and it touches no UI — a hand-rolled
+  `ProcessBuilder` drain thread, or rendering a widget from one, reintroduces that deadlock.
 
 ## End-to-End: SQLite Container + tbleSpace
 
@@ -339,6 +438,9 @@ mtron write.
 | Run with env          | `[image => 'img', environment => [KEY => val]]`                            |
 | Run with volume       | `[image => 'img', volumes => ['vol:/path']]`                               |
 | Run with network      | `[image => 'img', network => netname]`                                     |
+| Own what you create   | Add `owner => /usr/avatar` to the space config (label `com.phaseshift.metatron.owner`) |
+| What an owner created | `*docker:container/+.?[owner=></usr/avatar>]`                              |
+| Reap on close         | Add `on_close => docker:compose/<name> -> noobj` to the space config       |
 | Stop container        | `docker:container/<name> -> noobj`                                       |
 | List images           | `*docker:image/+`                                                          |
 | List containers       | `*docker:container/+`                                                      |
@@ -356,4 +458,6 @@ mtron write.
 | Remove network        | `docker:network/<name> -> noobj`                                         |
 | Start compose stack   | `docker:compose/<name> -> [services => [...]]`                             |
 | Stop compose stack    | `docker:compose/<name> -> noobj`                                         |
+| Stack container name  | `<name>` for a single-service stack, so its own guard can adopt it         |
+| Teardown without yaml | Automatic: the sweep by `com.docker.compose.project` label                |
 | Remote host           | Add `host => <tcp://host:port>` to space config                            |

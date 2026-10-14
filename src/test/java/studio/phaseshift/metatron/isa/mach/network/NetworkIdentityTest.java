@@ -78,12 +78,11 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
      */
     @Test
     public void testAuthoritiesAreDerivedFromMountedSpaces() {
-        final Network network = Machine.current().network();
-        assertFalse(network.authorities().contains("0.0.0.0:19191"),
+        assertFalse(Network.Helper.authorities().contains(f("ws://0.0.0.0:19191")),
                 "nothing has claimed that authority yet");
         mountSpaceWithHost(f("/sys/space/network-identity"), f("ws://0.0.0.0:19191"));
-        assertTrue(network.authorities().contains("0.0.0.0:19191"),
-                "a mounted space's declared host IS an authority this machine answers to: " + network.authorities());
+        assertTrue(Network.Helper.authorities().contains(f("ws://0.0.0.0:19191")),
+                "a mounted space's declared host IS an authority this machine answers to: " + Network.Helper.authorities());
     }
 
     /**
@@ -127,24 +126,24 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
     public void testPeersAreTheMachinesConnections() throws Exception {
         final Network network = Machine.current().network();
         final Obj wasConnected = network.atDirect(uri(PEER));
-        assertTrue(network.peers().isEmpty(), "nothing is declared yet: " + network.peers());
+        assertTrue(Network.Helper.peerAuthorities().isEmpty(), "nothing is declared yet: " + Network.Helper.peerAuthorities());
         final PeerCluster cluster = PeerCluster.detached(2, "/n", 21001).connect();
         try {
             assertTrue(network.isPeer(f("ws://localhost:21001/usr/x")),
                     "a server the roster declares IS a peer this frame may dial");
-            assertTrue(network.peers().isEmpty(),
-                    "but the roster is the known servers, NOT the connections the machine holds: " + network.peers());
+            assertTrue(Network.Helper.peerAuthorities().isEmpty(),
+                    "but the roster is the known servers, NOT the connections the machine holds: " + Network.Helper.peerAuthorities());
             // THE CONNECTION IS THE MACHINE'S OWN REACH, and declaring one is what peers() reports — the same act
             // PeerSpawn performs for a pushed peer (Machine.push builds the frame's own level the same way).
             network.at(uri(PEER), rec(mutableMap(
                     uri("ws://localhost:21001"),
                     rec(mutableMap(uri(AUTHORITY), uri("ws://localhost:21001/n"))))), MUTABLE);
-            assertEquals(Set.of("localhost:21001"), network.peers(),
+            assertEquals(Set.of(f("ws://localhost:21001")), Network.Helper.peerAuthorities(),
                     "the connection keys ARE the peers — declared, not emergent");
             assertFalse(network.own(f("ws://localhost:21001/usr/x")), "a declared peer is not mine");
         } finally {
             cluster.close();
-            Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap()));
+            Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));
             // "no connections" is the ABSENT field, not an empty rec: writing [] as the connections map fails the
             // network's positional predicate (measured — an empty rec's key is noobj, which is not a uri::T), and
             // `at` with noobj removes the entry, which is the state a machine with nothing dialed is actually in.
@@ -189,9 +188,9 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
     @Test
     public void testTheRosterIsOneSharedAddressToday() {
         final Network parent = Machine.current().network();
-        Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap()));
+        Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));
         final Machine child = Machine.current().push(f("network-roster-scope"));
-        Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap(
+        Machine.write(Network.ROOT_ROSTER, rec(mutableMap(
                 uri("ws://declared-in-child:21011"),
                 rec(mutableMap(uri(AUTHORITY), uri("ws://declared-in-child:21011"))))));
         child.pop();
@@ -202,7 +201,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
                     "the roster is one shared address: a declaration made while standing in a child is the "
                             + "parent's too — so the known servers are global, not per-machine: " + parent.roster());
         } finally {
-            Machine.write(Network.Helper.peerRosterPath(), rec(mutableMap()));
+            Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));
         }
     }
 }
