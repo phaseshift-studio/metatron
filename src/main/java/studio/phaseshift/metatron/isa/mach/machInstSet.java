@@ -491,14 +491,20 @@ public class machInstSet extends AbstractInstSet {
                                                 // THE REACH: the inst that ships a message to this peer and answers
                                                 // with what it computed. It is what makes a connection a connection
                                                 // rather than a known address.
-                                                uri(TRANSPORT).maybe().asUri(), INST_TYPE))
+                                                uri(TRANSPORT).maybe().asUri(), INST_TYPE,
+                                                // the protocol CLIENT the dial constructed (a ws_client::T or kin,
+                                                // typed ALL because this instruction set sits below /m/web) -- held
+                                                // so disconnect can hang up. absent for a connectionless transport
+                                                // (loop, http) and for a peer reference that crossed a wire.
+                                                uri(CLIENT).maybe(), T(ALL)))
                                         .create(), null, null,
                                 Map.of(uri(AUTHORITY), "the peer's service uri, scheme://host:port — the connection key, and the one field a peer cannot do without",
                                         uri(HOST), "where to dial it from here, route included: ws://host:port/mtron",
                                         uri(HANDLER), "the protocol surface at that endpoint, named as a uri: </m/web/ws/mtron_ws>, </m/web/http/mtron_http>, </m/web/mcp/mcp_ws>",
                                         uri(NAME), "the machine's name in the distributed expression that means it — a bare name, never an address",
                                         uri(STATUS), "the health report computed for this peer — computed on call, never stored",
-                                        uri(TRANSPORT), "the reach: an inst that ships a message to this peer and answers with the peer's result"),
+                                        uri(TRANSPORT), "the reach: an inst that ships a message to this peer and answers with the peer's result",
+                                        uri(CLIENT), "the protocol client the dial constructed — held so disconnect can hang up; absent for connectionless transports"),
                                 """
                                 one metatron machine this machine can reach — the value of a network peer
                                 connection. `host` and `handler` absent is not a broken peer: it is a peer
@@ -553,14 +559,18 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(ROSTER).maybe().asUri(), rec(URI_TYPE, T(URI_TID.some())),
                                                 uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID)),
                                                 uri(SOURCE).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
-                                                uri(STATUS).maybe().asUri(), rec(T(PEER_TID), URI_TYPE)))
+                                                // the AUTO STATUS INST BasicNetwork installs at construction --
+                                                // a method-shaped field, not a map: the component rec is
+                                                // re-typechecked on every peer write, so this slot must say what
+                                                // the component actually stores.
+                                                uri(STATUS).maybe().asUri(), INST_TYPE))
                                         .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
                                         .create(),
                                 Map.of(uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
                                         uri(ROSTER).maybe(), "known machines, connectionless: <machine> => uri{+} — every address that machine answers at",
                                         uri(PEER).maybe(), "machine's own connections: <service-uri> => peer::T",
                                         uri(SOURCE).maybe(), "the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism",
-                                        uri(STATUS).maybe(), "the health method: peer => status"),
+                                        uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"),
                                 """
                                 a machine's network: the endpoints the system knows about, the peers the
                                 current machine has dialed, and the handlers that discover them. membership is

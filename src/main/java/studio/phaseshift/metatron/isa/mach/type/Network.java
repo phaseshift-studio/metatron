@@ -156,6 +156,91 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
 
     /**
+     * CONNECT — the network's MOUNT op, the third copy of memory's {@code addSpace} and the ISA's
+     * {@code refer}: take a connectionless description and make it a live member of this machine's reach.
+     * ENSURE PEERED, never rebuild: an authority this machine has already dialed answers its existing
+     * {@code peer::T} — connect is an optimization, never a protection, because a re-dial could not change
+     * the far side. A fresh connection is a disconnect first, exactly as a fresh instruction set is an
+     * unmount first.
+     * <p>
+     * The dial uri may carry the protocol ROUTE ({@code ws://host:port/mtron}); the peer keys on the
+     * SERVICE authority alone, so data reads address {@code ws://host:port/<path>} while the peer's
+     * {@code host} field remembers where it was dialed, route included — peer::T's own words.
+     * <p>
+     * The handler names the DIALER, resolved through instruction memory at dial time (which is what lets
+     * this component stay below {@code /m/web} while web's protocol clients do the dialing); {@code loop:}
+     * needs none. No dialer answers {@code noobj}: the authority stays known, not reachable from here.
+     */
+    default Obj connect(final fURI dialURI) {
+        return this.connect(dialURI, null);
+    }
+
+    default Obj connect(final fURI dialURI, final fURI handler) {
+        final fURI service = dialURI.path(List.of());
+        final Obj existing = this.peers().elements()
+                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
+                .map(Rel::second)
+                .filter(Obj::isRec)
+                .findFirst().orElse(noobj());
+        if (!existing.isNoObj())
+            return existing;
+        final Obj dialed = Helper.dial(dialURI, handler);
+        if (dialed.isNoObj() || dialed.isFail())
+            return noobj();
+        // a dialer answers either the transport itself (loop) or a protocol CLIENT whose send_recv is the
+        // transport (the client is kept on the peer so disconnect can hang up). THE TRANSPORT CONVENTION
+        // IS LHS-IS-THE-MESSAGE — probe() and the read/write arms apply the message as the lhs — while a
+        // protocol client's send_recv takes it as arg(0): adapt HERE, once, so every client protocol
+        // inherits the convention without knowing it (unadapted, send_recv shipped an empty arg and
+        // answered noobj — measured).
+        final Obj reach = dialed.isRec() ? dialed.asRec().<Obj>at(uri(SEND_RECV)) : noobj();
+        final Obj transport = dialed.isObjInst() ? dialed
+                : reach.isObjInst() ? instLambda(message ->
+                        reach.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(message)).apply(noobj()))
+                : dialed.isRec() ? dialed.asRec().<Obj>at(uri(TRANSPORT))
+                : noobj();
+        if (!transport.isObjInst()) {
+            CommonUtil.close(dialed);
+            return noobj();
+        }
+        final Obj peer = rec(
+                uri(AUTHORITY), uri(service),
+                uri(HOST), uri(dialURI),
+                uri(TRANSPORT), transport);
+        if (null != handler)
+            peer.asRec().at(uri(HANDLER), uri(handler), MUTABLE);
+        if (dialed.isRec() && dialed != transport)
+            peer.asRec().at(uri(CLIENT), dialed, MUTABLE);
+        peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
+        this.at(uri(PEER), this.peers().plus(rec(uri(service), peer)), MUTABLE);
+        return peer;
+    }
+
+    /**
+     * The inverse of {@link #connect(fURI)}: retract THIS level's dial for the authority — hang up its
+     * client, remove the member. An authority that was never dialed is a no-op answering {@code noobj}.
+     * Nothing left dialed removes the {@code peer} field entirely: an EMPTY rec is not the same value as
+     * an absent one (the component predicate's map idiom rejects the empty rec's noobj entry — measured).
+     */
+    default Obj disconnect(final fURI authority) {
+        final fURI service = authority.path(List.of());
+        final Rec peers = this.peers();
+        final Obj keyed = peers.elements()
+                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
+                .map(kv -> (Obj) kv)
+                .findFirst().orElse(noobj());
+        if (keyed.isNoObj())
+            return noobj();
+        final Obj peer = keyed.asRel().second();
+        if (peer.isRec())
+            peer.asRec().jvm().values().forEach(CommonUtil::close);
+        CommonUtil.close(peer);
+        final List<Obj> kept = peers.elements().filter(kv -> !kv.equals(keyed)).map(kv -> (Obj) kv).toList();
+        this.at(uri(PEER), kept.isEmpty() ? noobj() : rec(kept.stream().map(Obj::asRel)), MUTABLE);
+        return peer;
+    }
+
+    /**
      * the {@code status} method, as an <b>auto</b> inst that closes over <em>this</em> network.
      * <p>
      * A static method reference would report on whatever network happened to be global; closing over the receiver
@@ -199,7 +284,13 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * ({@code localize()}) and answers through its transport.
      */
     default Obj read(final fURI vid) {
-        if (!vid.hasAuthority())
+        // THE GATE IS THE HOST, NOT THE PORT. hasAuthority() demands host AND port, but an address is
+        // elsewhere-shaped the moment it names a host -- ws://host/path on the default port and
+        // loop://self are both another machine's to answer, and the port-blind form sent them silently
+        // to local memory instead of the peer (measured: the loop peer's reads fell through). An
+        // undeclared host still answers noobj below, so index-mounted web spaces keep catching their
+        // own patterns on the fall-through exactly as before.
+        if (null == vid.host())
             return noobj();
         final Obj transport = this.transportOf(vid.path(List.of()));
         if (transport.isNoObj())
@@ -217,7 +308,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * transport. Same local/undeclared fall-through as {@link #read(fURI)}.
      */
     default Obj write(final fURI vid, final Obj obj) {
-        if (!vid.hasAuthority())
+        // host-gated, exactly as read -- see the note there
+        if (null == vid.host())
             return noobj();
         // A FAIL IS NOT SHIPPABLE DATA. Its serialization is a diagnostic rendering (fail::[...]), not mtron
         // source, so the value round trip below cannot rebuild it — and a fail stack belongs to the JVM that
@@ -295,6 +387,33 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                     || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
         }
 
+
+        /**
+         * THE DIAL TABLE, scheme- then handler-routed — the step a description takes to become a peer.
+         * {@code loop:} is built here rather than resolved: the machine's own loopback needs no web
+         * dependency and no socket — its transport applies the shipped message against the LOCAL machine,
+         * so a {@code from_(path)} message reads the path here and a {@code start_(obj).to_(path)} message
+         * writes it here. That makes "a read through a loop peer equals the local read" an executable
+         * contract, which is the property every real transport must then preserve one authority over.
+         * <p>
+         * Any other scheme needs a HANDLER — a vocabulary vid resolved through instruction memory at dial
+         * time. A protocol CLIENT TYPE is a dialer whose constructor takes {@code [host=>...]} (the
+         * constructor IS the dial — ws_client, mcp_client); a handler that resolves to an inst is applied
+         * to the dial uri instead. No handler, or one that declines: {@code noobj}, and the authority
+         * stays known rather than reachable.
+         */
+        public static Obj dial(final fURI dialURI, final fURI handler) {
+            if ("loop".equals(dialURI.scheme()))
+                return instLambda(message -> message.isCall() ? message.apply(noobj()) : noobj());
+            if (null == handler)
+                return noobj();
+            final Obj dialer = Machine.read(handler);
+            if (dialer.isType() && dialer.asType().hasConstructor())
+                return dialer.asType().constructor().asInst()
+                        .args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(rec(uri(HOST), uri(dialURI))))
+                        .apply(noobj());
+            return dialer.isObjInst() ? dialer.asInst().apply(uri(dialURI)) : noobj();
+        }
 
         /**
          * True when {@code host} names this machine. A server declared as {@code 0.0.0.0:8555} (all local
