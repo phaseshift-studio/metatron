@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -379,6 +381,32 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertEquals(result, firstStage.apply(noobj()));
         assertEquals(result, pristine.apply(noobj()),
                 () -> String.format("%s does not mean %s when evaluated as parsed (%s)", code, expectedResult, firstStage));
+    }
+
+    /**
+     * {@code explain()} REPORTS THE COMPILED CHAIN. The int ring's unit law — catInstSet's own
+     * {@code theory_unit_removal} — drops {@code plus(0)}, so the reported metadata and table must be that
+     * collapsed chain, not the expression as written. This is the case the base-ISA explain rows cannot reach:
+     * {@code mInstSetTest} mounts no cat laws, so nothing there collapses and the two stages coincide.
+     * <p>
+     * The SHIPPED schedule is installed for this one test: rewrite BEFORE resolve. This class's
+     * {@link CatTheoryCompiler} resolves first, and under that order the unit law's guard — written against the
+     * pre-resolution chain, where the operand type comes from the run rather than from resolved endpoints — does
+     * not fire at all, so the staging is simply not observable through it.
+     */
+    @Test
+    public void testExplainReportsTheCompiledChain() {
+        Machine.current().compiler(BasicCompiler.defaults());
+        checkCodeParseApply(LOG, "6.plus(0).explain()>>desc>>insts", "1");
+        // the rewrite chain is WIRED: desc.rewrite is the pre-analysis stage's explanation rec (it used to be
+        // hardcoded noobj, which left the compiled stage unreachable), and that rec is the chain's last
+        final Obj submitted = ObjmtronSerializer.eval("6.plus(0).explain()>>desc>>rewrite");
+        assertFalse(submitted.isNoObj(), () -> "desc.rewrite should carry the pre-analysis stage's rec: " + submitted);
+        assertTrue(submitted.isRec(), () -> "desc.rewrite should be an explanation::T rec: " + submitted);
+        assertTrue(ObjmtronSerializer.eval("6.plus(0).explain()>>desc>>rewrite>>desc>>rewrite").isNoObj(),
+                "the pre-analysis rec terminates the rewrite chain");
+        assertTrue(ObjmtronSerializer.eval("6.plus(0).explain()>>desc>>rewrite>>desc>>insts").asInt().intValue() > 1,
+                "the pre-analysis stage still carries the chain the laws collapsed");
     }
 
     /**

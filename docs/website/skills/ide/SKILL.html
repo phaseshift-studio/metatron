@@ -503,9 +503,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
               mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::715,
+            runtime=&gt;millis::709,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/62402db7]
+            output=&gt;!*/sys/tmp/4eefef00]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -738,7 +738,26 @@ with it, then save (<code>code/N.to</code>).</p>
          &gt;-?str&lt;=str{*}('
 ')].explain()
 ==&gt;explanation::[format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
-                 desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],
+                 desc=&gt;[rng=&gt;&lt;#&gt;,
+                        insts=&gt;2,
+                        rewrite=&gt;explanation::[
+                         format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
+                         desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],
+                         per_inst=&gt;[[op=&gt;at,
+                                     args=&gt;[/dev/scratch/idx/Echo/method/speak],
+                                     f=&gt;'&lt;j&gt;',
+                                     form=&gt;standard,
+                                     c_dom=&gt;0,
+                                     c_rng=&gt;0],
+                                    [op=&gt;update,
+                                     dom=&gt;&lt;#&gt;,
+                                     rng=&gt;&lt;#&gt;,
+                                     args=&gt;[[body=&gt;split('
+   ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?rng=str&amp;dom=str{*}('
+   ')]],
+                                     form=&gt;mapper,
+                                     c_dom=&gt;1,
+                                     c_rng=&gt;1]]]],
                  per_inst=&gt;[[op=&gt;at,
                              args=&gt;[/dev/scratch/idx/Echo/method/speak],
                              f=&gt;'&lt;j&gt;',

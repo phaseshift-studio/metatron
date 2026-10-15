@@ -54,8 +54,8 @@ mtron> *bash?docq
 ==>docs::[obj=>bash?rng=lst[str]&dom=#{?}(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
-          args=>[{?}timeout=>'a real number denoting timeout of ...',
-                 cmd=>'the terminal command to evaluate (...'],
+          args=>[cmd=>'the terminal command to evaluate (...',
+                 {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -76,7 +76,7 @@ mtron> bash('df -h')
     'tmpfs                  6.1G  6.4M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  526G ...',
-    'tmpfs                   31G  147M ...',
+    'tmpfs                   31G  154M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -85,7 +85,7 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/397
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/393
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
 ==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
@@ -93,7 +93,7 @@ mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr i
     (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/398
+    [ProcBuilder<228>]]@/sys/fail/394
 ```
 ### batch
 
@@ -127,15 +127,15 @@ applied to each. The glyphs are the actions, and the sugar says so in plain sigh
 ```mtron
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
 ==>explanation::[format=>!inst?rng=str&dom=#{?}(){<j>},
-                 desc=>[rng=><#>,insts=>4],
-                 per_inst=>[[op=>start,
-                             rng=>lst,
-                             args=>[['ls','whoami']],
-                             f=>'<j>',
-                             form=>initial,
-                             c_dom=>0,
-                             c_rng=>1],
-                            [op=>select,
+                 desc=>[rng=><#>,
+                        insts=>4,
+                        rewrite=>explanation::[
+                         format=>!inst?rng=str&dom=#{?}(){<j>},
+                         desc=>[rng=><#>,insts=>4],
+                         per_inst=>[[op=>start,
+                                     rng=>lst,
+                                     args=>[['ls','whoami']],
+                                     f=>'<j>',
    ...
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()>>format
 ==>"""
@@ -218,9 +218,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/403
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/399
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/404
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/400
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -255,9 +255,9 @@ mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::624,
-    free_mem_jvm=>mB::184.79457,
+    free_mem_jvm=>mB::440.64200,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::439.20542,
+    used_mem_jvm=>mB::183.35799,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[run=>0,stop=>0]]
@@ -329,7 +329,7 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
 ==>fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 5] *<mfs:README.md?mimeq=tex...
      ^
-     could not parse at '[']@/sys/fail/405
+     could not parse at '[']@/sys/fail/401
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ==>[space=>/sys/space,
     web=>[http/host=>http://localhost:8777,
