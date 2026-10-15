@@ -311,15 +311,9 @@ mtron> 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2)
 ==>3
 mtron> 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()>>format
 ==>"""
-    op     dom          rng     args     f    desc     c_dom  c_rng 
-    start  noobj{0}::T  int::T  6        <j>  initial  {0}    {1}   
-    plus   int::T       int::T  0        <j>  mapper   {1}    {1}   
-    mult   int::T       int::T  1        <j>  mapper   {1}    {1}   
-    neg    int::T       int::T           <j>  mapper   {1}    {1}   
-    neg    int::T       int::T           <j>  mapper   {1}    {1}   
-    plus   int::T       int::T  map.neg  <j>  mapper   {1}    {1}   
-    mult   int::T       int::T  2        <j>  mapper   {1}    {1}   
-    div    int::T       int::T  2        <j>  mapper   {1}    {1}   
+    op     dom          rng     args  f    desc     c_dom  c_rng 
+    start  noobj{0}::T  int::T  6     <j>  initial  {0}    {1}   
+    minus  int::T       int::T  3     <j>  mapper   {1}    {1}   
    """
 ```
 Reading the two rows that survive: `plus(0)` and `mult(1)` are the int ring's units (`theory_unit_removal`),
