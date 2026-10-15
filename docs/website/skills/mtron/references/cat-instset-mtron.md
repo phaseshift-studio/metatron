@@ -8,8 +8,9 @@ description: |
   TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's
   siblings / inverse / connected component, when classifying an edge's coefficient shape (`form`), set-theoretic
   class (`class`), or declared process laws (`law`), when wiring the algebraic theories (`ring` / `field` /
-  `rig` / `group` / `monoid` / `boolean` / `lattice`), or when adding a law-driven rewrite — the category *is*
-  the rewrite table.
+  `rig` / `group` / `monoid` / `boolean` / `lattice`), when adding a law-driven rewrite — the category *is*
+  the rewrite table — or when lifting code itself into the graph (`path::T` for value code with rewrite edges,
+  `abstraction::T` for its pointwise type-level image) to navigate, prune, or plan rewrites.
 ---
 
 # the category graph (`/m/math/cat`)
@@ -344,6 +345,79 @@ coefficient shape and a shape-only test would unwrap a predicate.
 **Not yet wired** — the graph/relation family: `inverse`-pair elision ($x.\mathrm{as} (B).\mathrm{as} (A) \leadsto x$
 when the round trip is a `coupling`), `as`-cast fusion through a refinement, and `section`/`retraction` cancellation.
 It needs the whole cast subgraph (`check()`, `implicit()`) rather than one instruction, so it is a separate slice.
+
+## the third lift — code as a vertex (`path::T`, `abstraction::T`)
+
+The first two lifts put types and insts *into* the graph; the third puts **code** in. A chain lifted to `path::T`
+is a vertex whose out-edges are the rewrite rules that can move it — the rewrite graph, generated one dereference
+at a time, never materialized whole. Its pointwise image under $\alpha$ is `abstraction::T`: the same chain with
+every instruction replaced by its `morphism::T`, i.e. **value code below, type code above**.
+
+<!-- figure source: assets/tikz/cat-third-lift.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
+<img src="../assets/cat-third-lift.png" alt="the third lift: value code below, abstraction above, joined by the lift α and the replay γ" width="100%" style="margin:0.3em 0 0 0"/>
+
+### `path::T` — value code as a vertex
+
+| field         | what it is                                                                            |
+|---------------|---------------------------------------------------------------------------------------|
+| `obj`         | the chain itself (the value code)                                                     |
+| `<rule name>` | one lazy edge per **live** rewrite — dereference (`>>`) applies the rule and re-lifts |
+
+Only live edges are materialized (see *a-priori pruning*): a vertex lists exactly the rules that can move it, and a
+**normal form prints as its own certificate** — `[path::[obj=>...]]`, no out-edges, zero matches attempted. A
+traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).
+
+```mtron
+mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
+==>[fail::[inst apply failure: unable to convert mcode to rec::T [Obj<649>] (at /m/inst/as) [Obj<649>]]]
+mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>theory_involution]==[>>theory_unit_removal]
+==>[fail::[inst apply failure: unable to convert mcode to rec::T [Obj<649>] (at /m/inst/as) [Obj<649>]]]
+```
+**A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
+rule's guard factors into a *type-part* (laws, forms, adjacency of classifications) and a *value-residue* (operand
+equality, literal values); the pruner tests only the type-part, a **necessary** condition, so pruning a rule is a
+*proof* of identity ("no match in the abstraction, no match in the concrete") while keeping one merely licenses the
+real match. A rule the pruner does not know is never pruned.
+
+### `abstraction::T` — type code as a vertex
+
+| field         | description                                                                                                           |
+|---------------|-----------------------------------------------------------------------------------------------------------------------|
+| `obj`         | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`   |
+| `code`        | the concrete chain the lift came from — the $\gamma$ **anchor** a chosen abstract route is replayed on                |
+| `<rule name>` | one lazy edge per live rewrite, decided **endogenously** — read off `obj`'s own morphisms, no table outside the graph |
+
+The abstraction's edges dereference to the *next abstraction* (apply at the anchor, re-lift), so traversal is closed
+at the type level, and the laws/forms/theories a rule consults sit on the word itself: `*…/obj/1/law`,
+`*…/obj/2/analysis/inverse` walk into the category from inside the vertex.
+
+```mtron
+mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
+==>[fail::[inst apply failure: unable to convert mcode to rec::T [Obj<649>] (at /m/inst/as) [Obj<649>]]]
+```
+### may / must — the fiber modality
+
+An abstract vertex stands for its **fiber** — every concrete chain that lifts to it — so an edge there is a claim
+quantified over that set, in one of two strengths:
+
+| modality   | the claim                                                     | example                                                                             |
+|------------|---------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| **must** □ | the rule fires for *every* fiber member (zero value-residue)  | `law_shard` on $[\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]$   |
+| **may** ◇  | the rule fires for *some* members; undecidable without values | unit removal at $\mathrm{plus}(\mathrm{int})$ — only the $\mathrm{plus}(0)$ members |
+
+Hence the degree ordering $\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))$: the abstraction carries edges on
+behalf of fiber-mates, and equality holds exactly when every edge is a must-edge. Refinement is **edge-antitone** —
+descending the q-param rungs ($\mathrm{plus (int)} \to \mathrm{plus (int?{=}0{::}T)} \to \mathrm{plus} (0)$) shrinks the
+fiber and discharges ◇ into □; a rule becomes *exact* at the rung whose type absorbs its residue. Counting instances
+rather than rules, the ordering reverses: one abstract edge fans into one concrete edge per match *site*, so the
+abstraction has more kinds of move and the path more copies of fewer kinds.
+
+**Planning.** $\gamma$ of a vertex is an infinite set, so no one descends from an arbitrary abstraction — what the
+abstract walk computes is not code but a **route**: a sequence of rule names, chosen upstairs where the graph is
+small, then **replayed at the anchor** (`code`), where values and sites exist (the path-lifting property of a
+fibration). Must-edges lift unconditionally; may-edges are the backtrack points, known in advance — a plan's
+remaining ◇-count is readable as the degree gap between the vertex and its anchor. The replayed route *is* the
+derivation witness.
 
 ## see also
 

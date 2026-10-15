@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-third-lift.png">cat-third-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
@@ -498,8 +499,8 @@ the same declarations the type checker uses:</p>
       {?}metadata=&gt;lst::T]][ctor?rng=table_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/table_widget,
                                dom=&gt;'maybe an obj',
                                rng=&gt;'a table widget',
-                               args=&gt;[{?}metadata=&gt;'a lst of rows of data behind the d...',
-                                      {?}row=&gt;'a lst of poly table rows',
+                               args=&gt;[{?}row=&gt;'a lst of poly table rows',
+                                      {?}metadata=&gt;'a lst of rows of data behind the d...',
                                       {?}header=&gt;'a lst of obj table headers'],
                                desc=&gt;'[structural] a tabular data widget'],
           tree_widget=&gt;docs::[obj=&gt;widget::T[?[root=&gt;uri::T,
@@ -510,12 +511,12 @@ the same declarations the type checker uses:</p>
       {?}expand=&gt;uri::T]][ctor?rng=tree_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/tree_widget,
                               dom=&gt;'maybe an obj',
                               rng=&gt;'a tree widget',
-                              args=&gt;[{?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
-                                     {?}expand=&gt;'branch uris whose children are rea...',
+                              args=&gt;[root=&gt;'the root uri to traverse from',
                                      {?}code=&gt;'transform obj prior to insertion i...',
-                                     root=&gt;'the root uri to traverse from',
-                                     {?}flatten=&gt;'fold single-folder chains into one...',
-                                     max=&gt;'the max depth to traverse'],
+                                     {?}expand=&gt;'branch uris whose children are rea...',
+                                     {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
+                                     max=&gt;'the max depth to traverse',
+                                     {?}flatten=&gt;'fold single-folder chains into one...'],
                               desc=&gt;'[structural] the root uri space is...'],
           ...(10 more)]
 </code></pre>
@@ -731,10 +732,10 @@ mtron&gt; board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anch
      [grid=&gt;(==&gt;{?}grid)=&gt;[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=&gt;==&gt;lst::T,
       noobj=&gt;(==&gt;{?}title)=&gt;noobj=&gt;/=&gt;str::T,
       style=&gt;(/=&gt;{?}style)=&gt;[anchor=&gt;top_right,border=&gt;continuous]=&gt;X=&gt;style::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]@/sys/fail/430
-   	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]@/sys/fail/431
+     predicate apply failed on execution (at /m/inst/ctor)]@/sys/fail/434
+   	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]@/sys/fail/435
 mtron&gt; @/usr/uidoc/board.display()             [-- pin it once --]
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]]@widget [display?rng=noobj{0}&amp;dom=widget(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/432
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@style]]@widget [display?rng=noobj{0}&amp;dom=widget(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/436
 mtron&gt; @/usr/uidoc/g10/1/0 &gt;&gt;= '@'             [-- one cell of the REFERENT --]
 ==&gt;'@'
 mtron&gt; @/usr/uidoc/g10/+/0 &gt;&gt;= ''             [-- every row's column 0 --]

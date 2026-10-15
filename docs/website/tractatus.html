@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-lift.png">cat-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/cat-third-lift.png">cat-third-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/mach-stages.png">mach-stages.png</a>
@@ -3148,7 +3149,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{r}}E{{m}}T{{c}}A{{r}}t{{y}}R{{c}}o{{g}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}m{{r}}E{{c}}t{{c}}a{{c}}t{{b}}R{{c}}o{{b}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3798,7 +3799,7 @@ mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
    	while parsing: nat::-10]@/sys/fail/263
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/265</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/266</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7078,16 +7079,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6484   6349372   1% /run'
+==&gt;'tmpfs                    6355856       6508   6349348   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  551230076 359727748  61% /'
-==&gt;'tmpfs                   31779272     131800  31647472   1% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032  551211372 359746452  61% /'
+==&gt;'tmpfs                   31779272     150008  31629264   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        296   6355556   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        256   6355596   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1348724332 572484212  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1349079316 572129228  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -7098,6 +7099,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;docs
 ==&gt;dsh-plugins
 ==&gt;'dsh-usage-boot.log'
+==&gt;dsh-usage-data
 ==&gt;'hs_err_pid210432.log'
 ==&gt;'hs_err_pid3714434.log'
 ==&gt;'language.properties'
@@ -7111,7 +7113,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[maCHiNe FAIlED][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
+==&gt;fail::[macHIne fAileD][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7299,7 +7301,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1503/15/52/245?tz=-0600
+==&gt;datetime:://2026.10:1505/22/08/536?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9114,12 +9116,12 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              start=&gt;[code=&gt;at(ab).plus('B'),
                      loop=&gt;second::1.0,
                      state=&gt;pause]@/sys/thread/b,
-             time=&gt;datetime:://2026.10:1503/15/55/063?tz=-0600,
+             time=&gt;datetime:://2026.10:1505/22/11/143?tz=-0600,
              runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
 mtron&gt; */sys/thread/b.stop()
-==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread [stop?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/220
+==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread [stop?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/221
 mtron&gt; */sys/thread/a.stop()
 ==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread [stop?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/224
 mtron&gt; *ab

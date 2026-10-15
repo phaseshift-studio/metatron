@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-third-lift.png">cat-third-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
@@ -443,7 +444,7 @@ the workspace and a chat feature. Then:</p>
 ==&gt;fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 10] @chatter.chat('what is t...
      ^
-     could not parse at '[']@/sys/fail/383
+     could not parse at '[']@/sys/fail/387
 </code></pre>
 <p>The <code>/usr/chatter/#</code> space serves a the default location for features to store their various constructions.</p>
 <pre><code class="language-mtron">mtron&gt; */usr/chatter/chat_result/+
@@ -451,7 +452,7 @@ mtron&gt; [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
 ==&gt;fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 10] */usr/chatter/chat_resul...
      ^
-     could not parse at '[']@/sys/fail/384
+     could not parse at '[']@/sys/fail/388
 </code></pre>
 <p><strong>A tool is an instruction.</strong> There is no tool registry to populate: anything callable <em>is</em> a tool, and <code>mTool</code>
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a <code>tool_feature</code> can

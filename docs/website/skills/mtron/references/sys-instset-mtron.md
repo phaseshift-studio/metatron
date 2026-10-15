@@ -68,7 +68,7 @@ mtron> bash('ls')
     'CONTRIBUTING.md',
     'dist',
     'docs',
-    ...(14 more)]
+    ...(15 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
@@ -76,7 +76,7 @@ mtron> bash('df -h')
     'tmpfs                  6.1G  6.4M ...',
     'efivarfs               128K   42K ...',
     '/dev/nvme0n1p2         916G  526G ...',
-    'tmpfs                   31G  129M ...',
+    'tmpfs                   31G  147M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -85,7 +85,7 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/393
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/397
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
 ==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
@@ -93,7 +93,7 @@ mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr i
     (at /m/sys/inst/bash) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/394
+    [ProcBuilder<228>]]@/sys/fail/398
 ```
 ### batch
 
@@ -109,7 +109,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'CONTRIBUTING.md',
            'dist',
            'docs',
-           ...(14 more)]]
+           ...(15 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
@@ -119,7 +119,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'CONTRIBUTING.md',
     'dist',
     'docs',
-    ...(15 more)]
+    ...(16 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -160,13 +160,13 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: CONTRIBUTING.md',
     '  File: dist',
     '  File: docs',
-    ...(14 more)]
+    ...(15 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
     '  Size: 43651     	Blocks: 88     ...',
     'Device: 259,5	Inode: 25559359    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-14 02:45:47.381906...',
+    'Access: 2026-10-15 03:17:10.459930...',
    ...
 ```
 ### a shape of its own
@@ -184,7 +184,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::698,
     bB::409,
     bB::409,
-    ...(14 more)]
+    ...(15 more)]
 ```
 Unit values test against each other's units:
 
@@ -218,9 +218,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/399
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/403
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/400
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/404
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -255,9 +255,9 @@ mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::624,
-    free_mem_jvm=>mB::392.70954,
+    free_mem_jvm=>mB::184.79457,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::231.29045,
+    used_mem_jvm=>mB::439.20542,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[run=>0,stop=>0]]
@@ -329,7 +329,7 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
 ==>fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 5] *<mfs:README.md?mimeq=tex...
      ^
-     could not parse at '[']@/sys/fail/401
+     could not parse at '[']@/sys/fail/405
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ==>[space=>/sys/space,
     web=>[http/host=>http://localhost:8777,

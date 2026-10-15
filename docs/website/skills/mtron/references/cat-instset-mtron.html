@@ -313,6 +313,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-third-lift.png">cat-third-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
@@ -411,7 +412,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">cat-instset</h1>
-        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form), set-theoretic class (class), or declared process laws (law), when wiring the algebraic theories (ring / field / rig / group / monoid / boolean / lattice), or when adding a law-driven rewrite — the category *is* the rewrite table.</small><br/>
+        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form), set-theoretic class (class), or declared process laws (law), when wiring the algebraic theories (ring / field / rig / group / monoid / boolean / lattice), when adding a law-driven rewrite — the category *is* the rewrite table — or when lifting code itself into the graph (path::T for value code with rewrite edges, abstraction::T for its pointwise type-level image) to navigate, prune, or plan rewrites.</small><br/>
         <a href="cat-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>cat-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -739,6 +740,77 @@ coefficient shape and a shape-only test would unwrap a predicate.</p>
 <p><strong>Not yet wired</strong> — the graph/relation family: <code>inverse</code>-pair elision (\(x.\mathrm{as} (B).\mathrm{as} (A) \leadsto x\)
 when the round trip is a <code>coupling</code>), <code>as</code>-cast fusion through a refinement, and <code>section</code>/<code>retraction</code> cancellation.
 It needs the whole cast subgraph (<code>check()</code>, <code>implicit()</code>) rather than one instruction, so it is a separate slice.</p>
+<h3>the third lift — code as a vertex (<code>path::T</code>, <code>abstraction::T</code>)</h3>
+<p>The first two lifts put types and insts <em>into</em> the graph; the third puts <strong>code</strong> in. A chain lifted to <code>path::T</code>
+is a vertex whose out-edges are the rewrite rules that can move it — the rewrite graph, generated one dereference
+at a time, never materialized whole. Its pointwise image under \(\alpha\) is <code>abstraction::T</code>: the same chain with
+every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value code below, type code above</strong>.</p>
+<!-- figure source: assets/tikz/cat-third-lift.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
+<img src="../assets/cat-third-lift.png" alt="the third lift: value code below, abstraction above, joined by the lift α and the replay γ" width="100%" style="margin:0.3em 0 0 0"/>
+<h4><code>path::T</code> — value code as a vertex</h4>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>obj</code></td><td>the chain itself (the value code)</td></tr>
+<tr><td><code>&lt;rule name&gt;</code></td><td>one lazy edge per <strong>live</strong> rewrite — dereference (<code>&gt;&gt;</code>) applies the rule and re-lifts</td></tr>
+</tbody>
+</table>
+<p>Only live edges are materialized (see <em>a-priori pruning</em>): a vertex lists exactly the rules that can move it, and a
+<strong>normal form prints as its own certificate</strong> — <code>[path::[obj=&gt;...]]</code>, no out-edges, zero matches attempted. A
+traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).</p>
+<pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
+==&gt;[fail::[inst apply failure: unable to convert mcode to rec::T [Obj&lt;649&gt;] (at /m/inst/as) [Obj&lt;649&gt;]]]
+mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;theory_involution]==[&gt;&gt;theory_unit_removal]
+==&gt;[fail::[inst apply failure: unable to convert mcode to rec::T [Obj&lt;649&gt;] (at /m/inst/as) [Obj&lt;649&gt;]]]
+</code></pre>
+<p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
+rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand
+equality, literal values); the pruner tests only the type-part, a <strong>necessary</strong> condition, so pruning a rule is a
+<em>proof</em> of identity (&quot;no match in the abstraction, no match in the concrete&quot;) while keeping one merely licenses the
+real match. A rule the pruner does not know is never pruned.</p>
+<h4><code>abstraction::T</code> — type code as a vertex</h4>
+<table>
+<thead>
+<tr><th>field</th><th>description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>obj</code></td><td>the abstract word \(\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)\) — each instruction as its <code>morphism::T</code></td></tr>
+<tr><td><code>code</code></td><td>the concrete chain the lift came from — the \(\gamma\) <strong>anchor</strong> a chosen abstract route is replayed on</td></tr>
+<tr><td><code>&lt;rule name&gt;</code></td><td>one lazy edge per live rewrite, decided <strong>endogenously</strong> — read off <code>obj</code>'s own morphisms, no table outside the graph</td></tr>
+</tbody>
+</table>
+<p>The abstraction's edges dereference to the <em>next abstraction</em> (apply at the anchor, re-lift), so traversal is closed
+at the type level, and the laws/forms/theories a rule consults sit on the word itself: <code>*…/obj/1/law</code>,
+<code>*…/obj/2/analysis/inverse</code> walk into the category from inside the vertex.</p>
+<pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
+==&gt;[fail::[inst apply failure: unable to convert mcode to rec::T [Obj&lt;649&gt;] (at /m/inst/as) [Obj&lt;649&gt;]]]
+</code></pre>
+<h4>may / must — the fiber modality</h4>
+<p>An abstract vertex stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so an edge there is a claim
+quantified over that set, in one of two strengths:</p>
+<table>
+<thead>
+<tr><th>modality</th><th>the claim</th><th>example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>must</strong> □</td><td>the rule fires for <em>every</em> fiber member (zero value-residue)</td><td><code>law_shard</code> on \([\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]\)</td></tr>
+<tr><td><strong>may</strong> ◇</td><td>the rule fires for <em>some</em> members; undecidable without values</td><td>unit removal at \(\mathrm{plus}(\mathrm{int})\) — only the \(\mathrm{plus}(0)\) members</td></tr>
+</tbody>
+</table>
+<p>Hence the degree ordering \(\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))\): the abstraction carries edges on
+behalf of fiber-mates, and equality holds exactly when every edge is a must-edge. Refinement is <strong>edge-antitone</strong> —
+descending the q-param rungs (\(\mathrm{plus (int)} \to \mathrm{plus (int?{=}0{::}T)} \to \mathrm{plus} (0)\)) shrinks the
+fiber and discharges ◇ into □; a rule becomes <em>exact</em> at the rung whose type absorbs its residue. Counting instances
+rather than rules, the ordering reverses: one abstract edge fans into one concrete edge per match <em>site</em>, so the
+abstraction has more kinds of move and the path more copies of fewer kinds.</p>
+<p><strong>Planning.</strong> \(\gamma\) of a vertex is an infinite set, so no one descends from an arbitrary abstraction — what the
+abstract walk computes is not code but a <strong>route</strong>: a sequence of rule names, chosen upstairs where the graph is
+small, then <strong>replayed at the anchor</strong> (<code>code</code>), where values and sites exist (the path-lifting property of a
+fibration). Must-edges lift unconditionally; may-edges are the backtrack points, known in advance — a plan's
+remaining ◇-count is readable as the degree gap between the vertex and its anchor. The replayed route <em>is</em> the
+derivation witness.</p>
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>

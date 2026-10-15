@@ -1,0 +1,104 @@
+% cat-third-lift.tex — the third lift: code as a vertex, and the square that lifts it
+% Rendered with the tikz MCP server (compile_tikz), which wraps this body in a
+% standalone document (default preamble: tikz, amsmath, amssymb + common TikZ
+% libraries) and writes docs/website/skills/mtron/assets/cat-third-lift.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels are deliberately UNFILLED (no
+% `fill=black` patch), so no text box shows against the page; labels are offset
+% clear of the strokes instead.
+%
+% THE FIGURE, IN ONE PICTURE. This is the ANSI layout spec from
+% cat-instset-mtron.md drawn for real:
+%
+%       abstraction::T [A] -- >>r1 --> [A'] -- >>r2 --> [A*]   type code
+%                       ^                              :      edges: rules,
+%  (the quotient     a  | lift     replay the route    : g    each may ◇ or must □
+%   the planner walks)  |           at the anchor      v
+%       path::T        [p] -- >>r1 --> [p'] -- >>r2 --> [p*]   value code
+%    (the member in hand)                                      edges: rule sites
+%
+%                fiber(A) = { p, q, r, ... }   edges(p) subset edges(A)
+%
+%   * SPACING RULE — every satellite legend HUGS what it annotates, and dead air
+%     around a legend is the one thing to keep out. The left column is therefore
+%     RIGHT-aligned flush to the boxes (0.25 cm) rather than left-aligned in a
+%     ragged column: left-aligning it measures the same 0.25 cm only at its
+%     widest caption and leaves up to 1.4 cm of empty line beside `path::T`. The
+%     right column is left-aligned ~0.3 cm off the boxes, and the two
+%     facts sit ~0.3 cm under the lowest caption. The vertical offsets of the
+%     captions are already at their floor (~0.22 cm clear of the box stroke), so
+%     they are NOT worth tightening further.
+%
+%   * Two rows of the SAME chain, two steps each. The top row is TYPE CODE —
+%     the abstraction, whose edges are RULES; the bottom row is VALUE CODE —
+%     the path, whose edges are rule SITES. Identical labels on purpose: the
+%     row is the same chain seen at two heights, which is the whole point.
+%   * The two verticals are the fibration. alpha (SOLID) lifts UP and is a
+%     function: a concrete chain has exactly one abstraction. gamma (DASHED)
+%     goes DOWN and is not: a chosen abstract route is replayed at the anchor,
+%     which is a policy, so there is no unique value to draw — the dash is
+%     that, not decoration.
+%   * Modality belongs to the abstract edges and lives in the right legend:
+%     every abstract edge is a claim quantified over the fiber, `must` (box,
+%     fires for every member) or `may` (diamond, fires for some). The legend
+%     reads "each may ◇ or must □" — with `each` — deliberately: the glyphs are
+%     the row's edge vocabulary, so they are USED rather than left dangling,
+%     while no single edge is stamped with a strength. That stamp is not ours to
+%     make: must-vs-may is decided per rule by its value-residue against the
+%     abstraction, which a generic r1/r2 does not fix.
+%   * The two facts under the square are what makes that gap: the fiber
+%     fiber(A) = { p, q, r, ... } and the degree ordering edges(p) <= edges(A).
+%   * Every claim is structural (no counts, no status), so the picture does not
+%     age as the third lift lands — transient status stays in the prose.
+
+\begin{tikzpicture}[
+  c/.style={draw, rounded corners=2pt, thick, minimum width=10mm, minimum height=6.5mm,
+            font=\small, inner sep=1.2mm},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  ed/.style={-{Stealth[length=2.2mm]}, thick, dashed},
+  el/.style={font=\scriptsize, inner sep=1pt},
+  tl/.style={font=\tiny, inner sep=1pt},
+  lbl/.style={font=\small, inner sep=1pt},
+  sub/.style={font=\tiny, text=white!60!black, align=left, inner sep=1pt},
+  note/.style={font=\scriptsize, inner sep=1pt},
+  color=white
+]
+
+% ---- the abstraction row: type code, edges are RULES ----
+\node[c] (A)  at (0.0,2.6) {$[A]$};
+\node[c] (Ap) at (3.0,2.6) {$[A']$};
+\node[c] (As) at (6.0,2.6) {$[A^{*}]$};
+\draw[e] (A)  -- node[el,above=1pt]{$>>\!r_1$} (Ap);
+\draw[e] (Ap) -- node[el,above=1pt]{$>>\!r_2$} (As);
+
+% ---- the path row: value code, edges are rule SITES ----
+\node[c] (p)  at (0.0,0) {$[p]$};
+\node[c] (pp) at (3.0,0) {$[p']$};
+\node[c] (ps) at (6.0,0) {$[p^{*}]$};
+\draw[e] (p)  -- node[el,above=1pt]{$>>\!r_1$} (pp);
+\draw[e] (pp) -- node[el,above=1pt]{$>>\!r_2$} (ps);
+
+% ---- the two verticals: lift up (a function), replay down (a policy) ----
+\draw[e]  (p.north)   -- node[el,left=2pt,pos=0.55]{$\alpha$}
+                         node[el,right=2pt,pos=0.55]{lift} (A.south);
+\draw[ed] (As.south)  -- node[el,right=2pt,pos=0.55]{$\gamma$} (ps.north);
+\node[tl, anchor=east, align=right] at (5.75,1.9) {replay the route\\ at the anchor};
+
+% ---- what each row is, left (RIGHT-aligned: the column hugs the boxes, so no
+%      ragged dead air sits between a legend and what it annotates) ----
+\node[lbl, anchor=east] at (-0.8,2.6)  {\texttt{abstraction::T}};
+\node[sub, anchor=east, align=right] at (-0.8,1.95) {(the quotient\\ the planner walks)};
+\node[lbl, anchor=east] at (-0.8,0)    {\texttt{path::T}};
+\node[sub, anchor=east, align=right] at (-0.8,-0.65){(the member in hand)};
+
+% ---- and what its edges are, right (same 0.25 cm off the boxes) ----
+\node[lbl, anchor=west] at (6.8,2.6)   {type code};
+\node[tl, anchor=west, align=left] at (6.8,1.95) {edges: rules,\\ each may $\Diamond$ or must $\square$};
+\node[lbl, anchor=west] at (6.8,0)     {value code};
+\node[tl, anchor=west, align=left] at (6.8,-0.65) {edges: rule sites};
+
+% ---- the two facts under the square (tucked up under the lowest caption) ----
+\node[note] at (1.1,-1.15) {$\mathrm{fiber}(A) = \{\,p,\,q,\,r,\,\dots\,\}$};
+\node[note] at (5.3,-1.15) {$\mathrm{edges}(p) \subseteq \mathrm{edges}(A)$};
+\end{tikzpicture}

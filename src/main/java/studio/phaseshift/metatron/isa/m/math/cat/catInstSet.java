@@ -63,6 +63,7 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI MORPHISM_TID = CATEGORY_TID.extend("morphism");
     public static final fURI OBJECT_TID = CATEGORY_TID.extend("object");
     public static final fURI PATH_TID = CATEGORY_TID.extend("path");
+    public static final fURI ABSTRACTION_TID = CATEGORY_TID.extend("abstraction");
     public static final fURI THEORY_TID = CAT_ISA_TID.extend("theory");
     public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
     public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
@@ -93,6 +94,12 @@ public class catInstSet extends AbstractInstSet {
      */
     public static Type MORPHISM_TYPE;
     public static Type PATH_TYPE;
+    /**
+     * {@code abstraction::T} — a path's obj lifted pointwise along \(\alpha\): each chain instruction as its
+     * {@code morphism::T}, so the laws, forms, theories, classes and analyses are read in-graph rather than
+     * from a table outside it
+     */
+    public static Type ABSTRACTION_TYPE;
 
 
     /// //////////////////////////////////////////////////////////////
@@ -270,26 +277,71 @@ public class catInstSet extends AbstractInstSet {
                                         .tid(CATEGORY_TID)
                                         .vid(PATH_TID)
                                         .isaPredicate(rec(
-                                                uri(OBJ), CODE_TYPE,
-                                                uri(REWRITE).maybe().asUri(), lst(ALL_TYPE),
-                                                uri(LAW).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)))
+                                                uri(OBJ), CODE_TYPE))
                                         .constructor(arg -> {
                                             final Rec path = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                                             final Code code = path.at(OBJ);
-                                            // a type with no address models no object: answer noobj (the caller's
-                                            // orElse already means "no theories"), never raise — a fail here is
-                                            // stacked into fail space AND, mid-rewrite, aborts the rewrite that asked
                                             if (!code.isCode())
                                                 return noobj();
-                                            //path.at(LAW, LawTable.typeLawsOf(obj.asType()), MUTABLE);
-                                            path.at(REWRITE, auto_(instLambda((ignore, i) -> {
-                                                return code;
-                                            })).tryToInst(), MUTABLE);
+                                            for (final Inst rewrite : this.rewrites()) {
+                                                try {
+                                                    if (!maybeNotIdentity(code, rewrite))
+                                                        continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
+                                                    path.at(uri(rewrite.tid().name()), auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst(), MUTABLE);
+                                                } catch (final Exception e) {
+                                                    //do nothing
+                                                }
+                                            }
                                             return path.selfTID(PATH_TID);
                                         })
                                         .create(), Map.of(
                                         uri(REWRITE), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)"),
                                 "code as a categorical path incident to iso-semantic rewritten forms"),
+                        docWrap(ABSTRACTION_TYPE = Type.Builder.build()
+                                        .tid(CATEGORY_TID)
+                                        .vid(ABSTRACTION_TID)
+                                        .isaPredicate(rec(
+                                                uri(OBJ), lst(T(MORPHISM_TID)),
+                                                uri(CODE).maybe().asUri(), CODE_TYPE))
+                                        .constructor(arg -> {
+                                            final Obj source = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec().at(OBJ) : arg;
+                                            if (source.isLst())
+                                                return arg.asRec().selfTID(ABSTRACTION_TID);    // already lifted
+                                            if (!source.isCode())
+                                                return noobj();
+                                            final Code code = source.asCode();
+                                            final Type carrier = carrier(code);
+                                            final List<Obj> morphisms = new ArrayList<>();
+                                            for (final Inst chain : code.insts()) {
+                                                // the declared n-tid keys the chain instruction into the law table in-graph
+                                                final LawTable.Declared declared = LawTable.declared(chain.tid().basePath(), carrier);
+                                                final Inst keyed = null == declared ? chain : chain.tid(declared.tid());
+                                                Obj morphism;
+                                                try {
+                                                    morphism = MORPHISM_TYPE.constructor().apply(keyed);
+                                                } catch (final Exception e) {
+                                                    morphism = noobj();
+                                                }
+                                                morphisms.add(morphism.isNoObj() ? rec(mutableMap(uri(OBJ), keyed), MORPHISM_TID, null) : morphism);
+                                            }
+                                            final Rec abstraction = rec(uri(OBJ), lst(morphisms), uri(CODE), code);
+                                            // the live out-edges, decided endogenously: the liveness data is the
+                                            // law/form/name fields of obj=>'s own morphisms, not a table outside the graph
+                                            for (final Inst rewrite : this.rewrites()) {
+                                                try {
+                                                    if (!maybeNotIdentity(morphisms, rewrite))
+                                                        continue;
+                                                    abstraction.at(uri(rewrite.tid().name()), auto_(instLambda(lhs -> ABSTRACTION_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst(), MUTABLE);
+                                                } catch (final Exception e) {
+                                                    //do nothing
+                                                }
+                                            }
+                                            return abstraction.selfTID(ABSTRACTION_TID);
+                                        })
+                                        .create(), Map.of(
+                                        uri(OBJ), "the abstract word \\(\\alpha(f_1 \\cdot \\ldots \\cdot f_n) = \\alpha(f_1) \\cdot \\ldots \\cdot \\alpha(f_n)\\): each chain instruction as its \\(\\mathrm{morphism}\\), carrying law, form, theory, class and analysis in-graph",
+                                        uri(CODE), "the concrete chain the abstraction was lifted from -- the concretization \\(\\gamma\\) anchor a chosen abstract route is pulled back down to"),
+                                "code lifted pointwise along \\(\\alpha\\) into the classification alphabet: the quotient a planner searches, where a zero-residue rewrite (one whose guard is decided by declarations alone) is a first-class edge"),
                         docWrap(THEORY_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(THEORY_TID)
@@ -376,6 +428,7 @@ public class catInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(PATH_TID), lst(PATH_TYPE), (lhs, inst) -> PATH_TYPE.constructor().apply(lhs)),
+                        instC(AS_INST_TID.dom(ALL).rng(ABSTRACTION_TID), lst(ABSTRACTION_TYPE), (lhs, inst) -> ABSTRACTION_TYPE.constructor().apply(lhs)),
                         instC(CAT_C_INST_TID.dom(ALL.maybe()).rng(CODE_TID.maybe()), lst(URI_TYPE), (lhs, inst) -> {
                             final List<Inst> newCode = lhs.isNoObj() ?
                                     new ArrayList<>() :
@@ -603,6 +656,207 @@ public class catInstSet extends AbstractInstSet {
         if (!insts.isEmpty() && START_INST_TID.equals(insts.get(0).tid().basePath()))
             return insts.get(0).arg(0).type();
         return T(ALL);
+    }
+
+    /**
+     * The a-priori liveness test: whether the rewrite can be anything but the identity on this code,
+     * decided from the category's declarations alone — no match is attempted. The code's one-pass
+     * {@link Profile} (its op adjacencies, declared process laws, forms and theory-modeling operands)
+     * is the abstraction \(\alpha(\mathrm{code})\), and each rule's test is a <em>necessary</em>
+     * condition for that rule's own guard — operand equality and literal values are never consulted —
+     * so {@code false} is a proof of identity ("no match in the abstraction, no match in the
+     * concrete"), while {@code true} only licenses the real match. A rule this method does not know
+     * answers {@code true}: unknown edges are kept, never pruned.
+     */
+    public static boolean maybeNotIdentity(final Code code, final Inst rewrite) {
+        final List<Inst> insts = code.insts();
+        if (insts.isEmpty())
+            return false; // every rewrite is the identity on the empty chain
+        return live(Profile.of(code), rewrite);
+    }
+
+    /**
+     * The same liveness test, decided endogenously: the profile is read off an {@code abstraction::T}'s own
+     * morphisms (their {@code law}, {@code form} and {@code name} fields, with each morphism's carried
+     * {@code obj} instruction supplying operands), so the vertex prunes its out-edges from data it already
+     * contains rather than from a table outside the graph.
+     */
+    public static boolean maybeNotIdentity(final List<Obj> morphisms, final Inst rewrite) {
+        if (morphisms.isEmpty())
+            return false; // every rewrite is the identity on the empty word
+        return live(Profile.of(morphisms), rewrite);
+    }
+
+    /**
+     * The rule dispatch shared by both profiles — each case is the necessary half of that rule's own guard.
+     */
+    private static boolean live(final Profile profile, final Inst rewrite) {
+        return switch (rewrite.tid().basePath().name()) {
+            case "theory_unit_removal" -> profile.unit;
+            case "theory_involution" -> profile.adjInvolution;
+            case "law_idempotent" -> profile.adjIdempotent;
+            case "law_absorbing" -> profile.absorbing;
+            case "law_monoidic" -> profile.adjMonoidFold;
+            case "law_poset" -> profile.adjPoset;
+            case "inverse_cancellation" -> profile.adjInverse;
+            case "form_map_unwrap" -> profile.mapWrap;
+            case "derivation_contraction" -> LawTable.derivations().stream()
+                    .anyMatch(d -> profile.ops.contains(d.rhs().insts().getLast().tid().basePath().toString()));
+            default -> true; // an undeclared rule proves nothing -- keep the edge
+        };
+    }
+
+    /**
+     * The declaration profile of one code chain, computed in a single pass over its instructions: which
+     * law-bearing adjacencies, theory-modeling operands and forms the chain puts on the table. One field
+     * per rule family; every field over-approximates its rule's guard (op adjacency stands in for
+     * {@code same()}'s operand equality, operand-models-a-theory stands in for the unit test), never under.
+     */
+    private static final class Profile {
+
+        private final Set<String> ops = new HashSet<>();  // the op addresses present -- derivation heads test membership
+        private boolean unit;            // an op over a theory-modeling operand, or a bare argless op (a candidate identity morphism)
+        private boolean adjInvolution;   // an adjacent same-op pair declaring involution, or any adjacent same-op pair under a carrier with a declared inverse role
+        private boolean adjIdempotent;   // an adjacent same-op pair declaring idempotent
+        private boolean adjMonoidFold;   // an adjacent same-op reducer/join pair declaring monoidic
+        private boolean adjPoset;        // an adjacent same-op pair declaring poset
+        private boolean adjInverse;      // an adjacent pair on a declared opposing edge
+        private boolean absorbing;       // an absorbing op with live code before it
+        private boolean mapWrap;         // a map(f) wrapping an unwrappable instruction
+
+        private static Profile of(final Code code) {
+            final Profile profile = new Profile();
+            final List<Inst> insts = code.insts();
+            final Type carrier = carrier(code);
+            final boolean carrierInverse = !TheoryHelper.invInst(carrier).isNoObj();
+            final Map<String, LawTable.Declared> declarations = new HashMap<>();
+            final Map<Type, Boolean> modeled = new HashMap<>();
+            final int seed = START_INST_TID.equals(insts.get(0).tid().basePath()) ? 1 : 0;
+            for (int i = seed; i < insts.size(); i++) {
+                final Inst inst = insts.get(i);
+                final String op = inst.tid().basePath().toString();
+                profile.ops.add(op);
+                final LawTable.Declared declared = declarations.computeIfAbsent(op, k -> LawTable.declared(inst.tid().basePath(), carrier));
+                if (inst.args().isEmpty())
+                    profile.unit = true;  // a bare op may be a theory's identity morphism
+                else if (models(inst.dom(), modeled) || models(inst.arg(0).type(), modeled))
+                    profile.unit = true;  // op(id) needs an operand whose type models a theory
+                if (i > seed && null != declared && declares(declared, Law.absorbing))
+                    profile.absorbing = true;
+                if (null != mapArgument(inst, carrier))
+                    profile.mapWrap = true;
+                if (i > seed) {
+                    final Inst prior = insts.get(i - 1);
+                    if (sameOp(prior, inst)) {
+                        if (carrierInverse || (null != declared && declares(declared, Law.involution)))
+                            profile.adjInvolution = true;
+                        if (null != declared) {
+                            if (declares(declared, Law.idempotent))
+                                profile.adjIdempotent = true;
+                            if (declares(declared, Law.poset))
+                                profile.adjPoset = true;
+                            final Inst.Form form = Inst.Form.of(inst.tid(declared.tid()));
+                            if ((Inst.Form.reducer == form || Inst.Form.join == form) && declares(declared, Law.monoidic))
+                                profile.adjMonoidFold = true;
+                        }
+                    }
+                    final LawTable.Declared priorDeclared = declarations.computeIfAbsent(prior.tid().basePath().toString(), k -> LawTable.declared(prior.tid().basePath(), carrier));
+                    if (opposes(declared, prior.tid().basePath()) || opposes(priorDeclared, inst.tid().basePath()))
+                        profile.adjInverse = true;
+                }
+            }
+            return profile;
+        }
+
+        /**
+         * The profile read off an abstraction's morphisms: {@code law}, {@code form} and {@code name} are
+         * endogenous fields of each {@code morphism::T}, and each morphism's carried {@code obj} instruction
+         * supplies the operands (args, dom) for the unit, map and inverse tests. An {@code initial} morphism
+         * is the seed: it fixes the carrier and takes part in no adjacency.
+         */
+        private static Profile of(final List<Obj> morphisms) {
+            final Profile profile = new Profile();
+            final Map<Type, Boolean> modeled = new HashMap<>();
+            Type carrier = T(ALL);
+            boolean carrierInverse = false;
+            String priorName = null;
+            fURI priorInverse = null;
+            boolean pastSeed = false;
+            for (final Obj m : morphisms) {
+                if (!m.isRec())
+                    continue;
+                final Rec morphism = m.asRec();
+                final Inst keyed = morphism.has(uri(OBJ)) ? morphism.at(OBJ).asInst() : null;
+                final String name = morphism.has(uri(NAME)) ? morphism.at(NAME).uriValue().name()
+                        : (null == keyed ? null : keyed.tid().basePath().name());
+                final String form = morphism.has(uri(FORM)) ? morphism.at(FORM).uriValue().name() : null;
+                final List<String> laws = morphism.has(uri(LAW))
+                        ? morphism.at(LAW).asLst().lstValue().stream().map(l -> l.uriValue().name()).toList()
+                        : List.of();
+                if (Inst.Form.initial.name().equals(form)) {   // the seed: fixes the carrier, no adjacency
+                    if (null != keyed && 0 < keyed.args().count()) {
+                        carrier = keyed.arg(0).type();
+                        carrierInverse = !TheoryHelper.invInst(carrier).isNoObj();
+                    }
+                    continue;
+                }
+                if (null != keyed) {
+                    profile.ops.add(keyed.tid().basePath().toString());
+                    if (keyed.args().isEmpty())
+                        profile.unit = true;  // a bare op may be a theory's identity morphism
+                    else if (models(keyed.dom(), modeled) || models(keyed.arg(0).type(), modeled))
+                        profile.unit = true;  // op(id) needs an operand whose type models a theory
+                    if (null != mapArgument(keyed, carrier))
+                        profile.mapWrap = true;
+                }
+                if (pastSeed && laws.contains(Law.absorbing.name()))
+                    profile.absorbing = true;
+                if (pastSeed && null != name && name.equals(priorName)) {
+                    if (carrierInverse || laws.contains(Law.involution.name()))
+                        profile.adjInvolution = true;
+                    if (laws.contains(Law.idempotent.name()))
+                        profile.adjIdempotent = true;
+                    if (laws.contains(Law.poset.name()))
+                        profile.adjPoset = true;
+                    if ((Inst.Form.reducer.name().equals(form) || Inst.Form.join.name().equals(form)) && laws.contains(Law.monoidic.name()))
+                        profile.adjMonoidFold = true;
+                }
+                final fURI inverse = null == keyed ? null : inverseOf(keyed);
+                if (pastSeed
+                        && ((null != inverse && null != priorName && priorName.equals(inverse.name()))
+                        || (null != priorInverse && priorInverse.name().equals(name))))
+                    profile.adjInverse = true;
+                priorName = name;
+                priorInverse = inverse;
+                pastSeed = true;
+            }
+            return profile;
+        }
+
+        /**
+         * The declared opposing edge of the keyed instruction, read from its own entry; null when none. The
+         * one residue the morphism does not yet surface eagerly (it sits in the lazy {@code analysis} block),
+         * so it is read off the carried n-tid rather than forcing the analysis.
+         */
+        private static fURI inverseOf(final Inst keyed) {
+            final LawTable.Entry entry = LawTable.lawsOf(keyed.tid());
+            return null == entry ? null : entry.inverse();
+        }
+
+        /**
+         * Whether the operand's type models any algebraic theory -- memoized per type, since a chain's
+         * instructions overwhelmingly share their operand types.
+         */
+        private static boolean models(final Type operand, final Map<Type, Boolean> cache) {
+            return cache.computeIfAbsent(operand, t -> !TheoryHelper.instances(t).jvm().isEmpty());
+        }
+
+        /**
+         * Whether the declaration's opposing edge is the given op -- one side of an adjacent inverse pair.
+         */
+        private static boolean opposes(final LawTable.Declared declared, final fURI op) {
+            return null != declared && null != declared.entry().inverse() && declared.entry().inverse().basePath().equals(op);
+        }
     }
 
     /**
