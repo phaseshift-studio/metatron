@@ -419,7 +419,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 <h2>the category graph (<code>/m/math/cat</code>)</h2>
 <p><code>/m/math/cat</code> realizes types and insts as a <strong>category</strong>: types are the objects (the vertices), insts are the
 morphisms (the edges), and an inst's dom/rng are its source and target endpoints.</p>
-<pre><code class="language-mtron">mtron&gt; import(/m/math/cat)
+<pre><code class="language-mtron">mtron&gt; import(/m/math/cat,cat)
 ...
 </code></pre>
 <p>The lift is a type constructor. An <em>object</em> is constructed from a type and a <em>morphism</em> from an inst. The cat-graph is
@@ -761,9 +761,13 @@ every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value c
 <strong>normal form prints as its own certificate</strong> — <code>[path::[obj=&gt;...]]</code>, no out-edges, zero matches attempted. A
 traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==&gt;[fail::[inst apply failure: unable to convert mcode to rec::T [Obj&lt;649&gt;] (at /m/inst/as) [Obj&lt;649&gt;]]]
+==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
+           theory_unit_removal=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+           theory_involution=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+           inverse_cancellation=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+           derivation_contraction=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;theory_involution]==[&gt;&gt;theory_unit_removal]
-==&gt;[fail::[inst apply failure: unable to convert mcode to rec::T [Obj&lt;649&gt;] (at /m/inst/as) [Obj&lt;649&gt;]]]
+==&gt;[path::[obj=&gt;start(5)]]
 </code></pre>
 <p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand
@@ -785,7 +789,47 @@ real match. A rule the pruner does not know is never pruned.</p>
 at the type level, and the laws/forms/theories a rule consults sit on the word itself: <code>*…/obj/1/law</code>,
 <code>*…/obj/2/analysis/inverse</code> walk into the category from inside the vertex.</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==&gt;[fail::[inst apply failure: unable to convert mcode to rec::T [Obj&lt;649&gt;] (at /m/inst/as) [Obj&lt;649&gt;]]]
+==&gt;[abstraction::[obj=&gt;[morphism[start]::[name=&gt;start,
+                                          form=&gt;mapper,
+                                          class=&gt;[endo],
+                                          src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                                          trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                                          analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+                                          obj=&gt;start(5)],
+                        morphism[plus?rng=int&amp;dom=int]::[
+                         name=&gt;plus,
+                         form=&gt;mapper,
+                         class=&gt;[endo],
+                         src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                         trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                         analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+                         obj=&gt;plus?rng=int&amp;dom=int(0),
+                         ...(1 more)],
+                        morphism[neg?rng=int&amp;dom=int]::[
+                         name=&gt;neg,
+                         form=&gt;mapper,
+                         class=&gt;[endo,
+                                 iso,
+                                 auto,
+                                 section,
+                                 retraction,
+                                 mono,
+                                 epi],
+                         src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                         trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                         analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+                         obj=&gt;neg?rng=int&amp;dom=int(),
+                         ...(1 more)],
+                        morphism[neg?rng=int&amp;dom=int]::[
+                         name=&gt;neg,
+                         form=&gt;mapper,
+                         class=&gt;[endo,
+                                 iso,
+                                 auto,
+                                 section,
+                                 retraction,
+                                 mono,
+   ...
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstract vertex stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so an edge there is a claim
