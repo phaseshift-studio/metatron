@@ -19,7 +19,7 @@ description: |
 morphisms (the edges), and an inst's dom/rng are its source and target endpoints.
 
 ```mtron_pre
-[NO_OUTPUT] import(/m/math/cat)
+[NO_OUTPUT] import(/m/math/cat,cat)
 ```
 
 The lift is a type constructor. An _object_ is constructed from a type and a _morphism_ from an inst. The cat-graph is

@@ -19,7 +19,7 @@ description: |
 morphisms (the edges), and an inst's dom/rng are its source and target endpoints.
 
 ```mtron
-mtron> import(/m/math/cat)
+mtron> import(/m/math/cat,cat)
 ...
 ```
 The lift is a type constructor. An _object_ is constructed from a type and a _morphism_ from an inst. The cat-graph is
@@ -369,9 +369,13 @@ traversal chain is a derivation witness: each step is labeled by the rule that j
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==>[fail::[inst apply failure: unable to convert mcode to rec::T [Obj<649>] (at /m/inst/as) [Obj<649>]]]
+==>[path::[obj=>start(5).plus(0).neg().neg(),
+           theory_unit_removal=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
+           theory_involution=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
+           inverse_cancellation=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
+           derivation_contraction=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>}]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>theory_involution]==[>>theory_unit_removal]
-==>[fail::[inst apply failure: unable to convert mcode to rec::T [Obj<649>] (at /m/inst/as) [Obj<649>]]]
+==>[path::[obj=>start(5)]]
 ```
 **A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a *type-part* (laws, forms, adjacency of classifications) and a *value-residue* (operand
@@ -393,7 +397,47 @@ at the type level, and the laws/forms/theories a rule consults sit on the word i
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==>[fail::[inst apply failure: unable to convert mcode to rec::T [Obj<649>] (at /m/inst/as) [Obj<649>]]]
+==>[abstraction::[obj=>[morphism[start]::[name=>start,
+                                          form=>mapper,
+                                          class=>[endo],
+                                          src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+                                          trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+                                          analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+                                          obj=>start(5)],
+                        morphism[plus?rng=int&dom=int]::[
+                         name=>plus,
+                         form=>mapper,
+                         class=>[endo],
+                         src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+                         trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+                         analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+                         obj=>plus?rng=int&dom=int(0),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[endo,
+                                 iso,
+                                 auto,
+                                 section,
+                                 retraction,
+                                 mono,
+                                 epi],
+                         src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+                         trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+                         analysis=>!inst?rng=#&dom=#(<#>::T){<j>},
+                         obj=>neg?rng=int&dom=int(),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[endo,
+                                 iso,
+                                 auto,
+                                 section,
+                                 retraction,
+                                 mono,
+   ...
 ```
 ### may / must — the fiber modality
 
