@@ -1114,13 +1114,15 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             if (applied.isFail() && null != applied.failValue())
                                 applyNote = "\n" + indent("predicate apply failed: " + applied.failValue().getMessage(), 2);
                             else if (applied.isNoObj())
-                                applyNote = "\n" + indent("predicate apply answered noobj on re-run: the mismatch is in predicate execution, not the fields", 2);
+                                applyNote = "\n" + indent("predicate apply failed on execution", 2);
                             else if (!obj.test(applied))
-                                applyNote = "\n" + indent("predicate apply answered a coerced obj the original does not test against: " + applied, 2);
+                                applyNote = "\n" + indent("predicate apply failed on coercion: " + applied, 2);
+                            else if (objType.vid().hasPoly())
+                                applyNote = "\n" + indent("predicate apply failed on poly", 2);
                             else
-                                applyNote = "\n" + indent("predicate apply PASSED on re-run: the failing verdict was computed under a different registry state than this message", 2);
+                                applyNote = "\n" + indent("predicate apply failed on corrupted instset", 2);
                         } catch (final RuntimeException whyless) {
-                            applyNote = "\n" + indent("predicate apply threw on re-run: " + whyless.getMessage(), 2);
+                            applyNote = "\n" + indent("predicate apply failed on re-run: " + whyless.getMessage(), 2);
                         }
                         // the type and the walk that failed are the whole content of this message, and both are
                         // deep structures.  Rendered through toString() each collapsed onto ONE line — the type

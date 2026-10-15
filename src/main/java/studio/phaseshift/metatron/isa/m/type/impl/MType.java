@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -33,8 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.Tokens.BASE_TYPES;
-import static studio.phaseshift.metatron.Tokens.REC_TID;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 
 
@@ -88,6 +86,13 @@ public class MType extends MObj implements Type {
      * a single call stack; two threads resolving the same name are independent and both read.
      */
     private static final ThreadLocal<Set<String>> RESOLVING = ThreadLocal.withInitial(LinkedHashSet::new);
+    private static final Set<fURI> POLY_BASE_TYPES = Set.of(LST_TID, REC_TID, REL_TID);
+
+    private static Type checkPolyPoly(final Type type) {
+        if (!type.vid().poly().isEmpty() && !POLY_BASE_TYPES.contains(type.baseTypeID().basePath()))
+            throw MTronException.of("only poly types can have polynomials: %s X=> %s", type.vid().basePath(), type.vid().poly());
+        return type;
+    }
 
     private static Type T0(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
         final fURI bigTID = null == tid ? vid.big() : tid.big();
@@ -95,9 +100,7 @@ public class MType extends MObj implements Type {
         final fURI checkID = null == bigVID ? bigTID : bigVID;
         assert checkID != null;
         if (checkID.isGeneric())
-            return new MType(Tuple.Pair.with(null, null), checkID, checkID);
-        if (!checkID.poly().isEmpty() && !checkID.basePath().equals(Tokens.REL_TID) && !checkID.basePath().equals(Tokens.LST_TID) && !checkID.basePath().equals(REC_TID))
-            throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
+            return checkPolyPoly(new MType(Tuple.Pair.with(null, null), checkID, checkID));
         // THE IN-FLIGHT BRAKE. the registry read below can re-enter this very resolution: a space read
         // walks its q-proc list, which constructs objs whose type checks resolve this same name, which
         // reads the registry, which walks the q-proc list... the memoized first lap broke that cycle BY
@@ -117,9 +120,9 @@ public class MType extends MObj implements Type {
                 if (obj.isType()) {
                     if (checkID.c().equals(obj.c()) &&
                             Objects.equals(obj.asType().predicate(), predicate) &&
-                            Objects.equals(obj.asType().constructor(), constructor))
-                        return obj.asType();
-                    else {
+                            Objects.equals(obj.asType().constructor(), constructor)) {
+                        return checkPolyPoly(obj.asType());
+                    } else {
                         // A request that names BOTH a base type and a vid (X::T@name) wins over the
                         // registered form: a re-registration may rebase a name onto a different type
                         // (mortal -> person::T[...]@mortal after mortal was human::T[...]@mortal), and
@@ -132,9 +135,9 @@ public class MType extends MObj implements Type {
                         // The coefficient is folded into the tid BEFORE construction so the constructor's
                         // canonical-only registration rule sees the final coefficient -- a variant must not
                         // register itself after the fact.
-                        return new MType(Tuple.Pair.with(
+                        return checkPolyPoly(new MType(Tuple.Pair.with(
                                 null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                                null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), derivedTID, derivedVID).as(); // coefficient specific type doesn't exist, create it
+                                null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), derivedTID, derivedVID).as()); // coefficient specific type doesn't exist, create it
                     }
                 }
             } finally {
@@ -142,14 +145,15 @@ public class MType extends MObj implements Type {
             }
         }
         // final boolean isBaseType = ;
-        if (BASE_TYPES.contains(checkID.basePath()) || bigTID.basePath().equals(ALL))
-            return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID);
+        if (BASE_TYPES.contains(checkID.basePath()) || bigTID.basePath().equals(ALL)) {
+            return checkPolyPoly(new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID));
+        }
         //if (Objects.equals(bigVID, bigTID))
         //    return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
         //if ((null != vid && null != tid) || checkID.hasPattern())
         //    return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
         //throw MTronException.of("type not found: %s@%s", tid, vid); // TODO: a few cases fail --namely around equality checks. fix and then replace the bottom with this/
-        return new MType(Tuple.Pair.with(predicate, constructor), bigTID, null == bigVID ? checkID : bigVID)/*.c(checkID.c()).as()*/;
+        return checkPolyPoly(new MType(Tuple.Pair.with(predicate, constructor), bigTID, null == bigVID ? checkID : bigVID))/*.c(checkID.c()).as()*/;
     }
 
     @Override

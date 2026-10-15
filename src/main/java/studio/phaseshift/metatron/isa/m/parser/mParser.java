@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -160,6 +161,7 @@ public class mParser {
 
     static {
         new mInstSet().sugars().forEach(mParser::addSugar);
+        new catInstSet().sugars().forEach(mParser::addSugar);
         // Cache the sugar parser after all sugars are loaded
         cachedSugarParser = PARSERS.isEmpty() ? null : choice(PARSERS.toArray(new Parser[0]));
         // Initialize all parsers first

@@ -133,10 +133,10 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
     }
 
     @Test
-    void testClientqNamesTheInboundPeer() throws Exception {
+    void testInboundPeerName() throws Exception {
         final Network network = Machine.current().network();
-        final Obj dialed = network.connect(this.dialURI().q(CLIENTQ, "builder2"), WS_CLIENT_TID);
-        // IDENTITY RIDES THE DIAL: the ?clientq processor on the connection uri IS the exchange — no
+        final Obj dialed = network.connect(this.dialURI().q(NAME, "builder2"), WS_CLIENT_TID);
+        // IDENTITY RIDES THE DIAL: the ?name processor on the connection uri IS the exchange — no
         // announce message, no anonymous-then-upgrade — so the listener's co-mount mints a NAMED peer
         // the moment the socket opens (the accept runs on the server's worker thread, hence the wait).
         final long deadline = System.currentTimeMillis() + 2000;
@@ -144,14 +144,14 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
         while (System.currentTimeMillis() < deadline && !inbound.isRec()) {
             inbound = network.peers().elements()
                     .filter(kv -> kv.first().isUri() && !kv.first().uriValue().equals(this.service()))
-                    .map(kv -> (Obj) kv.second())
+                    .map(kv -> kv.second())
                     .filter(Obj::isRec)
                     .findFirst().orElse(noobj());
             if (!inbound.isRec())
                 Thread.sleep(50);
         }
         assertEquals(str("builder2"), inbound.asRec().<Obj>at(uri(NAME)),
-                "the ?clientq processor names the inbound peer on accept");
+                "the ?name processor names the inbound peer on accept");
         // and the ?q processor never leaks into the roster: the dial's own peer keys on the BARE authority
         assertEquals(this.service(), dialed.asRec().<Obj>at(uri(AUTHORITY)).uriValue(),
                 "service keys are q-stripped — the dial's processors belong to the dial, not the key");

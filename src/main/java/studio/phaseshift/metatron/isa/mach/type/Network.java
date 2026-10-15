@@ -178,7 +178,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     default Obj connect(final fURI dialURI, final fURI handler) {
-        // CONNECT IS SUGAR. The idiomatic act is CONSTRUCTION: ws_client::[pattern=><ws://host/mtron?clientq=me>]
+        // CONNECT IS SUGAR. The idiomatic act is CONSTRUCTION: ws_client::[pattern=><ws://host/mtron?name=me>]
         // — the client's constructor dials, and on success REGISTERS ITSELF with the network, exactly as a
         // space's constructor indexes itself into Memory (memspace::[pattern=>xyz/#]). connect() remains for
         // the caller that has a uri and a dialer vid rather than a type literal: it constructs through
@@ -253,11 +253,11 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * listener retracts it with {@link #disconnect(fURI)} when the socket closes.
      */
     default Obj accept(final fURI remote, final Obj session) {
-        // IDENTITY RIDES THE DIAL: ws://host:port/mtron?clientq=builder2 — the ?clientq processor on
+        // IDENTITY RIDES THE DIAL: ws://host:port/mtron?name=builder2 — the ?name parameter on
         // the connection uri IS the identity exchange (no announce message, no anonymous state to
         // upgrade), so a server that exposes the full connection uri mints a NAMED peer on accept.
-        final String name = remote.qMap().get(CLIENTQ);
-        final fURI service = remote.path(List.of()).removeQ(CLIENTQ);
+        final String name = remote.qMap().get(NAME);
+        final fURI service = remote.path(List.of()).removeQ(NAME);
         final Obj existing = this.peers().elements()
                 .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
                 .map(Rel::second)
@@ -296,7 +296,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     default Obj disconnect(final fURI authority) {
-        final fURI service = authority.path(List.of()).removeQ(CLIENTQ);
+        final fURI service = authority.path(List.of()).removeQ(NAME);
         final Rec peers = this.peers();
         final Obj keyed = peers.elements()
                 .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
@@ -479,10 +479,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
         /**
          * The service KEY for any client-facing uri: bare authority, with exactly the processor the dial
-         * spends (?clientq) retracted — every other ?q rides through.
+         * spends (?name) retracted — every other ?q rides through.
          */
         public static fURI serviceOf(final fURI uri) {
-            return uri.path(java.util.List.of()).removeQ(studio.phaseshift.metatron.Tokens.CLIENTQ);
+            return uri.path(java.util.List.of()).removeQ(studio.phaseshift.metatron.Tokens.NAME);
         }
 
         /**

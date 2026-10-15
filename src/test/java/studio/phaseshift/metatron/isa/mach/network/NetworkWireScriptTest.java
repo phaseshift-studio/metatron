@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
@@ -67,7 +66,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * <pre>
  *   [WS_SERVER a]          start a wsSpace on a fresh port with the /mtron route; binds {{a}} = ws://localhost:port
  *   [AWAIT_PEERS n]        wait (max 3s) until this machine holds exactly n peers — the inbound co-mount is async
- *   [AWAIT_NAMED name]     wait (max 3s) until an inbound peer carries name — identity rides the dial (?clientq)
+ *   [AWAIT_NAMED name]     wait (max 3s) until an inbound peer carries name — identity rides the dial (?name)
  *   [PROBE_PEERS]          /m/networkProbe/peers  = how many peers the machine holds
  *   [PROBE_NAMED name]     /m/networkProbe/named  = 1 iff some peer is named name
  *   [PROBE_Q_LEAK]         /m/networkProbe/qleak  = 1 iff any roster KEY carries a ?q processor (must stay 0)
@@ -296,14 +295,14 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     /**
      * THE WIRE: the loop equalities carried over a real websocket — read-through equals the far side\u0027s local
      * read, write-through lands at the far side — plus the two facts the connection itself establishes: the
-     * ?clientq identity names the inbound co-mount, and connect is ensure-peered (a second dial of the same
+     * ?name identity names the inbound co-mount, and connect is ensure-peered (a second dial of the same
      * service answers the existing peer, never a second socket).
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[CONNECT {{a}}/mtron?clientq=scripted {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?name=scripted {{ws_client}}]",
             "[STATE] </t/wire/x> -> 42",
             "*<{{a}}/t/wire/x> % 42                          [-- read through the wire == the far side local read --]",
             "[STATE] <{{a}}/t/wire/y> -> 7",
@@ -311,7 +310,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "[AWAIT_PEERS 2]                                     [-- the dialed peer + the inbound co-mount --]",
             "[AWAIT_NAMED scripted]",
             "[PROBE_NAMED scripted]",
-            "*/m/networkProbe/named % 1                      [-- ?clientq on the dial named the inbound peer --]",
+            "*/m/networkProbe/named % 1                      [-- ?name on the dial named the inbound peer --]",
             "[PROBE_Q_LEAK]",
             "*/m/networkProbe/qleak % 0                      [-- the processor was spent, never leaked into a key --]",
             "[CONNECT {{a}}/mtron {{ws_client}}]",
@@ -332,8 +331,8 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
             "[WS_SERVER b]",
-            "[CONNECT {{a}}/mtron?clientq=alpha {{ws_client}}]",
-            "[CONNECT {{b}}/mtron?clientq=beta {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?name=alpha {{ws_client}}]",
+            "[CONNECT {{b}}/mtron?name=beta {{ws_client}}]",
             "[AWAIT_PEERS 4]                                     [-- two dialed + two inbound --]",
             "[AWAIT_NAMED alpha]",
             "[AWAIT_NAMED beta]",
@@ -405,26 +404,26 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     /**
      * IDENTITY AND ALIASING AT THE BOUNDARY: localhost and 127.0.0.1 are the SAME service (ensure-peered
      * collapses loopback aliases — one socket, not two); ensure-peered also means a second dial\u0027s
-     * ?clientq is never spoken (the socket already exists, so the first identity stands); and a
+     * ?name is never spoken (the socket already exists, so the first identity stands); and a
      * disconnect-reconnect cycle mints a FRESH reach that works.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[CONNECT {{a}}/mtron?clientq=first {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?name=first {{ws_client}}]",
             "[AWAIT_NAMED first]",
             "[CONNECT {{a_ip}}/mtron {{ws_client}}]",
             "[PROBE_PEERS]",
             "*/m/networkProbe/peers % 2                       [-- 127.0.0.1 IS localhost: the alias collapsed to the existing peer --]",
-            "[CONNECT {{a}}/mtron?clientq=second {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?name=second {{ws_client}}]",
             "[PROBE_NAMED second]",
             "*/m/networkProbe/named % 0                       [-- ensure-peered: the second dial never spoke, so its identity never crossed --]",
             "[PROBE_NAMED first]",
             "*/m/networkProbe/named % 1                       [-- the first identity stands --]",
             "[DISCONNECT {{a}}]",
             "[AWAIT_PEERS 0]",
-            "[CONNECT {{a}}/mtron?clientq=reborn {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?name=reborn {{ws_client}}]",
             "[STATE] </t/wire/again> -> 7",
             "*<{{a}}/t/wire/again> % 7                        [-- a reconnect after hang-up is a fresh, working reach --]",
             "[AWAIT_NAMED reborn]                                 [-- with a fresh identity --]"
@@ -439,8 +438,8 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "[WS_SERVER a]",
             "[WS_SERVER b]",
             "[CONNECT loop://self]",
-            "[CONNECT {{a}}/mtron?clientq=alpha {{ws_client}}]",
-            "[CONNECT {{b}}/mtron?clientq=beta {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?name=alpha {{ws_client}}]",
+            "[CONNECT {{b}}/mtron?name=beta {{ws_client}}]",
             "[AWAIT_PEERS 5]                                     [-- loop + two dialed + two inbound --]",
             "[AWAIT_NAMED alpha]",
             "[AWAIT_NAMED beta]",
@@ -463,7 +462,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?clientq=ctor>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=ctor>]",
             "[AWAIT_PEERS 2]                                     [-- the ctor indexed itself: dialed + inbound --]",
             "[AWAIT_NAMED ctor]                                  [-- identity rode the pattern --]",
             "[STATE] </t/wire/c> -> 42",

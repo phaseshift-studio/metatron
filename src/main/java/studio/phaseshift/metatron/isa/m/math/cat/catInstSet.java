@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -37,14 +37,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -60,9 +57,12 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class catInstSet extends AbstractInstSet {
 
     public static final fURI CAT_ISA_TID = MATH_ISA_TID.extend("cat");
+    public static final fURI CAT_INST_TID = CAT_ISA_TID.extend("inst");
+    public static final fURI CAT_C_INST_TID = CAT_INST_TID.extend("c");
     public static final fURI CATEGORY_TID = CAT_ISA_TID.extend("category");
     public static final fURI MORPHISM_TID = CATEGORY_TID.extend("morphism");
     public static final fURI OBJECT_TID = CATEGORY_TID.extend("object");
+    public static final fURI PATH_TID = CATEGORY_TID.extend("path");
     public static final fURI THEORY_TID = CAT_ISA_TID.extend("theory");
     public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
     public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
@@ -83,11 +83,17 @@ public class catInstSet extends AbstractInstSet {
 
 
     public static Type CATEGORY_TYPE;
-
+    /**
+     * {@code object::T} — the vertex block: the algebraic theories the object models, keyed by the
+     * user's name for each theory instance (an object can model several — even several of one theory)
+     */
+    public static Type OBJECT_TYPE;
     /**
      * {@code morphism::T} — the edge block: the morphism's own algebra
      */
     public static Type MORPHISM_TYPE;
+    public static Type PATH_TYPE;
+
 
     /// //////////////////////////////////////////////////////////////
     // the algebraic theories — a theory is a named tuple of op-edges (role => op-tid); algebraic_theory::T
@@ -128,14 +134,19 @@ public class catInstSet extends AbstractInstSet {
      */
     public static Type CLASS_TYPE;
 
-    /**
-     * {@code object::T} — the vertex block: the algebraic theories the object models, keyed by the
-     * user's name for each theory instance (an object can model several — even several of one theory)
-     */
-    public static Type OBJECT_TYPE;
-
 
     public record Finding(List<Inst> insts, Position kind, String reason) {
+    }
+
+    public static Inst instLawLambda = instLambda((lhs, inst) -> {
+        if (inst.tid().basePath().name().equals(Law.floatable)) {
+
+        }
+        return noobj();
+    });
+
+    public static Inst createInstLawLambda(final fURI id) {
+        return instLawLambda.tid(f(Law.valueOf(id.name()).name()).q(id.qMap()).poly(id.poly()));
     }
 
 
@@ -208,7 +219,7 @@ public class catInstSet extends AbstractInstSet {
                                                 block.put(uri(LAW), entry.laws());
                                             if (null != entry && null != entry.derivation())
                                                 block.put(uri(DERIVATION), rec(uri(LHS), entry.derivation().lhs(), uri(RHS), entry.derivation().rhs()));
-                                            return rec(block).clone().selfTID(MORPHISM_TID);
+                                            return rec(block).clone().selfTID(MORPHISM_TID.poly(inst.typeId()));
                                         })
                                         .create(),
                                 mutableMap(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (^{\\ast}, 1),\\; \\mathrm{flatmapper} = (1, ^{+}),\\; \\ldots\\)",
@@ -248,13 +259,37 @@ public class catInstSet extends AbstractInstSet {
                                                 final Obj insts = Machine.read(f("/m/inst/+")/*.dom(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())*/.rng(obj.vid())); // TODO: constrain to instset
                                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
                                             })).tryToInst(), MUTABLE);
-                                            return object.selfTID(OBJECT_TID);
+                                            return object.selfTID(OBJECT_TID.poly(obj.typeId()));
                                         })
                                         .create(), Map.of(
                                         uri(MORPHED_TO), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)",
                                         uri(MORPHED_FROM), "the morphisms targeted at this object (in-edges): \\(\\mathrm{morphed\\_from}(A) = \\{f : \\mathrm{trgt}(f) = A\\}\\)",
                                         uri(LAW), "the structural theories \\(\\mathcal{T}\\) the object models"),
                                 "a type as a categorical object incident to targeting morphisms and sourcing morphisms"),
+                        docWrap(PATH_TYPE = Type.Builder.build()
+                                        .tid(CATEGORY_TID)
+                                        .vid(PATH_TID)
+                                        .isaPredicate(rec(
+                                                uri(OBJ), CODE_TYPE,
+                                                uri(REWRITE).maybe().asUri(), lst(ALL_TYPE),
+                                                uri(LAW).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)))
+                                        .constructor(arg -> {
+                                            final Rec path = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
+                                            final Code code = path.at(OBJ);
+                                            // a type with no address models no object: answer noobj (the caller's
+                                            // orElse already means "no theories"), never raise — a fail here is
+                                            // stacked into fail space AND, mid-rewrite, aborts the rewrite that asked
+                                            if (!code.isCode())
+                                                return noobj();
+                                            //path.at(LAW, LawTable.typeLawsOf(obj.asType()), MUTABLE);
+                                            path.at(REWRITE, auto_(instLambda((ignore, i) -> {
+                                                return code;
+                                            })).tryToInst(), MUTABLE);
+                                            return path.selfTID(PATH_TID);
+                                        })
+                                        .create(), Map.of(
+                                        uri(REWRITE), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)"),
+                                "code as a categorical path incident to iso-semantic rewritten forms"),
                         docWrap(THEORY_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
                                 .vid(THEORY_TID)
@@ -339,7 +374,23 @@ public class catInstSet extends AbstractInstSet {
                                 .create(), "the theory of near-rings \\(\\langle N, +, \\cdot, 0 \\rangle\\): \\(+\\) a group, \\(\\cdot\\) a monoid, one-sided distributivity, no multiplicative \\(1\\) (reserved for barrier types)")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
-                        instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs))),
+                        instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs)),
+                        instC(AS_INST_TID.dom(ALL).rng(PATH_TID), lst(PATH_TYPE), (lhs, inst) -> PATH_TYPE.constructor().apply(lhs)),
+                        instC(CAT_C_INST_TID.dom(ALL.maybe()).rng(CODE_TID.maybe()), lst(URI_TYPE), (lhs, inst) -> {
+                            final List<Inst> newCode = lhs.isNoObj() ?
+                                    new ArrayList<>() :
+                                    new ArrayList<>(lhs.isCode() ?
+                                            lhs.asCode().insts() :
+                                            lhs.isInst() ?
+                                                    lhs.tid().basePath().equals(BLOCK_INST_TID) ?
+                                                            lhs.asInst().arg(0).asCall().insts() :
+                                                            (lhs.tid().basePath().equals(CAT_ISA_TID.extend("inst").extend("c")) ?
+                                                                    List.of(lhs.apply().asInst().c(lhs.c())) :
+                                                                    List.of(lhs.asInst())) :
+                                                    List.of(start_(lhs).tryToInst().asInst()));
+                            newCode.add(createInstLawLambda(inst.arg(0).uriValue()).c(inst.arg(0).c()));
+                            return block_(code(newCode)).tryToInst();
+                        })),
                 uri(REWRITE), lst(
                         /* =====================================================================================
                          * (4) THE GRAPH/RELATION-DRIVEN FAMILY — next slice, deliberately NOT wired yet.
@@ -530,9 +581,16 @@ public class catInstSet extends AbstractInstSet {
                                         out = contract(out, d);
                                     return code(out);
                                 }), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)")
-        ))));
+                ))));
         docWrap(this, "categorical realization of types and insts as objects and morphisms");
         super.setup();
+    }
+
+    @Override
+    public Set<Sugar> sugars() {
+        return new LinkedHashSet<>(List.of(
+                //   Sugar.prefix("=?=", List.of(WHERE_INST_TID), 1),
+                Sugar.prefix("^", List.of(CAT_C_INST_TID), 1)));
     }
 
 

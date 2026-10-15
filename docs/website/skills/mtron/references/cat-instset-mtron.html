@@ -433,32 +433,33 @@ same declarations are what the rewriter stage consumes (see <em>the declared rew
 <p><strong>IMPORTANT</strong>: when referencing an instruction directly in a <code>console::T</code>, a <code>block</code> inst (sugar'd <code>|</code>) prevents the
 instruction from being evaluated.</p>
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T)
-==&gt;object::[obj=&gt;int::T,
-            law=&gt;[ring=&gt;ring_theory::[add=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
-                                      mul=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
-                                      zero=&gt;0,
-                                      one=&gt;1],
-                  add_group=&gt;group_theory::[
-                   op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
-                   id=&gt;0,
-                   inv=&gt;!*/m/inst/neg?rng=/m/int&amp;dom=/m/int],
-                  add_monoid=&gt;monoid_theory::[
-                   op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
-                   id=&gt;0],
-                  mult_monoid=&gt;monoid_theory::[
-                   op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
-                   id=&gt;1]],
-            morphed_to=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
-            morphed_from=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}]
+==&gt;object[int]::[obj=&gt;int::T,
+                 law=&gt;[ring=&gt;ring_theory::[add=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                                           mul=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
+                                           zero=&gt;0,
+                                           one=&gt;1],
+                       add_group=&gt;group_theory::[
+                        op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                        id=&gt;0,
+                        inv=&gt;!*/m/inst/neg?rng=/m/int&amp;dom=/m/int],
+                       add_monoid=&gt;monoid_theory::[
+                        op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                        id=&gt;0],
+                       mult_monoid=&gt;monoid_theory::[
+                        op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
+                        id=&gt;1]],
+                 morphed_to=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+                 morphed_from=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}]
 mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
-==&gt;morphism::[name=&gt;plus,
-              form=&gt;mapper,
-              class=&gt;[endo],
-              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-              analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-              obj=&gt;plus?rng=int&amp;dom=int(int::T),
-              ...(1 more)]
+==&gt;morphism[plus?rng=int&amp;dom=int]::[
+    name=&gt;plus,
+    form=&gt;mapper,
+    class=&gt;[endo],
+    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
+    obj=&gt;plus?rng=int&amp;dom=int(int::T),
+    ...(1 more)]
 </code></pre>
 <h3>the two blocks</h3>
 <h4>the object block — <code>object::T</code> (a vertex)</h4>
