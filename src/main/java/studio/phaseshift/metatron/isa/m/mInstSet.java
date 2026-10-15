@@ -1240,7 +1240,6 @@ public class mInstSet extends AbstractInstSet {
     @Override
     public Set<Sugar> sugars() {
         return new LinkedHashSet<>(List.of(
-                //   Sugar.prefix("=?=", List.of(WHERE_INST_TID), 1),
                 Sugar.prefix("%==", List.of(GROUP_INST_TID), 1),
                 Sugar.prefix("==", List.of(SELECT_INST_TID), 1),
                 Sugar.prefix("?~", List.of(IS_INST_TID, SORTA_INST_TID), 1),
@@ -1250,7 +1249,6 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("?<=", List.of(IS_INST_TID, LTE_INST_TID), 1),
                 Sugar.prefix("?<", List.of(IS_INST_TID, LT_INST_TID), 1),
                 Sugar.prefix("?!=", List.of(IS_INST_TID, NEQ_INST_TID), 1),
-                Sugar.prefix("?~", List.of(SORTA_INST_TID), 1),
                 Sugar.prefix("?", List.of(ISA_INST_TID), 1),
                 Sugar.prefix("!@", List.of(AUTO_AT_INST_TID), 1),
                 Sugar.prefix("@", List.of(AT_INST_TID), 1),
@@ -1279,7 +1277,7 @@ public class mInstSet extends AbstractInstSet {
                 //Sugar.prefix("=", List.of(EQ_INST_TID), 1),
                 //  Sugar.wrap("(", ")", List.of(GET_INST_TID), 1),
                 //Sugar.prefix("./", List.of(GET_INST_TID), 1),
-                Sugar.prefix("^*", List.of(M_ISA_INST_TID.extend("auto_to")), 0),
+                // Sugar.prefix("^*", List.of(M_ISA_INST_TID.extend("auto_to")), 0),
                 Sugar.prefix("!*", List.of(AUTO_FROM_INST_TID), 1),
                 Sugar.prefix("!", List.of(AUTO_INST_TID), 1),
                 // Sugar.prefix("~", List.of(THREAD_INST_TID), 1),

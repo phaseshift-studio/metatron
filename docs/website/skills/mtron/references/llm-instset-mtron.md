@@ -40,14 +40,20 @@ the workspace and a chat feature. Then:
 
 ```mtron
 mtron> [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
-==>fail::[parse error at lin... is t...   ^   could not parse at '[']@/sys/fail/383
+==>fail::[parse error at line 1, col 1:
+     [MAX_OUTPUT 10] @chatter.chat('what is t...
+     ^
+     could not parse at '[']@/sys/fail/383
 ```
 The `/usr/chatter/#` space serves a the default location for features to store their various constructions.
 
 ```mtron
 mtron> */usr/chatter/chat_result/+
 mtron> [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
-==>fail::[parse error at lin...resul...   ^   could not parse at '[']@/sys/fail/384
+==>fail::[parse error at line 1, col 1:
+     [MAX_OUTPUT 10] */usr/chatter/chat_resul...
+     ^
+     could not parse at '[']@/sys/fail/384
 ```
 **A tool is an instruction.** There is no tool registry to populate: anything callable *is* a tool, and `mTool`
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a `tool_feature` can

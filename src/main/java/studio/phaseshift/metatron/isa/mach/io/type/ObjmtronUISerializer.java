@@ -432,7 +432,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      */
     @Override
     public String writeFail(final Fail fail) {
-        final int max = this.clipFail();
+        final int max = Integer.MAX_VALUE;// this.clipFail();
         final StringBuilder sb = new StringBuilder();
         // handleIds' composition: a bracket for the fail, then one per distinct cause, then the
         // fail's own tid/vid -- which a fail rendered from a message alone would lose
@@ -442,7 +442,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         int left = max;
         while (current != null) {
             // one line per level: a newline inside a message is not a layout this renderer owns
-            final String message = null == current.message() ? "" : current.message().replace('\n', ' ');
+            final String message = null == current.message() ? "" : current.message();//.replace('\n', ' ');
             final Fail next = current.cause().orElse(null);
             // a level whose text is already inside the level above's is the same failure framed
             // twice, not a second cause — the plain renderer drops it and so does this

@@ -22,6 +22,8 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.Sugar;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -136,6 +138,10 @@ public interface InstSet extends Space, Machine.Component {
 
     Set<Inst> rewrites();
 
+    default Set<Sugar> sugars() {
+        return Set.of();
+    }
+
     /**
      * The address→tid edge of this instset: given a vid, return the tid of the
      * obj stored at that vid — for a type, its refinement (parent); for a
@@ -205,6 +211,7 @@ public interface InstSet extends Space, Machine.Component {
         // The REFER lives in the memory index now (BasicMemory.addSpace decides it), so this cannot do half the job
         // and no caller can skip it. The method stays as the SPELLING that says what mounting an ISA means.
         Machine.current().memory().addSpace(isa);
+        isa.sugars().forEach(mParser::addSugar);
     }
 
     static Stream<InstSet> importInstSetStream(final fURI vid) {

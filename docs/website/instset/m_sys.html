@@ -439,14 +439,6 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
                      pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/fsspace,
-                 space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/serialspace,
-                 rec::T[?[level=&gt;union(info,trace,warn,error,debug),
-   source=&gt;&lt;#&gt;::T,
-   message=&gt;str::T]]@/m/sys/log_entry,
-                 uri::T[][ctor?rng=dir&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/dir,
-                 uri::T[][ctor?rng=file&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/file,
-                 file::T@/m/dckr/image],
           const=&gt;[thread_executor::[stop=&gt;[,],
                                     run=&gt;[!*/thread/main]]@/sys/thread/executor],
           inst=&gt;[as?rng=bytes&amp;dom=uri(bytes::T){&lt;j&gt;},
@@ -460,7 +452,15 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
                  bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
                  sleep?rng=A{?}&amp;dom=A{?}(real::T@/m/math/time){&lt;j&gt;},
                  stdout?rng=#{?}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-                 stdin?rng=str&amp;dom=#{?}(){&lt;j&gt;}]]@/m/sys</code></pre>
+                 stdin?rng=str&amp;dom=#{?}(){&lt;j&gt;}],
+          type=&gt;[space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?rng=fsspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/fsspace,
+                 space::T[][ctor?rng=serialspace&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/space/serialspace,
+                 rec::T[?[level=&gt;union(info,trace,warn,error,debug),
+   source=&gt;&lt;#&gt;::T,
+   message=&gt;str::T]]@/m/sys/log_entry,
+                 uri::T[][ctor?rng=dir&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/dir,
+                 uri::T[][ctor?rng=file&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/sys/file,
+                 file::T@/m/dckr/image]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -695,10 +695,10 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
-  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
   <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=#{?}">
@@ -741,9 +741,9 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
-  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
   <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}">

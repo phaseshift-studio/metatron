@@ -125,7 +125,7 @@ public class MachineSwarmMigrationTest extends AbstractMetatronTest {
             LOG.warn("  halted: a=%s b=%s c=%s", pa.halted(), pb.halted(), pc.halted());
             throw e;
         }
-        assertEquals(jnt(774), result.stream().iterator().next(),
+        assertEquals(jnt(774), result,
                 "A folded its own partition with the partials B and C each reported to the mailbox it waits on");
     }
 }
