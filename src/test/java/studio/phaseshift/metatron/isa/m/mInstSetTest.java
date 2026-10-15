@@ -1219,6 +1219,14 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.plus(2).explain()>>per_inst>>1>>c_rng             % 1            % per-inst range coefficient",
             "1.plus(2).explain()>>format.count()                 % 1            % one report table (a bulk analysis dom applied it twice)",
             "1.plus(2).explain()>>format.type()                  % str::T       % the table is a plain str, not a str{2} multiplicity",
+            // THE REWRITE CHAIN IS WIRED — desc.rewrite used to be hardcoded noobj, so there was no way to reach the
+            // pre-analysis stage at all. Each row here fails on that older code. The COMPILED-vs-SUBMITTED staging
+            // itself cannot be exhibited in this suite: the only rules mounted here are /m's, and explain_analysis is
+            // registered AFTER them (id_removal runs first, so the snapshot it takes has already lost id()) — the
+            // chain only survives a stage boundary when a LATER-mounted ISA's rule does the collapsing, which is
+            // catInstSetTest.testExplainReportsTheCompiledChain's job.
+            "6.id().explain()>>desc>>rewrite>>desc>>insts        % 1            % desc.rewrite leads to the pre-analysis stage's explanation rec",
+            "6.id().explain()>>desc>>rewrite>>desc>>rewrite      % noobj        % ... and that rec terminates the chain",
     }, delimiter = '%')
     public void testExplain(final String code, final String expected, final String desc) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

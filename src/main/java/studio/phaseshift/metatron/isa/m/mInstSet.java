@@ -503,12 +503,14 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(EXPLANATION_TYPE,
                                 Map.of(
                                         uri(FORMAT), "lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively",
-                                        uri(DESC), "expression-level metadata: whole-expression dom/rng, inst count, and the rewrite chain — the next stage's explanation ({?}), none when the original submission is last",
+                                        uri(DESC), "expression-level metadata of the COMPILED chain: whole-expression dom/rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)",
                                         uri(PER_INST), "lst of per-instruction stage recs (op/dom/rng/args/f/form/c_dom/c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java/opaque)"),
                                 "a structured explanation of a resolved expression produced by explain()",
                                 "1.plus(2).explain()>>desc>>rng     [-- int — the type flowing out of the expression --]",
                                 "1.plus(2).explain()>>per_inst      [-- per-inst recs: [op=>start,args=>[1],form=>initial,c_dom=>0,c_rng=>1], [op=>plus,dom=>int,rng=>int,args=>[2],f=>'<j>',form=>mapper,c_dom=>1,c_rng=>1] --]",
-                                "1.plus(2).explain()>>format         [-- the str::T text table --]"),
+                                "1.plus(2).explain()>>format         [-- the str::T text table --]",
+                                "6.plus(0).explain()>>desc>>insts    [-- 1 — the reported chain is the COMPILED one, so the unit law already dropped plus(0) --]",
+                                "6.plus(0).explain()>>desc>>rewrite  [-- the SUBMITTED rec: >>insts is 2 (start, plus), the expression as written --]"),
                         docWrap(SPACE_TYPE, null, null, Map.of(
                                         uri(PATTERN), "the uri address region the space will manage",
                                         uri(QPROC).maybe(), "query processors (qproc) that augment space capabilities",
@@ -920,17 +922,33 @@ public class mInstSet extends AbstractInstSet {
                                     final Tuple.Pair<Integer, Inst> explainInst = IteratorUtil.indexedStream(insts.iterator()).filter(i -> i.get1().tid().basePath().equals(EXPLAIN_INST_TID)).findAny().orElse(null);
                                     if (null == explainInst || explainInst.get0() <= 0) return code;
                                     final List<Inst> preceding = new ArrayList<>(insts.subList(0, explainInst.get0()));
-                                    // capture the pre-collapse code by CLOSURE, not as an inst arg — an arg
+                                    // capture BOTH stages of the chain by CLOSURE, not as an inst arg — an arg
                                     // (even block-wrapped) is resolved/collapsed by the outer resolve, which
                                     // would strip id()/plus(0)/mult(1) before explain can be computed.
-                                    final Code precedingCode = MCode.of(preceding).resolve(noobj());
+                                    //
+                                    // SUBMITTED is the expression as written. COMPILED is that same chain through the
+                                    // compiler's own rewriter (Code.rewrite -> compiler().rewriter()), which is what
+                                    // actually runs — and therefore what explain() REPORTS. Capturing only SUBMITTED
+                                    // (all this once did) made explain() render the pre-collapse chain while the
+                                    // compiler collapsed it: the table then contradicted both the documented "prints
+                                    // the compiled code" and profile(), which measures that same 8 -> 2 reduction.
+                                    //
+                                    // each stage gets its OWN list: the fixpoint replaces its input's inst list in
+                                    // place (selfJVM), so a shared list would hand the submitted table the rewritten
+                                    // rows. The insts themselves are never mutated — a rule that retypes an inst
+                                    // builds a new one — so SUBMITTED keeps rendering what the user wrote.
+                                    final Code submitted = MCode.of(new ArrayList<>(preceding)).resolve(noobj());
+                                    final Code compiled = MCode.of(new ArrayList<>(preceding)).rewrite().resolve(noobj());
+                                    // a chain the laws can empty outright would leave no insts to describe — report
+                                    // the submitted stage in that case rather than tripping over an empty stage list
+                                    final Code reported = compiled.insts().isEmpty() ? submitted : compiled;
                                     final List<Inst> bundledCode = new ArrayList<>();
                                     // dom is maybe (not maybeSome), mirroring profile_analysis: one lhs in, exactly
                                     // one report out. see profile_analysis — a gather dom double-applied the report,
                                     // which here merged into a single explanation{2} and a double-width >>format.
                                     bundledCode.add(instC(M_ISA_INST_TID.extend("explain_analysis").dom(ALL.maybe()).rng(EXPLANATION_TID),
                                             lst(),
-                                            (lhs, inst) -> explainRec(precedingCode)));
+                                            (lhs, inst) -> explainRec(reported, submitted)));
                                     if (explainInst.get0() + 1 < insts.size()) {
                                         final Inst capInst = insts.get(explainInst.get0() + 1);
                                         bundledCode.add(capInst.dom(EXPLANATION_TYPE));
@@ -1006,12 +1024,13 @@ public class mInstSet extends AbstractInstSet {
     }
 
     /**
-     * Build the explanation::T rec of the instructions in {@code code}: expression-level
+     * Build the explanation::T rec of the COMPILED instructions in {@code code}: expression-level
      * metadata (desc), per-instruction stages (per_inst), and a lazily constructed format
-     * (today's text table). Terminal-free — suitable for use in rewrites and
-     * non-interactive contexts.
+     * (today's text table) — with the rewrite chain wired, {@code desc.rewrite} being the
+     * explanation of {@code submitted}, the chain as the user wrote it. Terminal-free — suitable
+     * for use in rewrites and non-interactive contexts.
      */
-    private static Rec explainRec(final Code code) {
+    private static Rec explainRec(final Code code, final Code submitted) {
         final List<Inst> insts = code.insts();
         // per-instruction stage records
         final List<Obj> perInstRecs = new ArrayList<>();
@@ -1027,15 +1046,17 @@ public class mInstSet extends AbstractInstSet {
                     uri(C_DOM), jnt(i.dom().c().min()),
                     uri(C_RNG), jnt(i.rng().c().min())));
         }
+        // rewrite-stage chain: this rec describes the COMPILED code, so it points BACK at the submitted
+        // expression's rec; that rec is the chain's last and terminates it (noobj). explain() therefore
+        // returns the HEAD of the chain — the stage that runs — and >>desc>>rewrite walks to what was written.
+        final Obj submittedRec = null == submitted ? noobj() : explainRec(submitted, null);
         return rec(
                 mutableMap(uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(explainTable(code)))),
                         uri(DESC), rec(
                                 uri(DOM), domRngValue(insts.getFirst().dom()),
                                 uri(RNG), domRngValue(insts.getLast().rng()),
                                 uri(INSTS), jnt(insts.size()),
-                                // rewrite-stage chain: a later stage's explanation will point at this rec (the
-                                // original submitted expression's); the original terminates the chain (noobj)
-                                uri(REWRITE), noobj()),
+                                uri(REWRITE), submittedRec),
                         uri(PER_INST), lst(perInstRecs)), EXPLANATION_TID, null);
     }
 
