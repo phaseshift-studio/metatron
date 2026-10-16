@@ -144,10 +144,17 @@
                         </div>
                     </li>
                     <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
                         <div class="click-to-copy" title="click to copy">
                             <span class="badge bg-primary">docker</span>
-                            <pre><code class="language-bash">docker run -d --name metatron \
-  -p 8555:8555 -p 8777:8777 \
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --group-add $(stat -c '%g' /var/run/docker.sock) \
   ghcr.io/phaseshift-studio/metatron:latest</code></pre>
@@ -816,9 +823,9 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/51
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/53
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/52
+==&gt;[body=&gt;'another one']@tbledoc:note/54
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;21
@@ -851,6 +858,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;46
 ==&gt;17
 ==&gt;26
+==&gt;53
 ==&gt;27
 ==&gt;35
 ==&gt;45
@@ -868,6 +876,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;13
 ==&gt;25
 ==&gt;14
+==&gt;54
 ==&gt;42
 ==&gt;5
 ==&gt;38
