@@ -1,0 +1,12 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& a_{x_1} \arrow{r} & b_1 \arrow {ddr} & \\
+& a_{x_2} \arrow{r} & b_2 \arrow{dr} & \\
+\! \arrow{r} \arrow{uur} \arrow{ur} \arrow{dr} \arrow{ddr} & \ldots \arrow{r} & \ldots \arrow{r} & \! .\\
+& a_{x_n} \arrow{r} & b_n \arrow{ur} & \\
+& (\bar{a_{x_1}}\bar{a_{x_2}} \ldots \bar{a_{x_n}}) \arrow{r} & b \arrow{uur} & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

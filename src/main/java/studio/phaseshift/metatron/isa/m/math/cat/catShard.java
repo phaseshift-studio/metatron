@@ -19,15 +19,22 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.parser.mFluent;
+import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import java.util.*;
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static studio.phaseshift.metatron.Tokens.INST;
+import static studio.phaseshift.metatron.Tokens.M_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 
 /**
@@ -58,11 +65,16 @@ public class catShard {
      * whatever followed the reducer stays home on the master's chain.
      */
     static Code shard(final Code code) {
+        if (Machine.current().network().peers().isEmpty())
+            return code;
+        if (code.insts().stream().anyMatch(i -> i.tid().hasQ("no_shard"))) {
+            return code;
+        }
         final List<Inst> insts = code.insts();
         // --- the shape guard: [initial, {*}elementwise, reducer] ---
-        if (3 > insts.size() || !START_INST_TID.equals(insts.get(0).tid().basePath()))
-            return code;                                            // needs a seeded chain
-        final List<Obj> seed = insts.get(0).args().lstValue();
+        if (3 > insts.size() || !START_INST_TID.equals(insts.getFirst().tid().basePath()))
+            return code;
+        final List<Obj> seed = insts.getFirst().arg(0).stream().toList();
         if (2 > seed.size())
             return code;                                            // one summand -- nothing to factor
         final Type carrier = catLiveness.carrier(code);
@@ -86,38 +98,36 @@ public class catShard {
         }
         if (1 > cut)
             return code;                                            // no anchor (Thm 17: nothing blocks)
+        final Inst reducer = insts.get(cut);
         // --- the world's contribution: the roster decides the fan-out ---
         final List<Obj> targets = shardTargets();
         if (targets.isEmpty())
             return code;                                            // a lone machine: the rule is the identity
         final int k = Math.min(targets.size(), seed.size());
         // --- emit (a·c + b·c)·c ---
-        final Inst reducer = insts.get(cut);
         final List<Obj> summands = new ArrayList<>();
         final List<Obj> routes = new ArrayList<>();
         // the master: gather k partials behind the barrier, reduce once more, then run the tail at home
-        final List<Inst> master = new ArrayList<>();
-        master.add(instB(BARRIER_INST_TID, lst(jnt(k))));           // barrier(k): the dom coefficient is the partial count
-        master.add(reducer);
-        master.addAll(insts.subList(cut + 1, insts.size()));
-        summands.add(code(master));
-        routes.add(instB(TO_INST_TID, lst()));                      // to() -- stay
+        final mFluent<?> master = merge_().addInst(reducer).addInsts(insts.subList(cut + 1, insts.size()));
         // the slaves: one factor of the bulk each, the run replicated, the reducer applied locally
         for (int s = 0; s < k; s++) {
             final List<Obj> part = new ArrayList<>();
             for (int j = s; j < seed.size(); j += k)
                 part.add(seed.get(j));                              // round-robin factorization of the bulk
-            final List<Inst> slave = new ArrayList<>();
-            slave.add(instB(START_INST_TID, lst(part)));
-            slave.addAll(insts.subList(1, cut));
-            slave.add(reducer);
-            summands.add(code(slave));
-            routes.add(instB(TO_INST_TID, lst(targets.get(s))));
+            final mFluent<?> slave = start_(objs(part)).q("no_shard");
+            slave.addInsts(insts.subList(1, cut));
+            slave.addInst(reducer);
+            summands.add(block_(block_(block_(slave))));
+            routes.add(to_(targets.get(s)).tryToInst());
         }
         // [master, slave...] == [to(), to(a), ...] -- the lst is +, select routes each summand pointwise
-        return code(List.of(
-                instB(START_INST_TID, lst(lst(summands))),
-                instB(SELECT_INST_TID, lst(lst(routes)))));
+        final Code finalCode = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
+        // code.logger().warn("final code: %s", finalCode);
+        return finalCode;
+        // instB(START_INST_TID, lst(lst(summands))),
+        // ));
+        // start([start({1,2,3,4}).plus?rng=int&dom=int(2){<j>}@<1>.sum?rng=int&dom=int{*}(){<j>}@<2>]).select([to(<ws://ginger.local:8555>)]).barrier(1).
+        //sum?rng=int&dom=int{*}(){<j>}@<2>
     }
 
     /**

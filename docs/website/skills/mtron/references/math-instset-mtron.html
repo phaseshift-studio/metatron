@@ -258,7 +258,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -309,14 +308,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-third-lift.png">cat-third-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -331,14 +323,42 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/geometry-is-the-program.html"><i
-                            class="bi bi-diagram-3 icon-color me-2 isa-row"></i>geometry is the program</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/stream-ring-theory.pdf"><i
-                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/parametric-identities-in-ring-theory.html"><i
-                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/mm-adt.pdf"><i
-                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -486,7 +506,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime:://2026.10:1518/54/39/359?tz=-0600
+==&gt;datetime:://2026.10:1603/42/30/842?tz=-0600
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -636,16 +656,16 @@ mtron&gt; nanos::1000000.0.as(millis::T).matches(millis::T)
 <p>Time units require a real-backed value — an int-backed time is a type violation:</p>
 <pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@day
-   	while parsing: day::2.as(millis::T)]@/sys/fail/389
+   	while parsing: day::2.as(millis::T)]@/sys/fail/387
 mtron&gt; hour::2.as(minute::T)        [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@hour
-   	while parsing: hour::2.as(minute::T)]@/sys/fail/390
+   	while parsing: hour::2.as(minute::T)]@/sys/fail/388
 mtron&gt; nanos::2.as(millis::T)       [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=nanos&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@nanos
-   	while parsing: nanos::2.as(millis::T)]@/sys/fail/391
+   	while parsing: nanos::2.as(millis::T)]@/sys/fail/389
 mtron&gt; micros::2.as(millis::T)      [-- int-backed time (bad) --]
 ==&gt;fail::[2 is not a time::T[][ctor?rng=micros&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@micros
-   	while parsing: micros::2.as(millis::T)]@/sys/fail/392
+   	while parsing: micros::2.as(millis::T)]@/sys/fail/390
 </code></pre>
 <h5>relational operators</h5>
 <p><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>lte</code>, and <code>gte</code> auto-convert across units before comparing:</p>

@@ -258,7 +258,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -309,14 +308,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-third-lift.png">cat-third-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -331,14 +323,42 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/geometry-is-the-program.html"><i
-                            class="bi bi-diagram-3 icon-color me-2 isa-row"></i>geometry is the program</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/stream-ring-theory.pdf"><i
-                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/parametric-identities-in-ring-theory.html"><i
-                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/mm-adt.pdf"><i
-                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -478,13 +498,91 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]][fail][fail]@/sys/fail/148
-   	while parsing: mcp_client::[host=&gt;http://localhost:8777/mcp]@a]@/sys/fail/149
+==&gt;mcp_client::[host=&gt;http://localhost:8777/mcp,
+                status=&gt;!inst?rng=bool&amp;dom=#{?}(){&lt;j&gt;},
+                tool=&gt;[m_web_mcp_mcp_mtron_write_memory=&gt;tool::[
+                 inst=&gt;inst?rng=#{*}&amp;dom=#{?}(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
+                 name=&gt;m_web_mcp_mcp_mtron_write_memory,
+                 desc=&gt;'(experimental) returns a memory re...',
+                 arg=&gt;[current_memory=&gt;'the memory to remember -- e.g. a s...',
+                       previous_memory=&gt;'a previous memory vid to chain cur...']],
+                       m_web_mcp_mcp_mtron_read_memory=&gt;tool::[
+                        inst=&gt;inst?rng=#{*}&amp;dom=#{?}(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
+                        name=&gt;m_web_mcp_mcp_mtron_read_memory,
+                        desc=&gt;'(experimental) returns the result ...',
+                        arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
+                       m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
+                        inst=&gt;inst?rng=#{*}&amp;dom=#{?}(code=&gt;'/m/code',native=&gt;'/m/bool'){&lt;j&gt;},
+                        name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
+                        desc=&gt;'&lt;no description&gt;',
+                        arg=&gt;[code=&gt;'/m/code',native=&gt;'/m/bool']],
+                       m_web_mcp_mcp_mtron_list_space=&gt;tool::[
+                        inst=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+                        name=&gt;m_web_mcp_mcp_mtron_list_space,
+                        desc=&gt;'returns a rec identifying all acti...',
+                        arg=&gt;[=&gt;]],
+                       m_web_mcp_mcp_mtron_router_info=&gt;tool::[
+                        inst=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+                        name=&gt;m_web_mcp_mcp_mtron_router_info,
+                        desc=&gt;'returns router vid, tid, and space...',
+                        arg=&gt;[=&gt;]],
+                       m_web_mcp_mcp_mtron_find_inst=&gt;tool::[
+                        inst=&gt;inst?rng=#{*}&amp;dom=#{?}(pattern=&gt;'the inst tid to match',dom=&gt;'the dom of inst to match (can be added to pattern arg)',rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
+                        name=&gt;m_web_mcp_mcp_mtron_find_inst,
+                        desc=&gt;'returns a lst of all instruction p...',
+                        arg=&gt;[pattern=&gt;'the inst tid to match',
+                              dom=&gt;'the dom of inst to match (can be a...',
+                              rng=&gt;'the rng of inst to match (can be a...']],
+                       m_web_mcp_mcp_mtron_spawn_wsclient=&gt;tool::[
+                        inst=&gt;inst?rng=#{*}&amp;dom=#{?}(host=&gt;'the full ws:// uri of the websocket server to connect to',on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
+                        name=&gt;m_web_mcp_mcp_mtron_spawn_wsclient,
+                        desc=&gt;'create a websocket client with pro...',
+                        arg=&gt;[host=&gt;'the full ws:// uri of the websocke...',
+                              on_message=&gt;'the function to evaluate on every ...']],
+                       ...(1 more)]]@a
 mtron&gt; *a&gt;&gt;tool
+==&gt;[m_web_mcp_mcp_mtron_write_memory=&gt;tool::[
+     inst=&gt;inst?rng=#{*}&amp;dom=#{?}(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
+     name=&gt;m_web_mcp_mcp_mtron_write_memory,
+     desc=&gt;'(experimental) returns a memory re...',
+     arg=&gt;[current_memory=&gt;'the memory to remember -- e.g. a s...',
+           previous_memory=&gt;'a previous memory vid to chain cur...']],
+    m_web_mcp_mcp_mtron_read_memory=&gt;tool::[
+     inst=&gt;inst?rng=#{*}&amp;dom=#{?}(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
+     name=&gt;m_web_mcp_mcp_mtron_read_memory,
+     desc=&gt;'(experimental) returns the result ...',
+     arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
+    m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[inst=&gt;inst?rng=#{*}&amp;dom=#{?}(code=&gt;'/m/code',native=&gt;'/m/bool'){&lt;j&gt;},
+                                           name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
+                                           desc=&gt;'&lt;no description&gt;',
+                                           arg=&gt;[code=&gt;'/m/code',native=&gt;'/m/bool']],
+    m_web_mcp_mcp_mtron_list_space=&gt;tool::[inst=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+                                           name=&gt;m_web_mcp_mcp_mtron_list_space,
+                                           desc=&gt;'returns a rec identifying all acti...',
+                                           arg=&gt;[=&gt;]],
+    m_web_mcp_mcp_mtron_router_info=&gt;tool::[
+     inst=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+     name=&gt;m_web_mcp_mcp_mtron_router_info,
+     desc=&gt;'returns router vid, tid, and space...',
+     arg=&gt;[=&gt;]],
+    m_web_mcp_mcp_mtron_find_inst=&gt;tool::[inst=&gt;inst?rng=#{*}&amp;dom=#{?}(pattern=&gt;'the inst tid to match',dom=&gt;'the dom of inst to match (can be added to pattern arg)',rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
+                                          name=&gt;m_web_mcp_mcp_mtron_find_inst,
+                                          desc=&gt;'returns a lst of all instruction p...',
+                                          arg=&gt;[
+                                           pattern=&gt;'the inst tid to match',
+                                           dom=&gt;'the dom of inst to match (can be a...',
+                                           rng=&gt;'the rng of inst to match (can be a...']],
+    m_web_mcp_mcp_mtron_spawn_wsclient=&gt;tool::[
+     inst=&gt;inst?rng=#{*}&amp;dom=#{?}(host=&gt;'the full ws:// uri of the websocket server to connect to',on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
+     name=&gt;m_web_mcp_mcp_mtron_spawn_wsclient,
+     desc=&gt;'create a websocket client with pro...',
+     arg=&gt;[host=&gt;'the full ws:// uri of the websocke...',
+           on_message=&gt;'the function to evaluate on every ...']],
+    ...(1 more)]
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate inst-f noobj::T =&gt; a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/150
+==&gt;fail::[unable to locate inst-f noobj::T =&gt; a/tool/m_inst_eval_mtron/inst('1+2')]@/sys/fail/148
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>

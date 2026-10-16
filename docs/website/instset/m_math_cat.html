@@ -144,10 +144,17 @@
                         </div>
                     </li>
                     <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
                         <div class="click-to-copy" title="click to copy">
                             <span class="badge bg-primary">docker</span>
-                            <pre><code class="language-bash">docker run -d --name metatron \
-  -p 8555:8555 -p 8777:8777 \
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --group-add $(stat -c '%g' /var/run/docker.sock) \
   ghcr.io/phaseshift-studio/metatron:latest</code></pre>
@@ -258,7 +265,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -309,14 +315,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/README.md">README.md</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/cat-third-lift.png">cat-third-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
-                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -331,14 +330,42 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/geometry-is-the-program.html"><i
-                            class="bi bi-diagram-3 icon-color me-2 isa-row"></i>geometry is the program</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/stream-ring-theory.pdf"><i
-                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/parametric-identities-in-ring-theory.html"><i
-                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../articles/mm-adt.pdf"><i
-                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -440,18 +467,6 @@ categorical realization of types and insts as objects and morphisms</p>
                          pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
                          obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                          inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-              rewrite=&gt;[/m/math/cat/inst/rewrite/theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/branch_collapse?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/branch_inline?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_idempotent?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_absorbing?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_monoidic?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_poset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/inverse_cancellation?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/form_map_unwrap?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/derivation_contraction?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_shard?rng=code{?}&amp;dom=code(){&lt;j&gt;}],
               inst=&gt;[as?rng=morphism&amp;dom=#(category::T[?[obj=&gt;inst::T,
   form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
   {?}src=&gt;object::T,
@@ -556,7 +571,19 @@ categorical realization of types and insts as objects and morphisms</p>
    bottom=&gt;&lt;#&gt;::T,
    top=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/lattice_theory,
                      theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/semilattice_theory,
-                     theory::T[?[add=&gt;inst::T,mul=&gt;inst::T,zero=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/near_ring_theory]]@/m/math/cat</code></pre>
+                     theory::T[?[add=&gt;inst::T,mul=&gt;inst::T,zero=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/near_ring_theory],
+              rewrite=&gt;[/m/math/cat/inst/rewrite/theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/branch_collapse?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/branch_inline?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_idempotent?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_absorbing?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_monoidic?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_poset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/inverse_cancellation?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/form_map_unwrap?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/derivation_contraction?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_shard?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/math/cat</code></pre>
                     </div>
                 </div>
             </div>
@@ -1014,7 +1041,7 @@ categorical realization of types and insts as objects and morphisms</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/branch_collapse?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the additive like-term law \(x + x \leadsto x\{2\}\) on the branch, the code ring&#39;s additive op: equal members of a branch collapse to the single member with the summed coefficients -- \(\mathrm{branch}(+2, +4, +2) \leadsto \mathrm{branch}(+2\{2\}, +4)\) -- the additive normal form the code ring&#39;s distributivity law consumes
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the additive like-term law, law-indexed: equal members of any occurrence of the algebra&#39;s additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \(\mathrm{object}[code].law\), \(S = branch\)) \(\mathrm{branch}(+2, +4, +2) \leadsto \mathrm{branch}(+2\{2\}, +4)\) -- the additive normal form the code ring&#39;s distributivity law consumes
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
@@ -1029,7 +1056,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/branch_inline?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the single-addend law \(\mathrm{a} \cdot \mathrm{branch}(b) \cdot \mathrm{c} \leadsto \mathrm{a} \cdot b \cdot \mathrm{c}\): a branch of one member is that member added to nothing, so the frame unwraps, its own coefficient folded into the member -- after \(\mathrm{branch\_collapse}\), \(\mathrm{a} \cdot \mathrm{branch}(b, b) \cdot \mathrm{c} \leadsto \mathrm{a} \cdot b\{2\} \cdot \mathrm{c}\), and \(\mathrm{branch\{c\}}(b) \leadsto b&quot;{c}\) -- a non-call member unwraps as the map that emits it, \(\mathrm{a} \cdot \mathrm{branch}(x) \cdot \mathrm{c} \leadsto \mathrm{a} \cdot \mathrm{map}(x) \cdot \mathrm{c}\)
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the one-term sum law, law-indexed: an occurrence of the algebra&#39;s additive op with a single member is that member added to nothing -- \(\mathrm{a} \cdot \mathrm{branch}(b) \cdot \mathrm{c} \leadsto \mathrm{a} \cdot b \cdot \mathrm{c}\), the frame&#39;s own coefficient folded into the member, \(\mathrm{branch}\{c\}(b) \leadsto b\{c\}\) -- a non-call member unwraps as the map that emits it, \(\mathrm{branch}(x) \leadsto \mathrm{map}(x)\)
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>

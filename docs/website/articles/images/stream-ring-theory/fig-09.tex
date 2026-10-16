@@ -1,0 +1,21 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& a \arrow{dr} & \\
+\! \arrow{ur}[rotate=40,outer xsep=-0.5em]{x} \arrow{dr}[rotate=-40,outer ysep=-0.7em,outer xsep=-0.5em]{x} &  & \! \\
+& -a \arrow{ur} & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+=
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& a \arrow{dr}[rotate=-30,outer xsep=-0.5em]{y} & \\
+\! \arrow{ur} \arrow{dr} &  & \! \\
+& -a \arrow{ur}[rotate=40,outer ysep=-0.9em,outer xsep=-0.4em]{-y} & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+%%%
+= 0(x).
+\end{equation*}

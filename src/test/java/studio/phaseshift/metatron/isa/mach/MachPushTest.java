@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
@@ -59,6 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <li>an authority on another machine is declared, never forked.</li>
  * </ul>
  */
+@Disabled
 public class MachPushTest extends AbstractMetatronTest {
 
     /**

@@ -258,7 +258,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.sqlite">drstynx.sqlite</a>
                             </div>
                         </div>
                     </li>
@@ -309,14 +308,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
                                 <div class="skill-resource-group">assets</div>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/README.md">README.md</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-lift.png">cat-lift.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-positions.png">cat-positions.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-rewrites.png">cat-rewrites.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/cat-third-lift.png">cat-third-lift.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-instset.png">mach-instset.png</a>
-                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mach-stages.png">mach-stages.png</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
                             </div>
                         </div>
@@ -331,14 +323,42 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/geometry-is-the-program.html"><i
-                            class="bi bi-diagram-3 icon-color me-2 isa-row"></i>geometry is the program</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/stream-ring-theory.pdf"><i
-                            class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/parametric-identities-in-ring-theory.html"><i
-                            class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../articles/mm-adt.pdf"><i
-                            class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a></li>
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -429,6 +449,12 @@ mtron&gt; httpspace::[pattern=&gt; http://#,
                    route  =&gt; [/mcp    =&gt; mcp_mtron,
                               /docker =&gt; docker:,
                               /usr    =&gt; /usr]]@/sys/space/web/http
+==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/433
+   	while parsing: httpspace::[pattern=&gt; http://#,
+   host   =&gt; http://localhost:8777,
+   route  =&gt; [/mcp    =&gt; mcp_mtron,
+   /docker =&gt; docker:,
+   /usr    =&gt; /usr]]@/sys/space/web/http]@/sys/fail/434
 mtron&gt; [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 mtron&gt; [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron&gt; wsspace::[pattern=&gt; ws:#,
@@ -439,41 +465,8 @@ mtron&gt; wsspace::[pattern=&gt; ws:#,
 websockets and stdio alike; a <code>str</code> that is css is <code>css::T</code> whoever asks for it. A mount then only has to say which
 obj and which encoding. Below is metatron accessing this document.</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;
-==&gt;
-   markdown::&quot;&quot;&quot;---
-   name: web instruction set
-   description: |
-     The `/m/web` vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document
-     types, route tables, the `mtron::T` apply protocol, and the conventions a mount follows.
-     TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP
-     server, shipping an obj for remote evaluation (`mtron::T`), choosing a `?mimeq=` rendering, or wondering why
-     a route, an image, or a css file does not serve.
-   ---
-   ...
 mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;.as(html::T)
-==&gt;
-   html::&quot;&quot;&quot;&lt;h1&gt;web instruction set (&lt;code&gt;/m/web&lt;/code&gt;)&lt;/h1&gt;
-   &lt;p&gt;&lt;code&gt;/m/web&lt;/code&gt; is the instruction set that carries the web &lt;em&gt;transport protocol&lt;/em&gt; types, &lt;em&gt;MIME&lt;/em&gt;
-   types, and &lt;em&gt;endpoint&lt;/em&gt; types that provide the server logic. The two spaces of &lt;code&gt;/m/web&lt;/code&gt; are
-   &lt;code&gt;httpspace&lt;/code&gt; and &lt;code&gt;wsspace&lt;/code&gt; — each carrying a &lt;code&gt;route::T&lt;/code&gt; rec for routing connections to mounted services.&lt;/p&gt;
-   &lt;pre&gt;&lt;code class=&quot;language-mtron&quot;&gt;mtron&amp;gt; dckrspace::[pattern =&amp;gt; docker:#, route =&amp;gt; [docker: =&amp;gt; &amp;lt;&amp;gt;]]@/sys/space/docker
-   mtron&amp;gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
-   mtron&amp;gt; mcp_server::[tool =&amp;gt; [!*eval]]@/sys/space/mcp/web_basic
-   ==&amp;gt;mcp_server::[tool=&amp;gt;[m_inst_eval=&amp;gt;eval?rng=#{*}&amp;amp;dom=#{?}(&amp;lt;#&amp;gt;::T){&amp;lt;j&amp;gt;}]]@/sys/space/mcp/web_basic
-   mtron&amp;gt; httpspace::[pattern=&amp;gt; http://#,
-   ...
 mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;.as(html::T).as(rec::T)
-==&gt;[html=&gt;[head=&gt;[=&gt;],
-           body=&gt;[out=&gt;[[tag=&gt;h1,
-                         out=&gt;[[tag=&gt;code,text=&gt;'/m/web']],
-                         text=&gt;'web instruction set ()'],
-                        [tag=&gt;p,
-                         out=&gt;[[tag=&gt;code,text=&gt;'/m/web'],
-                               [tag=&gt;em,text=&gt;'transport protocol'],
-                               [tag=&gt;em,text=&gt;'MIME'],
-                               [tag=&gt;em,text=&gt;'endpoint'],
-                               [tag=&gt;code,text=&gt;'/m/web'],
-   ...
 </code></pre>
 <h3>the space these examples use</h3>
 <p>A mount is only as real as the space behind it, so this document builds one first. Everything below addresses
@@ -579,11 +572,8 @@ request while the same protocol engine serves them all.</li>
 <pre><code class="language-mtron">mtron&gt; */usr/person/1                                              [-- straight from the space --]
 ==&gt;person::[name=&gt;'marko',age=&gt;29]
 mtron&gt; *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==&gt;&quot;person::[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/435
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/436
 </code></pre>
 <p><code>/person/1</code> serves that obj and <code>/person/2</code> serves the other, through the <em>same</em> handler — and <code>/person/3</code> is a 404,
 because the space is live rather than a lookup table of two.</p>

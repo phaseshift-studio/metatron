@@ -279,6 +279,27 @@ public class MarkdownRunnerTest {
     }
 
     @Test
+    public void testArticleTreeCollectsNoSkillMarkdown(@TempDir final Path tmp) throws IOException {
+        // The theory-articles shape: frontmatter markdown that is neither SKILL.md nor
+        // under references/, so the markdown pass collects none of it. That is exactly
+        // why an --html run over the articles dir must still reach the html pass.
+        final Path articles = tmp.resolve("articles");
+        Files.createDirectories(articles);
+        Files.writeString(articles.resolve("stream-ring-theory.md"),
+                "---\nname: Stream Ring Theory\ndescription: d\n---\n\nbody\n");
+        assertTrue(MarkdownRunner.collectMarkdownFiles(articles).isEmpty(),
+                "an articles tree must not enter the markdown pass");
+
+        // ...while a skill tree does (SKILL.md, and anything under references/)
+        final Path skills = tmp.resolve("skills");
+        Files.createDirectories(skills.resolve("mtron/references"));
+        Files.writeString(skills.resolve("mtron/SKILL.md"), "---\nname: mtron\n---\n");
+        Files.writeString(skills.resolve("mtron/references/type.md"), "---\nname: type\n---\n");
+        assertEquals(2, MarkdownRunner.collectMarkdownFiles(skills).size(),
+                "SKILL.md and references/*.md are the markdown pass's documents");
+    }
+
+    @Test
     public void testRenderedArticleCarriesTheoryChrome(@TempDir final Path tmp) throws IOException {
         // A minimal website articles container: <tmp>/articles/geometry.md
         final Path articles = tmp.resolve("articles");
@@ -287,6 +308,12 @@ public class MarkdownRunnerTest {
                 ---
                 name: The Geometry of Data Is the Program
                 description: why a function's signature is the shape of the data it walks
+                author: |
+                  Ada Lovelace
+                  Countess of Lovelace
+                citation: >
+                  Lovelace, A., “Notes on the Analytical Engine,”
+                  Scientific Memoirs, 1843.
                 ---
 
                 **Theorem.** A coefficient is arithmetic: `{1,2,{10}3}.count()`.
@@ -309,6 +336,16 @@ public class MarkdownRunnerTest {
         assertTrue(html.contains("class=\"article-title"), "article must carry the frontmatter h1 chrome: " + html);
         assertTrue(html.contains("<h1 class=\"article-title mb-1\">The Geometry of Data Is the Program</h1>"),
                 "the h1 must carry the frontmatter name: " + html);
+        // author and citation are frontmatter chrome: the `|` byline keeps its two
+        // lines, the folded `>` citation one, and neither is body prose
+        assertTrue(html.contains("<div class=\"article-author\">Ada Lovelace<br>Countess of Lovelace</div>"),
+                "the frontmatter author must render as a byline: " + html);
+        assertTrue(html.contains("<div class=\"article-citation\">Lovelace, A., “Notes on the Analytical Engine,” "
+                        + "Scientific Memoirs, 1843.</div>"),
+                "the folded citation must render as one reference line: " + html);
+        final String body = html.substring(html.indexOf("article-body"));
+        assertFalse(body.contains("Ada Lovelace") || body.contains("Scientific Memoirs"),
+                "byline and citation belong to the chrome, not the body: " + body);
         // the article stylesheet rides the {{EXTRA_HEAD}} token and its href is
         // depth-rewritten (articles is one level under the website root)
         assertTrue(html.contains("../css/theory-article.css"),

@@ -129,26 +129,35 @@ public final class DocsUtil {
     // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * A parsed skill document: name, description, and the frontmatter-free body.
+     * A parsed skill or article document: the frontmatter fields the page chrome
+     * renders ({@code name}, {@code description}, and — for the theory articles —
+     * {@code author} and {@code citation}), plus the frontmatter-free body.
      */
-    public record FrontMatter(String name, String description, String body) {
+    public record FrontMatter(String name, String description, String author, String citation, String body) {
     }
 
     /**
-     * Split the YAML frontmatter from the markdown body and surface the
-     * {@code name} and {@code description} fields for the page chrome.
+     * Split the YAML frontmatter from the markdown body and surface the fields the
+     * page chrome renders. Those are {@code name} and {@code description} for every
+     * page, plus {@code author} (a byline, whose {@code |} literal-block lines stay
+     * separate) and {@code citation} (a reference line) for the theory articles.
+     *
+     * <p>Every other key is inert here: it is parsed off the body and dropped. Use a
+     * block scalar ({@code key: |} or {@code key: &gt;}) for a value containing
+     * {@code ": "}, which a plain scalar may not carry.
      */
     public static FrontMatter split(final String md) {
         if (!md.startsWith("---")) {
-            return new FrontMatter("", "", md);
+            return new FrontMatter("", "", "", "", md);
         }
         final int close = md.indexOf("\n---", 3);
         if (close < 0) {
-            return new FrontMatter("", "", md);
+            return new FrontMatter("", "", "", "", md);
         }
         final String front = md.substring(3, close);
         final String body = md.substring(close + 4).stripLeading();
-        return new FrontMatter(extract(front, "name"), extract(front, "description"), body);
+        return new FrontMatter(extract(front, "name"), extract(front, "description"),
+                extract(front, "author"), extract(front, "citation"), body);
     }
 
     /**

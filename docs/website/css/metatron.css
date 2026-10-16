@@ -30,7 +30,7 @@ mjx-container {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: var(--mheading);
+    color: var(--mred);
     font-family: 'Oswald', 'IBM Plex Sans', sans-serif;
     font-weight: 500;
     letter-spacing: 0.02em;
@@ -678,6 +678,57 @@ em {
 .dropdown-menu-dark .dropdown-item:hover {
     background: rgba(122, 37, 24, 0.2);
     color: var(--primary);
+}
+
+/* Right-align a dropdown before Bootstrap positions it. These menus open on :hover
+   (see the media query above), which happens before Bootstrap's Popper runs and
+   stamps [data-bs-popper] — the attribute that carries `.dropdown-menu-end`'s
+   right:0/left:auto. Until then the menu keeps its default left offset, so the
+   right-most nav item (articles, whose rows are a title plus format pills) hung off
+   the right edge of the viewport until a click let Popper pull it back. Same
+   declarations Popper uses, so hover and click land in the same place. */
+.navbar .dropdown-menu-end {
+    right: 0;
+    left: auto;
+}
+
+/* Articles dropdown: one row per article — the title links to the readable
+   edition (html, else pdf) and a mini pill per available file format follows it. */
+.dropdown-menu .article-row {
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-menu .article-row .article-link {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+}
+
+.article-formats {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.9rem 0 0.5rem;
+}
+
+.article-format {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.62rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding: 0.28em 0.5em;
+    border: 1px solid rgba(232, 232, 232, 0.25);
+    color: var(--light);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.article-format:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
 }
 
 .breadcrumb-item + .breadcrumb-item::before {

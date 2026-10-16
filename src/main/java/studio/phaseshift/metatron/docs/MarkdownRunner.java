@@ -68,6 +68,15 @@ import java.util.regex.Pattern;
  * Outputs outside a website skills tree (probe dirs like {@code target/temp})
  * skip the html pass with a note.</p>
  *
+ * <p>The same pass renders the theory <em>articles</em> when {@code -o} resolves
+ * into an {@code articles} container instead ({@code .metatron/articles} is the
+ * repo's symlink to {@code docs/website/articles}): every {@code .md} carrying YAML
+ * frontmatter becomes a sibling {@code .html} — frontmatter title and subtitle, the
+ * theory stylesheet, and image sources left relative so the {@code images/} tree
+ * beside it resolves. A directory input collects no <em>skill</em> docs there (an
+ * article is neither {@code SKILL.md} nor under {@code references/}), so an articles
+ * run reaches the html pass directly, booting no VM.</p>
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class MarkdownRunner {
@@ -128,20 +137,17 @@ public class MarkdownRunner {
         Files.createDirectories(out);
 
         // ── Collect: a single probe .md, or a skill dir's SKILL.md + references/*.md
-        final List<Path> files = new ArrayList<>();
-        if (singleFile) {
-            files.add(skillDir);
-        } else {
-            try (var stream = Files.walk(skillDir)) {
-                stream.filter(Files::isRegularFile)
-                        .filter(p -> p.getFileName().toString().endsWith(".md"))
-                        .filter(MarkdownRunner::isSkillDoc)
-                        .sorted()
-                        .forEach(files::add);
-            }
-        }
+        final List<Path> files = collectMarkdownFiles(skillDir);
         if (files.isEmpty()) {
             LOG.info("no skill markdown files found in " + skillDir);
+            // An --html run over a container holding no skill docs is still a valid
+            // request: the theory articles are markdown files a directory walk filters
+            // out (neither SKILL.md nor under references/), and the html pass below
+            // renders them from the articles container the output resolves into. That
+            // pass needs no VM, so returning here skips boot *and* teardown.
+            if (html) {
+                renderHtmlPass(out);
+            }
             return;
         }
         if (reverse) Collections.reverse(files);
@@ -184,24 +190,54 @@ public class MarkdownRunner {
 
         // ── Optional site-html pass over the skills container (was SkillHtmlRenderer) ──
         if (html) {
-            final long t1 = System.nanoTime();
-            final Path skillsDir = skillsContainer(out);
-            final Path articlesDir = articlesContainer(out);
-            if (skillsDir != null) {
-                renderSiteHtml(skillsDir);
-                LOG.info("html rendered into " + skillsDir + " (" + DocsUtil.elapsedMs(t1) + "ms)");
-            } else if (articlesDir != null) {
-                renderArticleHtml(articlesDir);
-                LOG.info("html rendered into " + articlesDir + " (" + DocsUtil.elapsedMs(t1) + "ms)");
-            } else {
-                LOG.info("--html skipped: output " + out + " is not under a website skills or articles tree");
-            }
+            renderHtmlPass(out);
         }
 
         LOG.info("done — " + files.size() + " files, " + DocsUtil.elapsedMs(buildStart) + "ms total (singleBoot="
                 + singleBoot + ", reverse=" + reverse + ", html=" + html + ")");
         BootLoader.close();
         System.exit(0);
+    }
+
+    /**
+     * The markdown files the pass processes: the single probe file, or every skill doc
+     * under a directory ({@code SKILL.md}, or anything under a {@code references/}
+     * directory). A directory holding neither — the theory-articles tree, whose
+     * frontmatter markdown is a different kind of document — yields an empty list, which
+     * is why an {@code --html} run over it must still reach the html pass.
+     */
+    static List<Path> collectMarkdownFiles(final Path skillDir) throws IOException {
+        if (Files.isRegularFile(skillDir)) return List.of(skillDir);
+        final List<Path> files = new ArrayList<>();
+        try (var stream = Files.walk(skillDir)) {
+            stream.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".md"))
+                    .filter(MarkdownRunner::isSkillDoc)
+                    .sorted()
+                    .forEach(files::add);
+        }
+        return files;
+    }
+
+    /**
+     * The site-html pass: render whichever canonical website container {@code out}
+     * resolves into — the skills tree, else the articles tree. Both passes write their
+     * pages into that container (symlinks followed), so {@code -o .metatron/articles}
+     * renders next to the article markdown.
+     */
+    private static void renderHtmlPass(final Path out) throws IOException {
+        final long t1 = System.nanoTime();
+        final Path skillsDir = skillsContainer(out);
+        final Path articlesDir = articlesContainer(out);
+        if (skillsDir != null) {
+            renderSiteHtml(skillsDir);
+            LOG.info("html rendered into " + skillsDir + " (" + DocsUtil.elapsedMs(t1) + "ms)");
+        } else if (articlesDir != null) {
+            renderArticleHtml(articlesDir);
+            LOG.info("html rendered into " + articlesDir + " (" + DocsUtil.elapsedMs(t1) + "ms)");
+        } else {
+            LOG.info("--html skipped: output " + out + " is not under a website skills or articles tree");
+        }
     }
 
     /**
@@ -405,6 +441,14 @@ public class MarkdownRunner {
         page.append("    <div class=\"article-doc\">\n");
         page.append("        <h1 class=\"article-title mb-1\">").append(fm.name()).append("</h1>\n");
         page.append("        <small class=\"article-subtitle\">").append(fm.description().replace("`", "").replaceAll("\\s+", " ").strip()).append("</small>\n");
+        // byline and citation come from the frontmatter, so an article body needs no
+        // repeated title and no ad-hoc byline block of its own
+        if (!fm.author().isBlank()) {
+            page.append("        <div class=\"article-author\">").append(htmlLines(fm.author())).append("</div>\n");
+        }
+        if (!fm.citation().isBlank()) {
+            page.append("        <div class=\"article-citation\">").append(htmlLines(fm.citation())).append("</div>\n");
+        }
         page.append("    </div>\n");
         page.append("    <div class=\"article-body\">\n");
         page.append(bodyShifted);
@@ -418,6 +462,23 @@ public class MarkdownRunner {
         Files.writeString(htmlFile, html, StandardCharsets.UTF_8);
         LOG.info("[article-html] wrote %s", htmlFile);
         return true;
+    }
+
+    /**
+     * Frontmatter prose as html lines: each source line becomes its own line (so a
+     * {@code |} literal block keeps its shape — a byline's affiliation stays under
+     * the name), blank lines drop. The text is escaped, because a citation may hold
+     * an {@code &} or an angle bracket.
+     */
+    private static String htmlLines(final String value) {
+        final StringBuilder out = new StringBuilder();
+        for (final String line : value.split("\n", -1)) {
+            final String part = line.strip();
+            if (part.isEmpty()) continue;
+            if (out.length() > 0) out.append("<br>");
+            out.append(part.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"));
+        }
+        return out.toString();
     }
 
     /**

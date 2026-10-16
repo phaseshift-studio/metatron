@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -316,7 +317,12 @@ public final class PeerCluster implements AutoCloseable {
                     uri(IN), uri(MTRON.value),
                     uri(OUT), uri(MTRON.value)), WS_CLIENT_TID, null);
             client = new WebSocketRecClient(wsRec);
-            return wsRec.sendRecv(message, REPLY_TIMEOUT_MS);
+            // FORCE THE REPLY BEFORE THE finally HANGS UP. sendRecv answers a FutureObj -- the send runs on a
+            // virtual thread -- so returning it unforced lets `finally` close the socket out from under the
+            // send, and the caller then inspects a future whose trip died. This helper owns the client's whole
+            // life (dial, one round trip, hang up), and a resource owner must not release it with work in
+            // flight. resolveFuture waits that future's OWN deadline and passes a non-future through.
+            return FutureObj.resolveFuture(wsRec.sendRecv(message, REPLY_TIMEOUT_MS));
         } catch (final Exception e) {
             return fail(e);
         } finally {
