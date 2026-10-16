@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
@@ -201,7 +202,12 @@ public final class PeerSpawn {
                     uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
                     uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null);
             client = new WebSocketRecClient(wsRec);
-            return wsRec.sendRecv(message, REPLY_TIMEOUT_MS);
+            // FORCE THE REPLY BEFORE THE finally HANGS UP. sendRecv answers a FutureObj: the send runs on a
+            // virtual thread, so handing the future out here lets the finally close the socket before the frame
+            // ever leaves, and the trip reports "socket ... is not connected" on a socket that was open the
+            // whole time. This method's contract is synchronous -- one short-lived client per message, closed
+            // on the way out -- so the round trip is settled while the client is still alive.
+            return FutureObj.resolveFuture(wsRec.sendRecv(message, REPLY_TIMEOUT_MS));
         } catch (final Exception e) {
             return fail(e);
         } finally {

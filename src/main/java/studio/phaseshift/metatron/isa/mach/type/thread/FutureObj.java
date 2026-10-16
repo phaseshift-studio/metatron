@@ -19,10 +19,13 @@
 package studio.phaseshift.metatron.isa.mach.type.thread;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.MTronException;
+
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 import java.util.Iterator;
 import java.util.UUID;
@@ -69,6 +72,30 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     public UUID tag() {
         return this.tag;
+    }
+
+    // ---- Async: a call on its own virtual thread ----
+
+    /**
+     * ASYNC — evaluate the call on its own metatron {@link VirtualThread} and answer the future that thread
+     * will complete. The call is applied against {@code noobj} (a seeded chain carries its own start), and the
+     * worker inherits the caller's machine perspective, which {@code ThreadExecutor} captures before it spawns.
+     * <p>
+     * Nothing blocks until something inspects the future, so a caller can fan out N calls and pay once, at the
+     * first inspection. {@link #get()} returns as soon as the thread has stopped: with the call's value, with a
+     * {@code fail::T} when it raised, or raising {@code CancellationException} when the thread was stopped
+     * before it produced one.
+     */
+    public static FutureObj<Obj> async(final Call call) {
+        return async(call, noobj());
+    }
+
+    /**
+     * ASYNC against an explicit lhs — the call is applied to {@code lhs} on the worker thread rather than to
+     * {@code noobj}.
+     */
+    public static FutureObj<Obj> async(final Call call, final Obj lhs) {
+        return VirtualThread.virtual(call).applyAsync(lhs);
     }
 
     public FutureObj<T> timeout(final int millis) {

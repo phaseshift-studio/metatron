@@ -236,9 +236,18 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                 if (null != this.thread && (null == e.getMessage() || !e.getMessage().contains("nterrupt"))) {
                     this.jvm().put(uri(RESULT), fail(e));
                     this.logger().error("thread execution failed: %s", e.getMessage());
+                    // THE FUTURE IS COMPLETED WITH THE FAIL: a waiter must not outlive the thread it waits on.
+                    // An uncompleted future turns a raised error into silence -- get() waits out its timeout and
+                    // the fail::T never reaches the caller's catch.
+                    if (null != this.future && !this.future.isDone())
+                        this.future.setObj(fail(e));
                 }
             } finally {
                 this.stop();
+                // a thread that ends without ever completing its future (interrupted, or stopped mid-loop)
+                // cancels it, so a waiter raises rather than blocking on a result that is never coming
+                if (null != this.future && !this.future.isDone())
+                    this.future.cancel(false);
                 synchronized (AbstractThread.this) {
                     AbstractThread.this.notifyAll();
                 }

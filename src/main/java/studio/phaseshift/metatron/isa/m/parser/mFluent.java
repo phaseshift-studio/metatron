@@ -78,6 +78,20 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return (F) this;
     }
 
+    public F addInsts(final List<Inst> insts) {
+        this.codeValue().addAll(insts);
+        return (F) this;
+    }
+
+    public F q(final String key, final Object value) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().q(key, value));
+        return (F) this;
+    }
+
+    public F q(final String key) {
+        return this.q(key, null);
+    }
+
     // ========================================
     // Control Flow Operations
     // ========================================
@@ -429,6 +443,13 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     //     return this.addInst(instB(mInstSet.CLOSE_INST_TID, lst(obj)));
     // }
 
+
+    public F compose_(final Call code) {
+        final List<Inst> composition = new ArrayList<>();
+        composition.addAll(this.insts());
+        composition.addAll(code.insts());
+        return this.jvm(composition).as();
+    }
 
     public F dedup_(final Obj obj) {
         return this.addInst(instB(mInstSet.DEDUP_INST_TID, lst(obj)));

@@ -36,6 +36,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
@@ -54,6 +56,10 @@ public class catRewrite {
      * graph-driven family below the unit law.
      */
     public static Lst rules() {
+        // The additive witness of the code ring is read off its algebra (object[code].law) inside each rule's
+        // lambda — at rewrite time, when the object::T machinery is live — never named in the rule body:
+        // that is the thin law-indexing. A null witness (the type declares no additive structure) degrades a
+        // normalizer to the identity.
         return lst(
                         /* =====================================================================================
                          * (4) THE GRAPH/RELATION-DRIVEN FAMILY — next slice, deliberately NOT wired yet.
@@ -111,77 +117,87 @@ public class catRewrite {
                                     return kept.size() == insts.size() ? code : code(kept);
                                 }), "the unit law of every theory the operand's type models: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and a bare identity operation is the identity morphism. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\), \\(x \\cdot . \\leadsto x\\)"),
 
-                        // (1b) the ring-axiom warmup — additive like-term collapse: branch is the code ring's
-                        // additive op (mInstSetLawTable), so equal members of a branch are additive repetitions of
-                        // the same member, x + x = 2·x — and the pair collapses to the single member with the
-                        // summed coefficients: branch(+2,+4,+2) |-> branch(+2{2},+4). Members are compared as
-                        // instructions (sameOp plus operands and refinement — MInst equals minus the positional vid,
-                        // parsed siblings sharing everything but their own address), and the survivors are the
-                        // additive normal form the follow-on distributivity rewrite consumes.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    boolean changed = false;
-                                    final List<Inst> out = new ArrayList<>(insts.size());
-                                    for (final Inst inst : insts) {
-                                        if (!BRANCH_INST_TID.equals(inst.tid().basePath()) || 2 > inst.args().count()) {
-                                            out.add(inst);
-                                            continue;
-                                        }
-                                        final List<Obj> reps = new ArrayList<>();
-                                        final List<cInt> sums = new ArrayList<>();
-                                        for (final Obj arg : inst.args().elements().toList()) {
-                                            int slot = -1;
-                                            for (int j = 0; j < reps.size(); j++) {
-                                                if (sameMember(reps.get(j), arg)) {
-                                                    slot = j;
-                                                    break;
-                                                }
-                                            }
-                                            if (-1 == slot) {
-                                                reps.add(arg);
-                                                sums.add(multiplicity(arg));
-                                            } else
-                                                sums.set(slot, sums.get(slot).plus(multiplicity(arg)));
-                                        }
-                                        if (reps.size() < inst.args().count()) {
-                                            changed = true;
-                                            final List<Obj> merged = new ArrayList<>(reps.size());
-                                            for (int i = 0; i < reps.size(); i++)
-                                                merged.add(cInt.ONE().equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
-                                            out.add(inst.args(lst(merged)));
-                                        } else
-                                            out.add(inst);
-                                    }
-                                    return changed ? code(out) : code;
-                                }), "the additive like-term law \\(x + x \\leadsto x\\{2\\}\\) on the branch, the code ring's additive op: equal members of a branch collapse to the single member with the summed coefficients -- \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
+                        // ============ (1b/1c) THE BRANCH-SPECIFIC WARM-UP — SUPERSEDED, KEPT IN COMMENT FOR THE SIDE-BY-SIDE ============
+                        // The two bodies below have moved into the law-indexed normalizers repeatedTerms / oneTerm
+                        // (inst-agnostic: the additive op is the witness read off the algebra — object[code].law,
+                        // ring.add / add_group.op, resolved inside each rule by additiveWitness at rewrite time).
+                        // The registrations that follow are the same two rules at the same rule addresses;
+                        // re-enable these to compare against the specific version (with the generic pair
+                        // registered, that would double-fire the same passes).
+                        // docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
+                        //         code -> {
+                        //             final List<Inst> insts = code.insts();
+                        //             boolean changed = false;
+                        //             final List<Inst> out = new ArrayList<>(insts.size());
+                        //             for (final Inst inst : insts) {
+                        //                 if (!BRANCH_INST_TID.equals(inst.tid().basePath()) || 2 > inst.args().count()) {
+                        //                     out.add(inst);
+                        //                     continue;
+                        //                 }
+                        //                 final List<Obj> reps = new ArrayList<>();
+                        //                 final List<cInt> sums = new ArrayList<>();
+                        //                 for (final Obj arg : inst.args().elements().toList()) {
+                        //                     int slot = -1;
+                        //                     for (int j = 0; j < reps.size(); j++) {
+                        //                         if (sameMember(reps.get(j), arg)) {
+                        //                             slot = j;
+                        //                             break;
+                        //                         }
+                        //                     }
+                        //                     if (-1 == slot) {
+                        //                         reps.add(arg);
+                        //                         sums.add(multiplicity(arg));
+                        //                     } else
+                        //                         sums.set(slot, sums.get(slot).plus(multiplicity(arg)));
+                        //                 }
+                        //                 if (reps.size() < inst.args().count()) {
+                        //                     changed = true;
+                        //                     final List<Obj> merged = new ArrayList<>(reps.size());
+                        //                     for (int i = 0; i < reps.size(); i++)
+                        //                         merged.add(cInt.ONE().equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
+                        //                     out.add(inst.args(lst(merged)));
+                        //                 } else
+                        //                     out.add(inst);
+                        //             }
+                        //             return changed ? code(out) : code;
+                        //         }), "the additive like-term law ... (see repeatedTerms)"),
+                        //
+                        // docWrap(InstSet.Helper.rewriter(rewriteTID("branch_inline"),
+                        //         code -> {
+                        //             final List<Inst> insts = code.insts();
+                        //             boolean changed = false;
+                        //             final List<Inst> out = new ArrayList<>(insts.size());
+                        //             for (final Inst inst : insts) {
+                        //                 if (BRANCH_INST_TID.equals(inst.tid().basePath()) && 1 == inst.args().count()) {
+                        //                     final Obj member = absorb(inst.arg(0), inst.c());
+                        //                     changed = true;
+                        //                     if (member.isCall())
+                        //                         out.addAll(member.asCall().insts());
+                        //                     else
+                        //                         out.add((Inst) map_(member).tryToInst());
+                        //                 } else
+                        //                     out.add(inst);
+                        //             }
+                        //             return changed ? code(out) : code;
+                        //         }), "the single-addend law ... (see oneTerm)"),
 
-                        // (1c) the single-addend law — a branch whose members have come to one is that member,
-                        // added to nothing, so its frame unwraps: a.branch(b).c |-> a.b.c, the branch's own
-                        // coefficient folded into the member as it goes (branch{c}(b) |-> b multiplied by c).
-                        // It runs on its own (a lone hand-written branch, branch(+1), has no identical pair to
-                        // collapse), and it runs on what branch_collapse left behind — a.collapsed to a single
-                        // member is collapsed AND inlined: a.branch(b,b).c |-> a.b{2}.c. The member is spliced
-                        // in by its insts (a call's list, its own singleton when it is an inst); a non-call
-                        // member is the map that emits it, so the inlining is stream-transparent either way.
+                        // (1b) the additive normalizer, law-indexed — the thin generalization of the warm-up above:
+                        // the moves are statements about the LAW, not about an inst. For the additive op S of the
+                        // algebra being rewritten,
+                        //
+                        //     like terms      S(x, x, ..., x)  ->  S(x{n})    (equality coefficient-blind: the confluence)
+                        //     one-term sum    S(x)             ->  x         (the frame's own coefficient folds into x)
+                        //
+                        // S is the witness read off object[code].law — ring.add / add_group.op, which here resolves
+                        // to branch — so the bodies (repeatedTerms / oneTerm) know nothing of branch; the same
+                        // bodies pointed at object[int].law would run on plus with no body change.
+                        docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
+                                code -> repeatedTerms(additiveWitness(T(CODE_TID)), code)),
+                                "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[code].law\\), \\(S = branch\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
+
                         docWrap(InstSet.Helper.rewriter(rewriteTID("branch_inline"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    boolean changed = false;
-                                    final List<Inst> out = new ArrayList<>(insts.size());
-                                    for (final Inst inst : insts) {
-                                        if (BRANCH_INST_TID.equals(inst.tid().basePath()) && 1 == inst.args().count()) {
-                                            final Obj member = absorb(inst.arg(0), inst.c());
-                                            changed = true;
-                                            if (member.isCall())
-                                                out.addAll(member.asCall().insts());
-                                            else
-                                                out.add((Inst) map_(member).tryToInst());
-                                        } else
-                                            out.add(inst);
-                                    }
-                                    return changed ? code(out) : code;
-                                }), "the single-addend law \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\): a branch of one member is that member added to nothing, so the frame unwraps, its own coefficient folded into the member -- after \\(\\mathrm{branch\\_collapse}\\), \\(\\mathrm{a} \\cdot \\mathrm{branch}(b, b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b\\{2\\} \\cdot \\mathrm{c}\\), and \\(\\mathrm{branch\\{c\\}}(b) \\leadsto b\"{c}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{a} \\cdot \\mathrm{branch}(x) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot \\mathrm{map}(x) \\cdot \\mathrm{c}\\)"),
+                                code -> oneTerm(additiveWitness(T(CODE_TID)), code)),
+                                "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
 
                         // (2a) the involution law: an adjacent pair of the SAME self-inverse operation is the
                         // identity -- neg.neg, reverse.reverse, not.not, conj.conj, inv.inv.
@@ -351,6 +367,117 @@ public class catRewrite {
      */
     private static boolean same(final Inst a, final Inst b) {
         return sameOp(a, b) && a.args().equals(b.args());
+    }
+
+    /**
+     * The op address of a type's declared additive structure — the law-indexed witness: the first theory
+     * instance of {@code object[T].law} that carries an additive role — the {@code add} role of a ring/field/rig,
+     * or the {@code op} role of an {@code add_*} monoid/group (an {@code op} on some other instance names that
+     * instance's own operation, so the name gate keeps a {@code mult_monoid} from masquerading as the add).
+     * The role is read with {@code atDirect} (no call evaluation; {@code rec.has} reports false on law keys
+     * that still resolve, so the noobj answer is the presence test), and the auto pointer is unwrapped with
+     * {@code getPointer} without resolving it. For the code ring this answers the branch address, for the
+     * int ring the plus address; a type declaring no additive structure answers null, which degrades the
+     * normalizers to the identity.
+     */
+    private static fURI additiveWitness(final Type type) {
+        for (final Map.Entry<Obj, Obj> instance : TheoryHelper.instances(type).jvm().entrySet()) {
+            if (!instance.getValue().isRec())
+                continue;
+            final Rec block = instance.getValue().asRec();
+            final String name = instance.getKey().isUri() ? instance.getKey().uriValue().name() : null;
+            final fURI address = null != name && name.startsWith("add_")
+                    ? roleAddress(block, OP)
+                    : roleAddress(block, ADD);
+            if (null != address)
+                return address;
+        }
+        return null;
+    }
+
+    /**
+     * The op address a law block's role binds, or null when the role is absent or binds a literal: the value
+     * arrives as a {@code !*} auto pointer naming its target in its own argument, so the address is read
+     * without resolving — the target may be an as-yet-unresolved registration.
+     */
+    private static fURI roleAddress(final Rec block, final String role) {
+        final Obj holder = block.atDirect(uri(role));
+        if (holder.isNoObj())
+            return null;
+        if (holder.isUri())
+            return holder.uriValue().basePath();
+        return Obj.Helper.getPointer(holder).map(fURI::basePath).orElse(null);
+    }
+
+    /**
+     * The repeated-term normalizer, law-indexed: every occurrence of {@code op} — the algebra's additive op —
+     * with two or more like terms consolidates them into the member that first appeared, carrying the summed
+     * multiplicities as the coefficient. The body is inst-agnostic: for the code ring {@code op} is
+     * {@code branch} (the warm-up), for the int ring the same body would point at {@code plus}. A null witness
+     * — the algebra declares no additive op — is the identity.
+     */
+    private static Code repeatedTerms(final fURI op, final Code code) {
+        if (null == op)
+            return code;
+        boolean changed = false;
+        final List<Inst> out = new ArrayList<>(code.insts().size());
+        for (final Inst inst : code.insts()) {
+            if (!op.equals(inst.tid().basePath()) || 2 > inst.args().count()) {
+                out.add(inst);
+                continue;
+            }
+            final List<Obj> reps = new ArrayList<>();
+            final List<cInt> sums = new ArrayList<>();
+            for (final Obj arg : inst.args().elements().toList()) {
+                int slot = -1;
+                for (int j = 0; j < reps.size(); j++) {
+                    if (sameMember(reps.get(j), arg)) {
+                        slot = j;
+                        break;
+                    }
+                }
+                if (-1 == slot) {
+                    reps.add(arg);
+                    sums.add(multiplicity(arg));
+                } else
+                    sums.set(slot, sums.get(slot).plus(multiplicity(arg)));
+            }
+            if (reps.size() < inst.args().count()) {
+                changed = true;
+                final List<Obj> merged = new ArrayList<>(reps.size());
+                for (int i = 0; i < reps.size(); i++)
+                    merged.add(cInt.ONE().equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
+                out.add(inst.args(lst(merged)));
+            } else
+                out.add(inst);
+        }
+        return changed ? code(out) : code;
+    }
+
+    /**
+     * The one-term normalizer, law-indexed: an occurrence of {@code op} — the algebra's additive op — whose
+     * members have come to one is that member, added to nothing, so the frame unwraps and the frame's own
+     * coefficient folds into the member ({@code branch{c}(b) |-> b{c}}); a call member splices in by its
+     * insts, a non-call member lifts to the map that emits it — stream-transparent either way. A null witness
+     * is the identity, as in {@link #repeatedTerms}.
+     */
+    private static Code oneTerm(final fURI op, final Code code) {
+        if (null == op)
+            return code;
+        boolean changed = false;
+        final List<Inst> out = new ArrayList<>(code.insts().size());
+        for (final Inst inst : code.insts()) {
+            if (op.equals(inst.tid().basePath()) && 1 == inst.args().count()) {
+                final Obj member = absorb(inst.arg(0), inst.c());
+                changed = true;
+                if (member.isCall())
+                    out.addAll(member.asCall().insts());
+                else
+                    out.add((Inst) map_(member).tryToInst());
+            } else
+                out.add(inst);
+        }
+        return changed ? code(out) : code;
     }
 
     /**

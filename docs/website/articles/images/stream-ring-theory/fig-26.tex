@@ -1,0 +1,14 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+&& a \arrow{dr} & & \\
+& \arrow{ur} \arrow{dr} & & \! \arrow{ddr} & \\
+&& -ab \arrow{ur} & & \\ 
+\arrow{uur} \arrow{ddr} & & & &  \! . \\
+&& b \arrow{dr} & & \\
+& \arrow{ur} \arrow{dr} & & \! \arrow{uur} & \\
+&& -ba \arrow{ur} & & \\ 
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

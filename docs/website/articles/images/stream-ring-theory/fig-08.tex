@@ -1,0 +1,20 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& a \arrow{dr} & \\
+\! \arrow{ur}[rotate=40,outer xsep=-0.5em]{x} \arrow{dr}[rotate=-40,outer ysep=-0.7em,outer xsep=-0.5em]{x} &  & \! \\
+& 0 \arrow{ur} & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+=
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& a \arrow{dr}[rotate=-30,outer xsep=-0.6em]{y} & \\
+\! \arrow{ur} \arrow{dr} &  & \! \\
+& 0 \arrow{ur} & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+= a(x).
+\end{equation*}

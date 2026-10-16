@@ -1,0 +1,19 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& & \begin{bmatrix}
+\frac{1}{2} & 0 \\
+\frac{i}{2} & 0
+\end{bmatrix} \alpha \arrow{r} & \alpha \arrow[bend left]{dr} & & \\
+\arrow[bend left]{urr} \arrow[bend right]{drr} \arrow{rr}& & \begin{bmatrix}
+-\frac{1}{2} & \frac{i}{2} \\
+\frac{i}{2} & -\frac{1}{2}
+\end{bmatrix} 1 \arrow{rr} & & \!. \\
+& & \begin{bmatrix}
+0 & \frac{i}{2} \\
+0 & \frac{1}{2}
+\end{bmatrix} \beta \arrow{r} & \beta \arrow[bend right]{ur} & & \\ 
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

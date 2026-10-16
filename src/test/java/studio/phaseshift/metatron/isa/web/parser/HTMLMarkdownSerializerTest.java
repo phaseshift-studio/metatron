@@ -215,6 +215,11 @@ public class HTMLMarkdownSerializerTest {
                 // display math
                 arguments("$$\\int_0^1 x\\,dx$$", "\\[\\int_0^1 x\\,dx\\]"),
                 arguments("\\[E = mc^2\\]", "\\[E = mc^2\\]"),
+                // display math that WRAPS: the delimiters are on their own lines, so the
+                // per-line scan cannot see the span — it is lifted before the parse, which
+                // is what keeps the TeX out of markdown's hands (the span's own newlines
+                // ride along inside the delimiters, where TeX ignores them)
+                arguments("before\n$$\nx \\\\ y\n$$\nafter", "\\[\nx \\\\ y\n\\]"),
                 // MathJax's own inline spelling is protected as well
                 arguments("\\(\\mathrm{obj} = X\\)", "\\(\\mathrm{obj} = X\\)"),
                 // the TeX is html-escaped, so it cannot break the page
@@ -226,6 +231,27 @@ public class HTMLMarkdownSerializerTest {
                 arguments("| $a_1$ | b |\n|---|---|\n| c | $d$ |", "<td>\\(d\\)</td>"),
                 arguments("[link $\\beta$](https://x.dev)", ">link \\(\\beta\\)</a>")
         );
+    }
+
+    @Test
+    public void testWrappedDisplayMathKeepsItsRowsOutOfMarkdownHands() {
+        // The real article shape (stream-ring-theory.md): a wrapped `$$…$$` whose body is
+        // an `array` of numbered lines. Before the wrap was lifted, markdown ate every
+        // `\\` row separator and turned the `1. …` rows into an ordered list.
+        final String html = HTMLMarkdownSerializer.toHTML("""
+                $$
+                \\begin{array}{ll|ll}
+                1. &&& a + b = a + c \\\\
+                2. &&& a + b = 0
+                \\end{array}
+                $$""");
+        assertTrue(html.contains("\\\\"), "the array row separator must survive: " + html);
+        assertTrue(html.contains("\\[") && html.contains("\\]"),
+                "the wrapped span must reach the page as display math: " + html);
+        assertTrue(html.contains("\\begin{array}{ll|ll}"), "the TeX must arrive intact: " + html);
+        assertFalse(html.contains("<ol>") || html.contains("<li>"),
+                "array rows must not be parsed as a markdown list: " + html);
+        assertFalse(html.contains(String.valueOf('\uE000')), "no math placeholder may leak: " + html);
     }
 
     @ParameterizedTest

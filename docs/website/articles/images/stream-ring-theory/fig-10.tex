@@ -1,0 +1,22 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+\arrow{r}{x} & a \arrow{r} & 1 \arrow{r} & \!
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+%%%
+\begin{tikzcd}[row sep=tiny, column sep=small]
+\arrow{r} & a \arrow{r}{y} & 1 \arrow{r} & \!
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+%%%
+\begin{tikzcd}[row sep=tiny, column sep=small]
+\arrow{r} & a \arrow{r} & 1 \arrow{r}{y} & \! .
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

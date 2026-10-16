@@ -1,0 +1,32 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=tiny]
+& & a \arrow{dr} & & \\
+& \! \arrow{ur} \arrow{dr} & & \! \arrow{ddr} & \\
+& & b \arrow{ur} & & \\
+\! \arrow{uur} \arrow{dr} & & & & \! \\
+& c \arrow[bend right]{urrr} & & &\\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+=
+\begin{tikzcd}[row sep=tiny, column sep=tiny]
+& a \arrow[bend left]{drrr} & & &\\
+\! \arrow{ddr} \arrow{ur} & & & & \! \\
+& & b \arrow{dr} & & \\
+& \! \arrow{dr} \arrow{ur} & & \! \arrow{uur} & \\
+& & c \arrow{ur} & & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+=
+\begin{tikzcd}[row sep=small, column sep=small]
+& a \arrow{dr}  & \\
+\! \arrow{r} \arrow{dr} \arrow{ur} & b \arrow{r} & \! . \\
+& c \arrow{ur}  & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

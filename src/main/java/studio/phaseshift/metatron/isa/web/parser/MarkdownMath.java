@@ -72,7 +72,8 @@ import java.util.List;
  * <li>content that is non-empty and not blank;</li>
  * <li>fenced code blocks and inline code spans are copied verbatim, so mtron
  * source — {@code ${*next_event}}, {@code Tuple$Pair}, a {@code sed} regexp —
- * is never touched. A math span must open and close on one line.</li>
+ * is never touched. An inline span must open and close on one line; a display
+ * {@code $$…$$} may wrap across lines, and is lifted before the line scan runs.</li>
  * </ul>
  *
  * <p>The scan is text-level, not a markdown parse: it knows code, fences and
@@ -124,9 +125,14 @@ public final class MarkdownMath {
         if (!markdown.contains("$") && !markdown.contains("\\(") && !markdown.contains("\\["))
             return new Protected(markdown, List.of());
 
-        final StringBuilder out = new StringBuilder(markdown.length());
         final List<Span> spans = new ArrayList<>();
-        final String[] lines = markdown.split("\n", -1);
+        // Display math may wrap: a `$$…$$` whose delimiters sit on different lines is
+        // lifted first, because the line scan below cannot see across the break and the
+        // markdown parse would otherwise eat the TeX — an `array`'s `\\` becomes `\`,
+        // and its `1. …` rows become an ordered list.
+        final String lifted = liftMultiLineDisplay(markdown, spans);
+        final StringBuilder out = new StringBuilder(lifted.length());
+        final String[] lines = lifted.split("\n", -1);
         Fence fence = null;
         for (int i = 0; i < lines.length; i++) {
             if (i > 0) out.append('\n');
@@ -145,6 +151,78 @@ public final class MarkdownMath {
             protectLine(line, out, spans);
         }
         return new Protected(out.toString(), List.copyOf(spans));
+    }
+
+    /**
+     * Lift every {@code $$…$$} display span whose delimiters sit on different lines,
+     * leaving a placeholder behind and appending the span. {@code $$} is always a
+     * display delimiter, so the tokens pair in document order; a pair sharing one line
+     * is left to {@link #protectLine}, which already handles it. Fences, inline code
+     * spans and backslash escapes are honored exactly as that scan honors them.
+     */
+    private static String liftMultiLineDisplay(final String markdown, final List<Span> spans) {
+        final String[] lines = markdown.split("\n", -1);
+        final int[] lineStart = new int[lines.length];
+        for (int i = 0, at = 0; i < lines.length; i++) {
+            lineStart[i] = at;
+            at += lines[i].length() + 1;
+        }
+        final List<int[]> tokens = new ArrayList<>();   // {line, column}
+        Fence fence = null;
+        for (int i = 0; i < lines.length; i++) {
+            if (null != fence) {
+                if (isFenceClose(fence, lines[i])) fence = null;
+                continue;
+            }
+            final Fence opened = fenceOpen(lines[i]);
+            if (null != opened) {
+                fence = opened;
+                continue;
+            }
+            for (final int column : displayTokens(lines[i])) tokens.add(new int[]{i, column});
+        }
+        final StringBuilder out = new StringBuilder(markdown.length());
+        int copied = 0;
+        for (int k = 0; k + 1 < tokens.size(); k += 2) {
+            final int[] open = tokens.get(k);
+            final int[] close = tokens.get(k + 1);
+            if (open[0] == close[0]) continue;          // one line: the line scan owns it
+            final int from = lineStart[open[0]] + open[1];
+            final int to = lineStart[close[0]] + close[1];
+            final String tex = markdown.substring(from + 2, to);
+            if (tex.isBlank()) continue;                // `$$ $$` is not a span
+            spans.add(new Span(tex, true));
+            out.append(markdown, copied, from).append(placeholder(spans.size() - 1));
+            copied = to + 2;
+        }
+        out.append(markdown, copied, markdown.length());
+        return out.toString();
+    }
+
+    /**
+     * The columns of every unescaped {@code $$} in one line of prose, stepping over code
+     * spans — the same scan {@link #protectLine} makes, so the two agree on what is a
+     * delimiter.
+     */
+    private static List<Integer> displayTokens(final String line) {
+        final List<Integer> columns = new ArrayList<>();
+        int i = 0;
+        while (i < line.length()) {
+            final char c = line.charAt(i);
+            if (c == '`') {
+                final int run = runLength(line, i, '`');
+                final int close = codeSpanClose(line, i + run, run);
+                i = close < 0 ? i + run : close + run;
+                continue;
+            }
+            if (c == '$' && !escaped(line, i) && i + 1 < line.length() && line.charAt(i + 1) == '$') {
+                columns.add(i);
+                i += 2;
+                continue;
+            }
+            i++;
+        }
+        return columns;
     }
 
     /**

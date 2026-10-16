@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Regenerates the "instruction sets" and "agent skills" dropdowns in the website
@@ -36,7 +37,10 @@ import java.util.List;
  * set); the menu icon is derived by convention as
  * {@code images/icons/space/&lt;leaf&gt;-icon.svg} (with the root {@code /m} mapping
  * to {@code mtron}). Skills are discovered from {@code docs/website/skills}, one
- * directory per skill ({@code SKILL.md} plus {@code references/*.md}).</p>
+ * directory per skill ({@code SKILL.md} plus {@code references/*.md}, {@code scripts/},
+ * and {@code assets/}); each listing drops the payload files {@link #isListed} names —
+ * {@code png}/{@code svg} images, {@code .sqlite} dumps, and a folder's
+ * {@code README.md}.</p>
  *
  * <p>Both dropdowns are delimited by HTML comment markers in
  * {@code docs/website/includes/header.html}: {@code <!-- INSTSET-MENU:START/END -->}
@@ -61,6 +65,18 @@ public class HeaderGenerator {
     private static final String INSTSET_END = "<!-- INSTSET-MENU:END -->";
     private static final String SKILLS_START = "<!-- SKILLS-MENU:START -->";
     private static final String SKILLS_END = "<!-- SKILLS-MENU:END -->";
+
+    /**
+     * Extensions a skill's dropdown never lists (see {@link #isListed}): images and
+     * SQLite dumps are payload, not pages.
+     */
+    private static final Set<String> SKIPPED_EXTENSIONS = Set.of("png", "svg", "sqlite");
+
+    /**
+     * Lower-cased file names a skill's dropdown never lists: a folder's own note, which
+     * is not a skill document.
+     */
+    private static final Set<String> SKIPPED_NAMES = Set.of("readme.md");
 
     public static void main(final String[] args) throws IOException {
         Path instsetDir = Path.of("docs/website/instset");
@@ -142,9 +158,11 @@ public class HeaderGenerator {
     /**
      * Walk the skill directory and collect each skill — a subdirectory holding a
      * {@code SKILL.md} plus optional {@code references/}, {@code scripts/}, and
-     * {@code assets/} directories.
+     * {@code assets/} directories. Each folder's listing drops the payload files
+     * {@link #isListed} names, so images, SQLite dumps and folder READMEs never reach
+     * the dropdown. Package-private for {@code HeaderGeneratorTest}.
      */
-    private static List<Skill> scanSkills(final Path skillsDir) throws IOException {
+    static List<Skill> scanSkills(final Path skillsDir) throws IOException {
         if (!Files.isDirectory(skillsDir)) {
             LOG.error("[header] not a directory: %s", skillsDir);
             return List.of();
@@ -170,6 +188,7 @@ public class HeaderGenerator {
         if (!Files.isDirectory(dir)) return List.of();
         try (final var stream = Files.list(dir)) {
             return stream.filter(Files::isRegularFile)
+                    .filter(HeaderGenerator::isListed)
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .filter(n -> n.endsWith(".md"))
@@ -187,12 +206,33 @@ public class HeaderGenerator {
         if (!Files.isDirectory(dir)) return List.of();
         try (final var stream = Files.list(dir)) {
             return stream.filter(Files::isRegularFile)
+                    .filter(HeaderGenerator::isListed)
                     .map(Path::getFileName)
-                    .filter(path -> !path.endsWith(".sqlite"))
                     .map(Path::toString)
                     .sorted()
                     .toList();
         }
+    }
+
+    /**
+     * Whether a skill's dropdown lists {@code file}, in any of its resource folders
+     * ({@code references/}, {@code scripts/}, {@code assets/}).
+     *
+     * <p>What a dropdown must not offer: payload rather than document. Images
+     * ({@code png}/{@code svg}) and SQLite dumps are data a reader cannot use as a
+     * page, and a folder's {@code README.md} is that folder's own note — a skill's
+     * document is its {@code SKILL.md}, which the menu links separately. Extensionless
+     * resources ({@code scripts/wsplus}) stay listed.
+     *
+     * <p>A filename test, not {@link Path#endsWith}: that compares whole path
+     * <em>elements</em>, so {@code Path.of("t.sqlite").endsWith(".sqlite")} is false and
+     * a data dump slips through (which is how {@code drstynx.sqlite} reached the menu).
+     */
+    static boolean isListed(final Path file) {
+        final String name = file.getFileName().toString();
+        if (SKIPPED_NAMES.contains(name.toLowerCase())) return false;
+        final int dot = name.lastIndexOf('.');
+        return dot < 0 || !SKIPPED_EXTENSIONS.contains(name.substring(dot + 1).toLowerCase());
     }
 
     /**
@@ -227,7 +267,7 @@ public class HeaderGenerator {
      * chevron that expands them in place, one open at a time via
      * {@code data-bs-parent}.
      */
-    private static String renderSkillsMenu(final List<Skill> skills) {
+    static String renderSkillsMenu(final List<Skill> skills) {
         final StringBuilder sb = new StringBuilder();
         sb.append("            <li class=\"nav-item dropdown\">\n");
         sb.append("                <a id=\"skills_dropdown\" class=\"nav-link dropdown-toggle\" href=\"#\" role=\"button\"\n");

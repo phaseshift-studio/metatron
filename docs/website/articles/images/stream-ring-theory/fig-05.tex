@@ -1,0 +1,19 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& & 1 \arrow{dr}[rotate=-40,outer xsep=-0.5em]{x} & &\\
+\arrow{r} & \arrow{ur} \arrow{dr} & & \arrow{r} & \! \\
+& & 1 \arrow{ur}[rotate=40,outer ysep=-0.7em,outer xsep=-0.4em]{x} & & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\!
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& & 1 \arrow{dr} & &\\
+\arrow{r} & \arrow{ur} \arrow{dr} & & \arrow{r}{x,x} & \! \\
+& & 1 \arrow{ur} & & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

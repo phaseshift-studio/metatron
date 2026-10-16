@@ -137,6 +137,8 @@ public interface Code extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
+        if (this.jvm().isEmpty())
+            return this.tid().isZero() ? noobj() : lhs;
         return Machine.current().applyCode(lhs, this);
     }
 

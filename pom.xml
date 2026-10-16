@@ -772,6 +772,63 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <!-- The theory articles, same runner, articles container. A directory
+                             walk collects no *skill* docs there (an article is neither
+                             SKILL.md nor under references/), so this goes straight to the
+                             article-html pass: every frontmatter .md under docs/website/
+                             articles becomes a sibling .html: frontmatter title and
+                             subtitle, the theory stylesheet, and its images/ references
+                             left relative so the tree beside it resolves. The markdown
+                             itself is never rewritten, so the author's .md stays as
+                             written. Must run after run-header-generator: the pages
+                             embed the shared header (pre-site rewrites it).
+                             -o must be the .metatron/articles alias (not the articles dir
+                             itself): the runner refuses an input/output pair that
+                             resolves to the same path, and the alias is what tells the
+                             html pass which container to render (symlinks are followed). -->
+                        <id>run-article-runner</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipMarkdown}</skip>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <argument>--add-modules</argument>
+                                <argument>jdk.incubator.vector</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.invoke=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.reflect=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util.concurrent.atomic=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.io=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.nio=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.net=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/sun.nio.cs=ALL-UNNAMED</argument>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>-Dmtron.singleBoot=${mtron.singleBoot}</argument>
+                                <argument>-Dmtron.reverse=${mtron.reverse}</argument>
+                                <argument>studio.phaseshift.metatron.docs.MarkdownRunner</argument>
+                                <argument>--html</argument>
+                                <argument>${project.basedir}/docs/website/articles</argument>
+                                <argument>-o</argument>
+                                <argument>${project.basedir}/.metatron/articles</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>bundle-site-scripts</id>
                         <!-- generate-resources, not pre-site: the website copies of wsplus are build
      products of bin/wsplus, and pre-site runs only for a site build, so they

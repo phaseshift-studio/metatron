@@ -1,0 +1,30 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=tiny]
+& \bar{a} \arrow{dr} & & \bar{a} \arrow{dr} && \\
+\! \arrow{ur} \arrow{dr} & & \! \arrow{ur} \arrow{dr} & & \! \\
+&  ab \arrow{ur} & & ab \arrow{ur} && \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+=
+\begin{tikzcd}[row sep=tiny, column sep=tiny]
+& \bar{a} \arrow{r} & \bar{a} \arrow{ddr} \\
+& \bar{a} \arrow{r} & ab \arrow{dr} \\
+\! \arrow{ur} \arrow{uur} \arrow{dr} \arrow{ddr} & & & \!. \\
+& ab \arrow{r} & \bar{a} \arrow{ur} \\
+& ab \arrow{r} & ab \arrow{uur} \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+=
+\begin{tikzcd}[row sep=tiny, column sep=tiny]
+& \bar{a} \arrow{dr} & \\
+\! \arrow{ur} \arrow{dr} \arrow{r} & ab\bar{a} \arrow{r} & \!. \\
+& abab \arrow{ur} & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

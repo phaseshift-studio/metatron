@@ -69,6 +69,9 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
 
     @Override
     public void close() {
+        // NOTE: this override is the real close path for a client -- CommonUtil.close(client) lands here, not
+        // on WebSocketObj.close(), since this class implements Rec/Closeable rather than WebSocketObj.
+        LOG.debug("closing client ready=%s", this.getReadyState());
         try {
             super.close();
         } catch (final Exception e) {
