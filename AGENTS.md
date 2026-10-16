@@ -704,3 +704,22 @@ guidelines. Key points:
 - Reference a GitHub issue (`Closes #N` or `Refs #N`)
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for full details.
+
+## XERJ (code search)
+
+This project uses XERJ for reference coding: when you are about to write code in
+unfamiliar territory, retrieve how somebody already solved it instead of guessing.
+
+```sh
+sh .xerj/start-node.sh &        # the node first — xerj mcp does NOT start one
+xerj search --prefix metatron "<plain words>"   # this repo's own sources
+xerj search --prefix ref      "<plain words>"   # the cloned reference projects
+xerj def --prefix metatron "<Symbol>"           # exact go-to-definition
+```
+
+`--prefix` is not optional here: `metatron-*` is this repository and `ref-*` is
+`ref/` (Graal/Truffle, JikesRVM, TinkerPop, RDF4J, LangChain4j); the tool's default
+prefix `ax` is empty, and neither `xerj search` nor `xerj def` will tell you that.
+Cite file:line for anything you rely on. Setup, corpora and caveats:
+[.xerj/README.md](./.xerj/README.md).
+

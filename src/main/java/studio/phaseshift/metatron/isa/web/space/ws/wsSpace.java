@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -114,7 +115,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                             if (null != pattern && pattern.isUri() && !config.containsKey(uri(HOST)))
                                 config.put(uri(HOST), uri(pattern.uriValue().retractPattern()));
                             final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(config, inst.arg(0).vid()));
-                            studio.phaseshift.metatron.isa.mach.type.Network.Helper.index(client);
+                            Network.Helper.index(client);
                             return client;
                         } catch (final Exception e) {
                             throw MTronException.of(e);

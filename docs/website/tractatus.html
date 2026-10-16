@@ -3149,7 +3149,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}M{{r}}e{{g}}T{{y}}a{{c}}T{{y}}R{{m}}o{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{m}}E{{m}}t{{b}}a{{b}}T{{r}}r{{m}}o{{m}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3797,7 +3797,7 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/263
+   	while parsing: nat::-10]@/sys/fail/265
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/267</code></pre>
 </div>
@@ -7079,16 +7079,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6616   6349240   1% /run'
+==&gt;'tmpfs                    6355856       6560   6349296   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  551243304 359714520  61% /'
-==&gt;'tmpfs                   31779272     154172  31625100   1% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032  556059380 354898444  62% /'
+==&gt;'tmpfs                   31779272     150256  31629016   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        264   6355588   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        268   6355584   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1349099968 572108576  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1349567960 571640584  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -7108,12 +7108,14 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'mvnw.cmd'
 ==&gt;node_modules
 ==&gt;'pom.xml'
+==&gt;'__pycache__'
 ==&gt;'README.md'
+==&gt;ref
 ==&gt;'RELEASE.md'
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[macHine faiLED][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
+==&gt;fail::[mAcHINE Failed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7301,7 +7303,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1505/54/34/064?tz=-0600
+==&gt;datetime:://2026.10:1518/53/46/023?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9116,7 +9118,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              start=&gt;[code=&gt;at(ab).plus('B'),
                      loop=&gt;second::1.0,
                      state=&gt;pause]@/sys/thread/b,
-             time=&gt;datetime:://2026.10:1505/54/36/561?tz=-0600,
+             time=&gt;datetime:://2026.10:1518/53/48/659?tz=-0600,
              runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
@@ -10020,11 +10022,9 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
-==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -10069,21 +10069,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rec::T[?[{?}name=&gt;str::T,
-    location=&gt;isa(area:V/+/id).!*id(),
-    {?}parent=&gt;auto_from::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id(),
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-    {?}points=&gt;int::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-    {?}age=&gt;int::T,
-    {?}skill=&gt;uri::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10093,21 +10079,7 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+
-==&gt;rec::T[?[{?}name=&gt;str::T,
-    location=&gt;isa(area:V/+/id).!*id(),
-    {?}parent=&gt;auto_from::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id(),
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-    {?}points=&gt;int::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-    {?}age=&gt;int::T,
-    {?}skill=&gt;uri::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 </div>

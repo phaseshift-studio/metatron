@@ -20,19 +20,25 @@ package studio.phaseshift.metatron.isa.mach.type.compiler.rewriter;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Rewriter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.MAX;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_FIXPOINT_REWRITER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -98,9 +104,51 @@ public class FixPointRewriter extends MRec implements Rewriter {
                         if (out.isCode())
                             rewritten.set(out.asCode());
                     });
+            // bottom-up after the pass: the rules are flat on the top-level chain, so a call-type inst argument
+            // — a branch's member, a map's function — is rewritten by the very same rules before the top-level
+            // pass sees it, and the fixpoint iterates over a branch that carries a branch. Recursion is
+            // strictly descending (an argument is a proper sub-code), so it terminates.
+            rewritten.set(descend(rewritten.get()));
             if (hash == (hash = rewritten.get().hashCode()))
                 done--;
         }
         return rewritten.get();
+    }
+
+    /**
+     * The same rules, one level down into the additive members: branch is the code ring's additive op, and its
+     * members are the one place like terms compose, so a member that is itself a call is rewritten to the
+     * fixpoint by {@link #apply} before the top-level pass groups the members (a branch that carries a branch
+     * reduces itself first). Only the members of branch insts are descended into — the arguments of every other
+     * inst stay exactly as written, because the chain rules are not compositional over a derivation's slots.
+     * A branch whose members all come back unchanged keeps its object identity, and a member that came in as an
+     * inst stays an inst (a single-instruction rewrite unwraps back to its inst).
+     */
+    private Code descend(final Code code) {
+        boolean changed = false;
+        final List<Inst> out = new ArrayList<>(code.insts().size());
+        for (final Inst inst : code.insts()) {
+            if (!BRANCH_INST_TID.equals(inst.tid().basePath()) || 0 == inst.args().count()) {
+                out.add(inst);
+                continue;
+            }
+            final List<Obj> args = inst.args().elements().toList();
+            final List<Obj> built = new ArrayList<>(args.size());
+            boolean argChanged = false;
+            for (final Obj arg : args) {
+                final Obj next = arg.isCall() && 0 < arg.asCall().insts().size()
+                        ? apply(arg).tryToInst()
+                        : arg;
+                if (arg != next)
+                    argChanged = true;
+                built.add(next);
+            }
+            if (argChanged) {
+                changed = true;
+                out.add(inst.args(lst(built)));
+            } else
+                out.add(inst);
+        }
+        return changed ? code(out) : code;
     }
 }

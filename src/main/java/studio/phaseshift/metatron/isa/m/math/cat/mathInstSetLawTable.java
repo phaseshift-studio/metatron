@@ -28,7 +28,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.FIELD_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.GROUP_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.Law.*;
+import static studio.phaseshift.metatron.isa.m.math.cat.Law.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.MONOID_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.RIG_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.RING_THEORY_TID;

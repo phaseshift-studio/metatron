@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
-import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
+import studio.phaseshift.metatron.isa.m.math.cat.Law;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  * InstPattern — one slot of a CATEGORICAL match: a predicate over an instruction's classification
- * (its declared process {@link catInstSet.Law laws}, optionally its {@link Inst.Form form}) rather
+ * (its declared process {@link Law laws}, optionally its {@link Inst.Form form}) rather
  * than its tid, with a multiplicity. A sequence of slots is a regular expression whose alphabet is
  * the category's morphism classifications — the abstract form of {@code RewriterBuilder}'s
  * inst-specific chain match, and the match side of a distribution rule:
@@ -45,7 +45,7 @@ import java.util.List;
  */
 public final class InstPattern {
 
-    private final List<catInstSet.Law> laws = new ArrayList<>();
+    private final List<Law> laws = new ArrayList<>();
     private Inst.Form form = null;
     private int min = 1;
     private boolean unbounded = false;
@@ -57,7 +57,7 @@ public final class InstPattern {
         return new InstPattern();
     }
 
-    public static InstPattern law(final catInstSet.Law... laws) {
+    public static InstPattern law(final Law... laws) {
         final InstPattern pattern = new InstPattern();
         pattern.laws.addAll(List.of(laws));
         return pattern;
@@ -69,7 +69,7 @@ public final class InstPattern {
         return pattern;
     }
 
-    public InstPattern and(final catInstSet.Law... laws) {
+    public InstPattern and(final Law... laws) {
         this.laws.addAll(List.of(laws));
         return this;
     }
@@ -107,7 +107,7 @@ public final class InstPattern {
     public boolean matches(final Inst inst) {
         if (null != this.form && Inst.Form.of(inst) != this.form)
             return false;
-        for (final catInstSet.Law required : this.laws)
+        for (final Law required : this.laws)
             if (!LawTable.declares(inst.tid(), required))
                 return false;
         return true;

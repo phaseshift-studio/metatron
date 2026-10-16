@@ -30,7 +30,7 @@ import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.BOOLEAN_THEOR
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.FIELD_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.GROUP_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.LATTICE_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.Law.*;
+import static studio.phaseshift.metatron.isa.m.math.cat.Law.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.MONOID_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.RIG_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.RING_THEORY_TID;

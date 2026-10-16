@@ -64,16 +64,13 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * Three names, three questions: {@link #jvmRoot()} is this JVM's bootstrap; {@link #root()} is the top of the
  * containment this thread is in, and is what resolution reads; {@link #current()} is where the thread stands.
  * <p>
- * There is no separate Frame object: <b>the machine IS the frame</b>. {@code push()} clones a child that owns its own
- * rec and its own component levels, and the enclosing machine is reached through each accumulating component's
- * {@code previous} link.
  * <p>
  * The members, by role:
  * <ol>
  *     <li><b>identity and place</b> -- {@code jvmRoot}, {@code root}, {@code mach0}, {@code defaultMachine}: where
  *     things are and who contains whom.</li>
  *     <li><b>the perspective</b> -- {@code CURRENT}, {@code current()}, {@code relativeToCurrent}: where THIS thread
- *     stands, which is what lets the machine be the frame.</li>
+ *     stands, which is what lets the machine be the machine.</li>
  *     <li><b>the address surface</b> -- {@code read}, {@code write}, {@code loaded}: the one way in, asking the
  *     network, then data memory, then instruction memory.</li>
  *     <li><b>the component contract</b> -- {@link Component} and its {@code machine()} walk.</li>
@@ -126,7 +123,7 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
-     * The frame of reference, per thread: the machine this thread is evaluating in, or {@link #root()} when nothing
+     * The machine of reference, per thread: the machine this thread is evaluating in, or {@link #root()} when nothing
      * moved it. A worker starts where its caller stood and publishes where it ended.
      */
     ThreadLocal<Machine> CURRENT = new ThreadLocal<>();
@@ -160,7 +157,7 @@ public interface Machine extends Rec, AutoCloseable {
         // tables, for now), which is idempotent; the fallback to instruction memory does not, and a raw
         // spelling can never match tables keyed by full identity. a scheme-less vid passes through
         // untouched: alignPrefix normalizes to coefficient one, which must not be imposed on an ordinary
-        // read, and a RELATIVE name stays relative -- "in the frame" is memory's contract to interpret.
+        // read, and a RELATIVE name stays relative -- "in the machine" is memory's contract to interpret.
         final fURI aligned = vid.hasScheme() ? machine.memory().alignPrefix(vid) : vid;
         final fURI name = aligned.equals(vid.one()) ? vid : aligned;
         final Obj dispatched = machine.network().read(name);
@@ -177,7 +174,7 @@ public interface Machine extends Rec, AutoCloseable {
         // import. Fetched through here, NOT by a caller reaching for instset() directly — a selector may do that as
         // an optimization, but the way instructions are fetched is this read.
         // It is asked on a MISS rather than before memory because an ISA read scans that ISA's tables and walks the
-        // frame chain, and every read in the VM comes through this method. Once the ISA mounts are dropped (nothing
+        // machine chain, and every read in the VM comes through this method. Once the ISA mounts are dropped (nothing
         // of an instruction set is in the data index) this becomes the only source for its jurisdiction, and the
         // order stops mattering.
         if (Helper.isReadingInstructionMemory())
@@ -325,7 +322,7 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
-     * Bind this machine's memory — used by {@link #push()} to hand a child frame its {@link MemoryUnion} over the
+     * Bind this machine's memory — used by {@link #push()} to hand a child machine its {@link MemoryUnion} over the
      * parent's memory.
      */
     default Machine memory(final Memory memory) {
@@ -334,7 +331,7 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
-     * Bind this machine's network — used by {@link #push(fURI)} to hand a child frame its own
+     * Bind this machine's network — used by {@link #push(fURI)} to hand a child machine its own
      * {@link studio.phaseshift.metatron.isa.mach.type.network.NetworkUnion} level. The close on the
      * displaced value is the close-before-clear contract: whatever reach the old level held hangs up.
      */
@@ -366,12 +363,12 @@ public interface Machine extends Rec, AutoCloseable {
             this.memory().addSpace(sysSpace);
             // This machine's OWN address space, at <vid>/# (the root's is /#): what a vid-less `#` cache used to
             // claim by accident, before it was made unregistered. It must be PER MACHINE — a single root /# also
-            // matches /xyz/iso, so a child's write would land in the root and outlive its frame. The vid-scoped
+            // matches /xyz/iso, so a child's write would land in the root and outlive its machine. The vid-scoped
             // pattern is more specific than /# and less specific than every mounted space, so mostSpecific gives
-            // each frame its own level: own, no leak up, no leak across — by construction rather than by accident.
+            // each machine its own level: own, no leak up, no leak across — by construction rather than by accident.
             final memSpace machineSpace = memSpace.unregistered(resolved.extend(ALL), resolved.extend(SPACE));
             // The machine's own address space carries the same q-processors as its infra space: an address that
-            // lands here (a frame that mints no infra of its own — a peer frame, say — resolves ~/sys/fail into
+            // lands here (a machine that mints no infra of its own — a peer machine, say — resolves ~/sys/fail into
             // this catch-all) must still find the processor its ?q names, or the write is refused as unattached.
             machineSpace.addQ(QCollection.docQ());
             machineSpace.addQ(QCollection.subQ());
@@ -381,14 +378,14 @@ public interface Machine extends Rec, AutoCloseable {
             this.memory().addSpace(machineSpace);
             // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.
             this.memory().write(this.vid(), this);
-            // this machine's log sink: a frame with none answers noobj, and GraphittyObjLogger.doLog then logs every level
+            // this machine's log sink: a machine with none answers noobj, and GraphittyObjLogger.doLog then logs every level
             final fURI vid = this.vid().resolve().extend(Helper.SYS_DIR.extend(LOGG));
             GraphittyObjLogger.setLogger(Helper.LOG_SINK);
             this.memory().write(vid, LogObj.sink(Helper.logLevels(this), vid));
             // DISCOVERY SOURCES come up with the ROOT, once, and only after its infra exists: a source is a
             // handler that announces this machine and writes what it hears into the roster. Guarded on the root's
             // VID rather than ROOT_MACHINE — that constant is assigned AFTER this constructor returns, so it is
-            // still null here. One responder per host, not per frame: the roster is read at the root.
+            // still null here. One responder per host, not per machine: the roster is read at the root.
             if (ROOT_MACHINE_VID.equals(this.vid())) {
                 //this.at(NETWORK).asRec().at(uri(SOURCE), rec(uri(webInstSet.MDNS_TID.name()), uri(webInstSet.MDNS_TID)), MUTABLE);
                 //this.logger().error("starting sources: %s", this.network().source());
@@ -399,7 +396,7 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
-     * This thread's frame stack, not initialized eagerly: until {@link #push()} is used there is no frame, and every
+     * This thread's machine stack, not initialized eagerly: until {@link #push()} is used there is no machine, and every
      * component accessor falls through to the machine's own slot.
      */
     /**
@@ -414,7 +411,7 @@ public interface Machine extends Rec, AutoCloseable {
      * The extension is a uri because it is an expression: multi-segment, templated and composed steps all work.
      * <p>
      * An extension carrying an <b>authority</b> is a different boundary: it names another mtron instance rather
-     * than another frame. That machine is forked as a separate OS process when the authority is on this same
+     * than another machine. That machine is forked as a separate OS process when the authority is on this same
      * physical machine (a loopback host), and merely declared as a peer otherwise — see {@link PeerSpawn}.
      */
     default Machine push(final fURI extension) {
@@ -423,23 +420,23 @@ public interface Machine extends Rec, AutoCloseable {
         // rather than hasAuthority(), which also demands an explicit port — a pushed host without one gets a free
         // port allocated, and the handle's vid then carries it.
         if (null != extension && extension.hasHost()) {
-            // RESOLVE FIRST: the frame's address encodes the port, so the port has to exist before it is derived.
+            // RESOLVE FIRST: the machine's address encodes the port, so the port has to exist before it is derived.
             final fURI peer = PeerSpawn.resolve(extension);
             // THE FRAME SPAWNS ITSELF, and it LIVES AT A LOCAL ADDRESS derived from the peer and anchored on the
             // ROOT: <root>/network/peer/<scheme>/<host>/<port>/<namespace>. Because the address is a path in THIS
-            // machine, the frame registers where every machine does, ~-relative state (~/sys/fail, ~/thread) stays
+            // machine, the machine registers where every machine does, ~-relative state (~/sys/fail, ~/thread) stays
             // local, and a plain local read reaches it — no remote uri is ever written through the wire.
             //
-            // ANCHORED ON THE ROOT, not on the current frame: a peer is a machine-level entity, and anchoring on
-            // the frame that happens to be current would nest the same peer's address under the pushed frame when a
-            // second push for the same authority happens from inside it (measured: <frame>/network/peer/…/worker
+            // ANCHORED ON THE ROOT, not on the current machine: a peer is a machine-level entity, and anchoring on
+            // the machine that happens to be current would nest the same peer's address under the pushed machine when a
+            // second push for the same authority happens from inside it (measured: <machine>/network/peer/…/worker
             // for the second push where the first got /network/peer/…/worker).
             //
             // ITS CONNECTION IS THE FRAME'S OWN NETWORK LEVEL: network.peer is <service-uri> => peer::T, and the
             // entry push was asked for carries the FULL declared address — the only thing that knows where the wire
-            // goes and what namespace the node mounts. The reach (the transport) is filled in by the frame's own
+            // goes and what namespace the node mounts. The reach (the transport) is filled in by the machine's own
             // constructor, and the level is built HERE rather than in that constructor because constructing a
-            // component inside a frame re-enters type resolution while that frame is current.
+            // component inside a machine re-enters type resolution while that machine is current.
             final BasicNetwork network = new BasicNetwork(mutableMap(
                     uri(PEER), rec(mutableMap(
                             PeerSpawn.service(peer),
@@ -451,20 +448,20 @@ public interface Machine extends Rec, AutoCloseable {
                     MACH_REMOTE_MACHINE_TID, Network.Helper.peerPath(peer)));
         }
         final fURI parentVID = this.vid();
-        // The ADDRESS ARITHMETIC IS SHARED with move and pop (Helper.frameAddress): `.`, `..` and `~` mean the
+        // The ADDRESS ARITHMETIC IS SHARED with move and pop (Helper.machineAddress): `.`, `..` and `~` mean the
         // same thing to all three, so a spelling cannot mean "up" to one instruction and something else to
         // another. What differs is only what the instruction then DOES with the address — push mints it, move
         // walks to it, pop discards it. A machine with NO vid (test machines, and any rootless construct) has no
         // address to extend, so the extension becomes the child's address outright and the descendant rule below
-        // does not apply: only a frame that HAS a parent address has to stay under it.
-        final fURI childVID = Helper.frameAddress(this, extension);
+        // does not apply: only a machine that HAS a parent address has to stay under it.
+        final fURI childVID = Helper.machineAddress(this, extension);
         if (null != parentVID && !Helper.descends(parentVID, childVID))
             // print the RESOLVED forms, because the raw ones are what made this message hard to act on: the check
             // compares resolved segment lists, so a raw `/.` and a raw `aaa` say nothing about which comparison
-            // failed. A frame's address must strictly extend its parent's, and now the message shows both sides.
+            // failed. A machine's address must strictly extend its parent's, and now the message shows both sides.
             // This is the guard for a caller that hands push an escape DIRECTLY: the push INSTRUCTION no longer
             // reaches it for `..`, because it resolves the address and mints the leaf from the address's parent
-            // (push(<../b>) == move(<..>).push(<b>)). So the caller here is Java, not a frame address.
+            // (push(<../b>) == move(<..>).push(<b>)). So the caller here is Java, not a machine address.
             throw MTronException.of("push(%s) does not descend from %s: resolved %s is not a strict descendant of %s",
                     extension, parentVID, childVID, parentVID.resolve());
         // THE CHILD OWNS ITS REC. Passing null keeps the clone's OWN copy of the map instead of handing the child
@@ -532,7 +529,7 @@ public interface Machine extends Rec, AutoCloseable {
         final Machine machine = CURRENT.get();
         if (null == machine)
             return this;
-        // A pushed peer's lifetime is its frame's: the process this machine forked is reaped with the frame.
+        // A pushed peer's lifetime is its machine's: the process this machine forked is reaped with the machine.
         PeerSpawn.reap(machine);
         final Obj parent = machine.parent();
         if (!(parent instanceof Machine parentMachine))
@@ -675,31 +672,31 @@ public interface Machine extends Rec, AutoCloseable {
         }
 
         /**
-         * Resolve a frame ADDRESS against the frame it is written in — the ONE definition of what {@code .},
-         * {@code ..} and {@code ~} mean to a frame instruction, shared by {@link Machine#push(fURI) push},
+         * Resolve a machine ADDRESS against the machine it is written in — the ONE definition of what {@code .},
+         * {@code ..} and {@code ~} mean to a machine instruction, shared by {@link Machine#push(fURI) push},
          * {@code move} and {@code pop} so the three cannot drift apart.
          * <p>
          * The arithmetic is fURI's, deliberately. {@code .} and {@code ..} are kept at parse and folded HERE,
-         * because this is the first place the BASE is known: {@code ..} reduces (it pops a segment of the frame's
-         * address), so {@code ../b} is the sibling {@code b}, {@code ~/..} is the parent frame, and {@code .} is
-         * the frame itself.
+         * because this is the first place the BASE is known: {@code ..} reduces (it pops a segment of the machine's
+         * address), so {@code ../b} is the sibling {@code b}, {@code ~/..} is the parent machine, and {@code .} is
+         * the machine itself.
          * <p>
          * {@code ~} is consumed BEFORE the fold rather than left inside it: the fold pops whatever precedes a
          * {@code ..}, so a base left in the path would be eaten by its own displacement ({@code ~/..} would
          * collapse to the empty path instead of naming the parent).
          * <p>
          * An absolute base popped PAST the root <b>saturates</b> — it stays AT the root — rather than becoming a
-         * displacement. A displacement ({@code ../../..}) is a direction, not a place, and a frame instruction
+         * displacement. A displacement ({@code ../../..}) is a direction, not a place, and a machine instruction
          * has to stand somewhere; saturation is also exactly the no-op {@link Machine#pop()} already performs
-         * when a frame has no parent. A machine with no vid (a test machine, any rootless construct) has nothing
+         * when a machine has no parent. A machine with no vid (a test machine, any rootless construct) has nothing
          * to descend from, so there the target becomes the address outright — which is what makes
          * {@code push(<a/b>)} mint a two-segment address on a vid-less machine.
          *
-         * @param here   the frame the address is written in — the base for a relative target
+         * @param here   the machine the address is written in — the base for a relative target
          * @param target the address as spelled, with {@code .}/{@code ..}/{@code ~} still in it
          * @return the resolved address, or {@code here}'s own vid when the target is null
          */
-        public static fURI frameAddress(final Machine here, final fURI target) {
+        public static fURI machineAddress(final Machine here, final fURI target) {
             if (null == target)
                 return null == here ? null : here.vid();
             // a wire address names a peer across a process boundary, not a place in this tree: taken as written
@@ -734,8 +731,8 @@ public interface Machine extends Rec, AutoCloseable {
          * WHOLE path to be compared against its own last segment, and they agree. The segment-wise test also keeps
          * {@code a/../b} legal (it reduces back inside the parent).
          * <p>
-         * WHO THIS GUARDS NOW. A frame address that crosses a level is no longer a caller error: the push
-         * INSTRUCTION resolves the address and mints its leaf from the frame at the address's PARENT, so
+         * WHO THIS GUARDS NOW. A machine address that crosses a level is no longer a caller error: the push
+         * INSTRUCTION resolves the address and mints its leaf from the machine at the address's PARENT, so
          * {@code push(<../b>) == move(<..>).push(<b>)} and never arrives here. This is the guard for
          * {@link Machine#push(fURI)} called DIRECTLY, where a single machine must still be the parent of what it
          * mints and an escape has no parent to be re-homed to.
@@ -751,7 +748,7 @@ public interface Machine extends Rec, AutoCloseable {
         }
 
         /**
-         * The {@code ~}-relative log sink, left unexpanded so {@code GraphittyObjLogger} reads each frame's own.
+         * The {@code ~}-relative log sink, left unexpanded so {@code GraphittyObjLogger} reads each machine's own.
          */
         public static final fURI LOG_SINK = f("~/sys/log");
 
@@ -775,7 +772,7 @@ public interface Machine extends Rec, AutoCloseable {
          * INSTRUCTION MEMORY IS BEING READ — this thread is inside the instset hop of {@link Machine#read(fURI)}. A
          * read made FROM an ISA read is a data read: answering one resolves the dom/rng types of the pattern, and
          * resolving a type is itself a read, so without this the hop re-entered itself until the stack died
-         * (measured: seven StackOverflowErrors in MachPushTest, where reads happen while a frame is mid-construction
+         * (measured: seven StackOverflowErrors in MachPushTest, where reads happen while a machine is mid-construction
          * and memory has not been populated yet).
          */
         private static final ThreadLocal<Boolean> READING_INSTRUCTION_MEMORY = ThreadLocal.withInitial(() -> false);
