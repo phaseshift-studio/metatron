@@ -1784,10 +1784,10 @@ reference to artifacts in metatron can be attached.
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a single-line token-usage bar — the tailor-made caller of the general ui stack bar: the est categories as colored sections (smallest first, largest last, an empty one skipped) against the context window (max), with in over max as the percent and the window sized behind the bar</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'actual input tokens of the chat'" class="text-info">&#39;actual input tokens of the chat&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#"the context window's size in tokens — the bar's window: the sections are its share, in__max the percent, the rest the unused tail"" class="text-info">max the percent, the rest the unused tail&quot;</a>
+  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'actual input tokens of the chat'" class="text-info">&#39;actual input tokens of the chat&#39;</a>
   <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'actual output tokens of the chat (counted for the record, not drawn)'" class="text-info">&#39;actual output tokens of the chat (counted for the record, not drawn)&#39;</a>
   <a href="#{?}est" class="text-light">{?}est</a> <span class="text-light">=&gt;</span> <a href="#'the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]'" class="text-info">&#39;the estimated composition of the window: [system=&gt;int, ai=&gt;int, user=&gt;int, tool=&gt;int]&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#"the context window's size in tokens — the bar's window: the sections are its share, in__max the percent, the rest the unused tail"" class="text-info">max the percent, the rest the unused tail&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1835,10 +1835,10 @@ reference to artifacts in metatron can be attached.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a tool specification" class="text-info">a tool specification</a> <span class="text-light">=&gt;</span> ?</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
   <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
   <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__llm__feature__tool_feature">

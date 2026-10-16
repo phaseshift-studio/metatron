@@ -757,11 +757,17 @@ traversal chain is a derivation witness: each step is labeled by the rule that j
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
            theory_unit_removal=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+           branch_collapse=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+           branch_inline=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
            theory_involution=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
            inverse_cancellation=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           derivation_contraction=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]
+           derivation_contraction=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+           ...(1 more)]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;theory_involution]==[&gt;&gt;theory_unit_removal]
-==&gt;[path::[obj=&gt;start(5)]]
+==&gt;[path::[obj=&gt;start(5),
+           branch_collapse=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+           branch_inline=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
+           law_shard=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]
 </code></pre>
 <p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand

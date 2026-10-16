@@ -365,11 +365,17 @@ traversal chain is a derivation witness: each step is labeled by the rule that j
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==>[path::[obj=>start(5).plus(0).neg().neg(),
            theory_unit_removal=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
+           branch_collapse=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
+           branch_inline=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
            theory_involution=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
            inverse_cancellation=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
-           derivation_contraction=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>}]]
+           derivation_contraction=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
+           ...(1 more)]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>theory_involution]==[>>theory_unit_removal]
-==>[path::[obj=>start(5)]]
+==>[path::[obj=>start(5),
+           branch_collapse=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
+           branch_inline=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>},
+           law_shard=>!inst?rng=#{*}&dom=#{?}(<#>::T){<j>}]]
 ```
 **A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a *type-part* (laws, forms, adjacency of classifications) and a *value-residue* (operand

@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -109,7 +111,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     void testPosition(final String compute, final String inst, final String expected, final String why) {
         final Inst target = "plus".equals(inst) ? plus() : asUriInt();
-        checkEquality(LOG, catInstSet.position(target), expectedLst(expected), true);
+        checkEquality(LOG, catGraph.position(target), expectedLst(expected), true);
     }
 
     private static Lst expectedLst(final String csv) {
@@ -119,7 +121,7 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     @Test
     public void testContestedNamesTheWitnesses() {
-        final Lst witnesses = catInstSet.contested(plus());
+        final Lst witnesses = catGraph.contested(plus());
         checkEquality(LOG, bool(witnesses.lstValue().stream().anyMatch(w -> w.uriValue().toString().contains("dom=/m/bool"))), bool(true), true);
         checkEquality(LOG, bool(witnesses.lstValue().stream().anyMatch(w -> w.uriValue().toString().contains("dom=/m/real"))), bool(true), true);
         checkEquality(LOG, bool(witnesses.lstValue().stream().anyMatch(w -> w.uriValue().toString().contains("dom=/m/uri"))), bool(true), true);
@@ -128,7 +130,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     @Test
     @Disabled
     public void testOrbitSpansIntsReversibleComponent() {
-        final Obj orbit = catInstSet.orbit(plus());
+        final Obj orbit = catGraph.orbit(plus());
         for (final String member : new String[]{"int", "bool", "bytes", "real", "str", "uri", "datetime"})
             checkEquality(LOG, bool(orbit.stream().map(o -> o.asRec().at(OBJ).asType()).anyMatch(o -> o.vid().name().equals(member))), bool(true), true);
         // degenerate vertices never join the orbit — only named types are vertices
@@ -139,23 +141,23 @@ public class catInstSetTest extends AbstractInstSetTest {
     @Test
     @Disabled
     public void testFamilyCountsTheSiblingRegistrations() {
-        checkEquality(LOG, jnt(catInstSet.family(plus()).lstValue().size()), jnt(13), true);
+        checkEquality(LOG, jnt(catGraph.family(plus()).lstValue().size()), jnt(13), true);
     }
 
     @Test
     @Disabled
     public void testCastSubgraphAuditAndImplicitCasts() {
         // the as-graph audit + implicit-cast manifestation, harvested from AsGraphTest
-        final Set<catInstSet.Finding> findings = catInstSet.check();
-        final Map<catInstSet.Position, Integer> kinds = new HashMap<>();
-        for (final catInstSet.Finding finding : findings) {
+        final Set<catAudit.Finding> findings = catAudit.check();
+        final Map<Position, Integer> kinds = new HashMap<>();
+        for (final catAudit.Finding finding : findings) {
             kinds.compute(finding.kind(), (a, b) -> null == b ? 1 : b + 1);
-            if (!finding.kind().equals(catInstSet.Position.incomparable))
+            if (!finding.kind().equals(Position.incomparable))
                 LOG.warn(finding);
         }
         LOG.warn("TYPES OF FINDINGS: %s", kinds);
 
-        final List<Inst> implicit = catInstSet.implicit();
+        final List<Inst> implicit = catAudit.implicit();
         for (final Inst inst : implicit)
             LOG.warn("implicit: %s", inst);
     }
@@ -184,7 +186,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "/m/type_test/french               % /m/type_test/nordic            % AMBIGUOUS"},
             delimiter = '%')
     public void testTypeTestSiblingLabels(final String siblingA, final String siblingB, final String label) {
-        final List<String> labels = catInstSet.check().stream()
+        final List<String> labels = catAudit.check().stream()
                 .filter(v -> null != v.kind() && v.insts().size() > 1)
                 .filter(v -> v.insts().stream().anyMatch(i -> i.tid().dom().basePath().equals(f(siblingA)))
                         && v.insts().stream().anyMatch(i -> i.tid().dom().basePath().equals(f(siblingB))))
@@ -566,9 +568,107 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
+     * {@code branch_collapse} — the additive like-term law on the branch, the code ring's additive op: equal
+     * members of a branch collapse to the single member with the summed coefficients (x + x = 2·x),
+     * first-occurrence order preserved — the additive normal form the follow-on distributivity rewrite consumes.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a duplicate pair among three collapses; the distinct survivor keeps its position
+            "1+2.branch(+2,+4,+2)  % start(1).plus(2).branch(plus{2}(2),plus(4))      % {{2}5,7}",
+            // a survivor before the pair stays before it
+            "1+2.branch(+4,+2,+2)  % start(1).plus(2).branch(plus(4),plus{2}(2))      % {{2}5,7}",
+            // three equal members sum to the coefficient 3, and the single survivor then inlines (branch_inline)
+            "1+2.branch(+2,+2,+2)  % start(1).plus(2).plus{3}(2)                     % {3}5",
+            // no equal members — the law is the identity on distinct addition
+            "1+2.branch(+2,+4,+8)  % start(1).plus(2).branch(plus(2),plus(4),plus(8)) % {5,7,11}",
+            // like terms at different multiplicities — the coefficient is summed, not part of the identity
+            "1.branch({3}10,{2}10,13)  % start(1).branch({5}10,13)  % {{5}10,13}",
+            // mixed: a code pair and an inst trio each sum their own like terms, the distinct singletons
+            // keep their positions, and with four members left the branch stays (no inline)
+            "1.branch(+2.+2,plus{2}(2).+2,plus(2),plus{4}(2),plus(3),plus(2),mult(10))  % start(1).branch(plus{3}(2).plus(2),plus{6}(2),plus(3),mult(10))  % {{3}5,{6}3,4,10}",
+    }, delimiter = '%')
+    public void testBranchCollapse(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * {@code branch_collapse} on chain members — equal CODES collapse like equal single insts, but the
+     * expected shape (a collapsed code carrying the summed coefficient) has no mtron sugar to parse back,
+     * so pin it by structure and value instead: the branch loses its duplicate member, and the stream it
+     * still produces is the one the law promises.
+     */
+    @Test
+    public void testBranchCollapseCodeMembers() {
+        final Code code = ObjmtronSerializer.parse("1.branch(2.neg(),4.neg(),2.neg())");
+        final Inst branch = catRewrite(code).insts().stream()
+                .filter(i -> BRANCH_INST_TID.equals(i.tid().basePath()))
+                .findFirst().orElseThrow();
+        // three members with a duplicate pair, collapsed to two
+        assertEquals(2, branch.args().count());
+        // the duplicate collapsed to the code carrying the summed coefficient at its head inst
+        assertEquals(ObjmtronSerializer.parse("start(1).branch(map{2}(2).neg(),map(4).neg())").asCode().insts().get(1), branch);
+        // the collapse is stream-transparent: -2 twice, -4 once
+        assertEquals(ObjmtronSerializer.parse("{{2}-2,-4}"), code.apply(noobj()));
+    }
+
+    /**
+     * {@code branch_inline} — the single-addend law: a branch whose members have come to one unwraps its
+     * frame (a.branch(b).c |-> a.b.c), on its own for a hand-written lone branch and on what
+     * {@code branch_collapse} left behind (a.branch(b,b).c |-> a.b{2}.c). Stream-transparent in every shape.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a lone hand-written branch unwraps, no identical pair needed
+            "1.branch(+2)      % start(1).plus(2)        % 3",
+            // a lone chain member unwraps by its insts
+            "1.branch(+2.neg()) % start(1).plus(2).neg()  % -3",
+            // a non-call member unwraps as the map that emits it
+            "1.branch(2)       % start(1).map(2)          % 2",
+            // the collapse's single survivor is inlined with its summed coefficient
+            "1.branch(+2,+2)   % start(1).plus{2}(2)      % {2}3",
+            // the collapse's chain survivor is inlined with its summed coefficient at the head inst
+            "1.branch(2.neg(),2.neg())  % start(1).map{2}(2).neg()  % {2}-2",
+            // two distinct members stay branched
+            "1.branch(+2,+4)   % start(1).branch(plus(2),plus(4))   % {3,5}",
+            // an inst member and a code member that start the same are distinct — no collapse
+            "1.branch(+2,+2.+2)  % start(1).branch(plus(2),plus(2).plus(2))  % {3,5}",
+            // a fully-duplicate chain pair collapses, then inlines
+            "1.branch(+2.+2,+2.+2)  % start(1).plus{2}(2).plus(2)  % {2}5",
+            // like chains already carrying head coefficients sum their multiplicities (1 + 10)
+            "1.branch(+2.+2,plus{10}(2).+2)  % start(1).plus{11}(2).plus(2)  % {11}5",
+            // a fully-duplicate scalar pair inlines into the map that emits the summed term
+            "1.branch(10,10)      % start(1).map({2}10)  % {2}10",
+            "1.branch({2}10,{3}10)  % start(1).map({5}10)  % {5}10",
+    }, delimiter = '%')
+    public void testBranchInline(final String code, final String expected, final String expectedResult) throws Exception {
+        rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
      * The shared rewrite assertion: the cat-only fixpoint compiles the code to {@code expected}, and the
      * code still evaluates to {@code expectedResult}.
      */
+    /**
+     * The two laws at a FIXPOINT driven through the rewriter itself — the rules are flat on the top-level
+     * chain, so a branch living inside a member is rewritten bottom-up by the rewriter (the rules see it only
+     * once it has reduced itself), and the like terms are summed in the pass after: branch(+2,
+     * branch(+2, plus{3}(2))) |-> branch(+2, plus{4}(2)) |-> plus{5}(2).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the member's own branch (1 + 3) reduces to its term, which then sums with its twin (1) to 5
+            "1.branch(+2,branch(+2,plus{3}(2)))    % start(1).plus{5}(2)  % {5}3",
+            // two equal NESTED branches are like terms too, once each is reduced — multiplicity 2 + 2 = 4
+            "1.branch(branch(+2,+2),branch(+2,+2))  % start(1).plus{4}(2)  % {4}3",
+    }, delimiter = '%')
+    public void testBranchFixpoint(final String code, final String expected, final String expectedResult) {
+        final Code firstStage = ObjmtronSerializer.parse(code);
+        final Call compilation = FixPointRewriter.single().apply(firstStage).tryToInst();
+        assertEquals(ObjmtronSerializer.parse(expected), compilation);
+        assertEquals(ObjmtronSerializer.parse(expectedResult), compilation.apply(noobj()));
+    }
+
     private static void rewriteAssert(final String code, final String expected, final String expectedResult) {
         final Code firstStage = ObjmtronSerializer.parse(code);
         // an untouched twin: firstStage is the object handed to the rewriter, and this one is what it was parsed as

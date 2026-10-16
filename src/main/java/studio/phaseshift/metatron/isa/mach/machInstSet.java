@@ -103,7 +103,7 @@ public class machInstSet extends AbstractInstSet {
      * All three SPEAK ONE ADDRESS DIALECT, and it is the {@code ..} motif: {@code ~} is the frame you stand in,
      * {@code ~/a} (or plain {@code a}) is its child, {@code ..} is its parent, {@code ../b} is the sibling
      * {@code b}, and {@code ../../..} walks as far up as asked. The arithmetic lives in ONE place —
-     * {@link Machine.Helper#frameAddress} — so the three cannot drift; they differ only in what they DO with the
+     * {@link Machine.Helper#machineAddress} — so the three cannot drift; they differ only in what they DO with the
      * address they are handed. {@code push} MINTS the address, {@code move} WALKS to it without closing anything,
      * {@code pop} DISCARDS it.
      * <p>
@@ -713,7 +713,7 @@ public class machInstSet extends AbstractInstSet {
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@~/thread/ping")),
                 uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
-instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
+                        instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("~/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
                             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();
@@ -732,7 +732,7 @@ instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, 
                                     final Machine here = Machine.current();
                                     if (inst.arg(0).isNoObj())
                                         return here.push();
-                                    final fURI target = Machine.Helper.frameAddress(here, inst.arg(0).uriValue());
+                                    final fURI target = Machine.Helper.machineAddress(here, inst.arg(0).uriValue());
                                     // a wire address names a PROCESS boundary, not a place in this tree: it is not split
                                     // into container + leaf, because the authority IS the frame's identity
                                     if (target.hasHost() || target.hasScheme())
@@ -744,7 +744,7 @@ instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, 
                                     final fURI containerAddress = target.asNode().retract(1);
                                     final Machine container = containerAddress.equals(here.vid())
                                             ? here // the common case: a plain child of where we already stand — no read
-                                            : Helper.frameAt(here, containerAddress, "push");
+                                            : Helper.machineAt(here, containerAddress, "push");
                                     return container.push(f(target.name()));
                                 }),
                                 "the lhs is not consulted: push acts on the FRAME the code is running in, and carries the value flowing through untouched",
@@ -770,7 +770,7 @@ instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, 
                                         throw MTronException.of("the root machine can not be closed via pop");
                                     if (inst.arg(0).isNoObj())
                                         return here.pop();
-                                    final Machine named = inst.arg(0).isMachine() ? inst.arg(0).asMachine() : Helper.frameAt(here, inst.arg(0).uriValue(), "pop");
+                                    final Machine named = inst.arg(0).isMachine() ? inst.arg(0).asMachine() : Helper.machineAt(here, inst.arg(0).uriValue(), "pop");
                                     if (Helper.sameFrame(named, here))
                                         return here.pop();
                                     throw MTronException.of("pop(%s) is not the frame you stand in (%s): a frame is discarded by the one that holds it — pop() where you stand, or move(<%s>) there first",
@@ -788,7 +788,7 @@ instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, 
                         // move() is move(<..>): the NON-destructive way up, and the whole point of the motif —
                         // pop() destroys the frame it leaves, move() leaves it standing and reachable by address
                         docWrap(instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) ->
-                                        Machine.current(Helper.frameAt(Machine.current(), inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue(), "move"))),
+                                        Machine.current(Helper.machineAt(Machine.current(), inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue(), "move"))),
                                 "the lhs is not consulted: move chooses the FRAME the next code runs in",
                                 "the frame moved to — \\(\\mathrm{move}(t) \\mapsto f\\) where \\(f\\) is the machine \\(t\\) addresses",
                                 Map.of(jnt(0), "\\(t\\), the address to stand in: `~` is the frame you are in, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling \\(b\\), and `../../..` walks up. Absent, \\(t = \\;..\\) — bare `move()` IS `move(<..>)`"),
@@ -984,13 +984,13 @@ instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, 
          * canonically, so the equality check catches every spelling of it. Anything that resolves to something other
          * than a frame is refused BY ADDRESS, so the message names what was asked for rather than what was found.
          */
-        public static Machine frameAt(final Machine here, final fURI target, final String instruction) {
-            final fURI address = Machine.Helper.frameAddress(here, target);
+        public static Machine machineAt(final Machine here, final fURI target, final String instruction) {
+            final fURI address = Machine.Helper.machineAddress(here, target);
             if (null == address || address.isEmpty() || address.equals(ROOT_MACHINE_VID))
                 return Machine.root();
             final Obj found = Machine.read(address);
             if (!found.isMachine())
-                throw MTronException.of("%s(%s) found no frame: resolved %s is %s",
+                throw MTronException.of("%s(%s) found no machine: resolved %s is %s",
                         instruction, target, address, found.isNoObj() ? "empty" : "a " + found.tid());
             return found.asMachine();
         }

@@ -440,6 +440,18 @@ categorical realization of types and insts as objects and morphisms</p>
                          pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
                          obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                          inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+              rewrite=&gt;[/m/math/cat/inst/rewrite/theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/branch_collapse?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/branch_inline?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_idempotent?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_absorbing?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_monoidic?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_poset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/inverse_cancellation?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/form_map_unwrap?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/derivation_contraction?rng=code{?}&amp;dom=code(){&lt;j&gt;},
+                        /m/math/cat/inst/rewrite/law_shard?rng=code{?}&amp;dom=code(){&lt;j&gt;}],
               inst=&gt;[as?rng=morphism&amp;dom=#(category::T[?[obj=&gt;inst::T,
   form=&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,standard),
   {?}src=&gt;object::T,
@@ -544,16 +556,7 @@ categorical realization of types and insts as objects and morphisms</p>
    bottom=&gt;&lt;#&gt;::T,
    top=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/lattice_theory,
                      theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/semilattice_theory,
-                     theory::T[?[add=&gt;inst::T,mul=&gt;inst::T,zero=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/near_ring_theory],
-              rewrite=&gt;[/m/math/cat/inst/rewrite/theory_unit_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/theory_involution?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_idempotent?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_absorbing?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_monoidic?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/law_poset?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/inverse_cancellation?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/form_map_unwrap?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                        /m/math/cat/inst/rewrite/derivation_contraction?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/math/cat</code></pre>
+                     theory::T[?[add=&gt;inst::T,mul=&gt;inst::T,zero=&gt;&lt;#&gt;::T]]@/m/math/cat/theory/near_ring_theory]]@/m/math/cat</code></pre>
                     </div>
                 </div>
             </div>
@@ -561,7 +564,7 @@ categorical realization of types and insts as objects and morphisms</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">17</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">9</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">17</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">1</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">12</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -628,7 +631,13 @@ categorical realization of types and insts as objects and morphisms</p>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">rewrites</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__math__cat__inst__rewrite__derivation_contraction?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__math__cat__inst__rewrite__branch_collapse?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">branch_collapse</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__math__cat__inst__rewrite__branch_inline?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">branch_inline</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__math__cat__inst__rewrite__derivation_contraction?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">derivation_contraction</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__math__cat__inst__rewrite__form_map_unwrap?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -648,6 +657,9 @@ categorical realization of types and insts as objects and morphisms</p>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__math__cat__inst__rewrite__law_poset?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">law_poset</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__math__cat__inst__rewrite__law_shard?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">law_shard</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__math__cat__inst__rewrite__theory_involution?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">theory_involution</span>
@@ -991,8 +1003,38 @@ categorical realization of types and insts as objects and morphisms</p>
     
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">9</span></h3>
-    <div class="card mb-3" id="__m__math__cat__inst__rewrite__derivation_contraction?rng=__m__code{?}&dom=__m__code">
+    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">12</span></h3>
+    <div class="card mb-3" id="__m__math__cat__inst__rewrite__branch_collapse?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">branch_collapse</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/inst/rewrite/branch_collapse?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/branch_collapse?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the additive like-term law \(x + x \leadsto x\{2\}\) on the branch, the code ring&#39;s additive op: equal members of a branch collapse to the single member with the summed coefficients -- \(\mathrm{branch}(+2, +4, +2) \leadsto \mathrm{branch}(+2\{2\}, +4)\) -- the additive normal form the code ring&#39;s distributivity law consumes
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__inst__rewrite__branch_inline?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">branch_inline</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/inst/rewrite/branch_inline?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/branch_inline?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the single-addend law \(\mathrm{a} \cdot \mathrm{branch}(b) \cdot \mathrm{c} \leadsto \mathrm{a} \cdot b \cdot \mathrm{c}\): a branch of one member is that member added to nothing, so the frame unwraps, its own coefficient folded into the member -- after \(\mathrm{branch\_collapse}\), \(\mathrm{a} \cdot \mathrm{branch}(b, b) \cdot \mathrm{c} \leadsto \mathrm{a} \cdot b\{2\} \cdot \mathrm{c}\), and \(\mathrm{branch\{c\}}(b) \leadsto b&quot;{c}\) -- a non-call member unwraps as the map that emits it, \(\mathrm{a} \cdot \mathrm{branch}(x) \cdot \mathrm{c} \leadsto \mathrm{a} \cdot \mathrm{map}(x) \cdot \mathrm{c}\)
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__inst__rewrite__derivation_contraction?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-warning fw-bold">derivation_contraction</span>
@@ -1093,6 +1135,21 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/law_poset?rng=code{?}&dom=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the poset law \(x &gt; a \wedge x &gt; b \iff x &gt; \max(a, b)\): adjacent comparisons of the same ordered type compose to the stricter bound -- \(\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))\), \(\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))\)
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__math__cat__inst__rewrite__law_shard?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">law_shard</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/math/cat/inst/rewrite/law_shard?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/law_shard?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the distribution kernel \((a+b) \cdot c = (a \cdot c + b \cdot c) \cdot c\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, reapply the reducer behind a barrier -- \(\{1,2,3\}.f.\Sigma \leadsto [\mathrm{barrier}.\Sigma,\ \{1,3\}.f.\Sigma,\ \{2\}.f.\Sigma] == [\mathrm{to}(),\ \mathrm{to}(a),\ \mathrm{to}(b)]\)
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>

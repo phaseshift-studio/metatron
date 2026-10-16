@@ -15,6 +15,10 @@ opencode.json
 !.github/workflows/docker.yml
 target/
 node_modules/
+# Reference-coding corpora: shallow clones of the open-source projects nearest
+# to metatron, indexed locally by XERJ into ref-* (see .xerj/README.md). ~600 MB
+# of somebody else's source — never part of a commit.
+ref/
 .metatron.history
 *.iml
 /.venv/

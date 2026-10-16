@@ -19,16 +19,16 @@
 package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
-import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
+import studio.phaseshift.metatron.isa.m.math.cat.Law;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 
 import java.util.List;
 
 /**
  * FloatWalk — the shard cut, COMPUTED rather than pattern-matched: push a coefficient rightward
- * through the chain while each instruction declares {@link catInstSet.Law#floatable} (Thm 6,
+ * through the chain while each instruction declares {@link Law#floatable} (Thm 6,
  * universal functional commutativity) and answer the index of the first instruction that declares
- * {@link catInstSet.Law#blocked} (Thm 17: a reduce anchors the coefficient). The walk starts after
+ * {@link Law#blocked} (Thm 17: a reduce anchors the coefficient). The walk starts after
  * the chain's seed: position 0 is the initial inst and is never asked to float — a start has no
  * coefficient to commute past.
  * <p>
@@ -51,9 +51,9 @@ public final class FloatWalk {
     public static int cut(final List<Inst> chain) {
         for (int i = 1; i < chain.size(); i++) {
             final Inst inst = chain.get(i);
-            if (LawTable.declares(inst.tid(), catInstSet.Law.blocked))
+            if (LawTable.declares(inst.tid(), Law.blocked))
                 return i;
-            if (!LawTable.declares(inst.tid(), catInstSet.Law.floatable))
+            if (!LawTable.declares(inst.tid(), Law.floatable))
                 return NO_CUT;
         }
         return NO_CUT;

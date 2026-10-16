@@ -46,8 +46,8 @@ public interface WebSocketObj extends Rec, Closeable {
 
     record IO(MIME.MIMEType input, MIME.MIMEType output) {
         public static IO of(final Rec obj, final MIME.MIMEType defaultType) {
-            final MIME.MIMEType input = obj.has(IN) ? MIME.MIMEType.of(obj.at(IN).uriValue().toString()) : defaultType;
-            final MIME.MIMEType output = obj.has(OUT) ? MIME.MIMEType.of(obj.at(OUT).uriValue().toString()) : defaultType;
+            final MIME.MIMEType input = obj.has(IN) ? MIME.MIMEType.of(obj.at(IN).uriValue().toString(), defaultType) : defaultType;
+            final MIME.MIMEType output = obj.has(OUT) ? MIME.MIMEType.of(obj.at(OUT).uriValue().toString(), defaultType) : defaultType;
             return new IO(input, output);
         }
     }
