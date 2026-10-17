@@ -467,10 +467,6 @@ terminal widgets to spruce up the metatron</p>
                      pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          inst=&gt;[as?rng=str&amp;dom=widget(str::T){&lt;j&gt;},
-                 display?rng=noobj{0}&amp;dom=widget(){&lt;j&gt;},
-                 nano?rng=#{?}&amp;dom=#{?}(){&lt;j&gt;},
-                 less?rng=noobj{0}&amp;dom=str(isa(int::T).else(10)){&lt;j&gt;}],
           type=&gt;[rec::T[][ctor?rng=console&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/console,
                  uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@/m/mach/ui/anchor,
                  rec::T[?[{?}border=&gt;str::T,
@@ -538,7 +534,11 @@ terminal widgets to spruce up the metatron</p>
                  widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?rng=modal_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/modal_widget,
                  widget::T[?[{?}data=&gt;rec::T,
    {?}context=&gt;int::T,
-   {?}total=&gt;int::T]][ctor?rng=stack_bar_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/stack_bar_widget]]@/m/mach/ui</code></pre>
+   {?}total=&gt;int::T]][ctor?rng=stack_bar_widget&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/mach/ui/widget/stack_bar_widget],
+          inst=&gt;[as?rng=str&amp;dom=widget(str::T){&lt;j&gt;},
+                 display?rng=noobj{0}&amp;dom=widget(){&lt;j&gt;},
+                 nano?rng=#{?}&amp;dom=#{?}(){&lt;j&gt;},
+                 less?rng=noobj{0}&amp;dom=str(isa(int::T).else(10)){&lt;j&gt;}]]@/m/mach/ui</code></pre>
                     </div>
                 </div>
             </div>
@@ -831,8 +831,8 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a menu bar widget" class="text-success">a menu bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#height" class="text-light">height</a> <span class="text-light">=&gt;</span> <a href="#'the interior height of the menu bar in rows'" class="text-info">&#39;the interior height of the menu bar in rows&#39;</a>
-  <a href="#lines" class="text-light">lines</a> <span class="text-light">=&gt;</span> <a href="#'a lst of line widgets laid out across the bar'" class="text-info">&#39;a lst of line widgets laid out across the bar&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lines" class="text-light">lines</a> <span class="text-light">=&gt;</span> <a href="#'a lst of line widgets laid out across the bar'" class="text-info">&#39;a lst of line widgets laid out across the bar&#39;</a>
+  <a href="#height" class="text-light">height</a> <span class="text-light">=&gt;</span> <a href="#'the interior height of the menu bar in rows'" class="text-info">&#39;the interior height of the menu bar in rows&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__modal_widget">
@@ -1141,9 +1141,9 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a table widget" class="text-success">a table widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}row" class="text-light">{?}row</a> <span class="text-light">=&gt;</span> <a href="#'a lst of poly table rows'" class="text-info">&#39;a lst of poly table rows&#39;</a>
-  <a href="#{?}metadata" class="text-light">{?}metadata</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows of data behind the display'" class="text-info">&#39;a lst of rows of data behind the display&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}metadata" class="text-light">{?}metadata</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows of data behind the display'" class="text-info">&#39;a lst of rows of data behind the display&#39;</a>
   <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'a lst of obj table headers'" class="text-info">&#39;a lst of obj table headers&#39;</a>
+  <a href="#{?}row" class="text-light">{?}row</a> <span class="text-light">=&gt;</span> <a href="#'a lst of poly table rows'" class="text-info">&#39;a lst of poly table rows&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_select_widget">
@@ -1182,10 +1182,10 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree select tool" class="text-success">a tree select tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
-  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
   <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_widget">

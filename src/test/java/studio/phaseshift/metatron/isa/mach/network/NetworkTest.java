@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static studio.phaseshift.metatron.Tokens.AUTHORITY;
 import static studio.phaseshift.metatron.Tokens.KIND;
+import static studio.phaseshift.metatron.Tokens.MACHINE;
 import static studio.phaseshift.metatron.Tokens.STATUS;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -100,8 +101,8 @@ public class NetworkTest extends AbstractMetatronTest {
     void testAnAddressInTheRosterIsKnownNotDown() {
         final Obj declared = Machine.read(Network.ROOT_ROSTER);   // this class's own peer cluster lives here
         try {
-            Machine.write(Network.ROOT_ROSTER, rec(mutableMap(
-                    uri("ws://metatron.local."), uri("ws://10.0.0.1:8777/"))));
+            Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
+                    uri("ws://metatron.local."), uri("ws://10.0.0.1:8777/"))))));
             final Obj report = Machine.current().network().status(noobj());
             final Rec entry = report.stream().map(Obj::asRec)
                     .filter(one -> "ws://metatron.local.".equals(one.at(uri(AUTHORITY)).uriValue().toString()))

@@ -116,12 +116,26 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
+     * THE MACHINES the roster knows: {@code <host> => reach{+}}, one row per machine and its reaches — an
+     * endpoint uri to dial or the transport that reaches it.
+     * <p>
+     * The roster is a CONTAINER, not the listing: it carries {@code discover} beside {@code machine}, so a
+     * consumer that wants machines has to say so. Reading {@code roster()} as the listing walks
+     * {@code {discover, machine}} and probes a discovery handler as though it were a peer.
+     */
+    default Rec machines() {
+        final Obj field = this.roster().at(uri(MACHINE));
+        return field.isRec() ? field.asRec() : rec();
+    }
+
+    /**
      * Is this address a <b>peer</b>? A connection this machine holds, or one the roster declares.
      */
     default boolean isPeer(final fURI vid) {
         return vid.hasAuthority()
                 && (Helper.peerAuthorities(this).stream().anyMatch(peer -> Helper.sameService(peer, vid))
-                || Stream.concat(this.roster().keys(), this.roster().values())
+                || this.machines().elements()
+                .flatMap(kv -> Stream.concat(Stream.of(kv.first()), kv.second().stream()))
                 .filter(Obj::isUri).map(Obj::uriValue).anyMatch(known -> Helper.sameService(known, vid)));
     }
 
@@ -140,7 +154,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * local memory.
      */
     default Obj transportOf(final fURI authority) {
-        final Obj declared = Stream.concat(this.peers().elements(), this.roster().elements())
+        final Obj declared = Stream.concat(this.peers().elements(), this.machines().elements())
                 .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), authority))
                 .map(Rel::second)
                 .map(reach -> reach.isRec() ? reach.asRec().at(TRANSPORT) : reach)
@@ -149,7 +163,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         if (!declared.isNoObj())
             return declared;
         // a DISCOVERED machine is keyed by the machine, so its addresses are the VALUES — one or more of them
-        return this.roster().elements().flatMap(kv -> kv.second().stream())
+        return this.machines().elements().flatMap(kv -> kv.second().stream())
                 .filter(Obj::isUri)
                 .filter(address -> Helper.sameService(address.uriValue(), authority)
                         && java.util.Objects.equals(address.uriValue().scheme(), authority.scheme()))
@@ -344,7 +358,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      */
     default Obj status(final Obj lhs) {
         final Obj field = lhs.isRec() ? lhs.asRec().at(uri(PEER)) : noobj();
-        final Obj roster = field.isRec() ? field : this.roster();
+        final Obj roster = field.isRec() ? field : this.machines();
         if (!roster.isRec())
             return noobj(); // nothing declared: an empty cluster, not an error
         return objs(roster.asRec().jvm().entrySet().stream()

@@ -3176,7 +3176,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}m{{y}}e{{b}}t{{y}}A{{r}}t{{m}}R{{m}}o{{r}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}m{{b}}E{{g}}t{{r}}A{{c}}t{{m}}r{{y}}o{{m}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3271,7 +3271,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 ==&gt;0x6d65746174726f6e
 mtron&gt; bytes::'48656c6c6f'     ​2​
 ==&gt;fail::['48656c6c6f' [string] is not a bytes::T
-   	while parsing: bytes::'48656c6c6f']@/sys/fail/246</code></pre>
+   	while parsing: bytes::'48656c6c6f']@/sys/fail/248</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3729,7 +3729,7 @@ mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     �
 ==&gt;fail::[parse error at line 1, col 19:
      filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
                        ^
-     could not parse at '&lt;']@/sys/fail/258
+     could not parse at '&lt;']@/sys/fail/261
 mtron&gt; *filtered     ​3​</code></pre>
 </div>
 </div>
@@ -3824,9 +3824,9 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/263
+   	while parsing: nat::-10]@/sys/fail/266
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/265</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/267</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3925,7 +3925,7 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/267
+   	while parsing: nat::-10]@/sys/fail/268
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/269</code></pre>
 </div>
@@ -7106,16 +7106,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6692   6349164   1% /run'
+==&gt;'tmpfs                    6355856       6696   6349160   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  563845740 347112084  62% /'
-==&gt;'tmpfs                   31779272     146056  31633216   1% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032  564193444 346764380  62% /'
+==&gt;'tmpfs                   31779272     138948  31640324   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        264   6355588   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        280   6355572   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1350140644 571067900  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1350106796 571101748  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -7143,7 +7143,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[MachInE Failed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
+==&gt;fail::[mAchInE FAILed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7331,7 +7331,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1612/59/02/753?tz=-0600
+==&gt;datetime:://2026.10:1619/11/30/199?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9146,7 +9146,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              start=&gt;[code=&gt;at(ab).plus('B'),
                      loop=&gt;second::1.0,
                      state=&gt;pause]@/sys/thread/b,
-             time=&gt;datetime:://2026.10:1612/59/05/366?tz=-0600,
+             time=&gt;datetime:://2026.10:1619/11/32/891?tz=-0600,
              runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
@@ -9187,10 +9187,10 @@ mtron&gt; *ab
 ==&gt;virtual::[code=&gt;print('.'),
              loop=&gt;second::2.5]@/sys/thread/example
 mtron&gt; */sys/thread/example.pause()     ​2​
-==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/pause@1) [machInstSet&lt;807&gt;]][unable to convert rec::T to str::T [machInstSet&lt;807&gt;]]@/sys/fail/225
+==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/pause@1) [machInstSet&lt;822&gt;]][unable to convert rec::T to str::T [machInstSet&lt;822&gt;]]@/sys/fail/225
 mtron&gt; */sys/thread/example/state     ​3​
 mtron&gt; */sys/thread/example.resume()     ​4​
-==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/resume@1) [machInstSet&lt;811&gt;]][unable to convert rec::T to str::T [machInstSet&lt;811&gt;]]@/sys/fail/226
+==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/resume@1) [machInstSet&lt;826&gt;]][unable to convert rec::T to str::T [machInstSet&lt;826&gt;]]@/sys/fail/226
 mtron&gt; */sys/thread/example/state     ​5​</code></pre>
 </div>
 </div>
@@ -9318,7 +9318,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     ​2​
 
    		&lt;p&gt;&amp;nbsp;&lt;/p&gt;		&lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
    &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px" /&gt;
-   	&lt;script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920" integrity="sha512-L0ha0OXavK/8okipN9F8BtP84dg9DUhPERbBXzwI6dgTA55d2+yweo3pn5CSFYs45/r8md2+xvUPtTdvTNRfjA==" data-cf-beacon='{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e07c623","r":1,"spa":2}' crossorigin="anonymous"&gt;&lt;/script&gt;
+   	&lt;script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"2ed4d310d5f64c4a9118e02b0e07c623","r":1,"spa":2}' crossorigin="anonymous"&gt;&lt;/script&gt;
    &lt;/body&gt;
    &lt;/html&gt;
    """
@@ -9342,8 +9342,8 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​3​
                          width=&gt;'500px'],
                         [tag=&gt;script,
                          type=&gt;'module',
-                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
-                         integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
+                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092&gt;,
+                         integrity=&gt;'sha512-UKNk8GbxkABxKcXYuLkO16EleLG...',
                          data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
                          crossorigin=&gt;'anonymous']],
                   style=&gt;'background-color: black;']]]
@@ -9370,8 +9370,8 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt
                          width=&gt;'500px'],
                         [tag=&gt;script,
                          type=&gt;'module',
-                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
-                         integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
+                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092&gt;,
+                         integrity=&gt;'sha512-UKNk8GbxkABxKcXYuLkO16EleLG...',
                          data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
                          crossorigin=&gt;'anonymous']],
                   style=&gt;'background-color: black;']]]
@@ -9393,8 +9393,8 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
                          width=&gt;'500px'],
                         [tag=&gt;script,
                          type=&gt;'module',
-                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920&gt;,
-                         integrity=&gt;'sha512-L0ha0OXavK/8okipN9F8BtP84dg...',
+                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092&gt;,
+                         integrity=&gt;'sha512-UKNk8GbxkABxKcXYuLkO16EleLG...',
                          data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
                          crossorigin=&gt;'anonymous']],
                   style=&gt;'background-color: black;']]]</code></pre>

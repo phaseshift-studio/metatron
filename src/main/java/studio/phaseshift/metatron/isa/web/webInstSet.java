@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.mach.io.type.*;
 import studio.phaseshift.metatron.isa.web.parser.*;
+import studio.phaseshift.metatron.isa.web.space.mdns.handler.mdnsDiscovery;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
@@ -72,10 +73,10 @@ import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHand
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.HTTP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
+import static studio.phaseshift.metatron.isa.web.space.mdns.handler.mdnsDiscovery.MDNS_DISCOVERY_TID;
 import static studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.STDIO_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_emulator_wsHandler.WS_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.mdns.handler.mdns_peerHandler.MDNS_PEER_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
 import static studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder.MCP_MTRON_SERVER_TYPE;
@@ -257,6 +258,7 @@ public class webInstSet extends AbstractInstSet {
     public static Type SSE_TYPE;
     public static Type DISCOVERY_TYPE;
     public static Type MDNS_TYPE;
+    public static Type MDNS_DISCOVERY_TYPE;
     public static Type ROUTE_TYPE;
 
 
@@ -505,9 +507,23 @@ public class webInstSet extends AbstractInstSet {
                                         .create(),
                                 "the multicast-dns discovery surface — service registration and browsing on 224.0.0.251:5353, interoperable with Bonjour and avahi",
                                 "mdns::T refines discovery::T; its peers are found by a DNS-SD browse and advertised as _metatron._tcp.local"),
-                        docWrap(MDNS_PEER_HANDLER_TYPE,
-                                "the mdns peer handler — announces the authorities this machine answers to and writes what it hears into the roster",
-                                "mdns_peer::[service=>'_metatron._tcp.local.']"),
+                        docWrap(MDNS_DISCOVERY_TYPE = Type.Builder.build()
+                                        .tid(MDNS_TID)
+                                        .vid(MDNS_DISCOVERY_TID)
+                                        // STATUS IS OPTIONAL HERE AND REQUIRED BY discovery::T, deliberately: the
+                                        // constructor installs it, so a predicate that demanded it would reject every
+                                        // rec a user could actually write. What satisfies the obligation is the
+                                        // CONSTRUCTED value, never the input to construction — which is also why this
+                                        // type is nominal: its content is its constructor, not its shape.
+                                        .isaPredicate(rec(
+                                                uri(STATUS).maybe().asUri(), BOOL_TYPE))
+                                        .constructor(mdns -> new mdnsDiscovery(new LinkedHashMap<>(mdns.asRec().jvm()), mdns.asRec().vid()))
+                                        .create(),
+                                Map.of(
+                                        uri(STATUS), "true while this handler is live and finding machines — the one field discovery::T requires. OPTIONAL here and required there, deliberately: the constructor installs it, so demanding it of the rec a user writes would reject every one of them. derived on read, never stored, so an interface that went away reads false rather than stale true"),
+                                "the mdns discovery handler — announces the authorities this machine answers to and writes every machine it knows, this one included, into the one roster/machine table. a source is live once it exists: construction starts the responders and close() stops them, so there is no start or scan to drive. a passive background object that publishes only its liveness — many discovery protocols run at once and collaborate on the one index",
+                                "mdns_discovery::[=>]",
+                                "~/network/roster/discover/+.?[status=>false] [-- the discovery protocols that are down --]"),
                         // declared *after* its members so their Type objects exist when the union is built
                         docWrap(PROTOCOL_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -521,7 +537,6 @@ public class webInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(MCP_CLIENT_TID)
                                         .isaPredicate(rec(
-                                                uri(PATTERN).maybe().asUri(), URI_TYPE,
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(TRANSPORT).maybe(), URI_TYPE,
                                                 uri(COMMAND).maybe(), LST_TYPE,
@@ -532,7 +547,6 @@ public class webInstSet extends AbstractInstSet {
                                                 (x, inst) -> new mcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
                                         .create(), "an mcp client type specification", "a connection to an existing mcp server",
                                 Map.of(
-                                        uri(PATTERN).maybe(), "the client's claim as a Space: the remote address space it caches, host derived by retracting the pattern (ws://host:port/mcp/#)",
                                         uri(HOST).maybe(), "the mcp server endpoint (optional for stdio)",
                                         uri(TRANSPORT).maybe(), "specify the transport if host schema resolution isn't sufficient",
                                         uri(COMMAND).maybe(), "only necessary for stdio mcp servers, where the client is the server",
