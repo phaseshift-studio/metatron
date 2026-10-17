@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -467,6 +468,34 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.postWrite(sb.toString());
     }
 
+
+    public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth) {
+        if (inst.isNoObj() || null == inst.tid() || inst.tid().basePath().name().startsWith("auto") || inst.tid().basePath().equals(FROM_INST_TID)) {
+            return super.generateInst(sb, inst, depth + 1);
+        } else {
+            sb.append(inst.tid().basePath().small()).append("?").append(inst.tid().rng().small()).append("<=").append(inst.tid().dom().small());
+            inst.tid().qMap().forEach((key, value) -> {
+                if (!key.equals(Tokens.RNG) && !key.equals(Tokens.DOM)) {
+                    sb.append("&").append(key);
+                    if (null != value && !value.isEmpty())
+                        sb.append("=").append(value);
+                }
+            });
+            final String internal = inst.args().elements()
+                    .map(o -> {
+                        final StringBuilder temp = new StringBuilder();
+                        this.renderInstArg(temp, depth + 1, o);
+                        return this.cleanEnding(temp).toString();
+                    })
+                    .reduce(",", (a, b) -> a + b + ",");
+            sb.append("(")
+                    .append((inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)))
+                    .append(")")
+                    .append((inst.f() == null ? "" : "{" + inst.f() + "}"));
+        }
+        return cleanEnding(sb);
+    }
+
     /**
      * {@code message} cut to at most {@code max} columns with its middle elided: the head and
      * the tail are kept and {@code ...} — three columns, the width every other clip here uses —
@@ -479,7 +508,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return message.substring(0, head) + "..." + message.substring(message.length() - (kept - head));
     }
 
-    // ── Inst writer: the pointer styles ──────────────────────────
+// ── Inst writer: the pointer styles ──────────────────────────
 
     /**
      * An auto-pointer instruction is drawn in one of two ways, per this instance's
@@ -513,7 +542,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.postWrite(super.writeInst(inst));
     }
 
-    // ── URI / VID: the link tagging ──────────────────────────────
+// ── URI / VID: the link tagging ──────────────────────────────
 
     @Override
     protected StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
@@ -546,7 +575,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.postWrite(this.writeUriExtension(uri, "b", false));
     }
 
-    // ── Nesting detection ────────────────────────────────────────
+// ── Nesting detection ────────────────────────────────────────
 
     /**
      * Whether a poly breaks across lines: it does when its mtron text reads wider than
@@ -607,7 +636,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                 (depth + 1) * INDENT_SIZE);
     }
 
-    // ── List generation (clipped, nested) ────────────────────────
+// ── List generation (clipped, nested) ────────────────────────
 
     @Override
     public String writeLst(final Lst lst) {
@@ -662,7 +691,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.handleVID(sb, lst);
     }
 
-    // ── Rec generation (clipped, nested) ─────────────────────────
+// ── Rec generation (clipped, nested) ─────────────────────────
 
     @Override
     public String writeRec(final Rec rec) {
@@ -730,7 +759,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.handleVID(sb, rec);
     }
 
-    // ── Value rendering (the nested path) ────────────────────────
+// ── Value rendering (the nested path) ────────────────────────
 
     private void renderValue(final StringBuilder sb, final int depth, final Obj v) {
         if (null == v) {
@@ -762,14 +791,15 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         } else if (arg.isLst()) {
             this.generateLst(sb, arg.asLst(), depth);
         } else if (arg.isType()) {
-            this.generateType(sb, arg.asType(), depth);
+            sb.append(arg.vid().small()).append("::T");
+            //this.generateType(sb, arg.asType(), depth);
         } else {
             this.writeClip(sb, arg);
         }
         return sb;
     }
 
-    // ── Clip writer (the UI one) ─────────────────────────────────
+// ── Clip writer (the UI one) ─────────────────────────────────
 
     /**
      * Write a scalar leaf, clipped for the reader.  An inst and a uri always go through
