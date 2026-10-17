@@ -53,6 +53,7 @@ import(/m/ide,ide);
         [=====================]
         [======== HOME =======]
         [=====================]
+mdns_discovery::[=>];
 memspace::[
   pattern => </usr/marko/#>,                                 
         q => [mintq::[=>],
