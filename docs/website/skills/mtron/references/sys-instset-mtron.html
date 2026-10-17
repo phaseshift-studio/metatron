@@ -478,11 +478,11 @@ in its message. <code>timeout</code> takes a time type — <code>second::5.0</co
 bare int, which is seconds; the default is <code>second::20.0</code>.</p>
 <p>The signature is not a memory exercise; the inst carries its own doc:</p>
 <pre><code class="language-mtron">mtron&gt; *bash?docq
-==&gt;docs::[obj=&gt;bash?rng=lst[str]&amp;dom=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
+==&gt;docs::[obj=&gt;bash?lst[str]&lt;=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
-          args=&gt;[{?}timeout=&gt;'a real number denoting timeout of ...',
-                 cmd=&gt;'the terminal command to evaluate (...'],
+          args=&gt;[cmd=&gt;'the terminal command to evaluate (...',
+                 {?}timeout=&gt;'a real number denoting timeout of ...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -492,32 +492,32 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'Desktop',
     'dist',
-    ...(18 more)]
+    'docs',
+    ...(17 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.6M ...',
+    'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  539G ...',
-    'tmpfs                   31G  136M ...',
+    '/dev/nvme0n1p2         916G  538G ...',
+    'tmpfs                   31G  134M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/393
+==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/426
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/sys/fail/394
+    [ProcBuilder&lt;228&gt;]]@/sys/fail/427
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
@@ -528,9 +528,9 @@ the same <code>==</code> projection:</p>
            'boot',
            'conf',
            'CONTRIBUTING.md',
-           'Desktop',
            'dist',
-           ...(18 more)]]
+           'docs',
+           ...(17 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
@@ -538,9 +538,9 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'Desktop',
     'dist',
-    ...(19 more)]
+    'docs',
+    ...(18 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -574,15 +574,15 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: boot',
     '  File: conf',
     '  File: CONTRIBUTING.md',
-    '  File: Desktop',
     '  File: dist',
-    ...(18 more)]
+    '  File: docs',
+    ...(17 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
     '  Size: 44514     	Blocks: 88     ...',
     'Device: 259,5	Inode: 25322019    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-15 15:59:21.297645...',
+    'Access: 2026-10-16 19:12:43.806747...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -597,7 +597,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
     bB::698,
     bB::409,
     bB::409,
-    ...(18 more)]
+    ...(17 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -627,9 +627,9 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/399
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/432
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/400
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/433
 </code></pre>
 <p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:</p>
@@ -653,10 +653,10 @@ no input to take, so it is shown rather than run:</p>
 mtron&gt; */sys/thread/+.count()
 ==&gt;1
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::624,
-    free_mem_jvm=&gt;mB::444.40459,
+==&gt;[total_mem_jvm=&gt;mB::616,
+    free_mem_jvm=&gt;mB::331.75242,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::179.59540,
+    used_mem_jvm=&gt;mB::284.24757,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[run=&gt;0,stop=&gt;0]]
@@ -713,7 +713,7 @@ is doing — the sugar is short precisely because it is legible once:</p>
 ==&gt;fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=tex...
      ^
-     could not parse at '[']@/sys/fail/401
+     could not parse at '[']@/sys/fail/434
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
 ==&gt;[space=&gt;/sys/space,
     web=&gt;[http/host=&gt;http://localhost:8777,

@@ -36,10 +36,8 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_COMPILER_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -63,6 +61,7 @@ public class BasicMachine extends AbstractMachine {
 
     private Processor cachedProcessor = null;
     private Compiler cachedCompiler = null;
+    //private Network cachedNetwork = null;
 
     public BasicMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -152,6 +151,14 @@ public class BasicMachine extends AbstractMachine {
         final Obj proto = this.at(COMPILER).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
         return (this.cachedCompiler = proto.isCall() ? proto.apply().as() : proto.as()).clone().as();
     }
+
+    /*@Override
+    public Network network() {
+        if (null != this.cachedNetwork)
+            return this.cachedNetwork.clone().as();
+        final Obj proto = this.at(NETWORK).orThrow(MTronException.of("machine has no network: %s", this.type().vid()));
+        return (this.cachedNetwork = proto.isCall() ? proto.apply().as() : proto.as()).clone().as();
+    }*/
 
     // ======================== setters invalidate the cache ========================
 

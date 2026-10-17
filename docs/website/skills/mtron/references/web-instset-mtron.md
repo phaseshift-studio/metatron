@@ -18,7 +18,7 @@ types, and *endpoint* types that provide the server logic. The two spaces of `/m
 mtron> dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
 mtron> [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
-==>mcp_server::[tool=>[m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]]@/sys/space/mcp/web_basic
+==>mcp_server::[tool=>[m_inst_eval=>eval?#{*}<=#{?}(#::T){<j>}]]@/sys/space/mcp/web_basic
 mtron> httpspace::[pattern=> http://#,
                    host   => http://localhost:8777,
                    route  => [/mcp    => mcp_mtron,
@@ -192,9 +192,9 @@ mtron> */usr/person/1                                              [-- straight 
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
 ==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/435
+==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/468
 mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/436
+==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from)]@/sys/fail/469
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

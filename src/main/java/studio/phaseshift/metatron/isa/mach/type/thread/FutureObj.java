@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 import java.util.Iterator;
-import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -57,21 +56,15 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     public static final int DEFAULT_TIMEOUT_MS = 2000;
     public static final fURI FUTURE_TID = M_ISA_TID.extend("future");
 
-    private final UUID tag;
     private volatile boolean isCanceled;
     private int timeout = DEFAULT_TIMEOUT_MS;
 
-    public FutureObj(final UUID tag) {
+    public FutureObj() {
         super();
         this.jvm = new AtomicReference<T>();
         this.tid = FUTURE_TID;
         this.vid = null;
-        this.tag = tag;
         this.isCanceled = false;
-    }
-
-    public UUID tag() {
-        return this.tag;
     }
 
     // ---- Async: a call on its own virtual thread ----
@@ -187,6 +180,10 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
         return this.get(this.timeout).elements();
     }
 
+    // ---- isXXX() predicates: DELIBERATELY NOT delegated. A FutureObj stays opaque — a future is a future, so
+    // its type predicates answer its own /m/future tid, non-blocking. To inspect the wrapped value, unwrap()
+    // first, then test. (The blocking delegation this replaced once lived here.) ----
+
     // ---- Blocking get variants ----
 
     /**
@@ -253,6 +250,16 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     }
 
     // ---- Object overrides ----
+
+    @Override
+    public boolean equals(final Object other) {
+        return this == other;  // a future is a future — never equal to the value it wraps
+    }
+
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
 
     @Override
     public String toString() {

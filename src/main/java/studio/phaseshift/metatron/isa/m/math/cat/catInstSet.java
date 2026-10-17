@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.rewrite.Plan;
+import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
@@ -31,13 +33,16 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -47,11 +52,13 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI CAT_ISA_TID = MATH_ISA_TID.extend("cat");
     public static final fURI CAT_INST_TID = CAT_ISA_TID.extend("inst");
     public static final fURI CAT_C_INST_TID = CAT_INST_TID.extend("c");
+    public static final fURI CAT_LOWER_INST_TID = CAT_INST_TID.extend("lower");
     public static final fURI CATEGORY_TID = CAT_ISA_TID.extend("category");
     public static final fURI MORPHISM_TID = CATEGORY_TID.extend("morphism");
     public static final fURI OBJECT_TID = CATEGORY_TID.extend("object");
     public static final fURI PATH_TID = CATEGORY_TID.extend("path");
     public static final fURI ABSTRACTION_TID = CATEGORY_TID.extend("abstraction");
+    public static final fURI PLAN_TID = CATEGORY_TID.extend("plan");
     public static final fURI THEORY_TID = CAT_ISA_TID.extend("theory");
     public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
     public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
@@ -86,6 +93,11 @@ public class catInstSet extends AbstractInstSet {
      * from a table outside it
      */
     public static Type ABSTRACTION_TYPE;
+    /**
+     * {@code plan::T} — the morphism of the rewrite category: a rewrite rule (cut/span selector + route
+     * distribution) whose out-edge is a lambda that executes the plan to yield the rewritten path
+     */
+    public static Type PLAN_TYPE;
 
     /// //////////////////////////////////////////////////////////////
     // the algebraic theories — a theory is a named tuple of op-edges (role => op-tid); algebraic_theory::T
@@ -146,6 +158,12 @@ public class catInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(CAT_ISA_TID.extend(ALL)),
                 uri(TYPE), catTypes.registered(this),
                 uri(INST), lst(
+                        instC(CAT_LOWER_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(PLAN_TYPE), (lhs, inst) -> {
+                            // lower(plan::T): path → path — read the plan rec, apply it to the path's code, re-lift.
+                            final Plan plan = Plan.of(inst.arg(0).asRec());
+                            final Code code = lhs.asRec().at(OBJ).asCode();
+                            return PATH_TYPE.constructor().apply(PlanInterpreter.lower(plan, code));
+                        }),
                         instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(PATH_TID), lst(PATH_TYPE), (lhs, inst) -> PATH_TYPE.constructor().apply(lhs)),
@@ -166,7 +184,7 @@ public class catInstSet extends AbstractInstSet {
                             return block_(code(newCode)).tryToInst();
                         })),
                 uri(REWRITE), catRewrite.rules())
-                ));
+        ));
         docWrap(this, "categorical realization of types and insts as objects and morphisms");
         super.setup();
     }

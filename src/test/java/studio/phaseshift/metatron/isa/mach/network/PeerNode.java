@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -79,6 +80,8 @@ public final class PeerNode {
         // boot at warn: a forked JVM does not inherit the parent's -Dlogback.configurationFile, so without this
         // it logs at default DEBUG and three concurrent chatty boots will not be ready before the test does
         BootLoader.load(rec(uri("log"), uri("warn")));
+        // typing is not solved across distributed executions yet — a peer evaluates shipped code type-check-free
+        TypeCheck.disable(TypeCheck.values());
         memSpace.unregistered(rec(uri(PATTERN), uri("/sys/#")), null).addQ(QCollection.incrQ());
         InstSet.importInstSet(IO_ISA_TID);
         InstSet.importInstSet(f("/m/web"));

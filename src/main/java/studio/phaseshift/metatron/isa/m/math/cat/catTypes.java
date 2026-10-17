@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -176,7 +177,8 @@ public class catTypes {
                                 .tid(CATEGORY_TID)
                                 .vid(PATH_TID)
                                 .isaPredicate(rec(
-                                        uri(OBJ), CODE_TYPE))
+                                        uri(OBJ), CODE_TYPE,
+                                        T(URI_TID).maybe(), T(PLAN_TID)))
                                 .constructor(arg -> {
                                     final Rec path = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                                     final Code code = path.at(OBJ);
@@ -186,7 +188,14 @@ public class catTypes {
                                         try {
                                             if (!maybeNotIdentity(code, rewrite))
                                                 continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
-                                            path.at(uri(rewrite.tid().name()), auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst(), MUTABLE);
+                                            final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
+                                            final Plan plan = catRewrite.planOf(rewrite.tid().name());
+                                            // the out-edge is a plan::T — the rewrite rule as a first-class value, generated on the fly:
+                                            // its result is the lambda that executes the plan to yield the rewritten path (non-recursive).
+                                            // Plan is the rec itself, so there is no serialization: clone the plan, stamp its result
+                                            // lambda, and re-tid it to plan::T.
+                                            final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), PLAN_TID, null) : plan;
+                                            path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
                                         } catch (final Exception e) {
                                             //do nothing
                                         }
@@ -200,8 +209,7 @@ public class catTypes {
                                 .tid(CATEGORY_TID)
                                 .vid(ABSTRACTION_TID)
                                 .isaPredicate(rec(
-                                        uri(OBJ), lst(T(MORPHISM_TID)),
-                                        uri(CODE).maybe().asUri(), CODE_TYPE))
+                                        uri(OBJ), lst(T(MORPHISM_TID))))
                                 .constructor(arg -> {
                                     final Obj source = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec().at(OBJ) : arg;
                                     if (source.isLst())
@@ -221,26 +229,44 @@ public class catTypes {
                                         } catch (final Exception e) {
                                             morphism = noobj();
                                         }
-                                        morphisms.add(morphism.isNoObj() ? rec(mutableMap(uri(OBJ), keyed), MORPHISM_TID, null) : morphism);
-                                    }
-                                    final Rec abstraction = rec(uri(OBJ), lst(morphisms), uri(CODE), code);
-                                    // the live out-edges, decided endogenously: the liveness data is the
-                                    // law/form/name fields of obj=>'s own morphisms, not a table outside the graph
-                                    for (final Inst rewrite : self.rewrites()) {
-                                        try {
-                                            if (!maybeNotIdentity(morphisms, rewrite))
-                                                continue;
-                                            abstraction.at(uri(rewrite.tid().name()), auto_(instLambda(lhs -> ABSTRACTION_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst(), MUTABLE);
-                                        } catch (final Exception e) {
-                                            //do nothing
+                                        // lossless α: store the ORIGINAL inst in obj, so γ (walk obj in order)
+                                        // recovers the exact code — the form/law/class were computed from keyed
+                                        if (morphism.isNoObj())
+                                            morphisms.add(rec(mutableMap(uri(OBJ), chain), MORPHISM_TID, null));
+                                        else {
+                                            final Rec block = morphism.asRec();
+                                            block.at(uri(OBJ), chain, MUTABLE);
+                                            morphisms.add(block);
                                         }
                                     }
-                                    return abstraction.selfTID(ABSTRACTION_TID);
+                                    return rec(uri(OBJ), lst(morphisms)).selfTID(ABSTRACTION_TID);
                                 })
                                 .create(), Map.of(
-                                uri(OBJ), "the abstract word \\(\\alpha(f_1 \\cdot \\ldots \\cdot f_n) = \\alpha(f_1) \\cdot \\ldots \\cdot \\alpha(f_n)\\): each chain instruction as its \\(\\mathrm{morphism}\\), carrying law, form, theory, class and analysis in-graph",
-                                uri(CODE), "the concrete chain the abstraction was lifted from -- the concretization \\(\\gamma\\) anchor a chosen abstract route is pulled back down to"),
-                        "code lifted pointwise along \\(\\alpha\\) into the classification alphabet: the quotient a planner searches, where a zero-residue rewrite (one whose guard is decided by declarations alone) is a first-class edge"),
+                                uri(OBJ), "the abstract word \\(\\alpha(f_1 \\cdot \\ldots \\cdot f_n) = \\alpha(f_1) \\cdot \\ldots \\cdot \\alpha(f_n)\\): each chain instruction as its \\(\\mathrm{morphism}\\) carrying law, form, class and analysis, with the ORIGINAL inst in \\(\\mathrm{obj}\\) so \\(\\gamma\\) (walk \\(\\mathrm{obj}\\) in order) recovers the exact code"),
+                        "code lifted pointwise along \\(\\alpha\\) into the classification alphabet — the pure search surface a plan's selector reads"),
+                docWrap(PLAN_TYPE = Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(PLAN_TID)
+                                .isaPredicate(rec(
+                                        uri(NAME), URI_TYPE,
+                                        uri(RESULT).maybe().asUri(), ALL_TYPE, // for lambda based rewrites
+                                        uri(CUT).maybe().asUri(), lst(rec(uri(FORM), URI_TYPE, uri(LAW), lst(LAW_TYPE))),
+                                        uri(ROUTE).maybe(), lst(rec(
+                                                uri(TARGET), URI_TYPE,
+                                                uri(SPAN), lst(rec(
+                                                        uri(SPAN), URI_TYPE,
+                                                        uri(CUT).maybe(), lst(INT_TYPE),
+                                                        uri(FLAGS).maybe(), lst(URI_TYPE))))).maybe()))
+                                .constructor(arg -> {
+                                    final Rec plan = arg.isRec() && arg.asRec().has(uri(NAME)) ? arg.asRec() : rec(uri(NAME), arg);
+                                    return plan.selfTID(PLAN_TID);
+                                })
+                                .create(), Map.of(
+                                uri(NAME), "the plan's name — the rewrite rule it embodies",
+                                uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws) the plan anchors on",
+                                uri(ROUTE).maybe(), "the distribution: target + span regions the plan ships",
+                                uri(RESULT).maybe(), "the plan's out-edge: a lambda that executes the plan to yield the rewritten path"),
+                        "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)"),
                 docWrap(THEORY_TYPE = Type.Builder.build()
                         .tid(REC_TID)
                         .vid(THEORY_TID)

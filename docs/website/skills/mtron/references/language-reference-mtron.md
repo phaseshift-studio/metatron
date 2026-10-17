@@ -134,9 +134,9 @@ mtron> int{5}::3                                [-- coefficient {5} represents 5
 mtron> {5}3                                     [-- shorthand for the previous example (5 3s) --]
 ==>{5}3
 mtron> {1,2,3}.sum{2}()                         [-- two parallel sums yields {2}6 --]
-==>{2}6
+==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/220
 mtron> {1,2,3}.sum{2}().sum()                   [-- {2}6 merged by sum is 12 --]
-==>{2}6
+==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/226
 ```
 Coefficients propagate through arithmetic and affect count, sum, repeat:
 
@@ -148,7 +148,7 @@ mtron> {1,2,{10}3}.count()           [-- 12  (sum of coefficients) --]
 mtron> int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ==>{50}100
 mtron> {int{2}::1,int{3}::2}.sum()   [-- int::8 (coefficients account for) --]
-==>8
+==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/250
 ```
 ---
 
@@ -172,9 +172,9 @@ mtron> {1,2,3}.mult(10)               [-- {10,20,30} --]
 mtron> 1.plus(1.plus(1))              [-- 3  (nested) --]
 ==>3
 mtron> {1,2,3,4}.prod()               [-- 24 --]
-==>24
+==>fail::[unable to locate inst-f fail::T => prod?dom=#{*}()@<3>]@/sys/fail/262
 mtron> {1,2,3}.sum()                  [-- 6 --]
-==>6
+==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/266
 mtron> {1,2,3,4,5}.reduce(|plus(0))   [-- 15 (| necessary to block evaluation) --]
 ==>15
 ```
@@ -310,7 +310,7 @@ mtron> posint::2                    [-- posint::2  (admitted: the predicate lets
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[-1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/268
+   	while parsing: posint::-1]@/sys/fail/303
 ```
 ---
 
@@ -683,11 +683,11 @@ mtron> ?int::T    [-- check if type is int --]
 ```mtron
 chains: every inst's output is the next inst's input
 mtron> {1,2,3,4}.sum()                [-- 10 --]
-==>10
+==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/397
 mtron> {1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
-==>{2}10
+==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/401
 mtron> {1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
-==>{2}10
+==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/407
 mtron> {1,2,3,4}-<[plus(1), plus(10)]>-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
 ==>2
 ==>11

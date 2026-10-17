@@ -983,7 +983,11 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
 
         public final static fURI f(final String furi) {
-            return null == furi ? Singleton.empty() : of(furi);
+            return null == furi || furi.isEmpty() ? Singleton.empty() : of(furi);
+        }
+
+        public final static fURI f() {
+            return f(null);
         }
 
 

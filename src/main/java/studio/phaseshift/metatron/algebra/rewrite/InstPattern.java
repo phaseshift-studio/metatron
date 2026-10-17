@@ -101,16 +101,28 @@ public final class InstPattern {
     }
 
     /**
-     * Does one instruction satisfy this slot? Laws are declared facts: an inst whose table declares
-     * nothing matches no law-bearing slot — fail closed, never guess.
+     * Does one instruction satisfy this slot? Laws are declared facts — an inst whose table declares
+     * nothing matches no law-bearing slot, fail closed, never guess. The two form-derived laws are the
+     * exception: {@code floatable} (Thm 6, {@code F_m ∪ F_f ∪ F_fm}) and {@code blocked} (Thm 17,
+     * {@code F_r ∪ F_b}) are read off the inst's {@link Inst.Form form}, since they are declared nowhere
+     * in the table. The inst is expected to carry its declared (dom/rng-qualified) tid, so the form and
+     * the declared-law lookups both resolve pre-resolution.
      */
     public boolean matches(final Inst inst) {
         if (null != this.form && Inst.Form.of(inst) != this.form)
             return false;
         for (final Law required : this.laws)
-            if (!LawTable.declares(inst.tid(), required))
+            if (!satisfies(inst, required))
                 return false;
         return true;
+    }
+
+    private static boolean satisfies(final Inst inst, final Law law) {
+        return switch (law) {
+            case floatable -> Inst.Form.of(inst).isFloatable();
+            case blocked -> Inst.Form.of(inst).isBlocked();
+            default -> LawTable.declares(inst.tid(), law);
+        };
     }
 
     /**

@@ -38,7 +38,7 @@ links back to its containers.
 ```mtron
 mtron> dckrspace::T
 mtron> !*dckrspace?docq
-==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?rng=dckrspace&dom=#{?}(dckrspace::T){<j>}]@/m/dckr/space/dckrspace,
+==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?dckrspace<=#{?}(dckrspace::T){<j>}]@/m/dckr/space/dckrspace,
           desc=>'[structural] a docker daemon space',
           example=>['docker:compose/my-stack -> [servic...',
                     '*docker:container/+',
@@ -432,7 +432,7 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
                                     [op=>select,
                                      dom=><#>,
                                      rng=><#>,
-                                     args=>[[name=>id()]],
+                                     args=>[[name=>id?#<=#()]],
                                      form=>mapper,
                                      c_dom=>1,
                                      c_rng=>1]]]],
@@ -445,7 +445,7 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
                             [op=>select,
                              dom=><#>,
                              rng=><#>,
-                             args=>[[name=>id()]],
+                             args=>[[name=>id?#<=#()]],
                              form=>mapper,
                              c_dom=>1,
                              c_rng=>1]]]

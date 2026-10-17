@@ -18,6 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.rewrite.Cut;
+import studio.phaseshift.metatron.algebra.rewrite.Plan;
+import studio.phaseshift.metatron.algebra.rewrite.PlanBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
+import studio.phaseshift.metatron.algebra.rewrite.Route;
+import studio.phaseshift.metatron.algebra.rewrite.Span;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -26,9 +32,11 @@ import java.util.function.BiPredicate;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PLAN_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carrier;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.declares;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.mapArgument;
+import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.same;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.sameOp;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
@@ -40,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 
 /**
@@ -49,6 +58,53 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class catRewrite {
+
+    /**
+     * The one-cut distribution plan — {@code law_shard}, Thm 19 {@code (a+b)·c = (a·c+b·c)·c}: the anchor is a
+     * blocked reducer declaring {@code monoidic} (partials regroup) and {@code commutative} (order-free merge); the
+     * master re-applies it behind the barrier and runs the tail at home, each peer takes one factor of the seed bulk
+     * with the floatable run replicated and a local partial reduce. {@link PlanInterpreter#lower} consumes the cut.
+     */
+    private static final Cut SHARD_CUT = Cut.reducer(Law.monoidic, Law.commutative);
+    private static final Span SHARD_PRE = Span.before(SHARD_CUT).floatable();
+    private static final Span SHARD_AT = Span.at(SHARD_CUT);
+    private static final Span SHARD_POST = Span.after(SHARD_CUT);
+    private static final Plan SHARD_PLAN = PlanBuilder.plan("law_shard")
+            .cut(SHARD_CUT)
+            .route(Route.local(SHARD_AT, SHARD_POST))
+            .route(Route.peers(Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
+            .create();
+
+    /**
+     * The local unit-law plan — no cut/route (a theory rewrite, not a distribution): its {@code law} is the
+     * selector, and {@link PlanInterpreter#lower} dispatches on it to the unit removal.
+     */
+    private static final Plan UNIT_PLAN = new Plan(mutableMap(uri(NAME), uri("theory_unit_removal"), uri(LAW), uri(Law.unit.name())), PLAN_TID, null);
+
+    /**
+     * The local involution-law plan — its {@code law => involution} selector dispatches to the f·f ↦ ε fold.
+     */
+    private static final Plan INVOLUTION_PLAN = new Plan(mutableMap(uri(NAME), uri("theory_involution"), uri(LAW), uri(Law.involution.name())), PLAN_TID, null);
+
+    /**
+     * The rewrite-name → plan registry — the bridge the path's out-edges look up when a rewrite rule has a
+     * declarative plan ({@code law} or {@code cut}/{@code route}) rather than a bare lambda. A Plan is now the {@code plan::T} rec
+     * itself, so there is no serialization step: the value is handed out as-is.
+     */
+    private static final Map<String, Plan> PLANS = new LinkedHashMap<>();
+
+    static {
+        PLANS.put(SHARD_PLAN.name(), SHARD_PLAN);
+        PLANS.put(UNIT_PLAN.name(), UNIT_PLAN);
+        PLANS.put(INVOLUTION_PLAN.name(), INVOLUTION_PLAN);
+    }
+
+    /**
+     * The plan registered under a rewrite rule's name, or null when the rule is still a bare lambda.
+     */
+    public static Plan planOf(final String name) {
+        return PLANS.get(name);
+    }
 
 /**
      * The {@code /rewrite} registrations — the law-driven rules the category ships, each its
@@ -106,16 +162,7 @@ public class catRewrite {
                         // (1) the unit law, for EVERY theory instance the operand's type declares: op(id) |-> e,
                         // plus a bare identity operation (code's id) which is the identity morphism.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("theory_unit_removal"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    if (0 == insts.size())
-                                        return code;
-                                    final Map<Type, Rec> laws = new HashMap<>();
-                                    final List<Inst> kept = insts.stream()
-                                            .filter(i -> !isUnit(i, laws) && !isIdentity(i, laws))
-                                            .toList();
-                                    return kept.size() == insts.size() ? code : code(kept);
-                                }), "the unit law of every theory the operand's type models: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and a bare identity operation is the identity morphism. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\), \\(x \\cdot . \\leadsto x\\)"),
+                                code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the unit law of every theory the operand's type models: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and a bare identity operation is the identity morphism. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\), \\(x \\cdot . \\leadsto x\\)"),
 
                         // ============ (1b/1c) THE BRANCH-SPECIFIC WARM-UP — SUPERSEDED, KEPT IN COMMENT FOR THE SIDE-BY-SIDE ============
                         // The two bodies below have moved into the law-indexed normalizers repeatedTerms / oneTerm
@@ -202,15 +249,7 @@ public class catRewrite {
                         // (2a) the involution law: an adjacent pair of the SAME self-inverse operation is the
                         // identity -- neg.neg, reverse.reverse, not.not, conj.conj, inv.inv.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("theory_involution"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    if (2 > insts.size())
-                                        return code;
-                                    final Type carrier = carrier(code);
-                                    final List<Inst> collapsed = collapsePairs(insts,
-                                            (a, b) -> same(a, b) && isInvolution(a, carrier));
-                                    return collapsed.size() == insts.size() ? code : code(collapsed);
-                                }), "the involution law \\(f \\cdot f \\leadsto \\varepsilon\\) (period two) for any operation whose declared process laws include \\(\\mathrm{involution}\\) -- \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{reverse} \\cdot \\mathrm{reverse} \\leadsto \\varepsilon\\), \\(\\mathrm{not} \\cdot \\mathrm{not} \\leadsto \\varepsilon\\)"),
+                                code -> PlanInterpreter.lower(INVOLUTION_PLAN, code)), "the involution law \\(f \\cdot f \\leadsto \\varepsilon\\) (period two) for any operation whose declared process laws include \\(\\mathrm{involution}\\) -- \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{reverse} \\cdot \\mathrm{reverse} \\leadsto \\varepsilon\\), \\(\\mathrm{not} \\cdot \\mathrm{not} \\leadsto \\varepsilon\\)"),
 
                         // (2b) the idempotent law: an adjacent pair of the SAME idempotent operation is that
                         // operation -- ucase.ucase, zero.zero, one.one, an idempotent join (bool or/and).
@@ -350,7 +389,7 @@ public class catRewrite {
                         // >>law_shard edge, is policy (cf. derivation_expansion above) -- gate shardTargets()
                         // behind a plan flag / q-param to pull it out of the default fixpoint schedule.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_shard"),
-                                catShard::shard), "the distribution kernel \\((a+b) \\cdot c = (a \\cdot c + b \\cdot c) \\cdot c\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, reapply the reducer behind a barrier -- \\(\\{1,2,3\\}.f.\\Sigma \\leadsto [\\mathrm{barrier}.\\Sigma,\\ \\{1,3\\}.f.\\Sigma,\\ \\{2\\}.f.\\Sigma] == [\\mathrm{to}(),\\ \\mathrm{to}(a),\\ \\mathrm{to}(b)]\\)")
+                                code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot c = (a \\cdot c + b \\cdot c) \\cdot c\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, reapply the reducer behind a barrier -- \\(\\{1,2,3\\}.f.\\Sigma \\leadsto [\\mathrm{barrier}.\\Sigma,\\ \\{1,3\\}.f.\\Sigma,\\ \\{2\\}.f.\\Sigma] == [\\mathrm{to}(),\\ \\mathrm{to}(a),\\ \\mathrm{to}(b)]\\)")
         );
     }
 
@@ -359,14 +398,6 @@ public class catRewrite {
      */
     private static fURI rewriteTID(final String name) {
         return CAT_ISA_TID.extend(INST).extend(REWRITE).extend(name);
-    }
-
-    /**
-     * Two chain elements are the same operation: same op address and same operands. This is what makes a
-     * law-driven fold sound — {@code neg·neg} collapses, {@code neg·inv} does not.
-     */
-    private static boolean same(final Inst a, final Inst b) {
-        return sameOp(a, b) && a.args().equals(b.args());
     }
 
     /**
@@ -558,22 +589,6 @@ public class catRewrite {
     }
 
     /**
-     * Collapse adjacent pairs the predicate accepts to nothing — the equation {@code f·f ↦ ε} shared by the
-     * involution, idempotent and monoidic-fold laws.
-     */
-    private static List<Inst> collapsePairs(final List<Inst> insts, final BiPredicate<Inst, Inst> match) {
-        final List<Inst> result = new ArrayList<>();
-        int i = 0;
-        while (i < insts.size()) {
-            if (i + 1 < insts.size() && match.test(insts.get(i), insts.get(i + 1)))
-                i += 2; // f·f => ε — drop the pair
-            else
-                result.add(insts.get(i++));
-        }
-        return result;
-    }
-
-    /**
      * Collapse adjacent duplicate pairs to a single instance — the equation {@code f·f ↦ f} shared by the
      * idempotent law and by a monoidic fold (a reduction of one element is that element).
      */
@@ -588,64 +603,6 @@ public class catRewrite {
                 result.add(insts.get(i++));
         }
         return result;
-    }
-
-    /**
-     * The involution test: the operation's own declared {@code involution} law, or the carrier's declared
-     * additive-group inverse (the role path that keeps a type whose ops are not in the process-law table —
-     * e.g. {@code cmplx}'s {@code neg} — collapsing as before).
-     */
-    private static boolean isInvolution(final Inst inst, final Type carrier) {
-        if (declares(inst, carrier, Law.involution))
-            return true;
-        final Inst inv = TheoryHelper.invInst(carrier);
-        return !inv.isNoObj() && inv.test(inst);
-    }
-
-    /**
-     * The unit test: an operation applied to its own theory identity — {@code op(id)} — for every theory
-     * instance the operand's type models. The theory roles are read from {@code object::T.law}, so this one
-     * rule covers {@code x + 0}, {@code x · 1}, {@code x · <>} (uri), {@code x · .} (machine), {@code x · id}
-     * (code) and every user-declared monoid/group/ring/… The law blocks are memoized per rewrite pass by the
-     * caller's map, since a type's theories are shared by every instruction over it.
-     */
-    private static boolean isUnit(final Inst inst, final Map<Type, Rec> laws) {
-        if (inst.args().isEmpty())
-            return false;
-        final List<Type> operands = List.of(inst.dom(), inst.arg(0).type());
-        for (final Type operand : operands)
-            for (final Map.Entry<Obj, Obj> instance : laws.computeIfAbsent(operand, TheoryHelper::instances).jvm().entrySet()) {
-                if (!instance.getValue().isRec())
-                    continue;
-                final Rec block = instance.getValue().asRec();
-                for (final String[] roles : TheoryHelper.UNIT_ROLES) {
-                    final Inst unit = TheoryHelper.unit(block, roles[0], roles[1]);
-                    if (!unit.isNoObj() && unit.test(inst))
-                        return true;
-                }
-            }
-        return false;
-    }
-
-    /**
-     * The bare-identity test: an instruction with no operands that <em>is</em> a theory's identity operation
-     * (the role holds an instruction, not a literal) — the code ring's {@code id}. Its occurrence in a chain
-     * is the identity morphism, hence dead weight.
-     */
-    private static boolean isIdentity(final Inst inst, final Map<Type, Rec> laws) {
-        if (!inst.args().isEmpty())
-            return false;
-        for (final Map.Entry<Obj, Obj> instance : laws.computeIfAbsent(T(CODE_TID), TheoryHelper::instances).jvm().entrySet()) {
-            if (!instance.getValue().isRec())
-                continue;
-            final Rec block = instance.getValue().asRec();
-            for (final String role : TheoryHelper.IDENTITY_ROLES) {
-                final fURI identity = TheoryHelper.identityAddress(block, role);
-                if (null != identity && inst.tid().basePath().equals(identity))
-                    return true;
-            }
-        }
-        return false;
     }
 
     /**

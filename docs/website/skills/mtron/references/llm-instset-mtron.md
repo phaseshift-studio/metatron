@@ -43,7 +43,7 @@ mtron> [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
 ==>fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 10] @chatter.chat('what is t...
      ^
-     could not parse at '[']@/sys/fail/383
+     could not parse at '[']@/sys/fail/416
 ```
 The `/usr/chatter/#` space serves a the default location for features to store their various constructions.
 
@@ -53,7 +53,7 @@ mtron> [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
 ==>fail::[parse error at line 1, col 1:
      [MAX_OUTPUT 10] */usr/chatter/chat_resul...
      ^
-     could not parse at '[']@/sys/fail/384
+     could not parse at '[']@/sys/fail/417
 ```
 **A tool is an instruction.** There is no tool registry to populate: anything callable *is* a tool, and `mTool`
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a `tool_feature` can
@@ -77,7 +77,7 @@ mtron> import(/m/llm)
 mtron> import(/m/web,web)
 mtron> [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server
-==>mcp_server::[tool=>[m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]]@/sys/space/mcp/basic_server
+==>mcp_server::[tool=>[m_inst_eval=>eval?#{*}<=#{?}(#::T){<j>}]]@/sys/space/mcp/basic_server
 ```
 What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
 per server, `mcp_mtron` for the metatron-native tools, `mcp_message` for the ledger, and `/basic` for the server
@@ -246,9 +246,9 @@ Because a tool is an instruction, a server is a **selection over instructions**,
 
 ```mtron
 mtron> mcp_server::[tool => [!*eval, !*eval]]@/sys/space/mcp/two_say
-==>mcp_server::[tool=>[m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]]@/sys/space/mcp/two_say
+==>mcp_server::[tool=>[m_inst_eval=>eval?#{*}<=#{?}(#::T){<j>}]]@/sys/space/mcp/two_say
 mtron> */sys/space/mcp/two_say>>tool     [-- one entry: a collection is keyed by the instruction --]
-==>[m_inst_eval=>eval?rng=#{*}&dom=#{?}(<#>::T){<j>}]
+==>[m_inst_eval=>eval?#{*}<=#{?}(#::T){<j>}]
 ```
 Three rules follow, and the third is the one that surprises people:
 

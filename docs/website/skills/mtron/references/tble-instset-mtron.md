@@ -45,11 +45,11 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 
 ```mtron
 mtron> *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
-==>docs::[obj=>space::T[?[host=>uri::T,driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@/m/tble/space/tblespace,
+==>docs::[obj=>space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=#{?}(rec::T){<j>}]@/m/tble/space/tblespace,
           desc=>'[structural] a metatron realizatio...',
           example=>['*<http://metatron.phaseshift.studi...']]
 mtron> *</m/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
-==>[llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]
+==>[llm_chat_schema=>inst?#{*}<=#{*}(){<j>}]
 ```
 ## configuration
 
@@ -295,20 +295,20 @@ The instset prints that list itself, and each rewrite documents its own before/a
 mtron> */m/tble?docq
 ==>docs::[obj=>instset::[pattern=>/m/tble/#,
                          q=>[docq::[pattern=>docq,
-                                    pre_read=>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
-                                    pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,<#>::T){<j>},
+                                    pre_read=>inst?#{*}<=#{?}(uri::T){<j>},
+                                    pre_write=>inst?#{*}<=#{?}(uri::T,#::T){<j>},
                                     obj=>memspace::[pattern=><#>],
                                     inst=>instset::[pattern=><#>]]],
-                         const=>[[llm_chat_schema=>inst?rng=#{*}&dom=#{*}(){<j>}]@/m/tble/helper],
-                         type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?rng=tblespace&dom=#{?}(rec::T){<j>}]@/m/tble/space/tblespace],
-                         inst=>[sql?rng=rec{*}&dom=tblespace(str::T){<j>}],
-                         rewrite=>[/m/tble/inst/rewrite/sql_count?rng=code{?}&dom=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_sum?rng=code{?}&dom=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_sum_column?rng=code{?}&dom=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_mean?rng=code{?}&dom=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_limit?rng=code{?}&dom=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_offset?rng=code{?}&dom=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_offset_limit?rng=code{?}&dom=code(){<j>},
+                         const=>[[llm_chat_schema=>inst?#{*}<=#{*}(){<j>}]@/m/tble/helper],
+                         type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=#{?}(rec::T){<j>}]@/m/tble/space/tblespace],
+                         inst=>[sql?rec{*}<=tblespace(str::T){<j>}],
+                         rewrite=>[/m/tble/inst/rewrite/sql_count?code{?}<=code(){<j>},
+                                   /m/tble/inst/rewrite/sql_sum?code{?}<=code(){<j>},
+                                   /m/tble/inst/rewrite/sql_sum_column?code{?}<=code(){<j>},
+                                   /m/tble/inst/rewrite/sql_mean?code{?}<=code(){<j>},
+                                   /m/tble/inst/rewrite/sql_limit?code{?}<=code(){<j>},
+                                   /m/tble/inst/rewrite/sql_offset?code{?}<=code(){<j>},
+                                   /m/tble/inst/rewrite/sql_offset_limit?code{?}<=code(){<j>},
                                    ...(12 more)]]@/m/tble,
           desc=>'relational tables, typed rows, and...',
           example=>['*acme:customer.where[person=>[name...']]
@@ -426,17 +426,19 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/55
+==>[body=>'a note with a database-assigned key']@tbledoc:note/59
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/56
+==>[body=>'another one']@tbledoc:note/60
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>12
 ==>21
 ==>11
+==>59
 ==>4
 ==>6
 ==>49
 ==>31
+==>57
 ==>3
 ==>20
 ==>40
@@ -455,6 +457,7 @@ mtron> *tbledoc:note/+/id                                    [-- the keys the ba
 ==>22
 ==>10
 ==>18
+==>58
 ==>50
 ==>9
 ==>34
@@ -472,6 +475,7 @@ mtron> *tbledoc:note/+/id                                    [-- the keys the ba
 ==>44
 ==>36
 ==>56
+==>60
 ==>41
 ==>15
 ==>55
