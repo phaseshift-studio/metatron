@@ -47,17 +47,17 @@ body, .quoteblock blockquote, .quoteblock p, .mjx-chtml .MJXc-display span {
     font-weight: 500;
 }
 
-.sidebarblock, .content, pre .highlight, .language-java, .hljs, .literalblock pre, .listingblock>.content>pre:not(.highlight), .listingblock>.content>pre[class=highlight], .listingblock>.content>pre[class^="highlight "] {
+.sidebarblock, .content, pre .highlight, .language-java, .hljs, .literalblock pre, .listingblock > .content > pre:not(.highlight), .listingblock > .content > pre[class=highlight], .listingblock > .content > pre[class^="highlight "] {
     background-color: var(--secondarycolor) !important;
     padding: 1rem;
     color: var(--mdirtywhite)
 }
 
-#header>h1:first-child {
+#header > h1:first-child {
     font-size: 0;
 }
 
-.literalblock pre, .listingblock>.content>pre:not(.highlight), .listingblock>.content>pre[class=highlight], .listingblock>.content>pre[class^="highlight "] {
+.literalblock pre, .listingblock > .content > pre:not(.highlight), .listingblock > .content > pre[class=highlight], .listingblock > .content > pre[class^="highlight "] {
     background: #cbcbcb;
     padding: 1px;
     border: 1px solid var(--mred);
@@ -65,7 +65,7 @@ body, .quoteblock blockquote, .quoteblock p, .mjx-chtml .MJXc-display span {
 
 
 p {
-    font-size: 1.1em;
+    font-size: 1.5em;
     font-weight: lighter;
 }
 
@@ -84,10 +84,10 @@ strong {
 }
 
 th {
-    color: var(--mred) !important;  
+    color: var(--mred) !important;
 }
 
-.sidebarblock, 
+.sidebarblock,
 .content,
 pre .highlight,
 .language-java,

@@ -517,22 +517,22 @@ maven build commands are attached to the <code>project::T</code> for each of acc
                                        mvn_clean =&gt; !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  =&gt; !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==&gt;[root=&gt;mfs:src/test/resources/scratch,
-    src=&gt;[Operation=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
-          Echo=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
-          Calculator=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
-          EchoTest=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
+    src=&gt;[Operation=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+          Echo=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+          Calculator=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+          EchoTest=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;}],
     code=&gt;[,],
     idx=&gt;[=&gt;],
-    command=&gt;[read_file=&gt;/dev/scratch/command/read_file(file=&gt;uri::T,min=&gt;isa(int::T).else(0),max=&gt;isa(int::T).else(9223372036854775807)){*file.split(&quot;&quot;&quot;
+    command=&gt;[read_file=&gt;/dev/scratch/command/read_file?#&lt;=#(file=&gt;uri::T,min=&gt;isa(int::T).else(0),max=&gt;isa(int::T).else(9223372036854775807)){*file.split(&quot;&quot;&quot;
    &quot;&quot;&quot;).as(rec::T).select([is(gte(*min))=&gt;id()]).select([is(lt(*max))=&gt;id()])},
-              mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
-              mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
-              mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
+              mvn_build=&gt;!ide:command?#&lt;=#('mvn -f src/test/resources/scratch ...'),
+              mvn_clean=&gt;!ide:command?#&lt;=#('mvn -f src/test/resources/scratch ...'),
+              mvn_exec=&gt;!ide:command?#&lt;=#('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::802,
+            runtime=&gt;millis::892,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/69683f22]
+            output=&gt;!*/sys/tmp/9493652e]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>

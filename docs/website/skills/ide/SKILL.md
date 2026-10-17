@@ -88,22 +88,22 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
                                        mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==>[root=>mfs:src/test/resources/scratch,
-    src=>[Operation=>inst?rng=#{*}&dom=#{?}(){<j>},
-          Echo=>inst?rng=#{*}&dom=#{?}(){<j>},
-          Calculator=>inst?rng=#{*}&dom=#{?}(){<j>},
-          EchoTest=>inst?rng=#{*}&dom=#{?}(){<j>}],
+    src=>[Operation=>inst?#{*}<=#{?}(){<j>},
+          Echo=>inst?#{*}<=#{?}(){<j>},
+          Calculator=>inst?#{*}<=#{?}(){<j>},
+          EchoTest=>inst?#{*}<=#{?}(){<j>}],
     code=>[,],
     idx=>[=>],
-    command=>[read_file=>/dev/scratch/command/read_file(file=>uri::T,min=>isa(int::T).else(0),max=>isa(int::T).else(9223372036854775807)){*file.split("""
+    command=>[read_file=>/dev/scratch/command/read_file?#<=#(file=>uri::T,min=>isa(int::T).else(0),max=>isa(int::T).else(9223372036854775807)){*file.split("""
    """).as(rec::T).select([is(gte(*min))=>id()]).select([is(lt(*max))=>id()])},
-              mvn_build=>!ide:command('mvn -f src/test/resources/scratch ...'),
-              mvn_clean=>!ide:command('mvn -f src/test/resources/scratch ...'),
-              mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
+              mvn_build=>!ide:command?#<=#('mvn -f src/test/resources/scratch ...'),
+              mvn_clean=>!ide:command?#<=#('mvn -f src/test/resources/scratch ...'),
+              mvn_exec=>!ide:command?#<=#('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>millis::802,
+            runtime=>millis::892,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/69683f22]
+            output=>!*/sys/tmp/9493652e]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.

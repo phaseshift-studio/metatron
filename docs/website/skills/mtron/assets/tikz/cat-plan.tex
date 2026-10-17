@@ -1,0 +1,46 @@
+% cat-plan.tex — plan::T: a rewrite rule as data, the morphism of the rewrite category.
+% Rendered with the tikz MCP server (compile_tikz); the PNG drops in assets/ as cat-plan.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor #000000,
+% panels #191C24). Edge labels are UNFILLED and offset clear of the strokes.
+%
+% THE FIGURE, IN ONE PICTURE. A path::T's out-edge is a plan::T — a rewrite rule as a
+% value, not a closure. The lift alpha is vertical (a function: one abstraction per chain),
+% the out-edge is horizontal (the plan is reachable from the path). The shared type method
+% lower(plan::T) applies the plan; the plan's selector reads abstraction::T's morphism fields.
+%
+%       [abstraction::T]   type code — the selector's form/law
+%              ^
+%         a    |  lift
+%       [path::T] --out-edge--> [plan::T]   value code, a rewrite rule as data
+
+\begin{tikzpicture}[
+  c/.style={draw, rounded corners=2pt, thick, minimum width=14mm, minimum height=7mm,
+            font=\small, inner sep=1.2mm},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  el/.style={font=\scriptsize, inner sep=1pt},
+  sub/.style={font=\tiny, text=white!60!black, align=left, inner sep=1pt},
+  color=white
+]
+
+% abstraction::T directly above path::T — the squared lift, not a triangle
+\node[c] (A) at (0,2.4) {\texttt{abstraction::T}};
+\node[sub, anchor=west, align=left] at (1.3,2.4) {type code — the\\ selector's form/law};
+
+% path::T and its out-edge, plan::T
+\node[c] (p)  at (0,0) {\texttt{path::T}};
+\node[c] (pl) at (4.8,0) {\texttt{plan::T}};
+
+% the lift is vertical (a function: one abstraction per chain)
+\draw[e] (p.north) -- node[el,left=2pt]{$\alpha$} (A.south);
+
+% the out-edge is horizontal (the plan is reachable from the path)
+\draw[e] (p) -- node[el,above=2pt]{out-edge} (pl);
+
+% what each is
+\node[sub, anchor=east, align=right] at (-0.8,0) {value code};
+\node[sub, anchor=north, align=center] at (4.8,-0.8) {a rewrite rule as data\\ applied by $\mathrm{lower}(\cdot)$};
+
+% the plan is data
+\node[sub, anchor=north, align=center] at (2.4,-1.7) {the plan is data — \texttt{name} + \texttt{law} (local) or \texttt{cut}/\texttt{route} (distribution)};
+\end{tikzpicture}

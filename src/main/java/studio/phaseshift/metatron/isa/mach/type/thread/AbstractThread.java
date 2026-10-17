@@ -66,7 +66,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
     }
 
     protected Thread thread;
-    protected final FutureObj<Obj> future = new FutureObj<>(UUID.randomUUID());
+    protected final FutureObj<Obj> future = new FutureObj<>();
 
     // ======================== Execution ========================
 

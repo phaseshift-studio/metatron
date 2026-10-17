@@ -376,6 +376,10 @@ public final class Tokens {
     public static final String MORPHED_FROM = "morphed_from";
     public static final String MORPHED_TO = "morphed_to";
     public static final String FORM = "form";
+    public static final String CUT = "cut";
+    public static final String SPAN = "span";
+    public static final String FLAGS = "flags";
+    public static final String HOPS = "hops";
     public static final String POSITION = "position";
     public static final String CONTESTED = "contested";
     public static final String ORBIT = "orbit";

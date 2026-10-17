@@ -473,7 +473,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
                 status=&gt;!inst?rng=bool&amp;dom=#{?}(){&lt;j&gt;},
                 tool=&gt;[execute_tool=&gt;tool::[
-                 inst=&gt;inst?rng=#{*}&amp;dom=#{?}(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
+                 inst=&gt;inst?#{*}&lt;=#{?}(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
                  name=&gt;execute_tool,
                  desc=&gt;'Universal tool executor that can i...',
                  arg=&gt;[command=&gt;'Command-line string with tool name...']]]]

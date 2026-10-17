@@ -289,10 +289,10 @@ every instruction replaced by its `morphism::T`, i.e. **value code below, type c
 
 ### `path::T` — value code as a vertex
 
-| field         | what it is                                                                            |
-|---------------|---------------------------------------------------------------------------------------|
-| `obj`         | the chain itself (the value code)                                                     |
-| `<rule name>` | one lazy edge per **live** rewrite — dereference (`>>`) applies the rule and re-lifts |
+| field         | what it is                                                                                                               |
+|---------------|--------------------------------------------------------------------------------------------------------------------------|
+| `obj`         | the chain itself (the value code)                                                                                        |
+| `<rule name>` | one lazy edge per **live** rewrite — the out-edge is a `plan::T` (see below); dereference (`>>`) applies it and re-lifts |
 
 Only live edges are materialized (see *a-priori pruning*): a vertex lists exactly the rules that can move it, and a
 **normal form prints as its own certificate** — `[path::[obj=>...]]`, no out-edges, zero matches attempted. A
@@ -323,6 +323,46 @@ at the type level, and the laws/forms/theories a rule consults sit on the word i
 
 ```mtron_pre
 [MAXOUTPUT 40] [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
+```
+
+### `plan::T` — a rewrite rule as a value
+
+A `path::T` out-edge is not a bare rule name — it is a **plan**: the rewrite rule itself, lifted to a first-class
+value. `plan::T` is the morphism of the rewrite category (`path → path`), and it is *data*, never a closure — the
+same plan can be introspected, shipped, and applied anywhere.
+
+<!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
+<img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
+
+A plan is one of two shapes, discriminated by its own fields:
+
+| shape            | rec                                             | example                                                                           |
+|------------------|-------------------------------------------------|-----------------------------------------------------------------------------------|
+| **local**        | `[name, law]` — the process law it embodies     | `theory_unit_removal` → `law => unit`; `theory_involution` → `law => involution`  |
+| **distribution** | `[name, cut, route]` — the anchor + the fan-out | `law_shard` → `cut => [reducer, monoidic, commutative]`, routes `local` + `peers` |
+
+The application is a **type method**, not a field: `lower(plan::T)` is one instruction registered in
+`catInstSet.insts()`, shared by every plan. It reads everything it needs off the two objs — the plan's `law` or
+`cut`/`route`, and the path's code — matches the selector against the abstraction's morphism fields, applies the
+rewrite, and re-lifts to `path::T`. The plan carries no `result` λ; `lower` *is* the operator.
+
+```mtron_pre
+*/network
+[{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)]
+```
+
+```mtron_pre
+ws_client::[host=>ws://localhost:8555/mtron]
+*/network
+```
+
+**The relation.** `path::T` is the vertex, `plan::T` its out-edge, `abstraction::T` the surface the plan's selector
+reads, and `lower` the shared application that closes the loop back to `path::T`. Because a plan is data, the
+rewrite *schedule* and the plan's out-edge are the same thing — every rule is `lower(plan::T)`, which is "the
+rewrite table is the category" made literal.
+
+```mtron_pre
+[{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)].>-.lower(>>law_shard)
 ```
 
 ### may / must — the fiber modality

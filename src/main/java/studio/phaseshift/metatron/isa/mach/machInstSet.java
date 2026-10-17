@@ -617,6 +617,7 @@ public class machInstSet extends AbstractInstSet {
                                         // admitting any rec at all.
                                         .isaPredicate(rec(
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(ROSTER).maybe().asUri(), rec(
                                                         uri(DISCOVER).maybe().asUri(), T(MACH_DISCOVERY_TID.maybeSome()),
                                                         // A REACH PER HOST, not only an endpoint: discovery writes

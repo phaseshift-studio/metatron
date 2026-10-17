@@ -463,17 +463,17 @@ the agent ide — project::T definition, build result::T and the links between t
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/ide/#,
           q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+                     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+                     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[/m/ide/serializer::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java,
+          type=&gt;[/m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java,
                  rec::T[?[classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
    {?}package=&gt;str::T,
    {?}imports=&gt;lst::T,
    {?}preamble=&gt;str::T,
    {?}postscript=&gt;str::T]]@/m/ide/java,
-                 rec::T[?[status=&gt;union(success,error,halted),
+                 rec::T[?[status=&gt;union?#&lt;=#(success,error,halted),
    runtime=&gt;!*/m/math/time,
    {?}command=&gt;str::T,
    {?}project=&gt;project::T,
@@ -482,33 +482,20 @@ the agent ide — project::T definition, build result::T and the links between t
                  rec::T[?[root=&gt;uri::T,
    {?}name=&gt;str::T,
    {?}desc=&gt;str::T,
-   {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),
+   {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union?#&lt;=#(success,error,halted),
  runtime=&gt;!*/m/math/time,
  {?}command=&gt;str::T,
  {?}project=&gt;project::T,
  {?}result=&gt;str::T,
  {?}error=&gt;{?}[fail::T]]]@/m/ide/result],
    {?}code=&gt;&lt;#&gt;::T]]@/m/ide/project],
-          inst=&gt;[as?rng=project&amp;dom=uri(rec::T[?[root=&gt;uri::T,
-  {?}name=&gt;str::T,
-  {?}desc=&gt;str::T,
-  {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),
- runtime=&gt;!*/m/math/time,
- {?}command=&gt;str::T,
- {?}project=&gt;project::T,
- {?}result=&gt;str::T,
- {?}error=&gt;{?}[fail::T]]]@/m/ide/result],
-  {?}code=&gt;&lt;#&gt;::T]]@/m/ide/project){&lt;j&gt;},
-                 as?rng=skill&amp;dom=project(&lt;#&gt;::T){&lt;j&gt;},
-                 as?rng=java&amp;dom=java(rec::T[?[classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
-  {?}package=&gt;str::T,
-  {?}imports=&gt;lst::T,
-  {?}preamble=&gt;str::T,
-  {?}postscript=&gt;str::T]]@/m/ide/java){&lt;j&gt;},
-                 as?rng=java&amp;dom=java(str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/ide/java){&lt;j&gt;},
-                 find?rng=uri{*}&amp;dom=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T){&lt;j&gt;},
-                 search?rng=uri{*}&amp;dom=uri(str::T){&lt;j&gt;},
-                 command?rng=inst&amp;dom=#{?}(command=&gt;str::T){&lt;j&gt;}]]@/m/ide</code></pre>
+          inst=&gt;[as?project&lt;=uri(project::T){&lt;j&gt;},
+                 as?skill&lt;=project(#::T){&lt;j&gt;},
+                 as?java&lt;=java(java::T){&lt;j&gt;},
+                 as?java&lt;=java(java::T){&lt;j&gt;},
+                 find?uri{*}&lt;=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T){&lt;j&gt;},
+                 search?uri{*}&lt;=uri(str::T){&lt;j&gt;},
+                 command?inst&lt;=#{?}(command=&gt;str::T){&lt;j&gt;}]]@/m/ide</code></pre>
                     </div>
                 </div>
             </div>
@@ -577,7 +564,7 @@ the agent ide — project::T definition, build result::T and the links between t
         </span>
         <small class="text-muted code">/m/ide/serializer/obj_ide_java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/ide/serializer::T[][ctor?rng=obj_ide_java&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java</code></pre></div>
     
     
 </div><div class="card mb-3" id="__m__ide__project">
@@ -591,7 +578,7 @@ the agent ide — project::T definition, build result::T and the links between t
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[root=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}desc=&gt;str::T,
- {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),
+ {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union?#&lt;=#(success,error,halted),
  runtime=&gt;!*/m/math/time,
  {?}command=&gt;str::T,
  {?}project=&gt;project::T,
@@ -613,7 +600,7 @@ the agent ide — project::T definition, build result::T and the links between t
         </span>
         <small class="text-muted code">/m/ide/result</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[status=&gt;union(success,error,halted),
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[status=&gt;union?#&lt;=#(success,error,halted),
  runtime=&gt;!*/m/math/time,
  {?}command=&gt;str::T,
  {?}project=&gt;project::T,
@@ -639,7 +626,7 @@ x&gt;&gt;runtime.normalize()</code></pre>
         </span>
         <small class="text-muted code">/m/ide/inst/command?rng=/m/inst&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__command?rng=__m__inst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__ide__inst__command?rng=__m__inst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">command?rng=inst&dom=<span class="code text-info">#{?}</span>(command=>str::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__command?rng=__m__inst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__ide__inst__command?rng=__m__inst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">command?inst<=<span class="code text-info">#{?}</span>(command=>str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> wrap a command into an enriched instruction that runs it and returns ide:result::T</p>
@@ -662,7 +649,7 @@ my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it
         </span>
         <small class="text-muted code">/m/ide/inst/find?rng=/m/uri{*}&amp;dom=/m/uri</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find?rng=uri{*}&dom=uri(class=>uri::T,member=>str{?}::T,text=>str{?}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find?uri{*}<=uri(class=>uri::T,member=>str{?}::T,text=>str{?}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> finds project resources that contain provided uri fragment</p>
@@ -683,7 +670,7 @@ my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it
         </span>
         <small class="text-muted code">/m/ide/inst/search?rng=/m/uri{*}&amp;dom=/m/uri</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">search?rng=uri{*}&dom=uri(str::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">search?uri{*}<=uri(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> searches project resources whose contents match provided regex</p>

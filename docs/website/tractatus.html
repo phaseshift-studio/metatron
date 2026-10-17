@@ -913,10 +913,10 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
            boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
            local=&gt;booger],
     file=&gt;/home/killswitch/software/metatron/boot/docs.mtron]
-==&gt;&lt;#&gt;=&gt;plus?rng=int&amp;dom=int(fail::[unable to determine inst function:
+==&gt;&lt;#&gt;=&gt;plus?int&lt;=int(fail::[unable to determine inst function:
    	12          =&gt; 1?dom=int()   | [inst]
    	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/167){&lt;j&gt;}@&lt;/sys/space/cold/instset/1&gt;
+   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/167){&lt;j&gt;}
 ==&gt;&lt;#&gt;=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
 ==&gt;&lt;#&gt;=&gt;animal::T@chicken
 ==&gt;&lt;#&gt;=&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
@@ -939,7 +939,7 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 ==&gt;&lt;#&gt;=&gt;[name=&gt;'peter',
     age=&gt;35,
     out_=&gt;[created=&gt;!*v4]]
-==&gt;&lt;#&gt;=&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}</code></pre>
+==&gt;&lt;#&gt;=&gt;out?rec{*}&lt;=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}</code></pre>
 </div>
 </div>
 </div>
@@ -1935,39 +1935,39 @@ These types are distributed in the <code>/m/math</code> instruction set and impo
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;     ​1​
-==&gt;int::T[?is(gte(0)).is(lte(100))][ctor?rng=percent&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/percent
+==&gt;int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent
 ==&gt;int::T[is(gt(0))]@/m/math/nat
 ==&gt;lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx
 ==&gt;real::T@/m/math/datasize
 ==&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@/m/math/datetime
-==&gt;datasize::T[][ctor?rng=bB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/bB
-==&gt;datasize::T[][ctor?rng=kB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/kB
-==&gt;datasize::T[][ctor?rng=mB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/mB
-==&gt;datasize::T[][ctor?rng=gB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/gB
-==&gt;datasize::T[][ctor?rng=tB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/tB
-==&gt;datasize::T[][ctor?rng=pB&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/datasize/pB
+==&gt;datasize::T[][ctor?bB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB
+==&gt;datasize::T[][ctor?kB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB
+==&gt;datasize::T[][ctor?mB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB
+==&gt;datasize::T[][ctor?gB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB
+==&gt;datasize::T[][ctor?tB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB
+==&gt;datasize::T[][ctor?pB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB
 ==&gt;real::T@/m/math/currency
 ==&gt;currency::T@/m/math/currency/usd
 ==&gt;currency::T@/m/math/currency/euro
 ==&gt;real::T@/m/math/time
-==&gt;time::T[][ctor?rng=nanos&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/nanos
-==&gt;time::T[][ctor?rng=micros&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/micros
-==&gt;time::T[][ctor?rng=millis&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/millis
-==&gt;time::T[][ctor?rng=second&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/second
-==&gt;time::T[][ctor?rng=minute&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/minute
-==&gt;time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/hour
-==&gt;time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/time/day
+==&gt;time::T[][ctor?nanos&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos
+==&gt;time::T[][ctor?micros&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/micros
+==&gt;time::T[][ctor?millis&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/millis
+==&gt;time::T[][ctor?second&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/second
+==&gt;time::T[][ctor?minute&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/minute
+==&gt;time::T[][ctor?hour&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/hour
+==&gt;time::T[][ctor?day&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/day
 ==&gt;real::T@/m/math/metric
-==&gt;metric::T[][ctor?rng=mm&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/mm
-==&gt;metric::T[][ctor?rng=cm&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/cm
-==&gt;metric::T[][ctor?rng=dm&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/dm
-==&gt;metric::T[][ctor?rng=meter&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/meter
-==&gt;metric::T[][ctor?rng=km&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/metric/km
+==&gt;metric::T[][ctor?mm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm
+==&gt;metric::T[][ctor?cm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm
+==&gt;metric::T[][ctor?dm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm
+==&gt;metric::T[][ctor?meter&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter
+==&gt;metric::T[][ctor?km&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/km
 ==&gt;real::T@/m/math/imperial
-==&gt;imperial::T[][ctor?rng=inch&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/imperial/inch
-==&gt;imperial::T[][ctor?rng=foot&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/imperial/foot
-==&gt;imperial::T[][ctor?rng=yard&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/imperial/yard
-==&gt;imperial::T[][ctor?rng=mile&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/math/imperial/mile</code></pre>
+==&gt;imperial::T[][ctor?inch&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch
+==&gt;imperial::T[][ctor?foot&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot
+==&gt;imperial::T[][ctor?yard&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard
+==&gt;imperial::T[][ctor?mile&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2979,7 +2979,7 @@ An <code>int</code> is an <code>int</code> because it is named <code>int</code>.
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; str::T@re     ​1​
 mtron&gt; *select?&lt;=str&amp;docq     ​2​
-==&gt;docs::[obj=&gt;select?rng=lst&amp;dom=str(str::T){&lt;j&gt;},
+==&gt;docs::[obj=&gt;select?lst&lt;=str(str::T){&lt;j&gt;},
           dom=&gt;'a str to split by regex',
           rng=&gt;'the regex capture groups (or full ...',
           args=&gt;[0=&gt;'regex'],
@@ -3176,7 +3176,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{b}}E{{g}}t{{r}}A{{c}}t{{m}}r{{y}}o{{m}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{y}}E{{r}}t{{g}}a{{c}}T{{g}}r{{r}}o{{r}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3271,7 +3271,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 ==&gt;0x6d65746174726f6e
 mtron&gt; bytes::'48656c6c6f'     ​2​
 ==&gt;fail::['48656c6c6f' [string] is not a bytes::T
-   	while parsing: bytes::'48656c6c6f']@/sys/fail/248</code></pre>
+   	while parsing: bytes::'48656c6c6f']@/sys/fail/246</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3729,7 +3729,7 @@ mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     �
 ==&gt;fail::[parse error at line 1, col 19:
      filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
                        ^
-     could not parse at '&lt;']@/sys/fail/261
+     could not parse at '&lt;']@/sys/fail/258
 mtron&gt; *filtered     ​3​</code></pre>
 </div>
 </div>
@@ -3824,7 +3824,7 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/266
+   	while parsing: nat::-10]@/sys/fail/263
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/267</code></pre>
 </div>
@@ -4142,19 +4142,19 @@ mtron&gt; memspace::[
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; console::[=&gt;]@/usr/ui/console     ​1​
 ==&gt;console::[menu=&gt;[console=&gt;console::[command_palette=&gt;/m/mach/ui/console/command_palette::[
     console=&gt;!*/usr/ui/console,
-    help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-    redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
-    header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-    quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-    reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-    clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+    help=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
+    redirect=&gt;[input=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;}],
+    header=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
+    quit=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
+    reset=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
+    clear=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
     ...(30 more)]@/usr/ui/console/command_palette],
-                    help=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                    redirect=&gt;[input=&gt;inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}],
-                    header=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                    quit=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                    reset=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
-                    clear=&gt;inst?rng=noobj{0}&amp;dom=#{?}(){&lt;j&gt;},
+                    help=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
+                    redirect=&gt;[input=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;}],
+                    header=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
+                    quit=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
+                    reset=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
+                    clear=&gt;inst?noobj{0}&lt;=#{?}(){&lt;j&gt;},
                     ...(30 more)]]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​
@@ -7055,7 +7055,7 @@ mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
 ==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
-==&gt;docs::[obj=&gt;as?rng=bytes&amp;dom=inst(bytes::T){&lt;j&gt;},
+==&gt;docs::[obj=&gt;as?bytes&lt;=inst(bytes::T){&lt;j&gt;},
           dom=&gt;'/m/inst',
           rng=&gt;'/m/bytes',
           args=&gt;[0=&gt;'/m/bytes'],
@@ -7106,23 +7106,22 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6696   6349160   1% /run'
+==&gt;'tmpfs                    6355856       6576   6349280   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  564193444 346764380  62% /'
-==&gt;'tmpfs                   31779272     138948  31640324   1% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032  563939968 347017856  62% /'
+==&gt;'tmpfs                   31779272     140136  31639136   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        280   6355572   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        288   6355564   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1350106796 571101748  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1350732796 570475748  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
 ==&gt;boot
 ==&gt;conf
 ==&gt;'CONTRIBUTING.md'
-==&gt;Desktop
 ==&gt;dist
 ==&gt;docs
 ==&gt;dsh-plugins
@@ -7143,7 +7142,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[mAchInE FAILed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
+==&gt;fail::[MaChINe faIled][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7331,7 +7330,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1619/11/30/199?tz=-0600
+==&gt;datetime:://2026.10:1717/38/40/570?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -9146,8 +9145,8 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              start=&gt;[code=&gt;at(ab).plus('B'),
                      loop=&gt;second::1.0,
                      state=&gt;pause]@/sys/thread/b,
-             time=&gt;datetime:://2026.10:1619/11/32/891?tz=-0600,
-             runtime=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
+             time=&gt;datetime:://2026.10:1717/38/43/119?tz=-0600,
+             runtime=&gt;!inst?#{*}&lt;=#{?}(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
 mtron&gt; */sys/thread/b.stop()
@@ -9184,13 +9183,13 @@ mtron&gt; *ab
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; virtual::[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example     ​1​
-==&gt;virtual::[code=&gt;print('.'),
+==&gt;virtual::[code=&gt;print?#&lt;=#('.'),
              loop=&gt;second::2.5]@/sys/thread/example
 mtron&gt; */sys/thread/example.pause()     ​2​
-==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/pause@1) [machInstSet&lt;822&gt;]][unable to convert rec::T to str::T [machInstSet&lt;822&gt;]]@/sys/fail/225
+==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/pause@1) [machInstSet&lt;838&gt;]][unable to convert rec::T to str::T [machInstSet&lt;838&gt;]]@/sys/fail/225
 mtron&gt; */sys/thread/example/state     ​3​
 mtron&gt; */sys/thread/example.resume()     ​4​
-==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/resume@1) [machInstSet&lt;826&gt;]][unable to convert rec::T to str::T [machInstSet&lt;826&gt;]]@/sys/fail/226
+==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/resume@1) [machInstSet&lt;842&gt;]][unable to convert rec::T to str::T [machInstSet&lt;842&gt;]]@/sys/fail/226
 mtron&gt; */sys/thread/example/state     ​5​</code></pre>
 </div>
 </div>

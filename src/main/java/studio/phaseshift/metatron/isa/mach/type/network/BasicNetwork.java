@@ -23,11 +23,12 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.net.InetAddress;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.STATUS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_NETWORK_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -54,11 +55,20 @@ public class BasicNetwork extends MRec implements Network {
         this(mutableMap());
     }
 
+    private static Map<Obj, Obj> addFields(final Map<Obj, Obj> jvm) {
+        try {
+            jvm.putIfAbsent(uri(HOST), uri(InetAddress.getLocalHost().getCanonicalHostName()));
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+        return jvm;
+    }
+
     public BasicNetwork(final Map<Obj, Obj> jvm) {
-        super(jvm, MACH_NETWORK_TID, null);
+        super(addFields(jvm), MACH_NETWORK_TID, null);
         // the status METHOD is a field of the component, not a Java-only accessor: `*/network/status` must reach
         // it, so the inst is installed on the rec it closes over (and invoked there with `()`).
-        this.at(uri(STATUS), this.status(), MUTABLE);
+        jvm.putIfAbsent(uri(STATUS), this.status());
     }
 
     /**

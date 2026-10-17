@@ -39,7 +39,7 @@ mtron> """
                 host=><http://127.0.0.1:64342/stream>,
                 status=>!inst?rng=bool&dom=#{?}(){<j>},
                 tool=>[execute_tool=>tool::[
-                 inst=>inst?rng=#{*}&dom=#{?}(command=>'Command-line string with tool name and arguments'){<j>},
+                 inst=>inst?#{*}<=#{?}(command=>'Command-line string with tool name and arguments'){<j>},
                  name=>execute_tool,
                  desc=>'Universal tool executor that can i...',
                  arg=>[command=>'Command-line string with tool name...']]]]

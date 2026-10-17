@@ -102,6 +102,49 @@ public interface Inst extends Call {
                 return flatmapper;
             return standard;
         }
+
+        /**
+         * Project this form onto the stream-ring's function subrings — the article's five sets
+         * {@code F_m ∪ F_f ∪ F_fm ∪ F_r ∪ F_b}, the smaller set the rewrite algebra operates on. A form
+         * already in the subrings is its own image; the structural near-misses collapse onto their set
+         * ({@code scatter} is the linearized one-to-many = {@code flatmapper}; {@code join} is the
+         * many-to-many merge = {@code gather}); a form with no subring (the stream endpoints, the {@code fork}
+         * split, error recovery, unclassified) is its own image — it lies outside {@code F}.
+         *
+         * <p>{@code fork} stays its own image: it is the structural fan-out of {@code +} into parallel streams,
+         * not a data-transforming flatmap, so a coefficient does not float through it. {@code gather} is the
+         * code's name for the barrier near-ring {@code F_b} ({@code X* → Y*}), so {@code join} and
+         * {@code gather} share one image — no separate {@code barrier} form is needed.
+         */
+        public Form subring() {
+            return switch (this) {
+                case scatter -> flatmapper;
+                case join -> gather;
+                default -> this;
+            };
+        }
+
+        /**
+         * Thm 6 — the universal functional commutativity of coefficients holds across this form: the
+         * coefficient floats through it ({@code ca = a·c}). The replicable run, {@code F_m ∪ F_f ∪ F_fm}.
+         */
+        public boolean isFloatable() {
+            return switch (this.subring()) {
+                case mapper, filter, flatmapper -> true;
+                default -> false;
+            };
+        }
+
+        /**
+         * Thm 17 — the coefficient cannot commute past this form: a reduce/gather drains the stream and
+         * anchors the coefficient in place ({@code c1·1a ≠ 1a·c1}). The cut, {@code F_r ∪ F_b}.
+         */
+        public boolean isBlocked() {
+            return switch (this.subring()) {
+                case reducer, gather -> true;
+                default -> false;
+            };
+        }
     }
 
     // resolveArgs moved to Helper class for use by InstResolver implementations

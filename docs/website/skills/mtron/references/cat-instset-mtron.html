@@ -476,8 +476,8 @@ instruction from being evaluated.</p>
                        mult_monoid=&gt;monoid_theory::[
                         op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                         id=&gt;1]],
-                 morphed_to=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;},
-                 morphed_from=&gt;!inst?rng=#{*}&amp;dom=#{?}(){&lt;j&gt;}]
+                 morphed_to=&gt;!inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+                 morphed_from=&gt;!inst?#{*}&lt;=#{?}(){&lt;j&gt;}]
 mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
 ==&gt;morphism[plus?rng=int&amp;dom=int]::[
     name=&gt;plus,
@@ -485,8 +485,8 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
     class=&gt;[endo],
     src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
     trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-    obj=&gt;plus?rng=int&amp;dom=int(int::T),
+    analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+    obj=&gt;plus?int&lt;=int(int::T),
     ...(1 more)]
 </code></pre>
 <h3>the two blocks</h3>
@@ -507,20 +507,20 @@ mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
               form=&gt;mapper,
               src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
               trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-              analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-              obj=&gt;as?rng=bool&amp;dom=int(bool::T){&lt;j&gt;}]
+              analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+              obj=&gt;as?bool&lt;=int(bool::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
               src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
               trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-              analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-              obj=&gt;as?rng=bytes&amp;dom=int(bytes::T){&lt;j&gt;}]
+              analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+              obj=&gt;as?bytes&lt;=int(bytes::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
               src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
               trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-              analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-              obj=&gt;as?rng=real&amp;dom=int(real::T){&lt;j&gt;}]
+              analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+              obj=&gt;as?real&lt;=int(real::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
    ...
@@ -775,7 +775,7 @@ every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value c
 </thead>
 <tbody>
 <tr><td><code>obj</code></td><td>the chain itself (the value code)</td></tr>
-<tr><td><code>&lt;rule name&gt;</code></td><td>one lazy edge per <strong>live</strong> rewrite — dereference (<code>&gt;&gt;</code>) applies the rule and re-lifts</td></tr>
+<tr><td><code>&lt;rule name&gt;</code></td><td>one lazy edge per <strong>live</strong> rewrite — the out-edge is a <code>plan::T</code> (see below); dereference (<code>&gt;&gt;</code>) applies it and re-lifts</td></tr>
 </tbody>
 </table>
 <p>Only live edges are materialized (see <em>a-priori pruning</em>): a vertex lists exactly the rules that can move it, and a
@@ -783,18 +783,20 @@ every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value c
 traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
-           theory_unit_removal=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           branch_collapse=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           branch_inline=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           theory_involution=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           inverse_cancellation=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           derivation_contraction=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           ...(1 more)]]
+           theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
+                                       law=&gt;unit],
+           branch_collapse=&gt;plan::[name=&gt;branch_collapse,
+                                   result=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;}],
+           branch_inline=&gt;plan::[name=&gt;branch_inline,
+                                 result=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;}],
+           theory_involution=&gt;plan::[name=&gt;theory_involution,
+                                     law=&gt;involution],
+           inverse_cancellation=&gt;plan::[name=&gt;inverse_cancellation,
+                                        result=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;}],
+           derivation_contraction=&gt;plan::[name=&gt;derivation_contraction,
+                                          result=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;}]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;theory_involution]==[&gt;&gt;theory_unit_removal]
-==&gt;[path::[obj=&gt;start(5),
-           branch_collapse=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           branch_inline=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;},
-           law_shard=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]]
+==&gt;[noobj]
 </code></pre>
 <p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand
@@ -821,16 +823,16 @@ at the type level, and the laws/forms/theories a rule consults sit on the word i
                                           class=&gt;[endo],
                                           src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
                                           trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-                                          analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-                                          obj=&gt;start(5)],
+                                          analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+                                          obj=&gt;start?#&lt;=#(5)],
                         morphism[plus?rng=int&amp;dom=int]::[
                          name=&gt;plus,
                          form=&gt;mapper,
                          class=&gt;[endo],
                          src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
                          trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-                         analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-                         obj=&gt;plus?rng=int&amp;dom=int(0),
+                         analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+                         obj=&gt;plus?#&lt;=#(0),
                          ...(1 more)],
                         morphism[neg?rng=int&amp;dom=int]::[
                          name=&gt;neg,
@@ -844,8 +846,8 @@ at the type level, and the laws/forms/theories a rule consults sit on the word i
                                  epi],
                          src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
                          trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-                         analysis=&gt;!inst?rng=#&amp;dom=#(&lt;#&gt;::T){&lt;j&gt;},
-                         obj=&gt;neg?rng=int&amp;dom=int(),
+                         analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+                         obj=&gt;neg?#&lt;=#(),
                          ...(1 more)],
                         morphism[neg?rng=int&amp;dom=int]::[
                          name=&gt;neg,
@@ -857,6 +859,58 @@ at the type level, and the laws/forms/theories a rule consults sit on the word i
                                  retraction,
                                  mono,
    ...
+</code></pre>
+<h4><code>plan::T</code> — a rewrite rule as a value</h4>
+<p>A <code>path::T</code> out-edge is not a bare rule name — it is a <strong>plan</strong>: the rewrite rule itself, lifted to a first-class
+value. <code>plan::T</code> is the morphism of the rewrite category (<code>path → path</code>), and it is <em>data</em>, never a closure — the
+same plan can be introspected, shipped, and applied anywhere.</p>
+<!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
+<img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
+<p>A plan is one of two shapes, discriminated by its own fields:</p>
+<table>
+<thead>
+<tr><th>shape</th><th>rec</th><th>example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>local</strong></td><td><code>[name, law]</code> — the process law it embodies</td><td><code>theory_unit_removal</code> → <code>law =&gt; unit</code>; <code>theory_involution</code> → <code>law =&gt; involution</code></td></tr>
+<tr><td><strong>distribution</strong></td><td><code>[name, cut, route]</code> — the anchor + the fan-out</td><td><code>law_shard</code> → <code>cut =&gt; [reducer, monoidic, commutative]</code>, routes <code>local</code> + <code>peers</code></td></tr>
+</tbody>
+</table>
+<p>The application is a <strong>type method</strong>, not a field: <code>lower(plan::T)</code> is one instruction registered in
+<code>catInstSet.insts()</code>, shared by every plan. It reads everything it needs off the two objs — the plan's <code>law</code> or
+<code>cut</code>/<code>route</code>, and the path's code — matches the selector against the abstraction's morphism fields, applies the
+rewrite, and re-lifts to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
+<pre><code class="language-mtron">mtron&gt; */network
+==&gt;network::[host=&gt;booger,
+             status=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;}]
+mtron&gt; [{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)]
+==&gt;[path::[obj=&gt;map({1,2,3,4,5}).plus(10).sum()]]
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
+==&gt;[host=&gt;ws://localhost:8555/mtron,
+    send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+    send_recv=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+    close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+    on_message=&gt;print?#&lt;=#('received ${_}')]
+mtron&gt; */network
+==&gt;network::[host=&gt;booger,
+             status=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+             peer=&gt;[ws://localhost:8555=&gt;peer::[
+              authority=&gt;ws://localhost:8555,
+              host=&gt;ws://localhost:8555/mtron,
+              transport=&gt;inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+              client=&gt;[host=&gt;ws://localhost:8555/mtron,
+                       send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+                       send_recv=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+                       close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+                       on_message=&gt;print?#&lt;=#('received ${_}')]]]]
+</code></pre>
+<p><strong>The relation.</strong> <code>path::T</code> is the vertex, <code>plan::T</code> its out-edge, <code>abstraction::T</code> the surface the plan's selector
+reads, and <code>lower</code> the shared application that closes the loop back to <code>path::T</code>. Because a plan is data, the
+rewrite <em>schedule</em> and the plan's out-edge are the same thing — every rule is <code>lower(plan::T)</code>, which is &quot;the
+rewrite table is the category&quot; made literal.</p>
+<pre><code class="language-mtron">mtron&gt; [{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)].&gt;-.lower(&gt;&gt;law_shard)
+==&gt;path::[obj=&gt;map({1,2,3,4,5}).plus(10).sum()]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstract vertex stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so an edge there is a claim

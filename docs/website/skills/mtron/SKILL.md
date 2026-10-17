@@ -79,7 +79,7 @@ mtron> */a/x
 ==>1
 mtron> */a/b
 ==>[q=>r,
-    c=>plus(2),
+    c=>plus?#<=#(2),
     d=>[e=>[1.0,0xa5,true]]]
 mtron> */a/b/c
 mtron> */a/b/d
@@ -330,7 +330,7 @@ the default values are `#{?}` and `#{*}`, respectively.
 
 ```mtron
 mtron> *plus?docq
-==>docs::[obj=>plus?rng=int&dom=int(int::T){<j>},
+==>docs::[obj=>plus?int<=int(int::T){<j>},
           dom=>'the lhs int',
           rng=>'the result of the addition',
           args=>[int::T=>'the int to add to the lhs'],
@@ -339,61 +339,61 @@ mtron> *plus?docq
                     "1+2                [-- 3 sugar'd f...",
                     '1.plus(plus(1))    [-- 3 nested ap...',
                     '1+(+1)             [-- 3 sugar nes...']]
-==>docs::[obj=>plus?rng=real&dom=real(real::T){<j>},
+==>docs::[obj=>plus?real<=real(real::T){<j>},
           dom=>'a real',
           rng=>'the sum',
           args=>[0=>'the rhs real'],
           desc=>'[mapper] a sum function \(f(x, y) ...']
-==>docs::[obj=>plus?rng=str&dom=str(str::T){<j>},
+==>docs::[obj=>plus?str<=str(str::T){<j>},
           dom=>'a prefix str',
           rng=>'the concatenated str',
           args=>[0=>'a postfix str'],
           desc=>'[mapper] concatenate two str::T va...',
           example=>['"a" + "b" [-- "ab" --]']]
-==>docs::[obj=>plus?rng=uri{?}&dom=uri(uri::T){<j>},
+==>docs::[obj=>plus?uri{?}<=uri(uri{?}::T){<j>},
           dom=>'a uri',
           rng=>'the branch union',
           args=>[0=>'the rhs uri'],
           desc=>'[filter] a branch function \(f(x, ...']
-==>docs::[obj=>plus?rng=time&dom=time(real::T@/m/math/time){<j>},
+==>docs::[obj=>plus?time<=time(time::T){<j>},
           dom=>'/m/math/time',
           rng=>'/m/math/time',
           args=>[0=>'/m/real'],
           desc=>'[mapper] add two durations of the ...',
           example=>['millis::1500.0 + millis::500.0   [...']]
-==>docs::[obj=>plus?rng=metric&dom=metric(real::T@/m/math/metric){<j>},
+==>docs::[obj=>plus?metric<=metric(metric::T){<j>},
           dom=>'/m/math/metric',
           rng=>'/m/math/metric',
           args=>[0=>'/m/real'],
           desc=>'[mapper] add two distances of the ...',
           example=>['meter::1500.0 + meter::500.0   [--...']]
-==>docs::[obj=>plus?rng=imperial&dom=imperial(real::T@/m/math/imperial){<j>},
+==>docs::[obj=>plus?imperial<=imperial(imperial::T){<j>},
           dom=>'/m/math/imperial',
           rng=>'/m/math/imperial',
           args=>[0=>'/m/real'],
           desc=>'[mapper] add two distances of the ...',
           example=>['foot::12.0 + foot::36.0   [-- foot...']]
-==>docs::[obj=>plus?rng=cmplx&dom=cmplx(lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx){<j>},
+==>docs::[obj=>plus?cmplx<=cmplx(cmplx::T){<j>},
           dom=>'a complex number \(z = a + bi\)',
           rng=>'the complex sum \(z + w\)',
           args=>[lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx=>'the complex addend \(w = c + di\)'],
           desc=>'[mapper] complex addition: \((a+bi...',
           example=>['cmplx::[1.0,2.0] + cmplx::[3.0,4.0...']]
-==>docs::[obj=>plus?rng=datetime&dom=datetime(real::T@/m/math/time){<j>},
+==>docs::[obj=>plus?datetime<=datetime(time::T){<j>},
           dom=>'/m/math/datetime',
           rng=>'/m/math/datetime',
           args=>[0=>'/m/real'],
           desc=>'[mapper] shift a datetime forward ...',
           example=>['<//2026.08:09/14/30/00/000?tz=+000...']]
 mtron> *plus?str<=str&docq
-==>docs::[obj=>plus?rng=str&dom=str(str::T){<j>},
+==>docs::[obj=>plus?str<=str(str::T){<j>},
           dom=>'a prefix str',
           rng=>'the concatenated str',
           args=>[0=>'a postfix str'],
           desc=>'[mapper] concatenate two str::T va...',
           example=>['"a" + "b" [-- "ab" --]']]
 mtron> *select?<=str&docq
-==>docs::[obj=>select?rng=lst&dom=str(str::T){<j>},
+==>docs::[obj=>select?lst<=str(str::T){<j>},
           dom=>'a str to split by regex',
           rng=>'the regex capture groups (or full ...',
           args=>[0=>'regex'],

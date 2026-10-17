@@ -463,8 +463,8 @@ nested documents, typed collections, and schema-enforced writes — all within m
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/dcmnt/#,
           q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T){&lt;j&gt;},
+                     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+                     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
           constq=&gt;[obj_json::[density=&gt;OPAQUE,
@@ -484,18 +484,18 @@ nested documents, typed collections, and schema-enforced writes — all within m
     {?}inst=&gt;{?}[inst::T],
     {?}rewrite=&gt;{?}[inst::T],
     {?}sugar=&gt;{?}[lst::T],
-    {?}reference=&gt;{?}[uri::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#&gt;::T){&lt;j&gt;}]@/m/instset]][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/dcmnt/space/dcmntspace],
-          inst=&gt;[mql?rng=rec{*}&amp;dom=dcmntspace(uri::T,rec::T){&lt;j&gt;},
-                 mql?rng=rec{*}&amp;dom=collection(rec::T){&lt;j&gt;}],
-          rewrite=&gt;[/m/dcmnt/inst/rewrite/mql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                    /m/dcmnt/inst/rewrite/mql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                    /m/dcmnt/inst/rewrite/mql_sum_column?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                    /m/dcmnt/inst/rewrite/mql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                    /m/dcmnt/inst/rewrite/mql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                    /m/dcmnt/inst/rewrite/mql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                    /m/dcmnt/inst/rewrite/mql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                    /m/dcmnt/inst/rewrite/mql_where_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;},
-                    /m/dcmnt/inst/rewrite/mql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;}]]@/m/dcmnt</code></pre>
+    {?}reference=&gt;{?}[uri::T]]][ctor?instset&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/instset]][inst?dcmntspace&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/dcmnt/space/dcmntspace],
+          inst=&gt;[mql?rec{*}&lt;=dcmntspace(uri::T,rec::T){&lt;j&gt;},
+                 mql?rec{*}&lt;=collection(rec::T){&lt;j&gt;}],
+          rewrite=&gt;[/m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/dcmnt/inst/rewrite/mql_sum_column?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/dcmnt/inst/rewrite/mql_where_limit?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code(){&lt;j&gt;}]]@/m/dcmnt</code></pre>
                     </div>
                 </div>
             </div>
@@ -602,7 +602,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
  {?}post_write=&gt;inst::T,
  {?}qless_write=&gt;inst::T,
  {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?rng=qproc&amp;dom=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
@@ -611,11 +611,11 @@ nested documents, typed collections, and schema-enforced writes — all within m
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
-  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
-  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
-  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
+  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
+  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
+  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
   <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -640,8 +640,8 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/mql?rng=/m/rec{*}&amp;dom=/m/dcmnt/space/dcmntspace</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rng=rec{*}&dom=dcmntspace(uri::T,rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rng=rec{*}&dom=collection(rec::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rec{*}<=dcmntspace(uri::T,rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0-tab').click();document.getElementById('__m__dcmnt__inst__mql?rng=__m__rec{*}&dom=__m__dcmnt__space__dcmntspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rec{*}<=collection(rec::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the provided rec is translated to an bson query document and evaluated against the domain collection</p>
@@ -666,7 +666,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_count?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_count?code{?}<=code(){<j>}</code></pre></div>
     
 </div><div class="card mb-3" id="__m__dcmnt__inst__rewrite__mql_limit?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -676,7 +676,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_limit?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_limit?code{?}<=code(){<j>}</code></pre></div>
     
 </div><div class="card mb-3" id="__m__dcmnt__inst__rewrite__mql_mean?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -686,7 +686,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_mean?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_mean?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_mean?code{?}<=code(){<j>}</code></pre></div>
     
 </div><div class="card mb-3" id="__m__dcmnt__inst__rewrite__mql_select?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -696,7 +696,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_select?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_select?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_select?code{?}<=code(){<j>}</code></pre></div>
     
 </div><div class="card mb-3" id="__m__dcmnt__inst__rewrite__mql_sum?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -706,7 +706,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_sum?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_sum?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_sum?code{?}<=code(){<j>}</code></pre></div>
     
 </div><div class="card mb-3" id="__m__dcmnt__inst__rewrite__mql_sum_column?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -716,7 +716,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_sum_column?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_sum_column?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_sum_column?code{?}<=code(){<j>}</code></pre></div>
     
 </div><div class="card mb-3" id="__m__dcmnt__inst__rewrite__mql_where?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -726,7 +726,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_where?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where?code{?}<=code(){<j>}</code></pre></div>
     
 </div><div class="card mb-3" id="__m__dcmnt__inst__rewrite__mql_where_count?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -736,7 +736,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_where_count?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where_count?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where_count?code{?}<=code(){<j>}</code></pre></div>
     
 </div><div class="card mb-3" id="__m__dcmnt__inst__rewrite__mql_where_limit?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -746,7 +746,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         </span>
         <small class="text-muted code">/m/dcmnt/inst/rewrite/mql_where_limit?rng=/m/code{?}&amp;dom=/m/code</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where_limit?rng=code{?}&dom=code(){<j>}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where_limit?code{?}<=code(){<j>}</code></pre></div>
     
 </div>
 </div><div class="container-xxl py-3 text-center">

@@ -469,7 +469,7 @@ links back to its containers.</p>
 <h3>Space Configuration</h3>
 <pre><code class="language-mtron">mtron&gt; dckrspace::T
 mtron&gt; !*dckrspace?docq
-==&gt;docs::[obj=&gt;space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?rng=dckrspace&amp;dom=#{?}(dckrspace::T){&lt;j&gt;}]@/m/dckr/space/dckrspace,
+==&gt;docs::[obj=&gt;space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=#{?}(dckrspace::T){&lt;j&gt;}]@/m/dckr/space/dckrspace,
           desc=&gt;'[structural] a docker daemon space',
           example=&gt;['docker:compose/my-stack -&gt; [servic...',
                     '*docker:container/+',
@@ -779,7 +779,7 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
                                     [op=&gt;select,
                                      dom=&gt;&lt;#&gt;,
                                      rng=&gt;&lt;#&gt;,
-                                     args=&gt;[[name=&gt;id()]],
+                                     args=&gt;[[name=&gt;id?#&lt;=#()]],
                                      form=&gt;mapper,
                                      c_dom=&gt;1,
                                      c_rng=&gt;1]]]],
@@ -792,7 +792,7 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
                             [op=&gt;select,
                              dom=&gt;&lt;#&gt;,
                              rng=&gt;&lt;#&gt;,
-                             args=&gt;[[name=&gt;id()]],
+                             args=&gt;[[name=&gt;id?#&lt;=#()]],
                              form=&gt;mapper,
                              c_dom=&gt;1,
                              c_rng=&gt;1]]]
