@@ -34,7 +34,6 @@ import studio.phaseshift.metatron.isa.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.isa.sys.LogObj;
-import studio.phaseshift.metatron.isa.web.space.mdns.handler.mdns_peerHandler;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -50,9 +49,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.*;
-import static studio.phaseshift.metatron.isa.web.space.mdns.handler.mdns_peerHandler.DEFAULT_SERVICE;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_MACHINE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -382,15 +380,6 @@ public interface Machine extends Rec, AutoCloseable {
             final fURI vid = this.vid().resolve().extend(Helper.SYS_DIR.extend(LOGG));
             GraphittyObjLogger.setLogger(Helper.LOG_SINK);
             this.memory().write(vid, LogObj.sink(Helper.logLevels(this), vid));
-            // DISCOVERY SOURCES come up with the ROOT, once, and only after its infra exists: a source is a
-            // handler that announces this machine and writes what it hears into the roster. Guarded on the root's
-            // VID rather than ROOT_MACHINE — that constant is assigned AFTER this constructor returns, so it is
-            // still null here. One responder per host, not per machine: the roster is read at the root.
-            if (ROOT_MACHINE_VID.equals(this.vid())) {
-                //this.at(NETWORK).asRec().at(uri(SOURCE), rec(uri(webInstSet.MDNS_TID.name()), uri(webInstSet.MDNS_TID)), MUTABLE);
-                //this.logger().error("starting sources: %s", this.network().source());
-                //   Helper.startSources(this);
-            }
         }
         return this;
     }
@@ -646,26 +635,10 @@ public interface Machine extends Rec, AutoCloseable {
         private static final List<Closeable> SOURCES = new ArrayList<>();
 
         /**
-         * Start the discovery handlers the root network declares ({@link Network#source()}). A handler that is
-         * never started is a roster that never fills, so this is what makes a source mean anything at all.
-         */
-        private static volatile boolean SOURCES_CLOSED = false;
-
-        static Machine startSources(final Machine machine) {
-            InstSet.importInstSet(WEB_ISA_TID);
-            machine.network().source().elements().toList().forEach(entry -> {
-                machine.logger().error("loading source: %s", entry);
-                Machine.write(machine.vid().extend(NETWORK).extend(SOURCE).extend("mdns"), new mdns_peerHandler(mutableMap(uri(SERVICE), uri(DEFAULT_SERVICE)), null));
-            });
-            return machine;
-        }
-
-        /**
          * stop every discovery source — a responder that outlives the VM keeps announcing a dead address
          */
         public static void closeSources() {
             synchronized (SOURCES) {
-                SOURCES_CLOSED = true;
                 SOURCES.forEach(CommonUtil::close);
                 SOURCES.clear();
             }

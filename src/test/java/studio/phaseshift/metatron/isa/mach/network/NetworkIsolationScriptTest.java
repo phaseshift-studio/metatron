@@ -118,9 +118,13 @@ public class NetworkIsolationScriptTest extends AbstractMetatronTest {
                 },
                 "CLUSTER_CLOSE", args -> this.closeCluster(),
                 "MOUNT_AUTHORITY", args -> mountAuthority(f(args[0]), f(args[1])),
+                // INTO roster/machine: the roster is a container ([discover, machine]) and a reach declared at
+                // its root lands where no reader looks
                 "DECLARE_SILENT", args -> Machine.write(Network.ROOT_ROSTER, rec(mutableMap(
-                        uri(args[0]), noAnswerTransport()))),
-                "PROBE_ROSTER", args -> this.probe("roster", jnt(this.network().roster().jvm().size())),
+                        uri(MACHINE), rec(mutableMap(uri(args[0]), noAnswerTransport()))))),
+                // THE MACHINE TABLE, not the container: roster().jvm().size() counts the container's own fields,
+                // which is 1 whatever the cluster size -- the declared servers are its machine rows
+                "PROBE_ROSTER", args -> this.probe("roster", jnt(this.network().machines().jvm().size())),
                 "PROBE_PEER", args -> this.probe("peer", jnt(this.network().isPeer(f(args[0])) ? 1 : 0)),
                 "PROBE_OWN", args -> this.probe("own", jnt(this.network().own(f(args[0])) ? 1 : 0)),
                 "PROBE_MINE", args -> this.probe("mine", jnt(Network.Helper.authorities().stream()

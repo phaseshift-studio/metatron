@@ -177,6 +177,7 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI THREAD_EXECUTOR_TID = MACH_ISA_TID.extend("thread_executor");
     /// /// PEERS AND THE NETWORK /// ///
     public static final fURI PEER_TID = MACH_ISA_TID.extend("peer");
+
     public static Type PEER_TYPE;
     public static final fURI ID_CLIENT_TID = MACH_ISA_TID.extend("id_client");
     public static Type ID_CLIENT_TYPE;
@@ -271,6 +272,8 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_NETWORK_TID = MACH_MACHINE_COMPONENT_TID.extend(NETWORK);
     public static Type MACH_NETWORK_TYPE;
     public static Type MACH_MACHINE_COMPONENT_TYPE;
+    public static final fURI MACH_DISCOVERY_TID = MACH_NETWORK_TID.extend("discovery");
+    public static Type MACH_DISCOVERY_TYPE;
 
 
     public machInstSet() {
@@ -549,6 +552,27 @@ public class machInstSet extends AbstractInstSet {
                                 """,
                                 "peer::[authority=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>,handler=></m/web/ws/mtron_ws>,name=>'builder-2'] [-- a peer the current machine can ship to --]",
                                 "peer::[authority=><ws://192.168.1.42:8555>,name=>'builder-2'] [-- known, and not reachable from here --]"),
+                        MACH_DISCOVERY_TYPE = docWrap(Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(MACH_DISCOVERY_TID)
+                                        // ONE REQUIREMENT, AND EXACTLY ONE. A protocol's product is ROWS in
+                                        // roster/machine rather than fields on itself, so nothing else need be
+                                        // readable off the protocol -- but liveness must be, or a dead protocol
+                                        // is indistinguishable from a quiet network and
+                                        // `discover/+.?[status=>false]` has nothing to ask.
+                                        //
+                                        // It is also what makes this type decide anything: an implementation's
+                                        // tid descends from its own protocol surface (/m/web/mdns), never from
+                                        // here, so a purely nominal discovery::T would admit nothing at all.
+                                        .isaPredicate(rec(uri(STATUS), BOOL_TYPE))
+                                        .create(),
+                                Map.of(uri(STATUS), "the one field every discovery protocol must answer: true while it is live and finding machines. derived on read, never stored -- a responder whose interface went away does not announce itself"),
+                                """
+                                a discovery protocol -- a source of machine endpoints for the ONE roster/machine table. existence is its interface:
+                                construction starts it, deletion stops it, and it publishes no verbs. it requires exactly one field, status, because
+                                liveness is the only thing a consumer cannot work out for itself. where an endpoint was LEARNED is of no concern: every
+                                protocol writes into the shared table rather than exposing a listing of its own, so peers are generated from one
+                                consolidated index. distinct from /m/web/discovery, which is the protocol surface it discovers over"""),
                         MACH_NETWORK_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_MACHINE_COMPONENT_TID)
                                         .vid(MACH_NETWORK_TID)
@@ -593,7 +617,13 @@ public class machInstSet extends AbstractInstSet {
                                         // admitting any rec at all.
                                         .isaPredicate(rec(
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
-                                                uri(ROSTER).maybe().asUri(), rec(URI_TYPE, T(URI_TID.some())),
+                                                uri(ROSTER).maybe().asUri(), rec(
+                                                        uri(DISCOVER).maybe().asUri(), T(MACH_DISCOVERY_TID.maybeSome()),
+                                                        // A REACH PER HOST, not only an endpoint: discovery writes
+                                                        // addresses, a declaration writes the transport that reaches
+                                                        // the machine, and transportOf() already reads both out of
+                                                        // this one table -- an inst to apply, or an address to match.
+                                                        uri(MACHINE).maybe(), rec(URI_TYPE, T(ALL.some()))),
                                                 uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID)),
                                                 uri(SOURCE).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
                                                 // the AUTO STATUS INST BasicNetwork installs at construction --

@@ -287,7 +287,9 @@ public final class PeerCluster implements AutoCloseable {
         final Map<Obj, Obj> roster = new LinkedHashMap<>();
         for (int i = 1; i <= this.size(); i++)
             roster.put(uri("ws://localhost:" + this.port(i)), this.transport(i));
-        Machine.write(f("~/network/roster"), rec(roster));
+        // INTO roster/machine: the roster is a container, and a flat write at its root lands where no reader
+        // looks and takes the discovery registrations with it
+        Machine.write(f("~/network/roster"), rec(mutableMap(uri(MACHINE), rec(roster))));
         LOG.warn("roster declared (%d peer(s)): %s", roster.size(),
                 roster.keySet().stream().map(Object::toString).reduce((a, b) -> a + ", " + b).orElse("<empty>"));
         return this;
