@@ -18,12 +18,20 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.graphitty;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.DEBUG;
 
 /**
@@ -86,5 +94,54 @@ public class GraphittyLoggerTest extends AbstractMetatronTest {
     public void testMalformedTemplateDegradesToText(final String format, final String arg, final String expected, final String desc) {
         final String line = Graphitty.strip(LOG.localError(format, arg).orElse("logging disabled"));
         assertEquals("[" + GraphittyLoggerTest.class.getSimpleName() + "] " + expected, line, desc);
+    }
+
+    /**
+     * {@code print} (and so {@code none}) must emit a string literally: its Graphitty
+     * markup resolves, but mtron syntax highlighting is not layered on top — which is
+     * how the integer-highlight yellow used to override an explicit {@code {{g}}} green
+     * on a trailing number, and identifier-highlight blue used to tint the plain text.
+     */
+    private final List<String> captured = new ArrayList<>();
+
+    @AfterEach
+    void tearDown() {
+        GraphittyLogger.registerAppendPaneWriter((id, msg) -> { });
+        GraphittyLogger.setDefaultTargetPane(-1);
+    }
+
+    @Test
+    void testNoneEmitsLiteralMarkupWithoutSyntaxHighlighting() {
+        GraphittyLogger.registerAppendPaneWriter((id, msg) -> this.captured.add(msg));
+        GraphittyLogger.setDefaultTargetPane(0);
+
+        new GraphittyLogger().none("abc{{r}}bcd{{<3}}{{g}}467");
+
+        assertEquals(1, this.captured.size(), "one message was written");
+        final String msg = this.captured.get(0);
+        assertTrue(msg.contains("\033[32m"), "{{g}} green reaches the line: " + msg.replace("\033", "<E>"));
+        assertFalse(msg.contains("\033[33m"), "no integer-highlight yellow overrides it: " + msg.replace("\033", "<E>"));
+        assertFalse(msg.contains("\033[34m"), "no identifier-highlight blue on the text: " + msg.replace("\033", "<E>"));
+    }
+
+    /**
+     * The whole {@code print} instruction path, not just {@code none}: the string's
+     * Graphitty markup resolves (colour and cursor move survive), but mtron syntax
+     * highlighting is not layered on top — so an explicit {@code {{g}}} on a trailing
+     * number stays green and the {@code {{<N}}} move is intact for the screen to apply.
+     */
+    @Test
+    void testPrintInstructionEmitsLiteralMarkup() {
+        GraphittyLogger.registerAppendPaneWriter((id, msg) -> this.captured.add(msg));
+        GraphittyLogger.setDefaultTargetPane(0);
+
+        ObjmtronSerializer.parse("print(\"abc{{r}}bcd{{<3}}{{g}}467\")").apply();
+
+        assertEquals(1, this.captured.size(), "print wrote one message");
+        final String msg = this.captured.get(0);
+        assertTrue(msg.contains("\033[32m"), "{{g}} green reaches the terminal: " + msg.replace("\033", "<E>"));
+        assertTrue(msg.contains("\033[3D"), "the {{<3}} cursor move survives for the screen to apply: " + msg.replace("\033", "<E>"));
+        assertFalse(msg.contains("\033[33m"), "no integer-highlight yellow overrides it: " + msg.replace("\033", "<E>"));
+        assertFalse(msg.contains("\033[34m"), "no identifier-highlight blue on the text: " + msg.replace("\033", "<E>"));
     }
 }

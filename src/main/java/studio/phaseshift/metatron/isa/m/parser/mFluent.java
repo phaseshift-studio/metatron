@@ -276,6 +276,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.ORDER_INST_TID, lst(obj)));
     }
 
+    public F kmerge_(final Obj obj) {
+        return this.addInst(instB(mInstSet.KMERGE_INST_TID, lst(obj)));
+    }
+
     public F group_(final Obj obj) {
         return this.addInst(instB(mInstSet.GROUP_INST_TID, lst(obj)));
     }
@@ -734,6 +738,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F merge_() {
             return new mFluent<F>().merge_();
+        }
+
+        public static <F extends mFluent<F>> F kmerge_(final Obj obj) {
+            return new mFluent<F>().kmerge_(obj);
         }
 
         public static <F extends mFluent<F>> F take_(final Obj obj) {

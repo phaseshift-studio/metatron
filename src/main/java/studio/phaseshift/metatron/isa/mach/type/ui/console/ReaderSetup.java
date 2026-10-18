@@ -153,4 +153,84 @@ public final class ReaderSetup {
             Console.rawErr().println("[line] in=<" + line + "> out=<" + ansi + ">");
         return ansi;
     }
+
+    /**
+     * Show the terminal's cursor — the marker that says where on the line the
+     * arrow keys have moved the insertion point.
+     */
+    private static final String CURSOR_SHOW = "\033[?25h";
+
+    /**
+     * The DECSCUSR style the cursor is drawn in, chosen once from
+     * {@code -Dmetatron.console.cursor}.  Defaults to a blinking underline — the
+     * underscore the cursor reads as on a line — so the insertion point is
+     * visible even where the terminal's own blink is off or its cursor is a
+     * steady block that blends into the text.
+     */
+    private static final String CURSOR_STYLE =
+            cursorStyle(System.getProperty("metatron.console.cursor", "blink-underline"));
+
+    /**
+     * The DECSCUSR sequence for a cursor style name.  Unknown names fall back to
+     * the blinking underline rather than leaving the cursor unset.
+     */
+    static String cursorStyle(final String name) {
+        return switch (null == name ? "" : name) {
+            case "blink-block"     -> "\033[1 q";
+            case "block"           -> "\033[2 q";
+            case "blink-underline" -> "\033[3 q";
+            case "underline"       -> "\033[4 q";
+            case "blink-bar"       -> "\033[5 q";
+            case "bar"             -> "\033[6 q";
+            default                -> "\033[3 q";   // "default" or unknown: blink-underline
+        };
+    }
+
+    /**
+     * Affirm the cursor before a prompt: visible, and in the configured DECSCUSR
+     * style, so the reader can always see where they are on the line.
+     * <p>
+     * A modal tool (explain, tree select, …) hides the cursor while it owns the
+     * rows and restores it merely <em>visible</em>, in the terminal's default
+     * style — so this is re-asserted before every prompt rather than once at
+     * startup (see {@code Console#prepareForInput()}).
+     */
+    public static void showCursor(final Terminal terminal) {
+        if (null == terminal) return;
+        terminal.writer().print(cursorShow());
+        terminal.writer().flush();
+    }
+
+    /**
+     * The bytes {@link #showCursor(Terminal)} writes — the show-cursor code then the
+     * configured DECSCUSR style.  Exposed for a test that cannot drive a terminal
+     * (a {@code dumb(true)} terminal's stream is redirected away under the VM boot).
+     */
+    static String cursorShow() {
+        return CURSOR_SHOW + CURSOR_STYLE;
+    }
+
+    /**
+     * Hand the terminal's cursor style back on exit, so a blink style the console
+     * chose does not follow the reader into their shell.  Best-effort — the
+     * process is going away, so a write the terminal no longer takes is dropped.
+     */
+    public static void resetCursor(final Terminal terminal) {
+        if (null == terminal) return;
+        try {
+            terminal.writer().print(cursorReset());
+            terminal.writer().flush();
+        } catch (final Exception ignore) {
+            // the process is going away: nothing here is worth an error
+        }
+    }
+
+    /**
+     * The bytes {@link #resetCursor(Terminal)} writes — restore the terminal's own
+     * cursor style, then show the cursor.  Exposed for the same reason as
+     * {@link #cursorShow()}.
+     */
+    static String cursorReset() {
+        return "\033[0 q" + CURSOR_SHOW;
+    }
 }

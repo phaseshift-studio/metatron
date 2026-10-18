@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -28,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The screen's painter: which rows a frame repaints, and how a styled row is cut
@@ -193,6 +195,94 @@ public class ScreenPainterTest extends AbstractMetatronTest {
                                                final String description) {
         assertEquals(Graphitty.string(decode(expected)),
                 ScreenPainter.noCommands(Graphitty.string(decode(ansi))), description);
+    }
+
+    // ── horizontal moves and erases are resolved, not dropped ──────
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "abc{{<3}}467                      % 467      % a left move overwrites from the start",
+            "abc{{r}}bcd{{<3}}{{g}}467         % abc467   % the move lands where the overwritten text was",
+            "abc{{r}}bcd{{-X-}}                % <empty>  % a line clear leaves nothing",
+            "abcdef{{<3}}{{X-}}                % abc      % erase-to-end cuts the tail",
+            "abc{{-X}}xyz                      % xyz      % erase-to-start cuts the head",
+            "abc{{r}}bcd{{<3}}{{g}}46{{-X-}}   % <empty>  % a clear after an overwrite wipes it all",
+    }, delimiter = '%')
+    void testResolveCursor(final String markup, final String expected, final String description) {
+        final String resolved = ScreenPainter.resolveCursor(Graphitty.string(markup));
+        assertEquals("<empty>".equals(expected) ? "" : expected, Graphitty.strip(resolved), description);
+    }
+
+    @Test
+    void testResolveCursorFallsThroughToNoCommandsWithoutALineEdit() {
+        final String ansi = "abc\033[31mbcd\033[32m";
+        assertEquals(ScreenPainter.noCommands(ansi), ScreenPainter.resolveCursor(ansi),
+                "without a horizontal move or an erase, resolveCursor is exactly noCommands");
+    }
+
+    @Test
+    void testResolveCursorKeepsTheLinkItDidNotOverwrite() {
+        final String resolved = ScreenPainter.resolveCursor(
+                Graphitty.string("{{link}}/m/obj/a{{/link}}   {{<3}}xyz"));
+        assertTrue(resolved.contains("\033]8;;/m/obj/a\007"),
+                "the OSC 8 open survives a horizontal move elsewhere: " + resolved.replace("\033", "<E>"));
+        assertEquals("/m/obj/axyz", Graphitty.strip(ScreenPainter.withoutLinks(resolved)),
+                "the overwrite lands after the link label");
+    }
+
+    @Test
+    void testResolveCursorVertical() {
+        // up/down keep the column, next/previous-line reset it to zero (terminal semantics)
+        assertEquals("abcZ\ndef", Graphitty.strip(ScreenPainter.resolveCursor(
+                        Graphitty.string("abc\ndef{{^1}}Z"))),
+                "up one keeps the column, so Z appends to the line above");
+        assertEquals("oneX\ntwo", Graphitty.strip(ScreenPainter.resolveCursor(
+                        Graphitty.string("one\ntwo{{^2}}X"))),
+                "up past the top clamps to the first line, column kept");
+        assertEquals("abc\n\n   X", Graphitty.strip(ScreenPainter.resolveCursor(
+                        Graphitty.string("abc{{v2}}X"))),
+                "down keeps the column and opens blank lines in between");
+        assertEquals("abc\nX", Graphitty.strip(ScreenPainter.resolveCursor(
+                        Graphitty.string("abc{{v<1}}X"))),
+                "next-line lands at column zero");
+        assertEquals("a\n b", Graphitty.strip(ScreenPainter.resolveCursor(
+                        Graphitty.string("a{{v1}}b"))),
+                "down one keeps the column");
+    }
+
+    @Test
+    void testResolveCursorCarriageReturn() {
+        assertEquals("def", Graphitty.strip(ScreenPainter.resolveCursor("abc\rdef")),
+                "a carriage return rewinds to column zero and overwrites");
+        assertEquals("Xbc", Graphitty.strip(ScreenPainter.resolveCursor("abc\rX")),
+                "a carriage return then one char overwrites just the first column");
+        assertEquals("abc\ndef", Graphitty.strip(ScreenPainter.resolveCursor("abc\r\ndef")),
+                "a CRLF pair is still a plain newline");
+    }
+
+    @Test
+    void testResolveCursorEraseDisplay() {
+        assertEquals("one\ntwo", Graphitty.strip(ScreenPainter.resolveCursor(
+                        Graphitty.string("one\ntwo\nthree{{^1}}{{Xv}}"))),
+                "erase-to-bottom clears every row below the cursor");
+        assertEquals("\ntwo", Graphitty.strip(ScreenPainter.resolveCursor(
+                        Graphitty.string("one\ntwo{{^1}}{{X^}}"))),
+                "erase-to-top clears every row above the cursor and the head of its row");
+    }
+
+    @Test
+    void testCursorVisibility() {
+        assertEquals("\033[?25l", ScreenPainter.cursorVisibility("abc\033[?25ldef"),
+                "a hide code is extracted");
+        assertEquals("\033[?25h", ScreenPainter.cursorVisibility("\033[?25h"),
+                "a show code is extracted");
+        assertEquals("\033[?25l\033[?25h", ScreenPainter.cursorVisibility("\033[?25l\033[?25h"),
+                "both codes come out in their original order");
+        assertEquals("", ScreenPainter.cursorVisibility("abc"), "no code means no mode change");
+        assertEquals("abcdef", ScreenPainter.withoutCursorVisibility("abc\033[?25ldef"),
+                "the hide code is stripped and the content stays");
+        assertEquals("", ScreenPainter.withoutCursorVisibility("\033[?25h\033[?25l"),
+                "all visibility codes are stripped");
     }
 
     // ── helpers ────────────────────────────────────────────────────    // ── helpers ────────────────────────────────────────────────────

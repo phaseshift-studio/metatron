@@ -93,6 +93,18 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "[[[a=>1],[a=>3]],[[a=>2],[a=>4]]].kmerge(>>a)             % [[a=>1],[a=>2],[a=>3],[a=>4]]",
+            "[[[a=>3]],[[a=>1],[a=>2]],[[a=>0],[a=>4]]].kmerge(>>a)    % [[a=>0],[a=>1],[a=>2],[a=>3],[a=>4]]",
+            "[[[a=>1],[a=>2],[a=>3]]].kmerge(>>a)                      % [[a=>1],[a=>2],[a=>3]]",
+            "[[1,3,332],[0,1,4,5,3333]].kmerge(_)                      % [0,{2}1,3,4,5,332,3333]",
+    }, delimiter = '%')
+    public void testKmerge(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "'123'.select('\\d')                                                             % ['1','2','3']",
             "'abcd'.select('[a-z]{2}')                                                       % ['ab','cd']",
             "'ab3cd'.select('([a-z]+)(\\d?)([a-z]?)')                                        % [['ab3c','ab','3','c'],['d','d','','']]",

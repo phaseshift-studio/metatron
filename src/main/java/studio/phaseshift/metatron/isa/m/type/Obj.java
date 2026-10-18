@@ -1353,8 +1353,36 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             }),
                             "any obj", "the lhs obj", Map.of(jnt(0), "the code to apply asynchronously to the lhs"), "a fork function \\(f(x) \\nearrow x\\): the arg code applied to the lhs in a virtual thread, immediately yielding the lhs"),
                     docWrap(instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()), "any objs", "a window of the lhs objs", Map.of(jnt(0), "the starting offset", jnt(1), "the window length (defaults to 0)"), "a windowing function \\(f(x, i, n) \\nearrow x'\\): the objs starting at offset i for a span of n"),
-                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(LST_TID.poly(A.maybeSome())).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))).collect(new CommonUtil.LstCollector())),
+                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(LST_TID.poly(A.maybeSome())), lst(ALL_TYPE), (lhs, inst) -> lhs.isNoObj() ? noobj() : lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))).collect(new CommonUtil.LstCollector())),
                             "maybe some objs", "maybe a lst sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
+                    docWrap(instC(KMERGE_INST_TID.dom(LST_TID.poly(A.maybeSome()).maybeSome()).rng(LST_TID.poly(A.maybeSome())), lst(ALL_TYPE), (lhs, inst) -> {
+                                if (lhs.isNoObj())
+                                    return noobj();
+                                final ObjSelectComparator cmp = new ObjSelectComparator(inst.arg(0));
+                                final List<List<Obj>> streams = lhs.elements()
+                                        .map(o -> o.stream().flatMap(s -> s.<Obj>elements()).toList())
+                                        .toList();
+                                final PriorityQueue<int[]> heap = new PriorityQueue<>((a, b) -> cmp.compare(streams.get(a[0]).get(a[1]), streams.get(b[0]).get(b[1])));
+                                for (int i = 0; i < streams.size(); i++)
+                                    if (!streams.get(i).isEmpty())
+                                        heap.add(new int[]{i, 0});
+                                final List<Obj> merged = new ArrayList<>();
+                                while (!heap.isEmpty()) {
+                                    final int[] top = heap.poll();
+                                    merged.add(streams.get(top[0]).get(top[1]));
+                                    if (top[1] + 1 < streams.get(top[0]).size())
+                                        heap.add(new int[]{top[0], top[1] + 1});
+                                }
+                                final List<Obj> collapsed = new ArrayList<>();
+                                for (final Obj o : merged) {
+                                    if (!collapsed.isEmpty() && collapsed.getLast().clessEquals(o))
+                                        collapsed.set(collapsed.size() - 1, collapsed.getLast().c(c -> c.plus(o.c())));
+                                    else
+                                        collapsed.add(o);
+                                }
+                                return lst(collapsed);
+                            }),
+                            "maybe some sorted lists", "a lst k-way merged by the arg obj", Map.of(jnt(0), "the obj to merge by"), "a sorted merge function \\(f(X)\\to X'\\): k-way merges the lhs sorted lists by the arg obj"),
                     docWrap(instC(M_ISA_INST_TID.extend("via").dom(A).rng(B), lst(REL_TYPE), (lhs, inst) -> {
                                 Rel currentTransform = inst.arg(0).asRel();
                                 Obj currentObj = lhs;
@@ -1478,9 +1506,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any obj", "uncaught fails go to arg, others mapped by identity", Map.of(jnt(0), "the obj triggered on an uncaught fail"), "a catch function f(x)->x"),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function \\(f(x)\\to \\emptyset\\)"),
-                    docWrap(instC(PRINTLN_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs).stream().peek(x -> inst.logger().none(lineSeparator())))),
+                    docWrap(instC(PRINTLN_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none(o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs).stream().peek(x -> inst.logger().none(lineSeparator())))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
-                    docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).reduce(noobj(), (a, b) -> noobj()).orElse(lhs))),
+                    docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none(o.isStr() ? o.strValue() : o.toString())).reduce(noobj(), (a, b) -> noobj()).orElse(lhs))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     docWrap(instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
                                 final fURI pattern = inst.arg(0).uriValue();

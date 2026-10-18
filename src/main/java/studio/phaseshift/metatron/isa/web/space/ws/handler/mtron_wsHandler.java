@@ -60,7 +60,7 @@ public class mtron_wsHandler extends WebSocketRec {
             .vid(WS_MTRON_HANDLER_TID)
             .isaPredicate(rec(
                     uri(IN).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
-                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON_UI.value))))
+                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value))))
             .constructor(mtron_ws -> new mtron_wsHandler(new LinkedHashMap<>(mtron_ws.asRec().jvm()), mtron_ws.asRec().vid())).create();
 
 

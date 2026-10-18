@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Paints the screen's region of the terminal from a window of rows, writing only
@@ -230,6 +231,312 @@ public final class ScreenPainter {
             i = end;
         }
         return out.toString();
+    }
+
+    /**
+     * Resolve the cursor movement and erase-in-line commands of an ANSI stream into the
+     * text they edit, so a row is stored as its final content rather than as commands
+     * that would run again — and erase what a frame just painted — on every repaint.
+     * Text with none of those commands falls through to {@link #noCommands(String)}
+     * unchanged, so the common path stays byte-identical.
+     *
+     * <p>The commands resolved are the ones a reader can point at within the output's
+     * own lines: {@code CSI n D} (left), {@code CSI n C} (right), {@code CSI n G}
+     * (column), {@code CSI n A} (up), {@code CSI n B} (down), {@code CSI n E}/{@code F}
+     * (next/previous line), {@code CSI H}/{@code n H} (home / row), a bare carriage
+     * return ({@code \r}, column zero — the progress-bar overwrite),
+     * {@code CSI K}/{@code 0K}/{@code 1K}/{@code 2K} (erase line), and
+     * {@code CSI J}/{@code 0J}/{@code 1J} (erase display).  A show/hide-cursor code is
+     * not line content, so it is dropped here — {@code ScreenView} emits it to the
+     * terminal instead.
+     *
+     * @param ansi resolved ANSI text (markup would pass through untouched)
+     * @return the same content with the moves and erases applied, free of them
+     */
+    public static String resolveCursor(final String ansi) {
+        if (null == ansi || ansi.isEmpty()) return ansi;
+        if (!hasLineEdit(ansi)) return noCommands(ansi);
+        return new LineEditor().resolve(ansi);
+    }
+
+    /**
+     * The cursor show/hide codes ({@code CSI ?25h} / {@code CSI ?25l}) present in
+     * {@code ansi}, in the order they should reach the terminal.  They are terminal
+     * mode changes, not row content, so {@code ScreenView} emits them and then strips
+     * them with {@link #withoutCursorVisibility(String)}.
+     */
+    public static String cursorVisibility(final String ansi) {
+        if (null == ansi || ansi.indexOf("\033[?25") < 0) return "";
+        final String show = "\033[?25h";
+        final StringBuilder codes = new StringBuilder();
+        int i = 0;
+        while (i < ansi.length()) {
+            if (ansi.startsWith(show, i) || ansi.startsWith("\033[?25l", i)) {
+                codes.append(ansi, i, i + show.length());
+                i += show.length();
+            } else {
+                i++;
+            }
+        }
+        return codes.toString();
+    }
+
+    /** {@code ansi} with its cursor show/hide codes removed — they are mode changes, not content. */
+    public static String withoutCursorVisibility(final String ansi) {
+        if (null == ansi || ansi.indexOf("\033[?25") < 0) return ansi;
+        return ansi.replace("\033[?25h", "").replace("\033[?25l", "");
+    }
+
+    /** True when {@code ansi} carries a cursor move, a carriage return, or an erase. */
+    private static boolean hasLineEdit(final String ansi) {
+        // a bare carriage return is a move to column zero (the progress-bar overwrite)
+        if (ansi.indexOf('\r') >= 0) return true;
+        for (int i = ansi.indexOf('\033'); i >= 0; i = ansi.indexOf('\033', i + 1)) {
+            final int end = escapeEnd(ansi, i);
+            if (end <= i + 2 || ansi.charAt(i + 1) != '[') continue;
+            final char fin = ansi.charAt(end - 1);
+            if ("ABCDEFGHJK".indexOf(fin) >= 0) return true;
+        }
+        return false;
+    }
+
+    /**
+     * One pass over an ANSI stream that turns it into its final line content: it keeps a
+     * per-column cell model of every line it has written, applies text writes and the
+     * cursor moves/erases against it, and re-emits the lines with the styling and link
+     * spans that survive.
+     */
+    private static final class LineEditor {
+
+        /** One display column of a line being edited. */
+        private static final class Cell {
+            final String text;   // the glyph at this column ("" = blank)
+            final String style;  // active SGR when it was written ("" = default)
+            final String link;   // active OSC-8 uri, or null
+
+            Cell(final String text, final String style, final String link) {
+                this.text = text;
+                this.style = style;
+                this.link = link;
+            }
+        }
+
+        private final StringBuilder out = new StringBuilder();
+        private final List<List<Cell>> lines = new ArrayList<>();
+        private int row = 0;
+        private int col = 0;
+        private int maxRow = 0;
+        private String activeStyle = "";
+        private String activeLink = null;
+        private String lastStyle = "";
+        private String lastLink = null;
+        private boolean linkOpen = false;
+
+        String resolve(final String ansi) {
+            final int len = ansi.length();
+            int i = 0;
+            while (i < len) {
+                final char c = ansi.charAt(i);
+                if ('\n' == c) {
+                    this.row++;
+                    this.col = 0;
+                    this.activeLink = null;
+                    i++;
+                    continue;
+                }
+                if ('\r' == c) {
+                    this.col = 0;
+                    i++;
+                    continue;
+                }
+                if ('\033' != c) {
+                    final int cp = ansi.codePointAt(i);
+                    this.write(new String(Character.toChars(cp)), WCWidth.wcwidth(cp));
+                    i += Character.charCount(cp);
+                    continue;
+                }
+                final int end = escapeEnd(ansi, i);
+                final String seq = ansi.substring(i, end);
+                i = end;
+                if (seq.length() < 2) continue;
+                final char kind = seq.charAt(1);
+                if ('[' == kind) {
+                    if (isSgr(seq)) {
+                        this.activeStyle = applySgr(this.activeStyle, seq);
+                        continue;
+                    }
+                    final char fin = seq.charAt(seq.length() - 1);
+                    final int n = csiCount(seq);
+                    if ('D' == fin) this.col = Math.max(0, this.col - n);
+                    else if ('C' == fin) this.col += n;
+                    else if ('G' == fin) this.col = Math.max(0, n - 1);
+                    else if ('A' == fin) this.row = Math.max(0, this.row - n);
+                    else if ('B' == fin) this.row += n;
+                    else if ('E' == fin) { this.row += n; this.col = 0; }
+                    else if ('F' == fin) { this.row = Math.max(0, this.row - n); this.col = 0; }
+                    else if ('H' == fin) this.home(seq);
+                    else if ('K' == fin) this.eraseLine(seq);
+                    else if ('J' == fin) this.eraseDisplay(seq);
+                    // a show/hide-cursor code is not line content
+                    continue;
+                }
+                if (']' == kind && seq.startsWith("\033]8;")) {
+                    final String uri = osc8Uri(seq);
+                    this.activeLink = null == uri || uri.isEmpty() ? null : uri;
+                }
+                // any other escape is dropped, exactly as noCommands drops it
+            }
+            this.render();
+            return this.out.toString();
+        }
+
+        private void home(final String seq) {
+            final String params = seq.substring(2, seq.length() - 1);
+            if (params.isEmpty()) {
+                this.row = 0;
+                this.col = 0;
+                return;
+            }
+            final int semi = params.indexOf(';');
+            if (semi < 0) {
+                this.row = Math.max(0, csiCount(seq) - 1);
+                this.col = 0;
+                return;
+            }
+            try {
+                final int r = Integer.parseInt(params.substring(0, semi).trim());
+                final int c = Integer.parseInt(params.substring(semi + 1).trim());
+                this.row = Math.max(0, r - 1);
+                this.col = Math.max(0, c - 1);
+            } catch (final NumberFormatException ignore) {
+                // a malformed position moves nothing
+            }
+        }
+
+        private List<Cell> line(final int r) {
+            while (this.lines.size() <= r) this.lines.add(new ArrayList<>());
+            return this.lines.get(r);
+        }
+
+        private void write(final String text, final int width) {
+            final List<Cell> cells = this.line(this.row);
+            final int span = Math.max(1, width);
+            while (cells.size() < this.col) cells.add(new Cell(" ", "", null));
+            final Cell cell = new Cell(text, this.activeStyle, this.activeLink);
+            if (cells.size() == this.col) cells.add(cell);
+            else cells.set(this.col, cell);
+            // a wide glyph spans the columns after it too: mark them as its continuation so
+            // the model stays one-cell-per-column and an overwrite of a half-glyph lands on
+            // its own column rather than inside it
+            for (int c = 1; c < span; c++) {
+                final int at = this.col + c;
+                while (cells.size() <= at) cells.add(new Cell("", "", null));
+                cells.set(at, new Cell("", this.activeStyle, this.activeLink));
+            }
+            this.col += span;
+            if (this.row > this.maxRow) this.maxRow = this.row;
+        }
+
+        private void eraseLine(final String seq) {
+            final List<Cell> cells = this.line(this.row);
+            final String params = seq.substring(2, seq.length() - 1);
+            if ("2".equals(params)) {
+                cells.clear();
+                this.col = 0;
+                return;
+            }
+            if ("1".equals(params)) {
+                final int to = Math.min(this.col, cells.size());
+                if (to > 0) cells.subList(0, to).clear();
+                this.col = 0;
+                return;
+            }
+            // CSI K and CSI 0K erase to the end of the line
+            if (this.col < cells.size()) cells.subList(this.col, cells.size()).clear();
+        }
+
+        private void eraseDisplay(final String seq) {
+            final String params = seq.substring(2, seq.length() - 1);
+            if ("1".equals(params)) {
+                // erase from the top of the screen to the cursor: every row above, then
+                // the head of the current row (the column is rewound to zero, as eraseLine does)
+                for (int r = 0; r < this.row; r++) this.line(r).clear();
+                final List<Cell> cells = this.line(this.row);
+                final int to = Math.min(this.col, cells.size());
+                if (to > 0) cells.subList(0, to).clear();
+                this.col = 0;
+                return;
+            }
+            if ("2".equals(params)) {
+                // the whole screen ({{XX}} is usually intercepted upstream, but a raw 2J is the same thing)
+                for (int r = 0; r <= this.maxRow; r++) this.line(r).clear();
+                this.row = 0;
+                this.col = 0;
+                this.maxRow = 0;
+                return;
+            }
+            // CSI J and CSI 0J erase from the cursor to the bottom: the tail of this row,
+            // then every row below it
+            final List<Cell> cells = this.line(this.row);
+            if (this.col < cells.size()) cells.subList(this.col, cells.size()).clear();
+            for (int r = this.row + 1; r <= this.maxRow; r++) this.line(r).clear();
+            if (this.maxRow > this.row) this.maxRow = this.row;
+        }
+
+        private void render() {
+            for (int r = 0; r <= this.maxRow; r++) {
+                if (r > 0) this.out.append('\n');
+                this.renderLine(r < this.lines.size() ? this.lines.get(r) : List.of());
+            }
+            // a newline after the content closes the last row only when the cursor sits below it
+            if (this.row > this.maxRow) this.out.append('\n');
+        }
+
+        private void renderLine(final List<Cell> cells) {
+            for (final Cell cell : cells) this.emit(cell);
+            if (this.linkOpen) {
+                this.out.append("\033]8;;\007");
+                this.linkOpen = false;
+                this.lastLink = null;
+            }
+        }
+
+        private void emit(final Cell cell) {
+            if (!Objects.equals(this.lastLink, cell.link)) {
+                if (this.linkOpen) {
+                    this.out.append("\033]8;;\007");
+                    this.linkOpen = false;
+                }
+                if (null != cell.link) {
+                    this.out.append("\033]8;;").append(cell.link).append("\007");
+                    this.linkOpen = true;
+                }
+                this.lastLink = cell.link;
+            }
+            if (!this.lastStyle.equals(cell.style)) {
+                this.out.append(cell.style.isEmpty() ? "\033[0m" : cell.style);
+                this.lastStyle = cell.style;
+            }
+            this.out.append(cell.text);
+        }
+
+        private static int csiCount(final String seq) {
+            final String params = seq.substring(2, seq.length() - 1);
+            if (params.isEmpty()) return 1;
+            try {
+                return Integer.parseInt(params);
+            } catch (final NumberFormatException e) {
+                return 1;
+            }
+        }
+
+        private static String applySgr(final String current, final String seq) {
+            final String params = seq.substring(2, seq.length() - 1);
+            if (params.isEmpty()) return "";
+            for (final String p : params.split(";"))
+                if (p.isEmpty() || "0".equals(p)) return "";
+            return current + seq;
+        }
     }
 
     /**

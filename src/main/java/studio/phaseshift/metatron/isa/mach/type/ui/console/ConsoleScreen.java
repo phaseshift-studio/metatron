@@ -135,8 +135,10 @@ public final class ConsoleScreen {
         if (null == ansi || ansi.isEmpty()) return;
         // Never store terminal commands (cursor moves, line clears): a command kept
         // inside a row would run mid-paint and erase what a frame had just written.
-        // Styling and links survive — they ARE the row.
-        ansi = ScreenPainter.noCommands(ansi);
+        // Horizontal moves and erase-in-line are instead RESOLVED into the line's final
+        // text (an overwrite, an erase) so their visible effect survives a repaint;
+        // styling and links survive too — they ARE the row.
+        ansi = ScreenPainter.resolveCursor(ansi);
         // Wrap row by row, then hand the rows to the buffer as ONE stream.
         //
         // Appending each row on its own would be wrong in a way that shows: a row handed

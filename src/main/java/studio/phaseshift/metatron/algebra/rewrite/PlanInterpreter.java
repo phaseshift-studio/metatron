@@ -114,6 +114,7 @@ public final class PlanInterpreter {
                     : ZERO.equals(role) ? branchInline(code)
                     : INVERSE.equals(role) ? inverseCancellation(code)
                     : MAP_INST_TID.name().equals(role) ? mapUnwrap(code)
+                    : ORDER_INST_TID.name().equals(role) ? orderShard(plan, code)
                     : DERIVATION.equals(role) ? derivationContraction(code)
                     : code;
         // the law-classified folds: involution (drop), idempotent/monoidic (keep), poset (compose),
@@ -184,7 +185,7 @@ public final class PlanInterpreter {
             final List<Obj> part = new ArrayList<>();
             for (int j = s; j < seed.size(); j += k)
                 part.add(seed.get(j));
-            final mFluent<?> slave = start_(objs(part)).q("no_shard");
+            final mFluent<?> slave = start_(objs(part)).q("no_shard", true);
             slave.addInsts(insts.subList(1, cutIndex));
             slave.addInst(reducer);
             summands.add(block_(block_(block_(slave))));
@@ -192,6 +193,62 @@ public final class PlanInterpreter {
         }
         final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
         return emitted;
+    }
+
+    /**
+     * The one-cut sort distribution: factor the seed bulk over the roster, replicate the floatable run,
+     * each peer orders its shard locally, and the master k-merges the sorted shards behind the barrier.
+     * The identity unless the chain matches {@code [start, {*}floatable, order, {*}tail]} and the machine
+     * has live peers to fan out over. The combine is {@code kmerge} (the sorted merge), not the monoidic
+     * reapply of {@link #shard}.
+     */
+    private static Code orderShard(final Plan plan, final Code code) {
+        if (Machine.current().network().peers().isEmpty())
+            return code;
+        if (code.insts().stream().anyMatch(i -> i.tid().hasQ("no_shard")))
+            return code;
+
+        final List<Inst> insts = code.insts();
+        if (2 > insts.size() || !START_INST_TID.equals(insts.getFirst().tid().basePath()))
+            return code;
+
+        int cutIndex = -1;
+        for (int i = 1; i < insts.size(); i++)
+            if (ORDER_INST_TID.equals(insts.get(i).tid().basePath())) {
+                cutIndex = i;
+                break;
+            }
+        if (-1 == cutIndex)
+            return code;
+
+        final Inst order = insts.get(cutIndex);
+        final Obj selector = order.arg(0);
+
+        final List<Obj> seed = insts.getFirst().arg(0).stream().toList();
+        if (2 > seed.size())
+            return code;
+
+        final List<Obj> targets = shardTargets();
+        if (targets.isEmpty())
+            return code;
+        final int k = Math.min(targets.size(), seed.size());
+
+        // emit — the master k-merges the sorted shards; each slave carries one factor of the bulk, the
+        // floatable run replicated, and a local order.
+        final List<Obj> summands = new ArrayList<>();
+        final List<Obj> routes = new ArrayList<>();
+        final mFluent<?> master = kmerge_(selector).addInsts(insts.subList(cutIndex + 1, insts.size()));
+        for (int s = 0; s < k; s++) {
+            final List<Obj> part = new ArrayList<>();
+            for (int j = s; j < seed.size(); j += k)
+                part.add(seed.get(j));
+            final mFluent<?> slave = start_(objs(part)).q("no_shard", true);
+            slave.addInsts(insts.subList(1, cutIndex));
+            slave.addInst(order);
+            summands.add(block_(block_(block_(slave))));
+            routes.add(to_(targets.get(s)).tryToInst());
+        }
+        return start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
     }
 
     /**
