@@ -22,20 +22,22 @@ morphisms (the edges), and an inst's dom/rng are its source and target endpoints
 mtron> import(/m/math/cat,cat)
 ...
 ```
-The lift is a type constructor. An _object_ is constructed from a type and a _morphism_ from an inst. The cat-graph is
-dynamically generated, not apriori defined.
+The lift is a type constructor. An _object_ is constructed from a type and a _morphism_ from an inst. This structure is
+called the **cat-graph**.
 
 <!-- figure source: assets/tikz/cat-lift.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
 <img src="../assets/cat-lift.png" alt="the lift: a type is a vertex, an inst is an edge" width="40%" style="float:right; margin:0 0 0.9em 1.5em"/>
 
-Every morphism is classified on three axes — `form` (its n-tid coefficient shape), `position` (its place in the
-graph), and `law` (the algebraic laws it obeys) — and every object carries the structural theories it models. Those
-same declarations are what the rewriter stage consumes (see *the declared rewrites*). A vertex is a type lifted to
-`object::T` (`obj`, `law`, `morphed_to`, `morphed_from`); an edge is an inst lifted to `morphism::T`
-(`src` = dom, `trgt` = rng, `form`, `class`, `law`, `derivation`, `analysis`).
+A **vertex** is a type lifted to `object::T`; an **edge** is an inst lifted to `morphism::T`. Every morphism is
+classified on four axes — `form` (its n-tid coefficient shape), `class` (its set-theoretic class), `position` (its
+place in the graph), and `law` (the algebraic laws it obeys) — and every object carries the structural theories it
+models. Those same declarations are what the rewriter stage consumes (see *the declared rewrites*).
 
-**IMPORTANT**: when referencing an instruction directly in a `console::T`, a `block` inst (sugar'd `|`) prevents the
-instruction from being evaluated.
+A law is either **structural** (an object theory) or **process** (a morphism constraint). It's important to understand
+these properties first before understanding how they play off one another when modeling `code::T` as a vertex within
+a graph of rewrite edges.
+
+## the first lift — types as objects (`object::T`)
 
 ```mtron
 mtron> int::T.as(object::T)
@@ -56,27 +58,15 @@ mtron> int::T.as(object::T)
                         id=>1]],
                  morphed_to=>!inst?#{*}<=#{?}(){<j>},
                  morphed_from=>!inst?#{*}<=#{?}(){<j>}]
-mtron> |plus?int<=int(int::T).as(morphism::T)
-==>morphism[plus?rng=int&dom=int]::[
-    name=>plus,
-    form=>mapper,
-    class=>[endo],
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
-    analysis=>!inst?#<=#(#{*}::T){<j>},
-    obj=>plus?int<=int(int::T),
-    ...(1 more)]
 ```
-## the two blocks
+### the object fields
 
-### the object block — `object::T` (a vertex)
-
-| field          | what it is                                                      |
-|----------------|-----------------------------------------------------------------|
-| `obj`          | the type this object wraps (the vertex itself)                  |
-| `morphed_to`   | the morphisms **sourced from** this object (the outgoing edges) |
-| `morphed_from` | the morphisms **targeted at** this object (the incoming edges)  |
-| `law`          | the structural theories this object models (see *theories*)     |
+| field          | what it is                                                                |
+|----------------|---------------------------------------------------------------------------|
+| `obj`          | the type this object wraps (the vertex itself)                            |
+| `morphed_to`   | the morphisms **sourced from** this object (the outgoing edges)           |
+| `morphed_from` | the morphisms **targeted at** this object (the incoming edges)            |
+| `law`          | the structural theories this object models (see *the algebraic theories*) |
 
 ```mtron
 mtron> int::T.as(object::T).morphed_to()
@@ -102,21 +92,81 @@ mtron> int::T.as(object::T).morphed_to()
               form=>mapper,
    ...
 ```
-### the morphism block — `morphism::T` (an edge)
+### the algebraic theories
+
+An object can model several algebraic structures; `object::T>>law` is a rec keyed by the name you give each
+instance, and each role holds a `!*` (`auto_from`) pointer to the *live* operation rather than a copy — the graph is
+the references, and a role dereferences transparently on `>>` (`...>>law>>ring>>add` yields the inst). `theory::T`
+is the nominal super-type grouping them:
+
+| type                 | roles (fields)                     | what it asserts                                                                                                                                 |
+|----------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ring_theory`        | `add`, `mul`, `zero`, `one`        | $\langle R, +, \cdot, 0, 1 \rangle$: $+$ an abelian group, $\cdot$ a monoid, $a \cdot (b + c) = a \cdot b + a \cdot c$                          |
+| `field_theory`       | `add`, `mul`, `zero`, `one`, `inv` | $\langle F, +, \cdot, 0, 1, {}^{-1} \rangle$: a commutative ring where every non-$0$ element has a multiplicative inverse, $x \cdot x^{-1} = 1$ |
+| `rig_theory`         | `add`, `mul`, `zero`, `one`        | $\langle S, +, \cdot, 0, 1 \rangle$: additive and multiplicative monoids, $\cdot$ distributive over $+$, no additive inverses                   |
+| `group_theory`       | `op`, `id`, `inv`                  | $\langle G, \cdot, 1, {}^{-1} \rangle$: $g \cdot g^{-1} = g^{-1} \cdot g = 1$                                                                   |
+| `monoid_theory`      | `op`, `id`                         | $\langle M, \cdot, 1 \rangle$: $m \cdot 1 = 1 \cdot m = m$ and $(m \cdot n) \cdot p = m \cdot (n \cdot p)$                                      |
+| `boolean_theory`     | `or`, `and`, `not`, `zero`, `one`  | $\langle B, \lor, \land, \lnot, 0, 1 \rangle$: a complemented distributive lattice, $b \lor \lnot b = 1$ and $b \land \lnot b = 0$              |
+| `lattice_theory`     | `meet`, `join`, `bottom`, `top`    | $\langle L, \sqcap, \sqcup, \bot, \top \rangle$: every pair of elements has a meet and a join, bounded by $\bot$ and $\top$                     |
+| `semilattice_theory` | `op`, `id`                         | $\langle S, \sqcup, 0 \rangle$: an idempotent commutative monoid (one side of a lattice)                                                        |
+| `near_ring_theory`   | `add`, `mul`, `zero`               | $\langle N, +, \cdot, 0 \rangle$: $+$ a group, $\cdot$ a monoid, one-sided distributivity, no multiplicative $1$                                |
+
+## the second lift — insts as morphisms (`morphism::T`)
+
+```mtron
+mtron> |plus?int<=int(int::T).as(morphism::T)
+==>morphism[plus?rng=int&dom=int]::[
+    name=>plus,
+    form=>mapper,
+    class=>[endo],
+    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T){<j>},
+    analysis=>!inst?#<=#(#{*}::T){<j>},
+    obj=>plus?int<=int(int::T),
+    ...(1 more)]
+```
+(The `|` in that expression is a `block` inst — sugar that keeps the instruction from being evaluated, so the raw inst
+is lifted rather than its result.)
+
+### the morphism fields
 
 | field        | what it is                                                                                               |
 |--------------|----------------------------------------------------------------------------------------------------------|
 | `name`       | the operation's name                                                                                     |
 | `obj`        | the inst this morphism wraps (the edge itself)                                                           |
-| `form`       | the n-tid coefficient shape (`mapper`, `filter`, `reducer`, `flatmapper`, …)                             |
+| `form`       | the n-tid coefficient shape — see *the form axis*                                                        |
 | `class`      | the set-theoretic class (`endo`, `iso`, `auto`, `mono`, `epi`, `section`, `retraction`)                  |
 | `src`        | the source object (the morphism's dom)                                                                   |
 | `trgt`       | the target object (the morphism's rng)                                                                   |
 | `derivation` | the declared defining equation, `lhs ↦ rhs`, when the operation is derived (see *the declared rewrites*) |
-| `law`        | the declared **process** laws the morphism obeys (see *process laws*)                                    |
-| `analysis`   | a lazy sub-block of whole-graph stats — see below                                                        |
+| `law`        | the declared **process** laws the morphism obeys (see *the process laws*)                                |
+| `analysis`   | a lazy sub-block of whole-graph stats — see *the analysis sub-block*                                     |
 
-## incidence — the dual
+### the form axis
+
+`form` is the morphism's n-tid coefficient shape — the `(dom_c, rng_c)` pair in regex notation:
+
+| form         | what it is                                                        |
+|--------------|-------------------------------------------------------------------|
+| `initial`    | maps nothing to objs (`dom_c = 0`)                                |
+| `terminal`   | maps objs to nothing (`rng_c = 0`)                                |
+| `mapper`     | one-to-one obj transformation (`dom_c = rng_c = 1`)               |
+| `filter`     | conditionally passes or drops an obj (`dom_c = 1, rng_c = {0,1}`) |
+| `flatmapper` | one-to-many obj transformation (`dom_c = 1, rng_c > 1`)           |
+| `scatter`    | maps an obj to objs (`rng_c = {0,}`)                              |
+| `gather`     | maps objs to objs (`dom_c = {0,}`)                                |
+| `reducer`    | gathers objs into a single output (`rng_c = 1`)                   |
+| `fork`       | splits objs across parallel streams                               |
+| `join`       | merges parallel streams into a single stream                      |
+| `catcher`    | intercepts a `fail` obj for recovery                              |
+| `standard`   | an instruction with no well-defined classification                |
+
+Two forms collapse onto the stream-ring's function subrings for the rewrite algebra: `scatter` is the linearized
+one-to-many (`flatmapper`) and `join` is the many-to-many merge (`gather`). On that projection, a coefficient floats
+through `mapper` / `filter` / `flatmapper` — the `floatable` run — and is anchored by `reducer` / `gather` — the
+`blocked` cut (see *the process laws*).
+
+### the dual incidence
 
 `src`/`trgt` and `morphed_to`/`morphed_from` are the same relation seen from opposite sides:
 
@@ -128,10 +178,9 @@ mtron> int::T.as(object::T).morphed_to()
 `morphed_to(A)` is $\{ f \mid \mathrm{src} (f) = A \}$; `morphed_from(A)` is $\{ f \mid \mathrm{trgt} (f) = A \}$.
 Composing them round-trips — from an object to its edges and back, or from an edge to its endpoints and back.
 
-## the `analysis` sub-block
+### the analysis sub-block
 
-`analysis` is one lazy `auto()` — it stays a single `{<j>}` marker at level 1 until you `>>analysis`, so the
-morphism block reads small. Inside it, each stat is itself lazy:
+`analysis` is one lazy `auto()` — evaluated with `>>analysis`. Inside it, each stat is itself lazy:
 
 | field       | what it is                                                                                                       |
 |-------------|------------------------------------------------------------------------------------------------------------------|
@@ -141,7 +190,7 @@ morphism block reads small. Inside it, each stat is itself lazy:
 | `position`  | the edge's place among its siblings (a subset of the six kinds below)                                            |
 | `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                       |
 
-## the six edge kinds
+### the six edge kinds
 
 `position` classifies an edge against the rest of the graph into up to six labels:
 
@@ -161,7 +210,7 @@ morphism block reads small. Inside it, each stat is itself lazy:
 edges that have an opposing edge). It is a reachability class, coarser than isomorphism (which needs the round trip
 to be idempotent → `retract`) and finer than raw incidence.
 
-## the class axis
+### the class axis
 
 `class` classifies a morphism set-theoretically — whether it is self-mapping, invertible, or split. Only the sound
 implications are computed; a proper (non-split) mono/epi awaits composition, which is not wired yet:
@@ -176,26 +225,7 @@ implications are computed; a proper (non-split) mono/epi awaits composition, whi
 | `section`    | split mono — $f$ has a left inverse                                                       |
 | `retraction` | split epi — $f$ has a right inverse                                                       |
 
-## the algebraic theories — laws of structure
-
-An object can model several algebraic structures; `object::T>>law` is a rec keyed by the name you give each
-instance, and each role holds a `!*` (`auto_from`) pointer to the *live* operation rather than a copy — the graph is
-the references, and a role dereferences transparently on `>>` (`...>>law>>ring>>add` yields the inst). `theory::T`
-is the nominal super-type grouping them:
-
-| type                 | roles (fields)                     | what it asserts                                                                                                                                 |
-|----------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ring_theory`        | `add`, `mul`, `zero`, `one`        | $\langle R, +, \cdot, 0, 1 \rangle$: $+$ an abelian group, $\cdot$ a monoid, $a \cdot (b + c) = a \cdot b + a \cdot c$                          |
-| `field_theory`       | `add`, `mul`, `zero`, `one`, `inv` | $\langle F, +, \cdot, 0, 1, {}^{-1} \rangle$: a commutative ring where every non-$0$ element has a multiplicative inverse, $x \cdot x^{-1} = 1$ |
-| `rig_theory`         | `add`, `mul`, `zero`, `one`        | $\langle S, +, \cdot, 0, 1 \rangle$: additive and multiplicative monoids, $\cdot$ distributive over $+$, no additive inverses                   |
-| `group_theory`       | `op`, `id`, `inv`                  | $\langle G, \cdot, 1, {}^{-1} \rangle$: $g \cdot g^{-1} = g^{-1} \cdot g = 1$                                                                   |
-| `monoid_theory`      | `op`, `id`                         | $\langle M, \cdot, 1 \rangle$: $m \cdot 1 = 1 \cdot m = m$ and $(m \cdot n) \cdot p = m \cdot (n \cdot p)$                                      |
-| `boolean_theory`     | `or`, `and`, `not`, `zero`, `one`  | $\langle B, \lor, \land, \lnot, 0, 1 \rangle$: a complemented distributive lattice, $b \lor \lnot b = 1$ and $b \land \lnot b = 0$              |
-| `lattice_theory`     | `meet`, `join`, `bottom`, `top`    | $\langle L, \sqcap, \sqcup, \bot, \top \rangle$: every pair of elements has a meet and a join, bounded by $\bot$ and $\top$                     |
-| `semilattice_theory` | `op`, `id`                         | $\langle S, \sqcup, 0 \rangle$: an idempotent commutative monoid (one side of a lattice)                                                        |
-| `near_ring_theory`   | `add`, `mul`, `zero`               | $\langle N, +, \cdot, 0 \rangle$: $+$ a group, $\cdot$ a monoid, one-sided distributivity, no multiplicative $1$                                |
-
-## process laws — `morphism::T>>law`
+### the process laws
 
 The morphism's `law` field is a set of **process** law labels served from `mInstSetLawTable` (the declared process
 laws):
@@ -225,10 +255,6 @@ mtron> |plus?int<=int(int::T).as(morphism::T)>>law
 | `zero_divisor`       | a nonzero $a$ with $a \cdot b = 0$ for some nonzero $b$                      |
 | `cyclic`             | generated by one element — every value is a power of a single generator      |
 | `poset`              | the carrier is partially ordered — these insts are its comparisons           |
-
-A law is either **structural** (one of the object theories above) or **process** (these morphism labels). The former
-provenance axis (syntactic / declared / semantic) is dropped: the table serves the declared process laws, and the
-rest are derived from the n-tid or computed on demand.
 
 ## the declared rewrites — laws as rules
 
@@ -316,10 +342,13 @@ mtron> 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()>>for
     minus  int::T       int::T  3     <j>  mapper   {1}    {1}   
    """
 ```
-Reading the two rows that survive: `plus(0)` and `mult(1)` are the int ring's units (`theory_unit_removal`),
-`neg().neg()` is the additive group's involution (`theory_involution`), `plus(3.neg())` folds to `minus(3)`
-(`derivation_contraction`), and `mult(2).div(2)` is a declared inverse pair (`inverse_cancellation`). What is left is
-the seed and one operation.
+Only two instructions are left in the explain table: the seed and on operation. The other instructions were rewritten
+away:
+
+* `plus(0)` and `mult(1)` are the int ring's units (`theory_unit_removal`),
+* `neg().neg()` is the additive group's involution (`theory_involution`),
+* `plus(3.neg())` folds to `minus(3)` (`derivation_contraction`), and
+* `mult(2).div(2)` is a declared inverse pair (`inverse_cancellation`).
 
 **Direction.** Every rule above removes or preserves chain length, so a rule set that is only ever applied in that
 direction settles under any length-stable `rewriter::T` — the shipped `fixpoint_rewriter` is one such stage, not the
@@ -328,18 +357,6 @@ only one. The dual of `derivation_contraction` — `derivation_expansion`
 length back, so the pair would alternate forever and no stage could settle. Lowering to a target that lacks the
 derived operation is a policy, not a law.
 
-**Resolution.** The stage order is the compiler's to choose, and the default schedule rewrites *before* it resolves,
-so a chain instruction still carries only its op address while the law tables are keyed by the full n-tid.
-`LawTable.declared(op, operand)` bridges the two — it resolves the declared entry by address, disambiguated by the
-operand's type, and returns nothing rather than guessing, so a law never fires for a type that does not declare it.
-A schedule that resolves first (see `compiler::T`) lets the rewriter read the endpoints directly. `form_map_unwrap`
-is the one rule kept keyed to its operation rather than to a shape, because $\{?\} \to \{?\}$ is also `is`'s
-coefficient shape and a shape-only test would unwrap a predicate.
-
-**Not yet wired** — the graph/relation family: `inverse`-pair elision ($x.\mathrm{as} (B).\mathrm{as} (A) \leadsto x$
-when the round trip is a `coupling`), `as`-cast fusion through a refinement, and `section`/`retraction` cancellation.
-It needs the whole cast subgraph (`check()`, `implicit()`) rather than one instruction, so it is a separate slice.
-
 ## the third lift — code as a vertex (`path::T`, `abstraction::T`)
 
 The first two lifts put types and insts *into* the graph; the third puts **code** in. A chain lifted to `path::T`
@@ -347,7 +364,7 @@ is a vertex whose out-edges are the rewrite rules that can move it — the rewri
 at a time, never materialized whole. Its pointwise image under $\alpha$ is `abstraction::T`: the same chain with
 every instruction replaced by its `morphism::T`, i.e. **value code below, type code above**.
 
-<!-- figure source: assets/tikz/cat-third-lift.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
+<!-- figure source: assets/tikz/cat-third-lift.tex (same recipe) -->
 <img src="../assets/cat-third-lift.png" alt="the third lift: value code below, abstraction above, joined by the lift α and the replay γ" width="100%" style="margin:0.3em 0 0 0"/>
 
 ### `path::T` — value code as a vertex
@@ -365,17 +382,20 @@ traversal chain is a derivation witness: each step is labeled by the rule that j
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==>[path::[obj=>start(5).plus(0).neg().neg(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
-                                       law=>unit],
+                                       cut=>[role=>id],
+                                       route=>[[target=>none,span=>[[span=>at]]]]],
            branch_collapse=>plan::[name=>branch_collapse,
-                                   result=>!inst?#{*}<=#{?}(#{*}::T){<j>}],
+                                   cut=>[role=>add],
+                                   route=>[[target=>local,span=>[[span=>at]]]]],
            branch_inline=>plan::[name=>branch_inline,
-                                 result=>!inst?#{*}<=#{?}(#{*}::T){<j>}],
+                                 cut=>[role=>zero],
+                                 route=>[[target=>local,span=>[[span=>at]]]]],
            theory_involution=>plan::[name=>theory_involution,
-                                     law=>involution],
-           inverse_cancellation=>plan::[name=>inverse_cancellation,
-                                        result=>!inst?#{*}<=#{?}(#{*}::T){<j>}],
+                                     cut=>[law=>[involution]],
+                                     route=>[[target=>local,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
-                                          result=>!inst?#{*}<=#{?}(#{*}::T){<j>}]]]
+                                          cut=>[role=>derivation],
+                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>theory_involution]==[>>theory_unit_removal]
 ==>[noobj]
 ```
@@ -385,17 +405,17 @@ equality, literal values); the pruner tests only the type-part, a **necessary** 
 *proof* of identity ("no match in the abstraction, no match in the concrete") while keeping one merely licenses the
 real match. A rule the pruner does not know is never pruned.
 
-### `abstraction::T` — type code as a vertex
+### `abstraction::T` — the α-word
 
-| field         | description                                                                                                           |
-|---------------|-----------------------------------------------------------------------------------------------------------------------|
-| `obj`         | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`   |
-| `code`        | the concrete chain the lift came from — the $\gamma$ **anchor** a chosen abstract route is replayed on                |
-| `<rule name>` | one lazy edge per live rewrite, decided **endogenously** — read off `obj`'s own morphisms, no table outside the graph |
+| field | description                                                                                                                                                                                     |
+|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `obj` | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`, with the original inst kept in `morphism.obj` so γ recovers the exact code |
 
-The abstraction's edges dereference to the *next abstraction* (apply at the anchor, re-lift), so traversal is closed
-at the type level, and the laws/forms/theories a rule consults sit on the word itself: `*…/obj/1/law`,
-`*…/obj/2/analysis/inverse` walk into the category from inside the vertex.
+The abstraction is a **reference structure**, not a second vertex with its own moves: it pulls nothing up from the
+concrete chain. It is the pointwise α-image — one `morphism::T` per instruction, each already carrying `form`,
+`class`, `law`, and `analysis` — so a plan's selector reads it to compute a cut/span/route without consulting the
+code below. The laws/forms/theories a rule consults sit on the word itself: `*…/obj/1/law`, `*…/obj/2/analysis/inverse`
+walk into the category from inside the abstraction.
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
@@ -462,20 +482,17 @@ The application is a **type method**, not a field: `lower(plan::T)` is one instr
 `cut`/`route`, and the path's code — matches the selector against the abstraction's morphism fields, applies the
 rewrite, and re-lifts to `path::T`. The plan carries no `result` λ; `lower` *is* the operator.
 
-```mtron
-mtron> */network
-==>network::[host=>booger,
-             status=>!inst?#{*}<=#{?}(#{*}::T){<j>}]
-mtron> [{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)]
-==>[path::[obj=>map({1,2,3,4,5}).plus(10).sum()]]
-```
+**A distribution plan needs peers.** `law_shard` is live only over a non-empty peer roster — its guard reads the
+machine's dialed peers, and with no peer it matches nothing, so `lower` is the identity. A `ws_client` dials and
+self-registers a `peer::T` into the network; that registration is the trigger that turns the rule live:
+
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>[host=>ws://localhost:8555/mtron,
-    send=>inst?#{*}<=#{?}(){<j>},
-    send_recv=>inst?#{*}<=#{?}(){<j>},
-    close=>inst?#{*}<=#{?}(){<j>},
-    on_message=>print?#<=#('received ${_}')]
+==>ws_client::[host=>ws://localhost:8555/mtron,
+               send=>inst?#{*}<=#{?}(){<j>},
+               send_recv=>inst?#{*}<=#{?}(){<j>},
+               close=>inst?#{*}<=#{?}(){<j>},
+               on_message=>print?#<=#('received ${_}')]
 mtron> */network
 ==>network::[host=>booger,
              status=>!inst?#{*}<=#{?}(#{*}::T){<j>},
@@ -483,44 +500,79 @@ mtron> */network
               authority=>ws://localhost:8555,
               host=>ws://localhost:8555/mtron,
               transport=>inst?#{*}<=#{?}(#{*}::T){<j>},
-              client=>[host=>ws://localhost:8555/mtron,
-                       send=>inst?#{*}<=#{?}(){<j>},
-                       send_recv=>inst?#{*}<=#{?}(){<j>},
-                       close=>inst?#{*}<=#{?}(){<j>},
-                       on_message=>print?#<=#('received ${_}')]]]]
+              client=>ws_client::[host=>ws://localhost:8555/mtron,
+                                  send=>inst?#{*}<=#{?}(){<j>},
+                                  send_recv=>inst?#{*}<=#{?}(){<j>},
+                                  close=>inst?#{*}<=#{?}(){<j>},
+                                  on_message=>print?#<=#('received ${_}')]]]]
 ```
-**The relation.** `path::T` is the vertex, `plan::T` its out-edge, `abstraction::T` the surface the plan's selector
-reads, and `lower` the shared application that closes the loop back to `path::T`. Because a plan is data, the
+With the current `machine::T` having a `peer::T`, the `path::T` shows a distribution plan.
+
+```mtron
+mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+           theory_unit_removal=>plan::[name=>theory_unit_removal,
+                                       cut=>[role=>id],
+                                       route=>[[target=>none,span=>[[span=>at]]]]],
+           branch_collapse=>plan::[name=>branch_collapse,
+                                   cut=>[role=>add],
+                                   route=>[[target=>local,span=>[[span=>at]]]]],
+           branch_inline=>plan::[name=>branch_inline,
+                                 cut=>[role=>zero],
+                                 route=>[[target=>local,span=>[[span=>at]]]]],
+           theory_involution=>plan::[name=>theory_involution,
+                                     cut=>[law=>[involution]],
+                                     route=>[[target=>local,span=>[[span=>at]]]]],
+           law_idempotent=>plan::[name=>law_idempotent,
+                                  cut=>[law=>[idempotent]],
+                                  route=>[[target=>local,span=>[[span=>at]]]]],
+           law_absorbing=>plan::[name=>law_absorbing,
+                                 cut=>[law=>[absorbing]],
+                                 route=>[[target=>local,span=>[[span=>at]]]]],
+           ...(6 more)]]
+```
+Finally, `lower?path<=path(plan)` use `abstract::T` via `path::T` to construct a distributed computing `plan::T`.
+Because a plan is data, the
 rewrite *schedule* and the plan's out-edge are the same thing — every rule is `lower(plan::T)`, which is "the
 rewrite table is the category" made literal.
 
 ```mtron
-mtron> [{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)].>-.lower(>>law_shard)
-==>path::[obj=>map({1,2,3,4,5}).plus(10).sum()]
+mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
+==>[path::[obj=>start([block(block(block(start?no_shard({1,2,3,4,5}).plus(10).sum())))]).select([to(ws://localhost:8555)]).merge().sum(),
+           theory_unit_removal=>plan::[name=>theory_unit_removal,
+                                       cut=>[role=>id],
+                                       route=>[[target=>none,span=>[[span=>at]]]]],
+           branch_collapse=>plan::[name=>branch_collapse,
+                                   cut=>[role=>add],
+                                   route=>[[target=>local,span=>[[span=>at]]]]],
+           branch_inline=>plan::[name=>branch_inline,
+                                 cut=>[role=>zero],
+                                 route=>[[target=>local,span=>[[span=>at]]]]]]]
 ```
 ### may / must — the fiber modality
 
-An abstract vertex stands for its **fiber** — every concrete chain that lifts to it — so an edge there is a claim
-quantified over that set, in one of two strengths:
+An abstraction stands for its **fiber** — every concrete chain that lifts to it — so the moves a `path::T` exposes,
+decided by reading the abstraction, are claims quantified over that set in one of two strengths:
 
 | modality   | the claim                                                     | example                                                                             |
 |------------|---------------------------------------------------------------|-------------------------------------------------------------------------------------|
 | **must** □ | the rule fires for *every* fiber member (zero value-residue)  | `law_shard` on $[\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]$   |
 | **may** ◇  | the rule fires for *some* members; undecidable without values | unit removal at $\mathrm{plus}(\mathrm{int})$ — only the $\mathrm{plus}(0)$ members |
 
-Hence the degree ordering $\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))$: the abstraction carries edges on
-behalf of fiber-mates, and equality holds exactly when every edge is a must-edge. Refinement is **edge-antitone** —
-descending the q-param rungs ($\mathrm{plus (int)} \to \mathrm{plus (int?{=}0{::}T)} \to \mathrm{plus} (0)$) shrinks the
-fiber and discharges ◇ into □; a rule becomes *exact* at the rung whose type absorbs its residue. Counting instances
-rather than rules, the ordering reverses: one abstract edge fans into one concrete edge per match *site*, so the
-abstraction has more kinds of move and the path more copies of fewer kinds.
+Hence the degree ordering $\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))$: the abstraction licenses a move
+for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge is a
+must-edge. Refinement is **edge-antitone** — descending the q-param rungs
+($\mathrm{plus (int)} \to \mathrm{plus (int?{=}0{::}T)} \to \mathrm{plus} (0)$)
+shrinks the fiber and discharges ◇ into □; a rule becomes *exact* at the rung whose type absorbs its residue. Counting
+instances rather than rules, the ordering reverses: one licensed move fans into one concrete edge per match *site*, so
+the abstraction licenses more kinds of move and the path more copies of fewer kinds.
 
 **Planning.** $\gamma$ of a vertex is an infinite set, so no one descends from an arbitrary abstraction — what the
 abstract walk computes is not code but a **route**: a sequence of rule names, chosen upstairs where the graph is
-small, then **replayed at the anchor** (`code`), where values and sites exist (the path-lifting property of a
-fibration). Must-edges lift unconditionally; may-edges are the backtrack points, known in advance — a plan's
-remaining ◇-count is readable as the degree gap between the vertex and its anchor. The replayed route *is* the
-derivation witness.
+small, then **replayed on the path's code** (`path::T.obj`, the γ anchor), where values and sites exist (the
+path-lifting property of a fibration). Must-edges lift unconditionally; may-edges are the backtrack points, known in
+advance — a plan's remaining ◇-count is readable as the degree gap between the path and its abstraction. The replayed
+route *is* the derivation witness.
 
 ## see also
 

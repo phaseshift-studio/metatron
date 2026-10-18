@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.space.ws.handler;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -63,9 +64,8 @@ public class mtron_wsHandler extends WebSocketRec {
             .constructor(mtron_ws -> new mtron_wsHandler(new LinkedHashMap<>(mtron_ws.asRec().jvm()), mtron_ws.asRec().vid())).create();
 
 
-    public mtron_wsHandler(final Map<Obj, Obj> jvm, final fURI vid) {
-        super(jvm, WS_MTRON_HANDLER_TID, vid);
-        this.jvm().put(uri(ON_MESSAGE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+    public static Inst mtron_on_message(final WebSocketRec ws) {
+        return instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 final Obj rhs = lhs.apply(noobj());
                 // caughtTransient, not caught(): caught() deletes the fail from the fail
@@ -73,8 +73,8 @@ public class mtron_wsHandler extends WebSocketRec {
                 // reply (the transport boundary already caught the fail; this covers a
                 // direct ON_MESSAGE apply)
                 final Obj result = rhs.isFail() ? rhs.asFail().caughtTransient() : rhs;
-                LOG.debug("processed mtron message: %s => %s", lhs, result);
-                this.send(result);
+                ws.logger().debug("processed mtron message: %s => %s", lhs, result);
+                ws.send(result);
                 // emit the fail stack trace after the reply is sent, not during its
                 // serialization (where the tracer's own fail registration would delay the
                 // send and leave the client waiting)
@@ -83,21 +83,45 @@ public class mtron_wsHandler extends WebSocketRec {
                 return rhs;
             } catch (final Exception e) {
                 final Fail failure = fail(e).caughtTransient();
-                LOG.debug("error processing message: %s => %s", lhs, failure);
-                this.send(failure);
+                ws.logger().debug("error processing message: %s => %s", lhs, failure);
+                ws.send(failure);
                 MTronException.emitStackTrace(failure.jvm());
                 return failure;
             }
-        }));
-        this.jvm().put(uri(ON_ERROR), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
-            try {
-                this.send(lhs);
-                return noobj();
-            } catch (final Exception e) {
-                LOG.error("error processing error: %s", lhs, e);
-                return noobj();
-            }
-        }));
+        });
+    }
+
+    /**
+     * The mtron protocol surface, installed onto a {@link WebSocketRec} as GUARDED defaults — the same callbacks
+     * the server handler wears, so a client that dials an mtron endpoint ({@code protocol => mtron_ws}) can answer
+     * a server-initiated request. Explicit fields already on the rec win: the guards fill only what is absent.
+     */
+    public static void install(final WebSocketRec rec) {
+        if (!rec.jvm().containsKey(uri(ON_MESSAGE)))
+            rec.at(uri(ON_MESSAGE), mtron_on_message(rec), MUTABLE);
+        if (!rec.jvm().containsKey(uri(ON_ERROR)))
+            rec.at(uri(ON_ERROR), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+                try {
+                    rec.send(lhs);
+                    return noobj();
+                } catch (final Exception e) {
+                    rec.logger().error("error processing error: %s", lhs, e);
+                    return noobj();
+                }
+            }), MUTABLE);
+        if (!rec.jvm().containsKey(uri(STATE)))
+            rec.at(uri(STATE), instC(M_ISA_INST_TID.dom(A.maybe()).rng(BOOL_TID), lst(), (lhs, inst) -> {
+                try {
+                    return bool(rec.state());
+                } catch (final Exception e) {
+                    return BOOL_FALSE;
+                }
+            }), MUTABLE);
+    }
+
+    public mtron_wsHandler(final Map<Obj, Obj> jvm, final fURI vid) {
+        super(jvm, WS_MTRON_HANDLER_TID, vid);
+        install(this);
         this.jvm().put(uri(SEND), instC(M_ISA_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
             try {
                 this.send(inst.arg(0));
@@ -106,14 +130,6 @@ public class mtron_wsHandler extends WebSocketRec {
                 return noobj();
             }
         }));
-        this.jvm().put(uri(STATE), instC(M_ISA_INST_TID.dom(A.maybe()).rng(BOOL_TID), lst(), (lhs, inst) -> {
-            try {
-                return bool(this.state(this.socket));
-            } catch (final Exception e) {
-                return BOOL_FALSE;
-            }
-        }));
-
     }
 
     public Obj apply(final Obj obj) {

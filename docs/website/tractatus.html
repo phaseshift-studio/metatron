@@ -1711,6 +1711,12 @@ mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
                    pattern  =&gt; &lt;http://#&gt;,
                    route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                 /       =&gt; &lt;&gt;]]@/sys/space/web/http
+==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/179
+   	while parsing: httpspace::[host     =&gt; http://localhost:8777,
+   q        =&gt; [mimeq::[=&gt;]],
+   pattern  =&gt; &lt;http://#&gt;,
+   route    =&gt; [/mcp     =&gt; mcp_mtron_http,
+   /       =&gt; &lt;&gt;]]@/sys/space/web/http]@/sys/fail/180
 mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
                  pattern  =&gt; &lt;ws://#&gt;,
                  q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -1807,12 +1813,12 @@ mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
                provider =&gt; deepseek,
                protocol =&gt; openai,
                llm      =&gt; &lt;deepseek-v4-pro&gt;]
-==&gt;fail::[unable to construct model::T: fail::[inst apply failure: Authentication Fails (auth header format should be Bearer sk-...) (at /m/inst/ctor) [JdkHttpClient&lt;77&gt;]][Authentication Fails (auth header format should be Bearer sk-...) [JdkHttpClient&lt;77&gt;]]@/sys/fail/179
+==&gt;fail::[unable to construct model::T: fail::[inst apply failure: Authentication Fails (auth header format should be Bearer sk-...) (at /m/inst/ctor) [JdkHttpClient&lt;77&gt;]][Authentication Fails (auth header format should be Bearer sk-...) [JdkHttpClient&lt;77&gt;]]@/sys/fail/181
    	while parsing: model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
    api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
    provider =&gt; deepseek,
    protocol =&gt; openai,
-   llm      =&gt; &lt;deepseek-v4-pro&gt;]]@/sys/fail/180</code></pre>
+   llm      =&gt; &lt;deepseek-v4-pro&gt;]]@/sys/fail/182</code></pre>
 </div>
 </div>
 <!--
@@ -1875,7 +1881,7 @@ The purpose of breaking up the example into two expression is to highlight the O
      *http://localhost:11434/api/tags/+.&gt;&gt;.
             =?=[size=&gt;as(real::T).as(bB::...
                                           ^
-     could not parse at '.']@/sys/fail/181</code></pre>
+     could not parse at '.']@/sys/fail/183</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2160,7 +2166,7 @@ mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*eval],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/182
+==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/184
 ----
 
 [source,mtron]
@@ -2191,13 +2197,13 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.IllegalStateException: Operation cancelled due to transport failure: Status 1006, Reason: . The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [McpOperationHandler<329>]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.IllegalStateException: Operation cancelled due to transport failure: Status 1006, Reason: . The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [McpOperationHandler<329>]]@/sys/fail/183
-   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]@/sys/fail/184
+==>fail::[unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.IllegalStateException: Operation cancelled due to transport failure: Status 1006, Reason: . The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [McpOperationHandler<329>]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.IllegalStateException: Operation cancelled due to transport failure: Status 1006, Reason: . The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [McpOperationHandler<329>]]@/sys/fail/185
+   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]@/sys/fail/186
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/185
+==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/187
 ----
 
 Given that an `mcp_client::T` is an index of `insts`.
@@ -2282,7 +2288,7 @@ mtron> *ollama:+.
    tool     => [!*eval],
    think    => print(_),
    response => [to=>to(/usr/ai/response)]]].
-   to(aix)]@/sys/fail/186
+   to(aix)]@/sys/fail/188
 ----
 
 <1> create a `lst` to server as the an ordered sequence of chat interactions.
@@ -2815,7 +2821,7 @@ mtron&gt; int::-4     ​3​
 ==&gt;-4
 mtron&gt; nat::-4     ​4​
 ==&gt;fail::[-4 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-4]@/sys/fail/227
+   	while parsing: nat::-4]@/sys/fail/229
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken     ​5​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​6​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2828,7 +2834,7 @@ mtron&gt; chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
      [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
       age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]]
      predicate apply failed on execution
-   	while parsing: chicken::[name=&gt;'punky',age=&gt;'four']]@/sys/fail/228</code></pre>
+   	while parsing: chicken::[name=&gt;'punky',age=&gt;'four']]@/sys/fail/230</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2891,9 +2897,9 @@ mtron&gt; nat::T[?&lt;120]@age     ​2​
 mtron&gt; 21.as(int::T).as(nat::T).as(age::T)     ​3​
 ==&gt;age::21
 mtron&gt; -21.as(int::T).as(nat::T).as(age::T)     ​4​
-==&gt;fail::[inst apply failure: -21 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@2)]@/sys/fail/232
+==&gt;fail::[inst apply failure: -21 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@2)]@/sys/fail/234
 mtron&gt; 121.as(int::T).as(nat::T).as(age::T)     ​5​
-==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural] (at /m/inst/as@3)]@/sys/fail/233
+==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural] (at /m/inst/as@3)]@/sys/fail/235
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2907,7 +2913,7 @@ mtron&gt; chicken::[name=&gt;'punky',age=&gt;444]     ​8​
      [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
       age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T]]
      predicate apply failed on execution
-   	while parsing: chicken::[name=&gt;'punky',age=&gt;444]]@/sys/fail/234</code></pre>
+   	while parsing: chicken::[name=&gt;'punky',age=&gt;444]]@/sys/fail/236</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2993,7 +2999,7 @@ mtron&gt; 'marko'==re:'m.{3}o'     ​4​
 ==&gt;fail::[parse error at line 1, col 13:
      'marko'==re:'m.{3}o'
                  ^
-     could not parse at ''']@/sys/fail/235</code></pre>
+     could not parse at ''']@/sys/fail/237</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3032,11 +3038,11 @@ mtron&gt; being::T@chicken     ​3​
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)     ​4​
 ==&gt;chicken::[name=&gt;'marko',age=&gt;29]
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
-==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as@1)]@/sys/fail/241
+==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as@1)]@/sys/fail/243
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; 'punky'.as(chicken::T)     ​7​
-==&gt;fail::[inst apply failure: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null (at /m/inst/as@1) [Rec$RecType&lt;385&gt;]][Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null [Rec$RecType&lt;385&gt;]]@/sys/fail/242</code></pre>
+==&gt;fail::[inst apply failure: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null (at /m/inst/as@1) [Rec$RecType&lt;385&gt;]][Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null [Rec$RecType&lt;385&gt;]]@/sys/fail/244</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3143,13 +3149,13 @@ mtron&gt; nat::2     ​3​
 ==&gt;nat::2
 mtron&gt; nat::-2     ​4​
 ==&gt;fail::[-2 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-2]@/sys/fail/243
+   	while parsing: nat::-2]@/sys/fail/245
 mtron&gt; 2.as(nat::T)     ​5​
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)     ​6​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/244
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/246
 mtron&gt; nat::2 * -1     ​7​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat (at /m/inst/mult@1)]@/sys/fail/245</code></pre>
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat (at /m/inst/mult@1)]@/sys/fail/247</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3176,7 +3182,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{y}}E{{r}}t{{g}}a{{c}}T{{g}}r{{r}}o{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}M{{r}}e{{y}}T{{y}}a{{r}}T{{r}}R{{g}}O{{g}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -3271,7 +3277,7 @@ mtron&gt; a/b/c * d/e/f     ​6​
 ==&gt;0x6d65746174726f6e
 mtron&gt; bytes::'48656c6c6f'     ​2​
 ==&gt;fail::['48656c6c6f' [string] is not a bytes::T
-   	while parsing: bytes::'48656c6c6f']@/sys/fail/246</code></pre>
+   	while parsing: bytes::'48656c6c6f']@/sys/fail/248</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3729,7 +3735,7 @@ mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     �
 ==&gt;fail::[parse error at line 1, col 19:
      filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
                        ^
-     could not parse at '&lt;']@/sys/fail/258
+     could not parse at '&lt;']@/sys/fail/260
 mtron&gt; *filtered     ​3​</code></pre>
 </div>
 </div>
@@ -3824,9 +3830,9 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/263
+   	while parsing: nat::-10]@/sys/fail/266
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/267</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/269</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3925,9 +3931,9 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[-10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/268
+   	while parsing: nat::-10]@/sys/fail/270
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/269</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/271</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3948,15 +3954,15 @@ mtron&gt; int::T</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat::125
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: nat::125]@/sys/fail/270
+   	while parsing: nat::125]@/sys/fail/272
 mtron&gt; age::125
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: age::125]@/sys/fail/271
+   	while parsing: age::125]@/sys/fail/273
 mtron&gt; nat::125.as(age::T)
 ==&gt;fail::[125 is not a int::T[is(lt(120))]@nat
-   	while parsing: nat::125.as(age::T)]@/sys/fail/272
+   	while parsing: nat::125.as(age::T)]@/sys/fail/274
 mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[inst apply failure: 125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/273</code></pre>
+==&gt;fail::[inst apply failure: 125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/275</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5225,7 +5231,7 @@ mtron> -->
 ==>fail::[parse error at line 1, col 1:
      -->
      ^
-     could not parse at '-']@/sys/fail/279
+     could not parse at '-']@/sys/fail/281
 mtron> ++++
 mtron> [discrete]
 ==>[discrete]
@@ -5235,22 +5241,22 @@ mtron> === Navigating the Reference Structure
 ==>fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/280
+     could not parse at '=']@/sys/fail/282
 mtron> Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
 ==>fail::[parse error at line 1, col 9:
      Metatron is address-first: `a` answers the *addr...
              ^
-     could not parse at ' ']@/sys/fail/281
+     could not parse at ' ']@/sys/fail/283
 mtron> The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
 ==>fail::[parse error at line 1, col 4:
      The uri is the reference; the obj is the re...
         ^
-     could not parse at ' ']@/sys/fail/282
+     could not parse at ' ']@/sys/fail/284
 mtron> The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
 ==>fail::[parse error at line 1, col 4:
      The address space is first-class, obj-free ...
         ^
-     could not parse at ' ']@/sys/fail/283
+     could not parse at ' ']@/sys/fail/285
 mtron> [mtron]
 ==>[mtron]
 ----
@@ -6007,7 +6013,7 @@ mtron&gt; --&gt;
 ==&gt;fail::[parse error at line 1, col 1:
      --&gt;
      ^
-     could not parse at '-']@/sys/fail/279
+     could not parse at '-']@/sys/fail/281
 mtron&gt; ++++
 mtron&gt; [discrete]
 ==&gt;[discrete]
@@ -6017,22 +6023,22 @@ mtron&gt; === Navigating the Reference Structure
 ==&gt;fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/280
+     could not parse at '=']@/sys/fail/282
 mtron&gt; Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
 ==&gt;fail::[parse error at line 1, col 9:
      Metatron is address-first: `a` answers the *addr...
              ^
-     could not parse at ' ']@/sys/fail/281
+     could not parse at ' ']@/sys/fail/283
 mtron&gt; The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
 ==&gt;fail::[parse error at line 1, col 4:
      The uri is the reference; the obj is the re...
         ^
-     could not parse at ' ']@/sys/fail/282
+     could not parse at ' ']@/sys/fail/284
 mtron&gt; The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
 ==&gt;fail::[parse error at line 1, col 4:
      The address space is first-class, obj-free ...
         ^
-     could not parse at ' ']@/sys/fail/283
+     could not parse at ' ']@/sys/fail/285
 mtron&gt; [mtron]
 ==&gt;[mtron]</code></pre>
 </div>
@@ -6897,7 +6903,7 @@ mtron&gt; -&#8594;
 =&#8658;fail::[parse error at line 1, col 1:
      -&#8594;
      ^
-     could not parse at '-']@/sys/fail/279
+     could not parse at '-']@/sys/fail/281
 mtron&gt; 
 mtron&gt; [discrete]
 =&#8658;[discrete]
@@ -6907,22 +6913,22 @@ mtron&gt; === Navigating the Reference Structure
 =&#8658;fail::[parse error at line 1, col 1:
      === Navigating the Reference Structure
      ^
-     could not parse at '=']@/sys/fail/280
+     could not parse at '=']@/sys/fail/282
 mtron&gt; Metatron is address-first: <code>a</code> answers the <strong>address</strong>, <code><strong>a</code> answers the *value</strong>.
 =&#8658;fail::[parse error at line 1, col 9:
      Metatron is address-first: <code>a</code> answers the *addr&#8230;&#8203;
              ^
-     could not parse at ' ']@/sys/fail/281
+     could not parse at ' ']@/sys/fail/283
 mtron&gt; The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
 =&#8658;fail::[parse error at line 1, col 4:
      The uri is the reference; the obj is the re&#8230;&#8203;
         ^
-     could not parse at ' ']@/sys/fail/282
+     could not parse at ' ']@/sys/fail/284
 mtron&gt; The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
 =&#8658;fail::[parse error at line 1, col 4:
      The address space is first-class, obj-free &#8230;&#8203;
         ^
-     could not parse at ' ']@/sys/fail/283
+     could not parse at ' ']@/sys/fail/285
 mtron&gt; [mtron]
 =&#8658;[mtron]</p>
 </div>
@@ -7106,22 +7112,23 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355856       6576   6349280   1% /run'
+==&gt;'tmpfs                    6355856       6624   6349232   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  563939968 347017856  62% /'
-==&gt;'tmpfs                   31779272     140136  31639136   1% /dev/shm'
+==&gt;'/dev/nvme0n1p2         959786032  564439492 346518332  62% /'
+==&gt;'tmpfs                   31779272       1056  31778216   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779272          0  31779272   0% /run/qemu'
 ==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355852        288   6355564   1% /run/user/1000'
+==&gt;'tmpfs                    6355852        272   6355580   1% /run/user/1000'
 ==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1350732796 570475748  71% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1350676260 570532284  71% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
 ==&gt;boot
 ==&gt;conf
 ==&gt;'CONTRIBUTING.md'
+==&gt;Desktop
 ==&gt;dist
 ==&gt;docs
 ==&gt;dsh-plugins
@@ -7142,7 +7149,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[MaChINe faIled][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
+==&gt;fail::[mAcHInE fAILed][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/63</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7330,7 +7337,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:1717/38/40/570?tz=-0600
+==&gt;datetime:://2026.10:1808/55/13/799?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7350,7 +7357,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]     ​11�
 ==&gt;fail::[parse error at line 1, col 37:
      &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]
                                          ^
-     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/187
+     incomplete — binary operator '=' needs a right operand (e.g. 1 + 2)]@/sys/fail/189
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']].as(datetime::T)     ​12​
 ==&gt;datetime:://2024.12:25/09/00/00/000?tz=+0000
 mtron&gt; '2026-08-01T23:37:33-06:00'.as(datetime::T)&gt;&gt;year     ​13​
@@ -9126,17 +9133,17 @@ mtron&gt; */sys/thread/executor/stop/+/source/source</code></pre>
 mtron&gt; virtual::[code  =&gt; @ab + 'B',
                  loop  =&gt; second::1.0,
                  state =&gt; pause]@/sys/thread/b     ​3​
-==&gt;fail::[unable to construct virtual::T: fail::[inst apply failure: virtual::'BB'@/sys/thread/b [string] is not a thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual (at /m/inst/plus)]@/sys/fail/200
+==&gt;fail::[unable to construct virtual::T: fail::[inst apply failure: virtual::'BB'@/sys/thread/b [string] is not a thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual (at /m/inst/plus)]@/sys/fail/202
    	while parsing: virtual::[code  =&gt; @ab + 'B',
                     loop  =&gt; second::1.0,
-                    state =&gt; pause]@/sys/thread/b]@/sys/fail/201
+                    state =&gt; pause]@/sys/thread/b]@/sys/fail/203
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
                  yield =&gt; !*/sys/thread/b]@/sys/thread/a     ​4​
-==&gt;fail::[unable to construct virtual::T: fail::[inst apply failure: virtual::'BA'@/sys/thread/b [string] is not a thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual (at /m/inst/plus)]@/sys/fail/202
+==&gt;fail::[unable to construct virtual::T: fail::[inst apply failure: virtual::'BA'@/sys/thread/b [string] is not a thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual (at /m/inst/plus)]@/sys/fail/204
    	while parsing: virtual::[code  =&gt; @ab + 'A',
    loop  =&gt; second::1.0,
-   yield =&gt; !*/sys/thread/b]@/sys/thread/a]@/sys/fail/203
+   yield =&gt; !*/sys/thread/b]@/sys/thread/a]@/sys/fail/205
 mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
 ==&gt;virtual::[code=&gt;at(ab).plus('B'),
              loop=&gt;second::1.0,
@@ -9145,14 +9152,14 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              start=&gt;[code=&gt;at(ab).plus('B'),
                      loop=&gt;second::1.0,
                      state=&gt;pause]@/sys/thread/b,
-             time=&gt;datetime:://2026.10:1717/38/43/119?tz=-0600,
+             time=&gt;datetime:://2026.10:1808/55/16/633?tz=-0600,
              runtime=&gt;!inst?#{*}&lt;=#{?}(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)
 mtron&gt; */sys/thread/b.stop()
-==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread [stop?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/220
+==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread [stop?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/222
 mtron&gt; */sys/thread/a.stop()
-==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread [stop?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/224
+==&gt;fail::[lhs range does not match inst domain: thread::T[][ctor?rng=virtual&amp;dom=#{?}(rec::T){&lt;j&gt;}]@virtual =&gt; rec::T[?[code=&gt;&lt;#&gt;::T,{?}source=&gt;uri::T,{?}runtime=&gt;real::T@time,{?}yield=&gt;thread::T,{?}loop=&gt;real::T@time,{?}state=&gt;union(stop,run,pause),{?}result=&gt;&lt;#{*}&gt;::T]]@thread [stop?rng=thread&amp;dom=thread(){&lt;j&gt;}@&lt;1&gt;]]@/sys/fail/226
 mtron&gt; *ab
 ==&gt;virtual::'B'</code></pre>
 </div>
@@ -9186,10 +9193,10 @@ mtron&gt; *ab
 ==&gt;virtual::[code=&gt;print?#&lt;=#('.'),
              loop=&gt;second::2.5]@/sys/thread/example
 mtron&gt; */sys/thread/example.pause()     ​2​
-==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/pause@1) [machInstSet&lt;838&gt;]][unable to convert rec::T to str::T [machInstSet&lt;838&gt;]]@/sys/fail/225
+==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/pause@1) [machInstSet&lt;838&gt;]][unable to convert rec::T to str::T [machInstSet&lt;838&gt;]]@/sys/fail/227
 mtron&gt; */sys/thread/example/state     ​3​
 mtron&gt; */sys/thread/example.resume()     ​4​
-==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/resume@1) [machInstSet&lt;842&gt;]][unable to convert rec::T to str::T [machInstSet&lt;842&gt;]]@/sys/fail/226
+==&gt;fail::[inst apply failure: unable to convert rec::T to str::T (at /m/mach/inst/resume@1) [machInstSet&lt;842&gt;]][unable to convert rec::T to str::T [machInstSet&lt;842&gt;]]@/sys/fail/228
 mtron&gt; */sys/thread/example/state     ​5​</code></pre>
 </div>
 </div>
@@ -9285,7 +9292,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
                      /mcp     =&gt; mcp_mtron_http,
                      /docs    =&gt; target/docs]
        ]@/sys/space/web/http
-==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/284
+==&gt;fail::[unable to construct httpspace::T: fail::[inst apply failure: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]]@/sys/fail/286
    	while parsing: httpspace::[
    host     =&gt; http://localhost:8777,
    pattern  =&gt; http://#,
@@ -9293,7 +9300,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
    route    =&gt; [/        =&gt; &lt;&gt;,
    /mcp     =&gt; mcp_mtron_http,
    /docs    =&gt; target/docs]
-   ]@/sys/space/web/http]@/sys/fail/285</code></pre>
+   ]@/sys/space/web/http]@/sys/fail/287</code></pre>
 </div>
 </div>
 <h3 id="sec-html-type" class="discrete">HTML Type</h3>
@@ -9350,30 +9357,9 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)/html/head/tit
 ==&gt;fail::[parse error at line 1, col 51:
      ...haseshift.studio/splash.html&gt;.as(rec::T)/html/head/title
                                                 ^
-     incomplete — binary operator '/' needs a right operand (e.g. 1 + 2)]@/sys/fail/289
+     incomplete — binary operator '/' needs a right operand (e.g. 1 + 2)]@/sys/fail/291
 mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;     ​5​
-==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',
-                  out=&gt;[[tag=&gt;link,
-                         href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
-                         rel=&gt;'stylesheet'],
-                        [tag=&gt;link,
-                         href=&gt;&lt;css/metatron.css&gt;,
-                         rel=&gt;'stylesheet']]],
-           body=&gt;[out=&gt;[[tag=&gt;p],
-                        [tag=&gt;h1,
-                         style=&gt;'padding-left:125px;color:var(--pri...',
-                         text=&gt;'PhaseShift Studio'],
-                        [tag=&gt;img,
-                         style=&gt;'padding-left:100px',
-                         src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-                         width=&gt;'500px'],
-                        [tag=&gt;script,
-                         type=&gt;'module',
-                         src=&gt;&lt;https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092&gt;,
-                         integrity=&gt;'sha512-UKNk8GbxkABxKcXYuLkO16EleLG...',
-                         data-cf-beacon=&gt;'{"version":"2024.11.0","token":"2e...',
-                         crossorigin=&gt;'anonymous']],
-                  style=&gt;'background-color: black;']]]
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from)]@/sys/fail/292
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​
 ==&gt;[html=&gt;[head=&gt;[title=&gt;'PhaseShift Studio',
                   out=&gt;[[tag=&gt;link,
@@ -9447,12 +9433,7 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;     ​2​
 
 
 mtron&gt; *&lt;http://localhost:11434/api/tags?mimeq=application/x-mtron&gt;     ​3​
-==&gt;[models=&gt;[[name=&gt;'qwen3.5:4b',
-              model=&gt;'qwen3.5:4b',
-              modified_at=&gt;'2026-10-02T01:56:52.3384474-06:00',
-              size=&gt;3389983735,
-              digest=&gt;'2a654d98e6fba55d452b7043684e9b57a9...',
-   ...
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from)]@/sys/fail/293
 mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​
 ==&gt;[models=&gt;[[name=&gt;&lt;qwen3.5:4b&gt;,
               model=&gt;&lt;qwen3.5:4b&gt;,
@@ -9515,7 +9496,8 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             protocol=&gt; ollama,
             host    =&gt; &lt;http://localhost:11434&gt;,
             name    =&gt; &gt;&gt;id.as(uri::T)].as(model::T)
-         .chat('are you there?')</code></pre>
+         .chat('are you there?')
+==&gt;fail::[inst apply failure: no mimeq query processor attached to /sys/space/http [http://#] (at /m/inst/from@0)]@/sys/fail/297</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -10212,7 +10194,7 @@ code''' └────────────────┘ └────�
 ==&gt;fail::[parse error at line 1, col 16:
      *lite:person/+.=?=[age=&gt;?&lt;30]
                     ^
-     could not parse at '=']@/sys/fail/190
+     could not parse at '=']@/sys/fail/192
 mtron&gt; *lite:person/+/name.count()     ​2​
 ==&gt;3
 mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
@@ -10303,7 +10285,7 @@ mtron&gt; *lite:score/+.=?=[player=&gt;'marko']     ​4​
 ==&gt;fail::[parse error at line 1, col 15:
      *lite:score/+.=?=[player=&gt;'marko']
                    ^
-     could not parse at '=']@/sys/fail/199
+     could not parse at '=']@/sys/fail/201
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
 ==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>

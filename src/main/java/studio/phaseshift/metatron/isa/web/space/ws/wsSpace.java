@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
+import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.web.webHelper;
@@ -114,13 +115,30 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                             final studio.phaseshift.metatron.isa.m.type.Obj pattern = config.get(uri(PATTERN));
                             if (null != pattern && pattern.isUri() && !config.containsKey(uri(HOST)))
                                 config.put(uri(HOST), uri(pattern.uriValue().retractPattern()));
-                            final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(config, inst.arg(0).vid()));
+                            final WebSocketRec wsRec = new WebSocketRec(config, inst.arg(0).vid());
+                            // A PROTOCOL HAT: protocol=>mtron_ws installs the mtron facade's full surface (apply-and-
+                            // respond on_message, on_error, state) as guarded defaults, so the client can answer a
+                            // server-initiated request. Explicit fields still win — the guards fill only what is absent.
+                            final studio.phaseshift.metatron.isa.m.type.Obj protocol = config.get(uri(PROTOCOL));
+                            if (null != protocol && !protocol.isNoObj() && isMtronFacade(protocol))
+                                mtron_wsHandler.install(wsRec);
+                            final WebSocketRecClient client = new WebSocketRecClient(wsRec);
                             Network.Helper.index(client);
                             return client;
                         } catch (final Exception e) {
                             throw MTronException.of(e);
                         }
                     })).create();
+
+    /**
+     * Is a {@code protocol} reference the mtron facade ({@code mtron_ws})? The reference resolves through
+     * instruction memory — the same lookup the route table uses — so {@code protocol => mtron_ws} and its full
+     * tid name the same facade. mtron is the only protocol surface today; more facades extend this dispatch.
+     */
+    private static boolean isMtronFacade(final Obj protocol) {
+        final Obj resolved = protocol.isUri() ? Machine.read(protocol.uriValue()) : protocol;
+        return resolved.isType() && mtron_wsHandler.WS_MTRON_HANDLER_TID.equals(resolved.asType().vid());
+    }
 
     public static final Type WS_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)

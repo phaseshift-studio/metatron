@@ -28,27 +28,17 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import java.util.*;
-import java.util.function.BiPredicate;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PLAN_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carrier;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.declares;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.mapArgument;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.same;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.sameOp;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 
 /**
@@ -66,9 +56,9 @@ public class catRewrite {
      * with the floatable run replicated and a local partial reduce. {@link PlanInterpreter#lower} consumes the cut.
      */
     private static final Cut SHARD_CUT = Cut.reducer(Law.monoidic, Law.commutative);
-    private static final Span SHARD_PRE = Span.before(SHARD_CUT).floatable();
-    private static final Span SHARD_AT = Span.at(SHARD_CUT);
-    private static final Span SHARD_POST = Span.after(SHARD_CUT);
+    private static final Span SHARD_PRE = Span.before().floatable();
+    private static final Span SHARD_AT = Span.at();
+    private static final Span SHARD_POST = Span.after();
     private static final Plan SHARD_PLAN = PlanBuilder.plan("law_shard")
             .cut(SHARD_CUT)
             .route(Route.local(SHARD_AT, SHARD_POST))
@@ -76,15 +66,109 @@ public class catRewrite {
             .create();
 
     /**
-     * The local unit-law plan — no cut/route (a theory rewrite, not a distribution): its {@code law} is the
-     * selector, and {@link PlanInterpreter#lower} dispatches on it to the unit removal.
+     * The local unit-law plan — cut the identity (the {@code id} role) and route it to {@code none}: the span
+     * is deleted, the unit law's transform. No {@code law} selector — the theory names the role.
      */
-    private static final Plan UNIT_PLAN = new Plan(mutableMap(uri(NAME), uri("theory_unit_removal"), uri(LAW), uri(Law.unit.name())), PLAN_TID, null);
+    private static final Cut UNIT_CUT = Cut.role(ID);
+    private static final Plan UNIT_PLAN = PlanBuilder.plan("theory_unit_removal")
+            .cut(UNIT_CUT)
+            .route(Route.none(Span.at()))
+            .create();
 
     /**
-     * The local involution-law plan — its {@code law => involution} selector dispatches to the f·f ↦ ε fold.
+     * The involution plan — cut the self-inverse op ({@code law => [involution]}): the f·f ↦ ε fold.
      */
-    private static final Plan INVOLUTION_PLAN = new Plan(mutableMap(uri(NAME), uri("theory_involution"), uri(LAW), uri(Law.involution.name())), PLAN_TID, null);
+    private static final Cut INVOLUTION_CUT = Cut.law(Law.involution);
+    private static final Plan INVOLUTION_PLAN = PlanBuilder.plan("theory_involution")
+            .cut(INVOLUTION_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The idempotent plan — cut the idempotent op ({@code law => [idempotent]}): the f·f ↦ f fold.
+     */
+    private static final Cut IDEMPOTENT_CUT = Cut.law(Law.idempotent);
+    private static final Plan IDEMPOTENT_PLAN = PlanBuilder.plan("law_idempotent")
+            .cut(IDEMPOTENT_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The monoidic plan — cut a monoidic fold ({@code law => [monoidic]}): the f·f ↦ f fold on a reducer/join.
+     */
+    private static final Cut MONOIDIC_CUT = Cut.law(Law.monoidic);
+    private static final Plan MONOIDIC_PLAN = PlanBuilder.plan("law_monoidic")
+            .cut(MONOIDIC_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The inverse-cancellation plan — cut a declared inverse ({@code role => inverse}): the f·f⁻¹ ↦ ε fold on
+     * the declared opposing edge.
+     */
+    private static final Cut INVERSE_CUT = Cut.role(INVERSE);
+    private static final Plan INVERSE_PLAN = PlanBuilder.plan("inverse_cancellation")
+            .cut(INVERSE_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The like-term plan — cut the additive op ({@code role => add}): the route-as-function form, where the
+     * transform IS the ring's own addition (sum like terms).
+     */
+    private static final Cut BRANCH_CUT = Cut.role(ADD);
+    private static final Plan BRANCH_COLLAPSE_PLAN = PlanBuilder.plan("branch_collapse")
+            .cut(BRANCH_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The one-term plan — cut the additive identity ({@code role => zero}): the single addend is that addend
+     * (the implicit zero drops out).
+     */
+    private static final Cut BRANCH_INLINE_CUT = Cut.role(ZERO);
+    private static final Plan BRANCH_INLINE_PLAN = PlanBuilder.plan("branch_inline")
+            .cut(BRANCH_INLINE_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The poset plan — cut a poset comparison ({@code law => [poset]}): adjacent comparisons compose to the
+     * stricter bound.
+     */
+    private static final Cut POSET_CUT = Cut.law(Law.poset);
+    private static final Plan POSET_PLAN = PlanBuilder.plan("law_poset")
+            .cut(POSET_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The map-unwrap plan — cut the stream lift ({@code role => map}): the transparent map unwraps its value.
+     */
+    private static final Cut MAP_CUT = Cut.role(MAP_INST_TID.name());
+    private static final Plan MAP_UNWRAP_PLAN = PlanBuilder.plan("form_map_unwrap")
+            .cut(MAP_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The absorbing plan — cut an absorbing op ({@code law => [absorbing]}): everything before it is dead code.
+     */
+    private static final Cut ABSORBING_CUT = Cut.law(Law.absorbing);
+    private static final Plan ABSORBING_PLAN = PlanBuilder.plan("law_absorbing")
+            .cut(ABSORBING_CUT)
+            .route(Route.local(Span.at()))
+            .create();
+
+    /**
+     * The derivation plan — cut a derived op ({@code role => derivation}): fold its primitive composition back
+     * to the derived operation.
+     */
+    private static final Cut DERIVATION_CUT = Cut.role(DERIVATION);
+    private static final Plan DERIVATION_PLAN = PlanBuilder.plan("derivation_contraction")
+            .cut(DERIVATION_CUT)
+            .route(Route.local(Span.at()))
+            .create();
 
     /**
      * The rewrite-name → plan registry — the bridge the path's out-edges look up when a rewrite rule has a
@@ -97,6 +181,15 @@ public class catRewrite {
         PLANS.put(SHARD_PLAN.name(), SHARD_PLAN);
         PLANS.put(UNIT_PLAN.name(), UNIT_PLAN);
         PLANS.put(INVOLUTION_PLAN.name(), INVOLUTION_PLAN);
+        PLANS.put(IDEMPOTENT_PLAN.name(), IDEMPOTENT_PLAN);
+        PLANS.put(MONOIDIC_PLAN.name(), MONOIDIC_PLAN);
+        PLANS.put(INVERSE_PLAN.name(), INVERSE_PLAN);
+        PLANS.put(BRANCH_COLLAPSE_PLAN.name(), BRANCH_COLLAPSE_PLAN);
+        PLANS.put(BRANCH_INLINE_PLAN.name(), BRANCH_INLINE_PLAN);
+        PLANS.put(POSET_PLAN.name(), POSET_PLAN);
+        PLANS.put(MAP_UNWRAP_PLAN.name(), MAP_UNWRAP_PLAN);
+        PLANS.put(ABSORBING_PLAN.name(), ABSORBING_PLAN);
+        PLANS.put(DERIVATION_PLAN.name(), DERIVATION_PLAN);
     }
 
     /**
@@ -233,17 +326,16 @@ public class catRewrite {
                         // algebra being rewritten,
                         //
                         //     like terms      S(x, x, ..., x)  ->  S(x{n})    (equality coefficient-blind: the confluence)
-                        //     one-term sum    S(x)             ->  x         (the frame's own coefficient folds into x)
                         //
                         // S is the witness read off object[code].law — ring.add / add_group.op, which here resolves
-                        // to branch — so the bodies (repeatedTerms / oneTerm) know nothing of branch; the same
-                        // bodies pointed at object[int].law would run on plus with no body change.
+                        // to branch — so the body (repeatedTerms / oneTerm) knows nothing of branch; the same body
+                        // pointed at object[int].law would run on plus with no body change.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
-                                code -> repeatedTerms(additiveWitness(T(CODE_TID)), code)),
+                                code -> PlanInterpreter.lower(BRANCH_COLLAPSE_PLAN, code)),
                                 "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[code].law\\), \\(S = branch\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
 
                         docWrap(InstSet.Helper.rewriter(rewriteTID("branch_inline"),
-                                code -> oneTerm(additiveWitness(T(CODE_TID)), code)),
+                                code -> PlanInterpreter.lower(BRANCH_INLINE_PLAN, code)),
                                 "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
 
                         // (2a) the involution law: an adjacent pair of the SAME self-inverse operation is the
@@ -254,123 +346,40 @@ public class catRewrite {
                         // (2b) the idempotent law: an adjacent pair of the SAME idempotent operation is that
                         // operation -- ucase.ucase, zero.zero, one.one, an idempotent join (bool or/and).
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_idempotent"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    if (2 > insts.size())
-                                        return code;
-                                    final Type carrier = carrier(code);
-                                    final List<Inst> collapsed = collapseDuplicates(insts,
-                                            (a, b) -> same(a, b) && declares(a, carrier, Law.idempotent));
-                                    return collapsed.size() == insts.size() ? code : code(collapsed);
-                                }), "the idempotent law \\(f \\cdot f \\leadsto f\\) for any operation whose declared process laws include \\(\\mathrm{idempotent}\\) -- \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{zero} \\cdot \\mathrm{zero} \\leadsto \\mathrm{zero}\\)"),
+                                code -> PlanInterpreter.lower(IDEMPOTENT_PLAN, code)), "the idempotent law \\(f \\cdot f \\leadsto f\\) for any operation whose declared process laws include \\(\\mathrm{idempotent}\\) -- \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{zero} \\cdot \\mathrm{zero} \\leadsto \\mathrm{zero}\\)"),
 
                         // (2c) the absorbing law: an absorbing operation swallows the chain it is applied to
                         // (f . g = f), so every operation before it is dead code.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_absorbing"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    final int seed = (!insts.isEmpty() && START_INST_TID.equals(insts.get(0).tid().basePath())) ? 1 : 0;
-                                    final Type carrier = carrier(code);
-                                    for (int i = seed; i < insts.size(); i++)
-                                        if (declares(insts.get(i), carrier, Law.absorbing)) {
-                                            if (i <= seed)
-                                                return code;
-                                            final List<Inst> out = new ArrayList<>(insts.subList(0, seed));
-                                            out.addAll(insts.subList(i, insts.size()));
-                                            return code(out);
-                                        }
-                                    return code;
-                                }), "the absorbing law \\(f \\circ g = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so everything before it is dead code -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\(x + 3 \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\)"),
+                                code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(f \\circ g = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so everything before it is dead code -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\(x + 3 \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\)"),
 
                         // (2d) the monoidic law on a fold: a fold of a fold is the fold (reducing one element is
                         // the identity of the reduction), so an adjacent identical reducer/join collapses.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_monoidic"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    if (2 > insts.size())
-                                        return code;
-                                    final Type carrier = carrier(code);
-                                    final List<Inst> collapsed = collapseDuplicates(insts,
-                                            (a, b) -> same(a, b) && isFold(a, carrier) && declares(a, carrier, Law.monoidic));
-                                    return collapsed.size() == insts.size() ? code : code(collapsed);
-                                }), "the monoidic law on a fold (\\(\\mathrm{reducer}\\)/\\(\\mathrm{join}\\) form): a fold of a fold is the fold, \\(f \\cdot f \\leadsto f\\) -- \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\), \\(\\mathrm{merge} \\cdot \\mathrm{merge} \\leadsto \\mathrm{merge}\\)"),
+                                code -> PlanInterpreter.lower(MONOIDIC_PLAN, code)), "the monoidic law on a fold (\\(\\mathrm{reducer}\\)/\\(\\mathrm{join}\\) form): a fold of a fold is the fold, \\(f \\cdot f \\leadsto f\\) -- \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\), \\(\\mathrm{merge} \\cdot \\mathrm{merge} \\leadsto \\mathrm{merge}\\)"),
 
 
                         // (2f) the poset law: compose adjacent comparisons of the same order -- the stricter
                         // bound wins, so the two filters are one filter.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_poset"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    if (2 > insts.size())
-                                        return code;
-                                    final List<Inst> out = new ArrayList<>(insts.size());
-                                    boolean changed = false;
-                                    final Type carrier = carrier(code);
-                                    for (int i = 0; i < insts.size(); i++) {
-                                        final Inst composed = (i + 1 < insts.size()) ? posetCompose(insts.get(i), insts.get(i + 1), carrier) : null;
-                                        if (null != composed) {
-                                            out.add(composed);
-                                            changed = true;
-                                            i++;
-                                        } else
-                                            out.add(insts.get(i));
-                                    }
-                                    return changed ? code(out) : code;
-                                }), "the poset law \\(x > a \\wedge x > b \\iff x > \\max(a, b)\\): adjacent comparisons of the same ordered type compose to the stricter bound -- \\(\\mathrm{gt}(a) \\cdot \\mathrm{gt}(b) \\leadsto \\mathrm{gt}(\\max(a, b))\\), \\(\\mathrm{lt}(a) \\cdot \\mathrm{lt}(b) \\leadsto \\mathrm{lt}(\\min(a, b))\\)"),
+                                code -> PlanInterpreter.lower(POSET_PLAN, code)), "the poset law \\(x > a \\wedge x > b \\iff x > \\max(a, b)\\): adjacent comparisons of the same ordered type compose to the stricter bound -- \\(\\mathrm{gt}(a) \\cdot \\mathrm{gt}(b) \\leadsto \\mathrm{gt}(\\max(a, b))\\), \\(\\mathrm{lt}(a) \\cdot \\mathrm{lt}(b) \\leadsto \\mathrm{lt}(\\min(a, b))\\)"),
 
                         // (3a) inverse cancellation: an adjacent declared inverse pair with equal operands
                         // cancels to the identity -- the group law g . g^-1 = 1, read off Entry.inverse.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("inverse_cancellation"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    if (2 > insts.size())
-                                        return code;
-                                    final List<Inst> out = new ArrayList<>(insts.size());
-                                    boolean changed = false;
-                                    final Type carrier = carrier(code);
-                                    for (int i = 0; i < insts.size(); i++) {
-                                        if (i + 1 < insts.size() && inversePair(insts.get(i), insts.get(i + 1), carrier)) {
-                                            changed = true;
-                                            i++;
-                                        } else
-                                            out.add(insts.get(i));
-                                    }
-                                    return changed ? code(out) : code;
-                                }), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
+                                code -> PlanInterpreter.lower(INVERSE_PLAN, code)), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
 
                         // (5) the stream lift: `map` is transparent on the value it wraps, so map(f) |-> f.
                         // This stays WITH map (its shape {?} -> {?} also matches `is`, so a shape-only
                         // generalization would unwrap a predicate); one rule covers both map(f) |-> f and the
                         // nesting map(map(f)) |-> map(f) (the outer unwrap exposes the inner map, next pass).
                         docWrap(InstSet.Helper.rewriter(rewriteTID("form_map_unwrap"),
-                                code -> {
-                                    final List<Inst> insts = code.insts();
-                                    boolean changed = false;
-                                    final List<Inst> out = new ArrayList<>(insts.size());
-                                    final Type carrier = carrier(code);
-                                    for (final Inst inst : insts) {
-                                        final Obj wrapped = mapArgument(inst, carrier);
-                                        if (null != wrapped) {
-                                            out.add(wrapped.asInst());
-                                            changed = true;
-                                        } else
-                                            out.add(inst);
-                                    }
-                                    return changed ? code(out) : code;
-                                }), "the stream lift \\(\\mathrm{map}\\) is the identity on a scalar, so a mapping of an instruction unwraps: \\(\\mathrm{map}(f) \\leadsto f\\), which also collapses \\(\\mathrm{map}(\\mathrm{map}(f)) \\leadsto \\mathrm{map}(f)\\)"),
+                                code -> PlanInterpreter.lower(MAP_UNWRAP_PLAN, code)), "the stream lift \\(\\mathrm{map}\\) is the identity on a scalar, so a mapping of an instruction unwraps: \\(\\mathrm{map}(f) \\leadsto f\\), which also collapses \\(\\mathrm{map}(\\mathrm{map}(f)) \\leadsto \\mathrm{map}(f)\\)"),
 
                         // (3b) derivation contraction: fold a derived instruction's primitive composition back
                         // to the derived operation -- plus . neg |-> minus, mult . inv |-> div.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("derivation_contraction"),
-                                code -> {
-                                    final List<Derivation> derivations = LawTable.derivations();
-                                    if (derivations.isEmpty())
-                                        return code;
-                                    List<Inst> out = code.insts();
-                                    for (final Derivation d : derivations)
-                                        out = contract(out, d);
-                                    return code(out);
-                                }), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
+                                code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
 
                         // (6) the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
                         // (a+b)·c = (a·c + b·c)·c for a monoidic, commutative reducer. The seed bulk is factored
@@ -398,333 +407,5 @@ public class catRewrite {
      */
     private static fURI rewriteTID(final String name) {
         return CAT_ISA_TID.extend(INST).extend(REWRITE).extend(name);
-    }
-
-    /**
-     * The op address of a type's declared additive structure — the law-indexed witness: the first theory
-     * instance of {@code object[T].law} that carries an additive role — the {@code add} role of a ring/field/rig,
-     * or the {@code op} role of an {@code add_*} monoid/group (an {@code op} on some other instance names that
-     * instance's own operation, so the name gate keeps a {@code mult_monoid} from masquerading as the add).
-     * The role is read with {@code atDirect} (no call evaluation; {@code rec.has} reports false on law keys
-     * that still resolve, so the noobj answer is the presence test), and the auto pointer is unwrapped with
-     * {@code getPointer} without resolving it. For the code ring this answers the branch address, for the
-     * int ring the plus address; a type declaring no additive structure answers null, which degrades the
-     * normalizers to the identity.
-     */
-    private static fURI additiveWitness(final Type type) {
-        for (final Map.Entry<Obj, Obj> instance : TheoryHelper.instances(type).jvm().entrySet()) {
-            if (!instance.getValue().isRec())
-                continue;
-            final Rec block = instance.getValue().asRec();
-            final String name = instance.getKey().isUri() ? instance.getKey().uriValue().name() : null;
-            final fURI address = null != name && name.startsWith("add_")
-                    ? roleAddress(block, OP)
-                    : roleAddress(block, ADD);
-            if (null != address)
-                return address;
-        }
-        return null;
-    }
-
-    /**
-     * The op address a law block's role binds, or null when the role is absent or binds a literal: the value
-     * arrives as a {@code !*} auto pointer naming its target in its own argument, so the address is read
-     * without resolving — the target may be an as-yet-unresolved registration.
-     */
-    private static fURI roleAddress(final Rec block, final String role) {
-        final Obj holder = block.atDirect(uri(role));
-        if (holder.isNoObj())
-            return null;
-        if (holder.isUri())
-            return holder.uriValue().basePath();
-        return Obj.Helper.getPointer(holder).map(fURI::basePath).orElse(null);
-    }
-
-    /**
-     * The repeated-term normalizer, law-indexed: every occurrence of {@code op} — the algebra's additive op —
-     * with two or more like terms consolidates them into the member that first appeared, carrying the summed
-     * multiplicities as the coefficient. The body is inst-agnostic: for the code ring {@code op} is
-     * {@code branch} (the warm-up), for the int ring the same body would point at {@code plus}. A null witness
-     * — the algebra declares no additive op — is the identity.
-     */
-    private static Code repeatedTerms(final fURI op, final Code code) {
-        if (null == op)
-            return code;
-        boolean changed = false;
-        final List<Inst> out = new ArrayList<>(code.insts().size());
-        for (final Inst inst : code.insts()) {
-            if (!op.equals(inst.tid().basePath()) || 2 > inst.args().count()) {
-                out.add(inst);
-                continue;
-            }
-            final List<Obj> reps = new ArrayList<>();
-            final List<cInt> sums = new ArrayList<>();
-            for (final Obj arg : inst.args().elements().toList()) {
-                int slot = -1;
-                for (int j = 0; j < reps.size(); j++) {
-                    if (sameMember(reps.get(j), arg)) {
-                        slot = j;
-                        break;
-                    }
-                }
-                if (-1 == slot) {
-                    reps.add(arg);
-                    sums.add(multiplicity(arg));
-                } else
-                    sums.set(slot, sums.get(slot).plus(multiplicity(arg)));
-            }
-            if (reps.size() < inst.args().count()) {
-                changed = true;
-                final List<Obj> merged = new ArrayList<>(reps.size());
-                for (int i = 0; i < reps.size(); i++)
-                    merged.add(cInt.ONE().equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
-                out.add(inst.args(lst(merged)));
-            } else
-                out.add(inst);
-        }
-        return changed ? code(out) : code;
-    }
-
-    /**
-     * The one-term normalizer, law-indexed: an occurrence of {@code op} — the algebra's additive op — whose
-     * members have come to one is that member, added to nothing, so the frame unwraps and the frame's own
-     * coefficient folds into the member ({@code branch{c}(b) |-> b{c}}); a call member splices in by its
-     * insts, a non-call member lifts to the map that emits it — stream-transparent either way. A null witness
-     * is the identity, as in {@link #repeatedTerms}.
-     */
-    private static Code oneTerm(final fURI op, final Code code) {
-        if (null == op)
-            return code;
-        boolean changed = false;
-        final List<Inst> out = new ArrayList<>(code.insts().size());
-        for (final Inst inst : code.insts()) {
-            if (op.equals(inst.tid().basePath()) && 1 == inst.args().count()) {
-                final Obj member = absorb(inst.arg(0), inst.c());
-                changed = true;
-                if (member.isCall())
-                    out.addAll(member.asCall().insts());
-                else
-                    out.add((Inst) map_(member).tryToInst());
-            } else
-                out.add(inst);
-        }
-        return changed ? code(out) : code;
-    }
-
-    /**
-     * The branch's own coefficient folded into its single member — a branch of coefficient c applied to a
-     * single member multiplies that member's multiplicity by c, so the frame unwraps and the member comes out
-     * carrying it. A code member anchors the coefficient at its head inst (the one place the resolution
-     * pipeline preserves it); an inst or a non-call member takes the multiplication itself.
-     */
-    private static Obj absorb(final Obj member, final cInt c) {
-        if (cInt.ONE().equals(c))
-            return member;
-        if (member.isCode()) {
-            final List<Inst> insts = new ArrayList<>(member.asCode().insts());
-            insts.set(0, (Inst) insts.get(0).c(o -> o.mult(c)));
-            return code(insts);
-        }
-        return member.c(o -> o.mult(c));
-    }
-
-    /**
-     * Two branch members being the same additive element — {@link #same(Inst, Inst)} with the refined endpoints
-     * compared too, minus the positional vid (parsed siblings share everything but their own address, which is why
-     * a raw equals cannot group them). A code member is the same when its instruction list is pairwise the same.
-     * A non-call member is the same when it is coefficient-less equal ({@code 10} ≡ {@code 10{2}} as additive
-     * elements — they are the same term at different multiplicities). The coefficient is deliberately OUT of the
-     * test everywhere in the test — it is the multiplicity the law sums, and comparing it would leave the like
-     * terms uncollapsed (the {@code {3}10} + {@code {2}10} case must sum to {@code {5}10}, not refuse to match).
-     */
-    private static boolean sameMember(final Obj a, final Obj b) {
-        if (a.isInst() && b.isInst()) {
-            final Inst ai = a.asInst();
-            final Inst bi = b.asInst();
-            return same(ai, bi)
-                    && ai.dom().equals(bi.dom())
-                    && ai.rng().equals(bi.rng())
-                    && Objects.equals(ai.f(), bi.f());
-        }
-        if (a.isCode() && b.isCode()) {
-            final List<Inst> ai = a.asCode().insts();
-            final List<Inst> bi = b.asCode().insts();
-            if (ai.size() != bi.size())
-                return false;
-            for (int i = 0; i < ai.size(); i++)
-                if (!sameMember(ai.get(i), bi.get(i)))
-                    return false;
-            return true;
-        }
-        if (a instanceof Inst || b instanceof Inst || a instanceof Code || b instanceof Code)
-            return false;
-        return a.clessEquals(b);
-    }
-
-    /**
-     * The multiplicity an additive member contributes — the coefficient the law sums. For an inst member it
-     * is the inst's own coefficient ({@code plus{2}(2)}); for a code member it rides the chain's first inst
-     * ({@code map{2}(2).neg()}), the form the language's own coefficient-mark produces — the code's own tid is
-     * re-forged in resolution, so a coefficient there would be dropped.
-     */
-    private static cInt multiplicity(final Obj member) {
-        if (member.isCode() && !member.asCode().insts().isEmpty())
-            return member.asCode().insts().getFirst().c();
-        return member.c();
-    }
-
-    /**
-     * The member carrying its summed coefficient, at the anchor {@link #multiplicity(Obj)} reads it from —
-     * the inst's tid, or the head of the chain for a code (the first step's coefficient propagates the stream
-     * multiplicity, so the collapse is stream-transparent).
-     */
-    private static Obj coeff(final Obj member, final cInt c) {
-        if (member.isCode() && !member.asCode().insts().isEmpty()) {
-            final List<Inst> insts = member.asCode().insts();
-            final List<Inst> headed = new ArrayList<>(insts);
-            headed.set(0, insts.getFirst().c(c));
-            return code(headed);
-        }
-        return member.c(c);
-    }
-
-    /**
-     * Collapse adjacent duplicate pairs to a single instance — the equation {@code f·f ↦ f} shared by the
-     * idempotent law and by a monoidic fold (a reduction of one element is that element).
-     */
-    private static List<Inst> collapseDuplicates(final List<Inst> insts, final BiPredicate<Inst, Inst> match) {
-        final List<Inst> result = new ArrayList<>();
-        int i = 0;
-        while (i < insts.size()) {
-            if (i + 1 < insts.size() && match.test(insts.get(i), insts.get(i + 1))) {
-                result.add(insts.get(i));
-                i += 2; // f·f => f — keep one
-            } else
-                result.add(insts.get(i++));
-        }
-        return result;
-    }
-
-    /**
-     * A fold: the declared n-tid coefficient shape gathers many to one ({@code reducer} or {@code join}) and
-     * the operation is declared {@code monoidic} — the shape a repeated fold is idempotent on. The chain
-     * instruction is retyped with its declared address so the shape is legible before resolution.
-     */
-    private static boolean isFold(final Inst inst, final Type carrier) {
-        final LawTable.Declared declared = LawTable.declared(inst.tid().basePath(), carrier);
-        if (null == declared)
-            return false;
-        final Inst.Form form = Inst.Form.of(inst.tid(declared.tid()));
-        return (Inst.Form.reducer == form || Inst.Form.join == form) && declares(declared, Law.monoidic);
-    }
-
-    /**
-     * Compose two adjacent comparisons of the same ordered type to the stricter single bound — the poset law
-     * {@code x > a ∧ x > b ⇔ x > max(a, b)}. Null when the pair is not composable (not declared
-     * {@code poset}, different ops, or non-literal operands), so the caller keeps the original pair.
-     */
-    private static Inst posetCompose(final Inst a, final Inst b, final Type carrier) {
-        if (!sameOp(a, b) || !declares(a, carrier, Law.poset) || 1 != a.args().count() || 1 != b.args().count())
-            return null;
-        final String op = a.tid().basePath().name();
-        final boolean upper = op.equals(GT_INST_TID.name()) || op.equals(GTE_INST_TID.name());
-        final boolean lower = op.equals(LT_INST_TID.name()) || op.equals(LTE_INST_TID.name());
-        if (!upper && !lower)
-            return null;
-        final Obj x = a.arg(0);
-        final Obj y = b.arg(0);
-        final Obj bound;
-        if (x.isInt() && y.isInt())
-            bound = jnt(upper ? Math.max(x.asInt().intValue(), y.asInt().intValue()) : Math.min(x.asInt().intValue(), y.asInt().intValue()));
-        else if (x.isReal() && y.isReal())
-            bound = real(upper ? Math.max(x.asReal().realValue(), y.asReal().realValue()) : Math.min(x.asReal().realValue(), y.asReal().realValue()));
-        else if (x.isStr() && y.isStr()) {
-            final int comparison = x.asStr().strValue().compareTo(y.asStr().strValue());
-            bound = (upper ? 0 <= comparison : 0 >= comparison) ? x : y;
-        } else
-            return null;
-        return a.args(lst(bound));
-    }
-
-    /**
-     * Adjacent inverse pair with equal operands — the group law {@code f·f⁻¹ = 1}. The pairing is the edge's
-     * declared {@code inverse} (either direction), so it holds for plus/minus, mult/div, and every declared
-     * inverse pair, and only when the operands cancel exactly.
-     */
-    private static boolean inversePair(final Inst a, final Inst b, final Type carrier) {
-        return isInverseOf(a, b, carrier) || isInverseOf(b, a, carrier);
-    }
-
-    /**
-     * Whether {@code b} is the declared inverse of {@code a} with equal operands. Endpoints are unavailable
-     * before resolution, so the operand type that selected the declaration is the type guard.
-     */
-    private static boolean isInverseOf(final Inst a, final Inst b, final Type carrier) {
-        final LawTable.Declared declared = LawTable.declared(a.tid().basePath(), carrier);
-        return null != declared && null != declared.entry().inverse()
-                && b.tid().basePath().equals(declared.entry().inverse().basePath())
-                && a.args().equals(b.args());
-    }
-
-    /**
-     * Match a generic pattern against a source, binding the generic fURIs ({@code A}, {@code B}, …) as they are
-     * met. A generic uri matches anything (binding it); an inst matches by tid and recurses into its args.
-     */
-    private static boolean matchGenerics(final Obj pattern, final Obj source, final Map<fURI, Obj> bindings) {
-        if (pattern.isUri() && pattern.uriValue().isGeneric()) {
-            final fURI key = pattern.uriValue();
-            final Obj prior = bindings.get(key);
-            if (null == prior) {
-                bindings.put(key, source);
-                return true;
-            }
-            return prior.equals(source);
-        }
-        if (pattern.isInst() && source.isInst()) {
-            final Inst p = pattern.asInst();
-            final Inst s = source.asInst();
-            if (!s.tid().test(p.tid()))
-                return false;
-            if (p.args().count() != s.args().count())
-                return false;
-            for (int i = 0; i < p.args().count(); i++)
-                if (!matchGenerics(p.arg(i), s.arg(i), bindings))
-                    return false;
-            return true;
-        }
-        if (pattern.isCode() && source.isCode()) {
-            final List<Inst> ps = pattern.asCode().insts();
-            final List<Inst> ss = source.asCode().insts();
-            if (ps.size() != ss.size())
-                return false;
-            for (int i = 0; i < ps.size(); i++)
-                if (!matchGenerics(ps.get(i), ss.get(i), bindings))
-                    return false;
-            return true;
-        }
-        // a structural pattern (inst/code) never matches a non-structural source — falling through to
-        // source.test(pattern) here would let a scalar pass a nested-composition pattern (e.g. the `2`
-        // of plus(2) "matching" the map(B).neg() arg of the minus derivation)
-        if (pattern.isInst() || pattern.isCode() || source.isInst() || source.isCode())
-            return false;
-        return source.test(pattern);
-    }
-
-    /**
-     * Contract the primitive composition of a derivation back to its derived instruction — {@code mult·inv ↦ div}.
-     */
-    private static List<Inst> contract(final List<Inst> insts, final Derivation d) {
-        final List<Inst> out = new ArrayList<>();
-        for (final Inst inst : insts) {
-            final Map<fURI, Obj> bindings = new HashMap<>();
-            final Inst rhs = d.rhs().insts().getLast();
-            if (matchGenerics(rhs, inst, bindings)) {
-                final Inst lhs = d.lhs().insts().getLast();
-                out.add((Inst) Inst.Helper.substituteGenerics(lhs, bindings));
-            } else {
-                out.add(inst);
-            }
-        }
-        return out;
     }
 }

@@ -267,6 +267,13 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * listener retracts it with {@link #disconnect(fURI)} when the socket closes.
      */
     default Obj accept(final fURI remote, final Obj session) {
+        // SELF-LOOP: a loopback dialer is THIS machine. The outbound half of the dial — the ws_client
+        // constructor's index — already records the peer (keyed by OUR authority, with a dial-back host
+        // and an initiate transport). Minting a second peer keyed by the dialer's ephemeral source port
+        // would leave one socket as two peers: the twin is anonymous, undialable, and a fan-out target
+        // that no one answers. Decline the co-mount; the dialer records the peer.
+        if (Helper.isLoopbackHost(remote.host()))
+            return noobj();
         // IDENTITY RIDES THE DIAL: ws://host:port/mtron?name=builder2 — the ?name parameter on
         // the connection uri IS the identity exchange (no announce message, no anonymous state to
         // upgrade), so a server that exposes the full connection uri mints a NAMED peer on accept.

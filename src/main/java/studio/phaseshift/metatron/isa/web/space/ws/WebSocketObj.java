@@ -32,11 +32,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -243,36 +239,36 @@ public interface WebSocketObj extends Rec, Closeable {
         final Waiter waiter = Waiter.of();
         final Map<fURI, Waiter> waiters = WAITERS.computeIfAbsent(this, k -> new ConcurrentHashMap<>());
         waiters.put(tag, waiter);
-        this.logger().debug("WIRE awaiting tag=%s minted=%s deadline=%s outstanding=%s on %s", tag, minted, deadlineMs, waiters.size(), peer);
+        this.logger().debug("awaiting: tag=%s minted=%s deadline=%s outstanding=%s on %s", tag, minted, deadlineMs, waiters.size(), peer);
         return FutureObj.async(instLambda(outbound -> {
-            try {
-                if (!this.awaitOpen(deadlineMs)) {
-                    this.logger().warn("WIRE NOT CONNECTED tag=%s on %s -- nothing sent (%s)", tag, peer, this.socketState());
-                    return fail("socket to %s is not connected", peer);
-                }
-                this.send(outbound);
-                // send() swallows its own failure, so the socket is re-checked: a frame that never left must
-                // fail the trip now rather than at the far end of the deadline
-                final WebSocket live = this.getWebSocket();
-                if (null == live || !live.isOpen()) {
-                    this.logger().warn("WIRE SEND FAILED tag=%s on %s -- socket closed mid-send", tag, peer);
-                    return fail("send to %s failed: socket closed", peer);
-                }
-                this.logger().debug("WIRE sent tag=%s on %s, awaiting latch", tag, peer);
-                if (!waiter.latch().await(deadlineMs, TimeUnit.MILLISECONDS)) {
-                    this.logger().warn("WIRE TIMEOUT tag=%s on %s after %s ms (outstanding=%s)", tag, peer, deadlineMs, waiters.size());
-                    return fail("no reply from %s within %s ms", peer, deadlineMs);
-                }
-                this.logger().debug("WIRE filled tag=%s on %s", tag, peer);
-            } catch (final InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return fail("interrupted awaiting a reply from %s", peer);
-            } finally {
-                waiters.remove(tag);        // a slot outlives neither its deadline nor its reply
-            }
-            final Obj reply = waiter.obj().get();
-            return minted ? reply.clone().selfVID(null) : reply;
-        }), payload)
+                    try {
+                        if (!this.awaitOpen(deadlineMs)) {
+                            this.logger().warn("not connected: tag=%s on %s -- nothing sent (%s)", tag, peer, this.socketState());
+                            return fail("socket to %s is not connected", peer);
+                        }
+                        this.send(outbound);
+                        // send() swallows its own failure, so the socket is re-checked: a frame that never left must
+                        // fail the trip now rather than at the far end of the deadline
+                        final WebSocket live = this.getWebSocket();
+                        if (null == live || !live.isOpen()) {
+                            this.logger().warn("unable to send: tag=%s on %s -- socket closed mid-send", tag, peer);
+                            return fail("send to %s failed: socket closed", peer);
+                        }
+                        this.logger().debug("sent tag=%s on %s, awaiting latch", tag, peer);
+                        if (!waiter.latch().await(deadlineMs, TimeUnit.MILLISECONDS)) {
+                            this.logger().warn("connection timeout: tag=%s on %s after %s ms (outstanding=%s)", tag, peer, deadlineMs, waiters.size());
+                            return fail("no reply from %s within %s ms", peer, deadlineMs);
+                        }
+                        this.logger().debug("filled tag=%s on %s", tag, peer);
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return fail("interrupted awaiting a reply from %s", peer);
+                    } finally {
+                        waiters.remove(tag);        // a slot outlives neither its deadline nor its reply
+                    }
+                    final Obj reply = waiter.obj().get();
+                    return minted ? reply.clone().selfVID(null) : reply;
+                }), payload)
                 // the future gives up AFTER the inner wait, so the deadline is reported as the fail the round
                 // trip raised rather than as a bare inspection timeout
                 .timeout((int) Math.min(Integer.MAX_VALUE, deadlineMs + DEFAULT_SEND_RECV_SLACK_MS));

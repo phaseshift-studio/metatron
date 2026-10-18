@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.Tokens.*;
  * can carry, introspectable and writable in mtron rather than Java).
  *
  * <p>A Plan is itself the {@code rec}: a local law-driven plan is {@code [name => uri(name), law => uri(law)]},
- * a distribution plan is {@code [name => uri(name), cut => lst(cutRecs), route => lst(routeRecs)]}.
+ * a distribution plan is {@code [name => uri(name), cut => cutRec, route => lst(routeRecs)]}.
  * The concrete plan's tid is the {@code /m/math/cat/inst/rewrite/<name>_plan} refinement of the generic
  * {@code plan::T}. Every accessor reads {@code this.at(key)}; there are no Java fields.
  *
@@ -53,9 +53,9 @@ public class Plan extends MRec {
         return this.at(NAME).uriValue().name();
     }
 
-    public List<Cut> cuts() {
-        final Obj cuts = this.at(CUT);
-        return cuts.isNoObj() ? List.of() : cuts.asLst().elements().map(o -> Cut.of(o.asRec())).toList();
+    public Cut cut() {
+        final Obj cut = this.at(CUT);
+        return cut.isNoObj() ? null : Cut.of(cut.asRec());
     }
 
     public List<Route> routes() {

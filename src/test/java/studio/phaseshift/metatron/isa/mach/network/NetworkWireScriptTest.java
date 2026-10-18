@@ -65,10 +65,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  *
  * <pre>
  *   [WS_SERVER a]          start a wsSpace on a fresh port with the /mtron route; binds {{a}} = ws://localhost:port
- *   [AWAIT_PEERS n]        wait (max 3s) until this machine holds exactly n peers — the inbound co-mount is async
- *   [AWAIT_NAMED name]     wait (max 3s) until an inbound peer carries name — identity rides the dial (?name)
+ *   [AWAIT_PEERS n]        wait (max 3s) until this machine holds exactly n peers
  *   [PROBE_PEERS]          /m/networkProbe/peers  = how many peers the machine holds
- *   [PROBE_NAMED name]     /m/networkProbe/named  = 1 iff some peer is named name
  *   [PROBE_Q_LEAK]         /m/networkProbe/qleak  = 1 iff any roster KEY carries a ?q processor (must stay 0)
  *   [NETWORK_CLEAR]        disconnect every peer and close every script-started server
  * </pre>
@@ -116,13 +114,10 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
                 "WS_SERVER", args -> this.bind(args[0], this.startServer(args[0])),
                 "AWAIT_PEERS", args -> this.await("peers == " + args[0],
                         () -> this.network().peers().elements().count() == Long.parseLong(args[0])),
-                "AWAIT_NAMED", args -> this.await("a peer named " + args[0],
-                        () -> this.hasNamed(args[0])),
                 "PROBE_PEERS", args -> {
                     LOG.debug("probe peers net=%s count=%s keys=%s", System.identityHashCode(this.network()), this.network().peers().elements().count(), this.network().peers().keys().toList());
                     this.probe("peers", jnt(this.network().peers().elements().count()));
                 },
-                "PROBE_NAMED", args -> this.probe("named", jnt(this.hasNamed(args[0]) ? 1 : 0)),
                 "PROBE_Q_LEAK", args -> this.probe("qleak", jnt(this.network().peers().keys()
                         .map(Obj::uriValue).anyMatch(key -> !key.qMap().isEmpty()) ? 1 : 0)),
                 // THE SHAPE AUDIT: walk every entry of the peer map and verify the peer::T contract —
@@ -148,8 +143,8 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     private String auditPeerShape() {
         final java.util.List<studio.phaseshift.metatron.isa.m.type.Rel> entries =
                 this.network().peers().elements().toList();
-        if (entries.size() < 3)
-            return "expected 3+ peers, found " + entries.size();
+        if (entries.size() < 2)
+            return "expected 2+ peers, found " + entries.size();
         for (final studio.phaseshift.metatron.isa.m.type.Rel entry : entries) {
             final studio.phaseshift.metatron.isa.m.type.Obj key = entry.first();
             final studio.phaseshift.metatron.isa.m.type.Obj peer = entry.second();
@@ -246,20 +241,14 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
         this.servers.clear();
     }
 
-    private boolean hasNamed(final String name) {
-        return this.network().peers().values().filter(Obj::isRec).anyMatch(peer -> {
-            final Obj named = peer.asRec().at(uri(NAME));
-            return named.isStr() && name.equals(named.strValue());
-        });
-    }
-
     private void probe(final String name, final Obj value) {
         Machine.write(PROBE.extend(name), value);
     }
 
     /**
-     * The inbound co-mount lands on the server\u0027s worker thread, so a script line that asserts on it must wait
-     * for it — bounded, and failing with the condition\u0027s own words rather than a timeout stack.
+     * A bounded wait for a peer-count condition — a script line may assert on a count the connection\u0027s
+     * async close/reach settlement is still catching up to, so it waits rather than racing, and fails with
+     * the condition\u0027s own words rather than a timeout stack.
      */
     private void await(final String what, final java.util.function.BooleanSupplier condition) throws InterruptedException {
         final long deadline = System.currentTimeMillis() + 3000;
@@ -295,8 +284,8 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     /**
      * THE WIRE: the loop equalities carried over a real websocket — read-through equals the far side\u0027s local
      * read, write-through lands at the far side — plus the two facts the connection itself establishes: the
-     * ?name identity names the inbound co-mount, and connect is ensure-peered (a second dial of the same
-     * service answers the existing peer, never a second socket).
+     * ?name processor is spent (never leaked into a key), and connect is ensure-peered (a second dial
+     * of the same service answers the existing peer, never a second socket).
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
@@ -307,24 +296,21 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "*<{{a}}/t/wire/x> % 42                          [-- read through the wire == the far side local read --]",
             "[STATE] <{{a}}/t/wire/y> -> 7",
             "*/t/wire/y % 7                                   [-- write through the wire lands at the far side --]",
-            "[AWAIT_PEERS 2]                                     [-- the dialed peer + the inbound co-mount --]",
-            "[AWAIT_NAMED scripted]",
-            "[PROBE_NAMED scripted]",
-            "*/m/networkProbe/named % 1                      [-- ?name on the dial named the inbound peer --]",
+            "[AWAIT_PEERS 1]                                     [-- the sole outbound peer: the loopback listener declines its co-mount --]",
             "[PROBE_Q_LEAK]",
             "*/m/networkProbe/qleak % 0                      [-- the processor was spent, never leaked into a key --]",
             "[CONNECT {{a}}/mtron {{ws_client}}]",
             "[PROBE_PEERS]",
-            "*/m/networkProbe/peers % 2                      [-- ensure-peered: the re-dial answered the existing peer --]",
+            "*/m/networkProbe/peers % 1                      [-- ensure-peered: the re-dial answered the existing peer --]",
             "[DISCONNECT {{a}}]",
-            "[AWAIT_PEERS 0]                                     [-- hang-up retracts the dial and the far side retracts the co-mount --]"
+            "[AWAIT_PEERS 0]                                     [-- hang-up retracts the dial --]"
     })
     public void testWsWire() {
     }
 
     /**
-     * TWO SERVERS, ONE MACHINE: each dial mints its own peer and its own inbound co-mount, the four reaches are
-     * independent, and retraction is per-service — closing one leaves the other\u0027s pair standing.
+     * TWO SERVERS, ONE MACHINE: each dial mints its own peer, the reaches are independent, and retraction is
+     * per-service — closing one leaves the other\u0027s peer standing.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
@@ -333,16 +319,12 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "[WS_SERVER b]",
             "[CONNECT {{a}}/mtron?name=alpha {{ws_client}}]",
             "[CONNECT {{b}}/mtron?name=beta {{ws_client}}]",
-            "[AWAIT_PEERS 4]                                     [-- two dialed + two inbound --]",
-            "[AWAIT_NAMED alpha]",
-            "[AWAIT_NAMED beta]",
+            "[AWAIT_PEERS 2]                                     [-- two dialed --]",
             "[STATE] </t/wire/two> -> 11",
             "*<{{a}}/t/wire/two> % 11",
             "*<{{b}}/t/wire/two> % 11                        [-- both wires reach the same far-side store --]",
             "[DISCONNECT {{a}}]",
-            "[AWAIT_PEERS 2]                                     [-- retraction is per-service: b\u0027s pair stands --]",
-            "[PROBE_NAMED beta]",
-            "*/m/networkProbe/named % 1"
+            "[AWAIT_PEERS 1]                                     [-- retraction is per-service: b\u0027s peer stands --]"
     })
     public void testTwoServers() {
     }
@@ -402,33 +384,24 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     }
 
     /**
-     * IDENTITY AND ALIASING AT THE BOUNDARY: localhost and 127.0.0.1 are the SAME service (ensure-peered
-     * collapses loopback aliases — one socket, not two); ensure-peered also means a second dial\u0027s
-     * ?name is never spoken (the socket already exists, so the first identity stands); and a
-     * disconnect-reconnect cycle mints a FRESH reach that works.
+     * ALIASING AT THE BOUNDARY: localhost and 127.0.0.1 are the SAME service (ensure-peered collapses
+     * loopback aliases — one socket, not two), and a disconnect-reconnect cycle mints a FRESH reach that works.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[CONNECT {{a}}/mtron?name=first {{ws_client}}]",
-            "[AWAIT_NAMED first]",
+            "[CONNECT {{a}}/mtron {{ws_client}}]",
             "[CONNECT {{a_ip}}/mtron {{ws_client}}]",
             "[PROBE_PEERS]",
-            "*/m/networkProbe/peers % 2                       [-- 127.0.0.1 IS localhost: the alias collapsed to the existing peer --]",
-            "[CONNECT {{a}}/mtron?name=second {{ws_client}}]",
-            "[PROBE_NAMED second]",
-            "*/m/networkProbe/named % 0                       [-- ensure-peered: the second dial never spoke, so its identity never crossed --]",
-            "[PROBE_NAMED first]",
-            "*/m/networkProbe/named % 1                       [-- the first identity stands --]",
+            "*/m/networkProbe/peers % 1                       [-- 127.0.0.1 IS localhost: the alias collapsed to the existing peer --]",
             "[DISCONNECT {{a}}]",
             "[AWAIT_PEERS 0]",
-            "[CONNECT {{a}}/mtron?name=reborn {{ws_client}}]",
+            "[CONNECT {{a}}/mtron {{ws_client}}]",
             "[STATE] </t/wire/again> -> 7",
-            "*<{{a}}/t/wire/again> % 7                        [-- a reconnect after hang-up is a fresh, working reach --]",
-            "[AWAIT_NAMED reborn]                                 [-- with a fresh identity --]"
+            "*<{{a}}/t/wire/again> % 7                        [-- a reconnect after hang-up is a fresh, working reach --]"
     })
-    public void testIdentityAndAliasing() {
+    public void testAliasingAtTheBoundary() {
     }
 
 
@@ -440,9 +413,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "[CONNECT loop://self]",
             "[CONNECT {{a}}/mtron?name=alpha {{ws_client}}]",
             "[CONNECT {{b}}/mtron?name=beta {{ws_client}}]",
-            "[AWAIT_PEERS 5]                                     [-- loop + two dialed + two inbound --]",
-            "[AWAIT_NAMED alpha]",
-            "[AWAIT_NAMED beta]",
+            "[AWAIT_PEERS 3]                                     [-- loop + two dialed --]",
             "[PROBE_SHAPE]",
             "*/m/networkProbe/shape % \u0027ok\u0027              [-- every entry honors the peer::T contract --]",
             "[DISCONNECT loop://self]",
@@ -463,8 +434,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
             "[STATE] ws_client::[pattern=><{{a}}/mtron?name=ctor>]",
-            "[AWAIT_PEERS 2]                                     [-- the ctor indexed itself: dialed + inbound --]",
-            "[AWAIT_NAMED ctor]                                  [-- identity rode the pattern --]",
+            "[AWAIT_PEERS 1]                                     [-- the ctor indexed itself: the one outbound peer --]",
             "[STATE] </t/wire/c> -> 42",
             "*<{{a}}/t/wire/c> % 42                          [-- and the self-indexed reach carries reads --]"
     })
