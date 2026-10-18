@@ -33,10 +33,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Span — an induced region of the code chain, named <em>relative to a {@link Cut}</em> rather than by a
- * free string: {@code before/at/after} one cut, {@code between} two, or the {@code seed} (the chain's
- * initial inst). The cut is the primitive; the spans are what it induces — {@code law_shard} is the one-cut
- * case, a pipeline is several cuts with {@code between} spans.
+ * Span — an induced region of the code chain, named by {@link Kind} relative to the plan's single cut:
+ * {@code before/at/after} the cut, or the {@code seed} (the chain's initial inst). The cut is the primitive;
+ * the spans are the regions it induces — {@code law_shard} is the one-cut case.
  *
  * <p>A span carries the <em>atom obligation</em> its shape demands, which {@code create()} and the rewriter
  * check against the matched insts: {@code PRE} is the floatable run (Thm 5/6, {@code F_m ∪ F_f ∪ F_fm}), so
@@ -44,7 +43,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * the seed's bulk is partitioned instead) and {@link #partition()} (factor this span's data across the
  * route's fan-out) are what turn a local plan into a distributed one.
  *
- * <p>A Span is a {@code rec} — {@code [span => uri(kind), cut => lst(cutRecs), flags => lst(uri(flag))]}.
+ * <p>A Span is a {@code rec} — {@code [span => uri(kind), flags => lst(uri(flag))]}, the region named by
+ * {@code kind} relative to the plan's cut.
  * The three booleans are encoded as a {@code flags} list of uri markers ({@code floatable}/{@code no_seed}/
  * {@code partition}) so the rec needs no per-boolean key. Every accessor reads {@code this.at(key)}; there
  * are no Java fields.
@@ -73,31 +73,25 @@ public class Span extends MRec {
         super(jvm, tid, vid);
     }
 
-    public static Span before(final Cut cut) {
-        return of(Kind.PRE, List.of(cut));
+    public static Span before() {
+        return of(Kind.PRE);
     }
 
-    public static Span at(final Cut cut) {
-        return of(Kind.AT, List.of(cut));
+    public static Span at() {
+        return of(Kind.AT);
     }
 
-    public static Span after(final Cut cut) {
-        return of(Kind.POST, List.of(cut));
-    }
-
-    public static Span between(final Cut a, final Cut b) {
-        return of(Kind.BETWEEN, List.of(a, b));
+    public static Span after() {
+        return of(Kind.POST);
     }
 
     public static Span seed() {
-        return of(Kind.SEED, List.of());
+        return of(Kind.SEED);
     }
 
-    private static Span of(final Kind kind, final List<Cut> cuts) {
+    private static Span of(final Kind kind) {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(SPAN), uri(kind.name().toLowerCase()));
-        if (!cuts.isEmpty())
-            jvm.put(uri(CUT), lst(cuts.stream().map(c -> (Obj) c).toList()));
         return new Span(jvm, REC_TID, null);
     }
 
@@ -134,11 +128,6 @@ public class Span extends MRec {
 
     public Kind kind() {
         return Kind.valueOf(this.at(SPAN).uriValue().name().toUpperCase());
-    }
-
-    public List<Cut> cuts() {
-        final Obj cuts = this.at(CUT);
-        return cuts.isNoObj() ? List.of() : cuts.asLst().elements().map(o -> Cut.of(o.asRec())).toList();
     }
 
     public boolean isFloatable() {

@@ -23,17 +23,12 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PLAN_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -44,9 +39,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * <pre>{@code
  * final Cut  cut  = Cut.reducer(Law.monoidic, Law.commutative);
- * final Span pre  = Span.before(cut).floatable();
- * final Span at   = Span.at(cut);
- * final Span post = Span.after(cut);
+ * final Span pre  = Span.before().floatable();
+ * final Span at   = Span.at();
+ * final Span post = Span.after();
  *
  * final Plan shard = PlanBuilder.plan("shard")
  *         .cut(cut)
@@ -66,7 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public final class PlanBuilder {
 
     private final String name;
-    private final List<Cut> cuts = new ArrayList<>();
+    private Cut cut = null;
     private final List<Route> routes = new ArrayList<>();
 
     private PlanBuilder(final String name) {
@@ -78,7 +73,7 @@ public final class PlanBuilder {
     }
 
     public PlanBuilder cut(final Cut cut) {
-        this.cuts.add(cut);
+        this.cut = cut;
         return this;
     }
 
@@ -96,56 +91,28 @@ public final class PlanBuilder {
     public Plan create() {
         if (null == this.name || this.name.isBlank())
             throw MTronException.of("plan name is required");
-        if (this.cuts.isEmpty())
-            throw MTronException.of("at least one cut is required");
+        if (null == this.cut)
+            throw MTronException.of("a cut is required");
         if (this.routes.isEmpty())
             throw MTronException.of("at least one route is required");
         this.validateDistributedObligations();
-        this.resolveCutIndexes();
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(NAME), uri(this.name));
-        jvm.put(uri(CUT), lst(this.cuts.stream().map(c -> (Obj) c).toList()));
+        jvm.put(uri(CUT), this.cut);
         jvm.put(uri(ROUTE), lst(this.routes.stream().map(r -> (Obj) r).toList()));
-        // the concrete plan's tid — the /m/math/cat/inst/rewrite/<name>_plan refinement of plan::T
-        //plan.selfTID(CAT_ISA_TID.extend(INST).extend(REWRITE).extend(this.name + "_plan"));
         return new Plan(jvm, PLAN_TID, null);
     }
 
-    /**
-     * Resolve each span's inline cut recs to INDEXES into the plan's {@code cut} list: the plan declares
-     * each cut once, and every span references it by position instead of repeating a copy. The plan stays
-     * as small as its shape allows.
-     */
-    private void resolveCutIndexes() {
-        final Set<Obj> resolved = Collections.newSetFromMap(new IdentityHashMap<>());
-        for (final Route route : this.routes) {
-            final Obj spans = route.at(SPAN);
-            if (spans.isNoObj())
-                continue;
-            for (final Obj spanObj : spans.asLst().elements().toList()) {
-                if (!resolved.add(spanObj))
-                    continue;
-                final List<Cut> cuts = Span.of(spanObj.asRec()).cuts();
-                if (cuts.isEmpty())
-                    continue;
-                final List<Obj> indexes = cuts.stream().map(c -> (Obj) jnt(this.cuts.indexOf(c))).toList();
-                spanObj.asRec().at(uri(CUT), lst(indexes), MUTABLE);
-            }
-        }
-    }
-
     private void validateDistributedObligations() {
-        for (final Cut cut : this.cuts) {
-            final boolean distributed = this.routes.stream().anyMatch(route ->
-                    Route.Target.LOCAL != route.target()
-                            && route.spans().stream().anyMatch(span ->
-                            Span.Kind.AT == span.kind() && span.cuts().contains(cut)));
-            if (distributed) {
-                if (!cut.declares(Law.monoidic))
-                    throw MTronException.of("cut %s is distributed but does not declare monoidic", cut.form());
-                if (!cut.declares(Law.commutative))
-                    throw MTronException.of("cut %s is distributed but does not declare commutative", cut.form());
-            }
+        final boolean distributed = this.routes.stream().anyMatch(route ->
+                Route.Target.LOCAL != route.target()
+                        && Route.Target.NONE != route.target()
+                        && route.spans().stream().anyMatch(span -> Span.Kind.AT == span.kind()));
+        if (distributed) {
+            if (!this.cut.declares(Law.monoidic))
+                throw MTronException.of("cut %s is distributed but does not declare monoidic", this.cut.form());
+            if (!this.cut.declares(Law.commutative))
+                throw MTronException.of("cut %s is distributed but does not declare commutative", this.cut.form());
         }
     }
 }

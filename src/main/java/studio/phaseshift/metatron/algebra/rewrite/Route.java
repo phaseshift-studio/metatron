@@ -60,7 +60,8 @@ public class Route extends MRec {
         PEER,
         PEERS,
         SPACE,
-        TREE
+        TREE,
+        NONE
     }
 
     public Route(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -85,6 +86,13 @@ public class Route extends MRec {
 
     public static Route tree(final int hops, final Span... spans) {
         return of(Target.TREE, null, hops, spans);
+    }
+
+    /**
+     * Nowhere — the isolated span is deleted (the unit law's transform: cut the identity, route to nothing).
+     */
+    public static Route none(final Span... spans) {
+        return of(Target.NONE, null, 0, spans);
     }
 
     private static Route of(final Target target, final fURI address, final int hops, final Span... spans) {

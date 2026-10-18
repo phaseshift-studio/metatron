@@ -102,7 +102,7 @@ public class catTypes {
                                 .constructor(arg -> {
                                     final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
                                     final Inst inst = objInstRec.at(OBJ).asInst();
-                                    final LawTable.Entry entry = mInstSetLawTable.INSTANCE.lookup(inst.tid());
+                                    final LawTable.Entry entry = LawTable.lawsOf(inst.tid());
                                     final Map<Obj, Obj> block = new LinkedHashMap<>();
                                     block.put(uri(NAME), uri(inst.tid().name()));
                                     block.put(uri(FORM), uri(Inst.Form.of(inst).name()));
@@ -181,19 +181,21 @@ public class catTypes {
                                         T(URI_TID).maybe(), T(PLAN_TID)))
                                 .constructor(arg -> {
                                     final Rec path = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
-                                    final Code code = path.at(OBJ);
+                                    final Code code = path.atDirect(OBJ);
                                     if (!code.isCode())
                                         return noobj();
+                                    // the plan-driven liveness reads the abstraction, not the code: lift ONCE, then
+                                    // each rewrite's out-edge is materialized iff its selector matches the morphism
+                                    // list's form/law/name fields — decided endogenously (the abstraction already
+                                    // computed them), so it is type-checking-independent.
+                                    final Obj abstraction = ABSTRACTION_TYPE.constructor().apply(code);
+                                    final List<Obj> morphisms = abstraction.isNoObj() ? List.of() : abstraction.asRec().at(OBJ).asLst().elements().toList();
                                     for (final Inst rewrite : self.rewrites()) {
                                         try {
-                                            if (!maybeNotIdentity(code, rewrite))
+                                            if (!maybeNotIdentity(morphisms, rewrite))
                                                 continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
                                             final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
                                             final Plan plan = catRewrite.planOf(rewrite.tid().name());
-                                            // the out-edge is a plan::T — the rewrite rule as a first-class value, generated on the fly:
-                                            // its result is the lambda that executes the plan to yield the rewritten path (non-recursive).
-                                            // Plan is the rec itself, so there is no serialization: clone the plan, stamp its result
-                                            // lambda, and re-tid it to plan::T.
                                             final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), PLAN_TID, null) : plan;
                                             path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
                                         } catch (final Exception e) {
@@ -250,12 +252,14 @@ public class catTypes {
                                 .isaPredicate(rec(
                                         uri(NAME), URI_TYPE,
                                         uri(RESULT).maybe().asUri(), ALL_TYPE, // for lambda based rewrites
-                                        uri(CUT).maybe().asUri(), lst(rec(uri(FORM), URI_TYPE, uri(LAW), lst(LAW_TYPE))),
+                                        uri(CUT).maybe().asUri(), rec(
+                                                uri(FORM).maybe().asUri(), URI_TYPE,
+                                                uri(LAW).maybe().asUri(), lst(LAW_TYPE),
+                                                uri(ROLE).maybe().asUri(), URI_TYPE),
                                         uri(ROUTE).maybe(), lst(rec(
                                                 uri(TARGET), URI_TYPE,
                                                 uri(SPAN), lst(rec(
                                                         uri(SPAN), URI_TYPE,
-                                                        uri(CUT).maybe(), lst(INT_TYPE),
                                                         uri(FLAGS).maybe(), lst(URI_TYPE))))).maybe()))
                                 .constructor(arg -> {
                                     final Rec plan = arg.isRec() && arg.asRec().has(uri(NAME)) ? arg.asRec() : rec(uri(NAME), arg);
@@ -263,9 +267,9 @@ public class catTypes {
                                 })
                                 .create(), Map.of(
                                 uri(NAME), "the plan's name — the rewrite rule it embodies",
-                                uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws) the plan anchors on",
+                                uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws + theory) the plan anchors on",
                                 uri(ROUTE).maybe(), "the distribution: target + span regions the plan ships",
-                                uri(RESULT).maybe(), "the plan's out-edge: a lambda that executes the plan to yield the rewritten path"),
+                                uri(RESULT).maybe(), "the plan's out-edge: a lambda that executes the plan to yield the rewritten path::T"),
                         "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)"),
                 docWrap(THEORY_TYPE = Type.Builder.build()
                         .tid(REC_TID)

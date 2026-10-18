@@ -81,6 +81,26 @@ public class Cut extends MRec {
     }
 
     /**
+     * An anchor identified by a theory role — {@code id} names the identity element (the unit law's cut). The
+     * role is read off {@code object::T.law}, not declared here; {@code role} names which role to cut on.
+     */
+    public static Cut role(final String role) {
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        jvm.put(uri(ROLE), uri(role));
+        return new Cut(jvm, REC_TID, null);
+    }
+
+    /**
+     * An anchor over a declared process law only — no form and no role: the predicate the anchor must declare
+     * (e.g. {@code involution}, {@code idempotent}), read back via {@link #laws()}.
+     */
+    public static Cut law(final Law... laws) {
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        jvm.put(uri(LAW), lst(Arrays.stream(laws).map(l -> (Obj) uri(l.name())).toList()));
+        return new Cut(jvm, REC_TID, null);
+    }
+
+    /**
      * An anchor over an arbitrary {@link Inst.Form}, with the laws the plan demands of it.
      */
     public static Cut of(final Inst.Form form, final Law... laws) {
@@ -95,6 +115,15 @@ public class Cut extends MRec {
      */
     public static Cut of(final Rec rec) {
         return new Cut(new LinkedHashMap<>(rec.jvm()), rec.tid(), rec.vid());
+    }
+
+    /**
+     * The anchor's function subring — read back from the {@code form} uri, or null when the cut is role/law-
+     * classified and carries no form.
+     */
+    public Inst.Form formOrNull() {
+        final Obj form = this.at(FORM);
+        return form.isNoObj() ? null : Inst.Form.valueOf(form.uriValue().name());
     }
 
     /**
@@ -121,5 +150,13 @@ public class Cut extends MRec {
      */
     public boolean declares(final Law law) {
         return this.laws().contains(law);
+    }
+
+    /**
+     * The theory role this cut identifies the anchor by, or null when the cut is form/law-classified.
+     */
+    public String role() {
+        final Obj role = this.at(ROLE);
+        return role.isNoObj() ? null : role.uriValue().name();
     }
 }

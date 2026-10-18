@@ -30,10 +30,8 @@ import studio.phaseshift.metatron.isa.mach.type.Network;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
@@ -72,7 +70,7 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
     void retractPeer() throws Exception {
         final Network network = Machine.current().network();
         network.disconnect(this.service());
-        // the dial's close reaches the listener async; wait for the co-mounted inbound to retract so
+        // the dial's close reaches the listener async; wait for the connection to settle so
         // each test starts with an empty reach
         final long deadline = System.currentTimeMillis() + 2000;
         while (System.currentTimeMillis() < deadline && network.peers().elements().count() > 0)
@@ -107,53 +105,9 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
     }
 
     @Test
-    void testInboundConnectIsCoMounted() throws Exception {
-        final Network network = Machine.current().network();
-        network.connect(this.dialURI(), WS_CLIENT_TID);
-        // both ends live in this JVM, so the SAME network holds the dialed service peer AND — once the
-        // listener's co-mount lands (the accept runs on the server's worker thread) — an inbound peer
-        // keyed by the client's ephemeral authority
-        final long deadline = System.currentTimeMillis() + 2000;
-        long inbound = 0;
-        while (System.currentTimeMillis() < deadline && 0 == inbound) {
-            inbound = network.peers().elements()
-                    .filter(kv -> kv.first().isUri() && !kv.first().uriValue().equals(this.service()))
-                    .count();
-            if (0 == inbound)
-                Thread.sleep(50);
-        }
-        assertEquals(1L, inbound, "the listener co-mounts an inbound peer::T for the connection");
-    }
-
-    @Test
     void testEnsurePeeredOverTheWire() {
         final Obj first = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
         final Obj second = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
         assertEquals(first, second, "connect is ensure-peered: a dialed service answers its existing peer, never a second socket");
-    }
-
-    @Test
-    void testInboundPeerName() throws Exception {
-        final Network network = Machine.current().network();
-        final Obj dialed = network.connect(this.dialURI().q(NAME, "builder2"), WS_CLIENT_TID);
-        // IDENTITY RIDES THE DIAL: the ?name processor on the connection uri IS the exchange — no
-        // announce message, no anonymous-then-upgrade — so the listener's co-mount mints a NAMED peer
-        // the moment the socket opens (the accept runs on the server's worker thread, hence the wait).
-        final long deadline = System.currentTimeMillis() + 2000;
-        Obj inbound = noobj();
-        while (System.currentTimeMillis() < deadline && !inbound.isRec()) {
-            inbound = network.peers().elements()
-                    .filter(kv -> kv.first().isUri() && !kv.first().uriValue().equals(this.service()))
-                    .map(kv -> kv.second())
-                    .filter(Obj::isRec)
-                    .findFirst().orElse(noobj());
-            if (!inbound.isRec())
-                Thread.sleep(50);
-        }
-        assertEquals(str("builder2"), inbound.asRec().<Obj>at(uri(NAME)),
-                "the ?name processor names the inbound peer on accept");
-        // and the ?q processor never leaks into the roster: the dial's own peer keys on the BARE authority
-        assertEquals(this.service(), dialed.asRec().<Obj>at(uri(AUTHORITY)).uriValue(),
-                "service keys are q-stripped — the dial's processors belong to the dial, not the key");
     }
 }

@@ -26,14 +26,8 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.BOOLEAN_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.FIELD_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.GROUP_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.LATTICE_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.Law.*;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.MONOID_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.RIG_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.RING_THEORY_TID;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -73,6 +67,7 @@ public final class mInstSetLawTable extends LawTable {
         loadUri();
         loadLst();
         loadRec();
+        loadCode();
     }
 
     @Override
@@ -190,7 +185,7 @@ public final class mInstSetLawTable extends LawTable {
             // zero=end (the 0-function, ≡ id{0}::T), one=id (the parametric identity), inv=additive inverse (coeff −1)
             return rec(mutableMap(
                     uri("ring"), rec(mutableMap(
-                                    uri(ADD), auto_from_(BRANCH_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                    uri(ADD), auto_from_(PLUS_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
                                     uri(MUL), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
                                     uri(Tokens.ZERO), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
                                     uri(Tokens.ONE), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
@@ -332,5 +327,20 @@ public final class mInstSetLawTable extends LawTable {
         entry(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), null, monoidic);
         entry(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), null, monoidic);
         entry(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), null, monoidic);
+    }
+
+    private void loadCode() {
+        // add = plus (binary +): the coefficient-summing abelian group — {1}a + {-1}a = noobj (cancel), a + noobj = a
+        entry(PLUS_INST_TID.dom(CODE_TID).rng(CODE_TID), null, commutative, monoidic);
+        // mul = compose (binary ·): the serial monoid — associative, identity id
+        entry(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID), null, monoidic);
+        // the additive normal form (n-ary branch): commutative, associative
+        entry(BRANCH_INST_TID.dom(CODE_TID).rng(CODE_TID), null, commutative, monoidic);
+        // the additive inverse (coeff −1): self-inverse
+        entry(NEG_INST_TID.dom(CODE_TID).rng(CODE_TID), NEG_INST_TID.dom(CODE_TID).rng(CODE_TID), involution);
+        // zero = end/noobj: the additive identity, absorbing in compose
+        entry(END_INST_TID.dom(CODE_TID).rng(CODE_TID), null, unit, absorbing);
+        // one = id: the multiplicative identity
+        entry(ID_INST_TID.dom(CODE_TID).rng(CODE_TID), null, unit, idempotent);
     }
 }

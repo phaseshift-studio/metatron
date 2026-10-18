@@ -127,6 +127,7 @@ public final class Tokens {
     public static final String INV = "inv";
     public static final String ZERO = "zero";
     public static final String ONE = "one";
+    public static final String ROLE = "role";
     public static final String OR = "or";
     public static final String AND = "and";
     public static final String NOT = "not";

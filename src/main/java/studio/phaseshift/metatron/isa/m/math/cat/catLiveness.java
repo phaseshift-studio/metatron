@@ -21,11 +21,14 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+
 import java.util.*;
+
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MAP_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -84,7 +87,7 @@ public class catLiveness {
      * The instruction a {@code map} wraps, or null when it wraps no instruction. Before resolution the
      * wrapped operand arrives as a uri (the op symbol), so it is read back as an instruction.
      */
-    static Obj mapArgument(final Inst inst, final Type carrier) {
+    public static Obj mapArgument(final Inst inst, final Type carrier) {
         if (1 != inst.args().count() || !isMap(inst))
             return null;
         final Obj arg = inst.arg(0);
@@ -116,24 +119,7 @@ public class catLiveness {
     }
 
     /**
-     * The a-priori liveness test: whether the rewrite can be anything but the identity on this code,
-     * decided from the category's declarations alone — no match is attempted. The code's one-pass
-     * {@link Profile} (its op adjacencies, declared process laws, forms and theory-modeling operands)
-     * is the abstraction \(\alpha(\mathrm{code})\), and each rule's test is a <em>necessary</em>
-     * condition for that rule's own guard — operand equality and literal values are never consulted —
-     * so {@code false} is a proof of identity ("no match in the abstraction, no match in the
-     * concrete"), while {@code true} only licenses the real match. A rule this method does not know
-     * answers {@code true}: unknown edges are kept, never pruned.
-     */
-    public static boolean maybeNotIdentity(final Code code, final Inst rewrite) {
-        final List<Inst> insts = code.insts();
-        if (insts.isEmpty())
-            return false; // every rewrite is the identity on the empty chain
-        return live(Profile.of(code), rewrite);
-    }
-
-    /**
-     * The same liveness test, decided endogenously: the profile is read off an {@code abstraction::T}'s own
+     * The liveness test, decided endogenously: the profile is read off an {@code abstraction::T}'s own
      * morphisms (their {@code law}, {@code form} and {@code name} fields, with each morphism's carried
      * {@code obj} instruction supplying operands), so the vertex prunes its out-edges from data it already
      * contains rather than from a table outside the graph.
@@ -141,7 +127,11 @@ public class catLiveness {
     public static boolean maybeNotIdentity(final List<Obj> morphisms, final Inst rewrite) {
         if (morphisms.isEmpty())
             return false; // every rewrite is the identity on the empty word
-        return live(Profile.of(morphisms), rewrite);
+        try {
+            return live(Profile.of(morphisms), rewrite);
+        } catch (final Exception e) {
+            return true; // the profile failed to compute — cannot prove identity, so keep the edge (never prune when unsure)
+        }
     }
 
     /**
@@ -159,7 +149,8 @@ public class catLiveness {
             case "form_map_unwrap" -> profile.mapWrap;
             case "derivation_contraction" -> LawTable.derivations().stream()
                     .anyMatch(d -> profile.ops.contains(d.rhs().insts().getLast().tid().basePath().toString()));
-            case "law_shard" -> profile.shard;   // a seed + a reducer declaring monoidic + commutative (the one-cut shard)
+            case "law_shard" ->
+                    profile.shard;   // a seed + a reducer declaring monoidic + commutative (the one-cut shard)
             default -> true; // an undeclared rule proves nothing -- keep the edge
         };
     }
@@ -182,55 +173,6 @@ public class catLiveness {
         private boolean absorbing;       // an absorbing op with live code before it
         private boolean mapWrap;         // a map(f) wrapping an unwrappable instruction
         private boolean shard;           // a seed + a reducer declaring monoidic + commutative (law_shard's anchor)
-
-        private static Profile of(final Code code) {
-            final Profile profile = new Profile();
-            final List<Inst> insts = code.insts();
-            final Type carrier = carrier(code);
-            final boolean carrierInverse = !TheoryHelper.invInst(carrier).isNoObj();
-            final Map<String, LawTable.Declared> declarations = new HashMap<>();
-            final Map<Type, Boolean> modeled = new HashMap<>();
-            final int seed = START_INST_TID.equals(insts.get(0).tid().basePath()) ? 1 : 0;
-            for (int i = seed; i < insts.size(); i++) {
-                final Inst inst = insts.get(i);
-                final String op = inst.tid().basePath().toString();
-                profile.ops.add(op);
-                final LawTable.Declared declared = declarations.computeIfAbsent(op, k -> LawTable.declared(inst.tid().basePath(), carrier));
-                if (0 < seed && null != declared) {
-                    final Inst.Form form = Inst.Form.of(inst.tid(declared.tid()));
-                    if (Inst.Form.reducer == form && declares(declared, Law.monoidic) && declares(declared, Law.commutative))
-                        profile.shard = true;   // law_shard's anchor: a reducer the plan re-applies behind an order-free barrier
-                }
-                if (inst.args().isEmpty())
-                    profile.unit = true;  // a bare op may be a theory's identity morphism
-                else if (models(inst.dom(), modeled) || models(inst.arg(0).type(), modeled))
-                    profile.unit = true;  // op(id) needs an operand whose type models a theory
-                if (i > seed && null != declared && declares(declared, Law.absorbing))
-                    profile.absorbing = true;
-                if (null != mapArgument(inst, carrier))
-                    profile.mapWrap = true;
-                if (i > seed) {
-                    final Inst prior = insts.get(i - 1);
-                    if (sameOp(prior, inst)) {
-                        if (carrierInverse || (null != declared && declares(declared, Law.involution)))
-                            profile.adjInvolution = true;
-                        if (null != declared) {
-                            if (declares(declared, Law.idempotent))
-                                profile.adjIdempotent = true;
-                            if (declares(declared, Law.poset))
-                                profile.adjPoset = true;
-                            final Inst.Form form = Inst.Form.of(inst.tid(declared.tid()));
-                            if ((Inst.Form.reducer == form || Inst.Form.join == form) && declares(declared, Law.monoidic))
-                                profile.adjMonoidFold = true;
-                        }
-                    }
-                    final LawTable.Declared priorDeclared = declarations.computeIfAbsent(prior.tid().basePath().toString(), k -> LawTable.declared(prior.tid().basePath(), carrier));
-                    if (opposes(declared, prior.tid().basePath()) || opposes(priorDeclared, inst.tid().basePath()))
-                        profile.adjInverse = true;
-                }
-            }
-            return profile;
-        }
 
         /**
          * The profile read off an abstraction's morphisms: {@code law}, {@code form} and {@code name} are
@@ -258,7 +200,7 @@ public class catLiveness {
                 final List<String> laws = morphism.has(uri(LAW))
                         ? morphism.at(LAW).asLst().lstValue().stream().map(l -> l.uriValue().name()).toList()
                         : List.of();
-                if (Inst.Form.initial.name().equals(form)) {   // the seed: fixes the carrier, no adjacency
+                if (Inst.Form.initial.name().equals(form) || (null != keyed && START_INST_TID.equals(keyed.tid().basePath()))) {   // the seed: start (op address) or initial form — the bare start reads as mapper pre-resolution, so the op address is the reliable seed marker
                     hasSeed = true;
                     if (null != keyed && 0 < keyed.args().count()) {
                         carrier = keyed.arg(0).type();
@@ -317,7 +259,7 @@ public class catLiveness {
          * instructions overwhelmingly share their operand types.
          */
         private static boolean models(final Type operand, final Map<Type, Boolean> cache) {
-            return cache.computeIfAbsent(operand, t -> !TheoryHelper.instances(t).jvm().isEmpty());
+            return cache.computeIfAbsent(operand, t -> !LawTable.typeLawsOf(t).jvm().isEmpty());
         }
 
         /**

@@ -9,10 +9,10 @@
 % the out-edge is horizontal (the plan is reachable from the path). The shared type method
 % lower(plan::T) applies the plan; the plan's selector reads abstraction::T's morphism fields.
 %
-%       [abstraction::T]   type code — the selector's form/law
+%       [abstraction::T]   type code — the α-word a plan reads
 %              ^
 %         a    |  lift
-%       [path::T] --out-edge--> [plan::T]   value code, a rewrite rule as data
+%       [path::T] --<rewrite_rule>--> [plan::T]   value code, a rewrite rule as data
 
 \begin{tikzpicture}[
   c/.style={draw, rounded corners=2pt, thick, minimum width=14mm, minimum height=7mm,
@@ -25,7 +25,7 @@
 
 % abstraction::T directly above path::T — the squared lift, not a triangle
 \node[c] (A) at (0,2.4) {\texttt{abstraction::T}};
-\node[sub, anchor=west, align=left] at (1.3,2.4) {type code — the\\ selector's form/law};
+\node[sub, anchor=west, align=left] at (1.3,2.4) {type code — the\\ $\alpha$-word a plan reads};
 
 % path::T and its out-edge, plan::T
 \node[c] (p)  at (0,0) {\texttt{path::T}};
@@ -35,7 +35,7 @@
 \draw[e] (p.north) -- node[el,left=2pt]{$\alpha$} (A.south);
 
 % the out-edge is horizontal (the plan is reachable from the path)
-\draw[e] (p) -- node[el,above=2pt]{out-edge} (pl);
+\draw[e] (p) -- node[el,above=2pt]{\texttt{<rewrite\_rule>}} (pl);
 
 % what each is
 \node[sub, anchor=east, align=right] at (-0.8,0) {value code};

@@ -53,7 +53,7 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
         this.wsclient.selfTID(WS_CLIENT_TID);
         this.wsclient.socket.setAttachment(this.wsclient.vid());
         if (this.wsclient.at(ON_MESSAGE).isNoObj()) {
-            this.wsclient.at(ON_MESSAGE, print_(str("received ${_}")).tryToInst(), MUTABLE);
+            this.wsclient.at(ON_MESSAGE, /*mtron_wsHandler.mtron_on_message(wsclient), MUTABLE);*/ print_(str("received ${_}")).tryToInst(), MUTABLE);
         }
         try {
             if (this.connectBlocking(5000, TimeUnit.MILLISECONDS)) {
