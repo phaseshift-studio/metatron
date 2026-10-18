@@ -433,6 +433,11 @@ public class Console extends MRec implements Closeable, Runnable {
             terminal.writer().print("\033[>1u");   // kitty progressive enhancement 1 (disambiguate)
             terminal.writer().print("\033[>4;2m"); // xterm modifyOtherKeys level 2
             terminal.writer().flush();
+            // Give the cursor a visible, blinking style from the first prompt — a terminal
+            // whose blink is off (or whose cursor is a steady block) otherwise leaves no
+            // marker on the line for the arrow keys to move around.  Re-asserted before
+            // every prompt (see prepareForInput), this is the once-at-startup one.
+            ReaderSetup.showCursor(terminal);
             this.outputHeader("");
             ReaderSetup.installSystemRegistry(parser, terminal, configurations);
             this.reader = ReaderSetup.buildReader(parser, terminal, this);
@@ -559,6 +564,11 @@ public class Console extends MRec implements Closeable, Runnable {
      * Always re-renders panes to ensure correct layout before input.
      */
     private void prepareForInput() {
+        // The cursor is the reader's only marker for where on the line the arrow keys
+        // have moved them, and a modal tool hands the terminal back with it merely
+        // visible (in the terminal's default style) — re-assert the visible, blinking
+        // style before every prompt so the insertion point always reads.
+        ReaderSetup.showCursor(terminal);
         // Built-in shortcut keys are reasserted before every read, so a
         // shadow binding (menu line key, tool) can never outlive this turn.
         this.reassertBuiltinKeys();
@@ -1070,8 +1080,10 @@ public class Console extends MRec implements Closeable, Runnable {
      * has to happen on every exit path: quit, ctrl-c, or the launcher restarting the VM.
      */
     private void releaseTerminalOnExit() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() ->
-                this.pointer.releaseTerminalModesForExit(), "metatron-console-teardown"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            this.pointer.releaseTerminalModesForExit();
+            ReaderSetup.resetCursor(terminal);
+        }, "metatron-console-teardown"));
     }
 
     /**

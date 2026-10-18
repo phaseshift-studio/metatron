@@ -105,8 +105,7 @@ public final class PlanBuilder {
 
     private void validateDistributedObligations() {
         final boolean distributed = this.routes.stream().anyMatch(route ->
-                Route.Target.LOCAL != route.target()
-                        && Route.Target.NONE != route.target()
+                (Route.Target.PEER == route.target() || Route.Target.PEERS == route.target())
                         && route.spans().stream().anyMatch(span -> Span.Kind.AT == span.kind()));
         if (distributed) {
             if (!this.cut.declares(Law.monoidic))

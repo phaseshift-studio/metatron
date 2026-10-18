@@ -61,6 +61,7 @@ public class Route extends MRec {
         PEERS,
         SPACE,
         TREE,
+        SHUFFLE,
         NONE
     }
 
@@ -78,6 +79,10 @@ public class Route extends MRec {
 
     public static Route peers(final Span... spans) {
         return of(Target.PEERS, null, 0, spans);
+    }
+
+    public static Route shuffle(final Span... spans) {
+        return of(Target.SHUFFLE, null, 0, spans);
     }
 
     public static Route space(final fURI address, final Span... spans) {

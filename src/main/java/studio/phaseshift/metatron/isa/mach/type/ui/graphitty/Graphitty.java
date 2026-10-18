@@ -97,7 +97,6 @@ public class Graphitty {
         CURSOR_REWRITES.put("@", "\033[H"); // home
         CURSOR_REWRITES.put("v<", "\033[{{v<}}E"); // move cursor to beginning of next X line
         CURSOR_REWRITES.put("^<", "\033[{{v<}}F"); // move cursor to beginning of previous X line
-        CURSOR_REWRITES.put("^+", "<redo>");
         CURSOR_REWRITES.put("^", "\033[{{^}}A"); // up X
         CURSOR_REWRITES.put("v", "\033[{{v}}B"); // down X
         CURSOR_REWRITES.put(">", "\033[{{>}}C"); // right X

@@ -66,6 +66,17 @@ public class catRewrite {
             .create();
 
     /**
+     * The one-cut sort distribution — {@code order_shard}: the anchor is the {@code order} op (a role cut, not
+     * a form — the sort is order-preserving, not a monoidic/commutative fold); the {@code shuffle} route factors
+     * the seed over the roster, each peer orders its shard, and the master {@code kmerge}s behind the barrier.
+     */
+    private static final Cut ORDER_CUT = Cut.role(ORDER_INST_TID.name());
+    private static final Plan ORDER_PLAN = PlanBuilder.plan("order_shard")
+            .cut(ORDER_CUT)
+            .route(Route.shuffle(Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
+            .create();
+
+    /**
      * The local unit-law plan — cut the identity (the {@code id} role) and route it to {@code none}: the span
      * is deleted, the unit law's transform. No {@code law} selector — the theory names the role.
      */
@@ -179,6 +190,7 @@ public class catRewrite {
 
     static {
         PLANS.put(SHARD_PLAN.name(), SHARD_PLAN);
+        PLANS.put(ORDER_PLAN.name(), ORDER_PLAN);
         PLANS.put(UNIT_PLAN.name(), UNIT_PLAN);
         PLANS.put(INVOLUTION_PLAN.name(), INVOLUTION_PLAN);
         PLANS.put(IDEMPOTENT_PLAN.name(), IDEMPOTENT_PLAN);
@@ -398,7 +410,9 @@ public class catRewrite {
                         // >>law_shard edge, is policy (cf. derivation_expansion above) -- gate shardTargets()
                         // behind a plan flag / q-param to pull it out of the default fixpoint schedule.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_shard"),
-                                code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot c = (a \\cdot c + b \\cdot c) \\cdot c\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, reapply the reducer behind a barrier -- \\(\\{1,2,3\\}.f.\\Sigma \\leadsto [\\mathrm{barrier}.\\Sigma,\\ \\{1,3\\}.f.\\Sigma,\\ \\{2\\}.f.\\Sigma] == [\\mathrm{to}(),\\ \\mathrm{to}(a),\\ \\mathrm{to}(b)]\\)")
+                                code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot c = (a \\cdot c + b \\cdot c) \\cdot c\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, reapply the reducer behind a barrier -- \\(\\{1,2,3\\}.f.\\Sigma \\leadsto [\\mathrm{barrier}.\\Sigma,\\ \\{1,3\\}.f.\\Sigma,\\ \\{2\\}.f.\\Sigma] == [\\mathrm{to}(),\\ \\mathrm{to}(a),\\ \\mathrm{to}(b)]\\)"),
+                        docWrap(InstSet.Helper.rewriter(rewriteTID("order_shard"),
+                                code -> PlanInterpreter.lower(ORDER_PLAN, code)), "the sort distribution: factor the seed bulk over the roster, each peer orders its shard locally, and the master k-merges the sorted shards behind the barrier")
         );
     }
 

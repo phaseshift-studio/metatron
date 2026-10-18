@@ -296,14 +296,22 @@ public final class ScreenView {
             else this.screenOutput(rest);
             return;
         }
-        this.screen.appendAnsi(ansi);
+        // A show/hide-cursor code is a terminal mode change, not content: emit it to the
+        // terminal (so the cursor actually hides or shows) and keep it out of the stored rows.
+        final String visibility = ScreenPainter.cursorVisibility(ansi);
+        final String content = visibility.isEmpty() ? ansi : ScreenPainter.withoutCursorVisibility(ansi);
+        if (!visibility.isEmpty()) {
+            this.console.getFloatingSurface().writeToTerminal(visibility);
+            if (content.isEmpty()) return;
+        }
+        this.screen.appendAnsi(content);
         if (this.screenAppends()) {
             this.screenAppended = true;
             // Plain text, without the hyperlink: the console is not yet handling clicks on
             // these rows (it does not know which terminal rows they are), and a terminal that
             // is handed a hyperlink takes the click for itself — which is how a link ended up
             // opening the desktop's "Unsupported operation" instead of being followed here.
-            this.console.getFloatingSurface().writeToTerminal(ScreenPainter.withoutLinks(ansi));
+            this.console.getFloatingSurface().writeToTerminal(ScreenPainter.withoutLinks(content));
             return;
         }
         if (this.screenAppended) {
