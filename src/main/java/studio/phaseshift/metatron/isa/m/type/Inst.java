@@ -423,7 +423,7 @@ public interface Inst extends Call {
     }
 
     default boolean isScatter() {
-        return this.dom().c().gt(cInt.ONE()) && this.rng().c().isOne();
+        return this.dom().c().isOne() && this.rng().c().max() == null;   // one → {0,}
     }
 
     default boolean isInitial() {
