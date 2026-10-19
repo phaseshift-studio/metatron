@@ -307,18 +307,20 @@ every instruction replaced by its `morphism::T`, i.e. **value code below, type c
 
 ### `path::T` — value code as a vertex
 
-| field         | what it is                                                                                                               |
-|---------------|--------------------------------------------------------------------------------------------------------------------------|
-| `obj`         | the chain itself (the value code)                                                                                        |
-| `<rule name>` | one lazy edge per **live** rewrite — the out-edge is a `plan::T` (see below); dereference (`>>`) applies it and re-lifts |
+| field         | what it is                                                                                                      |
+|---------------|-----------------------------------------------------------------------------------------------------------------|
+| `obj`         | the chain itself (the value code)                                                                               |
+| `<rule name>` | one edge per **live** rewrite — the edge holds the `plan::T` (see below); `lower(plan)` applies it and re-lifts |
 
 Only live edges are materialized (see *a-priori pruning*): a vertex lists exactly the rules that can move it, and a
 **normal form prints as its own certificate** — `[path::[obj=>...]]`, no out-edges, zero matches attempted. A
-traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).
+traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell). The
+three steps below are the same vertex after each application — the path shrinks as the rewrites fire:
 
 ```mtron_pre
 [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-[start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[>>theory_involution]==[>>theory_unit_removal]
+[start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]
+[start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
 ```
 
 **A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
@@ -398,10 +400,10 @@ decided by reading the abstraction, are claims quantified over that set in one o
 | **must** □ | the rule fires for *every* fiber member (zero value-residue)  | `law_shard` on $[\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]$   |
 | **may** ◇  | the rule fires for *some* members; undecidable without values | unit removal at $\mathrm{plus}(\mathrm{int})$ — only the $\mathrm{plus}(0)$ members |
 
-Hence the degree ordering $\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))$: the abstraction licenses a move
+Hence, the degree ordering $\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))$: the abstraction licenses a move
 for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge is a
-must-edge. Refinement is **edge-antitone** — descending the q-param rungs
-($\mathrm{plus (int)} \to \mathrm{plus (int?{=}0{::}T)} \to \mathrm{plus} (0)$)
+must-edge. Refinement is **edge-antitone** — descending the rungs
+($\mathrm{plus (int)} \to \mathrm{plus?int \le int (int{::}T)} \to \mathrm{plus} (0)$)
 shrinks the fiber and discharges ◇ into □; a rule becomes *exact* at the rung whose type absorbs its residue. Counting
 instances rather than rules, the ordering reverses: one licensed move fans into one concrete edge per match *site*, so
 the abstraction licenses more kinds of move and the path more copies of fewer kinds.

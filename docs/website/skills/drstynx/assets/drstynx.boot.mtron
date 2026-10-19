@@ -178,7 +178,7 @@ vecspace::[pattern     => embed:#,
  chat_result => inst?lst[real]<=#{?}(doc=>#::T){ *dr/feature/+.filter(tid().has(embed)).>>model.embed(*doc) }
  [------------------------------------^--]                                  
                           ]]]@/sys/space/vec/embed;
-[==grphspace::[pattern   => h:#,
+grphspace::[pattern   => g:#,
              host     => !*<boot/args/external/knowgraph>,
              q        => [incrq::[=>],subq::[=>]],
              schema   => noobj,
@@ -188,7 +188,7 @@ vecspace::[pattern     => embed:#,
                <serializer.config.ioRegistries>           => [<org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry>],
                <gremlin.remote.remoteConnectionClass>     => <org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection>,
                <gremlin.remote.remoteTraversalSourceName> => g],
-             route    => [h: => <>]]@</sys/space/grph/kg>;==]
+             route    => [h: => <>]]@</sys/space/grph/kg>;
 
 [==grphspace::[pattern  => g:#,
              q        => [incrq::[=>],subq::[=>]],

@@ -699,24 +699,24 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     @TestCategory.Read
     @ParameterizedTest
     @TestData(value = {
-            "$$/rshift/a/b/c/d -> 42",
-            "$$/rshift/a/b/c/e -> 54",
-            "$$/rshift/x/y     -> [z=>1,zz=>[2,3]]"
+            "$$/a/b/c/d -> 42",
+            "$$/a/b/c/e -> 54",
+            "$$/x/y     -> [z=>1,zz=>[2,3]]"
     })
     @CsvSource(value = {
-            "$$/rshift/a.>>                        % {$$/rshift/a/b}",
-            "$$/rshift/a.>>.>>                     % {$$/rshift/a/b/c}",
-            "$$/rshift/a.>>.>>.>>                  % {$$/rshift/a/b/c/d,$$/rshift/a/b/c/e}",
-            "$$/rshift/a.>>.>>.>>.*_               % {42,54}",
-            "$$/rshift/a/.>>                       % {$$/rshift/a/b/}",
-            "$$/rshift/a/.>>.>>                    % {$$/rshift/a/b/c/}",
-            "$$/rshift/a/.>>.>>.>>                 % {$$/rshift/a/b/c/d/,$$/rshift/a/b/c/e/}",
-            "$$/rshift/a/.>>.>>.*_                 % ($$/rshift/a/b/c/=>[d=>42,e=>54])",
-            "$$/rshift/x.>>                        %  $$/rshift/x/y",
-            "$$/rshift/x/y.>>                      % {$$/rshift/x/y/z,$$/rshift/x/y/zz}",
-            "$$/rshift/x/y.>>.*_                   % {1,[2,3]}",
-            "$$/rshift/x/y.>>.>>                   % {$$/rshift/x/y/zz/0,$$/rshift/x/y/zz/1}",
-            "$$/rshift/x/y.>>.>>.*_                % {2,3}"
+            "$$/a.>>                        % {$$/a/b}",
+            "$$/a.>>.>>                     % {$$/a/b/c}",
+            "$$/a.>>.>>.>>                  % {$$/a/b/c/d,$$/a/b/c/e}",
+            "$$/a.>>.>>.>>.*_               % {42,54}",
+            "$$/a/.>>                       % {$$/a/b/}",
+            "$$/a/.>>.>>                    % {$$/a/b/c/}",
+            "$$/a/.>>.>>.>>                 % {$$/a/b/c/d/,$$/a/b/c/e/}",
+            "$$/a/.>>.>>.*_                 % ($$/a/b/c/=>[d=>42,e=>54])",
+            "$$/x.>>                        %  $$/x/y",
+            "$$/x/y.>>                      % {$$/x/y/z,$$/x/y/zz}",
+            "$$/x/y.>>.*_                   % {1,[2,3]}",
+            "$$/x/y.>>.>>                   % {$$/x/y/zz/0,$$/x/y/zz/1}",
+            "$$/x/y.>>.>>.*_                % {2,3}"
     }, delimiter = '%')
     public void testRshiftUriGraphSpine(final String lookupExpression, final String expectedExpression) {
         final String lookupExpr = make(lookupExpression);

@@ -495,20 +495,20 @@ a graph of rewrite edges.</p>
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T).morphed_to()
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?bool&lt;=int(bool::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?bytes&lt;=int(bytes::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?real&lt;=int(real::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
@@ -542,8 +542,8 @@ is the nominal super-type grouping them:</p>
     name=&gt;plus,
     form=&gt;mapper,
     class=&gt;[endo],
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
     analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
     obj=&gt;plus?int&lt;=int(int::T),
     ...(1 more)]
@@ -794,12 +794,13 @@ every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value c
 </thead>
 <tbody>
 <tr><td><code>obj</code></td><td>the chain itself (the value code)</td></tr>
-<tr><td><code>&lt;rule name&gt;</code></td><td>one lazy edge per <strong>live</strong> rewrite — the out-edge is a <code>plan::T</code> (see below); dereference (<code>&gt;&gt;</code>) applies it and re-lifts</td></tr>
+<tr><td><code>&lt;rule name&gt;</code></td><td>one edge per <strong>live</strong> rewrite — the edge holds the <code>plan::T</code> (see below); <code>lower(plan)</code> applies it and re-lifts</td></tr>
 </tbody>
 </table>
 <p>Only live edges are materialized (see <em>a-priori pruning</em>): a vertex lists exactly the rules that can move it, and a
 <strong>normal form prints as its own certificate</strong> — <code>[path::[obj=&gt;...]]</code>, no out-edges, zero matches attempted. A
-traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).</p>
+traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell). The
+three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
@@ -816,9 +817,50 @@ traversal chain is a derivation witness: each step is labeled by the rule that j
                                      route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
            derivation_contraction=&gt;plan::[name=&gt;derivation_contraction,
                                           cut=&gt;[role=&gt;derivation],
-                                          route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
-mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[&gt;&gt;theory_involution]==[&gt;&gt;theory_unit_removal]
-==&gt;[noobj]
+                                          route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           order_shard=&gt;plan::[name=&gt;order_shard,
+                               cut=&gt;[role=&gt;order],
+                               route=&gt;[[target=&gt;shuffle,
+                                        span=&gt;[
+                                         [span=&gt;seed,flags=&gt;[partition]],
+                                         [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+                                         [span=&gt;at]]]]]]]
+mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]
+==&gt;[path::[obj=&gt;start(5).plus(0),
+           theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
+                                       cut=&gt;[role=&gt;id],
+                                       route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
+           branch_collapse=&gt;plan::[name=&gt;branch_collapse,
+                                   cut=&gt;[role=&gt;add],
+                                   route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           branch_inline=&gt;plan::[name=&gt;branch_inline,
+                                 cut=&gt;[role=&gt;zero],
+                                 route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           derivation_contraction=&gt;plan::[name=&gt;derivation_contraction,
+                                          cut=&gt;[role=&gt;derivation],
+                                          route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           order_shard=&gt;plan::[name=&gt;order_shard,
+                               cut=&gt;[role=&gt;order],
+                               route=&gt;[[target=&gt;shuffle,
+                                        span=&gt;[
+                                         [span=&gt;seed,flags=&gt;[partition]],
+                                         [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+                                         [span=&gt;at]]]]]]]
+mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]==[lower(&gt;&gt;theory_unit_removal)]
+==&gt;[path::[obj=&gt;start(5),
+           branch_collapse=&gt;plan::[name=&gt;branch_collapse,
+                                   cut=&gt;[role=&gt;add],
+                                   route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           branch_inline=&gt;plan::[name=&gt;branch_inline,
+                                 cut=&gt;[role=&gt;zero],
+                                 route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           order_shard=&gt;plan::[name=&gt;order_shard,
+                               cut=&gt;[role=&gt;order],
+                               route=&gt;[[target=&gt;shuffle,
+                                        span=&gt;[
+                                         [span=&gt;seed,flags=&gt;[partition]],
+                                         [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+                                         [span=&gt;at]]]]]]]
 </code></pre>
 <p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand
@@ -843,16 +885,16 @@ walk into the category from inside the abstraction.</p>
 ==&gt;[abstraction::[obj=&gt;[morphism[start]::[name=&gt;start,
                                           form=&gt;mapper,
                                           class=&gt;[endo],
-                                          src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-                                          trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                                          src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+                                          trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
                                           analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
                                           obj=&gt;start?#&lt;=#(5)],
                         morphism[plus?rng=int&amp;dom=int]::[
                          name=&gt;plus,
                          form=&gt;mapper,
                          class=&gt;[endo],
-                         src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-                         trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                         src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+                         trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
                          analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
                          obj=&gt;plus?#&lt;=#(0),
                          ...(1 more)],
@@ -866,8 +908,8 @@ walk into the category from inside the abstraction.</p>
                                  retraction,
                                  mono,
                                  epi],
-                         src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
-                         trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;},
+                         src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+                         trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
                          analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
                          obj=&gt;neg?#&lt;=#(),
                          ...(1 more)],
@@ -906,23 +948,23 @@ rewrite, and re-lifts to <code>path::T</code>. The plan carries no <code>result<
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the trigger that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
-               send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-               send_recv=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-               close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-               on_message=&gt;print?#&lt;=#('received ${_}')]
+==&gt;[host=&gt;ws://localhost:8555/mtron,
+    send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+    send_recv=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+    close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+    on_message=&gt;print?#&lt;=#('received ${_}')]
 mtron&gt; */network
-==&gt;network::[host=&gt;booger,
+==&gt;network::[host=&gt;f11c0bb8cf3f,
              status=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
              peer=&gt;[ws://localhost:8555=&gt;peer::[
               authority=&gt;ws://localhost:8555,
               host=&gt;ws://localhost:8555/mtron,
               transport=&gt;inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-              client=&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
-                                  send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-                                  send_recv=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-                                  close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-                                  on_message=&gt;print?#&lt;=#('received ${_}')]]]]
+              client=&gt;[host=&gt;ws://localhost:8555/mtron,
+                       send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+                       send_recv=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+                       close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
+                       on_message=&gt;print?#&lt;=#('received ${_}')]]]]
 </code></pre>
 <p>With the current <code>machine::T</code> having a <code>peer::T</code>, the <code>path::T</code> shows a distribution plan.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
@@ -945,14 +987,14 @@ mtron&gt; */network
            law_absorbing=&gt;plan::[name=&gt;law_absorbing,
                                  cut=&gt;[law=&gt;[absorbing]],
                                  route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           ...(6 more)]]
+           ...(7 more)]]
 </code></pre>
 <p>Finally, <code>lower?path&lt;=path(plan)</code> use <code>abstract::T</code> via <code>path::T</code> to construct a distributed computing <code>plan::T</code>.
 Because a plan is data, the
 rewrite <em>schedule</em> and the plan's out-edge are the same thing — every rule is <code>lower(plan::T)</code>, which is &quot;the
 rewrite table is the category&quot; made literal.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start([block(block(block(start?no_shard({1,2,3,4,5}).plus(10).sum())))]).select([to(ws://localhost:8555)]).merge().sum(),
+==&gt;[path::[obj=&gt;start([block(block(block(start?no_shard=true({1,2,3,4,5}).plus(10).sum())))]).select([to(ws://localhost:8555)]).merge().sum(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -961,7 +1003,14 @@ rewrite table is the category&quot; made literal.</p>
                                    route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
            branch_inline=&gt;plan::[name=&gt;branch_inline,
                                  cut=&gt;[role=&gt;zero],
-                                 route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+                                 route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           order_shard=&gt;plan::[name=&gt;order_shard,
+                               cut=&gt;[role=&gt;order],
+                               route=&gt;[[target=&gt;shuffle,
+                                        span=&gt;[
+                                         [span=&gt;seed,flags=&gt;[partition]],
+                                         [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+                                         [span=&gt;at]]]]]]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -975,10 +1024,10 @@ decided by reading the abstraction, are claims quantified over that set in one o
 <tr><td><strong>may</strong> ◇</td><td>the rule fires for <em>some</em> members; undecidable without values</td><td>unit removal at \(\mathrm{plus}(\mathrm{int})\) — only the \(\mathrm{plus}(0)\) members</td></tr>
 </tbody>
 </table>
-<p>Hence the degree ordering \(\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))\): the abstraction licenses a move
+<p>Hence, the degree ordering \(\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))\): the abstraction licenses a move
 for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge is a
-must-edge. Refinement is <strong>edge-antitone</strong> — descending the q-param rungs
-(\(\mathrm{plus (int)} \to \mathrm{plus (int?{=}0{::}T)} \to \mathrm{plus} (0)\))
+must-edge. Refinement is <strong>edge-antitone</strong> — descending the rungs
+(\(\mathrm{plus (int)} \to \mathrm{plus?int \le int (int{::}T)} \to \mathrm{plus} (0)\))
 shrinks the fiber and discharges ◇ into □; a rule becomes <em>exact</em> at the rung whose type absorbs its residue. Counting
 instances rather than rules, the ordering reverses: one licensed move fans into one concrete edge per match <em>site</em>, so
 the abstraction licenses more kinds of move and the path more copies of fewer kinds.</p>

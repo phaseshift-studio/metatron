@@ -185,7 +185,7 @@ public final class PlanInterpreter {
             final List<Obj> part = new ArrayList<>();
             for (int j = s; j < seed.size(); j += k)
                 part.add(seed.get(j));
-            final mFluent<?> slave = start_(objs(part)).q("no_shard", true);
+            final mFluent<?> slave = start_(objs(part)).q("no_shard");
             slave.addInsts(insts.subList(1, cutIndex));
             slave.addInst(reducer);
             summands.add(block_(block_(block_(slave))));
@@ -237,18 +237,19 @@ public final class PlanInterpreter {
         // floatable run replicated, and a local order.
         final List<Obj> summands = new ArrayList<>();
         final List<Obj> routes = new ArrayList<>();
-        final mFluent<?> master = kmerge_(selector).addInsts(insts.subList(cutIndex + 1, insts.size()));
+        final mFluent<?> master = merge_().addInsts(kmerge_(selector).insts()).addInsts(insts.subList(cutIndex + 1, insts.size()));
         for (int s = 0; s < k; s++) {
             final List<Obj> part = new ArrayList<>();
             for (int j = s; j < seed.size(); j += k)
                 part.add(seed.get(j));
-            final mFluent<?> slave = start_(objs(part)).q("no_shard", true);
+            final mFluent<?> slave = start_(objs(part)).q("no_shard");
             slave.addInsts(insts.subList(1, cutIndex));
-            slave.addInst(order);
+            slave.addInsts(order_(selector).insts());
             summands.add(block_(block_(block_(slave))));
             routes.add(to_(targets.get(s)).tryToInst());
         }
-        return start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
+        final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
+        return emitted;
     }
 
     /**

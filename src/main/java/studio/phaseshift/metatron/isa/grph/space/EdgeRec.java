@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class EdgeRec extends ElementRec<Edge> {
 
     public EdgeRec(final Edge edge, final grphSpace space) {
-        super(edge, space, f(edge.label()), space.elementVID(edge));
+        super(edge, space, space.elementTypeVid(edge.label(), false), space.elementVID(edge));
     }
 
     public Edge edge() {

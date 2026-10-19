@@ -32,7 +32,7 @@ import org.junit.jupiter.api.*;
  * ({@code needsTextColumn} / {@code widenColumnToText}).
  * <p>
  * The {@code testRshiftUriGraphSpine} rows were skipped for a different reason: a second {@code >>}
- * into a <em>list</em> value ({@code kv/test/rshift/x/y} holding {@code [z=>1,zz=>[2,3]]}) returned
+ * into a <em>list</em> value ({@code kv/test/x/y} holding {@code [z=>1,zz=>[2,3]]}) returned
  * {@code noobj} while PostgreSQL ran it green. That value lives in ONE row and Java-level
  * {@code unrollPoly} decomposes it — which needs the parent row back from the read.
  * {@code TypedKeyValueSchema} returns every row for a pattern read, so PostgreSQL always got it;

@@ -38,8 +38,6 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TID;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -120,8 +118,8 @@ public class ExistingGraphSchema {
         // Build types from all discovered labels
         final List<Type> types = new ArrayList<>();
         // Default V and E meta-collections — always present (TinkerPop convention)
-        types.add(Type.Builder.build().tid(VRTX_TID).vid(f("V")).create());
-        types.add(Type.Builder.build().tid(EDGE_TID).vid(f("E")).create());
+        types.add(Type.Builder.build().tid(REC_TID).vid(f("V")).create());
+        types.add(Type.Builder.build().tid(REC_TID).vid(f("E")).create());
         for (final LabelMetadata meta : this.labelSchemas.values()) {
             final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
             for (final PropertyMetadata prop : meta.properties()) {
@@ -131,10 +129,10 @@ public class ExistingGraphSchema {
             }
             if (fields.isEmpty()) continue;
             final fURI baseTid = meta.elementType() == ElementType.EDGE
-                    ? EDGE_TID : VRTX_TID;
+                    ? REC_TID : REC_TID;
             types.add(Type.Builder.build()
                     .tid(baseTid)
-                    .vid(f(meta.label()))
+                    .vid(this.space.schemaVID(meta.label()))
                     .isaPredicate(rec(fields))
                     .create());
         }
@@ -289,12 +287,12 @@ public class ExistingGraphSchema {
         // Determine element type (vertex vs edge) from existing metadata
         final LabelMetadata existing = this.labelSchemas.get(label.toLowerCase());
         final fURI baseTid = existing != null && existing.elementType() == ElementType.EDGE
-                ? grphInstSet.EDGE_TID
-                : grphInstSet.VRTX_TID;
+                ? REC_TID
+                : REC_TID;
 
         // vid = type name so resolveCollectionSchema(label) matches on t.vid().name()
         final Type type = Type.Builder.build()
-                .tid(baseTid)           // super-type: vrtx::T or edge::T
+                .tid(baseTid)           // super-type: rec::T
                 .vid(f(label))          // type name: "person", "knows", etc.
                 .isaPredicate(rec(fields))
                 .create();
@@ -310,8 +308,8 @@ public class ExistingGraphSchema {
             // type plus the default V and E meta-collections
             final fURI instSetVid = this.space.vid().extend(INSTSET);
             final fURI instSetPattern = instSetVid.extend(ALL);
-            final Type vType = Type.Builder.build().tid(VRTX_TID).vid(f("V")).create();
-            final Type eType = Type.Builder.build().tid(EDGE_TID).vid(f("E")).create();
+            final Type vType = Type.Builder.build().tid(REC_TID).vid(f("V")).create();
+            final Type eType = Type.Builder.build().tid(REC_TID).vid(f("E")).create();
             final InstSet instSet = new AbstractInstSet(
                     mutableMap(
                             uri(PATTERN), uri(instSetPattern),
@@ -336,5 +334,24 @@ public class ExistingGraphSchema {
 
     public LabelMetadata getLabelSchema(final String label) {
         return this.labelSchemas.get(label.toLowerCase());
+    }
+
+    /**
+     * Whether the given label names a vertex label (vs an edge label).
+     * The vertex/edge distinction is schema metadata, not a type hierarchy —
+     * a label's Type refines {@code rec::T} directly, and its element kind is
+     * recorded here from discovery.
+     */
+    public boolean isVertexLabel(final String label) {
+        final LabelMetadata meta = this.labelSchemas.get(label.toLowerCase());
+        return meta != null && meta.elementType() == ElementType.VERTEX;
+    }
+
+    /**
+     * Whether the given label names an edge label.
+     */
+    public boolean isEdgeLabel(final String label) {
+        final LabelMetadata meta = this.labelSchemas.get(label.toLowerCase());
+        return meta != null && meta.elementType() == ElementType.EDGE;
     }
 }

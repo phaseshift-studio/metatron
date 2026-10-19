@@ -819,7 +819,7 @@ public final class CommonRewrites {
 
                 return java.util.List.of(
                         instC(
-                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                                this.rewriteTid.dom(ALL.maybe()).rng(this.resultTid),
                                 lst(uri(expandedfURI), str(filterClause)),
                                 (lhs, inst) -> {
                                     // Barrier re-application guard: if the SwarmProcessor
@@ -1987,7 +1987,7 @@ public final class CommonRewrites {
 
         return new OrderRewriteBuilder<>(spaceType, orderFunction, matchSpacePredicate)
                 .tid(rewriteTID)
-                .rng(Tokens.LST_TID.maybe())
+                .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, ORDER_INST_TID)
                 .matchFromOrAt()
                 .build();

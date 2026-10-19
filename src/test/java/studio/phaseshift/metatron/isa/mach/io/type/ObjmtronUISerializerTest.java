@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -212,6 +213,24 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         final String written = ObjmtronUISerializer.single().write(obj);
         LOG.debug("nested rec => %s", written);
         assertTrue(written.contains("\n"), String.format("a nested poly should break across indented lines: %s", written));
+    }
+
+    /**
+     * A NON-FINITE REAL HAS NO MANTISSA. The display writer shortens a real to the digits after the
+     * point, which on "NaN" read {@code indexOf(".")} as -1 and sliced past the end
+     * ({@code Range [0, 5) out of bounds for length 3}), while "Infinity"/"-Infinity" were silently
+     * cut to "Infin"/"-Infin". They have no fraction to drop, so they are spelled whole.
+     */
+    @Test
+    public void testNonFiniteRealIsSpelledWhole() {
+        final ObjmtronUISerializer ui = ObjmtronUISerializer.blackWhite();
+        final String nan = ui.writeReal(real(Double.NaN));
+        final String pos = ui.writeReal(real(Double.POSITIVE_INFINITY));
+        final String neg = ui.writeReal(real(Double.NEGATIVE_INFINITY));
+        LOG.debug("non-finite reals => %s %s %s", nan, pos, neg);
+        assertTrue(nan.endsWith("NaN"), String.format("a NaN real is spelled NaN: %s", nan));
+        assertTrue(pos.endsWith("Infinity"), String.format("an infinite real keeps its sign word: %s", pos));
+        assertTrue(neg.endsWith("-Infinity"), String.format("a negative infinite real too: %s", neg));
     }
 
     @Test

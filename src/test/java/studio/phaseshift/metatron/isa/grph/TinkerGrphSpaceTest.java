@@ -44,7 +44,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
 
     public TinkerGrphSpaceTest() {
@@ -112,6 +111,7 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Disabled("id-based traversal count mismatch over TinkerGraph")
     @ParameterizedTest
     @CsvSource(value = {
             // ── wildcard counts (no ID needed) ──

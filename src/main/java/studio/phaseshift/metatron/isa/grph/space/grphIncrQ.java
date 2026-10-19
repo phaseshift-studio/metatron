@@ -37,8 +37,6 @@ import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_TID;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TYPE;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -90,15 +88,10 @@ public class grphIncrQ extends BaseQ {
                                 final boolean isV = "V".equals(collection);
                                 final boolean isE = "E".equals(collection);
                                 final boolean isVertex = isV
-                                        || (!isE && space.schema().types().stream()
-                                        .anyMatch(t -> t.vid().name()
-                                                .equalsIgnoreCase(collection)
-                                                && t.isRefinementOf(VRTX_TYPE)));
+                                        || (!isE && space.existingGraphSchema.isVertexLabel(collection));
                                 final boolean isEdge = isE
-                                        || (!isV && !isVertex && space.schema().types().stream()
-                                        .anyMatch(t -> t.vid().name()
-                                                .equalsIgnoreCase(collection)
-                                                && t.isRefinementOf(EDGE_TYPE)));
+                                        || (!isV && !isVertex
+                                        && space.existingGraphSchema.isEdgeLabel(collection));
                                 // Label unknown: default to vertex (e.g. bootstrap write)
                                 final boolean isLabelVertex = !isV && !isE
                                         && !isVertex && !isEdge;
