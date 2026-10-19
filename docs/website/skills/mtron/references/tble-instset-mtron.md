@@ -45,15 +45,11 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 
 ```mtron
 mtron> *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
-==>fail::[parse error at line 1, col 77:
-     ...ts ctor, and the space's own summary --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/556
+==>docs::[obj=>space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=#{?}(rec::T){<j>}]@/m/tble/space/tblespace,
+          desc=>'[structural] a metatron realizatio...',
+          example=>['*<http://metatron.phaseshift.studi...']]
 mtron> *</m/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
-==>fail::[parse error at line 1, col 85:
-     ...r rec: the llm chat schema, as a str --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/557
+==>[llm_chat_schema=>inst?#{*}<=#{*}(){<j>}]
 ```
 ## configuration
 
@@ -137,35 +133,33 @@ reconstructs the lst rather than a string that looks like one.
 
 ```mtron
 mtron> *tbledoc:person/+              [-- every row as a rec --]
-==>fail::[parse error at line 1, col 58:
-     ...              [-- every row as a rec --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/558
+==>[name=>'xilo',age=>33,skill=>'graph']
+==>[name=>'marko',age=>29]
+==>[name=>'metis',age=>41]
+==>[name=>'grant',age=>25]
+==>[name=>'vela',age=>53]
 mtron> *tbledoc:person/1              [-- one row --]
-==>fail::[parse error at line 1, col 47:
-     ...oc:person/1              [-- one row --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/559
+==>[name=>'marko',age=>29]
 mtron> *tbledoc:person/+/             [-- vid => row --]
-==>fail::[parse error at line 1, col 50:
-     ...person/+/             [-- vid => row --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/560
+==>tbledoc:person/4=>[name=>'xilo',age=>33,skill=>'graph']
+==>tbledoc:person/1=>[name=>'marko',age=>29]
+==>tbledoc:person/3=>[name=>'metis',age=>41]
+==>tbledoc:person/2=>[name=>'grant',age=>25]
+==>tbledoc:person/5=>[name=>'vela',age=>53]
 mtron> *tbledoc:person/+/name         [-- one column, across rows --]
-==>fail::[parse error at line 1, col 63:
-     ...         [-- one column, across rows --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/561
+==>'metis'
+==>'grant'
+==>'vela'
+==>'marko'
+==>'xilo'
 mtron> *tbledoc:person/1/name         [-- one field: the row is unrolled --]
-==>fail::[parse error at line 1, col 70:
-     ...  [-- one field: the row is unrolled --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/562
+==>'marko'
 mtron> *tbledoc:person/+/id           [-- the keys: they live in the vid, not in the body --]
-==>fail::[parse error at line 1, col 87:
-     ...hey live in the vid, not in the body --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/563
+==>1
+==>5
+==>2
+==>4
+==>3
 ```
 Rows come back in whatever order the backend chose — say so in the expression (`.order(select(col))`) when position
 matters.
@@ -177,15 +171,29 @@ matters.
 
 ```mtron
 mtron> *tbledoc:person/+/+      [-- clone: fields detached from their rows --]
-==>fail::[parse error at line 1, col 72:
-     ...one: fields detached from their rows --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/564
+==>'metis'
+==>41
+==>'grant'
+==>25
+==>53
+==>'vela'
+==>33
+==>29
+==>'graph'
+==>'marko'
+==>'xilo'
 mtron> @tbledoc:person/+/+      [-- anchor: the same fields, each still addressed to its row --]
-==>fail::[parse error at line 1, col 90:
-     ...lds, each still addressed to its row --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/565
+==>'metis'@tbledoc:person/3/name
+==>41@tbledoc:person/3/age
+==>'grant'@tbledoc:person/2/name
+==>25@tbledoc:person/2/age
+==>53@tbledoc:person/5/age
+==>'vela'@tbledoc:person/5/name
+==>33@tbledoc:person/4/age
+==>29@tbledoc:person/1/age
+==>'graph'@tbledoc:person/4/skill
+==>'marko'@tbledoc:person/1/name
+==>'xilo'@tbledoc:person/4/name
 ```
 The same holds for a rewrite's result — it is the clone path that hands rows back with a placeholder vid, which is why
 the anchored form is the one to keep when the rows might be written back:
@@ -335,15 +343,12 @@ mtron> tbledoc:award/2 -> [trophy=>'silver',recipient=>!*tbledoc:person/2]
 ==>[trophy=>'silver',
     recipient=>!*tbledoc:person/2]
 mtron> *tbledoc:award/+                [-- the cell renders as an unresolved pointer --]
-==>fail::[parse error at line 1, col 82:
-     ...ell renders as an unresolved pointer --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/576
+==>[trophy=>'silver',
+    recipient=>!*tbledoc:person/2]
+==>[trophy=>'gold',
+    recipient=>!*tbledoc:person/1]
 mtron> *tbledoc:award/1/recipient      [-- traversal resolves it to the row --]
-==>fail::[parse error at line 1, col 73:
-     ...[-- traversal resolves it to the row --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/577
+==>[name=>'marko',age=>29]
 ```
 The SQL footprint is deliberately plain: the column is a bare `INTEGER` (`TEXT` for string keys), there is no SQL
 `FOREIGN KEY` constraint, and the pointer metadata — including `ref_table` — lives in `_mtron_meta`. An intra-space
@@ -355,15 +360,16 @@ kinds may sit in one row.
 
 ```mtron
 mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
-==>fail::[parse error at line 1, col 89:
-     ...e the discovered types are published --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/578
+==>/sys/space/tbledoc/instset/#
 mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
-==>fail::[parse error at line 1, col 76:
-     ...     [-- the types as addressed objs --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/579
+==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
+    recipient=>isa(person/+/id).!*id(),
+    uri::T=><#>::T]]@/sys/space/tbledoc/instset/award
+==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T,uri::T=><#>::T]]@/sys/space/tbledoc/instset/note
+==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
+    {?}age=>int::T,
+    {?}skill=>str::T,
+    uri::T=><#>::T]]@/sys/space/tbledoc/instset/person
 ```
 Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
 of `rec::T`, and a foreign-key column appears as `recipient=>isa(person/+/id).!*id()` — the column *is* the pointer.
@@ -387,15 +393,9 @@ mtron> *tbledoc:kv/greeting
 mtron> tbledoc:kv/session/1 -> [user=>'marko',cart=>['fig','olive']]
 ==>[user=>'marko',cart=>['fig','olive']]
 mtron> *tbledoc:kv/session/1/cart      [-- a field of the stored document --]
-==>fail::[parse error at line 1, col 71:
-     ...  [-- a field of the stored document --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/580
+==>['fig','olive']
 mtron> *tbledoc:kv/+/                  [-- vid => value --]
-==>fail::[parse error at line 1, col 53:
-     ...+/                  [-- vid => value --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/581
+==>tbledoc:kv/greeting=>'salve, metatron'
 ```
 ## patching a row (a write replaces it)
 
@@ -426,14 +426,76 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/63
+==>[body=>'a note with a database-assigned key']@tbledoc:note/65
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/64
+==>[body=>'another one']@tbledoc:note/66
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>fail::[parse error at line 1, col 90:
-     ...     [-- the keys the backend picked --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/582
+==>12
+==>21
+==>11
+==>59
+==>4
+==>6
+==>49
+==>31
+==>57
+==>3
+==>20
+==>40
+==>7
+==>48
+==>32
+==>29
+==>19
+==>23
+==>51
+==>2
+==>8
+==>33
+==>47
+==>1
+==>22
+==>10
+==>18
+==>58
+==>50
+==>9
+==>34
+==>46
+==>17
+==>26
+==>53
+==>62
+==>63
+==>27
+==>35
+==>45
+==>61
+==>16
+==>52
+==>64
+==>24
+==>28
+==>44
+==>36
+==>65
+==>56
+==>60
+==>41
+==>15
+==>55
+==>37
+==>39
+==>43
+==>13
+==>25
+==>66
+==>14
+==>54
+==>42
+==>5
+==>38
+==>30
 ```
 ## taking the space down
 
@@ -452,10 +514,12 @@ mtron> tblespace::[pattern => tbledoc:#,
 mtron> *tbledoc:person/+.count()                   [-- 0: a fresh mount has not discovered its tables yet --]
 ==>5
 mtron> */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
-==>fail::[parse error at line 1, col 98:
-     ...he instset is what walks the catalog --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/583
+==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
+    recipient=>isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
+==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T]]@/sys/space/tbledoc/instset/note
+==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
+    {?}age=>int::T,
+    {?}skill=>str::T]]@/sys/space/tbledoc/instset/person
 mtron> *tbledoc:person/+.count()                   [-- the rows were in the file all along --]
 ==>5
 mtron> /sys/space/tbledoc -> noobj                 [-- leave the graph as we found it --]

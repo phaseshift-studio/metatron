@@ -22,40 +22,19 @@ mtron> true        [-- bool --]
 mtron> false       [-- bool --]
 ==>false
 mtron> "metatron"  [-- str (double-quoted) --]
-==>fail::[parse error at line 1, col 40:
-     "metatron"  [-- str (double-quoted) --]
-                                            ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/263
+==>'metatron'
 mtron> 'mtron'     [-- str (single-quoted) --]
-==>fail::[parse error at line 1, col 40:
-     'mtron'     [-- str (single-quoted) --]
-                                            ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/264
+==>'mtron'
 mtron> """mtron""" [-- str (triple double-quoted, multi-line) --]
-==>fail::[parse error at line 1, col 59:
-     ...r (triple double-quoted, multi-line) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/265
+==>'mtron'
 mtron> <a.b.c>     [-- uri (angle-bracket necessary of uri has . or space) --]
-==>fail::[parse error at line 1, col 72:
-     ...ket necessary of uri has . or space) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/266
+==><a.b.c>
 mtron> /foo/bar    [-- uri (path literal) --]
-==>fail::[parse error at line 1, col 39:
-     /foo/bar    [-- uri (path literal) --]
-                                           ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/267
+==>/foo/bar
 mtron> a           [-- uri (bare name — no angle brackets if alphanumeric) --]
-==>fail::[parse error at line 1, col 72:
-     ...— no angle brackets if alphanumeric) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/268
+==>a
 mtron> 0x0F        [-- bytes (hex literal) --]
-==>fail::[parse error at line 1, col 40:
-     0x0F        [-- bytes (hex literal) --]
-                                            ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/269
+==>0x0f
 mtron> noobj       [-- "no obj" (empty, none) --]
 ```
 ---
@@ -130,10 +109,7 @@ Objs can carry a **vid** (address URI) via `@`:
 mtron> [a=>1]@a                 [-- rec anchored at uri myVid --]
 ==>[a=>1]@a
 mtron> [1,2,3,4]@b              [-- lst anchored at *a --]
-==>fail::[parse error at line 1, col 52:
-     ...              [-- lst anchored at *a --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/290
+==>[1,2,3,4]@b
 mtron> *a + [b=>2]
 ==>[a=>1,b=>2]
 mtron> *a
@@ -158,9 +134,9 @@ mtron> int{5}::3                                [-- coefficient {5} represents 5
 mtron> {5}3                                     [-- shorthand for the previous example (5 3s) --]
 ==>{5}3
 mtron> {1,2,3}.sum{2}()                         [-- two parallel sums yields {2}6 --]
-==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/302
+==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/290
 mtron> {1,2,3}.sum{2}().sum()                   [-- {2}6 merged by sum is 12 --]
-==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/308
+==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<4>]@/sys/fail/297
 ```
 Coefficients propagate through arithmetic and affect count, sum, repeat:
 
@@ -172,7 +148,7 @@ mtron> {1,2,{10}3}.count()           [-- 12  (sum of coefficients) --]
 mtron> int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ==>{50}100
 mtron> {int{2}::1,int{3}::2}.sum()   [-- int::8 (coefficients account for) --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/336
+==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/325
 ```
 ---
 
@@ -196,9 +172,9 @@ mtron> {1,2,3}.mult(10)               [-- {10,20,30} --]
 mtron> 1.plus(1.plus(1))              [-- 3  (nested) --]
 ==>3
 mtron> {1,2,3,4}.prod()               [-- 24 --]
-==>fail::[unable to locate inst-f fail::T => prod?dom=#{*}()@<3>]@/sys/fail/348
+==>fail::[unable to locate inst-f fail::T => prod?dom=#{*}()@<3>]@/sys/fail/337
 mtron> {1,2,3}.sum()                  [-- 6 --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/352
+==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/341
 mtron> {1,2,3,4,5}.reduce(|plus(0))   [-- 15 (| necessary to block evaluation) --]
 ==>15
 ```
@@ -254,22 +230,13 @@ mtron> 1.and(gt(2),lt(5))                 [-- false --]
 mtron> "goodbye".plus(" nowhere")                    [-- "goodbye nowhere" --]
 ==>'goodbye nowhere'
 mtron> "goodbye" + " nowhere"                        [-- sugar sytnax for previous --]
-==>fail::[parse error at line 1, col 80:
-     ...       [-- sugar sytnax for previous --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/381
+==>'goodbye nowhere'
 mtron> 'a b c'.split(' ')                            [-- ["a", "b", "c"] --]
 ==>['a','b','c']
 mtron> 'a b c'-<' '                                  [-- sugar syntax for previous --]
-==>fail::[parse error at line 1, col 80:
-     ...       [-- sugar syntax for previous --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/382
+==>['a','b','c']
 mtron> {"a","b","c"}>-' '                            [-- "a b c"  (merge with separator) --]
-==>fail::[parse error at line 1, col 86:
-     ... [-- "a b c"  (merge with separator) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/383
+==>'a b c'
 mtron> 'ab3cd'.select('\d+')                         [-- ['3'] --]
 ==>['3']
 mtron> 'ab3cd'.select('\d{2}')                       [-- [,]  (no match — empty pair) --]
@@ -277,10 +244,7 @@ mtron> 'ab3cd'.select('\d{2}')                       [-- [,]  (no match — empt
 mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']               [-- 'AXc' (update sugar syntax) --]
 ==>'AXc'
 mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']=='[A-Z]{2,3}' [-- ['AX'] (update and select sugar syntax) --]
-==>fail::[parse error at line 1, col 94:
-     ...X'] (update and select sugar syntax) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/384
+==>['AX']
 ```
 ---
 
@@ -308,25 +272,13 @@ Wildcards:
 
 ```mtron
 mtron> http://abc:123/a/b/c.as(rec::T)>>scheme        [-- http --]
-==>fail::[parse error at line 1, col 60:
-     ...c.as(rec::T)>>scheme        [-- http --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/385
+==>http
 mtron> http://abc:123/a/b/c.as(rec::T)>>host          [-- abc --]
-==>fail::[parse error at line 1, col 59:
-     .../c.as(rec::T)>>host          [-- abc --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/386
+==>abc
 mtron> http://abc:123/a/b/c.as(rec::T)>>port          [-- 123 (noobj if no port) --]
-==>fail::[parse error at line 1, col 78:
-     ...          [-- 123 (noobj if no port) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/387
+==>123
 mtron> http://abc:123/a/b/c.as(rec::T)>>authority     [-- abc:123 --]
-==>fail::[parse error at line 1, col 63:
-     ...s(rec::T)>>authority     [-- abc:123 --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/388
+==>abc:123
 mtron> http://abc:123/a/b/c.as(rec::T)>>{schema,path} [-- {http,/a/b/c} --]
 ==>[<>,a,b,c]
 ```
@@ -354,15 +306,11 @@ Custom types, created with `tid::T[predicate][constructor]@vid` (see the *type s
 
 ```mtron
 mtron> int::T[is(gt(0))]@posint     [-- a new type: positive integers --]
-==>fail::[parse error at line 1, col 67:
-     ...   [-- a new type: positive integers --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/393
 mtron> posint::2                    [-- posint::2  (admitted: the predicate lets it through) --]
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[parse error at line 1, col 1: -1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1           ]@/sys/fail/394
+   	while parsing: posint::-1]@/sys/fail/378
 ```
 ---
 
@@ -499,10 +447,10 @@ mtron> [1,2,[a=>3],4]>>2                  [-- [1,2] --]
 mtron> [1,2,[a=>3],4]>>(-2)               [-- [a=>3] (negative indicies) --]
 ==>[a=>3]
 mtron> [1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4} (selectors are uris) --]
-==>fail::[parse error at line 1, col 79:
-     ... {1,2,[a=>3],4} (selectors are uris) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/455
+==>1
+==>2
+==>[a=>3]
+==>4
 ```
 ### On records
 
@@ -516,15 +464,9 @@ mtron> [a=>1,b=>2,c=>[d=>3]].rng()        [-- {1,2,[d=>3]}      (extract values)
 ==>2
 ==>[d=>3]
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c      [-- [d=>[e=>3]]       (access by key) --]
-==>fail::[parse error at line 1, col 77:
-     ...-- [d=>[e=>3]]       (access by key) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/456
+==>[d=>[e=>3]]
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c/d/e  [-- 3                 (walk nested structure) --]
-==>fail::[parse error at line 1, col 85:
-     ...             (walk nested structure) --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/457
+==>3
 ```
 ### On URIs
 
@@ -605,15 +547,7 @@ Chain through auto-refs:
 
 ```mtron
 mtron> *a>>x>>x           [-- follows !* chain to the final target --]
-==>fail::[parse error at line 1, col 64:
-     ...follows !* chain to the final target --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/470
 mtron> *a>>x/x            [-- reads a field after resolving the auto-ref --]
-==>fail::[parse error at line 1, col 70:
-     ...a field after resolving the auto-ref --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/471
 ```
 ---
 
@@ -637,10 +571,7 @@ mtron> 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
 mtron> a/b/c.split(/)                   [-- [a,b,c] --]
 ==>[a,b,c]
 mtron> {a,b,c}>-/                       [-- a/b/c --]
-==>fail::[parse error at line 1, col 47:
-     ...}>-/                       [-- a/b/c --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/472
+==>a/b/c
 mtron> a/b/c.split(/).merge(/)           [-- a/b/c --]
 ==>a/b/c
 mtron> a/b/c.split(/).merge(/).mult(<.>)  [-- a/b/c  (identity) --]
@@ -691,15 +622,7 @@ Inline type predicates:
 
 ```mtron
 mtron> ?int::T                        [-- test: is this an int? --]
-==>fail::[parse error at line 1, col 61:
-     ...           [-- test: is this an int? --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/491
 mtron> ?uri::T                        [-- is this a uri? --]
-==>fail::[parse error at line 1, col 54:
-     ...                  [-- is this a uri? --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/492
 mtron> isa(uri::T)                    [-- same, sugar --]
 mtron> ?int{5}::3                     [-- coefficient-aware check --]
 mtron> int{?}::10                     [-- optional coefficient {0,1} --]
@@ -721,10 +644,6 @@ mtron> ?=1        [-- check if equal to 1 --]
 mtron> ?>1        [-- check if greater than 1 --]
 mtron> ?<5        [-- check if less than 5 --]
 mtron> ?int::T    [-- check if type is int --]
-==>fail::[parse error at line 1, col 40:
-     ?int::T    [-- check if type is int --]
-                                            ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/497
 ```
 ---
 
@@ -764,11 +683,11 @@ mtron> ?int::T    [-- check if type is int --]
 ```mtron
 chains: every inst's output is the next inst's input
 mtron> {1,2,3,4}.sum()                [-- 10 --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/501
+==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/480
 mtron> {1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
-==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/505
+==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/484
 mtron> {1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
-==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/511
+==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<4>]@/sys/fail/491
 mtron> {1,2,3,4}-<[plus(1), plus(10)]>-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
 ==>2
 ==>11

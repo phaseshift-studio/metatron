@@ -672,7 +672,7 @@ public class mInstSet extends AbstractInstSet {
 
                         // Remove identity instructions (no-op)
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
-                                code -> code.selfJVM(
+                                code -> 1 == code.insts().size() ? code : code.selfJVM(
                                         RewriterBuilder.search(code.insts())
                                                 .match(instA(ID_INST_TID).insts())
                                                 .rewrite(x -> List.of())).asCode()), "removes identity instructions: \\(g \\cdot \\mathrm{id} \\leadsto g\\)"),
@@ -1276,7 +1276,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("@", List.of(AT_INST_TID), 1),
                 Sugar.prefix("|", List.of(BLOCK_INST_TID), 1),
                 Sugar.wrap("_/", "\\_", List.of(WITHIN_INST_TID), 1),
-                Sugar.wrap("=", "=>", List.of(AS_INST_TID), 1),  // TODO: gut
+                // Sugar.wrap("=", "=>", List.of(AS_INST_TID), 1),  // TODO: gut
                 Sugar.prefix("_", List.of(ID_INST_TID), 0),
                 Sugar.prefix("* ", List.of(MULT_INST_TID), 1),
                 Sugar.prefix("*", List.of(FROM_INST_TID), 1),

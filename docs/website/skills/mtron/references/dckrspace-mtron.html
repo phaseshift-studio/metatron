@@ -743,20 +743,17 @@ mtron&gt; mydb:people/3 -&gt; [name=&gt;'metis',role=&gt;oracle]
 </code></pre>
 <h4>Step 4: Query from mtron</h4>
 <pre><code class="language-mtron">mtron&gt; *mydb:people/+                                           [-- all rows              --]
-==&gt;fail::[parse error at line 1, col 87:
-     ...           [-- all rows              --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/260
+==&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;[name=&gt;'stynx',role=&gt;developer]
 mtron&gt; *mydb:people/+/                                          [-- all rows keyed by uri --]
-==&gt;fail::[parse error at line 1, col 87:
-     ...           [-- all rows keyed by uri --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/261
+==&gt;mydb:people/1=&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;mydb:people/3=&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;mydb:people/2=&gt;[name=&gt;'stynx',role=&gt;developer]
 mtron&gt; *mydb:people/+/name                                      [-- all names             --]
-==&gt;fail::[parse error at line 1, col 87:
-     ...           [-- all names             --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/262
+==&gt;'stynx'
+==&gt;'marko'
+==&gt;'metis'
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
 ==&gt;[name=&gt;'stynx']
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]

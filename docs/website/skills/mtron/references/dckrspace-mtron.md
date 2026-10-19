@@ -396,20 +396,17 @@ mtron> mydb:people/3 -> [name=>'metis',role=>oracle]
 
 ```mtron
 mtron> *mydb:people/+                                           [-- all rows              --]
-==>fail::[parse error at line 1, col 87:
-     ...           [-- all rows              --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/260
+==>[name=>'marko',role=>architect]
+==>[name=>'metis',role=>oracle]
+==>[name=>'stynx',role=>developer]
 mtron> *mydb:people/+/                                          [-- all rows keyed by uri --]
-==>fail::[parse error at line 1, col 87:
-     ...           [-- all rows keyed by uri --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/261
+==>mydb:people/1=>[name=>'marko',role=>architect]
+==>mydb:people/3=>[name=>'metis',role=>oracle]
+==>mydb:people/2=>[name=>'stynx',role=>developer]
 mtron> *mydb:people/+/name                                      [-- all names             --]
-==>fail::[parse error at line 1, col 87:
-     ...           [-- all names             --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/262
+==>'stynx'
+==>'marko'
+==>'metis'
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
 ==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]

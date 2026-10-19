@@ -39,9 +39,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
@@ -82,7 +80,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     private static Inst asUriInt() {
         return Machine.read(f("/m/inst/as").rng(f("/m/uri")).dom(f("/m/int"))).as();
     }
-
+    
     @Test
     @Disabled
     public void testIntFamilyShipsItsAlgebra() {
