@@ -412,11 +412,10 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     })
                     .start()
                     .getFuture().get().getOutput().getLines().stream().map(line -> {
-                        try {
-                            return ObjmtronSerializer.parse(line);
-                        } catch (final Exception e) {
-                            return str(line);
-                        }
+                        // a line of program output is mtron literal only when it parses; the parser
+                        // reports plain text as a fail::T VALUE, not a throw, so test the result
+                        final Obj parsed = ObjmtronSerializer.parse(line);
+                        return parsed.stream().anyMatch(Obj::isFail) ? str(line) : parsed;
                     }));
         } catch (final Exception e) {
             throw MTronException.of(e);

@@ -109,7 +109,7 @@ public class memSpace extends AbstractMemorySpace {
         } else {
             try {
                 LOG.info("loading persisted data at {{y}}%s", file.getAbsolutePath());
-                mParser.eval(file, ex -> {
+                Machine.evaluate(file, ex -> {
                     throw MTronException.of(ex);
                 }).reduce(noobj(), (x, y) -> noobj());
                 LOG.info("total data loaded from {{y}}%s{{X}}: {{y}}%d{{/y}} bytes", file.getAbsolutePath(), Files.size(file.toPath()));

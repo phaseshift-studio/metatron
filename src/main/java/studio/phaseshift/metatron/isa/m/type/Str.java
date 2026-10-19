@@ -168,23 +168,24 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
     private static void appendTemplateResult(final int kind, final String expr, final Obj lhs, final StringBuilder target) {
         final String open = kind == 0 ? "${" : "{{{";
         final String close = kind == 0 ? "}" : "}}}";
-        try {
-            final Obj parsed = ObjmtronSerializer.parse(expr);
-            try {
-                target.append(stringValueOf(parsed.apply(lhs)));
-            } catch (final Exception e1) {
-                // A complete literal expression (e.g. ${1+2}) has domain
-                // coefficient zero and cannot be applied to a concrete lhs —
-                // retry against noobj before leaving it as literal text.
-                try {
-                    target.append(stringValueOf(parsed.apply(noobj())));
-                } catch (final Exception e2) {
-                    target.append(open).append(expr).append(close);
-                }
-            }
-        } catch (final Exception e) {
-            // Leave the template literal verbatim rather than fail the string.
+        final Obj parsed = ObjmtronSerializer.parse(expr);
+        if (parsed.stream().anyMatch(Obj::isFail)) {
+            // Leave the template literal verbatim rather than fail the string. The parser reports an
+            // unparseable expression as a fail::T VALUE, not a throw.
             target.append(open).append(expr).append(close);
+            return;
+        }
+        try {
+            target.append(stringValueOf(parsed.apply(lhs)));
+        } catch (final Exception e1) {
+            // A complete literal expression (e.g. ${1+2}) has domain
+            // coefficient zero and cannot be applied to a concrete lhs —
+            // retry against noobj before leaving it as literal text.
+            try {
+                target.append(stringValueOf(parsed.apply(noobj())));
+            } catch (final Exception e2) {
+                target.append(open).append(expr).append(close);
+            }
         }
     }
 

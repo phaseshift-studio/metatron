@@ -211,7 +211,7 @@ public abstract class AbstractMetatronTest {
                 if (line.startsWith("[STATE] ")) {
                     final String mtron = line.substring("[STATE] ".length()).trim();
                     LOG.debug("[state] %s", mtron);
-                    ObjmtronSerializer.parseMulti(mtron).apply();
+                    ObjmtronSerializer.parse(mtron).apply();
                     continue;
                 }
                 final String[] parts = stripComment(line).split("%", -1);

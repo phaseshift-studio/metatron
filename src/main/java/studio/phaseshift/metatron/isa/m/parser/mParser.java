@@ -40,22 +40,18 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
@@ -81,7 +77,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
-import static studio.phaseshift.metatron.util.CommonUtil.splitOnNonQuotedSequence;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class mParser {
@@ -97,8 +92,35 @@ public class mParser {
      * Declared before the static parser build so the initializers see a
      * live joiner.
      */
-    private static final FailureJoiner FURTHEST =
-            (final Failure a, final Failure b) -> a.getPosition() >= b.getPosition() ? a : b;
+    /**
+     * Every expectation label the grammar declares (see {@link #labeled}). Declared before the
+     * static rule build: fields initialize in textual order, and the rules register their labels
+     * as they are built.
+     */
+    private static final Set<String> LABELS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /**
+     * The closers are labels too, but they say only "this token was expected here". When a closer and
+     * a declared expectation fail at the same offset, the expectation is the real explanation
+     * ("a value for the query parameter"), so the join below prefers it.
+     */
+    private static final Set<String> CLOSERS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    private static final FailureJoiner FURTHEST = (final Failure a, final Failure b) -> {
+        if (a.getPosition() != b.getPosition())
+            return a.getPosition() > b.getPosition() ? a : b;
+        final boolean aExpectation = LABELS.contains(a.getMessage()) && !CLOSERS.contains(a.getMessage());
+        final boolean bExpectation = LABELS.contains(b.getMessage()) && !CLOSERS.contains(b.getMessage());
+        if (aExpectation != bExpectation)
+            return aExpectation ? a : b;
+        return a;
+    };
+    /**
+     * What may follow a complete expression: another obj — which includes noobj, so it also covers
+     * the source ending here. Stated as the expectation rather than as a token.
+     */
+    private static final String EXPECTED_OBJ = "expected an obj";
+
     private static final SettableParser obj_parser = new MemoizedSettableParser();
     private static final SettableParser obj_no_code_parser = new MemoizedSettableParser();
     private static final SettableParser obj_no_call_parser = new MemoizedSettableParser();
@@ -116,13 +138,7 @@ public class mParser {
     // This allows: *x → from(x) and x * y → x.mult(y) to coexist.
     private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>();
     private static Parser cachedSugarParser = null;
-    private static Parser cachedMainParser = null;
     private static Parser cachedExpressionParser = null;
-
-    /**
-     * Maximum loop iterations in parseMulti() before throwing. Tests lower this.
-     */
-    public static int maxParseIterations = 10_000;
 
     //
     // Future: watchdog timer for exponential-backtracking detection
@@ -136,7 +152,7 @@ public class mParser {
     // Implementation sketch:
     //
     //   - A daemon ScheduledExecutorService with one thread.
-    //   - parse() (and parseMulti()'s inner call) records its start time in a
+    //   - parse() records its start time in a
     //     ThreadLocal<Long> before entering the parser.
     //   - The watchdog fires every ~500 ms, walks all live parse threads via
     //     Thread.getAllStackTraces(), checks elapsed time, and calls
@@ -160,6 +176,7 @@ public class mParser {
     private static final String QMAP_POLY_VALUE_CHARS = QMAP_VALUE_CHARS + ">,=";
 
     static {
+        LABELS.add(EXPECTED_OBJ);
         new mInstSet().sugars().forEach(mParser::addSugar);
         new catInstSet().sugars().forEach(mParser::addSugar);
         // Cache the sugar parser after all sugars are loaded
@@ -169,7 +186,7 @@ public class mParser {
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
-                opt(none(), null)).map(t -> f(pick(t, 0)).poly(pick(t, 1)).c(cInt.of((String) pick(t, 2))).qString(pick(t, 3))));
+                opt(none(), null)).map(t -> f(pick(t, 0)).poly(pick(t, 1)).c(coefficientOrOne(pick(t, 2))).qString(pick(t, 3))));
         rel_parser.set(seq(m_type_prefix(Tokens.REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), null)));
         obj_no_call_parser.set(choice(
                 m_comment(),
@@ -253,12 +270,12 @@ public class mParser {
                 m_objs()));
         lst_parser.set(seq(m_type_prefix(Tokens.LST_TID),
                 of('[').trim(),
-                lst_internal(),
-                of(']').trim(),
+                labeled(lst_internal(), "an lst entry — a value, or an inst"),
+                labeledCloser(of(']').trim(), "']' to close the lst"),
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix(Tokens.REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
+        rec_parser.set(seq(m_type_prefix(Tokens.REC_TID), of('[').trim(), labeled(rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), "a poly entry (a lst or a rec) — a value, key=>value, ',' or ']'"), labeledCloser(of(']').trim(), "']' to close the rec"), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
         inst_parser.set(choice(m_inst_b(), m_inst_c()));
         and_or_parser.set(seq(m_obj(), choice(of("||").trim(), of("&&").trim()), m_obj()).map(t -> {
             final Obj lhs = pick(t, 0);
@@ -277,14 +294,13 @@ public class mParser {
             return null == x ? noobj() : x;
         });
 
-        // Cache the main parser to avoid rebuilding it on every parse() call
-        cachedMainParser = cachedExpressionParser.end();
-
-        // Multi-statement parser: using expressionParser in a Java-level loop,
-        // manually consuming ; between expressions.  Doing this at the Java
-        // level instead of using PetitParser's possessive .star() because the
-        // separator (;) can consume whitespace without the following expression
-        // succeeding, and the possessive star won't backtrack.
+        // A source is a sequence of expressions, and ';' does NOT separate them in the
+        // grammar — it is a prefix sugar for end() (mInstSet: Sugar.prefix(";", ...)), so the
+        // expression that precedes it consumes it and the statement boundary is already
+        // decided by the time the expression returns. There is therefore nothing here for a
+        // rule to own: the walk over expressions in parse() IS the source rule,
+        // and it stays a walk only until ';' becomes a separator token rather than an
+        // expression.
     }
 
     public static LinkedHashSet<Parser> addSugar(final Sugar sugar) {
@@ -324,7 +340,8 @@ public class mParser {
 
     private static Parser generate_infix_sugar_parser(final List<fURI> instChain, final String token) {
         // Infix parser: m_obj_no_sugar() + token + m_obj_no_sugar()
-        return seq(m_obj_no_sugar(), of(token).trim(), m_obj()).map(t -> {
+        return seq(m_obj_no_sugar(), of(token).trim(),
+                labeled(m_obj(), "a right operand after '%s'".formatted(token))).map(t -> {
             final Obj lhs = pick(t, 0);
             final Obj rhs = pick(t, 2);
             Obj current = lhs;
@@ -364,7 +381,7 @@ public class mParser {
     public static Parser m_inst_b() {
         return seq(
                 m_inst_furi(), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim(), of('{').not()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), labeledCloser(of(')').trim(), "')' to close the inst args"), of('{').not()).pick(1), // 1 inst_args
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
                 .map(t -> (Inst) new MInst(Triplet.with(
@@ -379,7 +396,7 @@ public class mParser {
     public static Parser m_inst_c() {
         return seq(
                 choice(m_inst_furi(), m_type_prefix(Tokens.M_ISA_INST_TID)), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), labeledCloser(of(')').trim(), "')' to close the inst args")).pick(1), // 1 inst_args
                 seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),
@@ -403,7 +420,7 @@ public class mParser {
         // Blank the interiors of quoted spans in a same-length copy so the
         // comment regex cannot see comment markers that live inside string
         // literals; the matched regions then delete from the original.
-        // Quote spans follow the same rules as splitOnNonQuotedSequence():
+        // Quote spans follow the same rules as the splitter this replaced:
         // an odd run opens a span ('...', "...", """..."""), an even run is
         // empty-string literals ("") and opens nothing.
         final char[] masked = input.toCharArray();
@@ -455,7 +472,7 @@ public class mParser {
     /**
      * {@code input} with its comment regions deleted. Every index after the first comment
      * shifts, so this is a buffer for <em>parsing</em>, never for locating anything in the
-     * document — use {@link #prepare(String)} when a position has to be reported.
+     * source — use {@link #prepare(String)} when a position has to be reported.
      */
     public static String stripComments(final String input) {
         final List<int[]> regions = commentRegions(input);
@@ -468,14 +485,14 @@ public class mParser {
     }
 
     /**
-     * The document as the parser consumes it, plus the map back to the text it came from.
+     * The source as the parser consumes it, plus the map back to the text it came from.
      * The grammar reads a buffer with comments deleted and the ends trimmed, which shifts
      * every index past the first comment; a diagnostic reported in those coordinates points
      * at the wrong place in the file, and no caller can recover the difference afterwards.
      * So the preparation keeps the association: {@link #toOriginal(int)} turns any index the
-     * grammar produced back into a document offset.
+     * grammar produced back into a source offset.
      *
-     * @param original  the document exactly as the caller handed it over
+     * @param original  the source exactly as the caller handed it over
      * @param text      what the grammar parses — comments deleted, ends trimmed
      * @param offsets   {@code offsets[i]} is the original index of {@code text[i]}
      * @param endOffset the original index just past the last prepared character
@@ -483,7 +500,7 @@ public class mParser {
     private record Prepared(String original, String text, int[] offsets, int endOffset) {
 
         /**
-         * A prepared document whose text is already the coordinate space — for a buffer a
+         * A prepared source whose text is already the coordinate space — for a buffer a
          * combinator produced itself, where there is nothing to map back to.
          */
         static Prepared identity(final String buffer) {
@@ -494,7 +511,7 @@ public class mParser {
         }
 
         /**
-         * The document offset of {@code index} in {@link #text}. An index at or past the end
+         * The source offset of {@code index} in {@link #text}. An index at or past the end
          * of the prepared text is clamped to {@link #endOffset}, so a failure at end of input
          * lands where the last character of the expression sat.
          */
@@ -544,7 +561,9 @@ public class mParser {
     }
 
     public static Parser m_call_prefix(final Parser objParser, final fURI headTID) {
-        return seq(opt(objParser, null), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+        return seq(opt(objParser, null), opt(of(".").trim(), '.'),
+                opt(labeled(m_code(), "an instruction name after '.' (e.g. plus, map, from)"), null),
+                m_vid_postfix()).map(t -> {
             if (((List) t).get(0) instanceof List) {
                 return noobj();
             }
@@ -599,40 +618,8 @@ public class mParser {
         return m;
     }
 
-    public static <O extends Obj> O eval(final File source) {
-        try {
-            return eval(Files.readString(source.toPath()));
-        } catch (IOException e) {
-            throw MTronException.of(e);
-        }
-    }
-
-    public static <O extends Obj> O eval(final String code) {
-        final AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        splitOnNonQuotedSequence(stripComments(code), ';', false).stream()
-                .filter(s -> !s.trim().isEmpty())
-                .map(s -> Arrays.stream(s.split("\n"))
-                        .map(String::trim)
-                        .reduce("", (a, b) -> a + b + "\n"))
-                .map(s -> mParser.parse(s).apply())
-                .filter(o -> !o.isNoObj())
-                .forEach(o -> running.getAndUpdate(o::apply));
-        return (O) running.get();
-    }
-
     /**
-     * Formats a PetitParser parse failure into a human-readable error message
-     * with line:column, snippet context, and a simplified explanation of what
-     * went wrong.
-     */
-    private static String formatParseError(final Result failure) {
-        // a failure raised against a buffer no caller handed over — its own coordinates are
-        // the only ones there are
-        return formatParseError(failure, Prepared.identity(failure.getBuffer()));
-    }
-
-    /**
-     * Formats a PetitParser failure against the document it came from: the snippet, the caret,
+     * Formats a PetitParser failure against the source it came from: the snippet, the caret,
      * and the line:column are all in {@code prepared.original()} coordinates, while the
      * explanation is still derived from the prepared text the grammar actually read — the
      * position heuristics below only know about the characters the parser saw, and feeding them
@@ -671,367 +658,276 @@ public class mParser {
      * through verbatim; the position heuristics that follow would otherwise
      * rewrite them into generic bracket talk.
      */
-    private static final Set<String> DESIGNED = Set.of(
-            "unclosed single-quote — missing closing '''",
-            "unclosed double-quote — missing closing '\"'",
-            "unclosed triple-quote — missing closing '\"\"\"'");
 
-    /**
-     * Cleans up PetitParser's verbose ChoiceParser failure message into a
-     * single actionable explanation.
-     */
     private static String simplifyParseMessage(final String rawMsg, final String buffer,
                                                final int pos, final String snippet) {
-        if (null != rawMsg && DESIGNED.contains(rawMsg))
+        // a rule that declared what it expected has already said the best thing it can say
+        if (null != rawMsg && LABELS.contains(rawMsg))
             return rawMsg;
-        final boolean atEnd = pos >= buffer.length();
-        final char atChar = atEnd ? '\0' : buffer.charAt(pos);
-        final char prevChar = pos > 0 ? buffer.charAt(pos - 1) : '\0';
-
-        // At end of input — scan backward for unclosed delimiters (reliable
-        // because the full expression is present, nothing comes after)
-        if (atEnd) {
-            final String unclosed = findUnclosedBefore(buffer, pos);
-            if (unclosed != null)
-                return "incomplete expression — " + unclosed;
-            return "incomplete expression — unexpected end of input";
-        }
-
-        // Position lands on an opener — look ahead for missing closer
-        if (atChar == '[' || atChar == '(' || atChar == '<' || atChar == '{') {
-            final char matchingCloser = switch (atChar) {
-                case '[' -> ']';
-                case '(' -> ')';
-                case '<' -> '>';
-                case '{' -> '}';
-                default -> '\0';
-            };
-            if (!hasMatchingCloser(buffer, pos, atChar, matchingCloser))
-                return "unclosed '" + atChar + "' — missing '" + matchingCloser + "'?";
-        }
-
-        // Position lands on a closer character without a matching opener
-        if (atChar == ']')
-            return "unexpected ']' — missing opening '[' or extra ']'?";
-        if (atChar == '>')
-            return "unexpected '>' — URI brackets don't match, or extra '>'?";
-        if (atChar == ')')
-            return "unexpected ')' — missing opening '(' or extra ')'?";
-        if (atChar == '}' && prevChar == '}')
-            return "unexpected '}}' — template expression missing '${{' or extra '}'?";
-        if (atChar == '}')
-            return "unexpected '}' — missing opening '{' or extra '}'?";
-
-        // ── Content-level designed failures ─────────────────────────────
-        // These fire where the bracket heuristics don't: two terms with no
-        // operator between them (12ab, 1e — mtron has no scientific
-        // notation, 1 2), a binary operator hanging at the end (1+, 1=, 1/),
-        // a dangling coefficient slot (?), a dot used as a name separator
-        // (a.b), and a leading-dot real (.5).
-        final char prevSignificant = lastNonSpace(buffer, pos);
-        final boolean prevClosesTerm = prevSignificant != '\0' && (Character.isLetterOrDigit(prevSignificant)
-                || prevSignificant == ']' || prevSignificant == ')' || prevSignificant == '}'
-                || prevSignificant == '>' || prevSignificant == '"' || prevSignificant == '\'');
-        if (Character.isLetterOrDigit(atChar) && prevClosesTerm)
-            return "unexpected '" + atChar + "' — two adjacent terms need an operator or sugar between them (e.g. 1 + 2)";
-        if ((atChar == '+' || atChar == '-' || atChar == '/' || atChar == '=') && prevClosesTerm)
-            return "incomplete — binary operator '" + atChar + "' needs a right operand (e.g. 1 + 2)";
-        if (atChar == '?' && (prevSignificant == '\0' || prevClosesTerm))
-            return "unexpected '?' — the coefficient slot needs a target to qualify (e.g. is?int(x), int::T[?>0])";
-        if (atChar == '[' && pos + 2 <= buffer.length() && Character.isLetterOrDigit(buffer.charAt(pos + 1))
-                && Character.isWhitespace(buffer.charAt(pos + 2)))
-            return "invalid list/record entry — entries separate with ',' or '=>' (e.g. [1,2,3], [a=>1,b=>2])";
-        if (pos >= 2 && buffer.charAt(pos - 1) == '.' && Character.isLetter(buffer.charAt(pos - 2)))
-            return "invalid name — mtron uses '/' for space paths, not '.' (e.g. */usr/share)";
-        if (Character.isDigit(atChar) && pos >= 1 && buffer.charAt(pos - 1) == '.'
-                && (pos == 1 || !Character.isDigit(buffer.charAt(pos - 2))))
-            return "invalid real — mtron has no leading-dot reals (write 0.5)";
-
-        // Generic: show what character couldn't be parsed, but also check from
-        // the end of the full expression for unclosed delimiters — the real
-        // problem is often an unclosed bracket earlier, not this character.
-        final String unclosedFromEnd = findUnclosedBefore(buffer, buffer.length());
-        if (unclosedFromEnd != null)
-            return String.format("could not parse at '%s' — %s", atChar, unclosedFromEnd);
-        return String.format("could not parse at '%s'", atChar);
+        if (pos >= buffer.length())
+            return "unexpected end of source — the expression is incomplete";
+        return "unexpected '%s'".formatted(buffer.charAt(pos));
     }
-
     /**
-     * Characters that precede {@code <} or {@code >} in mtron operators
-     * ({@code => -> -< <= ?< ?> << >>}), meaning the angle bracket is
-     * part of an operator, not a standalone bracket.
-     */
-    private static boolean isOperatorChar(final char c) {
-        return c == '=' || c == '-' || c == '?' || c == '<' || c == '>';
-    }
-
     /**
-     * The last non-whitespace character strictly before {@code pos}, or
-     * {@code '\0'} if there is none.
-     */
-    private static char lastNonSpace(final String buffer, final int pos) {
-        for (int i = pos - 1; i >= 0; i--)
-            if (!Character.isWhitespace(buffer.charAt(i)))
-                return buffer.charAt(i);
-        return '\0';
-    }
-
-    /**
-     * Checks if {@code buffer} from position {@code from} has a matching closer
-     * for the opener at {@code from}.  Handles nesting: a closer at depth → 0
-     * resolves the opener.
-     */
-    private static boolean hasMatchingCloser(final String buffer, final int from,
-                                             final char open, final char close) {
-        int depth = 0;
-        for (int i = from; i < buffer.length(); i++) {
-            final char c = buffer.charAt(i);
-            if (c == open) depth++;
-            else if (c == close && depth > 0) depth--;
-            if (depth == 0 && i > from) return true;
-        }
-        return depth == 0;
-    }
-
-    /**
-     * Scans backward from {@code pos} looking for an unclosed delimiter.
-     * Returns a human-readable description, or null if nothing obvious.
-     */
-    private static String findUnclosedBefore(final String buffer, final int pos) {
-        int depth = 0;
-        int angleDepth = 0;
-        boolean inDoubleQuote = false;
-        boolean inSingleQuote = false;
-        boolean inTripleQuote = false;
-
-        for (int i = pos - 1; i >= 0; i--) {
-            final char c = buffer.charAt(i);
-
-            // Handle triple-quote
-            if (i >= 2 && buffer.substring(i - 2, i + 1).equals("\"\"\"")) {
-                inTripleQuote = !inTripleQuote;
-                i -= 2;
-                continue;
-            }
-
-            if (inTripleQuote) continue;
-
-            if (c == '"' && !inSingleQuote) {
-                inDoubleQuote = !inDoubleQuote;
-                continue;
-            }
-            if (c == '\'' && !inDoubleQuote) {
-                inSingleQuote = !inSingleQuote;
-                continue;
-            }
-            if (inDoubleQuote || inSingleQuote) continue;
-
-            // Track bracket depth.  Angle brackets (< >) and square/curved/curly
-            // brackets ([ ] ( ) { }) each get their own depth counter so that
-            // a dangling '>' from a mtron operator doesn't mask an unclosed '['.
-            if (c == ']') {
-                depth++;
-            } else if (c == '[') {
-                if (depth == 0) return "unclosed '[' — missing ']'?";
-                depth--;
-            } else if (c == '>' && !isOperatorChar(i > 0 ? buffer.charAt(i - 1) : '\0')) {
-                angleDepth++;
-            } else if (c == '<' && !isOperatorChar(i > 0 ? buffer.charAt(i - 1) : '\0')) {
-                if (angleDepth == 0) return "unclosed '<' — missing '>'?";
-                angleDepth--;
-            } else if (c == ')') {
-                depth++;
-            } else if (c == '(') {
-                if (depth == 0) return "unclosed '(' — missing ')'?";
-                depth--;
-            } else if (c == '}') depth++;
-            else if (c == '{') {
-                if (depth == 0) return "unclosed '{' — missing '}'?";
-                depth--;
-            }
-        }
-
-        // Quote check
-        if (inDoubleQuote) return "unclosed double-quote — missing closing '\"'?";
-        if (inSingleQuote) return "unclosed single-quote — missing closing '''?";
-        if (inTripleQuote) return "unclosed triple-quote — missing closing '\"\"\"'?";
-
-        return null;
-    }
-
-    /**
-     * A construction-time type violation ({@code nat::-3}) arrives as an MTronException thrown while the
-     * parser was BUILDING the value — {@code MObj.<init>} -> {@code Obj.Helper.objTypeCheck} — not while
-     * evaluating it. Turn it into a {@code fail::T} so the failure is a value: inspectable, testable, and
-     * reportable at a boundary instead of escaping as a Java exception.
+     * The one door: mtron source in, an {@link Obj} out.
      * <p>
-     * It is NOT catchable by a {@code .catch()} chained inside the same expression: the failure returns
-     * from the parse of that expression, so anything written after the offending literal is never parsed.
-     * That is an acceptable limit because the violation is STATIC — the value and its type are both right
-     * there in the expression — so the useful affordance is the diagnostic (which level of the predicate
-     * stack rejected it, and from which source), not a runtime handler.
+     * A source is one expression or a {@code ;}-separated sequence of them: one statement parses to that statement's obj, several parse to
+     * a {@code code::T} whose statements are separated by {@code end()}. Nothing else splits a
+     * source — a file, a command argument, a REPL line and a boot script all arrive here.
      * <p>
-     * The source fragment and its offset are attached because no {@code ExecutionStack} frame is live at
-     * parse time: {@code Tracer.mtron_stack} has nothing to capture here, so without the offset a
-     * frame-less failure would say only what went wrong, never where.
+     * Failure is a value, not an exception: {@link Obj#isFail()} is true on the result, and its
+     * message is a position-oriented explanation — source line and column, the offending
+     * text, a caret, and what was expected. {@link #faultOf(Obj)} returns that same information
+     * as data. It is a {@code fail::T} rather than a throw because the rest of the VM already
+     * carries failure that way (a fail propagates through application and is caught at a
+     * boundary); the parser was the one component that rendered its failure into a sentence at
+     * the point of failure, where nothing downstream could use it.
+     *
+     * @param mtron source text — an expression, or a source of them
+     * @return the parsed obj, or a {@code fail::T} describing where and why it stopped
      */
-    private static Obj parseFailure(final MTronException e, final String source, final int offset) {
-        final String snippet = source.trim();
-        return offset > 0
-                ? fail(e, "%s%n\twhile parsing: %s%n\tat offset %d", e.getMessage(), snippet, offset)
-                : fail(e, "%s%n\twhile parsing: %s", e.getMessage(), snippet);
+    /** A brace directly on a type name, followed by {@code ::T}: a coefficient, never a branch. */
+    private static final Pattern TYPE_COEFFICIENT =
+            Pattern.compile("([A-Za-z0-9_\\-\\.]+)\\{([^{}]*)\\}\\s*::\\s*T");
+
+    /** One step of the walk: the statement, where the next one starts, or the fault. */
+    private record Step(Obj statement, int next, Obj fault) {
     }
 
-    public static <O extends Obj> O parse(final String code) {
-        final Prepared prepared = prepare(code);
+    /**
+     * Parse ONE statement from {@code position}, given the statement before it. The adjacency rule
+     * lives here: two expressions may only follow one another when the first one ended a statement
+     * (the ';' sugar records that as an {@code end()} instruction).
+     */
+    private static Step step(final Prepared prepared, final int position, final Obj previous) {
         final String text = prepared.text();
-        if (text.isEmpty())
-            return (O) noobj();
-        // Use cached parser instead of rebuilding on every call
-        long start = System.nanoTime();
         final Result result;
         try {
-            result = cachedMainParser.parse(text);
+            result = cachedExpressionParser.parseOn(new Context(text, position));
         } catch (final StackOverflowError e) {
-            throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", text);
+            return new Step(null, position,
+                    parseFail(prepared, position, "infinite recursion in the parser — possible left recursion"));
         } catch (final MTronException e) {
-            return (O) parseFailure(e, text, 0);
+            // a construction-time type violation (nat::-3): the grammar read the value and the
+            // value's type rejected it. It is already a mtron failure; keep its text, name the
+            // source it came from, and locate it.
+            return new Step(null, position, parseFail(prepared, position,
+                    "%s%n\twhile parsing: %s".formatted(e.getMessage(), text)));
         }
-        long parseTime = System.nanoTime() - start;
-        if (result.isFailure()) {
-            // the failure's coordinates belong to the prepared text — report them against
-            // the document the caller handed over
-            throw MTronException.of(formatParseError(result, prepared));
+        if (result.isFailure())
+            return new Step(null, position, parseFail(prepared, result));
+        if (result.getPosition() <= position) {
+            // m_call_prefix is a sequence of OPTIONAL parts, so it can "succeed" without consuming
+            // anything. Ask the value rule what it objected to and report that instead.
+            final Result probe = m_obj(false).parseOn(new Context(text, position));
+            return new Step(null, position, parseFail(prepared, probe.isFailure() ? probe : result));
         }
-        start = System.nanoTime();
-        O obj = result.get();
-        long getTime = System.nanoTime() - start;
-        // Log timing for expressions (disable in production)
-        if (parseTime > 1_000_000) // > 1ms
-            LOG.debug("Parse timing for '%s': parse=%dms, get=%dms", text, parseTime / 1_000_000, getTime / 1_000_000);
-        return obj;
+        if (null != previous && !endsStatement(previous))
+            return new Step(null, position, parseFail(prepared, new Context(text, position)
+                    .failure(EXPECTED_OBJ, position)));
+        return new Step(result.get(), result.getPosition(), null);
     }
 
-    /**
-     * Non-throwing parse that returns a diagnostic record instead of throwing
-     * on failure.  Use this in REPLs, IDE integrations, and anywhere you want
-     * to probe validity without a try/catch.
+    /*
+     * THE WALK IS SHARED. parse() collects every statement and assembles one obj; the boot runner
+     * reads one statement, applies it, then reads the next — which it must, because a statement's
+     * CONSTRUCTION can have effects (a `@vid` write mounts a space) that the next statement needs.
      */
-    public static ParseDiagnostic parseDiagnose(final String code) {
-        // the same preparation parse() uses, so the two entry points accept exactly the
-        // same documents — this one used to trim without stripping comments, which made a
-        // commented expression valid or invalid depending on which door it came through
-        final Prepared prepared = prepare(code);
-        if (prepared.text().isEmpty())
-            return ParseDiagnostic.ok(noobj());
-        try {
-            final Result result = cachedMainParser.parse(prepared.text());
-            if (result.isSuccess())
-                return ParseDiagnostic.ok(result.get());
-            // the failure is located in the prepared text; the diagnostic reports the
-            // document, so line, column, position and buffer all agree with what the caller sent
-            final int position = prepared.toOriginal(result.getPosition());
-            final int[] lc = Token.lineAndColumnOf(prepared.original(), position);
-            final String simplified = simplifyParseMessage(
-                    result.getMessage(), result.getBuffer(), result.getPosition(), "");
-            return new ParseDiagnostic(noobj(), lc[0], lc[1],
-                    position, prepared.original(), simplified, false);
-        } catch (final StackOverflowError e) {
-            return new ParseDiagnostic(noobj(), 1, 1, 0, prepared.original(),
-                    "infinite recursion detected — possible left recursion", false);
-        }
-    }
-
-    /**
-     * Parses mtron code with support for {@code ;}-separated multi-statement input.
-     * Unlike {@link #parse(String)} which expects exactly one expression,
-     * this method allows {@code expr;expr;...} at the top level. The {@code ;}
-     * separator maps to {@code end()} instructions between statements.
-     * <p>
-     * Implementation: uses {@link #parse(String)} in a loop, consuming one
-     * expression at a time and manually trimming the {@code ;} separator.  This
-     * avoids PetitParser's possessive-star issue where a separator can partially
-     * match without the following expression succeeding.
-     */
-    public static <O extends Obj> O parseMulti(final String code) {
-        final String trimmed = stripComments(code.trim());
-        if (trimmed.isEmpty())
-            return (O) noobj();
-
-        final List<Inst> allInsts = new ArrayList<>();
-        String remaining = trimmed;
-        boolean needsEnd = false;
-        int iterations = 0;
-
-        while (!remaining.isBlank()) {
-            if (++iterations > maxParseIterations) {
-                throw MTronException.of("infinite recursion detected in parser: parseMulti() exceeded %d iterations on '%s'", maxParseIterations, remaining);
-            }
-            remaining = remaining.trim();
-
-            // Consume leading ; separators.  We defer the actual end()
-            // insertion until an expression follows, so that trailing ; does
-            // not produce a spurious end().
-            if (remaining.startsWith(";")) {
-                if (!allInsts.isEmpty()) needsEnd = true;
-                remaining = remaining.substring(1).trim();
-                continue;
-            }
-
-            final Result result;
+    public static Obj parse(final String mtron) {
+        final Prepared prepared = prepare(mtron);
+        final String text = prepared.text();
+        if (text.isEmpty())
+            return noobj();
+        // the ::T says this is a type position, so the brace on the type name is a coefficient: a
+        // body cInt does not recognize is a malformed coefficient, not a branch segment
+        final Matcher coefficients = TYPE_COEFFICIENT.matcher(text);
+        while (coefficients.find()) {
             try {
-                result = cachedExpressionParser.parse(remaining);
-            } catch (final StackOverflowError e) {
-                throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", remaining);
-            } catch (final MTronException e) {
-                return (O) parseFailure(e, remaining, trimmed.length() - remaining.length());
+                // an empty body is not a coefficient either: there is no "the coefficient is nothing"
+                if (coefficients.group(2).isBlank())
+                    throw new IllegalArgumentException("empty coefficient body");
+                cInt.of(coefficients.group(2));
+            } catch (final Exception e) {
+                return parseFail(prepared, prepared.toOriginal(coefficients.start(2)),
+                        "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {**}, {?}, {??}, {+}");
             }
-            if (result.isFailure()) {
-                if (!allInsts.isEmpty()) break;   // partial parse, return what we have
-                throw MTronException.of(formatParseError(result));
-            }
+        }
+        final List<Obj> statements = new ArrayList<>();
+        Obj previous = null;
+        int position = 0;
+        while (position < text.length()) {
+            final Step step = step(prepared, position, previous);
+            if (null != step.fault())
+                return step.fault();
+            statements.add(step.statement());
+            previous = step.statement();
+            position = step.next();
+        }
+        return assemble(statements);
+    }
 
-            final Obj parsed = result.get();
-            final int consumed = result.getPosition();
+    /**
+     * Read a source one statement at a time. The boundaries are the parser's own — a statement ends
+     * where the grammar ended it, which is where {@code ;} put an {@code end()} — so a {@code ';'}
+     * inside a {@code str::T}, a comment or a uri never cuts one in half.
+     * <p>
+     * This is what a caller that must interleave parsing with execution loops over: parse one
+     * statement, apply it, then read the next. Parsing a whole source first is only safe when
+     * construction has no effects, which is not yet true in metatron.
+     */
+    public static final class Incremental {
 
-            // Guard: if the parser succeeded but consumed zero characters we
-            // would loop forever on the same remaining string.
-            if (consumed == 0) {
-                throw MTronException.of("infinite recursion detected in parser: parser consumed 0 characters at '%s'", remaining);
-            }
-            remaining = remaining.substring(consumed);
+        private final Prepared prepared;
+        private int position;
+        private Obj previous;
+        private Obj fault;
 
-            // Skip comments — m_comment() returns noobj(), and a comment-only
-            // segment should not insert an end() separator or become a statement.
-            if (parsed.isNoObj()) continue;
-
-            if (needsEnd) {
-                allInsts.add(instB(END_INST_TID, lst()));
-                needsEnd = false;
-            }
-            appendToInstList(allInsts, parsed);
+        private Incremental(final String source) {
+            this.prepared = prepare(source);
+            this.position = 0;
+            this.previous = null;
+            this.fault = null;
         }
 
-        // Strip trailing end() instructions — they come from trailing ;
-        // that the parser consumed as sugar but have no subsequent expression.
-        while (!allInsts.isEmpty()
-                && END_INST_TID.equals(allInsts.get(allInsts.size() - 1).tid().basePath())) {
-            allInsts.remove(allInsts.size() - 1);
+        public boolean hasNext() {
+            return null == this.fault && this.position < this.prepared.text().length();
         }
 
-        if (allInsts.isEmpty())
-            return (O) noobj();
-        if (allInsts.size() == 1) {
-            final Inst single = allInsts.get(0);
-            // Unwrap start(x) wrappers introduced by appendToInstList for bare
-            // values — a single expression should return the same shape as parse().
-            if (START_INST_TID.equals(single.tid().basePath())
-                    && single.args().count() == 1) {
-                return (O) single.args().lstValue().get(0);
+        /** The next statement, or {@code noobj} when the source is exhausted or has faulted. */
+        public Obj next() {
+            if (!hasNext())
+                return noobj();
+            final Step step = step(this.prepared, this.position, this.previous);
+            if (null != step.fault()) {
+                this.fault = step.fault();
+                return this.fault;
             }
-            return (O) single;
+            this.position = step.next();
+            this.previous = step.statement();
+            return step.statement();
         }
-        return (O) MCode.of(allInsts, Tokens.CODE_TID, null).tryToInst();
+
+        /** The fault that stopped the walk, or {@code null}. */
+        public Obj fault() {
+            return this.fault;
+        }
+    }
+
+    public static Incremental incremental(final String source) {
+        return new Incremental(source);
+    }
+
+    /**
+     * Whether a parsed statement consumed the {@code ;} that ends it — the ';' sugar appends an
+     * {@code end()} instruction, so a statement is closed when its last instruction is one.
+     */
+    private static boolean endsStatement(final Obj statement) {
+        if (null == statement)
+            return false;
+        if (statement.isCode()) {
+            final List<Inst> insts = statement.asCode().jvm();
+            return !insts.isEmpty()
+                    && END_INST_TID.equals(insts.get(insts.size() - 1).tid().basePath());
+        }
+        return statement.isInst()
+                && END_INST_TID.equals(statement.asInst().tid().basePath());
+    }
+
+    /**
+     * The parse result as a {@code fail::T} carrying a {@link ParseFault}. Transient on purpose:
+     * a parse fault is a value the caller inspects, not a frame on the machine's fail stack, and
+     * the parser has to work before a machine is loaded (a boot file, an IDE, a test harness).
+     */
+    private static Obj parseFail(final Prepared prepared, final Result failure) {
+        final int position = prepared.toOriginal(failure.getPosition());
+        final int[] lc = Token.lineAndColumnOf(prepared.original(), position);
+        return parseFail(new ParseFault(
+                formatParseError(failure, prepared), prepared.original(), lc[0], lc[1], position));
+    }
+
+    private static Obj parseFail(final Prepared prepared, final int position, final String message) {
+        final int[] lc = Token.lineAndColumnOf(prepared.original(), position);
+        return parseFail(new ParseFault(
+                "parse error at line %d, col %d: %s".formatted(lc[0], lc[1], message),
+                prepared.original(), lc[0], lc[1], position));
+    }
+
+    /**
+     * Mint the parse fail the way every other fail is minted — a frame in the machine's fail
+     * space, addressable and catchable like any other obj. A fail is an Obj, so the parser hands
+     * back an ordinary one rather than a special parser-only value. Only before a machine exists
+     * (a boot file mid-load, an editor with no VM attached) is a transient fail the best
+     * available value, because there is no fail space yet to put it in.
+     */
+    private static Obj parseFail(final ParseFault fault) {
+        return Machine.loaded() ? MFail.fail(fault) : MFail.transientFail(fault);
+    }
+
+    /**
+     * The structured fault behind a {@link #parse(String)} failure, or {@code null} when the obj
+     * is not a parse fail. A reader of the door's output, not another door.
+     */
+    public static ParseFault faultOf(final Obj obj) {
+        return null != obj && obj.isFail() && obj.asFail().jvm() instanceof ParseFault fault ? fault : null;
+    }
+
+    /**
+     * Assemble parsed statements: one is itself (the shape a single expression always had),
+     * several are a code with {@code end()} between them (the shape the deleted {@code parseMulti}
+     * built by hand).
+     */
+    private static Obj assemble(final List<Obj> statements) {
+        if (statements.isEmpty())
+            return noobj();
+        // One expression is that expression. Several are the chain the grammar built, joined
+        // as parsed: ';' is sugar for an end() INST — an Obj with a place in the chain — so
+        // nothing is stripped, inserted, or normalized away here. A ';' that produced an
+        // end() stays in the program for whoever applies it.
+        if (statements.size() == 1)
+            return statements.get(0);
+        final List<Inst> insts = new ArrayList<>();
+        for (final Obj statement : statements)
+            appendToInstList(insts, statement);
+        return MCode.of(insts, Tokens.CODE_TID, null).tryToInst();
+    }
+
+    /**
+     * Where a failed parse stopped, and the same explanation its message carries. Reachable from
+     * the fail itself ({@code fail.jvm()}), so a caller that needs to place a marker in a
+     * source does not have to read prose.
+     */
+    public static final class ParseFault extends MTronException {
+
+        private final String source;
+        private final int line;
+        private final int column;
+        private final int position;
+
+        private ParseFault(final String message, final String source,
+                           final int line, final int column, final int position) {
+            super(message, null, true);
+            this.source = source;
+            this.line = line;
+            this.column = column;
+            this.position = position;
+        }
+
+        public String source() {
+            return this.source;
+        }
+
+        public int line() {
+            return this.line;
+        }
+
+        public int column() {
+            return this.column;
+        }
+
+        public int position() {
+            return this.position;
+        }
     }
 
     /**
@@ -1062,7 +958,9 @@ public class mParser {
      * Appends the instructions from an Obj (Code, Inst, or plain value) to the given list.
      */
     private static void appendToInstList(final List<Inst> insts, final Obj obj) {
-        if (null == obj || obj.isNoObj()) return;
+        // noobj is an Obj (the zero), not the absence of one: a statement that parsed to it
+        // stays in the program as start(noobj) rather than vanishing from the chain
+        if (null == obj) return;
         if (obj.isCode()) {
             insts.addAll(obj.asCode().codeValue());
         } else if (obj.isInst()) {
@@ -1094,14 +992,14 @@ public class mParser {
         return seq(of('-').not(), leadingBraceGuard, contentParser,
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 2)).poly(pick(t, 3)).c(cInt.of((String) pick(t, 4))).qString(pick(t, 5)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 2)).poly(pick(t, 3)).c(coefficientOrOne(pick(t, 4))).qString(pick(t, 5)));
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
         return choice(
                 of("{0}").trim().map(t -> NOOBJ),
                 seq(of("<>").trim()).map(x -> empty()),
-                seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query, true), of('>')).pick(1),
+                seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query, true), labeledCloser(of('>'), "'>' to close the uri")).pick(1),
                 m_furi_bare(furiCharacterSet, polynomial, coefficient, query));
     }
 
@@ -1115,7 +1013,7 @@ public class mParser {
                 .map(t -> {
                     final String c = pick(t, 0);
                     final fURI f = pick(t, 1);
-                    return null == c ? f : f.c(cInt.of(c));
+                    return null == c ? f : f.c(coefficientOrOne(c));
                 });
     }
 
@@ -1123,7 +1021,8 @@ public class mParser {
         return seq(of('[').trim(),
                 seq(opt(m_furi_coefficient(), cInt.ONE()), m_furi(REDUCED_FURI_CHARS, false, true, false), opt(seq(of("=>").trim(), m_furi(REDUCED_FURI_CHARS, false, true, false)), "")).flatten()
                         .separatedBy(of(',').trim()),
-                of(']').trim())
+                labeledCloser(of(']').trim(),
+                        "']' to close the uri poly — a uri poly can not nest (an element is a type, not another poly)"))
                 .map(t -> ((List) (pick(t, 1))).stream().filter(c -> !c.equals(',')).map(Object::toString).toList());
     }
 
@@ -1136,7 +1035,10 @@ public class mParser {
      */
     public static Parser m_furi_branch() {
         return seq(of('{').trim(),
-                seq(opt(m_furi_coefficient(), cInt.ONE()), m_furi(REDUCED_FURI_CHARS, false, true, false)).flatten()
+                labeled(seq(of('}').not(),
+                        seq(opt(m_furi_coefficient(), cInt.ONE()), m_furi(REDUCED_FURI_CHARS, false, true, false)).flatten())
+                        .map(t -> pick(t, 1)),
+                        "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {+}, {?}")
                         .separatedBy(of(',').trim()),
                 of('}').trim())
                 .map(t -> ((List) (pick(t, 1))).stream().filter(c -> !c.equals(',')).map(Object::toString).toList());
@@ -1150,8 +1052,10 @@ public class mParser {
      */
     public static Parser m_furi_branch_literal() {
         final Parser nested = seq(of('{'), noneOf("}").star(), of('}')).flatten();
-        final Parser body = nested.or(noneOf("}")).star().flatten();
-        return seq(m_furi_coefficient().not(), of('{'), body, of('}'))
+        final Parser body = nested.or(noneOf("}")).plus().flatten();
+        return seq(m_furi_coefficient().not(), of('{'),
+                labeled(body, "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {+}, {?}"),
+                of('}'))
                 .map(t -> "{" + pick(t, 2) + "}");
     }
 
@@ -1177,8 +1081,22 @@ public class mParser {
                 .map(t -> "{" + pick(t, 0) + "}" + pick(t, 1));
     }
 
+    /**
+     * {@link cInt#of(String)} is the authority on coefficient bodies and throws on a malformed one.
+     * The parser may not throw, so a malformed coefficient degrades to the neutral coefficient here;
+     * the checks that can name the problem (the type-position check, the label registry) are what
+     * report it as a failure.
+     */
+    private static cInt coefficientOrOne(final Object raw) {
+        try {
+            return cInt.of(null == raw ? null : raw.toString());
+        } catch (final Exception e) {
+            return cInt.ONE();
+        }
+    }
+
     public static Parser m_furi_coefficient() {
-        return seq(of('{'), choice(
+        return seq(of('{'), labeled(choice(
                         seq(opt(seq(opt(of('-'), ""), digit().plus()), ""), of(','), opt(seq(opt(of('-'), ""), digit().plus()), "")).flatten(),
                         seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
                         of(","),
@@ -1190,6 +1108,7 @@ public class mParser {
                         of('-'),
                         of("??"),
                         of('?')),
+                        "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {**}, {?}, {??}, {+}"),
                 of('}')).map(t -> pick(t, 1).toString());
     }
 
@@ -1214,10 +1133,11 @@ public class mParser {
                 opt(choice(
                         m_furi_template(), // Template expressions like ${[q=>hello]}
                         seq((word().or(anyOf("+#_-"))).plus(),
-                                opt(seq(of("="), choice(
+                                opt(seq(of("="), labeled(choice(
                                         seq(of("["), word().or(anyOf(QMAP_POLY_VALUE_CHARS)).star(), of("]")),
                                         m_furi_no_query(),
-                                        word().or(anyOf(QMAP_VALUE_CHARS)).star())), ""))
+                                        word().or(anyOf(QMAP_VALUE_CHARS)).plus()),
+                                        "a value for the query parameter ('=' must be followed by one)")), ""))
                 ).separatedBy(of("&")), "").flatten())
         ).map(t -> mParser.<List<String>>pick(t, 1).stream().reduce((a, b) -> a + b).orElse(""));
     }
@@ -1273,11 +1193,65 @@ public class mParser {
                 .map(t -> objs(((List) t).stream().filter(x -> x instanceof Obj).toList()));
     }
 
+    /**
+     * A type's brace is a COEFFICIENT, not a branch: {@code int{3}::T} is three ints, and
+     * {@code int{BAD}::T} is a malformed coefficient rather than a type with a branch segment. The
+     * {@code ::T} is what tells the parser it is in a type position, so the check runs over the
+     * type text: a trailing {@code {...}} that is NOT preceded by {@code /} (a path segment) is
+     * handed to {@link cInt}, the authority on coefficient bodies, and a rejection becomes a
+     * positioned parse failure instead of a constructed type.
+     */
+    private static final class TypeCoefficientParser extends Parser {
+
+        private final Parser inner;
+
+        private TypeCoefficientParser(final Parser inner) {
+            this.inner = inner;
+        }
+
+        @Override
+        public Result parseOn(final Context ctx) {
+            final Result result = this.inner.parseOn(ctx);
+            if (result.isFailure())
+                return result;
+            final String text = ctx.getBuffer().substring(ctx.getPosition(), result.getPosition());
+            final int close = text.lastIndexOf('}');
+            if (close < 0)
+                return result;
+            final int open = text.lastIndexOf('{', close);
+            if (open < 0 || (open > 0 && text.charAt(open - 1) == '/'))
+                return result;                                   // a path branch, not a coefficient
+            try {
+                cInt.of(text.substring(open + 1, close));
+            } catch (final Exception e) {
+                return ctx.failure(
+                        "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {**}, {?}, {??}, {+}",
+                        ctx.getPosition() + open + 1);
+            }
+            return result;
+        }
+
+        @Override
+        public Parser copy() {
+            return new TypeCoefficientParser(this.inner.copy());
+        }
+
+        @Override
+        public List<Parser> getChildren() {
+            return List.of(this.inner);
+        }
+
+        @Override
+        public void replace(final Parser source, final Parser target) {
+            // immutable: the inner parser is fixed at construction
+        }
+    }
+
     public static Parser m_type_prefix(final fURI baseType) {
         return (null == baseType) ? seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0) :
                 opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0), m_furi_coefficient().map(t -> {
                     try {
-                        return baseType.c(cInt.of((String) t));
+                        return baseType.c(coefficientOrOne(t));
                     } catch (Exception e) {
                         return null;
                     }
@@ -1372,15 +1346,49 @@ public class mParser {
     }
 
     public static Parser m_type() {
-        return seq(m_type_prefix(null), of('T'),
+        return seq(new TypeCoefficientParser(m_type_prefix(null)), of('T'),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
-                choice(m_furi_coefficient().map(t -> Tokens.TYPE_TID.c(cInt.of(t.toString()))), m_vid_postfix()))
+                choice(m_furi_coefficient().map(t -> Tokens.TYPE_TID.c(coefficientOrOne(t))), m_vid_postfix()))
                 .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0).toString().equals("noobj") ? NOOBJ_TID : pick(t, 0), pick(t, 4)));
     }
 
+    /**
+     * One element of a fluent chain: an instruction, optionally introduced by the dot that
+     * separates it — or a bare value after a dot, which is a {@code map} of that value.
+     * <p>
+     * {@code 1.plus(2).445.plus(4)} parses to {@code start(1).plus(2).map(445).plus(4)}. A value
+     * in the middle of a chain has nowhere else to land, and "apply this constant" is exactly
+     * what {@code map} means, so the surface form needs no new concept — only a place in the
+     * chain for a non-inst obj. The dot is REQUIRED on that branch: whitespace adjacency is not
+     * a chain, so {@code 1 2} must stay an error rather than becoming {@code start(1).map(2)}.
+     */
+    private static Parser m_chain_element() {
+        return choice(
+                seq(opt(of('.').trim(), null), m_inst()).map(t -> pick(t, 1)),
+                // '.' is the ring's multiplication; '{a,b}' is the ring's addition. A brace after
+                // the dot is therefore a BRANCH, on the same footing as the dot rather than a
+                // sugar: 1.plus(2).{plus(4),plus(10)} is 1.plus(2).branch(plus(4),plus(10)).
+                seq(of('.').trim(), of('{').trim(),
+                        labeled(m_obj().separatedBy(of(',').trim()),
+                                "a branch — objs separated by ',' inside '{...}'"),
+                        of('}').trim())
+                        .map(t -> instB(BRANCH_INST_TID, lst(((List<Object>) pick(t, 2)).stream()
+                                .filter(part -> part instanceof Obj)
+                                .map(part -> (Obj) part)
+                                .toList()))),
+                seq(of('.').trim(), m_obj(false)).map(t -> {
+                    final Obj value = pick(t, 1);
+                    // branch one already had its chance: never double-wrap an inst a wider
+                    // grammar change may now allow here
+                    return value.isInst() || value.isCode()
+                            ? value
+                            : instB(MAP_INST_TID, lst(value));
+                }));
+    }
+
     public static Parser m_code() {
-        return seq(m_type_prefix(Tokens.CODE_TID), opt(of("|["), "|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
+        return seq(m_type_prefix(Tokens.CODE_TID), opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix())
                 .map(t -> ((List<Object>) pick(t, 2)).size() == 1 ?
                         ((List<Inst>) pick(t, 2)).get(0) :
                         new MCode((List) ((List<Object>) pick(t, 2))
@@ -1433,83 +1441,6 @@ public class mParser {
                         .map(t -> instB(tid.qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
 
-    public record FileParseError(int lineNumber, String lineString, Exception parseException) {
-    }
-
-    /**
-     * Result of a non-throwing parse via {@link #parseDiagnose(String)}.
-     * On success, {@code result} holds the parsed object.  On failure,
-     * {@code line}/{@code column}/{@code position} locate the error,
-     * {@code buffer} contains the full input, and {@code message} is a
-     * simplified human-readable explanation.
-     */
-    public record ParseDiagnostic(Obj result, int line, int column, int position,
-                                  String buffer, String message, boolean success) {
-        public static ParseDiagnostic ok(final Obj result) {
-            return new ParseDiagnostic(result, 0, 0, -1, "", "", true);
-        }
-
-        /**
-         * Returns the formatted error string (same format as
-         * {@link #parse(String)} throws), or {@code null} on success.
-         */
-        public String formatted() {
-            return success ? null : formatParseError(this);
-        }
-    }
-
-    /**
-     * Formats a {@link ParseDiagnostic} failure the same way
-     * {@link #parse(String)} formats parse errors.
-     */
-    private static String formatParseError(final ParseDiagnostic diag) {
-        final int contextRadius = 40;
-        final int snippetStart = Math.max(0, diag.position - contextRadius);
-        final int snippetEnd = Math.min(diag.buffer.length(), diag.position + contextRadius);
-        final String prefix = snippetStart > 0 ? "..." : "";
-        final String suffix = snippetEnd < diag.buffer.length() ? "..." : "";
-        final String snippet = prefix
-                + diag.buffer.substring(snippetStart, snippetEnd).replace("\n", "\\n").replace("\r", "\\r")
-                + suffix;
-        final int caretOffset = diag.position - snippetStart + (snippetStart > 0 ? 3 : 0);
-        final String caretLine = " ".repeat(caretOffset) + "^";
-        return String.format("parse error at line %d, col %d:\n  %s\n  %s\n  %s",
-                diag.line, diag.column, snippet, caretLine, diag.message);
-    }
-
-    private static String aggregateTillBlock(final List<String> lines, final int start, final String prefix) {
-        final StringBuilder builder = new StringBuilder();
-        for (final String line : lines.subList(start, lines.size() - 1)) {
-            builder.append(prefix).append(line).append("\n");
-            if (line.contains(";"))
-                break;
-        }
-        if (builder.isEmpty())
-            builder.append("\n");
-        return builder.deleteCharAt(builder.length() - 1).toString();
-    }
-
-    public static Stream<Obj> eval(final File file, final Consumer<FileParseError> exhandler) throws IOException {
-        final List<String> lines = Files.readAllLines(file.toPath());
-        final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
-        final AtomicInteger lineNumber = new AtomicInteger(0);
-        return splitOnNonQuotedSequence(stripComments(source), ';', false).stream()
-                .map(s -> Arrays.stream(s.split("\n"))
-                        .peek(x -> lineNumber.incrementAndGet())
-                        .filter(x -> !x.isBlank())
-                        .reduce("", (a, b) -> a + b + "\n"))
-                .peek(s -> LOG.debug("evaluating line: %s", s))
-                .map(s -> {
-                    try {
-                        return mParser.parse(s).apply();
-                    } catch (final Exception e) {
-                        exhandler.accept(new FileParseError(lineNumber.get(), aggregateTillBlock(lines, lineNumber.get(), "{{r}}> "), e));
-                        return noobj();
-                    }
-                })
-                .filter(o -> !o.isNoObj());
-    }
-
     /// //////////////////////////////////////////////////////////////////////////////////////////
     /// //////////////////////////// PARSER HELPER UTILITY METHODS ///////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
@@ -1536,7 +1467,22 @@ public class mParser {
      * reporter, while the inner failure's position is preserved, so line:col
      * still points at where the attempt actually stopped.
      */
+    /**
+     * Declare what a rule expected. The message is the diagnostic: a {@link LabeledParser} reports
+     * it at the position where the attempt actually died, so the farthest label is what reaches the
+     * reader. Registering it here is what lets the formatter tell a designed sentence from a
+     * PetitParser combinator dump WITHOUT a hardcoded list that silently stops matching when a new
+     * label is added.
+     */
     public static Parser labeled(final Parser inner, final String message) {
+        LABELS.add(message);
+        return new LabeledParser(inner, message);
+    }
+
+    /** A closer: expected only because the rule needs its delimiter. Loses an equal-offset tie. */
+    public static Parser labeledCloser(final Parser inner, final String message) {
+        LABELS.add(message);
+        CLOSERS.add(message);
         return new LabeledParser(inner, message);
     }
 

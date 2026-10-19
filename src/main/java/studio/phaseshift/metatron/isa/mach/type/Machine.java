@@ -52,6 +52,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_MACHINE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Machine: a SPACE OF SPACES -- the address space resolution happens in. Its members ({@code instset}, {@code memory},
@@ -214,6 +224,88 @@ public interface Machine extends Rec, AutoCloseable {
 
     static Obj write(final String vid, final Obj obj) {
         return Machine.write(f(vid), obj);
+    }
+
+    // ======================== the two entry points ========================
+
+    /**
+     * Parse {@code source} and nothing else — the {@code parser} stage on its own, as an obj.
+     * No rewriting, no resolution, no typing, no evaluation.
+     *
+     * @param source the mtron source text
+     * @return the parsed obj, or the {@code fail::T} that stopped it
+     */
+    public static Obj parse(final String source) {
+        return Machine.current().compiler().parser().apply(str(source));
+    }
+
+    /**
+     * Evaluate a source FILE as a program: read it, parse it, run each statement in turn.
+     */
+    public static Obj evaluate(final File file) {
+        try {
+            return evaluate(Files.readString(file.toPath()));
+        } catch (final IOException e) {
+            return MTronException.of(e).asFail();
+        }
+    }
+
+    /**
+     * Evaluate a source FILE statement by statement, reporting the statement that failed.
+     * <p>
+     * Parsing and applying are INTERLEAVED: a statement is parsed, applied, and only then is the
+     * next one read. That ordering is required, not stylistic — a boot statement's construction can
+     * have side effects (a {@code @vid} write mounts a space, e.g. the console), and those effects
+     * must be in place before the next statement is read.
+     */
+    public static Stream<Obj> evaluate(final File file, final Consumer<FileParseError> exhandler) throws IOException {
+        final List<String> lines = Files.readAllLines(file.toPath());
+        final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
+        final AtomicInteger lineNumber = new AtomicInteger(0);
+        return CommonUtil.splitOnNonQuotedSequence(
+                        studio.phaseshift.metatron.isa.m.parser.mParser.stripComments(source), ';', false)
+                .stream()
+                .map(piece -> Arrays.stream(piece.split("\n"))
+                        .peek(x -> lineNumber.incrementAndGet())
+                        .filter(x -> !x.isBlank())
+                        .reduce("", (a, b) -> a + b + "\n"))
+                .map(piece -> {
+                    final String line = lines.isEmpty() ? piece : lines.get(Math.min(lineNumber.get(), lines.size() - 1));
+                    final Obj parsedPiece = studio.phaseshift.metatron.isa.m.parser.mParser.parse(piece);
+                    if (parsedPiece.stream().anyMatch(Obj::isFail)) {
+                        // the statement did not parse: report it and take the next split
+                        exhandler.accept(new FileParseError(lineNumber.get(), line, parsedPiece.asFail().asException()));
+                        return noobj();
+                    }
+                    try {
+                        return parsedPiece.apply();
+                    } catch (final Exception e) {
+                        exhandler.accept(new FileParseError(lineNumber.get(), line, e));
+                        return noobj();
+                    }
+                })
+                .filter(o -> !o.isNoObj());
+    }
+
+    /** A statement of a source file that failed, with its line and the source it came from. */
+    record FileParseError(int lineNumber, String lineString, Exception parseException) {
+    }
+
+    /**
+     * Compile {@code source} (parse → rewrite → resolve → type) and run it on this machine.
+     * The one call for "evaluate this source": parse is the parser's job, and running compiled
+     * code is the machine's.
+     *
+     * @param source the mtron source text
+     * @return the obj the program computed, or the {@code fail::T} that stopped it
+     */
+    public static Obj evaluate(final String source) {
+        final Machine machine = Machine.current();
+        final Obj compiled = machine.compiler().apply(str(source));
+        // a fail leaves the inst chain; it is returned as itself, never run
+        if (compiled.isFail())
+            return compiled;
+        return machine.processor().code(compiled.asCode()).apply(noobj());
     }
 
     static Obj write(final Obj obj) {

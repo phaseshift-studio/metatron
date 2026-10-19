@@ -78,13 +78,15 @@ public class MUri extends MObj implements Uri {
             final fURI.Component component = template.get0();
             final String exprStr = template.get1();
 
-            try {
-                // Parse the expression using mParser
-                final Obj expr = ObjmtronSerializer.parse(exprStr);
-                result.add(Tuple.Pair.with(component, expr));
-            } catch (Exception e) {
-                throw MTronException.of("failed to parse template expression '${%s}': %s", exprStr, MTronException.translateMessage(e));
+            final Obj expr = ObjmtronSerializer.parse(exprStr);
+            if (expr.stream().anyMatch(Obj::isFail)) {
+                // a template expression that does not parse is a schema error, and this method's
+                // contract is to throw a descriptive MTronException: this is the boundary where the
+                // parser's fail::T VALUE becomes an exception
+                throw MTronException.of("failed to parse template expression '${%s}': %s", exprStr,
+                        studio.phaseshift.metatron.isa.m.parser.mParser.faultOf(expr).getMessage());
             }
+            result.add(Tuple.Pair.with(component, expr));
         }
 
         return result;

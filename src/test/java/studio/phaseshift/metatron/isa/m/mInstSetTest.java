@@ -284,6 +284,9 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "1.-<[_,_]>-                                                            % {2}1",
+            "1.-<[_,_]>-                                                            % int{2}::1",
+            "1.-<[_,_]>-                                                            % int{2,2}::1",
             "1.plus{-1}?int{??}<=int(1)                                             % int{-1}::2",
             "1.plus(_)                                                              % 2",
             "1.plus(2)                                                              % 3",

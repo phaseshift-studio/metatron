@@ -366,9 +366,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     // e.g. "_ + 5" with stdin "3" → plus(_, 5).apply(3) → 8
                     result = mParser.parse(evalExpr).apply(stdinObj);
                 } else if (evalExpr != null) {
-                    result = mParser.eval(evalExpr);
+                    result = Machine.evaluate(evalExpr);
                 } else {
-                    result = mParser.eval(new java.io.File(filePath));
+                    result = Machine.evaluate(new java.io.File(filePath));
                 }
                 if (!result.isNoObj()) {
                     System.out.print(ObjmtronSerializer.single().write(result) + "\n");
@@ -588,7 +588,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 try {
                     final Path bootPath = Path.of(args.at(Tokens.BOOT).uriValue().toString());
                     fsSpace.makeFile(bootPath).vid(f("boot/file"));
-                    final long count = mParser.eval(bootPath.toFile(), e -> {
+                    final long count = Machine.evaluate(bootPath.toFile(), e -> {
                         LOG.error("{{r}}%s{{X}} starting at line {{y}}%d{{X}}\n%s", e.parseException(), e.lineNumber() + 1, e.lineString());
                         if (Tracer.java_stack.enabled())
                             e.parseException().printStackTrace(System.err);

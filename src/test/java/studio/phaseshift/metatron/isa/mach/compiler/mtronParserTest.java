@@ -64,20 +64,19 @@ public class mtronParserTest extends AbstractMetatronTest {
     // ======================== the stage contract ========================
 
     /**
-     * A grammar's three shapes, and the stage's answer to each. Nothing about what mtron's own grammar
-     * returns is uniform — a value-led chain is a code, a head-first call is a lone inst, and a literal
-     * is just the literal — so the raw shapes are read here through the grammar, while the STAGE is
-     * asked for code and must answer with code whatever shape came back.
+     * The stage answers with the obj the grammar made — an inst for a head-first call, a rec for a
+     * rec literal, a code for a value-led chain. Lifting any of them to code is the compiler's job
+     * ({@link Parser.Helper#toCode}), not the parser's: the parser's contract is one Obj out.
      */
     @Test
-    public void testParseYieldsCodeWhateverTheGrammarMade() {
+    public void testTheStageEmitsWhatTheGrammarMade() {
         assertTrue(ObjmtronSerializer.parse("6.plus(1)").isCode(), "the grammar reads a value-led chain as code");
         assertTrue(ObjmtronSerializer.parse("plus(1)").isInst(), "the grammar reads a head-first call as a lone inst");
         assertTrue(ObjmtronSerializer.parse("5").isInt(), "the grammar reads a literal as itself");
         assertTrue(ObjmtronSerializer.parse("[a=>1]").isRec(), "the grammar reads a rec literal as a rec");
         for (final String source : List.of("6.plus(1)", "plus(1)", "5", "[a=>1]")) {
-            Assertions.assertTrue(mtronParser.single().apply(str(source)).isCode(),
-                    "the stage emits code for '" + source + "' whatever the grammar produced");
+            assertEquals(ObjmtronSerializer.parse(source), mtronParser.single().apply(str(source)),
+                    "the stage emits the obj the grammar made for '" + source + "', not a re-shaped one");
         }
     }
 
@@ -91,9 +90,9 @@ public class mtronParserTest extends AbstractMetatronTest {
         final Code code = ObjmtronSerializer.parse("6.plus(1)");
         assertSame(code, mtronParser.single().apply(code), "an already-parsed code passes through as the same instance");
         final Obj located = ObjmtronSerializer.parse("6").vid(f("/tmp/scalar"));
-        final Code lifted = mtronParser.single().apply(located);
-        assertEquals(located, lifted.insts().getFirst().arg(0),
-                "a value is carried into the start argument with its vid, not re-parsed from its rendering");
+        final Obj lifted = mtronParser.single().apply(located);
+        assertEquals(located, lifted,
+                "a value passes through as itself, addressing intact — not re-parsed from its rendering");
     }
 
     /**
@@ -221,8 +220,8 @@ public class mtronParserTest extends AbstractMetatronTest {
     @Test
     public void testMalformedSourceStaysAFailure() {
         try {
-            final Code parsed = mtronParser.single().apply(str("plus(1,2"));
-            assertTrue(parsed.insts().stream().anyMatch(Obj::isFail) || parsed.apply(noobj()).isFail(),
+            final Obj parsed = mtronParser.single().apply(str("plus(1,2"));
+            assertTrue(parsed.isFail() || parsed.apply(noobj()).isFail(),
                     "malformed source text is carried as a failure, not quietly minted into a program");
         } catch (final RuntimeException e) {
             // the grammar throws at its own reporting points; either way the source is what failed
@@ -249,7 +248,7 @@ public class mtronParserTest extends AbstractMetatronTest {
         }
 
         @Override
-        public Code apply(final Obj source) {
+        public Obj apply(final Obj source) {
             if (!source.isStr())
                 return Parser.Helper.toCode(source);
             final String[] words = source.strValue().trim().split("\\s+");
@@ -261,7 +260,7 @@ public class mtronParserTest extends AbstractMetatronTest {
 
     @Test
     public void testAnotherLanguageLowersOntoMtron() {
-        final Code lowered = new ToyLanguageParser().apply(str("add 6 to 1"));
+        final Obj lowered = new ToyLanguageParser().apply(str("add 6 to 1"));
         assertEquals(ObjmtronSerializer.parse("6.plus(1)"), lowered,
                 "the foreign source lowers to mtron code and nothing else — no new node type, no new inst");
         final Compiler toy = new BasicCompiler(

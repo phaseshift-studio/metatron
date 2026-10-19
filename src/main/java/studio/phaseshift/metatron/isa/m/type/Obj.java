@@ -1328,7 +1328,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(NATIVE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                                 final Str command = inst.arg(0).asStr();
                                 return MTronException.wrap(() ->
-                                        ObjmtronSerializer.parseMulti(new String(
+                                        ObjmtronSerializer.parse(new String(
                                                 new ProcessExecutor().commandSplit(command.strValue())
                                                         .readOutput(true)
                                                         .execute()

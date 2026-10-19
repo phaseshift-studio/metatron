@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
  *       {@code {{link}}} markup, no pager.  Rendering for a person is the job of
  *       {@link ObjmtronUISerializer}; this is what a machine reads.
  * </ul>
- * The static {@code parse}/{@code parseMulti}/{@code splitCodeAtEnd}/{@code eval}
+ * The static {@code parse}/{@code splitCodeAtEnd}/{@code eval}
  * helpers are the same parsing service, exposed for callers that only need one side.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -102,12 +102,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     // ── Parsing ──────────────────────────────────────────────────
 
+    @SuppressWarnings("unchecked")
     public static <OBJ extends Obj> OBJ parse(final String code) {
-        return mParser.parse(code);
-    }
-
-    public static <OBJ extends Obj> OBJ parseMulti(final String code) {
-        return mParser.parseMulti(code);
+        return (OBJ) mParser.parse(code);
     }
 
     public static List<Code> splitCodeAtEnd(final Code code) {
@@ -116,7 +113,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     public static Obj eval(final String expression) {
         // 1. Parse the full input — the parser natively handles ; via end() sugar
-        final Obj parsed = ObjmtronSerializer.parseMulti(expression);
+        final Obj parsed = ObjmtronSerializer.parse(expression);
         if (null == parsed || parsed.isNoObj()) return noobj();
         // 2. Split into independently executable segments at end() boundaries
         final List<Code> segments;
@@ -400,7 +397,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public Obj read(final String data) throws MTronException {
         try {
-            return mParser.eval(data);
+            return Machine.evaluate(data);
         } catch (final Exception e) {
             try {
                 return mParser.parse(data);

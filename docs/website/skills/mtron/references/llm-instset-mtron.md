@@ -40,20 +40,20 @@ the workspace and a chat feature. Then:
 
 ```mtron
 mtron> [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
-==>fail::[parse error at line 1, col 1:
-     [MAX_OUTPUT 10] @chatter.chat('what is t...
-     ^
-     could not parse at '[']@/sys/fail/385
+==>fail::[parse error at line 1, col 13:
+     [MAX_OUTPUT 10] @chatter.chat('what is the meaning o...
+                 ^
+     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/520
 ```
 The `/usr/chatter/#` space serves a the default location for features to store their various constructions.
 
 ```mtron
 mtron> */usr/chatter/chat_result/+
 mtron> [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
-==>fail::[parse error at line 1, col 1:
-     [MAX_OUTPUT 10] */usr/chatter/chat_resul...
-     ^
-     could not parse at '[']@/sys/fail/386
+==>fail::[parse error at line 1, col 13:
+     [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
+                 ^
+     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/521
 ```
 **A tool is an instruction.** There is no tool registry to populate: anything callable *is* a tool, and `mTool`
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a `tool_feature` can
@@ -248,7 +248,10 @@ Because a tool is an instruction, a server is a **selection over instructions**,
 mtron> mcp_server::[tool => [!*eval, !*eval]]@/sys/space/mcp/two_say
 ==>mcp_server::[tool=>[m_inst_eval=>eval?#{*}<=#{?}(#::T){<j>}]]@/sys/space/mcp/two_say
 mtron> */sys/space/mcp/two_say>>tool     [-- one entry: a collection is keyed by the instruction --]
-==>[m_inst_eval=>eval?#{*}<=#{?}(#::T){<j>}]
+==>fail::[parse error at line 1, col 94:
+     ...llection is keyed by the instruction --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/522
 ```
 Three rules follow, and the third is the one that surprises people:
 

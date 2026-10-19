@@ -1650,8 +1650,9 @@ public class TypeTest extends AbstractMetatronTest {
     @Disabled("lst[{4}int]::T — the container coefficient spelling is specified but not implemented")
     @Test
     public void testListContainerCoefficientSpellingIsNotYetParsed() {
-        final MTronException e = assertThrows(MTronException.class, () -> ObjmtronSerializer.parse("lst[{4}int]::T"));
-        LOG.warn("lst[{4}int]::T => %s", e.getMessage());
+        final Obj parsed = ObjmtronSerializer.parse("lst[{4}int]::T");
+        assertTrue(parsed.isFail(), "lst[{4}int]::T must not parse");
+        LOG.warn("lst[{4}int]::T => %s", parsed);
     }
 
     /**
@@ -1886,10 +1887,12 @@ public class TypeTest extends AbstractMetatronTest {
         assertTrue(built.stream().anyMatch(Obj::isFail),
                 "construction through a count-predicated type fails on the unresolved predicate: " + built);
 
-        // and with a polynomial on the type it fails earlier still, at parse time
-        final MTronException e = assertThrows(MTronException.class,
-                () -> ObjmtronSerializer.parse("lst4b::[1,2,3,4]"));
-        LOG.warn("lst4b::[1,2,3,4] => %s", e.getMessage());
+        // and with a polynomial on the type it fails earlier still, at parse time — as a fail::T
+        // value, since the parser returns failures rather than throwing them
+        final Obj parseFailed = ObjmtronSerializer.parse("lst4b::[1,2,3,4]");
+        LOG.warn("lst4b::[1,2,3,4] => %s", parseFailed);
+        assertTrue(parseFailed.stream().anyMatch(Obj::isFail),
+                "a polynomial on the type is rejected at parse time: " + parseFailed);
     }
 
     @TestData({

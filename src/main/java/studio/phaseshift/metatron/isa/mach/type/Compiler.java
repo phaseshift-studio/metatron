@@ -68,7 +68,7 @@ public interface Compiler extends Machine.Component, Rec {
      */
     @Override
     default Code apply(final Obj source) {
-        return this.typer().apply(this.resolver().apply(this.rewriter().apply(this.parser().apply(source))));
+        return this.typer().apply(this.resolver().apply(this.rewriter().apply(Parser.Helper.toCode(this.parser().apply(source)))));
     }
 
     // ======================== stage components ========================

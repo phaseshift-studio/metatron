@@ -79,8 +79,19 @@ public final class Executor {
         if (fullInput.isBlank()) return;
 
         // 1. Parse the full input — the parser natively handles ; via end() sugar
-        final Obj parsed = ObjmtronSerializer.parseMulti(fullInput);
+        final Obj parsed = ObjmtronSerializer.parse(fullInput);
         if (null == parsed || parsed.isNoObj()) return;
+
+        // A BARE VALUE IS NOT A PROGRAM. `{2}1` is a multiplicity of 1: it must be shown, not
+        // consumed. Pushing it through the compiler/processor folds the coefficient (the test helper
+        // applies it directly — `parse(...).apply(noobj())` — which is why the suite and the console
+        // disagreed), so a value short-circuits here and prints as itself.
+        if (!parsed.isCode() && !parsed.isInst()) {
+            final Obj value = parsed.apply(noobj());
+            this.console.printResult(value);
+            this.console.promptTraceForFails(value);
+            return;
+        }
 
         // 2. Split into independently executable segments at end() boundaries
         final List<Code> segments;

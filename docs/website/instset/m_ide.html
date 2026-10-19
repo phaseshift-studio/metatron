@@ -652,7 +652,8 @@ my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__find?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find?uri{*}<=uri(class=>uri::T,member=>str{?}::T,text=>str{?}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> finds project resources that contain provided uri fragment</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> finds project resources that contain provided uri fragment
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the location of found resources" class="text-success">the location of found resources</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -673,7 +674,8 @@ my_build -&gt; ide_command(command=&gt;&#39;mvn clean install&#39;)  [-- name it
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0-tab').click();document.getElementById('__m__ide__inst__search?rng=__m__uri{*}&dom=__m__uri-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">search?uri{*}<=uri(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> searches project resources whose contents match provided regex</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> searches project resources whose contents match provided regex
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the location of found resources" class="text-success">the location of found resources</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>

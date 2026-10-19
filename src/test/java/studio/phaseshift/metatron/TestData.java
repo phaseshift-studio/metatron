@@ -177,7 +177,7 @@ public @interface TestData {
                             final java.io.File tempFile = java.io.File.createTempFile("test-data-", ".mtron");
                             try {
                                 java.nio.file.Files.copy(stream, tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                                mParser.eval(tempFile).asCall().forEach(o -> o.apply());
+                                Machine.evaluate(tempFile).asCall().forEach(o -> o.apply());
                             } finally {
                                 tempFile.delete();
                             }
