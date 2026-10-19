@@ -388,7 +388,11 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         // lossless + compact: Double.toString is the shortest round-trippable form and
         // keeps a trailing .0 on whole numbers, so a real (1.0) never reads back as an int (1)
         final String ds = Double.toString(real.jvm());
-        final String ds2 = ds.substring(0, Math.min(ds.indexOf(".") + 5, ds.length() - ds.indexOf(".")) + 1);
+        // a non-finite real has no mantissa to shorten: "NaN" has no '.' at all, so the digit rule
+        // below read indexOf(".") + 5 == 4 and sliced past the end (Range [0, 5) for length 3), while
+        // "Infinity"/"-Infinity" were silently cut to "Infin". spell them whole instead.
+        final String ds2 = Double.isFinite(real.jvm()) ?
+                ds.substring(0, Math.min(ds.indexOf(".") + 5, ds.length() - ds.indexOf(".")) + 1) : ds;
         sb.append(ds2);
         if (ds2.endsWith(".")) sb.append("0");
         this.handleVID(sb, real);
@@ -400,7 +404,9 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final String text = str.strValue();
             final int max = this.clipStr();
             if (null != text && text.length() > max)
-                return super.writeStr(str(text.substring(0, max - 1) + "..."));
+                // a clip width of 0 (or a negative one from a user's clip rec) still has room for
+                // the three columns of the ellipsis, and max - 1 would index at -1
+                return super.writeStr(str(text.substring(0, Math.max(0, max - 1)) + "..."));
         }
         final String language = str.tid().basePath().name();
         if (!NanorcUtil.supportedLanguages().contains(language))
@@ -503,6 +509,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      * that carries the reason and the {@code (at <uri>)} frame.
      */
     private static String elide(final String message, final int max) {
+        // nothing to elide when it already fits: a short message would have its head and tail
+        // overlap, and the tail index goes negative once the kept width exceeds the length
+        if (message.length() <= max)
+            return message;
         final int kept = Math.max(0, max - 3);
         final int head = kept / 3;
         return message.substring(0, head) + "..." + message.substring(message.length() - (kept - head));
@@ -632,6 +642,14 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      * really sits.
      */
     private int entryIndent(final StringBuilder sb, final int depth, final boolean carried) {
+        // KNOWN LIMITATION (accepted, not a defect): the not-carried column is measured off the CURRENT
+        // physical line. When a sibling's broken block leaves the cursor on a line IT indented, the next
+        // sibling reads that indent and adds INDENT_SIZE -- so a run of same-level broken siblings sways
+        // right by one column each (INDENT_SIZE is 1, hence the 1,2,3... staircase). It reads as the
+        // structure drifting right because it is the structure: nesting that deep is the user's shape,
+        // not a rendering bug. If it ever misaligns something that should line up, the fix is here:
+        // thread the parent's entry column down and return anchor + INDENT_SIZE instead of
+        // lineIndent(sb) + INDENT_SIZE, which makes the indent independent of preceding siblings.
         return Math.max(carried ? this.lineWidth(sb) : this.lineIndent(sb) + INDENT_SIZE,
                 (depth + 1) * INDENT_SIZE);
     }
@@ -816,7 +834,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         } else if (obj.isStr()) {
             final int max = this.clipStr();
             if (obj.strValue().length() > max)
-                sb.append(this.write(str(obj.strValue().substring(0, max - 1) + "...")));
+                sb.append(this.write(str(obj.strValue().substring(0, Math.max(0, max - 1)) + "...")));
             else
                 sb.append(this.writeStr(obj.asStr()));
         } else if (obj.isBytes()) {
@@ -839,7 +857,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final int max = this.clipUri();
             final String uriStr = obj.uriValue().toString();
             if (uriStr.length() > max)
-                sb.append(this.writeUri(uri(obj.uriValue().toString().substring(0, max - 1) + "...")));
+                sb.append(this.writeUri(uri(obj.uriValue().toString().substring(0, Math.max(0, max - 1)) + "...")));
             else
                 sb.append(this.writeUri(obj.asUri()));
         } else if (obj.isFail()) {

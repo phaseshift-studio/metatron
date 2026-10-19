@@ -57,8 +57,6 @@
  import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ_PATTERN;
- import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TYPE;
- import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TYPE;
  import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TYPE;
  import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -88,6 +86,11 @@
       * (full relative path) and a serialized {@code value} property.
       */
      public static final String KV_STORE = "kv_store";
+     // Property names on the flat kv_store vertex. Namespaced to avoid JanusGraph's
+     // protected namespace ("key"/"value") and to keep the serialized-string value
+     // from colliding with a graph vertex's own "value" field (type-enforced globally).
+     public static final String KV_KEY = "mtron_key";
+     public static final String KV_VALUE = "mtron_value";
 
      /**
       * Tracked for proper cleanup of the remote JanusGraph connection.
@@ -235,9 +238,48 @@
                  Space.Helper.routeToSpace(f("E/" + element.id().toString()), this.routes());
      }
 
-     protected fURI schemaVID(final String label) {
+     protected fURI schemaBaseVID() {
          // Get the schema route value (e.g., /m/grph/schema/modern), not the route key (/g/S)
-         return this.at(ROUTE).asRec().elements().filter(e -> e.first().uriValue().toString().endsWith("S")).findFirst().get().second().uriValue().extend(label);
+         return this.at(ROUTE).asRec().elements()
+                 .filter(e -> e.first().uriValue().toString().endsWith("S"))
+                 .findFirst()
+                 .map(e -> e.second().uriValue())
+                 .orElse(null);
+     }
+
+     protected fURI schemaVID(final String label) {
+         final fURI base = this.schemaBaseVID();
+         return base != null ? base.extend(label) : null;
+     }
+
+     /**
+      * Whether {@code label} is a declared type in the configured schema route
+      * (e.g. modernSchema's person/software/knows/created), as opposed to an
+      * ad-hoc label minted by addV/addE at runtime. Detected via the type-name
+      * redirect registered when a schema type is imported (setup()).
+      */
+     protected boolean isSchemaType(final String label) {
+         final fURI redirected = Machine.current().memory().redirect(f(label), true);
+         return redirected != null && !redirected.basePath().test(f(label));
+     }
+
+     /**
+      * Resolve a TinkerPop element label to its metatron Type VID via the
+      * schema InstSet; fall back to the configured schema route (e.g.
+      * modernSchema) when the label is a declared schema type, else the bare
+      * label — covers dataset labels loaded after space construction while
+      * keeping ad-hoc labels (addE(rates)) as their own bare type name.
+      */
+     protected fURI elementTypeVid(final String label, final boolean vertex) {
+         final Iterator<IdObj> resolved = this.resolveCollectionSchema(label);
+         if (resolved.hasNext()) {
+             final Obj t = resolved.next().obj();
+             if (t instanceof Type type && type.vid() != null)
+                 return type.vid();
+         }
+         if (this.isSchemaType(label))
+             return this.schemaVID(label);
+         return f(label);
      }
 
      protected ExistingGraphSchema existingGraphSchema;
@@ -431,39 +473,34 @@
      private Iterator<IdObj> readCollectionFromInstSet(final InstSet instSet, final DataPath dp) {
          final boolean wildcard = dp.collectionIsWildcard();
          if (wildcard) {
-             return Stream.concat(
-                             instSet.types().stream().filter(t -> t.isRefinementOf(VRTX_TYPE)),
-                             instSet.types().stream().filter(t -> t.isRefinementOf(EDGE_TYPE)))
+             return instSet.types().stream()
+                     .filter(t -> this.isVertexLabel(t.vid().name()) || this.isEdgeLabel(t.vid().name()))
                      .map(t -> IdObj.of(t.vid(), t)).iterator();
          }
          if ("V".equals(dp.collection()))
-             return instSet.types().stream().filter(t -> t.isRefinementOf(VRTX_TYPE))
+             return instSet.types().stream().filter(t -> this.isVertexLabel(t.vid().name()))
                      .map(t -> IdObj.of(t.vid(), t)).iterator();
          if ("E".equals(dp.collection()))
-             return instSet.types().stream().filter(t -> t.isRefinementOf(EDGE_TYPE))
+             return instSet.types().stream().filter(t -> this.isEdgeLabel(t.vid().name()))
                      .map(t -> IdObj.of(t.vid(), t)).iterator();
          return IteratorUtil.of();
      }
 
      /**
       * Returns {@code true} when the given collection name is a known vertex
-      * label in the schema InstSet — i.e. a label-level collection like
-      * {@code g:person} rather than the meta-collections {@code V} / {@code E}.
+      * label — i.e. a label-level collection like {@code g:person} rather than
+      * the meta-collections {@code V} / {@code E}.  The vertex/edge distinction
+      * is schema metadata (not a type hierarchy).
       */
      private boolean isVertexLabel(final String collectionName) {
-         return this.schema().types().stream()
-                 .anyMatch(t -> t.vid().name().equalsIgnoreCase(collectionName)
-                         && t.isRefinementOf(VRTX_TYPE));
+         return this.existingGraphSchema.isVertexLabel(collectionName);
      }
 
      /**
-      * Returns {@code true} when the given collection name is a known edge
-      * label in the schema InstSet.
+      * Returns {@code true} when the given collection name is a known edge label.
       */
      private boolean isEdgeLabel(final String collectionName) {
-         return this.schema().types().stream()
-                 .anyMatch(t -> t.vid().name().equalsIgnoreCase(collectionName)
-                         && t.isRefinementOf(EDGE_TYPE));
+         return this.existingGraphSchema.isEdgeLabel(collectionName);
      }
 
      @Override
@@ -477,18 +514,6 @@
              this.at(key, lst(), MUTABLE);
          this.at(key).asLst().add(toAdd, MUTABLE);
          return this;
-     }
-
-     @Override
-     public Stream<IdObj> readStream(final fURI pattern) {
-         return IteratorUtil.stream(directReader().apply(pattern));
-     }
-
-     @Override
-     public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
-         directWriter().apply(pattern, obj);
-         if (obj.isNoObj()) return Stream.empty();
-         return Stream.of(IdObj.of(pattern, obj));
      }
 
      // =========================================================================
@@ -571,7 +596,7 @@
                      final Type labelType = this.schema().types().stream()
                              .filter(t -> t.vid().name().equalsIgnoreCase(dp.collection()))
                              .findFirst().orElse(null);
-                     if (labelType != null && labelType.isRefinementOf(VRTX_TYPE)) {
+                     if (labelType != null && this.isVertexLabel(dp.collection())) {
                          if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {
                              return readVertexTraversal(dp);
                          }
@@ -588,7 +613,7 @@
                                          return idobj;
                                      }
                                  }).iterator();
-                     } else if (labelType != null && labelType.isRefinementOf(EDGE_TYPE)) {
+                     } else if (labelType != null && this.isEdgeLabel(dp.collection())) {
                          if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {
                              return readEdgeTraversal(dp);
                          }
@@ -688,9 +713,7 @@
              return true;
          if ("+".equals(c) || "#".equals(c))
              return true; // wildcard collection → schema resolution (readCollection)
-         return this.schema().types().stream()
-                 .anyMatch(t -> t.vid().name().equalsIgnoreCase(c)
-                         && (t.isRefinementOf(VRTX_TYPE) || t.isRefinementOf(EDGE_TYPE)));
+         return this.isVertexLabel(c) || this.isEdgeLabel(c);
      }
 
      /**
@@ -734,15 +757,15 @@
      protected void writeFlat(final fURI relativePath, final Obj obj) {
          final String key = relativePath.toString();
          if (obj.isNoObj()) {
-             this.sjvm.V().hasLabel(KV_STORE).has("key", key).drop().iterate();
+             this.sjvm.V().hasLabel(KV_STORE).has(KV_KEY, key).drop().toList();
              return;
          }
          final Vertex existing = IteratorUtil.stream(
-                 this.sjvm.V().hasLabel(KV_STORE).has("key", key)).findFirst().orElse(null);
+                 this.sjvm.V().hasLabel(KV_STORE).has(KV_KEY, key)).findFirst().orElse(null);
          if (existing != null) {
-             this.sjvm.V(existing.id()).property("value", SERIALIZER.write(obj)).iterate();
+             this.sjvm.V(existing.id()).property(KV_VALUE, SERIALIZER.write(obj)).toList();
          } else {
-             this.sjvm.addV(KV_STORE).property("key", key).property("value", SERIALIZER.write(obj)).next();
+             this.sjvm.addV(KV_STORE).property(KV_KEY, key).property(KV_VALUE, SERIALIZER.write(obj)).next();
          }
      }
 
@@ -751,9 +774,9 @@
          final fURI nodePattern = pattern.asNode();
          if (relativePath.hasPattern()) {
              return IteratorUtil.stream(this.sjvm.V().hasLabel(KV_STORE)).flatMap(v -> {
-                 final String key = v.value("key").toString();
-                 final fURI vid = Space.Helper.routeToSpace(f(key), this.routes());
-                 final Obj val = SERIALIZER.read(v.value("value").toString());
+                 final String key = v.value(KV_KEY).toString();
+                 final fURI vid = this.pattern().retractPattern().extend(f(key));
+                 final Obj val = SERIALIZER.read(v.value(KV_VALUE).toString());
                  final List<IdObj> out = new ArrayList<>();
                  if (vid.test(nodePattern))
                      out.add(IdObj.of(vid, val));
@@ -763,10 +786,10 @@
              }).iterator();
          }
          final Vertex v = IteratorUtil.stream(
-                 this.sjvm.V().hasLabel(KV_STORE).has("key", relativePath.toString())).findFirst().orElse(null);
+                 this.sjvm.V().hasLabel(KV_STORE).has(KV_KEY, relativePath.toString())).findFirst().orElse(null);
          if (v == null)
              return IteratorUtil.of();
-         return IteratorUtil.of(IdObj.of(nodePattern, SERIALIZER.read(v.value("value").toString())));
+         return IteratorUtil.of(IdObj.of(nodePattern, SERIALIZER.read(v.value(KV_VALUE).toString())));
      }
 
      @Override
@@ -777,8 +800,12 @@
          // Edges are created via addE (Phase 3); skip edge-label collections.
          if ("E".equals(dp.collection()) || isEdgeLabel(dp.collection()))
              return;
-         if (!CommonUtil.isInt(dp.entry()))
+         if (!CommonUtil.isInt(dp.entry())) {
+             // A rec at a non-integer entry is not a vertex id — park it in the
+             // flat namespace so the >> spine walk can still descend into it.
+             this.writeFlat(relativePath, obj);
              return;
+         }
          if (!obj.isRec())
              throw MTronException.of("graph vertex requires a Rec; cannot promote %s", obj.type());
          final Object id = Long.parseLong(dp.entry());
@@ -799,7 +826,7 @@
                      .forEach(e -> {
                          final Obj value = e.getValue();
                          if (value.isNoObj() || value.isNone()) {
-                             this.sjvm.V(vertex.id()).properties(e.getKey().uriValue().toString()).drop().iterate();
+                             this.sjvm.V(vertex.id()).properties(e.getKey().uriValue().toString()).drop().toList();
                          } else if (!value.isAuto()) {
                              this.sjvm.V(vertex.id()).property(
                                      e.getKey().uriValue().toString(), ObjTP3Serializer.tp3Value(value)).next();
@@ -836,13 +863,13 @@
      protected Stream<FlatEntry> scanFlat(final String collectionPrefix) {
          final String prefix = collectionPrefix + "/";
          return IteratorUtil.stream(this.sjvm.V().hasLabel(KV_STORE)
-                         .has("key", org.apache.tinkerpop.gremlin.process.traversal.TextP.startingWith(prefix)))
-                 .map(v -> new FlatEntry(v.value("key").toString(),
-                         SERIALIZER.read(v.value("value").toString())));
+                         .has(KV_KEY, org.apache.tinkerpop.gremlin.process.traversal.TextP.startingWith(prefix)))
+                 .map(v -> new FlatEntry(v.value(KV_KEY).toString(),
+                         SERIALIZER.read(v.value(KV_VALUE).toString())));
      }
 
      @Override
      protected void removeFlat(final String fullKey) {
-         this.sjvm.V().hasLabel(KV_STORE).has("key", fullKey).drop().iterate();
+         this.sjvm.V().hasLabel(KV_STORE).has(KV_KEY, fullKey).drop().toList();
      }
  }

@@ -103,6 +103,27 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
 
+    @Test
+    public void testBareStartQProcParses() {
+        final var parsed = ObjmtronSerializer.parse("start?no_shard({'z','a','x','d','j'})");
+        assertFalse(parsed.isFail(), "expected bare start to parse, but got: " + parsed);
+    }
+
+    @Test
+    public void testFullSlaveSerializationParses() {
+        final String msg = "block(block(start?no_shard=true({'z','a','x','d','j'}).order?lst<=str{*}(id()).vid(f0279456)))";
+        final var parsed = ObjmtronSerializer.parse(msg);
+        assertFalse(parsed.isFail(), "expected full slave serialization to parse, but got: " + parsed);
+    }
+
+    @Test
+    public void testStartSeedObjsSurvivesSerialization() {
+        final var parsed = ObjmtronSerializer.parse("start?no_shard=true({'z','a','x','d','j'})");
+        final String serialized = ObjmtronSerializer.single().write(parsed);
+        assertTrue(serialized.contains("{'z','a','x','d','j'}"), "seed should survive serialization, got: " + serialized);
+    }
+
+
     @ParameterizedTest
     @CsvSource(value = {
             "'123'.select('\\d')                                                             % ['1','2','3']",

@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -80,9 +81,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class grphInstSet extends AbstractInstSet {
 
     public static final fURI GRPH_ISA_TID = M_ISA_TID.extend("grph");
-    public static final fURI EDGE_TID = GRPH_ISA_TID.extend("edge");
-    public static final fURI VRTX_TID = GRPH_ISA_TID.extend("vrtx");
-    public static final fURI ELMT_TID = GRPH_ISA_TID.extend("elmt");
     public static final fURI GRPH_INST_TID = GRPH_ISA_TID.extend("inst");
     public static final fURI GRPH_REWRITE_TID = GRPH_INST_TID.extend("rewrite");
     //
@@ -111,9 +109,6 @@ public class grphInstSet extends AbstractInstSet {
     public static final Uri LABEL = uri("LABEL");
     public static final Uri IN = uri(Direction.IN.name());
     public static final Uri OUT = uri(Direction.OUT.name());
-
-    public static Type VRTX_TYPE;
-    public static Type EDGE_TYPE;
 
     public grphInstSet() {
         super(mutableMap(uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL))), INSTSET_TID, GRPH_ISA_TID);
@@ -219,24 +214,6 @@ public class grphInstSet extends AbstractInstSet {
         this.jvm().putAll(mutableMap(
                 uri(CONSTQ), lst(ObjTP3Serializer.single()),
                 uri(TYPE), lst(
-                        docWrap(Type.Builder.build()
-                                .tid(REC_TID)
-                                .vid(ELMT_TID)
-                                .create(), "a key/value attributed element that is refined by vrtx::T and edge::T"),
-                        VRTX_TYPE = docWrap(Type.Builder.build()
-                                .tid(ELMT_TID)
-                                .vid(VRTX_TID)
-                                .isaPredicate(rec(
-                                        OUT.maybe().asUri(), rec(URI_TYPE, T(EDGE_TID.maybeSome())),
-                                        IN.maybe(), rec(URI_TYPE, T(EDGE_TID.maybeSome()))))
-                                .create(), "a key/value attributed vertex"),
-                        EDGE_TYPE = docWrap(Type.Builder.build()
-                                .tid(ELMT_TID)
-                                .vid(EDGE_TID)
-                                .isaPredicate(rec(
-                                        OUT, rec(URI_TYPE, T(VRTX_TID)),
-                                        IN, rec(URI_TYPE, T(VRTX_TID))))
-                                .create(), "a directed key/value attributed binary edge"),
                         docWrap(GRPH_SPACE_TYPE, "a space for graph traversal"),
                         docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")
                 ),
@@ -263,17 +240,17 @@ public class grphInstSet extends AbstractInstSet {
                         docWrap(instC(VALUES_INST_TID.dom(REC_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) ->
                                         inst.arg(0).isNoObj() ? lhs.asRec().at(uri("+")) : objs(inst.args().valueElements().map(key -> lhs.asRec().at(key)))),
                                 "an element", "the element values", mutableMap(jnt(0), "zero or more element property labels"), "returns the lhs element arg-labeled values"),
-                        docWrap(instC(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> {
+                        docWrap(instC(INV_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
                                     return vid != null ? Machine.read(vid.extend("IN")) : lhs.asRec().at(IN);
                                 }),
                                 "an edge", "the incoming vertex", Map.of(), "returns the lhs edge head vertex"),
-                        docWrap(instC(OUTV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> {
+                        docWrap(instC(OUTV_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
                                     return vid != null ? Machine.read(vid.extend("OUT")) : lhs.asRec().at(OUT);
                                 }),
                                 "an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex"),
-                        docWrap(instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID.c(cInt.of(2))), lst(), (lhs, inst) -> {
+                        docWrap(instC(BOTHV_INST_TID.dom(REC_TID).rng(REC_TID.c(cInt.of(2))), lst(), (lhs, inst) -> {
                                     final fURI vid = resolveVid(lhs);
                                     if (vid != null)
                                         return objs(Stream.concat(
@@ -286,19 +263,19 @@ public class grphInstSet extends AbstractInstSet {
                                         lst(GRAPH_CONFIG),
                                         (lhs, inst) -> grphSpace.of(inst.arg(0).asRec(), lhs.vid())),
                                 "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),*/
-                        docWrap(instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
+                        docWrap(instC(OUT_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
                                 "a vertex", "out adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing vertices"),
-                        docWrap(instC(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),
+                        docWrap(instC(IN_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),
                                 "a vertex", "in adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming vertices"),
-                        docWrap(instC(BOTH_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH)),
+                        docWrap(instC(BOTH_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH)),
                                 "a vertex", "both adjacent vertices", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing vertices"),
-                        docWrap(instC(OUTE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT)),
+                        docWrap(instC(OUTE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT)),
                                 "a vertex", "out adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing edges"),
-                        docWrap(instC(INE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN)),
+                        docWrap(instC(INE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN)),
                                 "a vertex", "in adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming edges"),
-                        docWrap(instC(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH)),
+                        docWrap(instC(BOTHE_INST_TID.dom(REC_TID).rng(REC_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH)),
                                 "a vertex", "both adjacent edges", mutableMap(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges"),
-                        instC(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(URI_TYPE, T(REC_TID.some()), T(REC_TID.maybe())), (lhs, inst) -> {
+                        instC(ADDE_INST_TID.dom(REC_TID).rng(REC_TID), lst(URI_TYPE, T(REC_TID.some()), T(REC_TID.maybe())), (lhs, inst) -> {
                             if (!(lhs instanceof VertexRec vr)) return noobj();
                             final Vertex outVertex = vr.vertex();
                             final grphSpace graphSpace = vr.space();
@@ -327,38 +304,65 @@ public class grphInstSet extends AbstractInstSet {
                             }));
                         })),
                 uri(REWRITE), lst(
-                        docWrap(
-                                InstSet.Helper.rewriter(
-                                        GRPH_REWRITE_TID.extend("gremlin_count"),
-                                        code -> code.selfJVM(
-                                                RewriterBuilder.search(code.insts())
-                                                        .match(List.of(instB(FROM_INST_TID, lst()), instB(COUNT_INST_TID, lst())))
-                                                        .rewrite(map -> {
-                                                            final java.util.List<Inst> matchList = new java.util.ArrayList<>(map.values());
-                                                            final Inst fromInst = matchList.get(0);
-                                                            final Obj ref = fromInst.arg(0);
-                                                            // guard: only V/E collections, no traversals (no field/extensions)
-                                                            if (!ref.isUri())
-                                                                return matchList.stream().map(Obj::asInst).toList();
-                                                            final DataPath dp = DataPath.withoutDB(ref.uriValue());
-                                                            if (!("V".equals(dp.collection()) || "E".equals(dp.collection()))
-                                                                    || !dp.entryIsWildcard()
-                                                                    || dp.hasField() || dp.hasExtension())
-                                                                return matchList.stream().map(Obj::asInst).toList();
-                                                            final fURI furi = ref.uriValue();
-                                                            final studio.phaseshift.metatron.isa.Space space = Machine.current().memory().getSpaceFor(furi);
-                                                            if (!(space instanceof grphSpace gs))
-                                                                return matchList.stream().map(Obj::asInst).toList();
-                                                            final long count = "V".equals(dp.collection())
-                                                                    ? gs.sjvm().V().count().next()
-                                                                    : gs.sjvm().E().count().next();
-                                                            return List.of(instC(
-                                                                    GRPH_REWRITE_TID.extend("graph_count").dom(ALL_STAR).rng(INT_TID),
-                                                                    lst(uri(furi)),
-                                                                    (lhs, inst) -> jnt(count)));
-                                                        })
-                                        ).asCode()),
-                                "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's count()-reducer for vrtx/edge collections"),
+                        docWrap(CommonRewrites.countRewrite(
+                                grphSpace.class,
+                                GRPH_REWRITE_TID.extend("gremlin_count"),
+                                (space, dp) -> "V".equals(dp.collection())
+                                        ? space.sjvm().V().count().next()
+                                        : space.sjvm().E().count().next()
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's count()-reducer for vrtx/edge collections"),
+                        docWrap(CommonRewrites.sumColumnRewrite(
+                                grphSpace.class,
+                                GRPH_REWRITE_TID.extend("gremlin_sum"),
+                                (grphSpace space, DataPath dp) -> {
+                                    final String field = dp.field();
+                                    if (field == null || field.isEmpty())
+                                        return 0L;
+                                    return space.sjvm().V().values(field).sum().next();
+                                },
+                                null
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's sum()-reducer over a vertex property"),
+                        docWrap(CommonRewrites.skipRewrite(
+                                grphSpace.class,
+                                GRPH_REWRITE_TID.extend("gremlin_skip"),
+                                (space, dp, skip) -> {
+                                    final Iterator<? extends Element> elements = "V".equals(dp.collection())
+                                            ? space.sjvm().V().skip(skip)
+                                            : space.sjvm().E().skip(skip);
+                                    return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
+                                }
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's skip()-barrier for vrtx/edge collections"),
+                        docWrap(CommonRewrites.offsetLimitRewrite(
+                                grphSpace.class,
+                                GRPH_REWRITE_TID.extend("gremlin_skip"),
+                                GRPH_REWRITE_TID.extend("gremlin_skip_limit"),
+                                (space, dp, skip, limit) -> {
+                                    final Iterator<? extends Element> elements = "V".equals(dp.collection())
+                                            ? space.sjvm().V().skip(skip).limit(limit)
+                                            : space.sjvm().E().skip(skip).limit(limit);
+                                    return objs(IteratorUtil.stream(elements).map(e -> (e instanceof Vertex v) ? new VertexRec(v, space) : new EdgeRec((Edge) e, space)));
+                                }
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "fuses skip+limit into a single gremlin skip().limit()"),
+                        docWrap(CommonRewrites.orderRewrite(
+                                grphSpace.class,
+                                GRPH_REWRITE_TID.extend("gremlin_order"),
+                                (space, dp, columns) -> {
+                                    final GraphTraversalSource g = space.sjvm();
+                                    if (columns == null || columns.isEmpty())
+                                        return objs(IteratorUtil.stream(g.V().order()).map(v -> new VertexRec((Vertex) v, space)));
+                                    return objs(IteratorUtil.stream(g.V().order().by(columns.get(0))).map(v -> new VertexRec((Vertex) v, space)));
+                                }
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's order()-by for vrtx collections"),
+                        docWrap(CommonRewrites.dedupRewrite(
+                                grphSpace.class,
+                                GRPH_REWRITE_TID.extend("gremlin_dedup"),
+                                (space, dp, columns) -> {
+                                    final GraphTraversalSource g = space.sjvm();
+                                    if (columns == null || columns.isEmpty())
+                                        return objs(IteratorUtil.stream(g.V().dedup()).map(v -> new VertexRec((Vertex) v, space)));
+                                    return objs(IteratorUtil.stream(g.V().dedup().by(columns.get(0))).map(v -> new VertexRec((Vertex) v, space)));
+                                }
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages gremlin's dedup()-by for vrtx collections"),
                         docWrap(CommonRewrites.limitRewrite(
                                 grphSpace.class,
                                 GRPH_REWRITE_TID.extend("gremlin_limit"),
@@ -373,7 +377,7 @@ public class grphInstSet extends AbstractInstSet {
                         // Optimize: from(V/+).isa([field=>value]) → g.V().has(field, predicate)
                         docWrap(CommonRewrites.whereRewrite(
                                 grphSpace.class,
-                                GRPH_REWRITE_TID.extend("gremlin_where").dom(GRPH_SPACE_TID).rng(VRTX_TID.maybeSome()),
+                                GRPH_REWRITE_TID.extend("gremlin_where").dom(GRPH_SPACE_TID).rng(REC_TID.maybeSome()),
                                 (space, dp, filterClause) -> {
                                     if (!"V".equals(dp.collection()))
                                         throw MTronException.of("where-rewrite only supports the vertex (V) collection: %s", dp.collection());

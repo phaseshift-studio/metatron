@@ -362,7 +362,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                     })
                     .reduce(",", (a, b) -> a + b + ",");
             sb.append(this.handleIds(inst, "(" +
-                    (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}")));
+                    (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null || inst.f().isLambda() ? "" : "{" + inst.f() + "}")));
         }
         return this.cleanEnding(sb);
     }
@@ -375,6 +375,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeObjs(final Objs objs) {
+        // ZERO MEMBERS IS NOOBJ, not an empty bracket pair: MObjs.isNoObj() is jvm.isEmpty(), and the
+        // root writer already renders that value as noobj -- so a nested one must agree. It also has no
+        // "a,b" remainder to slice: the reduce seed is "", so the old substring(1) threw
+        // "Range [1, 0) out of bounds for length 0" for every value that held an empty objs.
+        if (objs.isNoObj())
+            return this.writeNoObj(noobj());
         final String internal = IteratorUtil.stream(objs.jvm()).map(this::write).reduce("", (a, b) -> a + "," + b);
         return "{" + this.cleanEnding(new StringBuilder(internal.substring(1))) + "}";
     }
@@ -463,10 +469,16 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
      * Clipping is a display decision and belongs to the UI serializer, which overrides this.
      */
     protected StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
-        if (obj.isRec()) {
+        if (obj.isNoObj()) {
+            // the same guard ObjSerializer.write applies at the root: an empty objs IS a noobj
+            // (MObjs.isNoObj is jvm.isEmpty()) and must not fall into the objs branch below
+            sb.append(this.writeNoObj(noobj()));
+        } else if (obj.isRec()) {
             sb.append(this.writeRec(obj.asRec()));
         } else if (obj.isLst()) {
             sb.append(this.writeLst(obj.asLst()));
+        } else if (obj.isObjs()) {
+            sb.append(this.writeObjs(obj.asObjs()));
         } else if (obj.isInst()) {
             // through the virtual writeInst, not toShortString(): a uri or type inside the
             // instruction is written by the serializer, and only a serializer-written uri is

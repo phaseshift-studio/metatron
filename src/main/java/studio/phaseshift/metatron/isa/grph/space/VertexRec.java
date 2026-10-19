@@ -42,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class VertexRec extends ElementRec<Vertex> {
 
     public VertexRec(final Vertex vertex, final grphSpace space) {
-        super(vertex, space, f(vertex.label()), space.elementVID(vertex));
+        super(vertex, space, space.elementTypeVid(vertex.label(), true), space.elementVID(vertex));
     }
 
     public Vertex vertex() {

@@ -800,4 +800,91 @@ public class mParserTest extends AbstractMetatronTest {
                 "position " + diag.position() + " should be within buffer length "
                         + diag.buffer().length());
     }
+
+    // ========================================
+    // POSITION TRUTH — a diagnostic locates itself in the document the caller sent, not in
+    // the comment-stripped, trimmed buffer the grammar read
+    // ========================================
+
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvSource(value = {
+            "1 +                                     % plain expression",
+            "[-- a note --] 1 +                      % line comment on the same line",
+            "   [-- a note --]   1 +                 % comments plus surrounding whitespace",
+            "1 + [== a note ==]                      % block comment after the failure point",
+    }, delimiter = '%', quoteCharacter = '~')
+    void testDiagnoseReportsTheDocumentItWasGiven(final String code, final String desc) {
+        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
+        assertFalse(diag.success(), () -> desc + ": should fail");
+        assertEquals(code, diag.buffer(), () -> desc + ": the buffer is the document as sent, comments and all");
+        assertTrue(diag.position() >= 0 && diag.position() <= code.length(),
+                () -> desc + ": position must stay inside the document, got " + diag.position());
+        // the locating fields must all describe the same document. Before the fix the buffer was
+        // the document while line/column/position were the comment-stripped text's, so a caller
+        // had no way to place the error
+        final int lineStart = code.lastIndexOf('\n', diag.position() - 1) + 1;
+        assertEquals(diag.position() - lineStart + 1, diag.column(),
+                () -> desc + ": column must be the document column of position " + diag.position());
+        final long newlines = code.substring(0, diag.position()).chars().filter(c -> c == '\n').count();
+        assertEquals((int) newlines + 1, diag.line(),
+                () -> desc + ": line must be the document line of position " + diag.position());
+        assertTrue(diag.formatted().contains("line " + diag.line()),
+                () -> desc + ": formatted() must report the same line: " + diag.formatted());
+    }
+
+    /**
+     * The discriminating case: a comment that CONTAINS newlines. The stripped buffer loses
+     * those lines, so a diagnostic reported in stripped coordinates names a line that does
+     * not exist in the file — the very thing an editor needs to be right about.
+     */
+    @Test
+    public void testDiagnoseLineSurvivesMultiLineComment() {
+        final String code = "[== a\nb ==]\n1 +";
+        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
+        assertFalse(diag.success(), "1 + is incomplete");
+        assertEquals(code, diag.buffer(), "the document, comment and all");
+        assertEquals(3, diag.line(), () -> "the expression sits on line 3 of the document; the stripped buffer "
+                + "would have said line 2. got: " + diag.formatted());
+        assertEquals(code.indexOf('+'), diag.position(),
+                () -> "the caret sits on the operator that has no right operand. got: " + diag.formatted());
+        assertEquals(3, diag.column(), () -> "'+' is the third column of line 3. got: " + diag.formatted());
+        assertTrue(diag.formatted().contains("line 3"),
+                () -> "formatted() must report document coordinates: " + diag.formatted());
+    }
+
+    @ParameterizedTest(name = "[{index}] {2}")
+    @CsvSource(value = {
+            "[-- a note --] 1 + 2    % 1 + 2    % leading line comment",
+            "1 [-- a note --] + 2    % 1 + 2    % comment between the terms",
+            "1 + 2 [-- a note --]    % 1 + 2    % trailing line comment",
+            "[== a note ==] 1 + 2    % 1 + 2    % leading block comment",
+            "plus(1, [-- a note --] 2) % plus(1,2) % comment between the arguments",
+    }, delimiter = '%', quoteCharacter = '~')
+    void testCommentsDoNotShiftMeaning(final String withComments, final String bare,
+                                       final String desc) {
+        assertEquals(mParser.<Obj>parse(bare), mParser.<Obj>parse(withComments),
+                () -> desc + ": the comment is not part of the expression");
+    }
+
+    /**
+     * parse() stripped comments and parseDiagnose() did not, so the same text was valid or
+     * invalid depending on which door it came through. One preparation now serves both.
+     */
+    @ParameterizedTest(name = "[{index}] {1}")
+    @CsvSource(value = {
+            "1 [-- a note --] + 2    % comment between the terms",
+            "1 + 2 [== a note ==]    % trailing block comment",
+    }, delimiter = '%', quoteCharacter = '~')
+    void testParseDiagnoseAcceptsCommentsLikeParse(final String code, final String desc) {
+        assertTrue(mParser.parseDiagnose(code).success(),
+                () -> desc + ": parse() accepts this, so parseDiagnose() must too");
+        assertNotNull(mParser.<Obj>parse(code), () -> desc + ": parse() accepts this");
+    }
+
+    @Test
+    public void testCommentOnlyDocumentIsNoObj() {
+        final mParser.ParseDiagnostic diag = mParser.parseDiagnose("[-- nothing but a note --]");
+        assertTrue(diag.success(), "a document with only a comment is empty, not broken");
+        assertTrue(diag.result().isNoObj(), "and it reads as noobj");
+    }
 }

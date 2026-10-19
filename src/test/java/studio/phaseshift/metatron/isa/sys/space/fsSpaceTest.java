@@ -52,7 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @SkipRegexTest(value = {
         @SkipRegexTest.Skip(method = "testMultiFieldUpdates"),
         @SkipRegexTest.Skip(method = "testUpdateWrite", params = {"M28", "M29", "M30", "M31", "M39"}),
-        @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine", params = {"rshift/a/\\.>>\\.>>\\.\\*_", "rshift/x.*"})
+        @SkipRegexTest.Skip(method = "testRshiftUriGraphSpine", params = {"a/\\.>>\\.>>\\.\\*_", "x.*"})
 })
 public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
 

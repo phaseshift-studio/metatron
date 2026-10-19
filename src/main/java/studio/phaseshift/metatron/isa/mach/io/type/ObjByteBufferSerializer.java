@@ -161,6 +161,9 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeObjs(final Objs objs) {
+        // zero members is noobj (MObjs.isNoObj is jvm.isEmpty()) -- there is no remainder to slice
+        if (objs.isNoObj())
+            return NOOBJ_BYTES;
         final String internal = IteratorUtil.stream(objs.objsValue()).map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(("{" + internal.substring(1, internal.length() - 1) + "}").getBytes());
     }

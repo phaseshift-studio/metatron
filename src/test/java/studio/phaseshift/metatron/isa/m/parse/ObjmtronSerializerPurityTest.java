@@ -23,13 +23,24 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.PROCESSOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The contract of the pure mtron serializer: every {@code write(obj)} is legal, complete
@@ -106,6 +117,64 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
         assertFalse(readBack.isFail(), String.format("read-back failed: %s", written));
         assertEquals(obj, readBack, String.format("round-trip lost data: %s", written));
         assertEquals(obj.type(), readBack.type(), String.format("round-trip changed the type: %s", written));
+    }
+
+    /**
+     * ZERO MEMBERS IS A NOOBJ, not an empty bracket pair. {@code objs} is the one composite whose
+     * empty form is not an empty delimited body: {@code MObjs.isNoObj()} is {@code jvm.isEmpty()}, so
+     * the root writer already renders it {@code noobj}. A NESTED one used to route through
+     * {@code writeObjs}, whose reduce seed is {@code ""} — the {@code a,b} remainder it sliced was
+     * empty, so the write threw {@code Range [1, 0) out of bounds for length 0} and any value holding
+     * one could not be printed at all. The machine hit exactly that: {@code SwarmProcessor}'s state
+     * rec seeds {@code halted => objs0()}, so {@code /sys/processor.toString()} threw, and a test
+     * that concatenated the slot into an assertion message died on the message instead of reporting
+     * the assertion.
+     */
+    @Test
+    public void testZeroMembersRendersAsNoObjWhereverItSits() {
+        final ObjmtronSerializer ser = ObjmtronSerializer.single();
+        assertEquals("noobj", ser.write(objs0()), "an empty objs is its own noobj");
+        assertEquals("noobj", ser.writeObjs(objs0()), "writeObjs never slices an empty remainder");
+        assertEquals("noobj", new String(ObjByteBufferSerializer.singleton().writeObjs(objs0()).array()),
+                "and neither does the byte serializer");
+        // a rec's CONSTRUCTOR strips noobj values (Rec.Helper.cleanMap), so the empty objs is seeded
+        // onto the live map after construction -- which is exactly how SwarmProcessor seeds its own
+        // state rec, and how the field reached the writer in the first place
+        final Rec inner = rec(mutableMap());
+        inner.jvm().put(uri("b"), objs0());
+        final Rec outer = rec(mutableMap());
+        outer.jvm().put(uri("a"), inner);
+        assertEquals("[a=>[b=>noobj]]", ser.write(outer), "a nested empty objs renders as the noobj it is");
+        // the display serializer reaches the same text by a different branch (its writeClip has no
+        // objs arm at all); the diagnostic render is the one with no markup to strip first
+        final String diagnostic = ObjmtronUISerializer.diagnostic().write(outer);
+        assertTrue(diagnostic.contains("noobj"), String.format("the display serializer agrees: %s", diagnostic));
+        final Rec state = rec(mutableMap());
+        state.jvm().put(uri("halted"), objs0());
+        assertEquals("[halted=>noobj]", ser.write(state), "and a nested empty objs never throws");
+        final Obj readBack = ser.read(ser.write(state));
+        assertFalse(readBack.isFail(), "read-back failed");
+        assertTrue(readBack.asRec().at(uri("halted")).isNoObj(), "and reads back as noobj");
+    }
+
+    /**
+     * THE MACHINE'S OWN COMPONENTS ARE PRINTABLE. A processor seeds
+     * {@code halted => objs0()} onto its state rec, which is an empty objs — the one value the writer
+     * could not render (see the zero-members test above), so {@code /sys/processor.toString()} threw
+     * {@code Range [1, 0) out of bounds for length 0}. This is the symptom at its source, pinned
+     * against the live machine rather than a hand-built rec: it is what broke
+     * {@code NetworkIdentityTest.testComponentSlotsAreBoundNotDeferred}, whose assertion message
+     * concatenated the slot.
+     */
+    @Test
+    public void testTheMachinesProcessorIsPrintable() {
+        final Obj processor = Machine.current().atDirect(uri(PROCESSOR));
+        final String written = ObjmtronSerializer.single().write(processor);
+        LOG.debug("the machine's processor => %s", written);
+        assertTrue(written.contains("halted=>noobj"),
+                String.format("the seeded halted queue is the noobj it is: %s", written));
+        final String diagnostic = ObjmtronUISerializer.diagnostic().write(processor);
+        assertTrue(diagnostic.contains("halted"), String.format("and the display serializer renders it too: %s", diagnostic));
     }
 
     @Test

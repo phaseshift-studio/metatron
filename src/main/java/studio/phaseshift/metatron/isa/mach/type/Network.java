@@ -27,10 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.Closeable;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -521,7 +518,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         public static boolean sameService(final fURI a, final fURI b) {
-            return a.authority().equals(b.authority())
+            return Objects.equals(a.authority(), b.authority())
                     || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
         }
 

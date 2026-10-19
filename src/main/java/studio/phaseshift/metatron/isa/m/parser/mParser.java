@@ -399,7 +399,7 @@ public class mParser {
     private static final Pattern MTRON_COMMENT = Pattern.compile(
             "\\[--.*?(--]|$)|\\[==[\\s\\S]*?==]", Pattern.MULTILINE);
 
-    public static String stripComments(final String input) {
+    private static List<int[]> commentRegions(final String input) {
         // Blank the interiors of quoted spans in a same-length copy so the
         // comment regex cannot see comment markers that live inside string
         // literals; the matched regions then delete from the original.
@@ -444,17 +444,91 @@ public class mParser {
             if (quoteCount != 0)
                 masked[i] = ' ';
         }
-        // Find comment regions on the masked text (identical indices), then
-        // delete them from the original back-to-front so earlier indices stay
-        // valid.
+        // Find comment regions on the masked text (identical indices).
         final List<int[]> regions = new ArrayList<>();
         final Matcher matcher = MTRON_COMMENT.matcher(new String(masked));
         while (matcher.find())
             regions.add(new int[]{matcher.start(), matcher.end()});
+        return regions;
+    }
+
+    /**
+     * {@code input} with its comment regions deleted. Every index after the first comment
+     * shifts, so this is a buffer for <em>parsing</em>, never for locating anything in the
+     * document — use {@link #prepare(String)} when a position has to be reported.
+     */
+    public static String stripComments(final String input) {
+        final List<int[]> regions = commentRegions(input);
+        if (regions.isEmpty())
+            return input;
         final StringBuilder result = new StringBuilder(input);
         for (int r = regions.size() - 1; r >= 0; r--)
             result.delete(regions.get(r)[0], regions.get(r)[1]);
         return result.toString();
+    }
+
+    /**
+     * The document as the parser consumes it, plus the map back to the text it came from.
+     * The grammar reads a buffer with comments deleted and the ends trimmed, which shifts
+     * every index past the first comment; a diagnostic reported in those coordinates points
+     * at the wrong place in the file, and no caller can recover the difference afterwards.
+     * So the preparation keeps the association: {@link #toOriginal(int)} turns any index the
+     * grammar produced back into a document offset.
+     *
+     * @param original  the document exactly as the caller handed it over
+     * @param text      what the grammar parses — comments deleted, ends trimmed
+     * @param offsets   {@code offsets[i]} is the original index of {@code text[i]}
+     * @param endOffset the original index just past the last prepared character
+     */
+    private record Prepared(String original, String text, int[] offsets, int endOffset) {
+
+        /**
+         * A prepared document whose text is already the coordinate space — for a buffer a
+         * combinator produced itself, where there is nothing to map back to.
+         */
+        static Prepared identity(final String buffer) {
+            final int[] offsets = new int[buffer.length()];
+            for (int i = 0; i < offsets.length; i++)
+                offsets[i] = i;
+            return new Prepared(buffer, buffer, offsets, buffer.length());
+        }
+
+        /**
+         * The document offset of {@code index} in {@link #text}. An index at or past the end
+         * of the prepared text is clamped to {@link #endOffset}, so a failure at end of input
+         * lands where the last character of the expression sat.
+         */
+        int toOriginal(final int index) {
+            return index < this.offsets.length ? this.offsets[index] : this.endOffset;
+        }
+    }
+
+    /**
+     * Prepare {@code code} for parsing — the same text {@code trim()} and
+     * {@link #stripComments(String)} produced before, now carrying the index map.
+     */
+    private static Prepared prepare(final String code) {
+        final List<int[]> regions = commentRegions(code);
+        int start = 0;
+        int end = code.length();
+        while (start < end && Character.isWhitespace(code.charAt(start)))
+            start++;
+        while (end > start && Character.isWhitespace(code.charAt(end - 1)))
+            end--;
+        final StringBuilder text = new StringBuilder(end - start);
+        final int[] offsets = new int[end - start];
+        int kept = 0;
+        int region = 0;
+        for (int i = start; i < end; i++) {
+            while (region < regions.size() && regions.get(region)[1] <= i)
+                region++;
+            if (region < regions.size() && regions.get(region)[0] <= i)
+                continue;                                    // inside a comment — skip it
+            text.append(code.charAt(i));
+            offsets[kept++] = i;
+        }
+        return new Prepared(code, text.toString(),
+                kept == offsets.length ? offsets : Arrays.copyOf(offsets, kept), end);
     }
 
     public static Parser m_paren_wrap(final Parser parser) {
@@ -552,8 +626,21 @@ public class mParser {
      * went wrong.
      */
     private static String formatParseError(final Result failure) {
-        final String buffer = failure.getBuffer();
-        final int pos = failure.getPosition();
+        // a failure raised against a buffer no caller handed over — its own coordinates are
+        // the only ones there are
+        return formatParseError(failure, Prepared.identity(failure.getBuffer()));
+    }
+
+    /**
+     * Formats a PetitParser failure against the document it came from: the snippet, the caret,
+     * and the line:column are all in {@code prepared.original()} coordinates, while the
+     * explanation is still derived from the prepared text the grammar actually read — the
+     * position heuristics below only know about the characters the parser saw, and feeding them
+     * the comment-bearing original would make them reason about text the grammar never read.
+     */
+    private static String formatParseError(final Result failure, final Prepared prepared) {
+        final String buffer = prepared.original();
+        final int pos = prepared.toOriginal(failure.getPosition());
         final int[] lc = Token.lineAndColumnOf(buffer, pos);
         final String rawMsg = failure.getMessage() != null ? failure.getMessage() : "unknown parse failure";
 
@@ -572,7 +659,7 @@ public class mParser {
         final String caretLine = " ".repeat(caretOffset) + "^";
 
         // ── Simplify the PetitParser message ───────────────────────────
-        final String simplified = simplifyParseMessage(rawMsg, buffer, pos, snippet);
+        final String simplified = simplifyParseMessage(rawMsg, failure.getBuffer(), failure.getPosition(), snippet);
 
         return String.format("parse error at line %d, col %d:\n  %s\n  %s\n  %s",
                 lc[0], lc[1], snippet, caretLine, simplified);
@@ -796,29 +883,32 @@ public class mParser {
     }
 
     public static <O extends Obj> O parse(final String code) {
-        final String trimmed = stripComments(code.trim());
-        if (trimmed.isEmpty())
+        final Prepared prepared = prepare(code);
+        final String text = prepared.text();
+        if (text.isEmpty())
             return (O) noobj();
         // Use cached parser instead of rebuilding on every call
         long start = System.nanoTime();
         final Result result;
         try {
-            result = cachedMainParser.parse(trimmed);
+            result = cachedMainParser.parse(text);
         } catch (final StackOverflowError e) {
-            throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", trimmed);
+            throw MTronException.of("infinite recursion detected in parser: possible left recursion in '%s'", text);
         } catch (final MTronException e) {
-            return (O) parseFailure(e, trimmed, 0);
+            return (O) parseFailure(e, text, 0);
         }
         long parseTime = System.nanoTime() - start;
         if (result.isFailure()) {
-            throw MTronException.of(formatParseError(result));
+            // the failure's coordinates belong to the prepared text — report them against
+            // the document the caller handed over
+            throw MTronException.of(formatParseError(result, prepared));
         }
         start = System.nanoTime();
         O obj = result.get();
         long getTime = System.nanoTime() - start;
         // Log timing for expressions (disable in production)
         if (parseTime > 1_000_000) // > 1ms
-            LOG.debug("Parse timing for '%s': parse=%dms, get=%dms", trimmed, parseTime / 1_000_000, getTime / 1_000_000);
+            LOG.debug("Parse timing for '%s': parse=%dms, get=%dms", text, parseTime / 1_000_000, getTime / 1_000_000);
         return obj;
     }
 
@@ -828,20 +918,26 @@ public class mParser {
      * to probe validity without a try/catch.
      */
     public static ParseDiagnostic parseDiagnose(final String code) {
-        final String trimmed = code.trim();
-        if (trimmed.isEmpty())
+        // the same preparation parse() uses, so the two entry points accept exactly the
+        // same documents — this one used to trim without stripping comments, which made a
+        // commented expression valid or invalid depending on which door it came through
+        final Prepared prepared = prepare(code);
+        if (prepared.text().isEmpty())
             return ParseDiagnostic.ok(noobj());
         try {
-            final Result result = cachedMainParser.parse(trimmed);
+            final Result result = cachedMainParser.parse(prepared.text());
             if (result.isSuccess())
                 return ParseDiagnostic.ok(result.get());
-            final int[] lc = Token.lineAndColumnOf(result.getBuffer(), result.getPosition());
+            // the failure is located in the prepared text; the diagnostic reports the
+            // document, so line, column, position and buffer all agree with what the caller sent
+            final int position = prepared.toOriginal(result.getPosition());
+            final int[] lc = Token.lineAndColumnOf(prepared.original(), position);
             final String simplified = simplifyParseMessage(
                     result.getMessage(), result.getBuffer(), result.getPosition(), "");
             return new ParseDiagnostic(noobj(), lc[0], lc[1],
-                    result.getPosition(), result.getBuffer(), simplified, false);
+                    position, prepared.original(), simplified, false);
         } catch (final StackOverflowError e) {
-            return new ParseDiagnostic(noobj(), 1, 1, 0, trimmed,
+            return new ParseDiagnostic(noobj(), 1, 1, 0, prepared.original(),
                     "infinite recursion detected — possible left recursion", false);
         }
     }

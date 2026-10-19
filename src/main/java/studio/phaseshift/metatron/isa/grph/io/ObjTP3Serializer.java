@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 
+import static studio.phaseshift.metatron.Tokens.BASE_TYPES;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -89,15 +90,21 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
      * URIs are wrapped in {@code <>} so they round-trip as URIs on read-back.
      */
     public static Object tp3Value(final Obj obj) {
-        return switch (obj) {
-            case NoObj ignored -> null;
-            case Int i -> i.jvm();
-            case Real r -> r.jvm();
-            case Bool b -> b.jvm();
-            case Str s -> s.jvm();
-            case Uri u -> "<" + u.uriValue() + ">";
-            default -> obj.toString();
-        };
+        if (obj.isNoObj())
+            return null;
+        // Base mono types stay native so g.V().has(...) predicates match; refined
+        // (e.g. nat::T) and poly values are mtron-serialized so their type round-trips.
+        if (!obj.isPoly() && BASE_TYPES.contains(obj.tid())) {
+            return switch (obj) {
+                case Int i -> i.jvm();
+                case Real r -> r.jvm();
+                case Bool b -> b.jvm();
+                case Str s -> s.jvm();
+                case Uri u -> "<" + u.uriValue() + ">";
+                default -> obj.toString();
+            };
+        }
+        return ObjmtronSerializer.single().write(obj);
     }
 
     /**
@@ -110,7 +117,12 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
             return uri(f(s.substring(1, s.length() - 1)));
         }
         if (value instanceof String s) {
-            return ObjmtronSerializer.single().read(s);
+            // mtron-serialized refined values carry the :: type annotation and
+            // composites open with [ or {; a plain string is a base str value.
+            if (s.contains("::") || s.startsWith("[") || s.startsWith("{")) {
+                return ObjmtronSerializer.single().read(s);
+            }
+            return str(s);
         }
         return MObjFactory.single().toObj(value);
     }

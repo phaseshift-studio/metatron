@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.grph;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -42,7 +41,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 public class JanusGrphSpaceTest extends AbstractGrphSpaceTest {
 
     private static final JanusGraphContainer JANUS_GRAPH = new JanusGraphContainer();
@@ -80,16 +78,14 @@ public class JanusGrphSpaceTest extends AbstractGrphSpaceTest {
                         uri("gremlin.remote.remoteTraversalSourceName"), uri("g")));
 
         // ── rewrite test space config (pattern /grt/#) ──
+        // No HOST/CONFIG → in-memory TinkerGraph fallback, so the rewrite space
+        // gets its own graph. The per-test space below shares the single JanusGraph
+        // graph and its GraphLoader wipe would otherwise destroy the seeded rows.
         rewriteTestConfigRec = rec(
                 uri(PATTERN), uri("/grt/#"),
-                uri(HOST), uri(f(hostPort)),
                 uri(ROUTE), rec(
                         uri("/grt/V"), uri("V"),
                         uri("/grt/E"), uri("E"),
-                        uri("/grt/S"), uri(MODERN_SCHEMA_TID)),
-                uri(CONFIG), rec(
-                        uri("serializer.className"), uri("org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1"),
-                        uri("serializer.config.ioRegistries"), uri("org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry"),
-                        uri("gremlin.remote.remoteTraversalSourceName"), uri("g")));
+                        uri("/grt/S"), uri(MODERN_SCHEMA_TID)));
     }
 }

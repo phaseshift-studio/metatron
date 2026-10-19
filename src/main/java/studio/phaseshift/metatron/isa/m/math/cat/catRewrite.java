@@ -73,6 +73,7 @@ public class catRewrite {
     private static final Cut ORDER_CUT = Cut.role(ORDER_INST_TID.name());
     private static final Plan ORDER_PLAN = PlanBuilder.plan("order_shard")
             .cut(ORDER_CUT)
+            .route(Route.local(SHARD_AT, SHARD_POST))
             .route(Route.shuffle(Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
             .create();
 
