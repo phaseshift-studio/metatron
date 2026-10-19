@@ -600,7 +600,7 @@ relational tables, typed rows, and SQL rewrites within the metatron</p>
         <a href="m_tble_space_tblespace.html" class="code text-primary fw-bold text-decoration-none">tblespace</a>
         <small class="text-muted code">/m/tble/space/tblespace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@tblespace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?rng=tblespace&amp;dom=#{?}(rec::T)]@tblespace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
  {?}pre_write=&gt;inst::T,
@@ -631,7 +631,8 @@ relational tables, typed rows, and SQL rewrites within the metatron</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace-doc-0-tab').click();document.getElementById('__m__tble__inst__sql?rng=__m__rec{*}&dom=__m__tble__space__tblespace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sql?rec{*}<=tblespace(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> query a relational database in native sql and yield an mtron mapped result set</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> query a relational database in native sql and yield an mtron mapped result set
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a table space typically backed by an sql-compliant relational database" class="text-info">a table space typically backed by an sql-compliant relational database</a> <span class="text-light">=&gt;</span> <a href="#a result set as a stream of rows in mtron" class="text-success">a result set as a stream of rows in mtron</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>

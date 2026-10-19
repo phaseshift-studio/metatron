@@ -64,10 +64,10 @@ public class mtronParser extends MRec implements Parser {
     }
 
     @Override
-    public Code apply(final Obj source) {
+    public Obj apply(final Obj source) {
         // an obj that is not source text is not read -- see Parser for why the identity case is
-        // required rather than a convenience. Either way what leaves this stage is code: what the
-        // grammar made, lifted by the helper every parser shares.
-        return Parser.Helper.toCode(source.isStr() ? ObjmtronSerializer.parse(source.strValue()) : source);
+        // required rather than a convenience. What leaves this stage is an obj: what the grammar
+        // made, or the fail that stopped it. Lifting a value to code is the compiler's job.
+        return source.isStr() ? ObjmtronSerializer.parse(source.strValue()) : source;
     }
 }

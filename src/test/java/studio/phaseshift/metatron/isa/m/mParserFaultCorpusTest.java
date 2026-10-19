@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Its purpose is to make the parser's error work safe. Adding an expectation label
  * ({@code mParser.labeled}) must never change <em>acceptance</em> — what parses today keeps
- * parsing — and must never move a diagnostic out of the document it belongs to. Those two
+ * parsing — and must never move a diagnostic out of the source it belongs to. Those two
  * properties are asserted here, so the message wording itself is free to be rewritten: that is
  * the point of the exercise, and pinning prose is what has kept the wording bad.</p>
  *
@@ -71,17 +72,31 @@ public class mParserFaultCorpusTest extends AbstractMetatronTest {
             // ── comments ─────────────────────────────────────────────
             "1 [-- a note --]                     % trailing line comment",
             "1 + 2 [== a block ==]                % trailing block comment",
-            "[-- nothing but a note --]           % comment-only document",
+            "[-- nothing but a note --]           % comment-only source",
+            // ── sources: a bare value mid-chain becomes a map of it ──
+            "1.plus(2).445                        % bare value mid-chain",
+            "1.plus(2).445.plus(4)                % bare value mid-chain, then more chain",
+            "1.445                                % a real keeps its dot",
+            // ── sources: statements ──
+            "1;2                                  % two values",
+            "1;2;3                                % three values",
+            "a -> 1; b -> 2                       % two instructions",
+            "a.x(); y()                           % an instruction continues the chain",
+            "1.plus(2).plus(5); 244.plus(30)      % a chain per statement",
+            "1.plus(2).{plus(4),plus(10)}.mult(2) % a brace is a branch, peer of the dot",
+            "{3,6}a/b/c?a=b                       % a value coefficient on the left",
+            "{x,y}                                % an objs literal — a coefficient, not a branch",
+            "<x://a?a&b>                          % a query key without '=' is legal",
+            "int{4}::T                            % a type coefficient on its right",
     }, delimiter = '%', quoteCharacter = '~')
     void testMustParse(final String code, final String desc) {
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
-        assertTrue(diag.success(),
-                () -> desc + ": must parse, got: " + diag.formatted());
+        final Obj parsed = mParser.parse(code);
+        assertFalse(parsed.isFail(), () -> desc + ": must parse, got: " + parsed);
     }
 
     /**
      * Snippets that must fail, and must fail <em>legibly</em>: the diagnostic locates itself in
-     * the document, and the explanation is prose rather than a PetitParser combinator dump.
+     * the source, and the explanation is prose rather than a PetitParser combinator dump.
      */
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(value = {
@@ -102,29 +117,31 @@ public class mParserFaultCorpusTest extends AbstractMetatronTest {
             "[a b]                                % two terms in a list slot",
             "=>                                   % operator with no left side",
             "::                                   % type marker with no name",
+            "int{}::T                             % an empty type coefficient",
             // ── quotes ───────────────────────────────────────────────
             "\"unterminated                       % unclosed double quote",
             "'unterminated                        % unclosed single quote",
     }, delimiter = '%', quoteCharacter = '~')
     void testMustFailLegibly(final String code, final String desc) {
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
-        assertFalse(diag.success(), () -> desc + ": must fail");
+        final Obj parsed = mParser.parse(code);
+        assertTrue(parsed.isFail(), () -> desc + ": must fail");
+        final mParser.ParseFault fault = mParser.faultOf(parsed);
+        assertNotNull(fault, () -> desc + ": the fail must carry the fault");
 
-        // the diagnostic describes the document the caller sent, not a preprocessed buffer
-        assertEquals(code, diag.buffer(), () -> desc + ": buffer must be the document as sent");
-        assertTrue(diag.position() >= 0 && diag.position() <= code.length(),
-                () -> desc + ": position " + diag.position() + " must be inside the document");
+        // the fault describes the source the caller sent, not a preprocessed buffer
+        assertEquals(code, fault.source(), () -> desc + ": the source as sent");
+        assertTrue(fault.position() >= 0 && fault.position() <= code.length(),
+                () -> desc + ": position " + fault.position() + " must be inside the source");
 
-        // line and column are derived from that position, in that document
-        final int lineStart = code.lastIndexOf('\n', diag.position() - 1) + 1;
-        assertEquals(diag.position() - lineStart + 1, diag.column(),
-                () -> desc + ": column must be the document column of the position");
-        final long newlines = code.substring(0, diag.position()).chars().filter(c -> c == '\n').count();
-        assertEquals((int) newlines + 1, diag.line(),
-                () -> desc + ": line must be the document line of the position");
+        // line and column are derived from that position, in that source
+        final int lineStart = code.lastIndexOf('\n', fault.position() - 1) + 1;
+        assertEquals(fault.position() - lineStart + 1, fault.column(),
+                () -> desc + ": column must be the source column of the position");
+        final long newlines = code.substring(0, fault.position()).chars().filter(c -> c == '\n').count();
+        assertEquals((int) newlines + 1, fault.line(),
+                () -> desc + ": line must be the source line of the position");
 
-        assertLegible(diag.message(), desc);
-        assertLegible(diag.formatted(), desc);
+        assertLegible(fault.getMessage(), desc);
     }
 
     /**
@@ -145,13 +162,8 @@ public class mParserFaultCorpusTest extends AbstractMetatronTest {
     }
 
     /**
-     * A document is not one expression: a broken statement must not silence the rest. This pins
+     * A source is not one expression: a broken statement must not silence the rest. This pins
      * the current contract of the multi-statement path while M4 is unbuilt — it reports what it
      * could read rather than throwing.
      */
-    @Test
-    void testMultiStatementStillYieldsWhatItCan() {
-        assertDoesNotThrow(() -> mParser.parseMulti("a -> 1; b -> 2"),
-                "two well-formed statements must parse");
-    }
 }

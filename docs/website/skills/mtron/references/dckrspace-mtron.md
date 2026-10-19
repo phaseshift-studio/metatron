@@ -396,25 +396,28 @@ mtron> mydb:people/3 -> [name=>'metis',role=>oracle]
 
 ```mtron
 mtron> *mydb:people/+                                           [-- all rows              --]
-==>[name=>'marko',role=>architect]
-==>[name=>'metis',role=>oracle]
-==>[name=>'stynx',role=>developer]
+==>fail::[parse error at line 1, col 87:
+     ...           [-- all rows              --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/260
 mtron> *mydb:people/+/                                          [-- all rows keyed by uri --]
-==>mydb:people/1=>[name=>'marko',role=>architect]
-==>mydb:people/3=>[name=>'metis',role=>oracle]
-==>mydb:people/2=>[name=>'stynx',role=>developer]
+==>fail::[parse error at line 1, col 87:
+     ...           [-- all rows keyed by uri --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/261
 mtron> *mydb:people/+/name                                      [-- all names             --]
-==>'stynx'
-==>'marko'
-==>'metis'
+==>fail::[parse error at line 1, col 87:
+     ...           [-- all names             --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/262
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
 ==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]
-==>explanation::[format=>!inst?rng=str&dom=#{?}(){<j>},
+==>explanation::[format=>!inst?rng=str&dom=#{?}(),
                  desc=>[rng=><#>,
                         insts=>2,
                         rewrite=>explanation::[
-                         format=>!inst?rng=str&dom=#{?}(){<j>},
+                         format=>!inst?rng=str&dom=#{?}(),
                          desc=>[rng=><#>,insts=>3],
                          per_inst=>[[op=>from,
                                      args=>[mydb:people/+],
@@ -439,7 +442,7 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
                  per_inst=>[[op=>sql_where,
                              args=>[people/+,"role = 'developer'"],
                              f=>'<j>',
-                             form=>initial,
+                             form=>standard,
                              c_dom=>0,
                              c_rng=>0],
                             [op=>select,
@@ -452,11 +455,11 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
 mtron> *mydb:people/+.count()                                   [-- number of rows        --]
 ==>3
 mtron> *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==>explanation::[format=>!inst?rng=str&dom=#{?}(){<j>},
+==>explanation::[format=>!inst?rng=str&dom=#{?}(),
                  desc=>[rng=>int,
                         insts=>1,
                         rewrite=>explanation::[
-                         format=>!inst?rng=str&dom=#{?}(){<j>},
+                         format=>!inst?rng=str&dom=#{?}(),
                          desc=>[rng=>int,insts=>2],
                          per_inst=>[[op=>from,
                                      args=>[mydb:people/+],

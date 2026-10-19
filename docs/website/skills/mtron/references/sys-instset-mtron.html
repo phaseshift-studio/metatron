@@ -481,8 +481,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
 ==&gt;docs::[obj=&gt;bash?lst[str]&lt;=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
-          args=&gt;[{?}timeout=&gt;'a real number denoting timeout of ...',
-                 cmd=&gt;'the terminal command to evaluate (...'],
+          args=&gt;[cmd=&gt;'the terminal command to evaluate (...',
+                 {?}timeout=&gt;'a real number denoting timeout of ...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -494,30 +494,30 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'CONTRIBUTING.md',
     'Desktop',
     'dist',
-    ...(18 more)]
+    ...(19 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.5M ...',
+    'tmpfs                  6.1G  6.6M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  539G ...',
-    'tmpfs                   31G  1.1M ...',
+    '/dev/nvme0n1p2         916G  541G ...',
+    'tmpfs                   31G  4.0M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/395
+==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/541
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/sys/fail/396
+    [ProcBuilder&lt;228&gt;]]@/sys/fail/542
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
@@ -530,7 +530,7 @@ the same <code>==</code> projection:</p>
            'CONTRIBUTING.md',
            'Desktop',
            'dist',
-           ...(18 more)]]
+           ...(19 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
@@ -540,16 +540,16 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'CONTRIBUTING.md',
     'Desktop',
     'dist',
-    ...(19 more)]
+    ...(20 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
 <pre><code class="language-mtron">mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum().explain()
-==&gt;explanation::[format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
+==&gt;explanation::[format=&gt;!inst?rng=str&amp;dom=#{?}(),
                  desc=&gt;[rng=&gt;&lt;#&gt;,
                         insts=&gt;4,
                         rewrite=&gt;explanation::[
-                         format=&gt;!inst?rng=str&amp;dom=#{?}(){&lt;j&gt;},
+                         format=&gt;!inst?rng=str&amp;dom=#{?}(),
                          desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;4],
                          per_inst=&gt;[[op=&gt;start,
                                      rng=&gt;lst,
@@ -558,11 +558,11 @@ applied to each. The glyphs are the actions, and the sugar says so in plain sigh
    ...
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum().explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-    op      dom          rng      args                f    desc      c_dom  c_rng 
-    start   noobj{0}::T  lst::T   ['ls','whoami']     &lt;j&gt;  initial   {0}    {1}   
-    select  lst::T       lst::T   [id()=&gt;bash(id())]  &lt;j&gt;  mapper    {1}    {1}   
-    rshift  lst::T       #{*}::T  noobj               &lt;j&gt;  standard  {1}    {*}   
-    sum     #{*}::T      #::T                         &lt;?&gt;  reducer   {*}    {1}   
+    op      dom          rng      args                f    desc     c_dom  c_rng 
+    start   noobj{0}::T  lst::T   ['ls','whoami']     &lt;j&gt;  initial  {0}    {1}   
+    select  lst::T       lst::T   [id()=&gt;bash(id())]  &lt;j&gt;  mapper   {1}    {1}   
+    rshift  lst::T       #{*}::T  noobj               &lt;j&gt;  scatter  {1}    {*}   
+    sum     #{*}::T      #::T                         &lt;?&gt;  reducer  {*}    {1}   
    &quot;&quot;&quot;
 </code></pre>
 <h4>pipe over the results</h4>
@@ -576,13 +576,13 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: CONTRIBUTING.md',
     '  File: Desktop',
     '  File: dist',
-    ...(18 more)]
+    ...(19 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
     '  Size: 44514     	Blocks: 88     ...',
     'Device: 259,5	Inode: 25322019    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-17 19:16:05.050240...',
+    'Access: 2026-10-18 22:05:46.822754...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -597,7 +597,7 @@ converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du<
     bB::698,
     bB::409,
     bB::409,
-    ...(18 more)]
+    ...(19 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -627,9 +627,9 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash)]@/sys/fail/401
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/547
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash)]@/sys/fail/402
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/548
 </code></pre>
 <p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:</p>
@@ -654,9 +654,9 @@ mtron&gt; */sys/thread/+.count()
 ==&gt;1
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::616,
-    free_mem_jvm=&gt;mB::315.69715,
+    free_mem_jvm=&gt;mB::326.47397,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::300.30284,
+    used_mem_jvm=&gt;mB::289.52602,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[run=&gt;0,stop=&gt;0]]
@@ -697,7 +697,8 @@ mtron&gt; fsspace::[
 mtron&gt; *&lt;mfs:pom.xml&gt;.tid()            [-- xml's mime --]
 ==&gt;/m/web/mime/xml
 mtron&gt; *&lt;mfs:boot/docs.mtron&gt;.tid()    [-- a .mtron file reads as the code it is --]
-==&gt;/m/rec
+==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
+	memspace::[pattern=&gt;/usr/#,q=&gt;[typeq::[pattern=&gt;&lt;T&gt;,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T),pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T),qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T)],mintq::[pattern=&gt;mintq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T)],docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T),pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T),obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],subq::[pattern=&gt;subq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T),pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T),qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T),obj=&gt;[,]],incrq::[pattern=&gt;incrq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T)]]]@/sys/space/usr [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(fsspace::[pattern=&gt;local:#,route=&gt;[local:=&gt;/home/killswitch/],script=&gt;!*boot/script]@/sys/space/fs)@&lt;5&gt;
 </code></pre>
 <p>Three content types, one <code>*</code> — the tid is the referent's claim, and <code>.tid()</code> is how
 it is read out. A <code>.mtron</code> file is not lines: it parses into the objs it declares, so
@@ -710,27 +711,23 @@ tag <em>is</em> the predicate validation — and, for <code>application/x-mtron<
 into its structural form. Where in doubt, <code>?docq</code> and <code>.explain()</code> say what an inst
 is doing — the sugar is short precisely because it is legible once:</p>
 <pre><code class="language-mtron">mtron&gt; [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
-==&gt;fail::[parse error at line 1, col 1:
-     [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=tex...
-     ^
-     could not parse at '[']@/sys/fail/403
+==&gt;fail::[parse error at line 1, col 13:
+     [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=text/markdown&gt; ...
+                 ^
+     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/549
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
-==&gt;[space=&gt;/sys/space,
-    web=&gt;[http/host=&gt;http://localhost:8777,
-          ws/host=&gt;ws://localhost:8555],
-    typer/stage=&gt;[inst_dom=&gt;true,
-                  inst_rng=&gt;true,
-                  type_pred=&gt;true,
-                  obj_write=&gt;true,
-                  code_resolve=&gt;false],
-    header=&gt;&quot;&quot;&quot;
-   _,.---._      _,.----.    ,-,--.
-   ...&quot;&quot;&quot;]
+==&gt;fail::[parse error at line 1, col 80:
+     ...  [-- the doc boot, read as its code --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/550
 </code></pre>
 <h3>walking the tree</h3>
 <p>Wildcards are space-side. <code>+</code> is one segment, <code>#</code> is the recursion:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/main/java/+/&gt;                  [-- the child of src/main/java --]
-==&gt;mfs:/src/main/java/studio=&gt;mfs:/src/main/java/studio
+==&gt;fail::[parse error at line 1, col 76:
+     ...      [-- the child of src/main/java --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/551
 mtron&gt; *&lt;mfs:docs/skills/mtron/+/&gt;  [-- this doc's siblings, with their content --]
 ...
 </code></pre>
@@ -756,13 +753,20 @@ before line N, <code>+</code> to append; a read takes the slice, a write replace
 <pre><code class="language-mtron">mtron&gt; bash('printf &quot;the metatron docs pipeline\nevaluates this block\nand inlines the result&quot; &gt; /tmp/mtron-docs-scratch/lines.txt')
 ==&gt;['']
 mtron&gt; *&lt;scratch:lines.txt?lineq=1&gt;                     [-- line two, zero-indexed --]
-==&gt;'evaluates this block'
+==&gt;fail::[parse error at line 1, col 80:
+     ...          [-- line two, zero-indexed --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/553
 mtron&gt; &lt;scratch:lines.txt?lineq=1&gt; -&gt; &quot;rewrote line two&quot;  [-- replace --]
-==&gt;'rewrote line two'
+==&gt;fail::[parse error at line 1, col 67:
+     ...&gt; -&gt; &quot;rewrote line two&quot;  [-- replace --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/554
 mtron&gt; *&lt;scratch:lines.txt&gt;                                  [-- the file after the write --]
-==&gt;&quot;&quot;&quot;the metatron docs pipeline
-   rewrote line two
-   and inlines the result&quot;&quot;&quot;
+==&gt;fail::[parse error at line 1, col 87:
+     ...        [-- the file after the write --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/555
 </code></pre>
 <h3>the file family — <code>read_file</code>, <code>edit_file</code></h3>
 <p>The same lines, as instructions, when the shape of the answer matters. A uri with a
@@ -770,7 +774,7 @@ dot in its name takes the angle brackets, even as an argument. <code>read_file</
 lines:</p>
 <pre><code class="language-mtron">mtron&gt; read_file(file=&gt;&lt;scratch:lines.txt&gt;, min=&gt;0, max=&gt;2)
 ==&gt;[[0,'the metatron docs pipeline'],
-    [1,'rewrote line two']]
+    [1,'evaluates this block']]
 </code></pre>
 <p><code>edit_file</code> states the write as arguments — insert at <code>min</code>, replace the <code>min..max</code>
 span when <code>max</code> is given — and answers with a status report:</p>

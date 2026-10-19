@@ -88,7 +88,7 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
                     MIN, null == this.uriValue().c().min() ? noobj() : jnt((Long) this.uriValue().c().min()),
                     MAX, null == this.uriValue().c().max() ? noobj() : jnt((Long) this.uriValue().c().max()));
         else if (k.equals(f(QPROC)))
-            return rec(this.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), ObjmtronSerializer.single().read(kv.getValue()))));
+            return rec(this.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), Helper.parseQ(kv.getValue()))));
         else
             throw MTronException.of("unknown uri component: %s", k);
     }*/
@@ -516,11 +516,12 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
          * a plain str for anything that isn't a valid literal (free-text query values).
          */
         static Obj parseQ(final String value) {
-            try {
-                return value.isEmpty() ? Obj.none() : ObjmtronSerializer.parse(value);
-            } catch (final Exception e) {
-                return str(value);
-            }
+            if (value.isEmpty())
+                return Obj.none();
+            final Obj parsed = ObjmtronSerializer.parse(value);
+            // the parser reports an unparseable literal as a fail::T VALUE, not a throw, so the
+            // free-text fallback tests the result rather than catching
+            return parsed.stream().anyMatch(Obj::isFail) ? str(value) : parsed;
         }
 
         private static int relativeDepth(final fURI child, final fURI base) {

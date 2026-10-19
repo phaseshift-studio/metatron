@@ -244,12 +244,11 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                 } else if (tid != null && T(tid).isRootType()) {
                     // #::T (any type) — the value could be anything, so hand the string straight
                     // to the mtron parser (no str/uri/code shortcut); a plain str only when it
-                    // isn't parseable mtron.
-                    try {
-                        obj = ObjmtronSerializer.parse(jpstr);
-                    } catch (final Exception e) {
+                    // isn't parseable mtron. The parser reports that as a fail::T VALUE, not a
+                    // throw, so the test is on the result.
+                    obj = ObjmtronSerializer.parse(jpstr);
+                    if (obj.stream().anyMatch(Obj::isFail))
                         obj = str(jpstr, tid, null);
-                    }
                 } else {
                     try {
                         if ((jpstr.startsWith("\"") || jpstr.startsWith("'") && jpstr.endsWith("\"") || jpstr.endsWith("'"))) {
@@ -271,9 +270,9 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                             } else
                                 obj = str(jpstr);
                         } else {
-                            try {
-                                obj = ObjmtronSerializer.parse(jpstr);
-                            } catch (final Exception e) {
+                            // the parser reports unparseable source as a fail::T value, not a throw
+                            obj = ObjmtronSerializer.parse(jpstr);
+                            if (obj.stream().anyMatch(Obj::isFail)) {
                                 // uri-bias only when the schema declared nothing — a declared
                                 // structural type (lst/rec/etc.) means the string is a mismatch
                                 // the tool should handle, not a uri to be mangled by uri-parse

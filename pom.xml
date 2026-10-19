@@ -1102,7 +1102,7 @@
                         <parallel>classesAndMethods</parallel>
                         <threadCount>6</threadCount>
                         <forkCount>6</forkCount>
-                        <reuseForks>false</reuseForks>
+                        <reuseForks>true</reuseForks>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow
                             --enable-native-access=ALL-UNNAMED

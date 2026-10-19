@@ -28,7 +28,9 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -263,29 +265,70 @@ public class mParserTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // parse() — ; inside operator chain produces end()
+            // ';' is sugar for an end() INST, so it appears in the parsed program
             "1+2;map(4)                                                     % start(1).plus(2).end().map(4)",
-            // parse() — ; inside strings is NOT a separator
+            // ... and inside a string it is just text
             "'\\.'                                                          % '\\.'",
             "'a;b'                                                          % 'a;b'",
-            // parseMulti() — leading ;
-            ";42                                                            % 42",
-            // parseMulti() — trailing ;
-            "42;                                                            % 42",
-            // parseMulti() — only semicolons → noobj
-            ";;;                                                            % noobj",
     }, delimiter = '%', quoteCharacter = '~')
     public void testSemicolonBehavior(final String code, final String expected) {
-        if (expected.equals("noobj")) {
-            assertTrue(ObjmtronSerializer.parseMulti(code).isNoObj());
-        } else if (code.startsWith(";") || code.endsWith(";")) {
-            // Leading/trailing ; tests — use parseMulti
-            final Obj result = ObjmtronSerializer.parseMulti(code);
-            final Obj ex = ObjmtronSerializer.parse(expected);
-            assertEquals(ex, result);
-        } else {
-            checkCodeParseApply(LOG, code, expected);
-        }
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * Surface forms that must parse to exactly the same Obj — the rewrites the grammar performs for
+     * the author. A bare value in a chain becomes a map of it; a statement boundary is start/end
+     * around the chains; a comment is invisible; a literal keeps its dot.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.plus(2).445                   % 1.plus(2).map(445)",
+            "1.plus(2).9                     % 1.plus(2).map(9)",
+            "1.plus(2).5.plus(3)             % 1.plus(2).map(5).plus(3)",
+            "a.x(); y()                      % a.x().end().y()",
+            "a.x(); 42                       % a.x().end().start(42)",
+            "1.plus(2).plus(5); 244.plus(30) % start(1).plus(2).plus(5).end().start(244).plus(30)",
+            "1;                              % start(1).end()",
+            ";1                              % end().start(1)",
+            "[-- a note --] 1 + 2            % 1 + 2",
+            "1 [-- a note --] + 2            % 1 + 2",
+            "1 + 2 [== a note ==]            % 1 + 2",
+            "plus(1, [-- a note --] 2)       % plus(1,2)",
+            "1.plus(2).{plus(4),plus(10)}.mult(2) % 1.plus(2).branch(plus(4),plus(10)).mult(2)",
+            "1.plus(2).{plus(4),plus(10),plus(20)} % 1.plus(2).branch(plus(4),plus(10),plus(20))",
+            "1.plus(2).{plus(4)}             % 1.plus(2).branch(plus(4))",
+            "1.plus(2).{7,3}                 % 1.plus(2).branch(7,3)",
+    }, delimiter = '%')
+    void testParsesToTheSameObjAs(final String code, final String equivalent) {
+        checkEquality(LOG, mParser.parse(code), mParser.parse(equivalent), true);
+    }
+
+    /**
+     * What an expression is worth. apply() is one program; eval() runs the statements of a source
+     * in turn, which is the only difference between the last two columns.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1                                        % 1",
+            "1.plus(2)                                % 3",
+            "1.plus(2).plus(3).plus(4)                % 10",
+            "100.minus(1)                             % 99",
+            "1.plus(2).445                            % 445",
+            "1.plus(2).445.plus(4)                    % 449",
+            "1.plus(2).9                              % 9",
+            "1.plus(2).5.plus(3)                      % 8",
+            "1.plus(2).plus(5); 244.plus(30)          % 274",
+            "1.plus(2).plus(5).to(x); 244.plus(*x)    % 244",
+            "1.plus(2).{plus(4),plus(10)}             % {7,13}",
+            "1.plus(2).{plus(4),plus(10),plus(20)}    % {7,13,23}",
+            "1.plus(2).{plus(4)}                      % 7",
+            "1.plus(2).{7,3}                          % {7,3}",
+            "{1,2,3,4}.map(+2)                        % {3,4,5,6}",
+            "1.445                                    % 1.445",
+            "1.5                                      % 1.5",
+    }, delimiter = '%')
+    void testApply(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
     }
 
     // ========================================
@@ -297,8 +340,8 @@ public class mParserTest extends AbstractMetatronTest {
         // eval() splits the whole source on ; — quoted ; must stay inside its span.
         // A lone " inside a triple-quoted span used to defeat the old boolean-toggle
         // splitter (early close exposed the inner ; as a statement separator).
-        assertEquals(jnt(42), mParser.eval("s -> \"\"\"a\"b;c\"\"\"; 42"));
-        assertEquals(jnt(42), mParser.eval("s -> \"a;b\"; 42"));
+        assertEquals(jnt(42), Machine.evaluate("s -> \"\"\"a\"b;c\"\"\"; 42"));
+        assertEquals(jnt(42), Machine.evaluate("s -> \"a;b\"; 42"));
     }
 
     // ========================================
@@ -310,11 +353,11 @@ public class mParserTest extends AbstractMetatronTest {
         // Comment-only inputs
         assertTrue(ObjmtronSerializer.parse("[-- just a comment --]").isNoObj());
         assertTrue(ObjmtronSerializer.parse("[== just a block ==]").isNoObj());
-        assertTrue(ObjmtronSerializer.parseMulti("[-- just a comment --]").isNoObj());
-        assertTrue(ObjmtronSerializer.parseMulti("[== just a block ==]").isNoObj());
+        assertTrue(ObjmtronSerializer.parse("[-- just a comment --]").isNoObj());
+        assertTrue(ObjmtronSerializer.parse("[== just a block ==]").isNoObj());
 
-        // Leading comments via parseMulti
-        assertEquals(42L, (Object) ObjmtronSerializer.parseMulti("[== header ==]42").jvm());
+        // Leading comments via parse
+        assertEquals(42L, (Object) ObjmtronSerializer.parse("[== header ==]42").jvm());
 
         // Mid-expression comments: parser limitation — m_comment() in obj_parser
         // greedily matches as a standalone expression, stopping before the value.
@@ -326,74 +369,74 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     // ========================================
-    // parseMulti() Structural Tests
+    // multi-statement source
     // ========================================
 
     @Test
     public void testParseMulti() {
         // Single expression — same shape as parse()
-        assertEquals(jnt(42).jvm(), ObjmtronSerializer.parseMulti("42").jvm());
+        assertEquals(jnt(42).jvm(), ObjmtronSerializer.parse("42").jvm());
 
         // Two bare values
-        final Obj multi1 = ObjmtronSerializer.parseMulti("42; true");
+        final Obj multi1 = ObjmtronSerializer.parse("42; true");
         assertTrue(multi1.isCode());
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(multi1.asCode()).size());
 
         // Three expressions
         assertEquals(3, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti("1; 2; 3").asCode()).size());
+                ObjmtronSerializer.parse("1; 2; 3").asCode()).size());
 
         // Single string — no splitting inside quotes
-        final Obj strResult = ObjmtronSerializer.parseMulti("'hello;world'");
+        final Obj strResult = ObjmtronSerializer.parse("'hello;world'");
         assertTrue(strResult.isStr());
         assertEquals("hello;world", strResult.jvm());
 
         // ; with whitespace variations
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti("1 ; 2").asCode()).size());
+                ObjmtronSerializer.parse("1 ; 2").asCode()).size());
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti("1;2").asCode()).size());
+                ObjmtronSerializer.parse("1;2").asCode()).size());
 
         // Multiple consecutive ;
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti("1;;;2").asCode()).size());
+                ObjmtronSerializer.parse("1;;;2").asCode()).size());
 
         // Mixed expression types
         assertEquals(3, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti("42; true; 'hello'").asCode()).size());
+                ObjmtronSerializer.parse("42; true; 'hello'").asCode()).size());
 
         // Instruction + bare value
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti("map(1); 42").asCode()).size());
+                ObjmtronSerializer.parse("map(1); 42").asCode()).size());
 
         // Empty input
-        assertTrue(ObjmtronSerializer.parseMulti("").isNoObj());
-        assertTrue(ObjmtronSerializer.parseMulti("   ").isNoObj());
+        assertTrue(ObjmtronSerializer.parse("").isNoObj());
+        assertTrue(ObjmtronSerializer.parse("   ").isNoObj());
     }
 
     @Test
     public void testParseMultiComments() {
         // Block comment between expressions
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti("1;[== block ==]2").asCode()).size());
+                ObjmtronSerializer.parse("1;[== block ==]2").asCode()).size());
 
         // Block comment with ; inside — not treated as separator
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti(
+                ObjmtronSerializer.parse(
                         "1;[== this ; is not ; a separator ==]2").asCode()).size());
 
         // Line comment between ; and expression
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti("1;[-- between --]2").asCode()).size());
+                ObjmtronSerializer.parse("1;[-- between --]2").asCode()).size());
 
         // Comments around ; separator
         assertEquals(2, ObjmtronSerializer.splitCodeAtEnd(
-                ObjmtronSerializer.parseMulti(
+                ObjmtronSerializer.parse(
                         "1;[-- before --];[-- after --]2").asCode()).size());
 
-        // Leading/trailing comments via parseMulti
-        assertEquals(42L, (Object) ObjmtronSerializer.parseMulti("[== header ==]42").jvm());
-        assertEquals(42L, (Object) ObjmtronSerializer.parseMulti("42[-- trailing --]").jvm());
+        // Leading/trailing comments
+        assertEquals(42L, (Object) ObjmtronSerializer.parse("[== header ==]42").jvm());
+        assertEquals(42L, (Object) ObjmtronSerializer.parse("42[-- trailing --]").jvm());
     }
 
     // ========================================
@@ -462,7 +505,8 @@ public class mParserTest extends AbstractMetatronTest {
         assertEquals(uri("http://metatron.com?a&b").uriValue(), ObjmtronSerializer.parse("<http://metatron.com?a&b>").uriValue());
         assertEquals(uri("http://metatron.com?a&b"), ObjmtronSerializer.parse("<http://metatron.com?a&b>"));
         assertEquals(uri("http://metatron.com?a=a/b/c&b=a"), ObjmtronSerializer.parse("<http://metatron.com?a=a/b/c&b=a>"));
-        assertThrows(MTronException.class, () -> ObjmtronSerializer.parse("/metatron.com?a&b"));
+        assertTrue(ObjmtronSerializer.parse("/metatron.com?a&b").isFail(),
+                "a quri missing its ?key=value is a fail");
         assertEquals(uri("metatron/com?a&b"), ObjmtronSerializer.parse("metatron/com?a&b"));
     }
 
@@ -487,188 +531,53 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     // ========================================
-    // Infinite Loop Guards — parseMulti() iteration cap + zero-progress check
-    // ========================================
-
-    @Test
-    public void testParseMultiIterationCapAndRestore() {
-        final int originalLimit = mParser.maxParseIterations;
-
-        try {
-            // Lower the cap so a multi-statement input triggers it quickly.
-            // 4 expressions → 4 parse iterations → exceeds lowered cap of 3.
-            mParser.maxParseIterations = 3;
-
-            final MTronException ex = assertThrows(MTronException.class,
-                    () -> ObjmtronSerializer.parseMulti("1;2;3;4"));
-            assertTrue(ex.getMessage().contains("infinite recursion detected in parser"),
-                    "Exception should mention 'infinite recursion detected in parser', got: "
-                            + ex.getMessage());
-            assertTrue(ex.getMessage().contains("iterations"),
-                    "Exception should mention 'iterations', got: "
-                            + ex.getMessage());
-        } finally {
-            mParser.maxParseIterations = originalLimit;
-        }
-
-        // After restoring the limit, multi-statement parsing should work again
-        final Obj result = ObjmtronSerializer.parseMulti("1;2;3;4;5");
-        assertNotNull(result);
-        assertFalse(result.isNoObj());
-    }
-
-    @Test
-    public void testParseMultiZeroProgressGuard() throws Exception {
-        // Swap in a dummy parser that always returns success at position 0.
-        // This simulates a grammar bug where the parser matches but consumes
-        // nothing — without the guard, parseMulti() would loop forever.
-        final Field field = mParser.class.getDeclaredField("cachedExpressionParser");
-        field.setAccessible(true);
-        final Parser original = (Parser) field.get(null);
-
-        try {
-            field.set(null, new Parser() {
-                @Override
-                public org.petitparser.context.Result parseOn(final Context context) {
-                    return context.success(noobj());
-                }
-
-                @Override
-                public Parser copy() {
-                    return this;
-                }
-
-                @Override
-                public List<Parser> getChildren() {
-                    return List.of();
-                }
-
-                @Override
-                public void replace(final Parser source, final Parser target) {
-                    // no-op
-                }
-            });
-
-            final MTronException ex = assertThrows(MTronException.class,
-                    () -> mParser.parseMulti("anything"));
-            assertTrue(ex.getMessage().contains("consumed 0 characters"),
-                    "Exception should mention 'consumed 0 characters', got: "
-                            + ex.getMessage());
-        } finally {
-            field.set(null, original);
-        }
-    }
-
-    // ========================================
     // Parse Error Messages
     // ========================================
 
-    @ParameterizedTest(name = "[{index}] {1}")
-    @CsvSource(value = {
-            // ── End-of-input: incomplete expressions ─────────────────
-            "1+                                                   % incomplete — binary operator",
-            "rec[name=>bob                                          % unclosed '['",
-            "lst[1,2,                                              % unclosed '['",
-            "str(                                                   % unclosed '('",
-            // ── Unclosed brackets ──────────────────────────────────
-            "plus([1,2                                             % unclosed",
-            "rec[name=>bob,                                        % unclosed '['",
-            "lst[1,2,3                                             % unclosed '['",
-            // ── Unclosed parens ───────────────────────────────────
-            "plus(1,2                                              % unclosed '('",
-            // ── Unclosed angle brackets (URI) ────────────────────
-            "<http://example.com                                   % unclosed '<'",
-            // ── Unexpected closers ───────────────────────────────
-            "1]                                                    % unexpected ']'",
-            "1)                                                    % unexpected ')'",
-            // ── Line:column is present ───────────────────────────
-            "1+2?rng=                                              % line 1",
-            "1+2?dom=abc                                           % line 1",
-    }, delimiter = '%', quoteCharacter = '~')
-    public void testParseErrorMessage(final String code, final String expectedFragment) {
-        final MTronException ex = assertThrows(MTronException.class,
-                () -> mParser.parse(code));
-        assertTrue(ex.getMessage().contains(expectedFragment),
-                () -> "Expected message to contain '" + expectedFragment
-                        + "' but got: " + ex.getMessage());
-    }
-
-    @Test
-    public void testParseErrorIncludesLineAndColumn() {
-        // Single-line: column at failure point
-        final MTronException ex1 = assertThrows(MTronException.class,
-                () -> mParser.parse("1+"));
-        assertTrue(ex1.getMessage().contains("line 1"),
-                "Should include line number, got: " + ex1.getMessage());
-        assertTrue(ex1.getMessage().contains("col "),
-                "Should include column number, got: " + ex1.getMessage());
-    }
-
-    @Test
-    public void testParseErrorSnippetIsTrimmed() {
-        // Long expression should produce a snippet with context, not the full buffer
-        final String longExpr = "plus(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20";
-        final MTronException ex = assertThrows(MTronException.class,
-                () -> mParser.parse(longExpr));
-        final String msg = ex.getMessage();
-        // Snippet should be shorter than the full expression
-        assertTrue(msg.length() < longExpr.length() + 200,
-                "Error message should contain a trimmed snippet, got length: " + msg.length());
-    }
-
-    @Test
-    public void testParseErrorUsesNewFormat() {
-        // Verify the error message uses the new format, not the raw PetitParser dump
-        final MTronException ex = assertThrows(MTronException.class,
-                () -> mParser.parse("1+]"));
-        final String msg = ex.getMessage();
-        assertTrue(msg.contains("parse error at"),
-                "Should use 'parse error at' format, got: " + msg);
-        assertTrue(msg.contains("^"),
-                "Should include caret indicator, got: " + msg);
-        // Should NOT contain raw ChoiceParser verbosity
-        assertFalse(msg.contains("expected") && msg.indexOf("expected") != msg.lastIndexOf("expected"),
-                "Should not contain raw ChoiceParser alternatives, got: " + msg);
-    }
-
-    // ========================================
-    // Designed failure messages — labeled at the expectation point
-    // ========================================
-
+    /**
+     * Every diagnostic has the same shape and names the source position it belongs to: header with
+     * line:col, the source as written, a caret, an explanation, and no combinator dump. The expected
+     * fragment is the one part that may change as labels improve; the shape may not.
+     */
     @ParameterizedTest
     @CsvSource(value = {
-            "'abc                % unclosed single-quote — missing closing '''",
-            "\"abc               % unclosed double-quote — missing closing '\"'",
-            "\"\"\"abc           % unclosed triple-quote — missing closing '\"\"\"'",
+            "lst[1,2,3                        % unclosed bracket",
+            "plus(1,2                         % unclosed paren",
+            "<http://example.com              % unclosed angle",
+            "1]                               % stray list closer",
+            "1)                               % stray paren closer",
+            "1+                               % dangling binary operator",
+            "12ab                             % two adjacent terms",
+            "[1 2]                            % poly entry",
+            "a.b                              % dot is not a name separator",
+            ".5                               % no leading-dot reals",
+            "~'abc~                           % unclosed single quote",
+            "~\"abc~                           % unclosed double quote",
+            "~\"\"\"abc~                           % unclosed triple quote",
+            "plus(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 % long expression, trimmed snippet",
     }, delimiter = '%', quoteCharacter = '~')
-    public void testUnclosedQuoteFailuresCarryDesignedMessage(final String code, final String expected) {
-        final MTronException ex = assertThrows(MTronException.class, () -> mParser.parse(code));
-        assertTrue(ex.getMessage().contains("parse error at"),
-                "should keep the line:col format, got: " + ex.getMessage());
-        assertTrue(ex.getMessage().contains(expected),
-                "the designed message should surface, got: " + ex.getMessage());
-    }
+    void testDiagnostics(final String code, final String desc) {
+        final Obj parsed = mParser.parse(code);
+        assertTrue(parsed.isFail(), () -> desc + ": must fail: " + parsed);
+        final mParser.ParseFault fault = mParser.faultOf(parsed);
+        assertNotNull(fault, () -> desc + ": the fail must carry the fault");
+        assertSame(parsed.asFail().jvm(), fault, () -> desc + ": the fault is the fail own cause");
+        assertEquals(code, fault.source(), () -> desc + ": the source as sent");
 
-    @ParameterizedTest
-    @CsvSource(value = {
-            "12ab            % two adjacent terms need an operator or sugar between them",
-            "1e              % two adjacent terms need an operator or sugar between them",
-            "1 2             % two adjacent terms need an operator or sugar between them",
-            "1+              % incomplete — binary operator",
-            "1=              % incomplete — binary operator",
-            "1/              % incomplete — binary operator",
-            "?               % the coefficient slot needs a target to qualify",
-            "[1 2]          % invalid list/record entry",
-            "[a b]          % invalid list/record entry",
-            "a.b             % mtron uses '/' for space paths",
-            ".5              % mtron has no leading-dot reals",
-    }, delimiter = '%', quoteCharacter = '~')
-    public void testContentLevelFailuresCarryDesignedMessage(final String code, final String expected) {
-        final MTronException ex = assertThrows(MTronException.class, () -> mParser.parse(code));
-        assertTrue(ex.getMessage().contains("parse error at"),
-                "should keep the line:col format, got: " + ex.getMessage());
-        assertTrue(ex.getMessage().contains(expected),
-                "the designed message should surface, got: " + ex.getMessage());
+        final String message = fault.getMessage();
+        assertTrue(message.contains("parse error at"), () -> desc + ": header missing: " + message);
+        assertTrue(message.contains("line ") && message.contains("col "),
+                () -> desc + ": position missing: " + message);
+        assertTrue(message.contains("^"), () -> desc + ": caret missing: " + message);
+        assertFalse(message.contains("Parser"), () -> desc + ": combinator names leaked: " + message);
+        assertTrue(message.length() < code.length() + 200,
+                () -> desc + ": snippet must be trimmed, got " + message.length() + " chars: " + message);
+
+        assertTrue(fault.position() >= 0 && fault.position() <= code.length(),
+                () -> desc + ": position inside the source");
+        final int lineStart = code.lastIndexOf('\n', fault.position() - 1) + 1;
+        assertEquals(fault.position() - lineStart + 1, fault.column(),
+                () -> desc + ": column must be the source column of the position");
     }
 
     @Test
@@ -686,205 +595,6 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     // ========================================
-    // ParseDiagnose — non-throwing parse
+    // THE ONE DOOR — parse() returns an obj, or a fail::T
     // ========================================
-
-    @ParameterizedTest(name = "[{index}] {2}")
-    @CsvSource(value = {
-            "1+2                                                         % ok                % valid addition",
-            "rec[name=>bob,age=>31]                                      % ok                % record literal",
-            "lst[1,2,3]                                                  % ok                % list literal",
-            "<http://example.com>                                        % ok                % angle-wrapped URI",
-            "plus(1,2)                                                   % ok                % instruction call",
-    }, delimiter = '%', quoteCharacter = '~')
-    public void testParseDiagnoseSuccessCases(final String code,
-                                              final String expectedMsgFragment, final String desc) {
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
-        assertTrue(diag.success(),
-                () -> desc + ": should succeed, got: " + diag.message());
-        assertNotNull(diag.result(), () -> desc + ": result should not be null");
-        assertFalse(diag.result().isNoObj(),
-                () -> desc + ": valid expression should not return noobj");
-        assertNull(diag.formatted(),
-                () -> desc + ": formatted() should be null on success, got: " + diag.formatted());
-        assertEquals(0, diag.line());
-        assertEquals(0, diag.column());
-        assertEquals(-1, diag.position());
-    }
-
-    @ParameterizedTest(name = "[{index}] {3}")
-    @CsvSource(value = {
-            // ── Unclosed delimiters (end-of-input) ────────────────
-            "lst[1,2,3                                                   % unclosed '['      % unclosed list bracket",
-            "plus(1,2                                                    % unclosed '('      % unclosed paren",
-            "<http://example.com                                         % unclosed '<'      % unclosed angle bracket",
-            "rec[name=>bob                                               % unclosed '['      % unclosed record bracket",
-            // ── Unexpected closers (no matching opener) ───────────
-            "1]                                                          % unexpected ']'    % stray list closer",
-            "1)                                                          % unexpected ')'    % stray paren closer",
-            // ── Incomplete / generic ──────────────────────────────
-            "1+                                                          % incomplete — binary operator   % trailing binary operator",
-            "str(                                                        % unclosed '('      % incomplete inst call",
-            // ── Operator chars confuse bracket detection ───────────
-            "1.-<[-<[?>0=>5,_=>_]>                                       % unclosed '['      % operator chars mask real unclosed bracket",
-    }, delimiter = '%', quoteCharacter = '~')
-    public void testParseDiagnoseFailureCases(final String code,
-                                              final String expectedMsgFragment, final String desc) {
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
-        assertFalse(diag.success(),
-                () -> desc + ": should fail");
-        assertNotNull(diag.message(),
-                () -> desc + ": message should not be null");
-        assertTrue(diag.message().contains(expectedMsgFragment),
-                () -> desc + ": expected message to contain '" + expectedMsgFragment
-                        + "' but got: " + diag.message());
-        assertTrue(diag.line() >= 1,
-                () -> desc + ": line should be >= 1, got: " + diag.line());
-        assertTrue(diag.column() >= 1,
-                () -> desc + ": column should be >= 1, got: " + diag.column());
-        assertTrue(diag.position() >= 0,
-                () -> desc + ": position should be >= 0, got: " + diag.position());
-        assertEquals(code, diag.buffer(),
-                () -> desc + ": buffer should be the trimmed input");
-        // formatted() must be non-null and contain the line:col header + caret
-        final String formatted = diag.formatted();
-        assertNotNull(formatted, () -> desc + ": formatted() should be non-null on failure");
-        assertTrue(formatted.contains("parse error at"),
-                () -> desc + ": formatted should contain 'parse error at', got: " + formatted);
-        assertTrue(formatted.contains("^"),
-                () -> desc + ": formatted should contain caret, got: " + formatted);
-        assertTrue(formatted.contains(expectedMsgFragment),
-                () -> desc + ": formatted should contain message fragment, got: " + formatted);
-    }
-
-    @Test
-    public void testParseDiagnoseEmptyAndWhitespace() {
-        // Empty string
-        final mParser.ParseDiagnostic empty = mParser.parseDiagnose("");
-        assertTrue(empty.success(), "empty string should succeed");
-        assertTrue(empty.result().isNoObj(), "empty string should return noobj");
-        assertNull(empty.formatted());
-
-        // Whitespace only
-        final mParser.ParseDiagnostic ws = mParser.parseDiagnose("  \n\t ");
-        assertTrue(ws.success(), "whitespace only should succeed");
-        assertNull(ws.formatted());
-    }
-
-    @Test
-    public void testParseDiagnoseNoobjLiteral() {
-        // noobj is a valid expression that evaluates to noobj
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose("noobj");
-        assertTrue(diag.success(), "noobj literal should parse successfully");
-        assertTrue(diag.result().isNoObj(), "noobj should evaluate to noobj");
-        assertNull(diag.formatted());
-        assertEquals(0, diag.line());
-        assertEquals(0, diag.column());
-        assertEquals(-1, diag.position());
-    }
-
-    @Test
-    public void testParseDiagnoseBufferPreserved() {
-        final String input = "plus(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15";
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(input);
-        assertFalse(diag.success());
-        assertEquals(input, diag.buffer(),
-                "buffer should be the full input, not trimmed or snipped");
-    }
-
-    @Test
-    public void testParseDiagnosePositionInBounds() {
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose("1]");
-        assertFalse(diag.success());
-        assertTrue(diag.position() >= 0 && diag.position() <= diag.buffer().length(),
-                "position " + diag.position() + " should be within buffer length "
-                        + diag.buffer().length());
-    }
-
-    // ========================================
-    // POSITION TRUTH — a diagnostic locates itself in the document the caller sent, not in
-    // the comment-stripped, trimmed buffer the grammar read
-    // ========================================
-
-    @ParameterizedTest(name = "[{index}] {1}")
-    @CsvSource(value = {
-            "1 +                                     % plain expression",
-            "[-- a note --] 1 +                      % line comment on the same line",
-            "   [-- a note --]   1 +                 % comments plus surrounding whitespace",
-            "1 + [== a note ==]                      % block comment after the failure point",
-    }, delimiter = '%', quoteCharacter = '~')
-    void testDiagnoseReportsTheDocumentItWasGiven(final String code, final String desc) {
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
-        assertFalse(diag.success(), () -> desc + ": should fail");
-        assertEquals(code, diag.buffer(), () -> desc + ": the buffer is the document as sent, comments and all");
-        assertTrue(diag.position() >= 0 && diag.position() <= code.length(),
-                () -> desc + ": position must stay inside the document, got " + diag.position());
-        // the locating fields must all describe the same document. Before the fix the buffer was
-        // the document while line/column/position were the comment-stripped text's, so a caller
-        // had no way to place the error
-        final int lineStart = code.lastIndexOf('\n', diag.position() - 1) + 1;
-        assertEquals(diag.position() - lineStart + 1, diag.column(),
-                () -> desc + ": column must be the document column of position " + diag.position());
-        final long newlines = code.substring(0, diag.position()).chars().filter(c -> c == '\n').count();
-        assertEquals((int) newlines + 1, diag.line(),
-                () -> desc + ": line must be the document line of position " + diag.position());
-        assertTrue(diag.formatted().contains("line " + diag.line()),
-                () -> desc + ": formatted() must report the same line: " + diag.formatted());
-    }
-
-    /**
-     * The discriminating case: a comment that CONTAINS newlines. The stripped buffer loses
-     * those lines, so a diagnostic reported in stripped coordinates names a line that does
-     * not exist in the file — the very thing an editor needs to be right about.
-     */
-    @Test
-    public void testDiagnoseLineSurvivesMultiLineComment() {
-        final String code = "[== a\nb ==]\n1 +";
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose(code);
-        assertFalse(diag.success(), "1 + is incomplete");
-        assertEquals(code, diag.buffer(), "the document, comment and all");
-        assertEquals(3, diag.line(), () -> "the expression sits on line 3 of the document; the stripped buffer "
-                + "would have said line 2. got: " + diag.formatted());
-        assertEquals(code.indexOf('+'), diag.position(),
-                () -> "the caret sits on the operator that has no right operand. got: " + diag.formatted());
-        assertEquals(3, diag.column(), () -> "'+' is the third column of line 3. got: " + diag.formatted());
-        assertTrue(diag.formatted().contains("line 3"),
-                () -> "formatted() must report document coordinates: " + diag.formatted());
-    }
-
-    @ParameterizedTest(name = "[{index}] {2}")
-    @CsvSource(value = {
-            "[-- a note --] 1 + 2    % 1 + 2    % leading line comment",
-            "1 [-- a note --] + 2    % 1 + 2    % comment between the terms",
-            "1 + 2 [-- a note --]    % 1 + 2    % trailing line comment",
-            "[== a note ==] 1 + 2    % 1 + 2    % leading block comment",
-            "plus(1, [-- a note --] 2) % plus(1,2) % comment between the arguments",
-    }, delimiter = '%', quoteCharacter = '~')
-    void testCommentsDoNotShiftMeaning(final String withComments, final String bare,
-                                       final String desc) {
-        assertEquals(mParser.<Obj>parse(bare), mParser.<Obj>parse(withComments),
-                () -> desc + ": the comment is not part of the expression");
-    }
-
-    /**
-     * parse() stripped comments and parseDiagnose() did not, so the same text was valid or
-     * invalid depending on which door it came through. One preparation now serves both.
-     */
-    @ParameterizedTest(name = "[{index}] {1}")
-    @CsvSource(value = {
-            "1 [-- a note --] + 2    % comment between the terms",
-            "1 + 2 [== a note ==]    % trailing block comment",
-    }, delimiter = '%', quoteCharacter = '~')
-    void testParseDiagnoseAcceptsCommentsLikeParse(final String code, final String desc) {
-        assertTrue(mParser.parseDiagnose(code).success(),
-                () -> desc + ": parse() accepts this, so parseDiagnose() must too");
-        assertNotNull(mParser.<Obj>parse(code), () -> desc + ": parse() accepts this");
-    }
-
-    @Test
-    public void testCommentOnlyDocumentIsNoObj() {
-        final mParser.ParseDiagnostic diag = mParser.parseDiagnose("[-- nothing but a note --]");
-        assertTrue(diag.success(), "a document with only a comment is empty, not broken");
-        assertTrue(diag.result().isNoObj(), "and it reads as noobj");
-    }
 }

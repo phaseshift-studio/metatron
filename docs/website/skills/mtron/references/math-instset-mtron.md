@@ -76,7 +76,7 @@ under `/m/math/+` and available via the standard type resolution system.
 ```mtron
 mtron> [-- current system time --]
 mtron> datetime_now()
-==>datetime:://2026.10:1808/56/12/163?tz=-0600
+==>datetime:://2026.10:1914/46/08/617?tz=-0600
 mtron> [-- from record (goes through .as(uri::T) first) --]
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
@@ -143,8 +143,20 @@ The `datetime::T` predicate ensures base uri has:
 
 ```mtron
 mtron> <//2024.13:25/09/00/00/000?tz=-0500>.?datetime::T [-- month 13 (bad)   --]
+==>fail::[parse error at line 1, col 75:
+     ...0>.?datetime::T [-- month 13 (bad)   --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/530
 mtron> <//2024.12:25/09/60/00/000?tz=-0500>.?datetime::T [-- second 60 (bad)  --]
+==>fail::[parse error at line 1, col 75:
+     ...0>.?datetime::T [-- second 60 (bad)  --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/531
 mtron> <//2024.12:25/09/00/00>.?datetime::T              [-- missing tz (bad) --]
+==>fail::[parse error at line 1, col 75:
+     ...:T              [-- missing tz (bad) --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/532
 ```
 #### mutating and filtering
 
@@ -241,17 +253,17 @@ Time units require a real-backed value — an int-backed time is a type violatio
 
 ```mtron
 mtron> day::2.as(millis::T)         [-- int-backed time (bad) --]
-==>fail::[2 is not a time::T[][ctor?rng=day&dom=#{?}(<#{*}>::T){<j>}]@day
-   	while parsing: day::2.as(millis::T)]@/sys/fail/391
+==>fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=day&dom=#{?}(<#{*}>::T)]@day
+   	while parsing: day::2.as(millis::T)         ]@/sys/fail/537
 mtron> hour::2.as(minute::T)        [-- int-backed time (bad) --]
-==>fail::[2 is not a time::T[][ctor?rng=hour&dom=#{?}(<#{*}>::T){<j>}]@hour
-   	while parsing: hour::2.as(minute::T)]@/sys/fail/392
+==>fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=hour&dom=#{?}(<#{*}>::T)]@hour
+   	while parsing: hour::2.as(minute::T)        ]@/sys/fail/538
 mtron> nanos::2.as(millis::T)       [-- int-backed time (bad) --]
-==>fail::[2 is not a time::T[][ctor?rng=nanos&dom=#{?}(<#{*}>::T){<j>}]@nanos
-   	while parsing: nanos::2.as(millis::T)]@/sys/fail/393
+==>fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=nanos&dom=#{?}(<#{*}>::T)]@nanos
+   	while parsing: nanos::2.as(millis::T)       ]@/sys/fail/539
 mtron> micros::2.as(millis::T)      [-- int-backed time (bad) --]
-==>fail::[2 is not a time::T[][ctor?rng=micros&dom=#{?}(<#{*}>::T){<j>}]@micros
-   	while parsing: micros::2.as(millis::T)]@/sys/fail/394
+==>fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=micros&dom=#{?}(<#{*}>::T)]@micros
+   	while parsing: micros::2.as(millis::T)      ]@/sys/fail/540
 ```
 #### relational operators
 

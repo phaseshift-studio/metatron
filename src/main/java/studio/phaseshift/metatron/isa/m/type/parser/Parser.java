@@ -62,10 +62,14 @@ public interface Parser extends Machine.Component {
      * Parse {@code source} — a {@code str} of source text — and return the program it denotes. Any
      * other obj is not source text: it is lifted as it stands, never re-read.
      *
+     * A fail is an obj too, and it is the one obj that leaves the inst chain (it goes to the fail
+     * stack; only {@code catch()} brings it back), so this stage hands a fail out unchanged. A
+     * {@code code::T} return could only wrap it back into a program, which is what a fail never does.
+     *
      * @param source the source text, or an obj that has already been parsed
-     * @return {@code source} as {@code code::T}
+     * @return the parsed obj, or the {@code fail::T} that stopped it
      */
-    Code apply(final Obj source);
+    Obj apply(final Obj source);
 
     class Helper {
 

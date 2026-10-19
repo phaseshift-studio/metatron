@@ -63,13 +63,18 @@ public class EdgeRec extends ElementRec<Edge> {
 
         final VertexProperty<?> redirectProp = fullVertex.property(grphInstSet.AUTO_ROUTE_STRING);
         if (redirectProp.isPresent()) {
-            try {
-                final String redirectStr = redirectProp.value().toString();
-                this.logger().debug("auto resolution of %s", redirectStr);
-                return ObjmtronSerializer.parse(redirectStr).apply().parent(new VertexRec(fullVertex, this.space));
-            } catch (final Exception e) {
-                this.logger().warn("an auto routing error occured: %s", e);
-            }
+            final String redirectStr = redirectProp.value().toString();
+            this.logger().debug("auto resolution of %s", redirectStr);
+            final Obj parsed = ObjmtronSerializer.parse(redirectStr);
+            if (parsed.stream().anyMatch(Obj::isFail))
+                // an unparseable route is reported, not routed: a fallback, never a throw
+                this.logger().warn("an auto routing parse error occured: %s", parsed);
+            else
+                try {
+                    return parsed.apply().parent(new VertexRec(fullVertex, this.space));
+                } catch (final Exception e) {
+                    this.logger().warn("an auto routing error occured: %s", e);
+                }
         }
         return new VertexRec(fullVertex, this.space);
     }

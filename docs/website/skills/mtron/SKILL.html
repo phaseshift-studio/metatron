@@ -618,19 +618,19 @@ instruction calls. Append <code>.explain()</code> to any expression to get its s
 and the unsugar'd text table is the lazy <code>&gt;&gt;format</code> inst (materialized in the interactive console):</p>
 <pre><code class="language-mtron">mtron&gt; start(/a).rshift().rshift().rshift().explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-    op      dom          rng      args   f    desc      c_dom  c_rng 
-    start   noobj{0}::T  uri::T   /a     &lt;j&gt;  initial   {0}    {1}   
-    rshift  uri::T       #{*}::T  noobj  &lt;j&gt;  standard  {1}    {*}   
-    rshift  A::T         B{*}::T         &lt;j&gt;  standard  {1}    {*}   
-    rshift  A::T         B{*}::T         &lt;j&gt;  standard  {1}    {*}   
+    op      dom          rng      args   f    desc     c_dom  c_rng 
+    start   noobj{0}::T  uri::T   /a     &lt;j&gt;  initial  {0}    {1}   
+    rshift  uri::T       #{*}::T  noobj  &lt;j&gt;  scatter  {1}    {*}   
+    rshift  A::T         B{*}::T         &lt;j&gt;  scatter  {1}    {*}   
+    rshift  A::T         B{*}::T         &lt;j&gt;  scatter  {1}    {*}   
    &quot;&quot;&quot;
 mtron&gt; /a.&gt;&gt;.&gt;&gt;.&gt;&gt;.explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-    op      dom          rng      args   f    desc      c_dom  c_rng 
-    start   noobj{0}::T  uri::T   /a     &lt;j&gt;  initial   {0}    {1}   
-    rshift  uri::T       #{*}::T  noobj  &lt;j&gt;  standard  {1}    {*}   
-    rshift  A::T         B{*}::T         &lt;j&gt;  standard  {1}    {*}   
-    rshift  A::T         B{*}::T         &lt;j&gt;  standard  {1}    {*}   
+    op      dom          rng      args   f    desc     c_dom  c_rng 
+    start   noobj{0}::T  uri::T   /a     &lt;j&gt;  initial  {0}    {1}   
+    rshift  uri::T       #{*}::T  noobj  &lt;j&gt;  scatter  {1}    {*}   
+    rshift  A::T         B{*}::T         &lt;j&gt;  scatter  {1}    {*}   
+    rshift  A::T         B{*}::T         &lt;j&gt;  scatter  {1}    {*}   
    &quot;&quot;&quot;
 </code></pre>
 <p>Traversing the graph non-sugar'd vs sugar'd (<code>&gt;&gt;</code> = <code>rshift</code>):</p>
@@ -721,6 +721,10 @@ loaded modules already provide, like <code>person</code>, never need creating), 
 runs the type's checks, and casting (<code>.as(type::T)</code>) validates an existing value:</p>
 <pre><code class="language-mtron">mtron&gt; import(/m/math,math)                     [-- module import, namespaced math --]
 mtron&gt; int::T[?&gt;0]@posint                       [-- a new type: positive integers --]
+==&gt;fail::[parse error at line 1, col 79:
+     ...   [-- a new type: positive integers --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/219
 mtron&gt; rec::T[?[name=&gt;str::T, age=&gt;int::T]]@being
 mtron&gt; person::[name=&gt;'marko', age=&gt;29]         [-- the stock person type, constructed --]
 ==&gt;person::[name=&gt;'marko',age=&gt;29]

@@ -198,11 +198,10 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
             final int eq = pair.indexOf('=');
             if (eq > 0) {
                 Obj p;
-                try {
-                    p = ObjmtronSerializer.parse(pair.substring(eq + 1).trim());
-                } catch (final Exception e) {
+                p = ObjmtronSerializer.parse(pair.substring(eq + 1).trim());
+                if (p.stream().anyMatch(Obj::isFail))
+                    // a label value that is not mtron literal is a uri-or-str, not an error
                     p = Str.Helper.toUriOrStr(pair.substring(eq + 1).trim(), true);
-                }
                 labels.at(uri(pair.substring(0, eq).trim()), p, MUTABLE);
             }
         }

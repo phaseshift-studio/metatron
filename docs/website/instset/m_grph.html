@@ -468,14 +468,7 @@ from vertex to vertex, the edge of the metatron is traversed</p>
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
           constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
-          type=&gt;[rec::T@/m/grph/elmt,
-                 elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
-   {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx,
-                 elmt::T[?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
-   IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge,
-                 space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,
+          type=&gt;[space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,
     {?}const=&gt;[&lt;#&gt;::T],
     {?}type=&gt;{?}[&lt;#&gt;::T],
     {?}inst=&gt;{?}[inst::T],
@@ -487,17 +480,22 @@ from vertex to vertex, the edge of the metatron is traversed</p>
           inst=&gt;[gremlin?#{*}&lt;=grphspace(str::T){&lt;j&gt;},
                  label?uri&lt;=rec(){&lt;j&gt;},
                  values?#{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
-                 inV?vrtx&lt;=edge(){&lt;j&gt;},
-                 outV?vrtx&lt;=edge(){&lt;j&gt;},
-                 bothV?vrtx{2}&lt;=edge(){&lt;j&gt;},
-                 out?vrtx{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
-                 in?vrtx{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
-                 both?vrtx{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
-                 outE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
-                 inE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
-                 bothE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
-                 addE?edge&lt;=vrtx(uri::T,rec{+}::T,rec{?}::T){&lt;j&gt;}],
+                 inV?rec&lt;=rec(){&lt;j&gt;},
+                 outV?rec&lt;=rec(){&lt;j&gt;},
+                 bothV?rec{2}&lt;=rec(){&lt;j&gt;},
+                 out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+                 in?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+                 both?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+                 outE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+                 inE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+                 bothE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+                 addE?rec&lt;=rec(uri::T,rec{+}::T,rec{?}::T){&lt;j&gt;}],
           rewrite=&gt;[/m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/grph/inst/rewrite/gremlin_sum?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/grph/inst/rewrite/gremlin_skip?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/grph/inst/rewrite/gremlin_skip_limit?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/grph/inst/rewrite/gremlin_order?code{?}&lt;=code(){&lt;j&gt;},
+                    /m/grph/inst/rewrite/gremlin_dedup?code{?}&lt;=code(){&lt;j&gt;},
                     /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(){&lt;j&gt;},
                     /m/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(){&lt;j&gt;},
                     /m/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(){&lt;j&gt;},
@@ -511,23 +509,14 @@ from vertex to vertex, the edge of the metatron is traversed</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">8</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">13</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">7</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">5</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">13</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">12</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
         <div class="card-body"><div class="mb-3">
     <h6 class="text-primary mb-2">types</h6>
-    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">grph</small></div><div class="d-flex flex-wrap"><a href="#__m__grph__edge" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">edge</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__grph__elmt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">elmt</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__grph__vrtx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">vrtx</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">schema</small></div><div class="d-flex flex-wrap"><a href="#__m__grph__schema__modern" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">schema</small></div><div class="d-flex flex-wrap"><a href="#__m__grph__schema__modern" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">modern</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">schema&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">modern</small></div></div><div class="d-flex flex-wrap"><a href="#__m__grph__schema__modern__created" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -551,40 +540,40 @@ from vertex to vertex, the edge of the metatron is traversed</p>
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__grph__inst__addE?rng=__m__grph__edge&dom=__m__grph__vrtx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__grph__inst__addE?rng=__m__rec&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">addE</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__both?rng=__m__rec{*}&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">both</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__bothE?rng=__m__rec{*}&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">bothE</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__bothV?rng=__m__grph__vrtx{2}&dom=__m__grph__edge" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__bothV?rng=__m__rec{2}&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">bothV</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__in?rng=__m__rec{*}&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">in</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__inE?rng=__m__rec{*}&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">inE</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__inV?rng=__m__grph__vrtx&dom=__m__grph__edge" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__inV?rng=__m__rec&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">inV</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__grph__inst__label?rng=__m__uri&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">label</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__out?rng=__m__rec{*}&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">out</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__outE?rng=__m__rec{*}&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">outE</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__grph__inst__outV?rng=__m__grph__vrtx&dom=__m__grph__edge" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__grph__inst__outV?rng=__m__rec&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">outV</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__grph__inst__values?rng=#{*}&dom=__m__rec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -596,8 +585,23 @@ from vertex to vertex, the edge of the metatron is traversed</p>
     <div class="d-flex flex-wrap"><a href="#__m__grph__inst__rewrite__gremlin_count?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin_count</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__grph__inst__rewrite__gremlin_dedup?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_dedup</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__grph__inst__rewrite__gremlin_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin_limit</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__grph__inst__rewrite__gremlin_order?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_order</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__grph__inst__rewrite__gremlin_skip?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_skip</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__grph__inst__rewrite__gremlin_skip_limit?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_skip_limit</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__grph__inst__rewrite__gremlin_sum?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_sum</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__grph__inst__rewrite__gremlin_where?rng=__m__code{?}&dom=__m__code" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin_where</span>
@@ -618,63 +622,28 @@ from vertex to vertex, the edge of the metatron is traversed</p>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">8</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">5</span></h3>
     <div class="card mb-3" id="__m__grph__schema__modern__created">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">created::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__edge" class="instset-doc-small-code text-info code">/m/grph/edge::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/grph/schema/modern/created</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/created</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__grph__edge" class="code inherited-link">edge::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
- IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/created</code></pre></div>
     
-</div><div class="card mb-3" id="__m__grph__edge">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">edge::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__elmt" class="instset-doc-small-code text-info code">/m/grph/elmt::T</a></span>
-        </span>
-        <small class="text-muted code">/m/grph/edge</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
- IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]]@/m/grph/edge</code></pre></div>
     
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a directed key/value attributed binary edge</p>
-</div>
-</div><div class="card mb-3" id="__m__grph__elmt">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">elmt::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
-        </span>
-        <small class="text-muted code">/m/grph/elmt</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/grph/elmt</code></pre></div>
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> a key/value attributed element that is refined by vrtx::T and edge::T</p>
-</div>
 </div><div class="card mb-3" id="__m__grph__schema__modern__knows">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">knows::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__edge" class="instset-doc-small-code text-info code">/m/grph/edge::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/grph/schema/modern/knows</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">edge::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/knows</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__grph__edge" class="code inherited-link">edge::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[OUT=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx],
- IN=&gt;[uri::T=&gt;elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx]]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[weight=&gt;real::T]]@/m/grph/schema/modern/knows</code></pre></div>
+    
     
 </div><div class="card mb-3" id="__m__grph__schema__modern">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -693,40 +662,24 @@ from vertex to vertex, the edge of the metatron is traversed</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">person::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__vrtx" class="instset-doc-small-code text-info code">/m/grph/vrtx::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/grph/schema/modern/person</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">vrtx::T[?[name=&gt;str::T,age=&gt;int::T]]@/m/grph/schema/modern/person</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__grph__vrtx" class="code inherited-link">vrtx::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[name=&gt;str::T,age=&gt;int::T]]@/m/grph/schema/modern/person</code></pre></div>
+    
     
 </div><div class="card mb-3" id="__m__grph__schema__modern__software">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">software::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__vrtx" class="instset-doc-small-code text-info code">/m/grph/vrtx::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/grph/schema/modern/software</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">vrtx::T[?[name=&gt;str::T,lang=&gt;str::T]]@/m/grph/schema/modern/software</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__grph__vrtx" class="code inherited-link">vrtx::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[name=&gt;str::T,lang=&gt;str::T]]@/m/grph/schema/modern/software</code></pre></div>
     
-</div><div class="card mb-3" id="__m__grph__vrtx">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">vrtx::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__grph__elmt" class="instset-doc-small-code text-info code">/m/grph/elmt::T</a></span>
-        </span>
-        <small class="text-muted code">/m/grph/vrtx</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">elmt::T[?[{?}OUT=&gt;[uri::T=&gt;edge::T],
- {?}IN=&gt;[uri::T=&gt;edge::T]]]@/m/grph/vrtx</code></pre></div>
     
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a key/value attributed vertex</p>
-</div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
     <h3 class="text-primary mb-3">spaces <span class="pill-label badge bg-info">1</span></h3>
@@ -735,7 +688,7 @@ from vertex to vertex, the edge of the metatron is traversed</p>
         <a href="m_grph_space_grphspace.html" class="code text-primary fw-bold text-decoration-none">grphspace</a>
         <small class="text-muted code">/m/grph/space/grphspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T],{?}reference=&gt;{?}[uri::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T){&lt;j&gt;}]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@grphspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T],{?}reference=&gt;{?}[uri::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T)]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T)]@grphspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
  {?}pre_write=&gt;inst::T,
@@ -752,62 +705,64 @@ from vertex to vertex, the edge of the metatron is traversed</p>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">13</span></h3>
-    <div class="card mb-3" id="__m__grph__inst__addE?rng=__m__grph__edge&dom=__m__grph__vrtx">
+    <div class="card mb-3" id="__m__grph__inst__addE?rng=__m__rec&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">addE</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__edge" data-bs-toggle="tooltip" title="range" class="code text-success">edge</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/addE?rng=/m/grph/edge&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/addE?rng=/m/rec&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__addE?rng=__m__grph__edge&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__addE?rng=__m__grph__edge&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">addE?edge<=vrtx(uri::T,rec{+}::T,rec{?}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__addE?rng=__m__rec&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__addE?rng=__m__rec&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">addE?rec<=rec(uri::T,rec{+}::T,rec{?}::T){<j>}</code></pre>
 </div>
     
-</div><div class="card mb-3" id="__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx">
+</div><div class="card mb-3" id="__m__grph__inst__both?rng=__m__rec{*}&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">both</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/both?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/both?rng=/m/rec{*}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__both?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">both?vrtx{*}<=vrtx(uri{*}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__both?rng=__m__rec{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__both?rng=__m__rec{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">both?rec{*}<=rec(uri{*}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming and outgoing vertices</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent incoming and outgoing vertices
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#both adjacent vertices" class="text-success">both adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx">
+</div><div class="card mb-3" id="__m__grph__inst__bothE?rng=__m__rec{*}&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">bothE</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__edge" data-bs-toggle="tooltip" title="range" class="code text-success">edge</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/bothE?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/bothE?rng=/m/rec{*}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__bothE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothE?edge{*}<=vrtx(uri{*}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__bothE?rng=__m__rec{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__bothE?rng=__m__rec{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothE?rec{*}<=rec(uri{*}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming and outgoing edges</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent incoming and outgoing edges
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#both adjacent edges" class="text-success">both adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__grph__inst__bothV?rng=__m__grph__vrtx{2}&dom=__m__grph__edge">
+</div><div class="card mb-3" id="__m__grph__inst__bothV?rng=__m__rec{2}&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">bothV</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__edge" data-bs-toggle="tooltip" title="domain" class="code text-info">edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{2}" data-bs-toggle="tooltip" title="range" class="code text-success">rec{2}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/bothV?rng=/m/grph/vrtx{2}&amp;dom=/m/grph/edge</small>
+        <small class="text-muted code">/m/grph/inst/bothV?rng=/m/rec{2}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__bothV?rng=__m__grph__vrtx{2}&dom=__m__grph__edge-doc-0-tab').click();document.getElementById('__m__grph__inst__bothV?rng=__m__grph__vrtx{2}&dom=__m__grph__edge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothV?vrtx{2}<=edge(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__bothV?rng=__m__rec{2}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__bothV?rng=__m__rec{2}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bothV?rec{2}<=rec(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-flatmapper">flatmapper</span> returns the lhs edge&#39;s head and tail vertices
@@ -826,55 +781,58 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace-doc-0-tab').click();document.getElementById('__m__grph__inst__gremlin?rng=#{*}&dom=__m__grph__space__grphspace-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">gremlin?<span class="code text-success">#{*}</span><=grphspace(str::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> executes the gremlin expression on the graph space</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> executes the gremlin expression on the graph space
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#execute a gremlin traversal" class="text-info">execute a gremlin traversal</a> <span class="text-light">=&gt;</span> <a href="#the gremlin expression" class="text-success">the gremlin expression</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx">
+</div><div class="card mb-3" id="__m__grph__inst__in?rng=__m__rec{*}&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">in</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/in?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/in?rng=/m/rec{*}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__in?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">in?vrtx{*}<=vrtx(uri{*}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__in?rng=__m__rec{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__in?rng=__m__rec{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">in?rec{*}<=rec(uri{*}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming vertices</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent incoming vertices
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#in adjacent vertices" class="text-success">in adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx">
+</div><div class="card mb-3" id="__m__grph__inst__inE?rng=__m__rec{*}&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">inE</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__edge" data-bs-toggle="tooltip" title="range" class="code text-success">edge</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/inE?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/inE?rng=/m/rec{*}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__inE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inE?edge{*}<=vrtx(uri{*}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__inE?rng=__m__rec{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__inE?rng=__m__rec{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inE?rec{*}<=rec(uri{*}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent incoming edges</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent incoming edges
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#in adjacent edges" class="text-success">in adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__grph__inst__inV?rng=__m__grph__vrtx&dom=__m__grph__edge">
+</div><div class="card mb-3" id="__m__grph__inst__inV?rng=__m__rec&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">inV</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__edge" data-bs-toggle="tooltip" title="domain" class="code text-info">edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/inV?rng=/m/grph/vrtx&amp;dom=/m/grph/edge</small>
+        <small class="text-muted code">/m/grph/inst/inV?rng=/m/rec&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__inV?rng=__m__grph__vrtx&dom=__m__grph__edge-doc-0-tab').click();document.getElementById('__m__grph__inst__inV?rng=__m__grph__vrtx&dom=__m__grph__edge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inV?vrtx<=edge(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__inV?rng=__m__rec&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__inV?rng=__m__rec&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inV?rec<=rec(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> returns the lhs edge head vertex
@@ -898,51 +856,53 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an element" class="text-info">an element</a> <span class="text-light">=&gt;</span> <a href="#the element label" class="text-success">the element label</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx">
+</div><div class="card mb-3" id="__m__grph__inst__out?rng=__m__rec{*}&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">out</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/out?rng=/m/grph/vrtx{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/out?rng=/m/rec{*}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__out?rng=__m__grph__vrtx{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">out?vrtx{*}<=vrtx(uri{*}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__out?rng=__m__rec{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__out?rng=__m__rec{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">out?rec{*}<=rec(uri{*}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent outgoing vertices</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent outgoing vertices
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#out adjacent vertices" class="text-success">out adjacent vertices</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx">
+</div><div class="card mb-3" id="__m__grph__inst__outE?rng=__m__rec{*}&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">outE</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__edge" data-bs-toggle="tooltip" title="range" class="code text-success">edge</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec{*}" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/outE?rng=/m/grph/edge{*}&amp;dom=/m/grph/vrtx</small>
+        <small class="text-muted code">/m/grph/inst/outE?rng=/m/rec{*}&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0-tab').click();document.getElementById('__m__grph__inst__outE?rng=__m__grph__edge{*}&dom=__m__grph__vrtx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outE?edge{*}<=vrtx(uri{*}::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__outE?rng=__m__rec{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__outE?rng=__m__rec{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outE?rec{*}<=rec(uri{*}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> returns the lhs vertex arg-adjacent outgoing edges</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs vertex arg-adjacent outgoing edges
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a vertex" class="text-info">a vertex</a> <span class="text-light">=&gt;</span> <a href="#out adjacent edges" class="text-success">out adjacent edges</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'zero or more edge labels'" class="text-info">&#39;zero or more edge labels&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__grph__inst__outV?rng=__m__grph__vrtx&dom=__m__grph__edge">
+</div><div class="card mb-3" id="__m__grph__inst__outV?rng=__m__rec&dom=__m__rec">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">outV</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__grph__edge" data-bs-toggle="tooltip" title="domain" class="code text-info">edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__grph__vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">vrtx</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/grph/inst/outV?rng=/m/grph/vrtx&amp;dom=/m/grph/edge</small>
+        <small class="text-muted code">/m/grph/inst/outV?rng=/m/rec&amp;dom=/m/rec</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__outV?rng=__m__grph__vrtx&dom=__m__grph__edge-doc-0-tab').click();document.getElementById('__m__grph__inst__outV?rng=__m__grph__vrtx&dom=__m__grph__edge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outV?vrtx<=edge(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__outV?rng=__m__rec&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__outV?rng=__m__rec&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">outV?rec<=rec(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> returns the lhs edge tail vertex
@@ -961,7 +921,8 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__grph__inst__values?rng=#{*}&dom=__m__rec-doc-0-tab').click();document.getElementById('__m__grph__inst__values?rng=#{*}&dom=__m__rec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">values?<span class="code text-success">#{*}</span><=rec(uri{*}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> returns the lhs element arg-labeled values</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> returns the lhs element arg-labeled values
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an element" class="text-info">an element</a> <span class="text-light">=&gt;</span> <a href="#the element values" class="text-success">the element values</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -970,7 +931,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">7</span></h3>
+    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">12</span></h3>
     <div class="card mb-3" id="__m__grph__inst__rewrite__gremlin_count?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -986,6 +947,21 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
+</div><div class="card mb-3" id="__m__grph__inst__rewrite__gremlin_dedup?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_dedup</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_dedup?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_dedup?code{?}<=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s dedup()-by for vrtx collections
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
+</div>
 </div><div class="card mb-3" id="__m__grph__inst__rewrite__gremlin_limit?rng=__m__code{?}&dom=__m__code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -997,6 +973,66 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_limit?code{?}<=code(){<j>}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s limit()-barrier for vrtx/edge collections
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__grph__inst__rewrite__gremlin_order?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_order</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_order?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_order?code{?}<=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s order()-by for vrtx collections
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__grph__inst__rewrite__gremlin_skip?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_skip</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_skip?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_skip?code{?}<=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s skip()-barrier for vrtx/edge collections
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__grph__inst__rewrite__gremlin_skip_limit?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_skip_limit</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_skip_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_skip_limit?code{?}<=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> fuses skip+limit into a single gremlin skip().limit()
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__grph__inst__rewrite__gremlin_sum?rng=__m__code{?}&dom=__m__code">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_sum</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/grph/inst/rewrite/gremlin_sum?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/gremlin_sum?code{?}<=code(){<j>}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s sum()-reducer over a vertex property
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>

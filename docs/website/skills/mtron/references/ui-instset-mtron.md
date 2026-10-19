@@ -68,7 +68,15 @@ type readable as the contract:
 
 ```mtron
 mtron> */m/mach/ui/widget/panel_widget       [-- title and body, both optional; ctor?panel_widget<=#{?} --]
+==>fail::[parse error at line 1, col 101:
+     ...th optional; ctor?panel_widget<=#{?} --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/603
 mtron> */m/mach/ui/widget/tree_widget        [-- root and max required; code/flatten/xref/expand optional --]
+==>fail::[parse error at line 1, col 103:
+     ...d; code/flatten/xref/expand optional --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/604
 ```
 `*/m/mach/ui/widget?docq` is the catalog — one entry per widget type, each with its args, its dom/rng and
 its own example. It is the fastest way to answer "what can I put in this thing", and it is generated from
@@ -112,12 +120,12 @@ mtron> */m/mach/ui/widget?docq
       {?}expand=>uri::T]][ctor?tree_widget<=#{?}(#{*}::T){<j>}]@/m/mach/ui/widget/tree_widget,
                               dom=>'maybe an obj',
                               rng=>'a tree widget',
-                              args=>[{?}code=>'transform obj prior to insertion i...',
-                                     {?}expand=>'branch uris whose children are rea...',
-                                     {?}xref=>'xref=>[max=>N, code=><call>] cross...',
+                              args=>[{?}xref=>'xref=>[max=>N, code=><call>] cross...',
                                      max=>'the max depth to traverse',
                                      {?}flatten=>'fold single-folder chains into one...',
-                                     root=>'the root uri to traverse from'],
+                                     root=>'the root uri to traverse from',
+                                     {?}code=>'transform obj prior to insertion i...',
+                                     {?}expand=>'branch uris whose children are rea...'],
                               desc=>'[structural] the root uri space is...'],
           ...(10 more)]
 ```
@@ -158,13 +166,10 @@ mtron> @/usr/uidoc/notes >>= [body=>"l01\nl02\nl03\nl04"]              [-- the u
    l04',
                       title=>'notes']
 mtron> */usr/uidoc/notes                                               [-- the widget, as the rec it is --]
-==>accordion_widget::[style=>style::[border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
-                                     foreground=>''],
-                      body=>'l01
-   l02
-   l03
-   l04',
-                      title=>'notes']
+==>fail::[parse error at line 1, col 101:
+     ...    [-- the widget, as the rec it is --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/605
 ```
 ## a widget is a rec — state lives in the map
 
@@ -339,7 +344,7 @@ mtron> g10 -> [,].repeat(code=>+['.'],until=>loop()?>9)-<[_].repeat(code=>+(>>0.
      ...(3 more)],
     ...(3 more)]
 mtron> board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
-==>fail::[unable to construct matrix_widget::T: fail::[inst apply failure: obj does not match /m/mach/ui/widget/matrix_widget::T
+==>fail::[parse error at line 1, col 1: unable to construct matrix_widget::T: fail::[inst apply failure: obj does not match /m/mach/ui/widget/matrix_widget::T
      [[grid=>!*/usr/uidoc/g10,
       style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
          X=>
@@ -348,14 +353,20 @@ mtron> board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_righ
      [grid=>(==>{?}grid)=>[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=>==>lst::T,
       noobj=>(==>{?}title)=>noobj=>/=>str::T,
       style=>(/=>{?}style)=>[anchor=>top_right,border=>continuous]=>X=>style::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]@/sys/fail/432
-   	while parsing: board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board]@/sys/fail/433
+     predicate apply failed on execution (at /m/inst/ctor)]@/sys/fail/614
+   	while parsing: board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board]@/sys/fail/615
 mtron> @/usr/uidoc/board.display()             [-- pin it once --]
-==>fail::[lhs range does not match inst domain: rec::T => rec::T[?[{?}style=>rec::T[?[{?}border=>str::T,{?}background=>str::T,{?}foreground=>str::T,{?}divider=>str::T,{?}headerDivider=>str::T,{?}pointer=>str::T,{?}leftMargin=>int::T,{?}rightMargin=>int::T,{?}topMargin=>int::T,{?}bottomMargin=>int::T,{?}anchor=>uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=>int::T,{?}height=>int::T,{?}top=>int::T,{?}left=>int::T,{?}zIndex=>int::T,{?}scroll=><#>::T,{?}scrollX=>int::T,{?}scrollY=>int::T]][ctor?rng=style&dom=#{?}(<#{*}>::T){<j>}]@style]]@widget [display?rng=noobj{0}&dom=widget(){<j>}@<1>]]@/sys/fail/434
+==>fail::[lhs range does not match inst domain: rec::T => rec::T[?[{?}style=>rec::T[?[{?}border=>str::T,{?}background=>str::T,{?}foreground=>str::T,{?}divider=>str::T,{?}headerDivider=>str::T,{?}pointer=>str::T,{?}leftMargin=>int::T,{?}rightMargin=>int::T,{?}topMargin=>int::T,{?}bottomMargin=>int::T,{?}anchor=>uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=>int::T,{?}height=>int::T,{?}top=>int::T,{?}left=>int::T,{?}zIndex=>int::T,{?}scroll=><#>::T,{?}scrollX=>int::T,{?}scrollY=>int::T]][ctor?rng=style&dom=#{?}(<#{*}>::T)]@style]]@widget [display?rng=noobj{0}&dom=widget()@<1>]]@/sys/fail/616
 mtron> @/usr/uidoc/g10/1/0 >>= '@'             [-- one cell of the REFERENT --]
-==>'@'
+==>fail::[parse error at line 1, col 73:
+     ...        [-- one cell of the REFERENT --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/617
 mtron> @/usr/uidoc/g10/+/0 >>= ''             [-- every row's column 0 --]
-==>{10}''
+==>fail::[parse error at line 1, col 68:
+     ...            [-- every row's column 0 --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/618
 ```
 The referent must be an **absolute** uri. A relative uri is a variable frame on the thread that wrote
 it, and a render pass runs on the surface's render thread — a relative referent does not resolve there,

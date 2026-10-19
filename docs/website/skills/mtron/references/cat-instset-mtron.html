@@ -449,6 +449,8 @@ morphisms (the edges), and an inst's dom/rng are its source and target endpoints
 <pre><code class="language-mtron">mtron&gt; import(/m/math/cat,cat)
 ...
 </code></pre>
+<p>The category is not part of the default boot profile: the import above is what mounts <code>/m/math/cat</code> and binds the
+<code>cat:</code> alias, and none of the lifts below resolves on a machine that has not imported it.</p>
 <p>The lift is a type constructor. An <em>object</em> is constructed from a type and a <em>morphism</em> from an inst. This structure is
 called the <strong>cat-graph</strong>.</p>
 <!-- figure source: assets/tikz/cat-lift.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
@@ -457,9 +459,9 @@ called the <strong>cat-graph</strong>.</p>
 classified on four axes — <code>form</code> (its n-tid coefficient shape), <code>class</code> (its set-theoretic class), <code>position</code> (its
 place in the graph), and <code>law</code> (the algebraic laws it obeys) — and every object carries the structural theories it
 models. Those same declarations are what the rewriter stage consumes (see <em>the declared rewrites</em>).</p>
-<p>A law is either <strong>structural</strong> (an object theory) or <strong>process</strong> (a morphism constraint). It's important to understand
-these properties first before understanding how they play off one another when modeling <code>code::T</code> as a vertex within
-a graph of rewrite edges.</p>
+<p>A law is either <strong>structural</strong>, declared at an object, or <strong>process</strong>, declared at a morphism. Both kinds of
+declaration are consumed by the later lifts: when <code>code::T</code> is modeled as a vertex on a graph of rewrite edges, the
+rules a vertex may take are read from exactly these declarations (see <em>the declared rewrites</em> and <em>the third lift</em>).</p>
 <h3>the first lift — types as objects (<code>object::T</code>)</h3>
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T)
 ==&gt;object[int]::[obj=&gt;int::T,
@@ -516,10 +518,11 @@ a graph of rewrite edges.</p>
    ...
 </code></pre>
 <h4>the algebraic theories</h4>
-<p>An object can model several algebraic structures; <code>object::T&gt;&gt;law</code> is a rec keyed by the name you give each
-instance, and each role holds a <code>!*</code> (<code>auto_from</code>) pointer to the <em>live</em> operation rather than a copy — the graph is
-the references, and a role dereferences transparently on <code>&gt;&gt;</code> (<code>...&gt;&gt;law&gt;&gt;ring&gt;&gt;add</code> yields the inst). <code>theory::T</code>
-is the nominal super-type grouping them:</p>
+<p>An object can model several algebraic structures. <code>object::T&gt;&gt;law</code> is a rec keyed by the name given to each
+instance at declaration, and each role holds a <code>!*</code> (<code>auto_from</code>) pointer to the <em>live</em> operation rather than a copy:
+the graph holds the references, and a role dereferences transparently on <code>&gt;&gt;</code> (<code>...&gt;&gt;law&gt;&gt;ring&gt;&gt;add</code> yields the
+inst). The first example above is the <code>int</code> case in full: its law rec declares a <code>ring</code> and the three constituent
+group/monoid instances. <code>theory::T</code> is the nominal super-type grouping them:</p>
 <table>
 <thead>
 <tr><th>type</th><th>roles (fields)</th><th>what it asserts</th></tr>
@@ -548,8 +551,8 @@ is the nominal super-type grouping them:</p>
     obj=&gt;plus?int&lt;=int(int::T),
     ...(1 more)]
 </code></pre>
-<p>(The <code>|</code> in that expression is a <code>block</code> inst — sugar that keeps the instruction from being evaluated, so the raw inst
-is lifted rather than its result.)</p>
+<p>The <code>|</code> in that expression is a <code>block</code> inst; it keeps the instruction from being evaluated, so that the raw inst is
+lifted rather than its result.</p>
 <h4>the morphism fields</h4>
 <table>
 <thead>
@@ -614,7 +617,7 @@ Composing them round-trips — from an object to its edges and back, or from an 
 <tbody>
 <tr><td><code>family</code></td><td>the same-name siblings: \(\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}\) — every registration of the same operator</td></tr>
 <tr><td><code>contested</code></td><td>the witness edges behind the <code>ambiguous</code> / <code>incomparable</code> labels — the competing siblings</td></tr>
-<tr><td><code>orbit</code></td><td>the reversible-core component of the dom — everything reachable by a chain of opposing edges</td></tr>
+<tr><td><code>orbit</code></td><td>the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions</td></tr>
 <tr><td><code>position</code></td><td>the edge's place among its siblings (a subset of the six kinds below)</td></tr>
 <tr><td><code>inverse</code></td><td>the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\) (only when a declared inverse exists)</td></tr>
 </tbody>
@@ -631,17 +634,17 @@ Composing them round-trips — from an object to its edges and back, or from an 
 <tr><td><code>duplicate</code></td><td>another morphism of the same family maps the same dom to the same rng</td></tr>
 <tr><td><code>ambiguous</code></td><td>contested by an incomparable sibling that <em>overlaps</em> it — dispatch has no winner</td></tr>
 <tr><td><code>incomparable</code></td><td>contested by an incomparable, <em>disjoint</em> sibling — dispatch stays total</td></tr>
-<tr><td><code>coupling</code></td><td>an opposing edge exists — a candidate inverse pair</td></tr>
+<tr><td><code>coupling</code></td><td>an edge in the opposite direction links the same two objects — a candidate inverse pair</td></tr>
 <tr><td><code>isochain</code></td><td>endpoints linked by a chain of couplings — one orbit of the reversible core</td></tr>
 <tr><td><code>retract</code></td><td>mutually reachable and round-trip idempotent — a subobject retraction</td></tr>
 </tbody>
 </table>
 <p><code>orbit</code> is the transitive closure of <code>coupling</code> — the connected component of the <em>reversible core</em> (the subgraph of
-edges that have an opposing edge). It is a reachability class, coarser than isomorphism (which needs the round trip
+edges that exist in both directions). It is a reachability class, coarser than isomorphism (which needs the round trip
 to be idempotent → <code>retract</code>) and finer than raw incidence.</p>
 <h4>the class axis</h4>
-<p><code>class</code> classifies a morphism set-theoretically — whether it is self-mapping, invertible, or split. Only the sound
-implications are computed; a proper (non-split) mono/epi awaits composition, which is not wired yet:</p>
+<p><code>class</code> classifies a morphism set-theoretically — as self-mapping, invertible, or split. Only the sound implications
+are computed; proper (non-split) mono/epi classification requires composition, which is not yet registered:</p>
 <table>
 <thead>
 <tr><th>class</th><th>what it asserts</th></tr>
@@ -671,7 +674,7 @@ laws):</p>
 <tr><td><code>left_distributive</code></td><td>\(a \cdot (b + c) = a \cdot b + a \cdot c\)</td></tr>
 <tr><td><code>right_distributive</code></td><td>\((a + b) \cdot c = a \cdot c + b \cdot c\)</td></tr>
 <tr><td><code>monoidic</code></td><td>an associative binary op with an identity</td></tr>
-<tr><td><code>magmadic</code></td><td>a non-associative binary op with an identity</td></tr>
+<tr><td><code>magmadic</code></td><td>a bare binary op — a magma, as <code>monoidic</code> is a monoid — no identity demanded</td></tr>
 <tr><td><code>unit</code></td><td>an identity element — \(e \cdot x = x \cdot e = x\)</td></tr>
 <tr><td><code>absorbing</code></td><td>an annihilator — \(a \cdot x = a\) for every \(x\)</td></tr>
 <tr><td><code>action</code></td><td>a monoid/group acting on a carrier — \(f(gh)x = f(g)f(h)x\)</td></tr>
@@ -689,9 +692,9 @@ laws):</p>
 </tbody>
 </table>
 <h3>the declared rewrites — laws as rules</h3>
-<p>Everything above is also the rewriter's input. A rule fires only when the operand's type <strong>declares</strong> the law it
-consumes, so the category <em>is</em> the rewrite table: an algebra registered on a type immediately licenses its rules, and
-a type that models no such structure is left alone.</p>
+<p>Everything above is also the rewriter's input. A rule fires only when the operand's type <strong>declares</strong> the law that
+the rule consumes, and the category is the rewrite table: an algebra registered on a type licenses the rules of that
+type, and a type that models no such structure is left unchanged.</p>
 <!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
 <img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
 <table>
@@ -704,17 +707,25 @@ a type that models no such structure is left alone.</p>
 <tr><td><code>law_idempotent</code></td><td>\(\mathrm{law} \ni \mathrm{idempotent}\)</td><td>\(f \cdot f \leadsto f\)</td></tr>
 <tr><td><code>law_absorbing</code></td><td>\(\mathrm{law} \ni \mathrm{absorbing}\)</td><td>\(g \cdot f \leadsto f\)</td></tr>
 <tr><td><code>law_monoidic</code></td><td>\(\mathrm{law} \ni \mathrm{monoidic}\) + the <code>reducer</code>/<code>join</code> form</td><td>\(f \cdot f \leadsto f\)</td></tr>
-<tr><td><code>law_poset</code></td><td>\(\mathrm{law} \ni \mathrm{poset}\)</td><td>\(\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))\)</td></tr>
+<tr><td><code>law_poset</code></td><td>\(\mathrm{law} \ni \mathrm{poset}\)</td><td>\(\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))\), \(\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))\)</td></tr>
 <tr><td><code>inverse_cancellation</code></td><td><code>analysis.inverse</code></td><td>\(f(a) \cdot f^{-1}(a) \leadsto \varepsilon\)</td></tr>
 <tr><td><code>form_map_unwrap</code></td><td>the stream lift <code>map</code></td><td>\(\mathrm{map}(f) \leadsto f\)</td></tr>
 <tr><td><code>derivation_contraction</code></td><td><code>derivation</code></td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
+<tr><td><code>branch_collapse</code></td><td>the additive role of the operand's algebra — <code>cut =&gt; [role =&gt; add]</code></td><td>\(\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})\) — equal terms collapse, summing the coefficients</td></tr>
+<tr><td><code>branch_inline</code></td><td>the additive role — <code>cut =&gt; [role =&gt; zero]</code></td><td>\(a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c\), \(\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}\), \(\mathrm{S}(x) \leadsto \mathrm{map}(x)\)</td></tr>
+<tr><td><code>law_shard</code></td><td><code>form = reducer</code> ∧ <code>law ∋ monoidic</code>, <code>commutative</code> + a live peer roster</td><td>\([\mathrm{barrier}, \mathrm{seed}_{\{m\}}, \ldots] == [\mathrm{to}(), \mathrm{to}(a), \mathrm{to}(b)]\) (Thm 19)</td></tr>
+<tr><td><code>order_shard</code></td><td>the <code>order</code> role — a sort op — + a live peer roster</td><td>the seed partitions, each peer sorts its shard, and the master \(k\)-merges the shards behind the barrier</td></tr>
 </tbody>
 </table>
-<p><strong>One declared law has no rule.</strong> <code>commutative</code> is recorded on many insts, but canonicalizing a commutative
-operand is a no-op where it would be legal: a stream is a <em>bag</em> (<code>{3,1,2}</code> already equals <code>{1,2,3}</code>), while a
-<code>lst</code>'s order is semantic, so reordering one would be unsound. The law stays declared (it is what licenses the
-inverse-pair search) without a rewrite of its own.</p>
-<p>The first two generalise a <em>ring's</em> unit and a <em>group's</em> inverse to every declared structure: the unit law is read
+<p><strong>Most declared laws carry no rule.</strong> Five of them back a rule directly — <code>involution</code>, <code>idempotent</code>, <code>absorbing</code>,
+<code>monoidic</code>, <code>poset</code> — and <code>floatable</code> and <code>blocked</code> do not drive a rule of their own but constrain where a
+distribution plan may anchor (its spans). The remaining labels are classification predicates, recorded for the
+rewriter's guards and for reasoning, with no rewrite of their own: <code>commutative</code>, <code>unit</code>, <code>magmadic</code>, <code>nilpotent</code>,
+<code>kleene</code>, <code>partial</code>, <code>prime</code>, <code>cyclic</code>, <code>zero_divisor</code>, <code>left_distributive</code>, <code>right_distributive</code>, <code>action</code>.
+<code>commutative</code> is the cleanest case: a canonical form for a commutative operand would be a no-op where it is legal — a
+stream is a <em>bag</em> (<code>{3,1,2}</code> already equals <code>{1,2,3}</code>) — while for an <code>lst</code> it would be unsound, its order being
+semantic. The law stays declared (it is what licenses the inverse-pair search) without a rewrite.</p>
+<p>The first two generalize a <em>ring's</em> unit and a <em>group's</em> inverse to every declared structure: the unit law is read
 for each <code>(op, id)</code> role pair a theory names (<code>add</code>/<code>zero</code>, <code>mul</code>/<code>one</code>, <code>op</code>/<code>id</code>, <code>or</code>/<code>zero</code>, <code>and</code>/<code>one</code>,
 <code>join</code>/<code>bottom</code>, <code>meet</code>/<code>top</code>), so \(x + 0\), \(x \cdot 1\), \(x \cdot \langle\rangle\) (uri), \(x \cdot .\) (machine) and
 \(x \cdot \mathrm{id}\) (code) all drop, and a bare identity <em>operation</em> (<code>code</code>'s \(\mathrm{id}\)) is the identity
@@ -741,7 +752,7 @@ mtron&gt; 5.plus(3).zero()
 mtron&gt; &quot;m&quot;.gt(&quot;a&quot;).gt(&quot;z&quot;)
 ==&gt;false
 </code></pre>
-<p>and the two <em>relational</em> declarations — the opposing edge and the defining equation — close the loop:</p>
+<p>The two <em>relational</em> declarations — the opposing edge and the defining equation — underlie the final two rules:</p>
 <pre><code class="language-mtron">mtron&gt; 5.plus(3).minus(3)
 ==&gt;5
 mtron&gt; 6.plus(3.neg())
@@ -756,7 +767,7 @@ mtron&gt; {1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }
 </code></pre>
 <p><strong>A worked compression.</strong> One expression, four of the rules above firing, and the whole chain collapses from eight
 operations to two. <code>explain()&gt;&gt;format</code> prints the <em>compiled</em> code — the op, its dom/rng, its arg and its coefficient
-shape per line — so you can always see what a rewrite did:</p>
+shape per line — so that every rewrite applied is visible:</p>
 <pre><code class="language-mtron">mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2)
 ==&gt;3
 mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&gt;&gt;format
@@ -766,18 +777,18 @@ mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&g
     minus  int::T       int::T  3     &lt;j&gt;  mapper   {1}    {1}   
    &quot;&quot;&quot;
 </code></pre>
-<p>Only two instructions are left in the explain table: the seed and on operation. The other instructions were rewritten
-away:</p>
+<p>Only two instructions remain in the explain table: the seed and the one operation that survives. The other
+instructions were rewritten away:</p>
 <ul>
 <li><code>plus(0)</code> and <code>mult(1)</code> are the int ring's units (<code>theory_unit_removal</code>),</li>
 <li><code>neg().neg()</code> is the additive group's involution (<code>theory_involution</code>),</li>
 <li><code>plus(3.neg())</code> folds to <code>minus(3)</code> (<code>derivation_contraction</code>), and</li>
 <li><code>mult(2).div(2)</code> is a declared inverse pair (<code>inverse_cancellation</code>).</li>
 </ul>
-<p><strong>Direction.</strong> Every rule above removes or preserves chain length, so a rule set that is only ever applied in that
-direction settles under any length-stable <code>rewriter::T</code> — the shipped <code>fixpoint_rewriter</code> is one such stage, not the
-only one. The dual of <code>derivation_contraction</code> — <code>derivation_expansion</code>
-(\(\mathrm{minus} \leadsto \mathrm{plus} \cdot \mathrm{neg}\)) — is deliberately <strong>not</strong> registered: it trades the
+<p><strong>Direction.</strong> Every rule above either removes or preserves chain length, so a rule set that is only ever applied in
+that direction settles under any <code>rewriter::T</code> that iterates the rewrite stage to a fixpoint — the bundled
+<code>fixpoint_rewriter</code> (<code>fixpoint_rewriter::[max=&gt;N]</code>, bounded iterations) is one such stage, not the only one. The dual of <code>derivation_contraction</code>, <code>derivation_expansion</code>
+(\(\mathrm{minus} \leadsto \mathrm{plus} \cdot \mathrm{neg}\)), is deliberately <strong>not</strong> registered: it trades the
 length back, so the pair would alternate forever and no stage could settle. Lowering to a target that lacks the
 derived operation is a policy, not a law.</p>
 <h3>the third lift — code as a vertex (<code>path::T</code>, <code>abstraction::T</code>)</h3>
@@ -799,7 +810,9 @@ every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value c
 </table>
 <p>Only live edges are materialized (see <em>a-priori pruning</em>): a vertex lists exactly the rules that can move it, and a
 <strong>normal form prints as its own certificate</strong> — <code>[path::[obj=&gt;...]]</code>, no out-edges, zero matches attempted. A
-traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell). The
+traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).
+The <code>==</code> between segments is a structural <code>select</code> — each segment names the step, a lift or a lower, applied to the
+previous segment's result, so a descent <code>[seed] == [lift] == [lower₁] == [lower₂]</code> reads as a chain of witnesses. The
 three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
@@ -820,7 +833,9 @@ three steps below are the same vertex after each application — the path shrink
                                           route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
            order_shard=&gt;plan::[name=&gt;order_shard,
                                cut=&gt;[role=&gt;order],
-                               route=&gt;[[target=&gt;shuffle,
+                               route=&gt;[[target=&gt;local,
+                                        span=&gt;[[span=&gt;at],[span=&gt;post]]],
+                                       [target=&gt;shuffle,
                                         span=&gt;[
                                          [span=&gt;seed,flags=&gt;[partition]],
                                          [span=&gt;pre,flags=&gt;[floatable,no_seed]],
@@ -841,7 +856,9 @@ mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theo
                                           route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
            order_shard=&gt;plan::[name=&gt;order_shard,
                                cut=&gt;[role=&gt;order],
-                               route=&gt;[[target=&gt;shuffle,
+                               route=&gt;[[target=&gt;local,
+                                        span=&gt;[[span=&gt;at],[span=&gt;post]]],
+                                       [target=&gt;shuffle,
                                         span=&gt;[
                                          [span=&gt;seed,flags=&gt;[partition]],
                                          [span=&gt;pre,flags=&gt;[floatable,no_seed]],
@@ -856,7 +873,9 @@ mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theo
                                  route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
            order_shard=&gt;plan::[name=&gt;order_shard,
                                cut=&gt;[role=&gt;order],
-                               route=&gt;[[target=&gt;shuffle,
+                               route=&gt;[[target=&gt;local,
+                                        span=&gt;[[span=&gt;at],[span=&gt;post]]],
+                                       [target=&gt;shuffle,
                                         span=&gt;[
                                          [span=&gt;seed,flags=&gt;[partition]],
                                          [span=&gt;pre,flags=&gt;[floatable,no_seed]],
@@ -873,14 +892,15 @@ real match. A rule the pruner does not know is never pruned.</p>
 <tr><th>field</th><th>description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>obj</code></td><td>the abstract word \(\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)\) — each instruction as its <code>morphism::T</code>, with the original inst kept in <code>morphism.obj</code> so γ recovers the exact code</td></tr>
+<tr><td><code>obj</code></td><td>the abstract word \(\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)\) — each instruction as its <code>morphism::T</code>: the surface a <code>plan::T</code>'s guard reads (its law/form/theory), the code and its descent staying anchored at <code>path::T.obj</code></td></tr>
 </tbody>
 </table>
-<p>The abstraction is a <strong>reference structure</strong>, not a second vertex with its own moves: it pulls nothing up from the
-concrete chain. It is the pointwise α-image — one <code>morphism::T</code> per instruction, each already carrying <code>form</code>,
-<code>class</code>, <code>law</code>, and <code>analysis</code> — so a plan's selector reads it to compute a cut/span/route without consulting the
-code below. The laws/forms/theories a rule consults sit on the word itself: <code>*…/obj/1/law</code>, <code>*…/obj/2/analysis/inverse</code>
-walk into the category from inside the abstraction.</p>
+<p>The lift to <code>abstraction::T</code> is <strong>lossy by design</strong>: it carries the pointwise α-image — one <code>morphism::T</code> per instruction,
+each already carrying <code>form</code>, <code>class</code>, <code>law</code>, and <code>analysis</code> — not a second concrete chain. Nor is it a vertex one
+descends through: no traversal runs over the abstraction, because it is only the lookup surface from which a <code>plan::T</code>
+derives its rewrite. The guard reads the laws/forms/theories off the word (<code>*…/obj/1/law</code>, <code>*…/obj/2/analysis/inverse</code>)
+and computes its cut/span/route without consulting the code below; the descent (\(\gamma\)) runs only through
+<code>path::T.obj</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
 ==&gt;[abstraction::[obj=&gt;[morphism[start]::[name=&gt;start,
                                           form=&gt;mapper,
@@ -926,27 +946,27 @@ walk into the category from inside the abstraction.</p>
 </code></pre>
 <h4><code>plan::T</code> — a rewrite rule as a value</h4>
 <p>A <code>path::T</code> out-edge is not a bare rule name — it is a <strong>plan</strong>: the rewrite rule itself, lifted to a first-class
-value. <code>plan::T</code> is the morphism of the rewrite category (<code>path → path</code>), and it is <em>data</em>, never a closure — the
-same plan can be introspected, shipped, and applied anywhere.</p>
+value. <code>plan::T</code> is the morphism of the rewrite category (<code>path → path</code>), and it is <em>data</em>, never a closure: a plan
+is introspectable and applicable wherever it is supplied.</p>
 <!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
 <img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
-<p>A plan is one of two shapes, discriminated by its own fields:</p>
+<p>A plan is always the rec <code>[name, cut, route]</code>; what distinguishes a local plan from a distribution is what its <code>cut</code>
+names and where its <code>route</code> sends it:</p>
 <table>
 <thead>
-<tr><th>shape</th><th>rec</th><th>example</th></tr>
+<tr><th>shape</th><th>the <code>cut</code> reads</th><th>the <code>route</code></th><th>example</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>local</strong></td><td><code>[name, law]</code> — the process law it embodies</td><td><code>theory_unit_removal</code> → <code>law =&gt; unit</code>; <code>theory_involution</code> → <code>law =&gt; involution</code></td></tr>
-<tr><td><strong>distribution</strong></td><td><code>[name, cut, route]</code> — the anchor + the fan-out</td><td><code>law_shard</code> → <code>cut =&gt; [reducer, monoidic, commutative]</code>, routes <code>local</code> + <code>peers</code></td></tr>
+<tr><td><strong>local</strong></td><td>a declared process law — <code>[law =&gt; [...]]</code> — or a theory role — <code>[role =&gt; ...]</code></td><td>stays local (<code>target =&gt; none</code> / <code>local</code>)</td><td><code>law_idempotent</code> → <code>cut =&gt; [law =&gt; [idempotent]]</code>; <code>theory_unit_removal</code> → <code>cut =&gt; [role =&gt; id]</code></td></tr>
+<tr><td><strong>distribution</strong></td><td>a <code>form</code> + <code>law</code> anchor, or a sort role</td><td>ships to <code>peers</code> / <code>shuffle</code>, with the anchor re-applied locally</td><td><code>law_shard</code> → <code>cut =&gt; [form =&gt; reducer, law =&gt; [monoidic, commutative]]</code>; <code>order_shard</code> → <code>cut =&gt; [role =&gt; order]</code></td></tr>
 </tbody>
 </table>
 <p>The application is a <strong>type method</strong>, not a field: <code>lower(plan::T)</code> is one instruction registered in
-<code>catInstSet.insts()</code>, shared by every plan. It reads everything it needs off the two objs — the plan's <code>law</code> or
-<code>cut</code>/<code>route</code>, and the path's code — matches the selector against the abstraction's morphism fields, applies the
-rewrite, and re-lifts to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
-<p><strong>A distribution plan needs peers.</strong> <code>law_shard</code> is live only over a non-empty peer roster — its guard reads the
+<code>catInstSet.insts()</code>, shared by every plan. It matches the plan's <code>cut</code> against the path's code, applies the rewrite,
+and re-lifts the result to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
+<p><strong>A distribution plan requires peers.</strong> <code>law_shard</code> is live only over a non-empty peer roster: its guard reads the
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
-self-registers a <code>peer::T</code> into the network; that registration is the trigger that turns the rule live:</p>
+self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
 ==&gt;[host=&gt;ws://localhost:8555/mtron,
     send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
@@ -954,7 +974,7 @@ self-registers a <code>peer::T</code> into the network; that registration is the
     close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
     on_message=&gt;print?#&lt;=#('received ${_}')]
 mtron&gt; */network
-==&gt;network::[host=&gt;f11c0bb8cf3f,
+==&gt;network::[host=&gt;booger,
              status=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
              peer=&gt;[ws://localhost:8555=&gt;peer::[
               authority=&gt;ws://localhost:8555,
@@ -966,7 +986,8 @@ mtron&gt; */network
                        close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
                        on_message=&gt;print?#&lt;=#('received ${_}')]]]]
 </code></pre>
-<p>With the current <code>machine::T</code> having a <code>peer::T</code>, the <code>path::T</code> shows a distribution plan.</p>
+<p><code>*/network</code> reads back the machine's network block — the dialed <code>peer::T</code> at the named host. With the <code>machine::T</code>
+now holding that <code>peer::T</code>, the <code>path::T</code> lists the distribution plan among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
@@ -989,12 +1010,13 @@ mtron&gt; */network
                                  route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
            ...(7 more)]]
 </code></pre>
-<p>Finally, <code>lower?path&lt;=path(plan)</code> use <code>abstract::T</code> via <code>path::T</code> to construct a distributed computing <code>plan::T</code>.
-Because a plan is data, the
-rewrite <em>schedule</em> and the plan's out-edge are the same thing — every rule is <code>lower(plan::T)</code>, which is &quot;the
-rewrite table is the category&quot; made literal.</p>
+<p>Finally, the inst <code>lower?path&lt;=path(plan)</code> applies a plan read off the path's out-edge — the examples read
+<code>&gt;&gt;law_shard</code>. Its output is the same <code>path::T</code>, its <code>obj</code> now the distributed layout: the seed bulk partitioned into
+<code>no_shard</code> shards, each shard shipped by a <code>select([to(peer)])</code> to its roster member, merged, and the reducer
+re-applied at home (Thm 19). The plan — not its application — is data, so the rewrite <em>schedule</em> and the out-edge
+that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start([block(block(block(start?no_shard=true({1,2,3,4,5}).plus(10).sum())))]).select([to(ws://localhost:8555)]).merge().sum(),
+==&gt;[path::[obj=&gt;start([block(block(block(start?no_shard({1,2,3,4,5}).plus(10).sum())))]).select([to(ws://localhost:8555)]).merge().sum(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -1006,7 +1028,9 @@ rewrite table is the category&quot; made literal.</p>
                                  route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
            order_shard=&gt;plan::[name=&gt;order_shard,
                                cut=&gt;[role=&gt;order],
-                               route=&gt;[[target=&gt;shuffle,
+                               route=&gt;[[target=&gt;local,
+                                        span=&gt;[[span=&gt;at],[span=&gt;post]]],
+                                       [target=&gt;shuffle,
                                         span=&gt;[
                                          [span=&gt;seed,flags=&gt;[partition]],
                                          [span=&gt;pre,flags=&gt;[floatable,no_seed]],
@@ -1020,29 +1044,32 @@ decided by reading the abstraction, are claims quantified over that set in one o
 <tr><th>modality</th><th>the claim</th><th>example</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>must</strong> □</td><td>the rule fires for <em>every</em> fiber member (zero value-residue)</td><td><code>law_shard</code> on \([\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]\)</td></tr>
+<tr><td><strong>must</strong> □</td><td>the rule fires for <em>every</em> fiber member — its guard reads no value</td><td><code>law_shard</code> on \([\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]\)</td></tr>
 <tr><td><strong>may</strong> ◇</td><td>the rule fires for <em>some</em> members; undecidable without values</td><td>unit removal at \(\mathrm{plus}(\mathrm{int})\) — only the \(\mathrm{plus}(0)\) members</td></tr>
 </tbody>
 </table>
-<p>Hence, the degree ordering \(\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))\): the abstraction licenses a move
-for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge is a
-must-edge. Refinement is <strong>edge-antitone</strong> — descending the rungs
+<p>Thus, the degree ordering \(\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))\) holds: the abstraction licenses
+a move for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge
+is a must-edge. Refinement is <strong>edge-antitone</strong> (order-reversing) — descending the rungs
 (\(\mathrm{plus (int)} \to \mathrm{plus?int \le int (int{::}T)} \to \mathrm{plus} (0)\))
-shrinks the fiber and discharges ◇ into □; a rule becomes <em>exact</em> at the rung whose type absorbs its residue. Counting
-instances rather than rules, the ordering reverses: one licensed move fans into one concrete edge per match <em>site</em>, so
-the abstraction licenses more kinds of move and the path more copies of fewer kinds.</p>
-<p><strong>Planning.</strong> \(\gamma\) of a vertex is an infinite set, so no one descends from an arbitrary abstraction — what the
-abstract walk computes is not code but a <strong>route</strong>: a sequence of rule names, chosen upstairs where the graph is
-small, then <strong>replayed on the path's code</strong> (<code>path::T.obj</code>, the γ anchor), where values and sites exist (the
-path-lifting property of a fibration). Must-edges lift unconditionally; may-edges are the backtrack points, known in
-advance — a plan's remaining ◇-count is readable as the degree gap between the path and its abstraction. The replayed
-route <em>is</em> the derivation witness.</p>
+shrinks the fiber and discharges the ◇ into a □. A rule becomes <em>exact</em> at the rung whose type absorbs its residue.
+Counting instances rather than rules, the ordering reverses: one licensed move fans out to one concrete edge per
+match <em>site</em>, so the abstraction licenses more kinds of moves while the path licenses more copies of fewer kinds.</p>
+<p><strong>Planning.</strong> The lossy lift makes the fiber \(\gamma\) of a vertex an infinite family, so no descent is made from an
+arbitrary abstraction.
+What the abstract walk computes is therefore not code but a <strong>route</strong>: a sequence of rule names, chosen in the
+abstraction, where the graph is small, then <strong>replayed on the path's code</strong> (<code>path::T.obj</code>, the γ anchor), where the
+values and sites exist (the path-lifting property of a fibration). Must-edges lift unconditionally; may-edges are the
+backtrack points, known in advance — a plan's remaining ◇-count is readable as the degree gap between the path and its
+abstraction. The replayed route <em>is</em> the derivation witness.</p>
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>
 <li><a href="language-reference-mtron.html">mtron language reference</a> — <code>.as(type::T)</code>, <code>&gt;&gt;</code> rshift, coefficients.</li>
 <li><a href="math-instset-mtron.html">math instruction set</a> — <code>/m/math</code>, where the category and its theories live.</li>
 <li><a href="../metatron/references/rewrite-system-java.html">rewrite system</a> — the <code>rewriter::T</code> stage and rewrite instructions.</li>
+<li><a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a> — the coefficient algebra the laws speak:
+<code>floatable</code> / <code>blocked</code>, and Thm 19 which <code>law_shard</code> realizes.</li>
 <li>figure sources — <code>assets/tikz/cat-*.tex</code> (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
 <code>assets/</code>).</li>
 </ul>

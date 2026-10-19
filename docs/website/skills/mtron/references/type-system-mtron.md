@@ -97,6 +97,10 @@ vid are each optional, and a type without a vid is a **lambda** (ephemeral) type
 creating types
 mtron> import(/m/math,math)      [-- module import, namespaced math — its types read math:nat, math:minute, ... --]
 mtron> int::T[is(gt(0))]@posint  [-- a new member of the hierarchy: integers greater than zero --]
+==>fail::[parse error at line 1, col 92:
+     ...ierarchy: integers greater than zero --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/584
 mtron> posint::T[is(gt(100))]@hundreds
 mtron> int::T[is(gt(0))][mult(10)]@int2x
 mtron> rec::T[?[name=>str::T,age=>int::T]]@being
@@ -120,7 +124,10 @@ mtron> 23.as(posint::T)               [-- posint::23 --]
 mtron> being::[name=>'marko',age=>29] [-- a rec built under its type --]
 ==>being::[name=>'marko',age=>29]
 mtron> int::42@the_answer             [-- a plain value, addressed in the space --]
-==>42@the_answer
+==>fail::[parse error at line 1, col 77:
+     ... plain value, addressed in the space --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/585
 ```
 ## predicates
 
@@ -132,7 +139,15 @@ Created with `?[...]` — defines a required **record structure** (`being`, crea
 
 ```mtron
 mtron> rec::T[?[age=>int::T]]                              [-- a lambda type: a rec whose age field is an int --]
+==>fail::[parse error at line 1, col 107:
+     ...ype: a rec whose age field is an int --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/586
 mtron> rec::T[?[name=>str::T, address=>str{?}::T]]         [-- address optional (str{?}::T) --]
+==>fail::[parse error at line 1, col 89:
+     ...    [-- address optional (str{?}::T) --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/587
 mtron> rec::T[?[flag=>str{2}::T, member=>being{+}::T]]@roster
 ```
 A field's type can be any type — including a lambda type or a created one like `being`.
@@ -145,8 +160,8 @@ mtron> [-- hundreds::T = [is(gt(100))] on top of posint's [is(gt(0))] on top of 
 mtron> hundreds::150                [-- 150  (passes both levels) --]
 ==>hundreds::150
 mtron> hundreds::50         [-- dies at posint's level — the ancestor stack is enforced, not just the top --]
-==>fail::[50 is not a posint::T[is(gt(100))]@hundreds
-   	while parsing: hundreds::50]@/sys/fail/412
+==>fail::[parse error at line 1, col 1: 50 is not a posint::T[is(gt(100))]@hundreds
+   	while parsing: hundreds::50         ]@/sys/fail/588
 ```
 ### non-isa predicates (nominal)
 
@@ -174,7 +189,15 @@ and coefficient:
 
 ```mtron
 mtron> int::T        [-- accepts any integer --]
+==>fail::[parse error at line 1, col 42:
+     ...nt::T        [-- accepts any integer --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/589
 mtron> int::T[?>0]   [-- only accepts positive integers --]
+==>fail::[parse error at line 1, col 53:
+     ...  [-- only accepts positive integers --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/590
 ```
 ### type constructors
 
@@ -213,7 +236,7 @@ mtron> -2.isa(intabs::T)                [-- noobj  (the filter drops it: the ver
 mtron> 2.as(intabs::T)                  [-- intabs::2  (admitted; the id branch of the ctor leaves it as-is) --]
 ==>intabs::2
 mtron> -2.as(intabs::T)         [-- refused: the predicate tests before the constructor could run --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/413
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/591
 ```
 A converting constructor is visible the same way — it runs on the admitted value, and on nothing else:
 
@@ -224,7 +247,7 @@ mtron> int2x::2                         [-- int2x::20  (the constructor mult(10)
 mtron> 2.as(int2x::T)                   [-- int2x::20  (admitted at the gate, then converted) --]
 ==>int2x::20
 mtron> -2.as(int2x::T)          [-- refused for the same reason — the gate runs first --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]@/sys/fail/414
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]@/sys/fail/592
 ```
 A type with no constructor is a pure constraint — values must already satisfy the predicate to be members; there is
 nothing to run them through.
@@ -258,10 +281,14 @@ types prevent this:
 
 ```mtron
 mtron> being::T@human                 [-- nominal siblings under being --]
+==>fail::[parse error at line 1, col 68:
+     ...    [-- nominal siblings under being --]
+                                                ^
+     unexpected end of source — the expression is incomplete]@/sys/fail/593
 mtron> being::T@chicken
 mtron> [-- A human is NOT a chicken, despite identical structure --]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)
-==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/417
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/596
 ```
 This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
 knowledge** (nominal — what has been declared).
@@ -343,10 +370,10 @@ mtron> [-- intabs has a constructor (absolute value), but the gate still runs fi
 mtron> 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
 ==>intabs::2
 mtron> -2.as(intabs::T) [-- refused: -2 is not an intabs — construction (intabs::-2) is the door that coerces --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/418
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/597
 mtron> [-- Without a constructor the cast is a pure test --]
 mtron> -2.as(int::T[?>0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/419
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/598
 ```
 `.as()` is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
 and the stamp records the fit:
@@ -355,7 +382,7 @@ and the stamp records the fit:
 mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- chicken::[name=>'fuzzy feet',age=>2]  (nominally a being: the stamp goes on) --]
 ==>chicken::[name=>'fuzzy feet',age=>2]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
-==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/422
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/601
 ```
 Note the asymmetry: an anonymous rec has no lineage to contradict it, so its fields alone decide the fit — the
 `chicken` demands `age=>int::T`, and the rec supplies it. A stamped `human`, though, carries a lineage — `human`
