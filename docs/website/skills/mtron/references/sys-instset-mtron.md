@@ -85,15 +85,15 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/541
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/517
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/542
+    [ProcBuilder<228>]]@/sys/fail/518
 ```
 ### batch
 
@@ -218,9 +218,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/547
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/523
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/548
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/524
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -255,9 +255,9 @@ mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::616,
-    free_mem_jvm=>mB::326.47397,
+    free_mem_jvm=>mB::259.60162,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::289.52602,
+    used_mem_jvm=>mB::356.39837,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[run=>0,stop=>0]]
@@ -330,12 +330,24 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
 ==>fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown> ...
                  ^
-     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/549
+     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/525
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
-==>fail::[parse error at line 1, col 80:
-     ...  [-- the doc boot, read as its code --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/550
+==>start?#<=#([space=>/sys/space,
+     web=>[http/host=>http://localhost:8777,
+           ws/host=>ws://localhost:8555],
+     typer/stage=>[inst_dom=>true,
+                   inst_rng=>true,
+                   type_pred=>true,
+                   obj_write=>true,
+                   code_resolve=>false],
+     header=>"""
+                    _,.---._      _,..."""]).print?#<=#('------------
+   *boot...',*boot/args,'
+   ------------
+   ').end?#<=#().print?#<=#('mounting instruction sets).end?#<=#().import?#<=#(/m/mach/io).end?#<=#().start?#<=#(memspace::[pattern=>/usr/#,
+              q=>[typeq::[pattern=><T>,
+                          pre_read=>inst?#{*}<=#{?}(uri::T){<j>},
+   ...
 ```
 ## walking the tree
 
@@ -343,10 +355,7 @@ Wildcards are space-side. `+` is one segment, `#` is the recursion:
 
 ```mtron
 mtron> *<mfs:src/main/java/+/>                  [-- the child of src/main/java --]
-==>fail::[parse error at line 1, col 76:
-     ...      [-- the child of src/main/java --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/551
+==>mfs:/src/main/java/studio=>mfs:/src/main/java/studio
 mtron> *<mfs:docs/skills/mtron/+/>  [-- this doc's siblings, with their content --]
 ...
 ```
@@ -378,20 +387,13 @@ before line N, `+` to append; a read takes the slice, a write replaces it:
 mtron> bash('printf "the metatron docs pipeline\nevaluates this block\nand inlines the result" > /tmp/mtron-docs-scratch/lines.txt')
 ==>['']
 mtron> *<scratch:lines.txt?lineq=1>                     [-- line two, zero-indexed --]
-==>fail::[parse error at line 1, col 80:
-     ...          [-- line two, zero-indexed --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/553
+==>'evaluates this block'
 mtron> <scratch:lines.txt?lineq=1> -> "rewrote line two"  [-- replace --]
-==>fail::[parse error at line 1, col 67:
-     ...> -> "rewrote line two"  [-- replace --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/554
+==>'rewrote line two'
 mtron> *<scratch:lines.txt>                                  [-- the file after the write --]
-==>fail::[parse error at line 1, col 87:
-     ...        [-- the file after the write --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/555
+==>"""the metatron docs pipeline
+   rewrote line two
+   and inlines the result"""
 ```
 ## the file family — `read_file`, `edit_file`
 
@@ -402,7 +404,7 @@ lines:
 ```mtron
 mtron> read_file(file=><scratch:lines.txt>, min=>0, max=>2)
 ==>[[0,'the metatron docs pipeline'],
-    [1,'evaluates this block']]
+    [1,'rewrote line two']]
 ```
 `edit_file` states the write as arguments — insert at `min`, replace the `min..max`
 span when `max` is given — and answers with a status report:

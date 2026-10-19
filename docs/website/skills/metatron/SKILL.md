@@ -22,10 +22,10 @@ mtron> ... [-- larger agent definition --]
 mtron> feature=>[
         tool_feature::[tool=>[!*eval]]
         ... [-- other features attached to agent --]
-==>fail::[parse error at line 1, col 9:
+==>fail::[parse error at line 1, col 8:
      feature=>[
-           tool_feature::[tool=>[!*eval]...
-             ^
+           tool_feature::[tool=>[!*eval...
+            ^
      unclosed triple-quote — missing closing '"""']@/sys/fail/212
 mtron> ]
 ==>fail::[parse error at line 1, col 1:

@@ -284,8 +284,12 @@ public final class PlanInterpreter {
         if (insts.isEmpty())
             return code;
         final Map<Type, Rec> laws = new HashMap<>();
+        // a lone instruction is a selector (payload), not a morphism to collapse — suppress the
+        // bare-identity test for it. isUnit still fires on a sole unit such as [plus(0)]; if that
+        // removal ever proves wrong, gate isUnit on !sole too (keep every single-instruction chain).
+        final boolean sole = 1 == insts.size();
         final List<Inst> kept = insts.stream()
-                .filter(i -> !isUnit(i, laws) && !isIdentity(i, laws))
+                .filter(i -> !isUnit(i, laws) && (!isIdentity(i, laws) || sole))
                 .toList();
         return kept.size() == insts.size() ? code : code(kept);
     }
@@ -321,6 +325,8 @@ public final class PlanInterpreter {
     private static boolean isIdentity(final Inst inst, final Map<Type, Rec> laws) {
         if (!inst.args().isEmpty())
             return false;
+        if (!cInt.ONE().equals(inst.c()))
+            return false;   // id{n} is a multiplicity, not a no-op
         for (final Map.Entry<Obj, Obj> instance : laws.computeIfAbsent(T(CODE_TID), TheoryHelper::instances).jvm().entrySet()) {
             if (!instance.getValue().isRec())
                 continue;
@@ -412,7 +418,7 @@ public final class PlanInterpreter {
         if (2 > insts.size())
             return code;
         final Type carrier = carrier(code);
-        final List<Inst> collapsed = collapseKeep(insts, (a, b) -> same(a, b) && isFold(a, carrier));
+        final List<Inst> collapsed = collapseKeep(insts, (a, b) -> same(a, b) && a.c().equals(b.c()) && isFold(a, carrier));
         return collapsed.size() == insts.size() ? code : code(collapsed);
     }
 

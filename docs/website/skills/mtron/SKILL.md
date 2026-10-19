@@ -313,10 +313,6 @@ runs the type's checks, and casting (`.as(type::T)`) validates an existing value
 ```mtron
 mtron> import(/m/math,math)                     [-- module import, namespaced math --]
 mtron> int::T[?>0]@posint                       [-- a new type: positive integers --]
-==>fail::[parse error at line 1, col 79:
-     ...   [-- a new type: positive integers --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/219
 mtron> rec::T[?[name=>str::T, age=>int::T]]@being
 mtron> person::[name=>'marko', age=>29]         [-- the stock person type, constructed --]
 ==>person::[name=>'marko',age=>29]

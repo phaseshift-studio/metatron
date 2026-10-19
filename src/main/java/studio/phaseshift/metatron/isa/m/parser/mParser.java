@@ -544,8 +544,20 @@ public class mParser {
             text.append(code.charAt(i));
             offsets[kept++] = i;
         }
-        return new Prepared(code, text.toString(),
-                kept == offsets.length ? offsets : Arrays.copyOf(offsets, kept), end);
+        final int[] keptOffsets = kept == offsets.length ? offsets : Arrays.copyOf(offsets, kept);
+        // THE TRIM COMES AFTER THE COMMENTS. `x   [-- note --]` ends in ']', so the raw trim above
+        // does nothing; once the comment is deleted, the spaces before it are still in the text and
+        // reach the grammar. Trim the prepared text again, and report end-of-input at the last KEPT
+        // character — the raw end is inside the comment that was deleted.
+        int from = 0;
+        int to = kept;
+        while (from < to && Character.isWhitespace(text.charAt(from)))
+            from++;
+        while (to > from && Character.isWhitespace(text.charAt(to - 1)))
+            to--;
+        final int endOffset = 0 == to ? end : keptOffsets[to - 1] + 1;
+        return new Prepared(code, text.substring(from, to),
+                Arrays.copyOfRange(keptOffsets, from, to), endOffset);
     }
 
     public static Parser m_paren_wrap(final Parser parser) {

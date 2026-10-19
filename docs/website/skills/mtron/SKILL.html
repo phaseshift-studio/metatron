@@ -721,10 +721,6 @@ loaded modules already provide, like <code>person</code>, never need creating), 
 runs the type's checks, and casting (<code>.as(type::T)</code>) validates an existing value:</p>
 <pre><code class="language-mtron">mtron&gt; import(/m/math,math)                     [-- module import, namespaced math --]
 mtron&gt; int::T[?&gt;0]@posint                       [-- a new type: positive integers --]
-==&gt;fail::[parse error at line 1, col 79:
-     ...   [-- a new type: positive integers --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/219
 mtron&gt; rec::T[?[name=&gt;str::T, age=&gt;int::T]]@being
 mtron&gt; person::[name=&gt;'marko', age=&gt;29]         [-- the stock person type, constructed --]
 ==&gt;person::[name=&gt;'marko',age=&gt;29]

@@ -188,19 +188,13 @@ binding step, and a route is debuggable by looking at the request uri.
 
 ```mtron
 mtron> */usr/person/1                                              [-- straight from the space --]
-==>fail::[parse error at line 1, col 92:
-     ...         [-- straight from the space --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/624
+==>person::[name=>'marko',age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==>fail::[parse error at line 1, col 117:
-     ..., over the carrier, native rendering --]
-                                                ^
-     unexpected end of source — the expression is incomplete]@/sys/fail/625
+==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from@0)]@/sys/fail/626
+==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from@0)]@/sys/fail/564
 mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from@0)]@/sys/fail/627
+==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from@0)]@/sys/fail/565
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.
