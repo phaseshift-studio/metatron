@@ -1,5 +1,6 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -41,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *       home -- rows with the same mailboxes and different results, which is the boundary made visible</li>
  * </ul>
  */
+@Isolated
 public class DistributedRewriteTest extends AbstractMultiServerSingleSpaceTest {
 
     public DistributedRewriteTest() {

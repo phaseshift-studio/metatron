@@ -51,6 +51,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -103,8 +104,35 @@ public class Agent extends MRec {
      */
     private ChatFrame currentResult;
 
+    /**
+     * Per-chat streaming sink — {@code on_partial_response} deltas are routed here
+     * (in addition to the feature dispatch) for the duration of one {@link #chat}
+     * call.  Transient and single-threaded by design: the agent serves one chat at
+     * a time (the latch blocks the caller), so it is never contended.
+     */
+    private transient Consumer<String> partialSink;
+
+    /**
+     * A harness-tool call awaiting yield — set by the harness-tool executor, read by the
+     * transport after {@code chat()} returns so it can surface the call as OpenAI
+     * {@code tool_calls}.  Transient and cleared per chat (in {@code beginTurn}).
+     */
+    private transient YieldTurnSignal pendingYield;
+
     public void setCurrentChatId(final int chatId) {
         this.currentChatId = chatId;
+    }
+
+    /**
+     * Record a harness-tool call awaiting yield (see {@link #pendingYield}).
+     */
+    public Agent pendingYield(final YieldTurnSignal signal) {
+        this.pendingYield = signal;
+        return this;
+    }
+
+    public YieldTurnSignal pendingYield() {
+        return this.pendingYield;
     }
 
     /**
@@ -495,6 +523,21 @@ public class Agent extends MRec {
         return this.chat(message, rec0().c(cInt.ZERO()).asRec());
     }
 
+    /**
+     * Stream this chat's partial responses to {@code partialSink} (in addition to the
+     * feature dispatch) for the duration of the call, then clear it.  The sink fires on
+     * LangChain4j's streaming thread, so the transport's {@code SseStream} (synchronized)
+     * is the thread-safe boundary.
+     */
+    public ChatFrame chat(final String message, final Consumer<String> partialSink) {
+        this.partialSink = partialSink;
+        try {
+            return this.chat(message);
+        } finally {
+            this.partialSink = null;
+        }
+    }
+
     public ChatFrame chat(final String message, final Rec responseFormat) {
         this.load();
         boolean formattedResponse = null != responseFormat && !responseFormat.isNoObj() && !responseFormat.isEmpty();
@@ -597,6 +640,7 @@ public class Agent extends MRec {
     private void beginTurn(final String message) {
         this.at(ACTIVE, BOOL_TRUE, MUTABLE);
         this.at(INTERRUPT, noobj(), MUTABLE);
+        this.pendingYield = null;
         if (this.first.getAndSet(false))
             this.features().elements().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_AGENT_CTOR, this));
         Machine.current().memory().stats().ioStats().incrBytesSent(message.getBytes().length);
@@ -665,6 +709,8 @@ public class Agent extends MRec {
     private void onPartialResponse(final String s, final List<Obj> features, final CountDownLatch latch) {
         StatusLine.message(str("\uD83D\uDCAC on_partial_response"));
         Machine.current().memory().stats().ioStats().incrBytesRecv(s.getBytes().length);
+        if (null != this.partialSink)
+            this.partialSink.accept(s);
         features.stream().map(Obj::asRec).forEach(f -> dispatchHook(f, ON_PARTIAL_RESPONSE, str(s)));
         if (this.isInterrupted())
             latch.countDown();
@@ -697,8 +743,7 @@ public class Agent extends MRec {
         // countDown() is idempotent, so this also covers the interrupt case.  Gating it on
         // isInterrupted() made a provider error park the agent's lifecycle thread forever
         // at latch.await() — the thread never reached the isError throw in chat().
-        if (isInterrupted())
-            latch.countDown();
+        latch.countDown();
     }
 
 

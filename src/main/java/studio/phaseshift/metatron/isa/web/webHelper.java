@@ -40,8 +40,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_INST_TID;
+import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.PROTOCOL_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.PROTOCOL_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -123,6 +124,9 @@ public class webHelper {
                     problems.add(str("%s: an instruction must yield a protocol surface, got rng %s".formatted(path, inst.rng())));
                 return;
             }
+            if (value.test(HTTP_HANDLER_TYPE)) {
+                return;
+            }
             if (value.isCode())
                 return; // a code chain's signature is resolved when it is applied, not declared
             problems.add(str("%s: value must be a uri, a type or an instruction, got %s".formatted(path, value.toShortString())));
@@ -143,7 +147,7 @@ public class webHelper {
     public static boolean isProtocolSurface(final Type type) {
         Type current = type;
         while (null != current && !current.isBaseType() && !current.isGeneric() && !current.isRootType()) {
-            if (null != current.vid() && current.vid().test(PROTOCOL_TID))
+            if (null != current.vid() && current.test(PROTOCOL_TYPE))
                 return true;
             current = current.parentType();
         }

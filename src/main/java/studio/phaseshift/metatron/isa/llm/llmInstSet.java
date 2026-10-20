@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.llm.type.feature.Feature;
+import studio.phaseshift.metatron.isa.llm.type.openai.openai_httpHandler;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.vec.type.MVec;
@@ -41,6 +42,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.type.Agent.agent;
 import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
 import static studio.phaseshift.metatron.isa.llm.type.mcp.mcpMessageServer.MCP_MESSAGE_SERVER_TYPE;
+import static studio.phaseshift.metatron.isa.llm.type.openai.openaiServer.OPENAI_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -54,6 +56,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.space.fsSpace.staticObjToFile;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
+import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.REST_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -64,6 +68,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_ISA_TID = M_ISA_TID.extend(LLM);
     public static final fURI LLM_MODEL_TID = LLM_ISA_TID.extend(MODEL);
     public static final fURI LLM_AGENT_TID = LLM_ISA_TID.extend(AGENT);
+    public static final fURI OPENAI_TID = LLM_ISA_TID.extend("openai");
     public static final fURI LLM_INST_TID = LLM_ISA_TID.extend(INST);
     public static final fURI LLM_CHAT_RESULT_TID = LLM_ISA_TID.extend("chat_result");
     public static final fURI LLM_FRAME_TID = LLM_ISA_TID.extend("frame");
@@ -164,6 +169,10 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_WATERMARK_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
     public static Type LLM_FEATURE_TYPE;
+    public static Type OPENAI_TYPE;
+    public static Type HTTP_OPENAI_HANDLER_TYPE;
+    public static final fURI OPENAI_HTTP_HANDLER_TID = LLM_ISA_TID.extend("openai_http");
+
 
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
@@ -794,7 +803,20 @@ public class llmInstSet extends AbstractInstSet {
 //                                 "overlays an iteration graph on the message ledger — each chat turn creates a linked iteration node with prev/next pointers and message back-references",
 //                                 "iteration_feature::[]"),
                         //////////////////////////////////////////////////////////
-                        MCP_MESSAGE_SERVER_TYPE),
+                        MCP_MESSAGE_SERVER_TYPE,
+                        docWrap(OPENAI_TYPE = Type.Builder.build()
+                                        .tid(REST_TID)
+                                        .vid(OPENAI_TID)
+                                        .create(),
+                                "the openai surface — a chat-completions rest api over /v1/models and /v1/chat/completions",
+                                "openai_server::T and openai_http::T are openai::T by path"),
+                        docWrap(OPENAI_SERVER_TYPE, "a transport-agnostic openai server exposing metatron agents as models"),
+                        docWrap(HTTP_OPENAI_HANDLER_TYPE = Type.Builder.build()
+                                .tid(HTTP_HANDLER_TID)
+                                .vid(OPENAI_HTTP_HANDLER_TID)
+                                .isaPredicate(rec(uri(MODEL).maybe().asUri(), LST_TYPE))
+                                .constructor(openai -> new openai_httpHandler(openai.jvm(), OPENAI_HTTP_HANDLER_TID, openai.vid()))
+                                .create(), "the openai http transport for the openai server")),
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(REC_TID).rng(LLM_MODEL_TID),
                                         lst(LLM_MODEL_TYPE),

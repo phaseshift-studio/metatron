@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
@@ -44,7 +43,6 @@ import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
-import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -57,7 +55,8 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -744,7 +743,7 @@ public class machInstSet extends AbstractInstSet {
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@~/thread/ping")),
                 uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
-                        instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
+                        /*instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("~/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
                             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();
@@ -752,7 +751,7 @@ public class machInstSet extends AbstractInstSet {
                                 thread.jvm().put(uri(SOURCE), auto_from_(uri(parent.vid())).tryToInst());
                             thread.applyAsync(lhs);
                             return thread;
-                        }),
+                        }),*/
                         // PUSH AT AN ADDRESS IS move-to-its-PARENT then push-its-NAME — the algebra Marko gave:
                         // push(<../b>) == move(<..>).push(<b>). So the frame that HOLDS the new machine is the one
                         // at the address's parent, and only the LEAF is minted: a sibling comes from the shared
@@ -804,11 +803,11 @@ public class machInstSet extends AbstractInstSet {
                                     final Machine named = inst.arg(0).isMachine() ? inst.arg(0).asMachine() : Helper.machineAt(here, inst.arg(0).uriValue(), "pop");
                                     if (Helper.sameFrame(named, here))
                                         return here.pop();
-                                    throw MTronException.of("pop(%s) is not the frame you stand in (%s): a frame is discarded by the one that holds it — pop() where you stand, or move(<%s>) there first",
+                                    throw MTronException.of("pop(%s) is not current machine (%s): a machine is discarded by the one that holds it -- move(<%s>) there first",
                                             inst.arg(0), here.vid(), inst.arg(0));
                                 }),
                                 "the lhs is not consulted: pop acts on the FRAME the code is running in",
-                                "the frame that HELD the one discarded — \\(\\mathrm{pop}(f) \\mapsto \\mathrm{parent}(f)\\), so the cursor lands on \\(f\\)'s \\(..\\)",
+                                "the machine that HELD the one discarded — \\(\\mathrm{pop}(f) \\mapsto \\mathrm{parent}(f)\\), so the cursor lands on \\(f\\)'s \\(..\\)",
                                 Map.of(jnt(0), "the frame to discard, which must resolve relative to the current machine: it is admitted only when \\(t \\sim \\mathrm{here}\\), so `pop(<../b>)` from \\(a\\) is refused. Absent, \\(t = \\mathrm{here}\\) — and `pop()` = `pop(<~>)` = `pop(_)`"),
                                 "DESTRUCTIVE — the one frame instruction that closes what it leaves, where move leaves it standing and reachable by address. It discards the frame you stand in and lands on that frame's \\(..\\). A frame is discarded by the one that HOLDS it, so an address that does not resolve to where you stand is refused rather than silently ignored, and the ROOT has no \\(..\\) to land on: it owns the address space, so closing it is the shutdown path and a reset is the honest instruction. Because \\(\\mathrm{move}\\) keeps no history and the containment link is what \\(\\mathrm{pop}\\) follows, a frame you only MOVED into has nowhere to return to.",
                                 "pop()               [-- discard where you stand, land on its .. --]",

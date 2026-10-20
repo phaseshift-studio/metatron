@@ -373,7 +373,9 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         if (target.isType())
             return RouteLane.handler(target.vid(), null, identityOf(target));
         if (target instanceof mcpServer)
-            return RouteLane.handler(HTTP_MCP_HANDLER_TID, ((mcpServer) target).jvm(), identityOf(target));
+            return RouteLane.handler(HTTP_MCP_HANDLER_TID, target.jvm(), identityOf(target));
+        if (target.testNominally(HTTP_HANDLER_TYPE))
+            return RouteLane.handler(target.tid(), target.jvm(), identityOf(target));
         if (routed.isUri())
             return templated ? RouteLane.addressed(routed.uriValue()) : RouteLane.web(routed.uriValue());
         return RouteLane.none();

@@ -19,26 +19,19 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
-import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerIntegrationTest;
 import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -51,7 +44,6 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
  * be a live out-edge of the shardable chain's {@code path::T}. This is the manual console demo, automated.
  */
 @Isolated
-@Execution(ExecutionMode.SAME_THREAD)
 public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegrationTest {
 
     @Override
@@ -78,7 +70,7 @@ public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegra
         assertFalse(Machine.current().network().peers().jvm().isEmpty(), "a self-dial mints a /network/peer");
 
         // start({1,2,3,4}).plus(1).sum() lifted to path::T exposes law_shard as a live out-edge
-        final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()");
+        final Obj code = Machine.parse("start({1,2,3,4}).plus(1).sum()");
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(code);
         assertTrue(path.isRec() && path.asRec().has(uri("law_shard")),
                 "law_shard is available as a rewrite when a peer is present: " + path);

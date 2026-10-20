@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -84,6 +85,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *         answers to, aliases collapse, and a declared peer is never also "mine".</li>
  * </ol>
  */
+@Isolated
 public class NetworkIsolationScriptTest extends AbstractMetatronTest {
 
     /**
