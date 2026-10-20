@@ -285,10 +285,11 @@ public interface WebSocketObj extends Rec, Closeable {
      */
     default Obj tagged(final Obj message, final fURI tag) {
         final Inst anchor = instB(VID_INST_TID, lst(uri(tag)));
-        // DESCEND THE BLOCKS FIRST. The payload arrives quoted -- block(block(block(chain))) -- and each local
-        // apply between here and the wire peels one. The anchor must ride the chain the PEER evaluates, so it
-        // goes on the INNERMOST code and is re-quoted to the same depth; appended outside, the quoting is one
-        // level short and the vid lands on a value this machine computed rather than on the peer's answer.
+        // DESCEND THE BLOCKS FIRST. The payload arrives quoted once per evaluation still ahead of it on the far
+        // side -- a law_shard summand reaches here as block(chain), and the peer's deserialization spends that
+        // level and runs the chain. The anchor must ride the chain the PEER evaluates, so it goes on the
+        // INNERMOST code and is re-quoted to the same depth; appended outside, the quoting is one level short and
+        // the vid lands on a value this machine computed rather than on the peer's answer.
         int blocks = 0;
         Obj inner = message;
         while (inner.isObjInst()

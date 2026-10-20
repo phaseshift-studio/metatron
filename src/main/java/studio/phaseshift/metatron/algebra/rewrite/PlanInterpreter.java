@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
@@ -42,6 +43,7 @@ import java.util.function.BiPredicate;
 import static studio.phaseshift.metatron.Tokens.ADD;
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
 import static studio.phaseshift.metatron.Tokens.DERIVATION;
+import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ID;
 import static studio.phaseshift.metatron.Tokens.INVERSE;
 import static studio.phaseshift.metatron.Tokens.OP;
@@ -188,7 +190,7 @@ public final class PlanInterpreter {
             final mFluent<?> slave = start_(objs(part)).q("no_shard");
             slave.addInsts(insts.subList(1, cutIndex));
             slave.addInst(reducer);
-            summands.add(block_(block_(block_(slave))));
+            summands.add(quoted(slave));
             routes.add(to_(targets.get(s)).tryToInst());
         }
         final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
@@ -245,11 +247,27 @@ public final class PlanInterpreter {
             final mFluent<?> slave = start_(objs(part)).q("no_shard");
             slave.addInsts(insts.subList(1, cutIndex));
             slave.addInsts(order_(selector).insts());
-            summands.add(block_(block_(block_(slave))));
+            summands.add(quoted(slave));
             routes.add(to_(targets.get(s)).tryToInst());
         }
         final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
         return emitted;
+    }
+
+    /**
+     * A SHARD IS QUOTED ONCE PER EVALUATION THAT STANDS BETWEEN IT AND THE PEER, so that the peer's evaluation is
+     * the one that RUNS it. One level is spent on this machine before the frame leaves (the round trip receives
+     * {@code block(chain)} for the {@code block(block(chain))} it routed), and the peer evaluates the frame it
+     * deserializes ({@code ObjmtronSerializer.read} evaluates the wire text), which spends the last level and runs
+     * the chain — so what the handler answers is the shard's value, {@code 12@<tag>}.
+     * <p>
+     * Quoted one level deeper, the peer only unquotes it and sends the chain back as CODE — and a master whose own
+     * read evaluates its replies then computes every shard itself: the answer is right and the work never leaves
+     * home (measured: the peers replied {@code start?no_shard({1,3,5}).plus(1).sum()} and the master read {@code 12}
+     * out of it; a master that only parses its replies fails instead, {@code unable to convert mcode to int::T}).
+     */
+    private static Obj quoted(final mFluent<?> slave) {
+        return block_(block_(slave));
     }
 
     /**
@@ -263,12 +281,25 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The fan-out targets: this machine's own reachable peers, keyed by connection uri. Empty on a lone
-     * machine, which gates the plan out of the default schedule there.
+     * The fan-out targets: the peers this machine DIALED, keyed by connection uri. Empty on a lone machine,
+     * which gates the plan out of the default schedule there.
+     * <p>
+     * A DIALED PEER, NOT EVERY PEER. {@code Network.accept} co-mounts every inbound socket as a peer too —
+     * keyed by the dialer's ephemeral source port, with no {@code host} — and the far end of that socket is a
+     * CLIENT. Whether a client evaluates a request the server sends it is invisible from here, and the default
+     * {@code ws_client} only prints one, so a shard shipped down it never comes back: its round trip waits out
+     * the deadline and the fail poisons the reduction (measured across two hosts: once one machine dialed the
+     * other, the dialed machine's {@code sum()} answered {@code unable to convert mfail to int::T}). The loopback
+     * case of the same twin is declined at accept; a cross-host dialer cannot be, so the planner chooses.
+     * {@code host} is the field {@code peer::T} reserves for a peer the current machine can ship to — where to
+     * dial it from here — so a target is a peer that carries one.
      */
     private static List<Obj> shardTargets() {
         try {
-            return new ArrayList<>(Machine.current().network().peers().jvm().keySet());
+            return Machine.current().network().peers().elements()
+                    .filter(peer -> peer.second().isRec() && peer.second().asRec().at(uri(HOST)).isUri())
+                    .map(Rel::first)
+                    .toList();
         } catch (final Exception e) {
             return List.of();
         }

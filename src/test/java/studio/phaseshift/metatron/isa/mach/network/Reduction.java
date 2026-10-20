@@ -71,7 +71,7 @@ public final class Reduction {
 
     /**
      * Peel the slave codes out of a {@code law_shard} master: one per route, un-quoted from their
-     * {@code block(block(block(...)))} nesting. The order matches {@link #routes(Code)}.
+     * {@code block(...)} nesting, however deep. The order matches {@link #routes(Code)}.
      */
     public static List<Code> slaves(final Code master) {
         final List<Code> slaves = new ArrayList<>();
