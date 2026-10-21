@@ -511,8 +511,8 @@ emergent membership.</p>
 <tr><th>handler</th><th>transport</th><th>what it does</th><th>witness</th></tr>
 </thead>
 <tbody>
-<tr><td><code>mtron_ws</code></td><td>ws</td><td>applies the frame's mtron expression, returns the result</td><td><code>mtron_wsHandler.java:54</code></td></tr>
-<tr><td><code>mtron_http</code></td><td>http</td><td>same, over HTTP</td><td><code>mtron_httpHandler.java</code></td></tr>
+<tr><td><code>mtron_ws</code></td><td>ws</td><td>evaluates each frame's mtron expression once, returns the answer</td><td><code>mtron_wsHandler.java</code></td></tr>
+<tr><td><code>mtron_http</code></td><td>http</td><td>declared <code>mtron::T</code>, but does not evaluate yet: answers the request rec it received</td><td><code>mtron_httpHandler.java</code></td></tr>
 <tr><td><code>web_httpHandler</code></td><td>http</td><td>REST verbs → <code>writeToSpace</code> (<code>GET</code>/<code>POST</code>/<code>PUT</code>/<code>PATCH</code>/<code>DELETE</code>)</td><td><code>web_httpHandler.java</code></td></tr>
 <tr><td><code>mcp_wsHandler</code> / <code>mcp_httpHandler</code> / <code>mcp_stdioHandler</code></td><td>ws / http / stdio</td><td>MCP servers</td><td><code>isa/web/space/*/handler/</code></td></tr>
 <tr><td><code>bin/wsplus</code></td><td>ws</td><td>standalone CLI client (<code>-e</code> one-shot)</td><td><code>bin/wsplus</code></td></tr>

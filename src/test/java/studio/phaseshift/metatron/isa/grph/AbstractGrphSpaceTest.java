@@ -491,7 +491,6 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         }
     }
 
-    @Disabled("/g/+ wildcard reads all vertices not the V/E collections; /g/S returns the instset not the schema type")
     @ParameterizedTest
     @CsvSource(value = {
             //  "*/g/+                                                   % true",

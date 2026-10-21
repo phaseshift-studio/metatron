@@ -448,10 +448,19 @@
 
      private Iterator<IdObj> readCollection(final DataPath dp) {
          if (!dp.hasCollection()) return IteratorUtil.of();
+         System.err.println("READ-COLLECTION dp=" + dp + " wildcard=" + dp.collectionIsWildcard() + " coll=" + dp.collection());
+
+         // -- wildcard: the V / E meta-collections, not the discovered label types --
+         if (dp.collectionIsWildcard()) {
+             final InstSet instSet = this.schema();
+             return instSet.types().stream()
+                     .filter(t -> "V".equals(t.vid().name()) || "E".equals(t.vid().name()))
+                     .map(t -> IdObj.of(t.vid(), t)).iterator();
+         }
 
          // -- shared SchemaSpace collection-level resolution --
          // Resolves exact label names (e.g. "person", "knows") against the
-         // schema InstSet at SCHEMA/INSTSET.  For wildcards returns all types.
+         // schema InstSet at SCHEMA/INSTSET.
          final Iterator<IdObj> schemaResults =
                  resolveCollectionSchema(dp.collection());
          if (schemaResults.hasNext())
