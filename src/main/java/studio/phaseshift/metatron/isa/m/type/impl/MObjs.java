@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.ALL_STAR;
@@ -198,10 +199,24 @@ public class MObjs implements Objs {
         //   return this.jvm.stream().map(Obj::c).reduce(cInt.ZERO(), cInt::plus);
     }
 
+    /**
+     * COPY ON WRITE: a coefficient change is a new bag, never an edit of this one. This bag may be held elsewhere — a
+     * rec value read through its rel, a stored value, a parsed code's literal, or the processor's lhs, whose total
+     * {@code Processor.invoke} multiplies the result by after compressing it with {@code c(one)} — so its members and its
+     * cached total stay as they are. A change that changes no member is this bag (no allocation); otherwise the new bag
+     * counts its own total and keeps this bag's vid WITHOUT the write the constructor makes when handed one.
+     * <p>
+     * The bag's other edits stay in place, as they must: {@code append} accumulates, {@code take} consumes (the
+     * processor's split re-queues the remainder), and {@code attemptBulk} reorganizes.
+     */
     @Override
     public Obj c(final Function<cInt, cInt> func) {
-        this.jvm = this.jvm.stream().map(obj -> obj.c(func)).collect(Collectors.toCollection(ArrayList::new));
-        return tryToShrink();
+        final List<Obj> members = this.jvm.stream().map(obj -> obj.c(func)).collect(Collectors.toCollection(ArrayList::new));
+        if (IntStream.range(0, members.size()).allMatch(i -> members.get(i) == this.jvm.get(i)))
+            return this.tryToShrink();
+        final MObjs copy = new MObjs(members, this.tid, null);
+        copy.vid = this.vid;
+        return copy.tryToShrink();
     }
 
     @Override
