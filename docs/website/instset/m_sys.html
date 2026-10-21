@@ -467,28 +467,28 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
                      pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+          inst=&gt;[as?bytes&lt;=uri(bytes::T){&lt;j&gt;},
+                 as?image&lt;=bytes(image::T,else(1.0)){&lt;j&gt;},
+                 close?noobj{0}&lt;=(){&lt;j&gt;},
+                 redirect?rec[short=&gt;uri,long=&gt;uri]&lt;=(uri::T){&lt;j&gt;},
+                 sys_stat?rec&lt;=(){&lt;j&gt;},
+                 find_file?lst&lt;=(name=&gt;str::T,{?}root=&gt;uri::T,pattern=&gt;bool::T,{?}max=&gt;int::T,{?}depth=&gt;int::T){&lt;j&gt;},
+                 read_file?lst&lt;=(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},
+                 edit_file?rec&lt;=(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},
+                 bash?lst[str]&lt;=(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
+                 sleep?A{?}&lt;=A{?}(time::T){&lt;j&gt;},
+                 stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;},
+                 stdin?str&lt;=(){&lt;j&gt;}],
           const=&gt;[thread_executor::[stop=&gt;[,],
                                     run=&gt;[!*/thread/main]]@/sys/thread/executor],
-          type=&gt;[space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace,
-                 space::T[][ctor?serialspace&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace,
+          type=&gt;[space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace,
+                 space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace,
                  rec::T[?[level=&gt;union(info,trace,warn,error,debug),
    source=&gt;&lt;#&gt;::T,
    message=&gt;str::T]]@/m/sys/log_entry,
-                 uri::T[][ctor?dir&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/sys/dir,
-                 uri::T[][ctor?file&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/sys/file,
-                 file::T@/m/dckr/image],
-          inst=&gt;[as?bytes&lt;=uri(bytes::T){&lt;j&gt;},
-                 as?image&lt;=bytes(image::T,else(1.0)){&lt;j&gt;},
-                 close?noobj{0}&lt;=#{?}(){&lt;j&gt;},
-                 redirect?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T){&lt;j&gt;},
-                 sys_stat?rec&lt;=#{?}(){&lt;j&gt;},
-                 find_file?lst&lt;=#{?}(name=&gt;str::T,{?}root=&gt;uri::T,pattern=&gt;bool::T,{?}max=&gt;int::T,{?}depth=&gt;int::T){&lt;j&gt;},
-                 read_file?lst&lt;=#{?}(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},
-                 edit_file?rec&lt;=#{?}(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},
-                 bash?lst[str]&lt;=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
-                 sleep?A{?}&lt;=A{?}(time::T){&lt;j&gt;},
-                 stdout?#{?}&lt;=#{?}(#{?}::T){&lt;j&gt;},
-                 stdin?str&lt;=#{?}(){&lt;j&gt;}]]@/m/sys</code></pre>
+                 uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir,
+                 uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file,
+                 file::T@/m/dckr/image]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -570,7 +570,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
         </span>
         <small class="text-muted code">/m/sys/dir</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?dir&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/sys/dir</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a reference to a directory within fsspace</p>
@@ -583,7 +583,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
         </span>
         <small class="text-muted code">/m/sys/file</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?file&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/sys/file</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a reference to a file within fsspace, resolved through the router&#39;s redirects</p>
@@ -631,7 +631,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
  {?}post_write=&gt;inst::T,
  {?}qless_write=&gt;inst::T,
  {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
@@ -650,7 +650,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
  {?}post_write=&gt;inst::T,
  {?}qless_write=&gt;inst::T,
  {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
@@ -668,7 +668,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
         </span>
         <small class="text-muted code">/m/sys/inst/bash?rng=/m/lst[/m/str]&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bash?lst[str]<=<span class="code text-info">#{?}</span>(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bash?lst[str]<=(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0.
@@ -697,7 +697,7 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
         </span>
         <small class="text-muted code">/m/sys/inst/close?rng=noobj{0}&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">close?<span class="code text-success">noobj{0}</span><=<span class="code text-info">#{?}</span>(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">close?<span class="code text-success">noobj{0}</span><=(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-terminal">terminal</span> close the lhs — release its resources; a router exits the vm, and a noobj runs the boot loader teardown
@@ -713,7 +713,7 @@ maps objs to nothing (rng_c = 0)</p>
         </span>
         <small class="text-muted code">/m/sys/inst/edit_file?rng=/m/rec&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">edit_file?rec<=<span class="code text-info">#{?}</span>(file=>uri::T,text=>str::T,min=>int::T,{?}max=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">edit_file?rec<=(file=>uri::T,text=>str::T,min=>int::T,{?}max=>int::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> write text to a file in fsspace::T. the min and max values represent the range to write.
@@ -723,10 +723,10 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
+  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
   <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=#{?}">
@@ -737,18 +737,18 @@ if both min and max are provided, then those lines are removed and the text is i
         </span>
         <small class="text-muted code">/m/sys/inst/find_file?rng=/m/lst&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find_file?lst<=<span class="code text-info">#{?}</span>(name=>str::T,{?}root=>uri::T,pattern=>bool::T,{?}max=>int::T,{?}depth=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find_file?lst<=(name=>str::T,{?}root=>uri::T,pattern=>bool::T,{?}max=>int::T,{?}depth=>int::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> recursively search directory for named file by regex or partial string match</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a lst of all files whose path matches str regex" class="text-success">a lst of all files whose path matches str regex</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
+  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
   <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
   <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=#{?}">
@@ -759,7 +759,7 @@ if both min and max are provided, then those lines are removed and the text is i
         </span>
         <small class="text-muted code">/m/sys/inst/read_file?rng=/m/lst&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">read_file?lst<=<span class="code text-info">#{?}</span>(file=>uri::T,{?}min=>int::T,{?}max=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">read_file?lst<=(file=>uri::T,{?}min=>int::T,{?}max=>int::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read a file from an fsspace::T. the min and max values represent the range to read.
@@ -769,9 +769,9 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
-  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}">
@@ -782,7 +782,7 @@ if only a min is provided, then the file is read from that line till the end.
         </span>
         <small class="text-muted code">/m/sys/inst/redirect?rng=/m/rec[short=&gt;uri,long=&gt;uri]&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">redirect?rec[short=>uri,long=>uri]<=<span class="code text-info">#{?}</span>(uri::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">redirect?rec[short=>uri,long=>uri]<=(uri::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> map a uri to its registered redirect forms — returning [short, long] of the rewritten uri</p>
@@ -818,7 +818,7 @@ if only a min is provided, then the file is read from that line till the end.
         </span>
         <small class="text-muted code">/m/sys/inst/stdin?rng=/m/str&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdin?rng=__m__str&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__stdin?rng=__m__str&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdin?str<=<span class="code text-info">#{?}</span>(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdin?rng=__m__str&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__stdin?rng=__m__str&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdin?str<=(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read a line of input from the running terminal</p>
@@ -833,7 +833,7 @@ if only a min is provided, then the file is read from that line till the end.
         </span>
         <small class="text-muted code">/m/sys/inst/stdout?rng=#{?}&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdout?<span class="code text-info"><span class="code text-success">#{?}</span></span><=<span class="code text-info"><span class="code text-success">#{?}</span></span>(<span class="code text-info"><span class="code text-success">#{?}</span></span>::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdout?<span class="code text-info"><span class="code text-success">#{?}</span></span><=(<span class="code text-info"><span class="code text-success">#{?}</span></span>::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> prints arg jvm object to the terminal and emits lhs obj as rhs obj</p>
@@ -848,7 +848,7 @@ if only a min is provided, then the file is read from that line till the end.
         </span>
         <small class="text-muted code">/m/sys/inst/sys_stat?rng=/m/rec&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__sys_stat?rng=__m__rec&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__sys_stat?rng=__m__rec&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sys_stat?rec<=<span class="code text-info">#{?}</span>(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__sys_stat?rng=__m__rec&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__sys_stat?rng=__m__rec&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sys_stat?rec<=(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> a summary of thread counts</p>

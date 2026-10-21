@@ -471,7 +471,7 @@ the workspace and a chat feature. Then:</p>
 ==&gt;fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 10] @chatter.chat('what is the meaning o...
                  ^
-     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/460
+     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/469
 </code></pre>
 <p>The <code>/usr/chatter/#</code> space serves a the default location for features to store their various constructions.</p>
 <pre><code class="language-mtron">mtron&gt; */usr/chatter/chat_result/+
@@ -479,7 +479,7 @@ mtron&gt; [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
 ==&gt;fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
                  ^
-     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/461
+     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/470
 </code></pre>
 <p><strong>A tool is an instruction.</strong> There is no tool registry to populate: anything callable <em>is</em> a tool, and <code>mTool</code>
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a <code>tool_feature</code> can

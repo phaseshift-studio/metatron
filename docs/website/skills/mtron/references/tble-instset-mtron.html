@@ -478,11 +478,11 @@ is what makes a <code>_?incrq</code> write assign its own key (see <em>keys the 
 </tbody>
 </table>
 <pre><code class="language-mtron">mtron&gt; *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
-==&gt;docs::[obj=&gt;space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace,
+==&gt;docs::[obj=&gt;space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace,
           desc=&gt;'[structural] a metatron realizatio...',
           example=&gt;['*&lt;http://metatron.phaseshift.studi...']]
 mtron&gt; *&lt;/m/tble/helper&gt;    [-- the instset's helper rec: the llm chat schema, as a str --]
-==&gt;[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}(){&lt;j&gt;}]
+==&gt;[llm_chat_schema=&gt;inst?&lt;=#{*}(){&lt;j&gt;}]
 </code></pre>
 <h3>configuration</h3>
 <table>
@@ -719,8 +719,8 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
                                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-                         const=&gt;[[llm_chat_schema=&gt;inst?#{*}&lt;=#{*}(){&lt;j&gt;}]@/m/tble/helper],
-                         type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
+                         const=&gt;[[llm_chat_schema=&gt;inst?&lt;=#{*}(){&lt;j&gt;}]@/m/tble/helper],
+                         type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
                          inst=&gt;[sql?rec{*}&lt;=tblespace(str::T){&lt;j&gt;}],
                          rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(){&lt;j&gt;},
                                    /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(){&lt;j&gt;},
@@ -823,18 +823,20 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/13
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/15
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/14
+==&gt;[body=&gt;'another one']@tbledoc:note/16
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;11
+==&gt;15
 ==&gt;2
 ==&gt;4
 ==&gt;6
 ==&gt;8
 ==&gt;1
 ==&gt;13
+==&gt;16
 ==&gt;3
 ==&gt;10
 ==&gt;14

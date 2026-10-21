@@ -38,7 +38,7 @@ links back to its containers.
 ```mtron
 mtron> dckrspace::T
 mtron> !*dckrspace?docq
-==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?dckrspace<=#{?}(dckrspace::T){<j>}]@/m/dckr/space/dckrspace,
+==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?dckrspace<=(dckrspace::T){<j>}]@/m/dckr/space/dckrspace,
           desc=>'[structural] a docker daemon space',
           example=>['docker:compose/my-stack -> [servic...',
                     '*docker:container/+',
@@ -410,11 +410,11 @@ mtron> *mydb:people/+/name                                      [-- all names   
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
 ==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]
-==>explanation::[format=>!inst?str<=#{?}(){<j>},
+==>explanation::[format=>!inst?str<=(){<j>},
                  desc=>[rng=><#>,
                         insts=>2,
                         rewrite=>explanation::[
-                         format=>!inst?str<=#{?}(){<j>},
+                         format=>!inst?str<=(){<j>},
                          desc=>[rng=><#>,insts=>3],
                          per_inst=>[[op=>from,
                                      args=>[mydb:people/+],
@@ -452,11 +452,11 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
 mtron> *mydb:people/+.count()                                   [-- number of rows        --]
 ==>3
 mtron> *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==>explanation::[format=>!inst?str<=#{?}(){<j>},
+==>explanation::[format=>!inst?str<=(){<j>},
                  desc=>[rng=>int,
                         insts=>1,
                         rewrite=>explanation::[
-                         format=>!inst?str<=#{?}(){<j>},
+                         format=>!inst?str<=(){<j>},
                          desc=>[rng=>int,insts=>2],
                          per_inst=>[[op=>from,
                                      args=>[mydb:people/+],
