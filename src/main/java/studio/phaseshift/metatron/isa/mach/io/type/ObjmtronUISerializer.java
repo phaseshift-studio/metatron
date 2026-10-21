@@ -492,11 +492,18 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         }
         final fURI tid = inst.tid();
         sb.append(tid.basePath().small());
-        // the typing pair — rng<=dom — is drawn only when the tid actually refines its typing;
-        // the other q params are drawn whenever they are there, and then they carry the '?'
+        // the typing pair — rng<=dom — is written around its defaults.  The syntax lets either side
+        // stand empty (xyz?A<=(), xyz?<=A()) and an empty side means the default typing, so a side
+        // that IS the default is left empty rather than spelled out: writing #{*} or #{?} there
+        // says nothing a reader needs AND re-reading it types the instruction explicitly.  A pair
+        // default on both sides is not written at all — xyz?<=() reads xyz(), which is what the tid
+        // of an untyped instruction carries, so plus(1,2) reads plus(1,2).  The other q params are
+        // drawn whenever they are there, and take the '?' when the pair is absent.
         final StringBuilder params = new StringBuilder();
-        if (typingSpecified(tid))
-            params.append(tid.rng().small()).append("<=").append(tid.dom().small());
+        final String rng = defaultRng(tid) ? "" : tid.rng().small().toString();
+        final String dom = defaultDom(tid) ? "" : tid.dom().small().toString();
+        if (!rng.isEmpty() || !dom.isEmpty())
+            params.append(rng).append("<=").append(dom);
         tid.qMap().forEach((key, value) -> {
             if (!key.equals(Tokens.RNG) && !key.equals(Tokens.DOM)) {
                 if (params.length() > 0)
@@ -523,19 +530,21 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     /**
-     * Whether an instruction's typing pair — its {@code rng<=dom} — is worth drawing.  A tid that
-     * carries neither has nothing to draw: the pair's defaults are {@code #} (all, one), so every
-     * plain call used to render its absence as {@code plus?#<=#(1,2)}.  A tid that carries the
-     * {@code #{*}<=#{?}} pair — all, maybe-some to all, maybe — is drawn as nothing too: that is
-     * the typing an instruction is given when no typing is specified, so it states nothing a
-     * reader does not already know ({@code inst?#{*}<=#{?}(#{*}::T)} reads {@code inst(#{*}::T)}).
-     * Every other pair is a real refinement and stays.  Other q params are not affected — they are
-     * drawn whenever they exist, with or without the pair.
+     * Whether a tid's rng side is the default typing — {@code #{*}} ({@code all.maybeSome()}) — or
+     * is not there at all.  The two are the same statement: an instruction's syntax leaves a
+     * default side empty ({@code xyz?A<=()}), so an absent side and an explicit {@code #{*}} both
+     * draw as nothing.
      */
-    private static boolean typingSpecified(final fURI tid) {
-        if (!tid.hasDom() && !tid.hasRng())
-            return false;
-        return !(tid.dom().equals(ALL.maybe()) && tid.rng().equals(ALL.maybeSome()));
+    private static boolean defaultRng(final fURI tid) {
+        return !tid.hasRng() || tid.rng().equals(ALL.maybeSome());
+    }
+
+    /**
+     * Whether a tid's dom side is the default typing — {@code #{?}} ({@code all.maybe()}) — or is
+     * not there at all ({@code xyz?<=A()}).  See {@link #defaultRng(fURI)}.
+     */
+    private static boolean defaultDom(final fURI tid) {
+        return !tid.hasDom() || tid.dom().equals(ALL.maybe());
     }
 
     /**

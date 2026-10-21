@@ -481,8 +481,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
 ==&gt;docs::[obj=&gt;bash?lst[str]&lt;=#{?}(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
-          args=&gt;[{?}timeout=&gt;'a real number denoting timeout of ...',
-                 cmd=&gt;'the terminal command to evaluate (...'],
+          args=&gt;[cmd=&gt;'the terminal command to evaluate (...',
+                 {?}timeout=&gt;'a real number denoting timeout of ...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -499,17 +499,17 @@ mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.8M  6.1G  ...',
+    'tmpfs           6.1G  6.9M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
     '/dev/nvme0n1p2  916G  541G  329G  ...',
-    'tmpfs            31G  149M   31G  ...',
+    'tmpfs            31G  172M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/486
+==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/477
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
 ==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
@@ -517,7 +517,7 @@ mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stder
     (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/sys/fail/487
+    [ProcBuilder&lt;228&gt;]]@/sys/fail/478
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
@@ -627,9 +627,9 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/492
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/483
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/493
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/484
 </code></pre>
 <p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:</p>
@@ -654,9 +654,9 @@ mtron&gt; */sys/thread/+.count()
 ==&gt;1
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::696.0,
-    free_mem_jvm=&gt;mB::323.5546,
+    free_mem_jvm=&gt;mB::295.3151,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::372.4453,
+    used_mem_jvm=&gt;mB::400.6848,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[run=&gt;0,stop=&gt;0]]
@@ -714,9 +714,9 @@ is doing — the sugar is short precisely because it is legible once:</p>
 ==&gt;fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=text/markdown&gt; ...
                  ^
-     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/494
+     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/485
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
-==&gt;start?#&lt;=#([space=&gt;/sys/space,
+==&gt;start([space=&gt;/sys/space,
      web=&gt;[http/host=&gt;http://localhost:8777,
            ws/host=&gt;ws://localhost:8555],
      typer/stage=&gt;[inst_dom=&gt;true,
@@ -725,11 +725,11 @@ is doing — the sugar is short precisely because it is legible once:</p>
                    obj_write=&gt;true,
                    code_resolve=&gt;false],
      header=&gt;&quot;&quot;&quot;
-                    _,.---._      _,...&quot;&quot;&quot;]).print?#&lt;=#('------------
+                    _,.---._      _,...&quot;&quot;&quot;]).print('------------
    *boot...',*boot/args,'
    ------------
-   ').end?#&lt;=#().print?#&lt;=#('mounting instruction sets
-   {{...').end?#&lt;=#().import?#&lt;=#(/m/mach/io).end?#&lt;=#().start?#&lt;=#(memspace::[pattern=&gt;/usr/#,
+   ').end().print('mounting instruction sets
+   {{...').end().import(/m/mach/io).end().start(memspace::[pattern=&gt;/usr/#,
               q=&gt;[typeq::[pattern=&gt;&lt;T&gt;,
    ...
 </code></pre>

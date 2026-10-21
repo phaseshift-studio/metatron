@@ -88,22 +88,22 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
                                        mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==>[root=>mfs:src/test/resources/scratch,
-    src=>[Operation=>inst?#{*}<=#{?}(){<j>},
-          Echo=>inst?#{*}<=#{?}(){<j>},
-          Calculator=>inst?#{*}<=#{?}(){<j>},
-          EchoTest=>inst?#{*}<=#{?}(){<j>}],
+    src=>[Operation=>inst(){<j>},
+          Echo=>inst(){<j>},
+          Calculator=>inst(){<j>},
+          EchoTest=>inst(){<j>}],
     code=>[,],
     idx=>[=>],
-    command=>[read_file=>/dev/scratch/command/read_file?#<=#(file=>uri::T,min=>isa(int::T).else(0),max=>isa(int::T).else(9223372036854775807)){*file.split("""
+    command=>[read_file=>/dev/scratch/command/read_file(file=>uri::T,min=>isa(int::T).else(0),max=>isa(int::T).else(9223372036854775807)){*file.split("""
    """).as(rec::T).select([is(gte(*min))=>id()]).select([is(lt(*max))=>id()])},
-              mvn_build=>!ide:command?#<=#('mvn -f src/test/resources/scratch ...'),
-              mvn_clean=>!ide:command?#<=#('mvn -f src/test/resources/scratch ...'),
-              mvn_exec=>!ide:command?#<=#('mvn -f src/test/resources/scratch ...')]]
+              mvn_build=>!ide:command('mvn -f src/test/resources/scratch ...'),
+              mvn_clean=>!ide:command('mvn -f src/test/resources/scratch ...'),
+              mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>millis::745.0,
+            runtime=>millis::742.0,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/7e77f83a]
+            output=>!*/sys/tmp/98c232df]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -371,8 +371,8 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
                                     [op=>update,
                                      dom=><#>,
                                      rng=><#>,
-                                     args=>[[body=>split?#<=#('
-   ').as?#<=#(rec::T).update?#<=#([is?#<=#(gt?#<=#(2)).is?#<=#(lt?#<=#(4))=>'return "marko";']).rshift?#<=#().merge?str<=str{*}('
+                                     args=>[[body=>split('
+   ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?str<=str{*}('
    ')]],
                                      form=>mapper,
                                      c_dom=>1,
@@ -386,8 +386,8 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
                             [op=>update,
                              dom=><#>,
                              rng=><#>,
-                             args=>[[body=>split?#<=#('
-   ').as?#<=#(rec::T).update?#<=#([is?#<=#(gt?#<=#(2)).is?#<=#(lt?#<=#(4))=>'return "marko";']).rshift?#<=#().merge?str<=str{*}('
+                             args=>[[body=>split('
+   ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?str<=str{*}('
    ')]],
                              form=>mapper,
                              c_dom=>1,

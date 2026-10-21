@@ -517,22 +517,22 @@ maven build commands are attached to the <code>project::T</code> for each of acc
                                        mvn_clean =&gt; !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  =&gt; !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==&gt;[root=&gt;mfs:src/test/resources/scratch,
-    src=&gt;[Operation=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-          Echo=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-          Calculator=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-          EchoTest=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;}],
+    src=&gt;[Operation=&gt;inst(){&lt;j&gt;},
+          Echo=&gt;inst(){&lt;j&gt;},
+          Calculator=&gt;inst(){&lt;j&gt;},
+          EchoTest=&gt;inst(){&lt;j&gt;}],
     code=&gt;[,],
     idx=&gt;[=&gt;],
-    command=&gt;[read_file=&gt;/dev/scratch/command/read_file?#&lt;=#(file=&gt;uri::T,min=&gt;isa(int::T).else(0),max=&gt;isa(int::T).else(9223372036854775807)){*file.split(&quot;&quot;&quot;
+    command=&gt;[read_file=&gt;/dev/scratch/command/read_file(file=&gt;uri::T,min=&gt;isa(int::T).else(0),max=&gt;isa(int::T).else(9223372036854775807)){*file.split(&quot;&quot;&quot;
    &quot;&quot;&quot;).as(rec::T).select([is(gte(*min))=&gt;id()]).select([is(lt(*max))=&gt;id()])},
-              mvn_build=&gt;!ide:command?#&lt;=#('mvn -f src/test/resources/scratch ...'),
-              mvn_clean=&gt;!ide:command?#&lt;=#('mvn -f src/test/resources/scratch ...'),
-              mvn_exec=&gt;!ide:command?#&lt;=#('mvn -f src/test/resources/scratch ...')]]
+              mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
+              mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
+              mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::745.0,
+            runtime=&gt;millis::742.0,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/7e77f83a]
+            output=&gt;!*/sys/tmp/98c232df]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -779,8 +779,8 @@ with it, then save (<code>code/N.to</code>).</p>
                                     [op=&gt;update,
                                      dom=&gt;&lt;#&gt;,
                                      rng=&gt;&lt;#&gt;,
-                                     args=&gt;[[body=&gt;split?#&lt;=#('
-   ').as?#&lt;=#(rec::T).update?#&lt;=#([is?#&lt;=#(gt?#&lt;=#(2)).is?#&lt;=#(lt?#&lt;=#(4))=&gt;'return &quot;marko&quot;;']).rshift?#&lt;=#().merge?str&lt;=str{*}('
+                                     args=&gt;[[body=&gt;split('
+   ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?str&lt;=str{*}('
    ')]],
                                      form=&gt;mapper,
                                      c_dom=&gt;1,
@@ -794,8 +794,8 @@ with it, then save (<code>code/N.to</code>).</p>
                             [op=&gt;update,
                              dom=&gt;&lt;#&gt;,
                              rng=&gt;&lt;#&gt;,
-                             args=&gt;[[body=&gt;split?#&lt;=#('
-   ').as?#&lt;=#(rec::T).update?#&lt;=#([is?#&lt;=#(gt?#&lt;=#(2)).is?#&lt;=#(lt?#&lt;=#(4))=&gt;'return &quot;marko&quot;;']).rshift?#&lt;=#().merge?str&lt;=str{*}('
+                             args=&gt;[[body=&gt;split('
+   ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?str&lt;=str{*}('
    ')]],
                              form=&gt;mapper,
                              c_dom=&gt;1,

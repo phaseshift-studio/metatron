@@ -295,8 +295,8 @@ The instset prints that list itself, and each rewrite documents its own before/a
 mtron> */m/tble?docq
 ==>docs::[obj=>instset::[pattern=>/m/tble/#,
                          q=>[docq::[pattern=>docq,
-                                    pre_read=>inst?#{*}<=#{?}(uri::T){<j>},
-                                    pre_write=>inst?#{*}<=#{?}(uri::T,#::T){<j>},
+                                    pre_read=>inst(uri::T){<j>},
+                                    pre_write=>inst(uri::T,#::T){<j>},
                                     obj=>memspace::[pattern=><#>],
                                     inst=>instset::[pattern=><#>]]],
                          const=>[[llm_chat_schema=>inst?#{*}<=#{*}(){<j>}]@/m/tble/helper],
@@ -363,7 +363,7 @@ mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types ar
 ==>/sys/space/tbledoc/instset/#
 mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-    recipient=>isa?#<=#(person/+/id).!*id?#<=#(),
+    recipient=>isa(person/+/id).!*id(),
     uri::T=><#>::T]]@/sys/space/tbledoc/instset/award
 ==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T,uri::T=><#>::T]]@/sys/space/tbledoc/instset/note
 ==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
@@ -426,21 +426,23 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/11
+==>[body=>'a note with a database-assigned key']@tbledoc:note/13
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/12
+==>[body=>'another one']@tbledoc:note/14
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>1
 ==>12
-==>3
-==>10
 ==>11
 ==>2
 ==>4
-==>5
 ==>6
-==>7
 ==>8
+==>1
+==>13
+==>3
+==>10
+==>14
+==>5
+==>7
 ==>9
 ```
 ## taking the space down
@@ -461,7 +463,7 @@ mtron> *tbledoc:person/+.count()                   [-- 0: a fresh mount has not 
 ==>5
 mtron> */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
 ==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-    recipient=>isa?#<=#(person/+/id).!*id?#<=#()]]@/sys/space/tbledoc/instset/award
+    recipient=>isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
 ==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T]]@/sys/space/tbledoc/instset/note
 ==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
     {?}age=>int::T,

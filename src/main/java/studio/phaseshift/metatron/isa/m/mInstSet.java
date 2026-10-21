@@ -195,6 +195,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI REIFY_INST_TID = M_ISA_INST_TID.extend("reify");
     public static final fURI UNION_INST_TID = M_ISA_INST_TID.extend("union");
     public static final fURI SELECT_INST_TID = M_ISA_INST_TID.extend("select");
+    public static final fURI CASCADE_INST_TID = M_ISA_INST_TID.extend("cascade");
     public static final fURI REMOVE_INST_TID = M_ISA_INST_TID.extend("remove");
     public static final fURI UPDATE_INST_TID = M_ISA_INST_TID.extend("update");
     public static final fURI WHERE_INST_TID = M_ISA_INST_TID.extend("where");
@@ -1279,8 +1280,9 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix("_", List.of(ID_INST_TID), 0),
                 Sugar.prefix("* ", List.of(MULT_INST_TID), 1),
                 Sugar.prefix("*", List.of(FROM_INST_TID), 1),
-                Sugar.prefix(">|", List.of(BARRIER_INST_TID), 1),
-                Sugar.prefix(">|", List.of(BARRIER_INST_TID), 0),
+                Sugar.prefix(">|", List.of(CASCADE_INST_TID), 1),
+                Sugar.prefix(">|", List.of(CASCADE_INST_TID), 0),
+                // Sugar.prefix(">|", List.of(BARRIER_INST_TID), 0),
                 Sugar.prefix(">-", List.of(MERGE_INST_TID), 1),
                 Sugar.prefix(">-", List.of(MERGE_INST_TID), 0),
                 Sugar.prefix("-<|", List.of(CHOOSE_INST_TID), 1),

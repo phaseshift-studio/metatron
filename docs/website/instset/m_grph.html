@@ -463,8 +463,8 @@ from vertex to vertex, the edge of the metatron is traversed</p>
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/grph/#,
           q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
+                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
           constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],

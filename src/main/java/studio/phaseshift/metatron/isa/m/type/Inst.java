@@ -831,7 +831,7 @@ public interface Inst extends Call {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(ARGS_INST_TID.dom(M_ISA_INST_TID).rng(LST_TID), lst(), (lhs, inst) -> inst.args()),
-                    instC(AS_INST_TID.dom(INST_TID).rng(CODE_TID), lst(CODE_TYPE), (lhs, inst) -> code(List.of(lhs.asInst())))));
+                    instC(AS_INST_TID.dom(INST_TID).rng(CODE_TID), lst(CODE_TYPE), (lhs, _) -> code(List.of(lhs.asInst())))));
             //instC(LSHIFT_INST_TID.dom(INST_TID).rng(ALL), lst(), (lhs, inst) -> lhs.dom()),
                     /*instC(RSHIFT_INST_TID.dom(INST_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(u ->
                             rec(uri(ARGS), lhs.asInst().args(),

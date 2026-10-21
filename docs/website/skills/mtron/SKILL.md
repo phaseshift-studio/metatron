@@ -86,7 +86,7 @@ mtron> */a/x
 ==>1
 mtron> */a/b
 ==>[q=>r,
-    c=>plus?#<=#(2),
+    c=>plus(2),
     d=>[e=>[1.0,0xa5,true]]]
 mtron> */a/b/c
 mtron> */a/b/d
