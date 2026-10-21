@@ -386,6 +386,7 @@ public final class Tokens {
     public static final String ORBIT = "orbit";
     public static final String LAW = "law";
     public static final String INVERSE = "inverse";
+    public static final String COMBINER = "combiner";
     public static final String DERIVATION = "derivation";
     public static final String FROM = "from";
     public static final String PROB = "prob";

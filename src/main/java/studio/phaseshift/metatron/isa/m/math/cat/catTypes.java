@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
@@ -119,6 +120,11 @@ public class catTypes {
                                         analysis.put(uri(POSITION), instLambda(inst.tid(), ALL, o2 -> catGraph.position(inst)).tryToInst());
                                         if (null != entry && null != entry.inverse())
                                             analysis.put(uri(INVERSE), uri(entry.inverse()));
+                                        // the edge the partials recombine through -- computed off the laws and the
+                                        // derivation, never declared (LawTable.combiner); a reducer without one has none
+                                        final fURI combiner = LawTable.combinerOf(inst);
+                                        if (null != combiner)
+                                            analysis.put(uri(COMBINER), uri(combiner));
                                         return rec(analysis);
                                     })).tryToInst());
                                     block.putAll(objInstRec.jvm());
@@ -137,6 +143,7 @@ public class catTypes {
                                 uri("analysis/orbit").maybe(), "the reversible-core component of the morphism's dom: \\(\\mathrm{orbit}(f) = \\{X : \\mathrm{dom}(f) \\sim^{*} X\\}\\)",
                                 uri("analysis/family").maybe(), "the same-name siblings: \\(\\mathrm{family}(f) = \\{g : \\mathrm{op}(g) = \\mathrm{op}(f)\\}\\)",
                                 uri("analysis/inverse").maybe(), "the opposing edge \\(f^{-1}\\) with \\(f \\cdot f^{-1} = 1\\)",
+                                uri("analysis/combiner").maybe(), "the fold the partials of a reducer recombine through, computed from its laws and derivation: \\((a \\uplus b) \\cdot r = (a \\cdot r \\uplus b \\cdot r) \\cdot \\mathrm{combiner}(r)\\)",
                                 uri(LAW), "the declared process laws \\(\\mathcal{L}\\) the morphism obeys, e.g. \\(\\mathrm{commutative}: f(x,y) = f(y,x)\\)",
                                 uri(CLASS), "the set-theoretic class of the morphism: \\(\\mathrm{class}(f) \\subseteq \\{\\mathrm{endo}, \\mathrm{iso}, \\mathrm{auto}, \\mathrm{mono}, \\mathrm{epi}, \\mathrm{section}, \\mathrm{retraction}\\}\\)",
                                 uri(DERIVATION), "the declared derivation of the morphism: \\(\\mathrm{lhs}\\) the derived instruction and \\(\\mathrm{rhs}\\) its primitive composition, e.g. \\(a / b \\mapsto a \\cdot b^{-1}\\)"),
