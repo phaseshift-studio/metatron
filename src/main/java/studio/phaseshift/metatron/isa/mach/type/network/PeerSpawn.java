@@ -55,7 +55,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /**
  * The process half of {@code push(<uri>)}: when the pushed address carries an authority that is still on this
  * physical machine, the peer mtron instance that answers it is a real OS process — forked here, declared in the
- * {@code /sys/peer} roster, and reaped when the frame that pushed it is popped.
+ * {@code /network/roster} roster, and reaped when the frame that pushed it is popped.
  * <p>
  * This is the production form of the test harness's {@code PeerCluster}/{@code PeerNode} pair. The invariants it
  * keeps are the ones that make an authority-routed read a real distributed act:
@@ -147,10 +147,11 @@ public final class PeerSpawn {
     public static void reap(final Machine machine) {
         if (null == machine)
             return;
-        // A LOCAL CHILD SHARES ITS PARENT'S NETWORK SLOT (there is no NetworkUnion yet), so its connections ARE the
-        // parent's — reaping those would destroy a connection the child never made. Compare the SLOTS, not the
-        // resolved components: a frame read back from memory may carry a plain rec, and a slot it owns is still its
-        // own. The guard disappears with the union, which gives every frame its own level over the inherited one.
+        // A machine whose network SLOT is its parent's shares the parent's reach — reaping those would destroy a
+        // connection the child never made. A pushed machine gets its own NetworkUnion level (Machine.push), so this
+        // covers the machines that do not: one read back from memory carrying a plain rec, or a frame built before
+        // the union is installed. Compare the SLOTS, not the resolved components: a slot the machine owns is its own
+        // even when the rec in it is plain.
         final Obj network = machine.atDirect(uri(NETWORK));
         final Obj parent = machine.parent();
         if (parent instanceof Machine parentMachine && network == parentMachine.atDirect(uri(NETWORK)))
