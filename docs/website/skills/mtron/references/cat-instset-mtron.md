@@ -59,8 +59,8 @@ mtron> int::T.as(object::T)
                        mult_monoid=>monoid_theory::[
                         op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
                         id=>1]],
-                 morphed_to=>!inst?#{*}<=#{?}(){<j>},
-                 morphed_from=>!inst?#{*}<=#{?}(){<j>}]
+                 morphed_to=>!inst(){<j>},
+                 morphed_from=>!inst(){<j>}]
 ```
 ### the object fields
 
@@ -75,20 +75,20 @@ mtron> int::T.as(object::T)
 mtron> int::T.as(object::T).morphed_to()
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
-              trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+              src=>!inst(#{*}::T){<j>},
+              trgt=>!inst(#{*}::T){<j>},
               analysis=>!inst?#<=#(#{*}::T){<j>},
               obj=>as?bool<=int(bool::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
-              trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+              src=>!inst(#{*}::T){<j>},
+              trgt=>!inst(#{*}::T){<j>},
               analysis=>!inst?#<=#(#{*}::T){<j>},
               obj=>as?bytes<=int(bytes::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
-              trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+              src=>!inst(#{*}::T){<j>},
+              trgt=>!inst(#{*}::T){<j>},
               analysis=>!inst?#<=#(#{*}::T){<j>},
               obj=>as?real<=int(real::T){<j>}]
 ==>morphism::[name=>as,
@@ -123,8 +123,8 @@ mtron> |plus?int<=int(int::T).as(morphism::T)
     name=>plus,
     form=>mapper,
     class=>[endo],
-    src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
-    trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+    src=>!inst(#{*}::T){<j>},
+    trgt=>!inst(#{*}::T){<j>},
     analysis=>!inst?#<=#(#{*}::T){<j>},
     obj=>plus?int<=int(int::T),
     ...(1 more)]
@@ -487,7 +487,7 @@ three steps below are the same vertex after each application — the path shrink
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==>[path::[obj=>start?#<=#(5).plus?#<=#(0).neg?#<=#().neg?#<=#(),
+==>[path::[obj=>start(5).plus(0).neg().neg(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
@@ -504,7 +504,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
                                           cut=>[role=>derivation],
                                           route=>[[target=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]
-==>[path::[obj=>start?#<=#(5).plus?#<=#(0),
+==>[path::[obj=>start(5).plus(0),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
@@ -518,7 +518,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involu
                                           cut=>[role=>derivation],
                                           route=>[[target=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
-==>[path::[obj=>start?#<=#(5),
+==>[path::[obj=>start(5),
            branch_collapse=>plan::[name=>branch_collapse,
                                    cut=>[role=>add],
                                    route=>[[target=>local,span=>[[span=>at]]]]],
@@ -551,18 +551,18 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
 ==>[abstraction::[obj=>[morphism[start]::[name=>start,
                                           form=>mapper,
                                           class=>[endo],
-                                          src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
-                                          trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+                                          src=>!inst(#{*}::T){<j>},
+                                          trgt=>!inst(#{*}::T){<j>},
                                           analysis=>!inst?#<=#(#{*}::T){<j>},
-                                          obj=>start?#<=#(5)],
+                                          obj=>start(5)],
                         morphism[plus?rng=int&dom=int]::[
                          name=>plus,
                          form=>mapper,
                          class=>[endo],
-                         src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
-                         trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+                         src=>!inst(#{*}::T){<j>},
+                         trgt=>!inst(#{*}::T){<j>},
                          analysis=>!inst?#<=#(#{*}::T){<j>},
-                         obj=>plus?#<=#(0),
+                         obj=>plus(0),
                          ...(1 more)],
                         morphism[neg?rng=int&dom=int]::[
                          name=>neg,
@@ -574,10 +574,10 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
                                  retraction,
                                  mono,
                                  epi],
-                         src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
-                         trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+                         src=>!inst(#{*}::T){<j>},
+                         trgt=>!inst(#{*}::T){<j>},
                          analysis=>!inst?#<=#(#{*}::T){<j>},
-                         obj=>neg?#<=#(),
+                         obj=>neg(),
                          ...(1 more)],
                         morphism[neg?rng=int&dom=int]::[
                          name=>neg,
@@ -617,28 +617,28 @@ self-registers a `peer::T` into the network; that registration is the condition 
 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>[host=>ws://localhost:8555/mtron,
-    send=>inst?#{*}<=#{?}(){<j>},
-    send_recv=>inst?#{*}<=#{?}(){<j>},
-    close=>inst?#{*}<=#{?}(){<j>},
-    on_message=>print?#<=#('received ${_}')]
+==>ws_client::[host=>ws://localhost:8555/mtron,
+               send=>inst(){<j>},
+               send_recv=>inst(){<j>},
+               close=>inst(){<j>},
+               on_message=>print('received ${_}')]
 mtron> */network
 ==>network::[host=>booger,
-             status=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+             status=>!inst(#{*}::T){<j>},
              q=>[subq::[pattern=>subq,
-                        pre_read=>inst?#{*}<=#{?}(uri::T){<j>},
-                        pre_write=>inst?#{*}<=#{?}(uri::T,#::T){<j>},
-                        qless_write=>inst?#{*}<=#{?}(uri::T,#::T){<j>},
+                        pre_read=>inst(uri::T){<j>},
+                        pre_write=>inst(uri::T,#::T){<j>},
+                        qless_write=>inst(uri::T,#::T){<j>},
                         obj=>[,]]],
              peer=>[ws://localhost:8555=>peer::[
               authority=>ws://localhost:8555,
               host=>ws://localhost:8555/mtron,
-              transport=>inst?#{*}<=#{?}(#{*}::T){<j>},
-              client=>[host=>ws://localhost:8555/mtron,
-                       send=>inst?#{*}<=#{?}(){<j>},
-                       send_recv=>inst?#{*}<=#{?}(){<j>},
-                       close=>inst?#{*}<=#{?}(){<j>},
-                       on_message=>print?#<=#('received ${_}')]]]]
+              transport=>inst(#{*}::T){<j>},
+              client=>ws_client::[host=>ws://localhost:8555/mtron,
+                                  send=>inst(){<j>},
+                                  send_recv=>inst(){<j>},
+                                  close=>inst(){<j>},
+                                  on_message=>print('received ${_}')]]]]
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
 `machine::T`
@@ -646,7 +646,7 @@ now holding that `peer::T`, the `path::T` lists the distribution plan among its 
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==>[path::[obj=>start?#<=#({1,2,3,4,5}).plus?#<=#(10).sum?#<=#(),
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
@@ -681,7 +681,7 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start?#<=#([start?#<=#&hops=0({1,2,3,4,5}).plus?#<=#(10).sum?#<=#()]).select?#<=#([to?#<=#(ws://localhost:8555)]).merge?#<=#().sum?#<=#(),
+==>[path::[obj=>start([start?hops=0({1,2,3,4,5}).plus(10).sum()]).select([to(ws://localhost:8555)]).merge().sum(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
@@ -700,7 +700,7 @@ A keyed fold lowers the same way, its master recombining pointwise: `merge().sum
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start?#<=#([start?#<=#&hops=0({1,2,3,4,5,6}).group?#<=#([mod?#<=#(3)=>sum?#<=#()])]).select?#<=#([to?#<=#(ws://localhost:8555)]).merge?#<=#().sum?#<=#().select?#<=#([id?#<=#()=>sum?#<=#()]),
+==>[path::[obj=>start([start?hops=0({1,2,3,4,5,6}).group([mod(3)=>sum()])]).select([to(ws://localhost:8555)]).merge().sum().select([id()=>sum()]),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],

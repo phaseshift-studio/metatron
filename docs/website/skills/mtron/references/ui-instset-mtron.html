@@ -516,8 +516,8 @@ the same declarations the type checker uses:</p>
           accordion_widget=&gt;docs::[obj=&gt;widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?accordion_widget&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/accordion_widget,
                                    dom=&gt;'maybe an obj',
                                    rng=&gt;'an accordion obj',
-                                   args=&gt;[{?}title=&gt;'the title of the accordion',
-                                          {?}body=&gt;'the body content of the accordion'],
+                                   args=&gt;[{?}body=&gt;'the body content of the accordion',
+                                          {?}title=&gt;'the title of the accordion'],
                                    desc=&gt;'[structural] an expandable/collaps...'],
           progress_table_widget=&gt;docs::[obj=&gt;widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/progress_table_widget,
                                         desc=&gt;'[structural] a table of progress b...',
@@ -527,9 +527,9 @@ the same declarations the type checker uses:</p>
       {?}metadata=&gt;lst::T]][ctor?table_widget&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/table_widget,
                                dom=&gt;'maybe an obj',
                                rng=&gt;'a table widget',
-                               args=&gt;[{?}metadata=&gt;'a lst of rows of data behind the d...',
-                                      {?}header=&gt;'a lst of obj table headers',
-                                      {?}row=&gt;'a lst of poly table rows'],
+                               args=&gt;[{?}header=&gt;'a lst of obj table headers',
+                                      {?}row=&gt;'a lst of poly table rows',
+                                      {?}metadata=&gt;'a lst of rows of data behind the d...'],
                                desc=&gt;'[structural] a tabular data widget'],
           tree_widget=&gt;docs::[obj=&gt;widget::T[?[root=&gt;uri::T,
       max=&gt;int::T,
@@ -539,12 +539,12 @@ the same declarations the type checker uses:</p>
       {?}expand=&gt;uri::T]][ctor?tree_widget&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/tree_widget,
                               dom=&gt;'maybe an obj',
                               rng=&gt;'a tree widget',
-                              args=&gt;[{?}code=&gt;'transform obj prior to insertion i...',
-                                     {?}expand=&gt;'branch uris whose children are rea...',
-                                     {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
-                                     max=&gt;'the max depth to traverse',
+                              args=&gt;[max=&gt;'the max depth to traverse',
                                      {?}flatten=&gt;'fold single-folder chains into one...',
-                                     root=&gt;'the root uri to traverse from'],
+                                     root=&gt;'the root uri to traverse from',
+                                     {?}code=&gt;'transform obj prior to insertion i...',
+                                     {?}expand=&gt;'branch uris whose children are rea...',
+                                     {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...'],
                               desc=&gt;'[structural] the root uri space is...'],
           ...(11 more)]
 </code></pre>
@@ -760,10 +760,10 @@ mtron&gt; board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anch
      [grid=&gt;(==&gt;{?}grid)=&gt;[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=&gt;==&gt;lst::T,
       noobj=&gt;(==&gt;{?}title)=&gt;noobj=&gt;/=&gt;str::T,
       style=&gt;(/=&gt;{?}style)=&gt;[anchor=&gt;top_right,border=&gt;continuous]=&gt;X=&gt;style::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]@/sys/fail/525
-   	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]@/sys/fail/526
+     predicate apply failed on execution (at /m/inst/ctor)]@/sys/fail/516
+   	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]@/sys/fail/517
 mtron&gt; @/usr/uidoc/board.display()             [-- pin it once --]
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T)]@style]]@widget [display?rng=noobj{0}&amp;dom=widget()@&lt;1&gt;]]@/sys/fail/527
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T)]@style]]@widget [display?rng=noobj{0}&amp;dom=widget()@&lt;1&gt;]]@/sys/fail/518
 mtron&gt; @/usr/uidoc/g10/1/0 &gt;&gt;= '@'             [-- one cell of the REFERENT --]
 ==&gt;'@'
 mtron&gt; @/usr/uidoc/g10/+/0 &gt;&gt;= ''             [-- every row's column 0 --]

@@ -479,8 +479,8 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
                        mult_monoid=&gt;monoid_theory::[
                         op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                         id=&gt;1]],
-                 morphed_to=&gt;!inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-                 morphed_from=&gt;!inst?#{*}&lt;=#{?}(){&lt;j&gt;}]
+                 morphed_to=&gt;!inst(){&lt;j&gt;},
+                 morphed_from=&gt;!inst(){&lt;j&gt;}]
 </code></pre>
 <h4>the object fields</h4>
 <table>
@@ -497,20 +497,20 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T).morphed_to()
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-              trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+              src=&gt;!inst(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?bool&lt;=int(bool::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-              trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+              src=&gt;!inst(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?bytes&lt;=int(bytes::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-              trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+              src=&gt;!inst(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?real&lt;=int(real::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
@@ -545,8 +545,8 @@ group/monoid instances. <code>theory::T</code> is the nominal super-type groupin
     name=&gt;plus,
     form=&gt;mapper,
     class=&gt;[endo],
-    src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-    trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+    src=&gt;!inst(#{*}::T){&lt;j&gt;},
+    trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
     analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
     obj=&gt;plus?int&lt;=int(int::T),
     ...(1 more)]
@@ -897,7 +897,7 @@ The <code>==</code> between segments is a structural <code>select</code> — eac
 previous segment's result, so a descent <code>[seed] == [lift] == [lower₁] == [lower₂]</code> reads as a chain of witnesses. The
 three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start?#&lt;=#(5).plus?#&lt;=#(0).neg?#&lt;=#().neg?#&lt;=#(),
+==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -914,7 +914,7 @@ three steps below are the same vertex after each application — the path shrink
                                           cut=&gt;[role=&gt;derivation],
                                           route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]
-==&gt;[path::[obj=&gt;start?#&lt;=#(5).plus?#&lt;=#(0),
+==&gt;[path::[obj=&gt;start(5).plus(0),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -928,7 +928,7 @@ mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theo
                                           cut=&gt;[role=&gt;derivation],
                                           route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]==[lower(&gt;&gt;theory_unit_removal)]
-==&gt;[path::[obj=&gt;start?#&lt;=#(5),
+==&gt;[path::[obj=&gt;start(5),
            branch_collapse=&gt;plan::[name=&gt;branch_collapse,
                                    cut=&gt;[role=&gt;add],
                                    route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
@@ -961,18 +961,18 @@ and computes its cut/span/route without consulting the code below; the descent (
 ==&gt;[abstraction::[obj=&gt;[morphism[start]::[name=&gt;start,
                                           form=&gt;mapper,
                                           class=&gt;[endo],
-                                          src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-                                          trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+                                          src=&gt;!inst(#{*}::T){&lt;j&gt;},
+                                          trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
                                           analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
-                                          obj=&gt;start?#&lt;=#(5)],
+                                          obj=&gt;start(5)],
                         morphism[plus?rng=int&amp;dom=int]::[
                          name=&gt;plus,
                          form=&gt;mapper,
                          class=&gt;[endo],
-                         src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-                         trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+                         src=&gt;!inst(#{*}::T){&lt;j&gt;},
+                         trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
                          analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
-                         obj=&gt;plus?#&lt;=#(0),
+                         obj=&gt;plus(0),
                          ...(1 more)],
                         morphism[neg?rng=int&amp;dom=int]::[
                          name=&gt;neg,
@@ -984,10 +984,10 @@ and computes its cut/span/route without consulting the code below; the descent (
                                  retraction,
                                  mono,
                                  epi],
-                         src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-                         trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+                         src=&gt;!inst(#{*}::T){&lt;j&gt;},
+                         trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
                          analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
-                         obj=&gt;neg?#&lt;=#(),
+                         obj=&gt;neg(),
                          ...(1 more)],
                         morphism[neg?rng=int&amp;dom=int]::[
                          name=&gt;neg,
@@ -1024,34 +1024,34 @@ and re-lifts the result to <code>path::T</code>. The plan carries no <code>resul
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;[host=&gt;ws://localhost:8555/mtron,
-    send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-    send_recv=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-    close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-    on_message=&gt;print?#&lt;=#('received ${_}')]
+==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
+               send=&gt;inst(){&lt;j&gt;},
+               send_recv=&gt;inst(){&lt;j&gt;},
+               close=&gt;inst(){&lt;j&gt;},
+               on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 ==&gt;network::[host=&gt;booger,
-             status=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+             status=&gt;!inst(#{*}::T){&lt;j&gt;},
              q=&gt;[subq::[pattern=&gt;subq,
-                        pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-                        pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-                        qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+                        pre_read=&gt;inst(uri::T){&lt;j&gt;},
+                        pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+                        qless_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                         obj=&gt;[,]]],
              peer=&gt;[ws://localhost:8555=&gt;peer::[
               authority=&gt;ws://localhost:8555,
               host=&gt;ws://localhost:8555/mtron,
-              transport=&gt;inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
-              client=&gt;[host=&gt;ws://localhost:8555/mtron,
-                       send=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-                       send_recv=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-                       close=&gt;inst?#{*}&lt;=#{?}(){&lt;j&gt;},
-                       on_message=&gt;print?#&lt;=#('received ${_}')]]]]
+              transport=&gt;inst(#{*}::T){&lt;j&gt;},
+              client=&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
+                                  send=&gt;inst(){&lt;j&gt;},
+                                  send_recv=&gt;inst(){&lt;j&gt;},
+                                  close=&gt;inst(){&lt;j&gt;},
+                                  on_message=&gt;print('received ${_}')]]]]
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>
 now holding that <code>peer::T</code>, the <code>path::T</code> lists the distribution plan among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start?#&lt;=#({1,2,3,4,5}).plus?#&lt;=#(10).sum?#&lt;=#(),
+==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -1084,7 +1084,7 @@ peer handed a shard with budget left plans it again over its own peers, so the s
 application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start?#&lt;=#([start?#&lt;=#&amp;hops=0({1,2,3,4,5}).plus?#&lt;=#(10).sum?#&lt;=#()]).select?#&lt;=#([to?#&lt;=#(ws://localhost:8555)]).merge?#&lt;=#().sum?#&lt;=#(),
+==&gt;[path::[obj=&gt;start([start?hops=0({1,2,3,4,5}).plus(10).sum()]).select([to(ws://localhost:8555)]).merge().sum(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -1101,7 +1101,7 @@ that licenses it are the same value: every rule is <code>lower(plan::T)</code>, 
 <p>A keyed fold lowers the same way, its master recombining pointwise: <code>merge().sum()</code> deep-merges the partial recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start?#&lt;=#([start?#&lt;=#&amp;hops=0({1,2,3,4,5,6}).group?#&lt;=#([mod?#&lt;=#(3)=&gt;sum?#&lt;=#()])]).select?#&lt;=#([to?#&lt;=#(ws://localhost:8555)]).merge?#&lt;=#().sum?#&lt;=#().select?#&lt;=#([id?#&lt;=#()=&gt;sum?#&lt;=#()]),
+==&gt;[path::[obj=&gt;start([start?hops=0({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]).select([to(ws://localhost:8555)]).merge().sum().select([id()=&gt;sum()]),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],

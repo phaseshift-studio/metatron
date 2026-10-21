@@ -461,8 +461,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/vec/#,
           q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
+                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
           const=&gt;[imaginary::NaN@/m/vec/imaginary],

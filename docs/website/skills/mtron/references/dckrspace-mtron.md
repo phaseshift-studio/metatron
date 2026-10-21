@@ -432,7 +432,7 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
                                     [op=>select,
                                      dom=><#>,
                                      rng=><#>,
-                                     args=>[[name=>id?#<=#()]],
+                                     args=>[[name=>id()]],
                                      form=>mapper,
                                      c_dom=>1,
                                      c_rng=>1]]]],
@@ -445,7 +445,7 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
                             [op=>select,
                              dom=><#>,
                              rng=><#>,
-                             args=>[[name=>id?#<=#()]],
+                             args=>[[name=>id()]],
                              form=>mapper,
                              c_dom=>1,
                              c_rng=>1]]]

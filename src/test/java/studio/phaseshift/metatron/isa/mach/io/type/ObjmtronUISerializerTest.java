@@ -521,23 +521,29 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     }
 
     /**
-     * AN INSTRUCTION'S TYPING IS DRAWN ONLY WHEN IT SAYS SOMETHING.  The pair is {@code rng<=dom}:
-     * {@code #{*}<=#{?}} (all, maybe-some to all, maybe) is the typing an untyped instruction is
-     * given, so drawing it states nothing — {@code inst?#{*}<=#{?}(#{*}::T)} reads
-     * {@code inst(#{*}::T)} — and a tid that carries no pair has none to draw, which is why a plain
-     * call used to render as {@code plus?#<=#(1,2)}.  Every other pair is a real refinement and
-     * stays, and so does every OTHER q param (the one that remains takes the {@code ?}).
+     * AN INSTRUCTION'S TYPING IS DRAWN SIDE BY SIDE WITH ITS DEFAULTS.  The signature is written
+     * {@code rng<=dom} — rng left of the arrow, dom right of it — and the syntax lets either side
+     * stand empty ({@code xyz?A<=()}, {@code xyz?<=A()}), an empty side meaning the default typing:
+     * rng {@code #{*}} ({@code all.maybeSome()}), dom {@code #{?}} ({@code all.maybe()}).  So a
+     * side that IS the default is left empty rather than spelled out, a pair default on both sides
+     * is not drawn at all ({@code xyz?<=()} reads {@code xyz()}), and every other q param still
+     * draws — taking the {@code ?} when the pair is gone.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "inst?#{*}<=#{?}(#{*}::T)   % inst(#{*}::T)           % the default typing draws as nothing",
-            "inst?#{*}<=#{?}&a=b(#{*}::T) % inst?a=b(#{*}::T)     % but another q param still draws",
-            "inst?a=b(#{*}::T)          % inst?a=b(#{*}::T)       % no pair, one param",
-            "inst?#{1}<=#{1}(#{*}::T)   % inst?#<=#(#{*}::T)      % a real pair stays",
-            "inst?str<=int(#{*}::T)     % inst?str<=int(#{*}::T)  % so does a named pair",
-            "inst?str<=int&a=b(#{*}::T) % inst?str<=int&a=b(#{*}::T) % a named pair with its param",
-            "plus(1,2)                  % plus(1,2)                % a plain call carries no typing noise",
-            "inst(1,2)                  % inst(1,2)                % and neither does a bare inst",
+            "inst?#{*}<=#{?}(#{*}::T)     % inst(#{*}::T)             % the default pair draws as nothing",
+            "plus?#{*}<=#{?}(45)          % plus(45)                  % and so it does on a plain call",
+            "plus(1,2)                     % plus(1,2)                 % a tid carrying no pair has nothing to draw",
+            "inst?a=b(#{*}::T)            % inst?a=b(#{*}::T)         % no pair, but the other param draws",
+            "inst?#{*}<=#{?}&a=b(#{*}::T) % inst?a=b(#{*}::T)         % the default pair never hides a param",
+            "plus?int<=(45)                % plus?int<=(45)            % rng specified, dom default (empty right side)",
+            "plus?<=int(45)                % plus?<=int(45)            % dom specified, rng default (empty left side)",
+            "plus?#{?}<=(45)               % plus?#{?}<=(45)           % #{?} is NOT the default rng — #{*} is",
+            "plus?#{*}<=(45)               % plus(45)                  % an explicit default rng states nothing",
+            "plus?#{1}<=#{1}(45)           % plus?#<=#(45)             % a real pair stays",
+            "plus?int<=int(45)             % plus?int<=int(45)         % both sides stay",
+            "plus?int<=&a=b(45)            % plus?int<=&a=b(45)        % an empty side keeps its params",
+            "plus?<=int&a=b(45)            % plus?<=int&a=b(45)        % on either side",
     }, delimiter = '%')
     public void testInstTypingIsDrawnOnlyWhenSpecified(final String code, final String expected, final String desc) {
         // an inst literal is parsed, never applied: applying it would run the instruction
@@ -545,6 +551,10 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         final String written = ObjmtronUISerializer.blackWhite().write(obj);
         LOG.debug("%s => %s", code, written);
         assertEquals(expected, written, String.format("%s: %s", desc, written));
+        // the display is a FIXED POINT: dropping a default side is not a change of typing, so
+        // reading the rendering back and drawing it again must yield the same signature
+        assertEquals(written, ObjmtronUISerializer.blackWhite().write(ObjmtronSerializer.parse(written)),
+                String.format("the rendered signature must read back as itself: %s", written));
     }
 
     @Test

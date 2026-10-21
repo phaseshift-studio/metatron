@@ -1510,6 +1510,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none(o.isStr() ? o.strValue() : o.toString())).reduce(noobj(), (a, b) -> noobj()).orElse(lhs))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
+                    docWrap(instC(CASCADE_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(LST_TID.maybe())), (lhs, inst) -> inst.arg(0).orElse(lhs).asLst().values().reduce(lhs, (a, b) -> b.apply(a))), "any obj", "the result of applying the arg to the lhs", Map.of(jnt(0), "the inst to apply to the lhs"), "an auto function \\(f(x) \\nearrow x'\\): the arg applied to the lhs (sugar'd !)"),
                     docWrap(instC(AT_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
                                 final fURI pattern = inst.arg(0).uriValue();
                                 if (pattern.hasPattern()) {

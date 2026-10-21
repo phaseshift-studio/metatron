@@ -463,8 +463,8 @@ the agent ide — project::T definition, build result::T and the links between t
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/ide/#,
           q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
+                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
           type=&gt;[/m/ide/serializer::T[][ctor?obj_ide_java&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java,
@@ -473,7 +473,7 @@ the agent ide — project::T definition, build result::T and the links between t
    {?}imports=&gt;lst::T,
    {?}preamble=&gt;str::T,
    {?}postscript=&gt;str::T]]@/m/ide/java,
-                 rec::T[?[status=&gt;union?#&lt;=#(success,error,halted),
+                 rec::T[?[status=&gt;union(success,error,halted),
    runtime=&gt;!*/m/math/time,
    {?}command=&gt;str::T,
    {?}project=&gt;project::T,
@@ -482,7 +482,7 @@ the agent ide — project::T definition, build result::T and the links between t
                  rec::T[?[root=&gt;uri::T,
    {?}name=&gt;str::T,
    {?}desc=&gt;str::T,
-   {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union?#&lt;=#(success,error,halted),
+   {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),
  runtime=&gt;!*/m/math/time,
  {?}command=&gt;str::T,
  {?}project=&gt;project::T,
@@ -578,7 +578,7 @@ the agent ide — project::T definition, build result::T and the links between t
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[root=&gt;uri::T,
  {?}name=&gt;str::T,
  {?}desc=&gt;str::T,
- {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union?#&lt;=#(success,error,halted),
+ {?}command=&gt;[uri::T=&gt;rec::T[?[status=&gt;union(success,error,halted),
  runtime=&gt;!*/m/math/time,
  {?}command=&gt;str::T,
  {?}project=&gt;project::T,
@@ -600,7 +600,7 @@ the agent ide — project::T definition, build result::T and the links between t
         </span>
         <small class="text-muted code">/m/ide/result</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[status=&gt;union?#&lt;=#(success,error,halted),
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[status=&gt;union(success,error,halted),
  runtime=&gt;!*/m/math/time,
  {?}command=&gt;str::T,
  {?}project=&gt;project::T,

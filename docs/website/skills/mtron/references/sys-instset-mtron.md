@@ -54,8 +54,8 @@ mtron> *bash?docq
 ==>docs::[obj=>bash?lst[str]<=#{?}(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
-          args=>[{?}timeout=>'a real number denoting timeout of ...',
-                 cmd=>'the terminal command to evaluate (...'],
+          args=>[cmd=>'the terminal command to evaluate (...',
+                 {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -73,10 +73,10 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.8M  6.1G  ...',
+    'tmpfs           6.1G  6.9M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
     '/dev/nvme0n1p2  916G  541G  329G  ...',
-    'tmpfs            31G  149M   31G  ...',
+    'tmpfs            31G  172M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -85,7 +85,7 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/486
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/477
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
 ==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
@@ -93,7 +93,7 @@ mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr i
     (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/487
+    [ProcBuilder<228>]]@/sys/fail/478
 ```
 ### batch
 
@@ -218,9 +218,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/492
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/483
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/493
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/484
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -255,9 +255,9 @@ mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::696.0,
-    free_mem_jvm=>mB::323.5546,
+    free_mem_jvm=>mB::295.3151,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::372.4453,
+    used_mem_jvm=>mB::400.6848,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[run=>0,stop=>0]]
@@ -330,9 +330,9 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
 ==>fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown> ...
                  ^
-     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/494
+     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/485
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
-==>start?#<=#([space=>/sys/space,
+==>start([space=>/sys/space,
      web=>[http/host=>http://localhost:8777,
            ws/host=>ws://localhost:8555],
      typer/stage=>[inst_dom=>true,
@@ -341,11 +341,11 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
                    obj_write=>true,
                    code_resolve=>false],
      header=>"""
-                    _,.---._      _,..."""]).print?#<=#('------------
+                    _,.---._      _,..."""]).print('------------
    *boot...',*boot/args,'
    ------------
-   ').end?#<=#().print?#<=#('mounting instruction sets
-   {{...').end?#<=#().import?#<=#(/m/mach/io).end?#<=#().start?#<=#(memspace::[pattern=>/usr/#,
+   ').end().print('mounting instruction sets
+   {{...').end().import(/m/mach/io).end().start(memspace::[pattern=>/usr/#,
               q=>[typeq::[pattern=><T>,
    ...
 ```

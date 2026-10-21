@@ -463,11 +463,11 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/math/#,
           q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
+                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[int::T[?is?#&lt;=#(gte?#&lt;=#(0)).is?#&lt;=#(lte?#&lt;=#(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent,
+          type=&gt;[int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent,
                  int::T[is(gt(0))]@/m/math/nat,
                  lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
                  real::T@/m/math/datasize,
@@ -531,7 +531,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                  as?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
                  as?imperial&lt;=metric(imperial::T){&lt;j&gt;},
                  as?metric&lt;=imperial(metric::T){&lt;j&gt;},
-                 cos?real&lt;=#{?}(as?#&lt;=#(real::T)){&lt;j&gt;},
+                 cos?real&lt;=#{?}(as(real::T)){&lt;j&gt;},
                  sin?real&lt;=#{?}(real::T){&lt;j&gt;},
                  tan?real&lt;=#{?}(real::T){&lt;j&gt;},
                  sqrt?real&lt;=#{?}(real::T){&lt;j&gt;},
@@ -1103,7 +1103,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/percent</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[?is?#&lt;=#(gte?#&lt;=#(0)).is?#&lt;=#(lte?#&lt;=#(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100</p>
@@ -1305,7 +1305,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/cos?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cos?real<=<span class="code text-info">#{?}</span>(as?#<=#(real::T)){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cos?real<=<span class="code text-info">#{?}</span>(as(real::T)){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the cosine (radians) of a real</p>
