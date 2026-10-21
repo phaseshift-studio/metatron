@@ -548,12 +548,18 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 return session;
             final Obj reach = session.isRec() ? session.asRec().<Obj>at(uri(SEND_RECV)) : noobj();
             if (reach.isObjInst())
-                // the message rides as send_recv's ARG: a bare inst survives computeArgs raw (it is
-                // not an obj-call, so percolation hands it back untouched) and the client's
-                // send_recv applies or ships it whole. a user's `|` quoting percolates against the
-                // REAL monad lhs before this adapter ever runs -- so the adapter adds nothing.
-                return instLambda(message ->
-                        reach.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(message)).apply(noobj()));
+                // THE MESSAGE IS A PAYLOAD, NOT A COMPUTATION. It rides as send_recv's ARG, and an inst's args
+                // are computed against the lhs before its function runs -- so unless the call BLOCKS, the
+                // message is evaluated HERE and only its result is shipped: a read answers this machine's value
+                // and a write lands in this machine's memory (measured across two hosts: on ginger,
+                // *<ws://booger.local:8555/x/y> answered the value planted at ginger's own /x/y). ?block keeps
+                // the args raw -- the processor's own switch, exactly as bindQ applies it -- so the far side is
+                // the one that evaluates what it is sent. Only this per-call copy blocks: a user's own
+                // send_recv still computes its arg, and `|` quotes what they mean to ship.
+                return instLambda(message -> {
+                    final Inst call = reach.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(message));
+                    return call.tid(call.tid().addQ(BLOCK)).apply(noobj());
+                });
             return session.isRec() ? session.asRec().<Obj>at(uri(TRANSPORT)) : noobj();
         }
 
