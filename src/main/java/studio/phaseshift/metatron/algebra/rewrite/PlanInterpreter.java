@@ -43,6 +43,7 @@ import java.util.function.BiPredicate;
 import static studio.phaseshift.metatron.Tokens.ADD;
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
 import static studio.phaseshift.metatron.Tokens.DERIVATION;
+import static studio.phaseshift.metatron.Tokens.HOPS;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ID;
 import static studio.phaseshift.metatron.Tokens.INVERSE;
@@ -70,8 +71,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>The one-cut distribution milestone (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the live peer
  * roster, match the chain shape {@code [seed, {*}floatable, blocked cut, {*}tail]}, locate the cut, then
  * emit the {@code [chain...]==[to()...]} layout the SwarmProcessor consumes. The cut's law obligations
- * ({@code monoidic} + {@code commutative}) ride on the {@code blocked} slot, so
- * {@link PlanBuilder#create()}'s shape-derived check and the match-time check are the same Thm 19 hypothesis.
+ * ({@code monoidic} + {@code commutative}) ride on the {@code blocked} slot's COMBINER — the fold the partials
+ * recombine through, computed by {@link LawTable#combiner} — so {@link PlanBuilder#create()}'s shape-derived
+ * check and the match-time check are the same Thm 19 hypothesis, read off the fold that is re-applied.
  *
  * <p>The chain instructions arrive pre-resolution (bare op addresses), so each body inst is first retyped
  * with its declared (dom/rng-qualified) tid via {@link LawTable#declared} — the step that makes
@@ -116,7 +118,6 @@ public final class PlanInterpreter {
                     : ZERO.equals(role) ? branchInline(code)
                     : INVERSE.equals(role) ? inverseCancellation(code)
                     : MAP_INST_TID.name().equals(role) ? mapUnwrap(code)
-                    : ORDER_INST_TID.name().equals(role) ? orderShard(plan, code)
                     : DERIVATION.equals(role) ? derivationContraction(code)
                     : code;
         // the law-classified folds: involution (drop), idempotent/monoidic (keep), poset (compose),
@@ -135,14 +136,20 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The one-cut distribution (Thm 19): factor the seed bulk over the roster, replicate the floatable run,
-     * reapply the reducer behind a barrier. The identity unless the chain matches the plan's one-cut shape and
+     * The one-cut distribution (Thm 19): factor the seed bulk over the roster, replicate the floatable run, and
+     * recombine the partials behind a barrier through the cut's COMBINER — computed, never declared
+     * ({@link LawTable#combiner}). A self-combining fold re-applies itself ({@code sum}, {@code prod}); a fold defined
+     * by its derivation recombines through the fold that defines it ({@code count} through {@code sum},
+     * {@code order(s)} through {@code kmerge(s)}). The identity unless the chain matches the plan's one-cut shape and
      * the machine has live peers to fan out over.
      */
     private static Code shard(final Plan plan, final Code code) {
         if (Machine.current().network().peers().isEmpty())
             return code;
-        if (code.insts().stream().anyMatch(i -> i.tid().hasQ("no_shard")))
+        // THE HOP BUDGET: how many more levels of the tree may be planned from here. hops=0 is a leaf -- the fold runs
+        // where it stands; the root's budget comes from the chain or the plan's tree route (see hops)
+        final int hops = hops(plan, code);
+        if (1 > hops)
             return code;
 
         final List<Inst> insts = code.insts();
@@ -152,15 +159,16 @@ public final class PlanInterpreter {
             return code;
 
         final Cut cut = plan.cut();
+        final Law[] laws = cut.laws().toArray(Law[]::new);
         final Type carrier = insts.getFirst().arg(0).type();
         final List<Inst> body = insts.subList(1, insts.size());
         final List<Inst> typed = body.stream().map(i -> retype(i, carrier)).toList();
 
-        // the one-cut shape: [ {*}floatable, blocked (declaring the cut's laws), {*}tail ]
+        // the one-cut shape: [ {*}floatable, blocked (recombined by a fold declaring the cut's laws), {*}tail ]
         final List<List<Inst>> captures = InstPattern.match(
                 List.of(
                         InstPattern.law(Law.floatable).star(),
-                        InstPattern.law(Law.blocked).and(cut.laws().toArray(Law[]::new)),
+                        InstPattern.law(Law.blocked).combinedBy(laws),
                         InstPattern.any().star()),
                 typed);
         if (null == captures)
@@ -168,6 +176,11 @@ public final class PlanInterpreter {
 
         final int cutIndex = 1 + captures.get(0).size();
         final Inst reducer = insts.get(cutIndex);
+        // a self-combining fold re-applies the chain's own instruction (pre-resolution, exactly as the slaves carry
+        // it); a fold defined by derivation recombines through the fold its definition names
+        final Inst keyed = typed.get(cutIndex - 1);
+        final Inst combined = LawTable.combiner(keyed, laws);
+        final Inst combiner = keyed == combined ? reducer : combined;
 
         final List<Obj> seed = insts.getFirst().arg(0).stream().toList();
         if (2 > seed.size())
@@ -178,7 +191,7 @@ public final class PlanInterpreter {
             return code;
         final int k = Math.min(targets.size(), seed.size());
 
-        // emit (a·c + b·c)·c — the master gathers partials and re-applies the reducer at home; each slave
+        // emit (a·r + b·r)·combiner(r) — the master gathers partials and recombines them at home; each slave
         // carries one factor of the bulk, the floatable run replicated, and a local partial reduce.
         //
         // A SLAVE SHIPS UNQUOTED. Nothing on this machine evaluates it: a multi-instruction chain is Code, never
@@ -187,16 +200,22 @@ public final class PlanInterpreter {
         // Network.Helper.asTransport). The peer's evaluation of that start(...) is the one that runs the slave,
         // so what comes back is its value, 12@<tag>. A quote would now be peeled on the far side instead, and
         // whether the code it uncovers still runs is left to the peer's processor -- so there is none.
+        //
+        // THE PEER RE-PLANS ITS PART. Applying a code compiles it (Machine.applyCode), so this rule runs again on the
+        // slave where it lands: with budget left (start?hops=n) and dialed peers of its own, the peer is an interior
+        // node of the tree -- it shards its part and recombines through the same combiner -- and at hops=0 it is a
+        // leaf. Every level partitions its part exactly, so a cycle in the dial graph only bounces work, never
+        // duplicates or drops it, and the budget bounds the bounce.
         final List<Obj> summands = new ArrayList<>();
         final List<Obj> routes = new ArrayList<>();
-        final mFluent<?> master = merge_().addInst(reducer).addInsts(insts.subList(cutIndex + 1, insts.size()));
+        final mFluent<?> master = merge_().addInst(withoutHops(combiner)).addInsts(withoutHops(insts.subList(cutIndex + 1, insts.size())));
         for (int s = 0; s < k; s++) {
             final List<Obj> part = new ArrayList<>();
             for (int j = s; j < seed.size(); j += k)
                 part.add(seed.get(j));
-            final mFluent<?> slave = start_(objs(part)).q("no_shard");
-            slave.addInsts(insts.subList(1, cutIndex));
-            slave.addInst(reducer);
+            final mFluent<?> slave = start_(objs(part)).q(HOPS, hops - 1);
+            slave.addInsts(withoutHops(insts.subList(1, cutIndex)));
+            slave.addInst(withoutHops(reducer));
             summands.add(slave);
             routes.add(to_(targets.get(s)).tryToInst());
         }
@@ -205,60 +224,35 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The one-cut sort distribution: factor the seed bulk over the roster, replicate the floatable run,
-     * each peer orders its shard locally, and the master k-merges the sorted shards behind the barrier.
-     * The identity unless the chain matches {@code [start, {*}floatable, order, {*}tail]} and the machine
-     * has live peers to fan out over. The combine is {@code kmerge} (the sorted merge), not the monoidic
-     * reapply of {@link #shard}.
+     * The hop budget of a fold, nearest statement first: a {@code ?hops} on any instruction of the chain — the seed
+     * when it is written ({@code start?hops=3(…)}), the reducer under the {@code {…}} sugar ({@code sum?hops=3()}),
+     * and on every slave this plan emits — else the plan's own tree route. A budget that is not a number plans nothing.
      */
-    private static Code orderShard(final Plan plan, final Code code) {
-        if (Machine.current().network().peers().isEmpty())
-            return code;
-        if (code.insts().stream().anyMatch(i -> i.tid().hasQ("no_shard")))
-            return code;
-
-        final List<Inst> insts = code.insts();
-        if (2 > insts.size() || !START_INST_TID.equals(insts.getFirst().tid().basePath()))
-            return code;
-
-        int cutIndex = -1;
-        for (int i = 1; i < insts.size(); i++)
-            if (ORDER_INST_TID.equals(insts.get(i).tid().basePath())) {
-                cutIndex = i;
-                break;
+    private static int hops(final Plan plan, final Code code) {
+        for (final Inst inst : code.insts())
+            if (inst.tid().hasQ(HOPS)) {
+                try {
+                    return Integer.parseInt(String.valueOf(inst.tid().qMap().get(HOPS)).trim());
+                } catch (final NumberFormatException e) {
+                    return 0;
+                }
             }
-        if (-1 == cutIndex)
-            return code;
+        return plan.routes().stream()
+                .filter(route -> Route.Target.TREE == route.target())
+                .mapToInt(Route::hops)
+                .findFirst().orElse(0);
+    }
 
-        final Inst order = insts.get(cutIndex);
-        final Obj selector = order.arg(0);
+    /**
+     * The instruction without its {@code ?hops}: a budget is the plan's to restate at each level — on the slave's
+     * seed — so no copied instruction may carry the level above's.
+     */
+    private static Inst withoutHops(final Inst inst) {
+        return inst.tid().hasQ(HOPS) ? inst.tid(inst.tid().removeQ(HOPS)) : inst;
+    }
 
-        final List<Obj> seed = insts.getFirst().arg(0).stream().toList();
-        if (2 > seed.size())
-            return code;
-
-        final List<Obj> targets = shardTargets();
-        if (targets.isEmpty())
-            return code;
-        final int k = Math.min(targets.size(), seed.size());
-
-        // emit — the master k-merges the sorted shards; each slave carries one factor of the bulk, the
-        // floatable run replicated, and a local order. The slave ships unquoted, exactly as in shard.
-        final List<Obj> summands = new ArrayList<>();
-        final List<Obj> routes = new ArrayList<>();
-        final mFluent<?> master = merge_().addInsts(kmerge_(selector).insts()).addInsts(insts.subList(cutIndex + 1, insts.size()));
-        for (int s = 0; s < k; s++) {
-            final List<Obj> part = new ArrayList<>();
-            for (int j = s; j < seed.size(); j += k)
-                part.add(seed.get(j));
-            final mFluent<?> slave = start_(objs(part)).q("no_shard");
-            slave.addInsts(insts.subList(1, cutIndex));
-            slave.addInsts(order_(selector).insts());
-            summands.add(slave);
-            routes.add(to_(targets.get(s)).tryToInst());
-        }
-        final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
-        return emitted;
+    private static List<Inst> withoutHops(final List<Inst> insts) {
+        return insts.stream().map(PlanInterpreter::withoutHops).toList();
     }
 
     /**
@@ -592,63 +586,48 @@ public final class PlanInterpreter {
     }
 
     /**
-     * Contract the primitive composition of a derivation back to its derived instruction — {@code mult·inv ↦ div}.
+     * Contract each occurrence of a derivation's primitive composition back to its derived instruction —
+     * {@code mult·inv ↦ div}, {@code map(1)·sum ↦ count}. The composition is the rhs after its seed
+     * ({@code start(A)}), matched as a contiguous WINDOW of the chain: a one-instruction rhs nests its composition in
+     * that instruction's args ({@code plus(map(B).neg())}), a longer one spans several, and matching only the rhs's
+     * last instruction would contract every {@code sum} to {@code count}.
      */
     private static List<Inst> contract(final List<Inst> insts, final Derivation d) {
+        final List<Inst> rhs = afterSeed(d.rhs());
+        final List<Inst> lhs = afterSeed(d.lhs());
+        if (rhs.isEmpty() || lhs.isEmpty())
+            return insts;
         final List<Inst> out = new ArrayList<>();
-        for (final Inst inst : insts) {
+        int i = 0;
+        while (i < insts.size()) {
             final Map<fURI, Obj> bindings = new HashMap<>();
-            final Inst rhs = d.rhs().insts().getLast();
-            if (matchGenerics(rhs, inst, bindings)) {
-                final Inst lhs = d.lhs().insts().getLast();
-                out.add((Inst) Inst.Helper.substituteGenerics(lhs, bindings));
+            if (i + rhs.size() <= insts.size() && matchesWindow(rhs, insts.subList(i, i + rhs.size()), bindings)) {
+                for (final Inst derived : lhs)
+                    out.add((Inst) Inst.Helper.substituteGenerics(derived, bindings));
+                i += rhs.size();
             } else
-                out.add(inst);
+                out.add(insts.get(i++));
         }
         return out;
     }
 
     /**
-     * Match a generic pattern against a source, binding the generic fURIs ({@code A}, {@code B}, …) as they are
-     * met. A generic uri matches anything (binding it); an inst matches by tid and recurses into its args.
+     * A derivation side without its seed — the instructions a chain matches, {@code start(A)} excluded.
      */
-    private static boolean matchGenerics(final Obj pattern, final Obj source, final Map<fURI, Obj> bindings) {
-        if (pattern.isUri() && pattern.uriValue().isGeneric()) {
-            final fURI key = pattern.uriValue();
-            final Obj prior = bindings.get(key);
-            if (null == prior) {
-                bindings.put(key, source);
-                return true;
-            }
-            return prior.equals(source);
-        }
-        if (pattern.isInst() && source.isInst()) {
-            final Inst p = pattern.asInst();
-            final Inst s = source.asInst();
-            if (!s.tid().test(p.tid()))
+    private static List<Inst> afterSeed(final Code side) {
+        final List<Inst> insts = side.insts();
+        return !insts.isEmpty() && START_INST_TID.equals(insts.getFirst().tid().basePath()) ? insts.subList(1, insts.size()) : insts;
+    }
+
+    /**
+     * Whether a chain window matches a derivation side instruction-for-instruction, the generics binding across the
+     * whole window.
+     */
+    private static boolean matchesWindow(final List<Inst> pattern, final List<Inst> window, final Map<fURI, Obj> bindings) {
+        for (int j = 0; j < pattern.size(); j++)
+            if (!Derivation.matchGenerics(pattern.get(j), window.get(j), bindings))
                 return false;
-            if (p.args().count() != s.args().count())
-                return false;
-            for (int i = 0; i < p.args().count(); i++)
-                if (!matchGenerics(p.arg(i), s.arg(i), bindings))
-                    return false;
-            return true;
-        }
-        if (pattern.isCode() && source.isCode()) {
-            final List<Inst> ps = pattern.asCode().insts();
-            final List<Inst> ss = source.asCode().insts();
-            if (ps.size() != ss.size())
-                return false;
-            for (int i = 0; i < ps.size(); i++)
-                if (!matchGenerics(ps.get(i), ss.get(i), bindings))
-                    return false;
-            return true;
-        }
-        // a structural pattern (inst/code) never matches a non-structural source — falling through to
-        // source.test(pattern) here would let a scalar pass a nested-composition pattern
-        if (pattern.isInst() || pattern.isCode() || source.isInst() || source.isCode())
-            return false;
-        return source.test(pattern);
+        return true;
     }
 
     /**

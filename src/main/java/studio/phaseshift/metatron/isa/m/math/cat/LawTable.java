@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -135,6 +137,10 @@ public abstract class LawTable {
      * no dom/rng) and the law table's keys carry the endpoints. When several entries share the op address
      * ({@code plus} over int, real, str, bool, …) the operand's type picks the right one; when nothing
      * matches, null rather than a guess — a law-driven rewrite must never fire on the wrong type.
+     * <p>
+     * A declaration over EVERY carrier — its dom is {@code #} or a generic ({@code A}) — is not a guess: it holds for
+     * this operand too ({@code count} over a stream of anything). A carrier-specific declaration still wins, so an op
+     * with typed overloads resolves to its own.
      */
     public static Declared declared(final fURI op, final Type operand) {
         final LawTable owner = ownerOf(op);
@@ -143,15 +149,84 @@ public abstract class LawTable {
         final String base = op.basePath().toString();
         final String type = (null == operand || null == operand.vid()) ? null : operand.vid().basePath().toString();
         Declared first = null;
+        Declared universal = null;
         for (final Map.Entry<fURI, Entry> e : owner.table.entrySet()) {
             if (!e.getKey().basePath().toString().equals(base))
                 continue;
+            final Declared declared = new Declared(e.getKey(), e.getValue());
             if (null == first)
-                first = new Declared(e.getKey(), e.getValue());
+                first = declared;
+            if (null == universal && isUniversal(e.getKey().dom()))
+                universal = declared;
             if (null != type && (e.getKey().dom().basePath().toString().equals(type) || e.getKey().rng().basePath().toString().equals(type)))
-                return new Declared(e.getKey(), e.getValue());
+                return declared;
         }
-        return null == type ? first : null;
+        return null == type ? first : universal;
+    }
+
+    /**
+     * Whether a declared dom ranges over every carrier: the universal type {@code #} or a generic variable.
+     */
+    private static boolean isUniversal(final fURI dom) {
+        return null != dom && null != dom.basePath() && (dom.basePath().equals(ALL.basePath()) || dom.basePath().isGeneric());
+    }
+
+    /**
+     * THE COMBINER of a fold, computed and never declared: the fold its partials recombine through, so that
+     * {@code (a ⊎ b)·r = (a·r ⊎ b·r)·combiner(r)} — Thm 19 with the re-application read off the theory. A stream is a
+     * bag, so this is the universal property of the free commutative monoid: a fold that distributes is
+     * {@code map(g)} followed by the fold of a commutative monoid, and its partials recombine through that fold.
+     * <ul>
+     *   <li>a fold declaring the laws itself is its own combiner — {@code sum}, {@code prod} — and the answer is
+     *       {@code keyed} itself;</li>
+     *   <li>a fold DEFINED as a pointwise map into one — its declared {@link Derivation}, {@code r ↦ map(g)·f} —
+     *       recombines through {@code f}, read off {@code r}'s target object (the carrier {@code f} folds), with the
+     *       generics bound from {@code keyed}'s own arguments — {@code count ↦ map(1)·sum},
+     *       {@code order(B) ↦ split([_])·kmerge(B)}.</li>
+     * </ul>
+     * {@code keyed} carries its declared n-tid ({@link #declared}). Null when the fold has none: {@code mean}
+     * (magmadic), {@code str} {@code sum} (not commutative), an undeclared or non-reducing instruction.
+     */
+    public static Inst combiner(final Inst keyed, final Law... laws) {
+        final Entry entry = lawsOf(keyed.tid());
+        if (null == entry || Inst.Form.reducer != Inst.Form.of(keyed))
+            return null;
+        if (declaresAll(entry, laws))
+            return keyed;
+        if (null == entry.derivation())
+            return null;
+        final Inst fold = entry.derivation().fold(keyed);
+        if (null == fold)
+            return null;
+        // the definition's last step must itself be a FOLD of the target, declaring the laws -- a mapper that
+        // happens to be monoidic and commutative (bool plus) recombines nothing
+        final Declared declared = declared(fold.tid().basePath(), keyed.rng());
+        return null != declared && Inst.Form.reducer == Inst.Form.of(fold.tid(declared.tid())) && declaresAll(declared.entry(), laws) ? fold : null;
+    }
+
+    /**
+     * The combiner under Thm 19's hypothesis — a partial recombines through a commutative monoid's fold.
+     */
+    public static Inst combiner(final Inst keyed) {
+        return combiner(keyed, Law.monoidic, Law.commutative);
+    }
+
+    /**
+     * The combiner as the category names it — the declared n-tid of the edge the partials recombine through, an
+     * address as {@code analysis.inverse} is one — or null when the fold has no combiner.
+     */
+    public static fURI combinerOf(final Inst keyed) {
+        final Inst fold = combiner(keyed);
+        if (null == fold)
+            return null;
+        if (fold == keyed)
+            return keyed.tid();
+        final Declared declared = declared(fold.tid().basePath(), keyed.rng());
+        return null == declared ? null : declared.tid();
+    }
+
+    private static boolean declaresAll(final Entry entry, final Law... laws) {
+        return Arrays.stream(laws).allMatch(law -> entry.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(law.name())));
     }
 
     /**

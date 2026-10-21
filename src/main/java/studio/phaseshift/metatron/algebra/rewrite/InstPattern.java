@@ -46,6 +46,7 @@ import java.util.List;
 public final class InstPattern {
 
     private final List<Law> laws = new ArrayList<>();
+    private List<Law> combiner = null;
     private Inst.Form form = null;
     private int min = 1;
     private boolean unbounded = false;
@@ -71,6 +72,16 @@ public final class InstPattern {
 
     public InstPattern and(final Law... laws) {
         this.laws.addAll(List.of(laws));
+        return this;
+    }
+
+    /**
+     * Require the instruction's partials to recombine through a fold declaring {@code laws} — its COMPUTED combiner
+     * ({@link LawTable#combiner}), which is the instruction itself only when it is self-combining. The slot of a
+     * distribution's cut: the plan re-applies the combiner at home, so the cut's laws are the combiner's to declare.
+     */
+    public InstPattern combinedBy(final Law... laws) {
+        this.combiner = List.of(laws);
         return this;
     }
 
@@ -114,7 +125,7 @@ public final class InstPattern {
         for (final Law required : this.laws)
             if (!satisfies(inst, required))
                 return false;
-        return true;
+        return null == this.combiner || null != LawTable.combiner(inst, this.combiner.toArray(Law[]::new));
     }
 
     private static boolean satisfies(final Inst inst, final Law law) {

@@ -32,6 +32,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
@@ -68,6 +69,7 @@ public final class mInstSetLawTable extends LawTable {
         loadLst();
         loadRec();
         loadCode();
+        loadAll();
     }
 
     @Override
@@ -317,6 +319,9 @@ public final class mInstSetLawTable extends LawTable {
         entry(ZERO_INST_TID.dom(LST_TID).rng(LST_TID), null, unit, idempotent);
         entry(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), null, monoidic);
         entry(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), null, monoidic);
+        // kmerge: the fold of the commutative monoid of sorted lsts (identity []) -- a merge of one merge is that
+        // merge, and the merge order is free
+        entry(KMERGE_INST_TID.dom(LST_TID.poly(InstSet.A.maybeSome()).maybeSome()).rng(LST_TID.poly(InstSet.A.maybeSome())), null, monoidic, commutative);
     }
 
     private void loadRec() {
@@ -342,5 +347,18 @@ public final class mInstSetLawTable extends LawTable {
         entry(END_INST_TID.dom(CODE_TID).rng(CODE_TID), null, unit, absorbing);
         // one = id: the multiplicative identity
         entry(ID_INST_TID.dom(CODE_TID).rng(CODE_TID), null, unit, idempotent);
+    }
+
+    /**
+     * The folds declared over EVERY carrier. Each is DEFINED as a pointwise map into a commutative monoid's fold, and
+     * that definition is where its combiner is read from ({@link LawTable#combiner}): no combiner is declared.
+     */
+    private void loadAll() {
+        // count: the coefficient sum -- every obj contributes its multiplicity, so it is map(1) folded by int's sum
+        entry(COUNT_INST_TID.dom(ALL_STAR).rng(INT_TID), null,
+                new Derivation(start_(uri(InstSet.A)).count_(), start_(uri(InstSet.A)).map_(jnt(1)).sum_()));
+        // order: the bag's normal form -- each obj a sorted singleton, k-way merged by the same selector
+        entry(ORDER_INST_TID.dom(InstSet.A.maybeSome()).rng(LST_TID.poly(InstSet.A.maybeSome())), null,
+                new Derivation(start_(uri(InstSet.A)).order_(uri(InstSet.B)), start_(uri(InstSet.A)).split_(lst(id_().tryToInst())).kmerge_(uri(InstSet.B))));
     }
 }

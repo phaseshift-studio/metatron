@@ -87,3 +87,7 @@ the pattern is a reference into the algebra, and the op is what the law resolves
    and its `native` route target.
 3. **The real span** — `pipeline` and `shuffle` need the span as a concrete region
    (`[(lo, hi, role)]`), not a scan over the whole chain; this is the gating piece for both.
+
+The working list — every pattern's law, shape, plumbing and status, including what has shipped — is
+`distributed-patterns-menu.md`. A stream is a bag (bulked by coefficient), so item 1's scan applies to `lst` values,
+not to streams.

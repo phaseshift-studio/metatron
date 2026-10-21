@@ -243,6 +243,21 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
+     * The COMBINER — the edge a reducer's partials recombine through, {@code (a ⊎ b)·r = (a·r ⊎ b·r)·combiner(r)} —
+     * computed from the morphism's declared laws and derivation, never declared: a self-combining fold names itself
+     * ({@code sum}, {@code prod}), a fold defined by derivation names the fold that defines it ({@code count} names
+     * {@code sum}), and a fold whose partials do not recombine ({@code mean}, {@code str} {@code sum}) has none
+     * ({@code noobj}). Each row: a morphism lift read through {@code >>analysis>>combiner} % the combiner's address.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "|count?int<=#{*}().as(morphism::T)>>analysis>>combiner % /m/inst/sum?rng=/m/int&dom=/m/int{*}",
+    }, delimiter = '%')
+    void testCombiner(final String expr, final String expected) {
+        checkCodeParseApply(LOG, expr, expected);
+    }
+
+    /**
      * The structural laws (the theory recs: ring/group/monoid) — not wired yet, {@code mInstSetLawTable.typeLaws} /
      * {@code catWrap(Type, …)} is still a no-op.
      */
@@ -665,6 +680,22 @@ public class catInstSetTest extends AbstractInstSetTest {
         final Call compilation = FixPointRewriter.single().apply(firstStage).tryToInst();
         assertEquals(ObjmtronSerializer.parse(expected), compilation);
         assertEquals(ObjmtronSerializer.parse(expectedResult), compilation.apply(noobj()));
+    }
+
+    /**
+     * The a-priori pruner on {@code path::T} — a rule is an out-edge of the lifted chain iff the chain's declaration
+     * profile cannot prove it the identity, so an absent edge is a proof and a present one only licenses the match.
+     * A bulk seed is carried by ONE member's type ({@code {1,2,3}} by {@code int}, not by the stream type
+     * {@code int{3}}), so a bulk-seeded chain is pruned like a single-seeded one instead of keeping every edge. Each
+     * row: the chain % a rule % whether that rule is a live out-edge of the chain's {@code path::T}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start({1,2,3}).mean()  % law_shard  % false",
+    }, delimiter = '%')
+    void testAprioriPruning(final String code, final String rule, final boolean live) {
+        final Obj path = catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse(code));
+        checkEquality(LOG, bool(path.asRec().has(uri(rule))), bool(live), true);
     }
 
     private static void rewriteAssert(final String code, final String expected, final String expectedResult) {
