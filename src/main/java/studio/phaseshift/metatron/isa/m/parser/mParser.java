@@ -996,8 +996,20 @@ public class mParser {
         return m_furi(FULL_FURI_CHARS, false, true, false);
     }
 
+    /**
+     * An RFC 3986 IP-literal host, read together with the {@code //} it follows: {@code //[::1]}. Everywhere else a
+     * {@code [} opens the poly annotation, so the literal is only taken right after {@code //}, where no poly can
+     * stand, and only when it holds a colon and nothing but hex digits, colons and dots (plus an optional zone,
+     * {@code %eth0}). The text passes through unchanged; {@code fURI}'s own pattern reads it as the host.
+     */
+    public static Parser m_furi_ip_literal() {
+        final Parser hexOrDot = anyOf("0123456789abcdefABCDEF.");
+        return seq(of("//"), of('['), hexOrDot.star(), of(':'), hexOrDot.or(of(':')).star(),
+                opt(seq(of('%'), word().or(anyOf(".~-%")).plus()), null), of(']')).flatten();
+    }
+
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query, final boolean allowLeadingBranch) {
-        final Parser element = word().or(m_furi_template()).or(m_furi_branch_literal()).or(m_furi_coefficient_marked_atom()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)));
+        final Parser element = m_furi_ip_literal().or(word()).or(m_furi_template()).or(m_furi_branch_literal()).or(m_furi_coefficient_marked_atom()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)));
         final Parser first = allowLeadingBranch ? m_furi_leading_coefficient_marked_atom().or(element) : element;
         final Parser contentParser = seq(first, element.star()).flatten();
         final Parser leadingBraceGuard = allowLeadingBranch ? of("") : of('{').not();

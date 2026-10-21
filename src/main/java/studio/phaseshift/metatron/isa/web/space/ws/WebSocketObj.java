@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.Closeable;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -98,9 +99,17 @@ public interface WebSocketObj extends Rec, Closeable {
                 null : this.getWebSocket().getAttachment();
     }
 
+    /**
+     * The other end of this socket, as a {@code ws://host:port} authority. It is BUILT from the remote's host and
+     * port, never parsed out of the socket address's {@code toString()}: that is {@code hostname/ip:port}, which a
+     * fURI reads as a path, and for an IPv6 peer ({@code /[0:0:0:0:0:0:0:1]:45960}) is no uri at all, so every
+     * frame from such a peer failed in {@link #peerName()} before {@code on_message} could run.
+     */
     default fURI getOtherVID() {
-        return (null == this.getWebSocket() || this.getWebSocket().isClosed() || !this.getWebSocket().isOpen()) ?
-                null : f(this.getWebSocket().getRemoteSocketAddress().toString());
+        if (null == this.getWebSocket() || this.getWebSocket().isClosed() || !this.getWebSocket().isOpen())
+            return null;
+        final InetSocketAddress remote = this.getWebSocket().getRemoteSocketAddress();
+        return null == remote ? null : f("").scheme("ws").host(fURI.hostOf(remote)).port(remote.getPort());
     }
 
     IO getIO();

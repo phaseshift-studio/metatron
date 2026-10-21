@@ -312,7 +312,26 @@ public interface Machine extends Rec, AutoCloseable {
      */
     public static Obj evaluate(final String source) {
         final Machine machine = Machine.current();
-        final Obj compiled = machine.compiler().apply(str(source));
+        return Machine.run(machine, machine.compiler().apply(str(source)));
+    }
+
+    /**
+     * Compile and run a program that has ALREADY BEEN READ — the {@code code::T} a {@link #parse} lifts to
+     * ({@link studio.phaseshift.metatron.isa.m.type.parser.Parser.Helper#toCode}) — on this machine. It is
+     * {@link #evaluate(String)} without the text: what the compiler's parse stage would have produced is handed
+     * in instead, so the program is evaluated exactly once whichever compiler is installed. The default
+     * compiler reads text itself, but a compiler may accept only {@code code::T} (the test-only category
+     * compiler does), and handed text such a compiler fails before anything runs.
+     *
+     * @param code the program, as code
+     * @return the obj the program computed, or the {@code fail::T} that stopped it
+     */
+    public static Obj evaluate(final Code code) {
+        final Machine machine = Machine.current();
+        return Machine.run(machine, machine.compiler().apply(code));
+    }
+
+    private static Obj run(final Machine machine, final Obj compiled) {
         // a fail leaves the inst chain; it is returned as itself, never run
         if (compiled.isFail())
             return compiled;

@@ -327,8 +327,12 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
         if (null == obj || obj.isNoObj()) return JsonNull.INSTANCE;
 
         JsonElement element;
-        if (obj.isFail()) element = new JsonPrimitive(obj.failValue().getMessage());
-        else if (obj.isBytes()) element = new JsonPrimitive(obj.<Bytes>as().toHexString());
+        // a CAUGHT fail is a fail too (isFail() answers false for it), and it is the form a transport sends: json carries
+        // only its message, lossy as json is, but it must carry something or the reply is never sent at all
+        if (obj.isFail() || obj.isCaughtFail()) {
+            final Throwable failure = obj.failValue();
+            element = new JsonPrimitive(null == failure.getMessage() ? failure.toString() : failure.getMessage());
+        } else if (obj.isBytes()) element = new JsonPrimitive(obj.<Bytes>as().toHexString());
         else if (obj.isBool()) element = new JsonPrimitive(obj.boolValue());
         else if (obj.isInt()) element = new JsonPrimitive(obj.intValue());
         else if (obj.isReal()) element = new JsonPrimitive(obj.realValue());

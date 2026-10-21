@@ -370,7 +370,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 // processors (?clientq=<name> is the dialer's identity), so the co-mount sees what the
                 // dialer actually dialed, not just where the socket came from.
                 final String descriptor = null == conn.getResourceDescriptor() ? "/" : conn.getResourceDescriptor();
-                final fURI authority = f(descriptor).scheme("ws").host(remote.getHostString()).port(remote.getPort());
+                final fURI authority = f(descriptor).scheme("ws").host(fURI.hostOf(remote)).port(remote.getPort());
                 if (!Machine.current().network().accept(authority, session).isNoObj())
                     this.accepted.put(conn, authority);
             } catch (final Exception e) {

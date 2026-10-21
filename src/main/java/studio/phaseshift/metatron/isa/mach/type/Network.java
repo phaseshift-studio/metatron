@@ -433,7 +433,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         /**
          * Hosts that all denote "this machine" — a server bound to the first is reachable at the others.
          */
-        private static final Set<String> LOOPBACK_HOSTS = Set.of("0.0.0.0", "127.0.0.1", "localhost", "::1", "[::1]");
+        // a socket reports IPv6 loopback uncompressed (and fURI.hostOf brackets it), so both spellings are here
+        private static final Set<String> LOOPBACK_HOSTS = Set.of("0.0.0.0", "127.0.0.1", "localhost", "::1", "[::1]",
+                "0:0:0:0:0:0:0:1", "[0:0:0:0:0:0:0:1]");
 
         private Helper() {
             // static only

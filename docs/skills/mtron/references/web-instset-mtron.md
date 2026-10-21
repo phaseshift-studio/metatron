@@ -2,7 +2,7 @@
 name: web instruction set
 description: |
   The `/m/web` vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document
-  types, route tables, the `mtron::T` apply protocol, and the conventions a mount follows.
+  types, route tables, the `mtron::T` evaluation surface, and the conventions a mount follows.
   TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP
   server, shipping an obj for remote evaluation (`mtron::T`), choosing a `?mimeq=` rendering, or wondering why
   a route, an image, or a css file does not serve.
@@ -64,7 +64,7 @@ person::[name=>'grant',age=>25]@/usr/person/2
 | `rest::T`                 | `/m/web/http/rest`                             | `http::T`     | a REST surface — get reads, put replaces, patch updates, delete unlinks, post creates |
 | `ws::T`                   | `/m/web/ws`                                    | `protocol::T` | the websocket vocabulary                                                              |
 | `mcp::T`                  | `/m/web/mcp`                                   | `protocol::T` | an MCP surface                                                                        |
-| `mtron::T`                | `/m/web/mtron`                                 | `protocol::T` | the mtron-eval surface — ship an obj, it is applied, the result returns               |
+| `mtron::T`                | `/m/web/mtron`                                 | `protocol::T` | one message is one expression, evaluated — its answer returns                         |
 | `stream::T`               | `/m/web/stream`                                | `protocol::T` | the raw byte / server-sent-event stream surface                                       |
 | `sse::T`                  | `/m/web/sse`                                   | `stream::T`   | a server-sent-events response — a chunked `text/event-stream` over http               |
 | `mcp_server::T`           | `/m/web/mcp/mcp_server`                        | `mcp::T`      | an MCP server obj — **transport-agnostic**                                            |
@@ -217,21 +217,33 @@ Past the mount, the remaining path is a traversal with the space's own read sema
 
   router prefixes → the router's redirect table → mount tables → `!*` data edges
 
-## the `mtron::T` apply protocol
+## `mtron::T` — one message, one expression, evaluated
 
-`mtron::T` is the code-execution surface: ship an obj, the handler **applies** it, the result comes back. Both
-realizations are the same three lines — `mtron_wsHandler`'s `ON_MESSAGE` is `lhs.apply(noobj())` then
-`send(rhs)`; `mtron_httpHandler` does the same in `ON_GET`/`ON_POST`, with the request rec as the lhs argument.
-Everything else the protocol needs follows from that:
+`mtron::T` (`/m/web/mtron`) is the surface for running mtron on another machine: a client sends an expression, the
+endpoint's machine evaluates it, and the answer comes back. Nothing wraps the expression — the message *is* the
+program — and it runs against the endpoint's own machine, so a read inside it reads that machine's spaces. (A
+console's `*<ws://host:port/x>` reaches a peer this way: the network ships the read to the peer's `/mtron` endpoint.)
 
-* **the incoming obj is the program.** There is no command envelope. Shipped code derefs through the machine's
-  own Router, so the handler never knows which space holds the data — `*<http://…>` from the console is this
-  protocol.
-* **failures are results.** A thrown exception is sent as `fail(e)` — the wire carries `fail` objs like any obj.
-* **the wire format is mtron text.** Both handlers override `SEND` with `application/x-mtron` serialization.
+**`mtron_ws`** (the `/mtron` route in `boot.mtron`) is the realization that does this:
 
-The carriers differ in one respect: http applies the body *to the request rec* (headers and params are visible to
-the code), while ws applies to `noobj()`. Code that must behave identically over both should be self-contained.
+* **one frame, one evaluation.** The session reads each text frame with its machine's own parser and evaluates it
+  exactly once, as the console does. The answer is not applied again, so an answer that is itself code comes back as
+  itself: `[plus(2).plus(2)]==[as(inst::T)]>-` answers the lambda, and `|start(7)` answers `start(7)`.
+* **the answer is the whole value.** A coefficient is part of it: `{3}34` answers `{3}34`.
+* **failures are answers.** A program that fails, or throws, answers its `fail`; the client never waits out its
+  deadline for a reply that is not coming.
+* **the connection picks the serialization.** `?in=` and `?out=` on the connection uri choose the serializers —
+  `application/x-mtron` both ways by default, `?out=application/x-mtron-ui` for the console's rendering, and
+  `?out=application/json` for a json client (lossy by design: coefficients, vids and tids do not survive json).
+
+```
+bin/wsplus -e '[plus(2).plus(2)]==[as(inst::T)]>-' 'ws://localhost:8555/mtron?out=application/x-mtron-ui'
+==>inst(#{*}::T){plus(2).plus(2)}
+```
+
+**`mtron_http`** is declared an `mtron::T` but does not evaluate yet: every request, GET or POST, is answered with
+the request rec it arrived as — `method`, `uri`, `headers`, and `body` (parsed, not run) — in json, an http mount's
+default serialization. Ship code over `mtron_ws` until it does.
 
 ## streaming a response (`sse::T`)
 
