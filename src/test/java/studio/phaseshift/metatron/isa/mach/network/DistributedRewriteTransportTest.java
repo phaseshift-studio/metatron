@@ -21,12 +21,17 @@ package studio.phaseshift.metatron.isa.mach.network;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
@@ -44,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.IN;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.Tokens.OUT;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MERGE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
@@ -143,6 +149,26 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
         for (final Map.Entry<Obj, Obj> e : partials)
             assertTrue(e.getKey().isUri() && e.getKey().uriValue().name().matches("[0-9a-f]{8}"),
                     "each partial is stamped with a minted 8-hex vid: " + e.getKey());
+    }
+
+    /**
+     * ONE PLAN, EVERY FOLD WHOSE PARTIALS RECOMBINE. {@code law_shard} shards the fold and the master recombines the
+     * peers' partials through its COMBINER, computed rather than named: {@code sum}/{@code prod} through themselves,
+     * {@code count} through {@code sum}, {@code order(s)} through {@code kmerge(s)}. The fold runs for real across the
+     * forked peers — the master's chain leads {@code start·select·merge·<combiner>} — and the recombined value is the
+     * value the undistributed fold answers. Each row: the fold % its combiner's op % the recombined value.
+     */
+    @Training.SkipTraining(reason = "the rows run over forked peers; the distributed layout is the subject, not the value alone")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6}.plus(1).count()  % sum    % 6",
+    }, delimiter = '%')
+    void testCombinerShardsOverTransport(final String source, final String combiner, final String expected) {
+        final DistributedComputation c = DistributedComputation.of(source);
+        final List<fURI> ops = TransportRewriteHarness.ops(Reduction.of(c).masterCode());
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, MERGE_INST_TID, M_ISA_INST_TID.extend(combiner)),
+                ops.subList(0, Math.min(4, ops.size())), "the master recombines the partials through the combiner: " + ops);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), c.result(), true);
     }
 
     private static void assertSlice(final List<Obj> slice, final int... expected) {

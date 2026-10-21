@@ -51,9 +51,17 @@ public class catRewrite {
 
     /**
      * The one-cut distribution plan — {@code law_shard}, Thm 19 {@code (a+b)·c = (a·c+b·c)·c}: the anchor is a
-     * blocked reducer declaring {@code monoidic} (partials regroup) and {@code commutative} (order-free merge); the
-     * master re-applies it behind the barrier and runs the tail at home, each peer takes one factor of the seed bulk
-     * with the floatable run replicated and a local partial reduce. {@link PlanInterpreter#lower} consumes the cut.
+     * blocked reducer whose partials recombine through a fold declaring {@code monoidic} (partials regroup) and
+     * {@code commutative} (order-free merge) — its COMBINER, computed rather than declared
+     * ({@link LawTable#combiner}): {@code sum} and {@code prod} recombine through themselves, {@code count} through
+     * {@code sum}, {@code order(s)} through {@code kmerge(s)}. The master recombines behind the barrier and runs the
+     * tail at home; each peer takes one factor of the seed bulk with the floatable run replicated and a local partial
+     * reduce. {@link PlanInterpreter#lower} consumes the cut.
+     * <p>
+     * The route is a TREE: a peer re-plans the part it is handed over its own dialed peers while budget remains, and
+     * recombines its children's partials through the same combiner. The budget is the plan's {@code hops} unless the
+     * chain states one ({@code ?hops=n}); the default of one level is the star — the master's peers fold their parts
+     * where they stand.
      */
     private static final Cut SHARD_CUT = Cut.reducer(Law.monoidic, Law.commutative);
     private static final Span SHARD_PRE = Span.before().floatable();
@@ -62,19 +70,7 @@ public class catRewrite {
     private static final Plan SHARD_PLAN = PlanBuilder.plan("law_shard")
             .cut(SHARD_CUT)
             .route(Route.local(SHARD_AT, SHARD_POST))
-            .route(Route.peers(Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
-            .create();
-
-    /**
-     * The one-cut sort distribution — {@code order_shard}: the anchor is the {@code order} op (a role cut, not
-     * a form — the sort is order-preserving, not a monoidic/commutative fold); the {@code shuffle} route factors
-     * the seed over the roster, each peer orders its shard, and the master {@code kmerge}s behind the barrier.
-     */
-    private static final Cut ORDER_CUT = Cut.role(ORDER_INST_TID.name());
-    private static final Plan ORDER_PLAN = PlanBuilder.plan("order_shard")
-            .cut(ORDER_CUT)
-            .route(Route.local(SHARD_AT, SHARD_POST))
-            .route(Route.shuffle(Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
+            .route(Route.tree(1, Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
             .create();
 
     /**
@@ -191,7 +187,6 @@ public class catRewrite {
 
     static {
         PLANS.put(SHARD_PLAN.name(), SHARD_PLAN);
-        PLANS.put(ORDER_PLAN.name(), ORDER_PLAN);
         PLANS.put(UNIT_PLAN.name(), UNIT_PLAN);
         PLANS.put(INVOLUTION_PLAN.name(), INVOLUTION_PLAN);
         PLANS.put(IDEMPOTENT_PLAN.name(), IDEMPOTENT_PLAN);
@@ -395,9 +390,11 @@ public class catRewrite {
                                 code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
 
                         // (6) the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
-                        // (a+b)·c = (a·c + b·c)·c for a monoidic, commutative reducer. The seed bulk is factored
-                        // over the machine's peers, the elementwise (floatable) run is replicated per factor with
-                        // a local partial reduce, and the reducer is reapplied once more behind a barrier at home:
+                        // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a
+                        // monoidic, commutative fold -- r itself (sum, prod), or the fold its derivation names
+                        // (count -> sum, order(s) -> kmerge(s)). The seed bulk is factored over the machine's peers,
+                        // the elementwise (floatable) run is replicated per factor with a local partial reduce, and
+                        // the combiner is applied once more behind a barrier at home:
                         //
                         //   {1,2,3}.plus(2).sum()
                         //     |->  [barrier(2).sum(), {1,3}.plus(2).sum(), {2}.plus(2).sum()]==[to(), to(<a>), to(<b>)]
@@ -411,9 +408,7 @@ public class catRewrite {
                         // >>law_shard edge, is policy (cf. derivation_expansion above) -- gate shardTargets()
                         // behind a plan flag / q-param to pull it out of the default fixpoint schedule.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_shard"),
-                                code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot c = (a \\cdot c + b \\cdot c) \\cdot c\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, reapply the reducer behind a barrier -- \\(\\{1,2,3\\}.f.\\Sigma \\leadsto [\\mathrm{barrier}.\\Sigma,\\ \\{1,3\\}.f.\\Sigma,\\ \\{2\\}.f.\\Sigma] == [\\mathrm{to}(),\\ \\mathrm{to}(a),\\ \\mathrm{to}(b)]\\)"),
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("order_shard"),
-                                code -> PlanInterpreter.lower(ORDER_PLAN, code)), "the sort distribution: factor the seed bulk over the roster, each peer orders its shard locally, and the master k-merges the sorted shards behind the barrier")
+                                code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot r = (a \\cdot r + b \\cdot r) \\cdot \\mathrm{combiner}(r)\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer's combiner -- computed, never declared: \\(\\Sigma\\) and \\(\\Pi\\) recombine through themselves, \\(\\mathrm{count}\\) through \\(\\Sigma\\), \\(\\mathrm{order}(s)\\) through \\(\\mathrm{kmerge}(s)\\) -- \\(\\{1,2,3\\}.f.\\mathrm{count} \\leadsto [\\{1,3\\}.f.\\mathrm{count},\\ \\{2\\}.f.\\mathrm{count}] == [\\mathrm{to}(a),\\ \\mathrm{to}(b)].\\Sigma\\)")
         );
     }
 

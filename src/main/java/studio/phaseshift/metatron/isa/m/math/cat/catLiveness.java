@@ -47,14 +47,27 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class catLiveness {
 
     /**
-     * The carrier type of a code chain — the type of the seed (the {@code start(x)} wrapper's arg).
-     * Argless ops ({@code neg()}) have no arg to derive it from, so the rewrite reads it off the seed.
+     * The carrier type of a code chain — the {@link #carrierOf carrier} of the seed (the {@code start(x)} wrapper's
+     * arg). Argless ops ({@code neg()}) have no arg to derive it from, so the rewrite reads it off the seed.
      */
     public static Type carrier(final Code code) {
         final List<Inst> insts = code.insts();
         if (!insts.isEmpty() && START_INST_TID.equals(insts.get(0).tid().basePath()))
-            return insts.get(0).arg(0).type();
+            return carrierOf(insts.get(0).arg(0));
         return T(ALL);
+    }
+
+    /**
+     * The carrier a seed fixes — the type of ONE obj of its stream. A bulk seed types as its stream: the member type
+     * with the bulk's multiplicity as its coefficient ({@code {1,2,3}} is {@code int{3}::T}). A multiplicity is not an
+     * object of the category — no theory is declared over {@code int{3}}, and {@code object::T} (dom {@code {?}})
+     * refuses it — so it is dropped and the member type ({@code int::T}) carries the chain. The rules and the
+     * {@code Profile} both read the carrier here, so the pruner sees exactly the carrier the rule it prunes would.
+     */
+    public static Type carrierOf(final Obj seed) {
+        final Type type = seed.type();
+        final fURI id = type.typeId();
+        return null == id || id.c().isOne() || id.c().isZero() ? type : T(id.one());
     }
 
     /**
@@ -150,7 +163,7 @@ public class catLiveness {
             case "derivation_contraction" -> LawTable.derivations().stream()
                     .anyMatch(d -> profile.ops.contains(d.rhs().insts().getLast().tid().basePath().toString()));
             case "law_shard" ->
-                    profile.shard;   // a seed + a reducer declaring monoidic + commutative (the one-cut shard)
+                    profile.shard;   // a seed + a reducer whose partials recombine (the one-cut shard)
             default -> true; // an undeclared rule proves nothing -- keep the edge
         };
     }
@@ -172,7 +185,7 @@ public class catLiveness {
         private boolean adjInverse;      // an adjacent pair on a declared opposing edge
         private boolean absorbing;       // an absorbing op with live code before it
         private boolean mapWrap;         // a map(f) wrapping an unwrappable instruction
-        private boolean shard;           // a seed + a reducer declaring monoidic + commutative (law_shard's anchor)
+        private boolean shard;           // a seed + a reducer with a combiner (law_shard's anchor)
 
         /**
          * The profile read off an abstraction's morphisms: {@code law}, {@code form} and {@code name} are
@@ -203,14 +216,13 @@ public class catLiveness {
                 if (Inst.Form.initial.name().equals(form) || (null != keyed && START_INST_TID.equals(keyed.tid().basePath()))) {   // the seed: start (op address) or initial form — the bare start reads as mapper pre-resolution, so the op address is the reliable seed marker
                     hasSeed = true;
                     if (null != keyed && 0 < keyed.args().count()) {
-                        carrier = keyed.arg(0).type();
+                        carrier = carrierOf(keyed.arg(0));
                         carrierInverse = !TheoryHelper.invInst(carrier).isNoObj();
                     }
                     continue;
                 }
-                if (hasSeed && Inst.Form.reducer.name().equals(form)
-                        && laws.contains(Law.monoidic.name()) && laws.contains(Law.commutative.name()))
-                    profile.shard = true;   // law_shard's anchor: a reducer the plan re-applies behind an order-free barrier
+                if (hasSeed && Inst.Form.reducer.name().equals(form) && combines(keyed, carrier))
+                    profile.shard = true;   // law_shard's anchor: a reducer whose partials recombine behind an order-free barrier
                 if (null != keyed) {
                     profile.ops.add(keyed.tid().basePath().toString());
                     if (keyed.args().isEmpty())
@@ -242,6 +254,18 @@ public class catLiveness {
                 pastSeed = true;
             }
             return profile;
+        }
+
+        /**
+         * Whether the chain instruction's partials recombine — it has a computed {@link LawTable#combiner} once keyed
+         * with its declared n-tid, exactly as the shard plan keys it. The morphism carries the ORIGINAL instruction,
+         * so the key is re-derived from the carrier here.
+         */
+        private static boolean combines(final Inst chain, final Type carrier) {
+            if (null == chain)
+                return false;
+            final LawTable.Declared declared = LawTable.declared(chain.tid().basePath(), carrier);
+            return null != declared && null != LawTable.combiner(chain.tid(declared.tid()));
         }
 
         /**
