@@ -122,20 +122,14 @@ public class machInstSet extends AbstractInstSet {
     private static final fURI UP = f("..");
 
     /**
-     * This machine's own name in a cluster roster. The home is IN the roster -- it is one of the machines -- but
-     * it is not a PEER of itself, so it is filtered out of the distribution and its mailboxes are the ones the
-     * peers report to.
+     * This machine's own name in the compute plan. The home is the branch the peers hang under — it is one of the
+     * machines, but not a peer of itself — so it is never shipped a worker, and its mailboxes are the ones the peers
+     * report to.
      */
     public static final String MACH_HOME = "a";
 
     /**
-     * WHERE DISTRIBUTED STATE LIVES. Never under /sys: that is the local instance's bookkeeping, and a mailbox or an
-     * inbox is written by one machine and read by another, so it must live where a shared subspace can cover it.
-     * /sys/peer stays where it is for the same reason -- the roster IS local bookkeeping, this machine's view of who
-     * is in the cluster.
-     */
-    /**
-     * WHERE DISTRIBUTED STATE LIVES, and it is a PLAIN NAMESPACE -- no scheme, no host, nothing that says what
+     * WHERE DISTRIBUTED STATE LIVES, and it is a plain namespace -- no scheme, no host, nothing that says what
      * answers it. A root that named its backend would put the transport into the rewrite, which is the one thing
      * this design cannot afford: the rewrite mints {@code /usr/compute/<home>/barrier/<peer>} and must not know or
      * care whether a local memory space, a syncing subspace or a remote peer answers it. What varies between
@@ -215,10 +209,10 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MONAD_PROCESSOR_TID = MACH_PROCESSOR_TID.extend(MONAD);
     public static final fURI MACH_SWARM_PROCESSOR_TID = MACH_MONAD_PROCESSOR_TID.extend("swarm");
     /**
-     * The processor of a frame that executes elsewhere — a refinement of {@code processor::T}, a SIBLING of
-     * {@code swarm::T} rather than a kind of swarm. It shares swarm's Java machinery (it is a thread, so the
-     * console's foreground/background handling applies to it) but not its meaning: what makes it what it is, is that
-     * applying its code ships that code to the peer instead of running it.
+     * The processor of a machine that executes elsewhere — a refinement of {@code processor::T}, a sibling of
+     * {@code swarm::T} rather than a kind of swarm. It is a thread, so the console's foreground/background handling
+     * applies to it, but it does not share swarm's meaning: what makes it what it is, is that applying its code
+     * ships that code to the peer instead of running it.
      */
     public static final fURI MACH_REMOTE_PROCESSOR_TID = MACH_PROCESSOR_TID.extend("remote");
     public static Type MACH_PROCESSOR_TYPE;
@@ -313,10 +307,10 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
                                         .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
                                 "a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result"),
-                        // A PROCESSOR THAT SHIPS — a sibling of swarm::T, not a kind of it. The Java class borrows
-                        // SwarmProcessor's thread machinery, but the type says what the thing IS: applying its code
-                        // does not run it, it hands the code to the peer and the peer's answer is the result. Named
-                        // separately so a frame's processor says what it is, the way every other component does.
+                        // A processor that ships — a sibling of swarm::T, not a kind of it. It is a thread, so the
+                        // console's handling applies, but the type says what the thing is: applying its code does not
+                        // run it, it hands the code to the peer and the peer's answer is the result. Named separately
+                        // so a machine's processor says what it is, the way every other component does.
                         MACH_REMOTE_PROCESSOR_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_PROCESSOR_TID)
                                         .vid(MACH_REMOTE_PROCESSOR_TID)
@@ -325,7 +319,7 @@ public class machInstSet extends AbstractInstSet {
                                         .create(),
                                 Map.of(uri(CODE), "the code to hand to the peer",
                                         uri(TRANSPORT), "the reach the code is shipped through"),
-                                "the processor of a frame that executes elsewhere: applying code here ships it to the peer and answers with what the peer computed"),
+                                "the processor of a machine that executes elsewhere: applying code here ships it to the peer and answers with what the peer computed"),
                         // the compiler family — structural apply(source)->code contract holding its four stages
                         MACH_COMPILER_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_MACHINE_COMPONENT_TID)
@@ -342,7 +336,7 @@ public class machInstSet extends AbstractInstSet {
                                         uri(REWRITER).maybe(), "the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites",
                                         uri(RESOLVER).maybe(), "the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default",
                                         uri(TYPER).maybe(), "the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry"),
-                                "the compiler contract of machine::T — a machine's lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler IS its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=>] is the default compiler.",
+                                "the compiler contract of machine::T — a machine's lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler is its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=>] is the default compiler.",
                                 "compiler::[rewriter=>fixpoint_rewriter::[max=>3],resolver=>scoring_resolver::[=>]]   [-- wire the stages that matter; parser and typer default --]",
                                 "compiler::[parser=>mtron_parser::[=>]]   [-- name the read stage explicitly --]",
                                 "compiler::[=>]   [-- the default compiler: mtron parse, fixpoint, scoring, typer --]"),
@@ -351,7 +345,7 @@ public class machInstSet extends AbstractInstSet {
                                         .tid(MACH_MACHINE_COMPONENT_TID)
                                         .vid(MACH_PARSER_TID)
                                         .create(),
-                                "the parse contract of compiler::T — the first stage, the only one that runs before there is any code, and the seam where a language is hosted: any language can be parsed as long as it generates code::T. given the rich type system, the object-oriented and functional-oriented approach, and turing-completeness, most any language can map to mtron code::T."),
+                                "the parse contract of compiler::T — the first stage, the only one that runs before there is any code, and the seam where a language is hosted: any language can be parsed as long as it generates code::T. Because the type system supports both object-oriented and functional designs and the language is Turing-complete, most languages can map onto mtron code::T."),
                         MACH_MTRON_PARSER_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_PARSER_TID)
                                         .vid(MACH_MTRON_PARSER_TID)
@@ -370,7 +364,7 @@ public class machInstSet extends AbstractInstSet {
                                         .vid(MACH_IDENTITY_REWRITER_TID)
                                         .constructor(arg -> IdentityRewriter.single())
                                         .create(),
-                                "at the rewrite stage of compiler::T, identity_rewriter::T is the no-op rewriter: it returns the code unchanged, which is the compiler's default when no concrete rewriter is wired",
+                                "at the rewrite stage of compiler::T, identity_rewriter::T is the no-op rewriter: it returns the code unchanged — for a compiler that wants no rewrites at all, since fixpoint_rewriter::T is the default",
                                 "identity_rewriter::[=>]   [-- the compiler's default rewrite stage --]"),
                         MACH_FIXPOINT_REWRITER_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_REWRITER_TID)
@@ -497,7 +491,7 @@ public class machInstSet extends AbstractInstSet {
                                 """
                                 the identity client — the identity element of the protocol-client family:
                                 dialing loop://<name> constructs one, and its send_recv evaluates the shipped
-                                message against the local machine. the executable form of the self-similarity
+                                message against the local machine. The executable form of the self-similarity
                                 contract: a read through a loop peer equals the local read.
                                 """,
                                 "*~/network.connect(<loop://self>) [-- the identity peer: reads and writes answer locally --]"),
@@ -546,8 +540,8 @@ public class machInstSet extends AbstractInstSet {
                                         uri(TRANSPORT), "the reach: an inst that ships a message to this peer and answers with the peer's result",
                                         uri(CLIENT), "the protocol client the dial constructed — held so disconnect can hang up; absent for connectionless transports"),
                                 """
-                                one metatron machine this machine can reach — the value of a network peer
-                                connection. `host` and `handler` absent is not a broken peer: it is a peer
+                                one metatron machine as the network records it — the value of a network peer
+                                connection. Absent `host` and `handler` is not a broken peer: it is a peer
                                 reference that crossed a wire, known here and not reachable from here.
                                 """,
                                 "peer::[authority=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>,handler=></m/web/ws/mtron_ws>,name=>'builder-2'] [-- a peer the current machine can ship to --]",
@@ -566,13 +560,9 @@ public class machInstSet extends AbstractInstSet {
                                         // here, so a purely nominal discovery::T would admit nothing at all.
                                         .isaPredicate(rec(uri(STATUS), BOOL_TYPE))
                                         .create(),
-                                Map.of(uri(STATUS), "the one field every discovery protocol must answer: true while it is live and finding machines. derived on read, never stored -- a responder whose interface went away does not announce itself"),
+                                Map.of(uri(STATUS), "the one field every discovery protocol must answer: true while it is live and finding machines. Derived on read, never stored — a responder whose interface went away does not announce itself"),
                                 """
-                                a discovery protocol -- a source of machine endpoints for the ONE roster/machine table. existence is its interface:
-                                construction starts it, deletion stops it, and it publishes no verbs. it requires exactly one field, status, because
-                                liveness is the only thing a consumer cannot work out for itself. where an endpoint was LEARNED is of no concern: every
-                                protocol writes into the shared table rather than exposing a listing of its own, so peers are generated from one
-                                consolidated index. distinct from /m/web/discovery, which is the protocol surface it discovers over"""),
+                                a discovery protocol — a source of machine endpoints for the one roster/machine table. Existence is its interface: construction starts it, deletion stops it, and it publishes no verbs. It requires exactly one field, status, because liveness is the only thing a consumer cannot work out for itself. Where an endpoint was learned is irrelevant: every protocol writes into the shared table rather than exposing a listing of its own, so peers are generated from one consolidated index. Distinct from /m/web/discovery, which is the protocol surface it discovers over"""),
                         MACH_NETWORK_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_MACHINE_COMPONENT_TID)
                                         .vid(MACH_NETWORK_TID)
@@ -635,16 +625,16 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
                                         .create(),
                                 Map.of(uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
-                                        uri(ROSTER).maybe(), "known machines, connectionless: <machine> => uri{+} — every address that machine answers at",
+                                        uri(ROSTER).maybe(), "known machines, connectionless: a declared peer is <authority> => transport, a discovered machine is <host> => uri{+} (every address it answers at); transportOf reads both",
                                         uri(PEER).maybe(), "machine's own connections: <service-uri> => peer::T",
                                         uri(SOURCE).maybe(), "the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism",
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"),
                                 """
                                 a machine's network: the endpoints the system knows about, the peers the
-                                current machine has dialed, and the handlers that discover them. membership is
+                                current machine has dialed, and the handlers that discover them. Membership is
                                 declared, never emergent — a uri must not be able to make itself a peer merely
                                 by being addressed — and it is accumulating, so a child machine unions its own
-                                level over its parent's. the authorities this machine answers to are derived
+                                level over its parent's. The authorities this machine answers to are derived
                                 from the host every mounted space declares, so identity has exactly one
                                 source and cannot drift.
                                 """,
@@ -660,19 +650,19 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(NETWORK).maybe().asUri(), MACH_NETWORK_TYPE,
                                                 uri(PROCESSOR).maybe().asUri(), MACH_PROCESSOR_TYPE))
                                         .constructor(arg -> BasicMachine.of(MACH_MACHINE_TID, arg.vid()))
-                                        .create(), Map.of(uri(INSTSET), "machine instruction set architecture",
-                                        uri(COMPILER), "parser, rewriter, resolver, and typer",
-                                        uri(MEMORY), "a frame of reference in space constrained by parent machine",
-                                        uri(NETWORK), "peers and shared peer state",
-                                        uri(PROCESSOR), "referential access to processing threads and computational state"),
+                                        .create(), Map.of(uri(INSTSET), "the machine's instruction set architecture",
+                                        uri(COMPILER), "the lowering axis: parser, rewriter, resolver, and typer",
+                                        uri(MEMORY), "the machine's address space, bounded by the parent machine",
+                                        uri(NETWORK), "the known machines and this machine's peers",
+                                        uri(PROCESSOR), "the execution axis: threads and computational state"),
                                 """
-                                a machine integrates language, structure, and process providing a frame of reference
-                                and action within metatron. machine's form nested stack by which parent machine state
-                                is accessible to children and by which parent machine's define the scope of a child
-                                machine's access to resources. lateral machine communication made possible through
-                                the  machine network where the peer group forms a shared computing workspace that is
-                                garbage collected when machine is popped off the parent stack. the absolute local root
-                                of the metatron graph (/.) is the root machine.
+                                a machine integrates language, structure, and process into one context for action
+                                within metatron. machines form a nested stack: a parent machine's state is reachable
+                                from its children, and a parent defines the scope of a child machine's access to
+                                resources. machines communicate laterally through the network component, where a
+                                peer group forms a shared computing workspace that is garbage collected when the
+                                machine is popped off the parent stack. the absolute root of the metatron graph
+                                (/.) is the root machine.
                                 """),
                         // THE REMOTE FRAME WEARS ITS OWN TYPE, and the reason is a constructor. machine::T mints a
                         // BasicMachine, so an obj claiming that tid is rebuilt locally the instant its type
@@ -704,14 +694,15 @@ public class machInstSet extends AbstractInstSet {
                                         // address, so this hands it only the rec it was declared with.
                                         .constructor(arg -> new RemoteMachine(arg.asRec().jvm(), MACH_REMOTE_MACHINE_TID, arg.vid()))
                                         .create(),
-                                Map.of(uri(PATTERN).maybe(), "the peer namespace this frame stands in"),
+                                Map.of(uri(PATTERN).maybe(), "the peer namespace this machine stands in"),
                                 """
                                 a machine that executes remotely. move(<authority>) stands in one, and every code
-                                application in its frame is shipped to the peer answering for that authority, so
-                                nothing about the computation is local. it is deliberately thin — the authority and
-                                the roster transport that reaches it, and no instset, compiler, processor or memory
-                                of its own — which is exactly why it cannot be the machine type: machine's
-                                constructor would rebuild it here, the one thing it must not be.
+                                application made on it is shipped to the peer answering for that authority, so
+                                nothing about the computation is local. It is deliberately thin — the connection it
+                                stands in (authority and transport), its parent machine's compiler, and its own
+                                shipping processor; it keeps no instset or memory of its own — which is exactly why
+                                it cannot be the machine type: machine's constructor would rebuild it here, the one
+                                thing it must not be.
                                 """),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()
@@ -778,13 +769,13 @@ public class machInstSet extends AbstractInstSet {
                                             : Helper.machineAt(here, containerAddress, "push");
                                     return container.push(f(target.name()));
                                 }),
-                                "the lhs is not consulted: push acts on the FRAME the code is running in, and carries the value flowing through untouched",
+                                "the lhs is not consulted: push acts on the machine the code is running in, and carries the value flowing through untouched",
                                 "the machine just minted and entered \\(c\\)",
-                                Map.of(jnt(0), "\\(t\\), the address to MINT. Its PARENT frame is what holds the new machine and only the \\(\\mathrm{name}(t)\\) is newly made, so \\(\\mathrm{push}(t) = \\mathrm{move}(\\mathrm{parent}(t)) \\cdot \\mathrm{push}(\\mathrm{name}(t))\\); absent, an anonymous child is minted instead"),
-                                "mint a machine at an address in the frame tree and make it current. CONSTRUCTIVE — it ADDS a frame, where move only chooses one. Because the leaf is minted FROM the address's parent, push can CROSS a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying an authority is a different boundary: a peer is forked when that authority is local and merely declared otherwise, and the frame that enters it runs its code on the peer.",
+                                Map.of(jnt(0), "\\(t\\), the address to mint. The machine at that address's parent holds the new machine and only \\(\\mathrm{name}(t)\\) is newly made, so \\(\\mathrm{push}(t) = \\mathrm{move}(\\mathrm{parent}(t)) \\cdot \\mathrm{push}(\\mathrm{name}(t))\\); absent, an anonymous child is minted instead"),
+                                "mint a machine at an address in the machine tree and make it current. Constructive — it adds a machine, where move only chooses one. Because the leaf is minted from the address's parent, push can cross a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying an authority is a different boundary: a peer is forked when that authority is local and merely declared otherwise, and the machine created for it runs its code on the peer.",
                                 "push(xyz)                              [-- mint /xyz --]",
                                 "push(<../b>)                           [-- the sibling b, minted from the shared parent: = move(<..>).push(b) --]",
-                                "push(<a/b>)                            [-- the descendant /a/b, minted from the frame at /a --]",
+                                "push(<a/b>)                            [-- the descendant /a/b, minted from the machine at /a --]",
                                 "push()                                 [-- an anonymous child, \\(c = \\mathrm{mintShortUUID}(\\mathrm{vid}(\\mathrm{here}))\\) --]",
                                 "push(<ws://localhost:8555/worker>)     [-- a process boundary, not a place in this tree --]"),
                         // POP NAMES THE FRAME YOU STAND IN. `pop()` and `pop(<~>)` are ONE instruction, and an
@@ -804,31 +795,31 @@ public class machInstSet extends AbstractInstSet {
                                     final Machine named = inst.arg(0).isMachine() ? inst.arg(0).asMachine() : Helper.machineAt(here, inst.arg(0).uriValue(), "pop");
                                     if (Helper.sameFrame(named, here))
                                         return here.pop();
-                                    throw MTronException.of("pop(%s) is not the frame you stand in (%s): a frame is discarded by the one that holds it — pop() where you stand, or move(<%s>) there first",
+                                    throw MTronException.of("pop(%s) is not the current machine (%s): a machine is discarded by the machine that holds it — discard the current machine with pop(), or move(<%s>) there first",
                                             inst.arg(0), here.vid(), inst.arg(0));
                                 }),
-                                "the lhs is not consulted: pop acts on the FRAME the code is running in",
-                                "the frame that HELD the one discarded — \\(\\mathrm{pop}(f) \\mapsto \\mathrm{parent}(f)\\), so the cursor lands on \\(f\\)'s \\(..\\)",
-                                Map.of(jnt(0), "the frame to discard, which must resolve relative to the current machine: it is admitted only when \\(t \\sim \\mathrm{here}\\), so `pop(<../b>)` from \\(a\\) is refused. Absent, \\(t = \\mathrm{here}\\) — and `pop()` = `pop(<~>)` = `pop(_)`"),
-                                "DESTRUCTIVE — the one frame instruction that closes what it leaves, where move leaves it standing and reachable by address. It discards the frame you stand in and lands on that frame's \\(..\\). A frame is discarded by the one that HOLDS it, so an address that does not resolve to where you stand is refused rather than silently ignored, and the ROOT has no \\(..\\) to land on: it owns the address space, so closing it is the shutdown path and a reset is the honest instruction. Because \\(\\mathrm{move}\\) keeps no history and the containment link is what \\(\\mathrm{pop}\\) follows, a frame you only MOVED into has nowhere to return to.",
-                                "pop()               [-- discard where you stand, land on its .. --]",
-                                "pop(<~>)            [-- the same instruction: ~ IS where you stand --]",
+                                "the lhs is not consulted: pop acts on the machine the code is running in",
+                                "the machine that held the one discarded — \\(\\mathrm{pop}(f) \\mapsto \\mathrm{parent}(f)\\), so the current machine becomes \\(f\\)'s \\(..\\)",
+                                Map.of(jnt(0), "the machine to discard, which must resolve relative to the current machine: it is admitted only when \\(t \\sim \\mathrm{here}\\), so `pop(<../b>)` from \\(a\\) is refused. Absent, \\(t = \\mathrm{here}\\) — and `pop()` = `pop(<~>)` = `pop(_)`"),
+                                "destructive — the one machine instruction that closes what it leaves, where move leaves it standing and reachable by address. It discards the machine the code is running in and lands on that machine's \\(..\\). A machine is discarded by the one that holds it, so an address that does not resolve to the current machine is refused rather than silently ignored, and the root has no \\(..\\) to land on: it owns the address space, so closing it is the shutdown path and a reset is the honest instruction. Because \\(\\mathrm{move}\\) keeps no history and the containment link is what \\(\\mathrm{pop}\\) follows, a machine the code only moved into has nowhere to return to.",
+                                "pop()               [-- discard the current machine, land on its .. --]",
+                                "pop(<~>)            [-- the same instruction: ~ is the current machine --]",
                                 "pop(_)              [-- and the same again with the lhs as the argument --]",
-                                "pop(<../b>)         [-- refused: b is not the frame you stand in --]",
+                                "pop(<../b>)         [-- refused: b is not the current machine --]",
                                 "pop()               [-- at the root: refused, reset metatron instead --]"),
                         // move() is move(<..>): the NON-destructive way up, and the whole point of the motif —
                         // pop() destroys the frame it leaves, move() leaves it standing and reachable by address
                         docWrap(instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) ->
                                         Machine.current(Helper.machineAt(Machine.current(), inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue(), "move"))),
-                                "the lhs is not consulted: move chooses the FRAME the next code runs in",
-                                "the frame moved to — \\(\\mathrm{move}(t) \\mapsto f\\) where \\(f\\) is the machine \\(t\\) addresses",
-                                Map.of(jnt(0), "\\(t\\), the address to stand in: `~` is the frame you are in, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling \\(b\\), and `../../..` walks up. Absent, \\(t = \\;..\\) — bare `move()` IS `move(<..>)`"),
-                                "choose where next inst will evaluate, and close nothing. The address is folded against the current machine and an address popped past root is a fail::T.",
-                                "move(<..>)          [-- up: the parent frame, WITHOUT closing this one --]",
+                                "the lhs is not consulted: move chooses the machine the next code runs in",
+                                "the machine moved to — \\(\\mathrm{move}(t) \\mapsto f\\) where \\(f\\) is the machine \\(t\\) addresses",
+                                Map.of(jnt(0), "\\(t\\), the address to stand in: `~` is the current machine, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling \\(b\\), and `../../..` walks up. Absent, \\(t = \\;..\\) — bare `move()` is `move(<..>)`"),
+                                "choose where the next inst will evaluate, and close nothing. The address is folded against the current machine, and an address that walks past the root saturates there rather than failing.",
+                                "move(<..>)          [-- up: the parent machine, without closing this one --]",
                                 "move()              [-- the same instruction --]",
                                 "move(<../b>)        [-- across, to the sibling b --]",
                                 "move(<a/c>)         [-- down a composed path in one step --]",
-                                "move(<~/..>)        [-- ~ is the frame base, consumed before the fold: the parent --]",
+                                "move(<~/..>)        [-- ~ is the current machine, consumed before the fold: the parent --]",
                                 "move(<../../..>)    [-- past the root: saturates at the root --]"),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             ((AbstractThread) lhs).stop();
@@ -858,10 +849,11 @@ public class machInstSet extends AbstractInstSet {
                         // rendezvous -- it marks where the rendezvous must be WIDENED to the machine's peers.
                         docWrap(InstSet.Helper.rewriter(MACH_REWRITE_TID.extend("sum_gather"),
                                         code -> {
-                                            // NO PEERS, NO DISTRIBUTION. The peers are the declared roster IN SPACE
-                                            // (/sys/peer): one entry per authority this machine may rely on. Space is the
-                                            // mechanism already proven (the barrier mailbox), so the topology is read from
-                                            // it -- the transport layer can arrive later without moving the peer source.
+                                            // NO PEERS, NO DISTRIBUTION. The topology is the compute plan in space
+                                            // (/usr/compute): its home/barrier branch carries one key per peer this
+                                            // machine may rely on. Space is the mechanism already proven (the barrier
+                                            // mailbox), so the topology is read from it -- the transport layer can arrive
+                                            // later without moving the peer source.
                                             // With an empty roster there is nothing to gather FROM, and the rule must not
                                             // fire at all: measured, an inserted gather changes WHEN a coefficient is
                                             // complete, which turns a surviving coefficient into a premature reduction.
@@ -977,9 +969,10 @@ public class machInstSet extends AbstractInstSet {
                                                     // barrier writes and reads a SPACE address (it subscribes at the mailbox and
                                                     // reads what has accumulated), so an authority like ws://localhost:8555
                                                     // resolves to nothing and the barrier would wait on a mailbox no write can
-                                                    // reach. /sys/peer is already a real space -- the roster lives in it -- so
-                                                    // the mailboxes live under it, one per peer, named by the peer's place in
-                                                    // the roster. Single-JVM construction: 'a' is this machine's name.
+                                                    // reach. /usr/compute is already a real space -- the plan lives in
+                                                    // it -- so the mailboxes live under it, one per peer, named by the
+                                                    // peer's place in the plan. Single-JVM construction: 'a' is this
+                                                    // machine's name.
                                                     for (final fURI peer : peers)
                                                         out.add(instB(BARRIER_INST_TID, lst(uri(
                                                                 COMPUTE.extend(MACH_HOME).extend("barrier").extend(peer.name())))));
@@ -990,7 +983,7 @@ public class machInstSet extends AbstractInstSet {
                                             return inserted ? code.selfJVM(out).asCode() : code;
                                         }),
                                 "gives a monoidic reducer its gather point: \\(\\mathrm{sum} \\leadsto \\mathrm{barrier} \\cdot \\mathrm{sum}\\)"))));
-        docWrap(this, "the reflective instruction set of metatron featuring process, monad, and code introspection");
+        docWrap(this, "the machine instruction set of metatron: machines and their five components (instset, compiler, memory, network, processor), the network's peer and discovery types, the thread family, and the instructions that mint, choose, and discard machines");
         super.setup();
 
     }

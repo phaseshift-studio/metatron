@@ -96,7 +96,7 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 # the boot/space modules.  Mount your own boot and pass its boot args as the
 # command:
 #   docker run ... metatron "[boot=><boot/deploy.mtron>,log=>info]"
-CMD ["[boot=><boot/docker.boot.mtron>,log=>info]"]
+CMD ["[boot=><boot/docker.boot.mtron>,log=>info,web=>[http=><http://0.0.0.0:8777>,ws=><ws://0.0.0.0:8555>]]"]
 
 # Assumes the boot serves http on 0.0.0.0:8777 (the container's healthcheck port).
 # The http / route serves an index from the fs: web root — a plain GET must be 2xx.

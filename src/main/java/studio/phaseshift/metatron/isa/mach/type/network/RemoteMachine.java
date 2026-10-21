@@ -130,7 +130,7 @@ public class RemoteMachine extends MRec implements Machine {
 
     /**
      * The frame INHERITS its enclosing scope. Local bookkeeping that is not the peer's — the declared roster at
-     * {@code /sys/peer}, {@code ~/thread}, the tracer — has to keep resolving while this frame is current, or the
+     * {@code /network/roster}, {@code ~/thread}, the tracer — has to keep resolving while this frame is current, or the
      * roster would read empty from inside the very frame it declared and no peer address could dispatch.
      * <p>
      * Execution never comes here: every code application is shipped ({@link #applyCode}), so this is the local

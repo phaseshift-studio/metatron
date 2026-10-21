@@ -34,18 +34,20 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_NETWORK_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * BasicNetwork — one level of a machine's network: a roster of {@code <service-uri> => <transport-inst>}.
+ * BasicNetwork — one level of a machine's network: the peers this machine has dialed, as a map of
+ * {@code <service-uri> => <transport-inst>}.
  * <p>
- * It holds <b>no state in Java fields</b>: the roster <em>is</em> this rec, so mtron reads and writes the peers of
+ * It holds <b>no state in Java fields</b>: the peer map <em>is</em> this rec, so mtron reads and writes the peers of
  * a frame directly and nothing the boundary acts on is hidden from reflection.
  * <p>
  * The value is the transport — an inst that takes the message and returns the peer's response. Keeping it an inst
  * is what keeps the machine free of any transport dependency: swapping ws for http, mqtt, a container endpoint or a
  * shared space is a roster change, not a code change.
  * <p>
- * The roster's home is still {@code /sys/peer}, reached through {@link Network#roster()}. It moves onto this rec —
- * the component's own map — once the network slot is mounted as a writable space; until then that path is the one
- * address mtron can write membership to, and routing every read through a single accessor keeps the move free.
+ * The known-server roster's home is {@code /network/roster}, reached through {@link Network#roster()}. It moves
+ * onto this rec — the component's own map — once the network slot is mounted as a writable space; until then that
+ * path is the one address mtron can write membership to, and routing every read through a single accessor keeps
+ * the move free.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */

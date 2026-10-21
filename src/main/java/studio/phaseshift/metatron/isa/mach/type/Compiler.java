@@ -84,14 +84,14 @@ public interface Compiler extends Machine.Component, Rec {
     }
 
     /**
-     * @return the rewriter stage component ({@code rewriter::T}) — identity by default
+     * @return the rewriter stage component ({@code rewriter::T}) — fixpoint_rewriter::T by default
      */
     default Rewriter rewriter() {
         return this.at(REWRITER).orThrow("compiler has no rewriter: %s", this);
     }
 
     /**
-     * @return the resolver stage component ({@code resolver::T}) — identity by default
+     * @return the resolver stage component ({@code resolver::T}) — scoring_resolver::T by default
      */
     default Resolver resolver() {
         return this.at(RESOLVER).orThrow("compiler has no resolver: %s", this);

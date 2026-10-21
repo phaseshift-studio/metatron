@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <p>
  * A separate process is the point: it has its own {@code Router}, its own spaces, its own serializer state, and
  * only a socket to the parent — which is exactly what makes an authority-routed read or write a real distributed
- * act rather than an in-JVM alias. The parent reaches it through the {@code /sys/peer} roster, so the same
+ * act rather than an in-JVM alias. The parent reaches it through the {@code /network/roster} roster, so the same
  * authority dispatch that serves a declared peer serves a spawned one.
  * <p>
  * Everything it does is narrated to stdout, which {@link PeerSpawn} captures per node as that node's trace, and
