@@ -19,6 +19,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.ModalTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.NetworkPanelTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.SwipePanelWidgetTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TreeSelectTool;
 import studio.phaseshift.metatron.isa.mach.ui.uiInstSet;
@@ -85,6 +86,7 @@ public class WidgetStateDisciplineTest extends AbstractInstSetTest {
                 Arguments.of("tree_select_widget", TreeSelectTool.class),
                 Arguments.of("swipe_panel_widget", SwipePanelWidgetTool.class),
                 Arguments.of("modal_widget", ModalTool.class),
+                Arguments.of("network_panel_tool", NetworkPanelTool.class),
                 Arguments.of("stack_bar_widget", StackBarWidget.class));
     }
 
