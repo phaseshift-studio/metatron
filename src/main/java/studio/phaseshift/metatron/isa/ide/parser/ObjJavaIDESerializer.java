@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.ide.parser;
 
-import ch.usi.si.seart.treesitter.Language;
 import ch.usi.si.seart.treesitter.Node;
 import ch.usi.si.seart.treesitter.Parser;
 import ch.usi.si.seart.treesitter.Tree;
@@ -27,8 +26,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.TreeSitterUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -37,6 +36,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.isa.ide.ideInstSet.IDE_JAVA_TID;
+import static studio.phaseshift.metatron.isa.ide.ideInstSet.IDE_JAVA_TYPE;
 import static studio.phaseshift.metatron.isa.ide.ideInstSet.OBJ_IDE_JAVA_SERIALIZER_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -79,12 +79,10 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
 
     private static final ObjJavaIDESerializer INSTANCE = new ObjJavaIDESerializer();
 
-    private static final Parser PARSER;
-
-    static {
-        ObjJavaSerializer.loadNativeLibrary();
-        PARSER = Parser.getFor(Language.JAVA);
-    }
+    /*
+     * NO static initializer: see TreeSitterUtil. The native load can fail, and a Throwable escaping <clinit>
+     * marks this class ERRONEOUS for the life of the JVM -- which is how java::T used to take the VM down.
+     */
 
     public static ObjJavaIDESerializer single() {
         return INSTANCE;
@@ -102,7 +100,13 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
 
     @Override
     public Obj read(final String source) throws MTronException {
-        try (final Tree tree = PARSER.parse(source)) {
+        final Parser parser;
+        try {
+            parser = TreeSitterUtil.parser();   // MTronException when the native library did not load
+        } catch (final MTronException e) {
+            throw MTronException.of(e, "%s is unavailable: %s", IDE_JAVA_TYPE.toShortString(), TreeSitterUtil.unavailability());
+        }
+        try (final Tree tree = parser.parse(source)) {
             final Node root = tree.getRootNode();
             final String programContent = root.getContent();
             Rec result = rec();
@@ -147,6 +151,9 @@ public class ObjJavaIDESerializer extends AbstractObjSerializer<String> {
             return result.selfTID(IDE_JAVA_TID);
         } catch (final MTronException e) {
             throw e;
+        } catch (final LinkageError e) {
+            // the library loaded but a symbol did not resolve -- same story, same graceful failure
+            throw MTronException.of(e, "%s is unavailable: %s", IDE_JAVA_TYPE.toShortString(), TreeSitterUtil.unavailability());
         } catch (final Exception e) {
             throw MTronException.of(e, "unable to parse java source into coarse schema");
         }
