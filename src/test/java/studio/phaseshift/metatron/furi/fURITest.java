@@ -31,6 +31,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,6 +73,7 @@ public class fURITest extends AbstractMetatronTest {
             "http://xyz.com                | null",
             "xyz://abc.xyz.com:90/x/y/z    | abc",
             "abc/xyz/com                   | null",
+            "ws://[::ffff:192.0.2.128]:80/a | null",
     }, delimiter = '|', nullValues = "null")
     public void testSubdomain(final String furiA, final String subdomain) {
         final fURI fa = f(furiA);
@@ -308,7 +311,13 @@ public class fURITest extends AbstractMetatronTest {
             "a/b/c,null,-1",
             "a/b/c,null,-1",
             "b/#,null,-1",
-            "null,null,-1"
+            "null,null,-1",
+            "ws://[::1]:8555/mtron,[::1],8555",
+            "ws://[0:0:0:0:0:0:0:1]:45960/mtron,[0:0:0:0:0:0:0:1],45960",
+            "http://[2001:db8:85a3::8a2e:370:7334]/a,[2001:db8:85a3::8a2e:370:7334],-1",
+            "ws://[::ffff:192.0.2.128]:80/a,[::ffff:192.0.2.128],80",
+            "ws://[fe80::1%25eth0]:8555/x,[fe80::1%25eth0],8555",
+            "//[::1]:8555/x,[::1],8555"
     }, nullValues = "")
     void testAuthority(final String furi, final String host, final int port) {
         for (final fURI parse : Arrays.asList(f(furi), mParser.m_furi().parse(furi).<fURI>get())) {
@@ -353,11 +362,42 @@ public class fURITest extends AbstractMetatronTest {
             "+/a/b/c/                | +/a/b/c/",
             "http://#/a/b/c          | http://#/a/b/c",
             "http://#:29/a/b/c       | http://#:29/a/b/c",
-            "/a/b/c/                 | /a/b/c/"
+            "/a/b/c/                 | /a/b/c/",
+            "ws://[::1]:8555/mtron   | ws://[::1]:8555/mtron",
+            "http://[2001:db8::1]/a/ | http://[2001:db8::1]/a/",
+            "ws://[0:0:0:0:0:0:0:1]:45960 | ws://[0:0:0:0:0:0:0:1]:45960"
     }, delimiter = '|')
     void testString(final String furi, final String furiString) {
         final fURI f = idem(furi);
         assertEquals(furiString, f.toString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "localhost:8555     % localhost     % 8555",
+            "192.168.1.61       % 192.168.1.61  % -1",
+            "[::1]:8555         % [::1]         % 8555",
+            "[2001:db8::1]      % [2001:db8::1] % -1",
+    }, delimiter = '%')
+    void testAuthorityOfString(final String authority, final String host, final int port) {
+        final fURI parsed = f("").authority(authority);
+        assertEquals(host, parsed.host());
+        assertEquals(port, parsed.port());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "127.0.0.1    % 127.0.0.1",
+            "::1          % [0:0:0:0:0:0:0:1]",
+            "2001:db8::1  % [2001:db8:0:0:0:0:0:1]",
+    }, delimiter = '%')
+    void testHostOfASocketAddress(final String address, final String host) throws Exception {
+        final String spelled = fURI.hostOf(new InetSocketAddress(InetAddress.getByName(address), 8555));
+        assertEquals(host, spelled);
+        // the authority it spells reads back as that host and port
+        final fURI authority = f("ws://" + spelled + ":8555/mtron");
+        assertEquals(host, authority.host());
+        assertEquals(8555, authority.port());
     }
 
     @ParameterizedTest

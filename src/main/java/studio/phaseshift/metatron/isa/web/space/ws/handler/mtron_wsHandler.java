@@ -18,11 +18,15 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws.handler;
 
+import org.java_websocket.WebSocket;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.parser.Parser;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
@@ -64,23 +68,34 @@ public class mtron_wsHandler extends WebSocketRec {
             .constructor(mtron_ws -> new mtron_wsHandler(new LinkedHashMap<>(mtron_ws.asRec().jvm()), mtron_ws.asRec().vid())).create();
 
 
+    /**
+     * ON_MESSAGE — answer a message with the message itself. A frame is a program, and it is evaluated ONCE, as it
+     * is read: by {@link #onMessage(WebSocket, String)} on a server session, by the input serializer on a client
+     * that wears this protocol. What reaches this inst is therefore already the answer. Applying it once more was
+     * the double apply: a value does not notice an application to noobj and a poly protects its members, but a
+     * bare call-typed answer (a lambda, a quote) RAN on noobj, so the wire answered the application of the answer
+     * where the console answered the answer.
+     * <p>
+     * The domain takes ANY multiplicity ({@code #{*}}). Declared {@code #{?}}, a message with a coefficient did not
+     * match it, so while {@code inst_dom} is checked the processor compressed the coefficient away: the function saw
+     * {@code 34} for {@code {3}34} and sent that, and only the inst's own return regained the {@code {3}}.
+     */
     public static Inst mtron_on_message(final WebSocketRec ws) {
-        return instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+        return instC(M_ISA_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
-                final Obj rhs = lhs.apply(noobj());
                 // caughtTransient, not caught(): caught() deletes the fail from the fail
                 // space — a write the message thread must not perform just to format a
                 // reply (the transport boundary already caught the fail; this covers a
                 // direct ON_MESSAGE apply)
-                final Obj result = rhs.isFail() ? rhs.asFail().caughtTransient() : rhs;
-                ws.logger().debug("processed mtron message: %s => %s", lhs, result);
+                final Obj result = lhs.isFail() ? lhs.asFail().caughtTransient() : lhs;
+                ws.logger().debug("answered mtron message: %s", result);
                 ws.send(result);
                 // emit the fail stack trace after the reply is sent, not during its
                 // serialization (where the tracer's own fail registration would delay the
                 // send and leave the client waiting)
                 if (result.isFail() || result.isCaughtFail())
                     MTronException.emitStackTrace(result.asFail().jvm());
-                return rhs;
+                return lhs;
             } catch (final Exception e) {
                 final Fail failure = fail(e).caughtTransient();
                 ws.logger().debug("error processing message: %s => %s", lhs, failure);
@@ -130,6 +145,39 @@ public class mtron_wsHandler extends WebSocketRec {
                 return noobj();
             }
         }));
+    }
+
+    /**
+     * ONE EVALUATION PER FRAME. A text frame is read by this machine's own parser stage ({@link Machine#parse}) and
+     * the program it denotes is compiled and run once ({@link Machine#evaluate(Code)}); the answer is what
+     * {@code on_message} receives, and it replies with it as it stands.
+     * <p>
+     * The input serializer is not asked to evaluate, though {@code ObjmtronSerializer.read} does: it hands the
+     * compiler TEXT, which a compiler that takes only {@code code::T} rejects, and when evaluation throws it falls
+     * back to a bare parse. On those paths a frame arrived unevaluated and the handler's own application (the
+     * second one everywhere else) was the only one, and a program that threw was run again from the start. Read
+     * here, a frame is evaluated exactly once whichever compiler is installed, and a program that throws answers
+     * its fail. A session whose input is not mtron (json, plain text) carries data and is read as it always was.
+     */
+    @Override
+    public void onMessage(final WebSocket conn, final String message) {
+        final MIME.MIMEType input = this.getIO().input();
+        if (!input.isMtron() && !input.isMtronUI()) {
+            super.onMessage(conn, message);
+            return;
+        }
+        final Obj answer = mtron_wsHandler.evaluate(message);
+        // the guard the serializer read applies: an uncaught fail would skip on_message's function, and the client
+        // would wait out its deadline for a reply that is never sent
+        this.onMessage(conn, answer.isFail() ? answer.asFail().caughtTransient() : answer);
+    }
+
+    private static Obj evaluate(final String frame) {
+        try {
+            return Machine.evaluate(Parser.Helper.toCode(Machine.parse(frame)));
+        } catch (final Exception e) {
+            return fail(e);
+        }
     }
 
     public Obj apply(final Obj obj) {

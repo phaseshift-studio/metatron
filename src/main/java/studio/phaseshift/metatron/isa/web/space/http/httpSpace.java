@@ -184,7 +184,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         // ?q processors (?clientq=<name> is the dialer's identity) — defined once at the request
         // boundary so the co-mount and the handlers see what the client actually dialed.
         final fURI connection = f(exchange.getRequestURI().toString()).scheme("http")
-                .host(exchange.getLocalAddress().getHostString()).port(exchange.getLocalAddress().getPort());
+                .host(fURI.hostOf(exchange.getLocalAddress())).port(exchange.getLocalAddress().getPort());
         final RouteLane lane = null != fixed ? fixed
                 : this.resolveRoute(routeValue, connection.localize());
         if (RouteLane.Kind.NONE == lane.kind()) {

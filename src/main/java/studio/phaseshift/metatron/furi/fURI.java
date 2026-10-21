@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -309,8 +310,21 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     default fURI authority(final String authority) {
         if (null == authority && null != this.authority())
             return fURI.of(this.scheme(), null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
-        final String[] parts = authority.split(":");
-        return parts.length == 2 ? this.host(parts[0]).port(Integer.parseInt(parts[1])) : this.host(parts[0]);
+        // the port's colon is the first one AFTER the host: past the closing bracket of an IP-literal ([::1]:8555),
+        // whose own colons are the address, not a separator
+        final int colon = authority.indexOf(':', authority.startsWith("[") ? Math.max(0, authority.indexOf(']')) : 0);
+        return -1 == colon ? this.host(authority) : this.host(authority.substring(0, colon)).port(Integer.parseInt(authority.substring(colon + 1)));
+    }
+
+    /**
+     * The host a socket address reports, spelled as a fURI host. An IPv6 address is bracketed (the RFC 3986
+     * IP-literal) because its colons would otherwise read as the port separator; any other host is as reported. A
+     * socket address is never parsed through its {@code toString()}: that is {@code hostname/ip:port}, which a fURI
+     * reads as a path, and for an IPv6 peer ({@code /[0:0:0:0:0:0:0:1]:45960}) is no uri at all.
+     */
+    static String hostOf(final InetSocketAddress address) {
+        final String host = address.getHostString();
+        return host.indexOf(':') >= 0 && !host.startsWith("[") ? "[" + host + "]" : host;
     }
 
     /**
@@ -341,7 +355,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     default String subdomain() {
         final String hostString = this.host();
-        if (null == hostString)
+        // an IP-literal ([::ffff:192.0.2.128]) is an address, not a name: its dots are not domain labels
+        if (null == hostString || hostString.startsWith("["))
             return null;
         Matcher m = fURI.Singleton.HOST_PATTERN.matcher(hostString);
         if (m.matches() && m.group(1) != null) {
@@ -944,9 +959,14 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         // `{...}` whose body IS a cInt is the trailing coefficient, not a branch — the negative lookahead makes the
         // coefficient win at the end, so `a/b/{c,d}` is path `a/b/{c,d}` while `a/b/c{2}` is path `a/b/c` + coeff `{2}`.
         private static final String COEFFICIENT_BODY = "-?\\d+,-?\\d+|,-?\\d+|-?\\d+,|,|-?\\d+|\\*\\*|-\\*|-\\?|\\?\\?|\\*|\\+|\\?|-";
+        // An RFC 3986 IP-literal host: `[` an IPv6 address `]`, with an optional zone (`%eth0`, or `%25eth0` as RFC
+        // 6874 encodes it). Everywhere else in a fURI brackets open the poly annotation, but directly after `//` a
+        // poly cannot stand, and an IPv6 address needs them: its colons would otherwise read as the port separator.
+        // Only hex digits, colons and dots, and at least one colon, so nothing that spells a poly can match.
+        private static final String IP_LITERAL = "\\[(?=[^\\]]*:)[0-9A-Fa-f:.]+(?:%[0-9A-Za-z._~%-]+)?\\]";
         public static final Pattern FURI_PATTERN = Pattern.compile(
                 "((?<scheme>[^:/.]+):)?" +
-                        "(//((?<host>[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
+                        "(//((?<host>" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
                         "(?<path>(?:[^?\\[{&]|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
                         "(\\[(?<poly>[^]]+)])?" +
                         "(\\{(?<coefficient>" + COEFFICIENT_BODY + ")})?" +
@@ -963,7 +983,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         // - coefficient: only matches {..} NOT preceded by $ (negative lookbehind)
         public static final Pattern FURI_TEMPLATE_PATTERN = Pattern.compile(
                 "((?<scheme>\\$\\{[^}]+}|[^:/.]+):)?" +
-                        "(//((?<host>\\$\\{[^}]+}|[^?\\[&<>:/]+)(:(?<port>\\$\\{[^}]+}|\\d+))?))?" +
+                        "(//((?<host>\\$\\{[^}]+}|" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\$\\{[^}]+}|\\d+))?))?" +
                         "(?<path>([^?\\[&{]|\\$\\{[^}]+})+)?" +
                         "(\\[(?<poly>[^]]+)])?" +
                         "((?<!\\$)\\{(?<coefficient>[^}\\]]+)})?" +
