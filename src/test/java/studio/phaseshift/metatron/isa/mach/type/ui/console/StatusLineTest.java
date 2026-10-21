@@ -34,9 +34,7 @@ import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
 
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
@@ -49,13 +47,19 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 @Execution(ExecutionMode.SAME_THREAD)
 public class StatusLineTest extends AbstractMetatronTest {
 
-    /** The banner divides messages with a bullet, newest leftmost. */
+    /**
+     * The banner divides messages with a bullet, newest leftmost.
+     */
     private static final String DOT = " • ";
-    /** The line's colors in the banner's normal state: yellow on blue. */
+    /**
+     * The line's colors in the banner's normal state: yellow on blue.
+     */
     private static final String FORE = "y";
     private static final String BACK = "b";
 
-    /** The banner is class-level state shared by every status line, so each test starts blank. */
+    /**
+     * The banner is class-level state shared by every status line, so each test starts blank.
+     */
     @BeforeEach
     void clearBannerBefore() {
         StatusLine.message(str(""));
@@ -68,7 +72,9 @@ public class StatusLineTest extends AbstractMetatronTest {
         WireStats.reset();
     }
 
-    /** What a terminal shows of the banner's markup: the envelope, then the messages. */
+    /**
+     * What a terminal shows of the banner's markup: the envelope, then the messages.
+     */
     private static String visibleBanner() {
         return Graphitty.strip(StatusLine.bannerMarkup(FORE, BACK));
     }
@@ -100,7 +106,7 @@ public class StatusLineTest extends AbstractMetatronTest {
             WireStats.received("peer", null);
         for (int i = 0; i < sent; i++)
             WireStats.sent("peer", null);
-        assertEquals(expected, Graphitty.strip(StatusLine.netMarkup("y")), description);
+        assertEquals(expected, Graphitty.strip(StatusLine.netMarkup("y", BACK)).trim(), description);
     }
 
     /**
@@ -109,10 +115,10 @@ public class StatusLineTest extends AbstractMetatronTest {
      */
     @Test
     void shouldTintTheTripCountOnlyWhenTheWireHasTimedOut() {
-        assertFalse(StatusLine.netMarkup("y").contains("{{r}}"), "an answering wire is quiet");
+        assertFalse(StatusLine.netMarkup("y", BACK).contains("r}}"), "an answering wire is quiet");
         WireStats.timeout();
-        assertTrue(StatusLine.netMarkup("y").contains("{{r}}"), "a timeout is the one thing worth a color");
-        assertEquals("⇄0 ↓0 ↑0", Graphitty.strip(StatusLine.netMarkup("y")),
+        assertTrue(StatusLine.netMarkup("y", BACK).contains("r}}"), "a timeout is the one thing worth a color");
+        assertEquals("⇄0 ↓0 ↑0", Graphitty.strip(StatusLine.netMarkup("y", BACK)).trim(),
                 "the count is unchanged — only its color is");
     }
 
