@@ -19,10 +19,12 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.ArrayList;
@@ -34,7 +36,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.sum_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -172,6 +178,25 @@ public abstract class LawTable {
     }
 
     /**
+     * A chain instruction keyed with its declared n-tid for the carrier it folds — the form {@link #combiner},
+     * {@code Form.of} and every declared-law lookup read before resolution. A fold whose argument holds folds,
+     * {@code group([k⇒h])}, has those keyed too, since its combiner is computed from theirs. The instruction itself
+     * when nothing declares it: an undeclared op matches no law-bearing slot, fail closed.
+     */
+    public static Inst keyed(final Inst inst, final Type carrier) {
+        final Declared declared = declared(inst.tid().basePath(), carrier);
+        if (null == declared)
+            return inst;
+        final Inst typed = inst.tid(declared.tid());
+        if (!GROUP_INST_TID.equals(typed.tid().basePath()) || 1 != typed.args().count() || !typed.arg(0).isRec())
+            return typed;
+        final Map<Obj, Obj> spec = new LinkedHashMap<>();
+        typed.arg(0).asRec().elements().forEach(kv -> spec.put(kv.jvm().get0(),
+                kv.secondDirect().isInst() ? keyed(kv.secondDirect().asInst(), carrier) : kv.secondDirect()));
+        return typed.args(lst(rec(spec)));
+    }
+
+    /**
      * THE COMBINER of a fold, computed and never declared: the fold its partials recombine through, so that
      * {@code (a ⊎ b)·r = (a·r ⊎ b·r)·combiner(r)} — Thm 19 with the re-application read off the theory. A stream is a
      * bag, so this is the universal property of the free commutative monoid: a fold that distributes is
@@ -182,17 +207,21 @@ public abstract class LawTable {
      *   <li>a fold DEFINED as a pointwise map into one — its declared {@link Derivation}, {@code r ↦ map(g)·f} —
      *       recombines through {@code f}, read off {@code r}'s target object (the carrier {@code f} folds), with the
      *       generics bound from {@code keyed}'s own arguments — {@code count ↦ map(1)·sum},
-     *       {@code order(B) ↦ split([_])·kmerge(B)}.</li>
+     *       {@code order(B) ↦ split([_])·kmerge(B)};</li>
+     *   <li>a fold whose argument holds folds recombines POINTWISE through theirs — {@code group([k⇒h])}, see
+     *       {@link #pointwise} — and its combiner is a chain rather than one instruction.</li>
      * </ul>
-     * {@code keyed} carries its declared n-tid ({@link #declared}). Null when the fold has none: {@code mean}
+     * {@code keyed} carries its declared n-tid ({@link #keyed}). Null when the fold has none: {@code mean}
      * (magmadic), {@code str} {@code sum} (not commutative), an undeclared or non-reducing instruction.
      */
-    public static Inst combiner(final Inst keyed, final Law... laws) {
+    public static Call combiner(final Inst keyed, final Law... laws) {
         final Entry entry = lawsOf(keyed.tid());
         if (null == entry || Inst.Form.reducer != Inst.Form.of(keyed))
             return null;
         if (declaresAll(entry, laws))
             return keyed;
+        if (GROUP_INST_TID.equals(keyed.tid().basePath()))
+            return pointwise(keyed, laws);
         if (null == entry.derivation())
             return null;
         final Inst fold = entry.derivation().fold(keyed);
@@ -205,23 +234,58 @@ public abstract class LawTable {
     }
 
     /**
+     * THE POINTWISE COMBINER. {@code group([k⇒h])} is a homomorphism from the bag into the recs of {@code h}'s monoid,
+     * keyed by {@code k}: the partials merge by key, and each key's partials fold through {@code h}'s own combiner. So
+     * it is computed from that combiner, never named — {@code sum()==[_=>combiner(h)]}: the rec {@code sum} (the deep
+     * merge, which appends colliding partials into a bag — a lst kept whole, so an {@code order}'s sorted runs reach
+     * {@code kmerge} as runs — and reads a bulked partial as its copies), then a per-key fold. Null, so nothing shards,
+     * when a value is not a fold with a combiner ({@code mean}, a constant), or when the spec's entries fold differently
+     * (a key keeps no record of the entry that claimed it, and the claim falls differently in every part, so even folds
+     * with one combiner would mix).
+     */
+    private static Call pointwise(final Inst keyed, final Law... laws) {
+        if (1 != keyed.args().count() || !keyed.arg(0).isRec())
+            return null;
+        final List<Obj> folds = keyed.arg(0).asRec().elements().map(Rel::secondDirect).toList();
+        final Obj fold = folds.isEmpty() ? null : folds.getFirst();
+        if (null == fold || !fold.isInst() || !folds.stream().allMatch(f -> f.isInst() && catLiveness.same(f.asInst(), fold.asInst())))
+            return null;
+        final Obj perKey = perKey(fold, laws);
+        return null == perKey ? null : sum_().select_(rec(id_().tryToInst(), perKey));
+    }
+
+    /**
+     * The per-key fold of one spec value: its combiner, a self-combining fold emitted as the chain wrote it (its op
+     * address, resolved where it runs). Null when the value is no fold with a combiner.
+     */
+    private static Obj perKey(final Obj value, final Law... laws) {
+        if (!value.isInst())
+            return null;
+        final Call fold = combiner(value.asInst(), laws);
+        if (null == fold)
+            return null;
+        return fold == value ? value.asInst().tid(value.asInst().tid().basePath()) : fold;
+    }
+
+    /**
      * The combiner under Thm 19's hypothesis — a partial recombines through a commutative monoid's fold.
      */
-    public static Inst combiner(final Inst keyed) {
+    public static Call combiner(final Inst keyed) {
         return combiner(keyed, Law.monoidic, Law.commutative);
     }
 
     /**
      * The combiner as the category names it — the declared n-tid of the edge the partials recombine through, an
-     * address as {@code analysis.inverse} is one — or null when the fold has no combiner.
+     * address as {@code analysis.inverse} is one — or null when the fold has no combiner, or recombines through a
+     * chain ({@link #pointwise}) that no single edge names.
      */
     public static fURI combinerOf(final Inst keyed) {
-        final Inst fold = combiner(keyed);
-        if (null == fold)
+        final Call fold = combiner(keyed);
+        if (null == fold || !fold.isInst())
             return null;
         if (fold == keyed)
             return keyed.tid();
-        final Declared declared = declared(fold.tid().basePath(), keyed.rng());
+        final Declared declared = declared(fold.asInst().tid().basePath(), keyed.rng());
         return null == declared ? null : declared.tid();
     }
 

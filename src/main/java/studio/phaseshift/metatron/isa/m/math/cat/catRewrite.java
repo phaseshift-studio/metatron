@@ -54,7 +54,8 @@ public class catRewrite {
      * blocked reducer whose partials recombine through a fold declaring {@code monoidic} (partials regroup) and
      * {@code commutative} (order-free merge) — its COMBINER, computed rather than declared
      * ({@link LawTable#combiner}): {@code sum} and {@code prod} recombine through themselves, {@code count} through
-     * {@code sum}, {@code order(s)} through {@code kmerge(s)}. The master recombines behind the barrier and runs the
+     * {@code sum}, {@code order(s)} through {@code kmerge(s)}, and a keyed {@code group([k⇒h])} pointwise — the rec
+     * {@code sum} merges its partials by key, then each key folds through {@code h}'s combiner. The master recombines behind the barrier and runs the
      * tail at home; each peer takes one factor of the seed bulk with the floatable run replicated and a local partial
      * reduce. {@link PlanInterpreter#lower} consumes the cut.
      * <p>
@@ -408,7 +409,7 @@ public class catRewrite {
                         // >>law_shard edge, is policy (cf. derivation_expansion above) -- gate shardTargets()
                         // behind a plan flag / q-param to pull it out of the default fixpoint schedule.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_shard"),
-                                code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot r = (a \\cdot r + b \\cdot r) \\cdot \\mathrm{combiner}(r)\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer's combiner -- computed, never declared: \\(\\Sigma\\) and \\(\\Pi\\) recombine through themselves, \\(\\mathrm{count}\\) through \\(\\Sigma\\), \\(\\mathrm{order}(s)\\) through \\(\\mathrm{kmerge}(s)\\) -- \\(\\{1,2,3\\}.f.\\mathrm{count} \\leadsto [\\{1,3\\}.f.\\mathrm{count},\\ \\{2\\}.f.\\mathrm{count}] == [\\mathrm{to}(a),\\ \\mathrm{to}(b)].\\Sigma\\)")
+                                code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot r = (a \\cdot r + b \\cdot r) \\cdot \\mathrm{combiner}(r)\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer's combiner -- computed, never declared: \\(\\Sigma\\) and \\(\\Pi\\) recombine through themselves, \\(\\mathrm{count}\\) through \\(\\Sigma\\), \\(\\mathrm{order}(s)\\) through \\(\\mathrm{kmerge}(s)\\), \\(\\mathrm{group}([k \\Rightarrow h])\\) pointwise through \\(\\Sigma\\) then \\(\\mathrm{combiner}(h)\\) per key -- \\(\\{1,2,3\\}.f.\\mathrm{count} \\leadsto [\\{1,3\\}.f.\\mathrm{count},\\ \\{2\\}.f.\\mathrm{count}] == [\\mathrm{to}(a),\\ \\mathrm{to}(b)].\\Sigma\\)")
         );
     }
 

@@ -153,11 +153,16 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         return (Lst) Poly.super.c(f);
     }
 
+    /**
+     * The slots of both lsts, in order. A lst is slot-oriented, never a bag of copies: each operand's coefficient is
+     * read into its slots ONCE — {@link #elements()} already carries it there — so {@code [] + {2}[1,2]} is
+     * {@code [{2}1,{2}2]}, and the result stands alone ({@code c = 1}).
+     */
     @Override
     default Lst plus(final Lst rhs) {
         final List<Obj> list = new ArrayList<>();
-        this.elements().map(e -> e.c(c -> c.mult(this.c()))).forEach(list::add);
-        rhs.elements().map(e -> e.c(c -> c.mult(rhs.c()))).forEach(list::add);
+        this.<Obj>elements().forEach(list::add);
+        rhs.<Obj>elements().forEach(list::add);
         return this.<Lst>jvm(list).c(cInt::one);
     }
 

@@ -331,7 +331,9 @@ public final class mInstSetLawTable extends LawTable {
         entry(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), involution);
         entry(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), null, monoidic);
         entry(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), null, monoidic);
-        entry(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), null, monoidic);
+        // the deep merge's fold: commutative because a lst is an atom of the merge -- colliding values, lsts included,
+        // append into a bag -- so a bag of recs folds to one rec in any order, and law_shard recombines it through itself
+        entry(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), null, monoidic, commutative);
     }
 
     private void loadCode() {
@@ -360,5 +362,7 @@ public final class mInstSetLawTable extends LawTable {
         // order: the bag's normal form -- each obj a sorted singleton, k-way merged by the same selector
         entry(ORDER_INST_TID.dom(InstSet.A.maybeSome()).rng(LST_TID.poly(InstSet.A.maybeSome())), null,
                 new Derivation(start_(uri(InstSet.A)).order_(uri(InstSet.B)), start_(uri(InstSet.A)).split_(lst(id_().tryToInst())).kmerge_(uri(InstSet.B))));
+        // group: the keyed fold -- no laws of its own; its combiner is POINTWISE, computed from the folds its spec holds
+        entry(GROUP_INST_TID.dom(ALL_STAR).rng(REC_TID), null);
     }
 }
