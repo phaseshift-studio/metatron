@@ -1684,7 +1684,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                             ? kv.first().apply(e)
                                             : (e.isRec() ? e.asRec().at(kv.first()) : e);
                                     if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
-                                        result.compute(kk, (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), v.asLst().at(jnt(1)).append(e), MUTABLE));
+                                        // a key is an identity, not a multiplicity: a bulked member's coefficient is counted by
+                                        // the group it joins ({2}x keys as x), never carried on the key
+                                        result.compute(kk.c(cInt::one), (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), v.asLst().at(jnt(1)).append(e), MUTABLE));
                                 }));
                                 return result.entrySet().stream()
                                         .map(kv -> rel(

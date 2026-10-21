@@ -149,7 +149,7 @@ Composing them round-trips — from an object to its edges and back, or from an 
 | `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions |
 | `position`  | the edge's place among its siblings (a subset of the six kinds below)                                            |
 | `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                       |
-| `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`) |
+| `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`); a keyed fold (`group`) recombines pointwise through a chain — `sum`, then a per-key fold — that no single edge names, so it has none here |
 
 ### the six edge kinds
 
@@ -239,7 +239,7 @@ type, and a type that models no such structure is left unchanged.
 | `derivation_contraction` | `derivation`                                                       | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$ |
 | `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]` | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients            |
 | `branch_inline`          | the additive role — `cut => [role => zero]`                          | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$ |
-| `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order` |
+| `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
 `monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
@@ -306,6 +306,80 @@ that direction settles under any `rewriter::T` that iterates the rewrite stage t
 ($\mathrm{minus} \leadsto \mathrm{plus} \cdot \mathrm{neg}$), is deliberately **not** registered: it trades the
 length back, so the pair would alternate forever and no stage could settle. Lowering to a target that lacks the
 derived operation is a policy, not a law.
+
+### the deep merge — the rec monoid a keyed fold recombines through
+
+`+` on recs is a **deep merge**, and `sum` is its fold: $\mathrm{sum}(\{r_1, \ldots, r_n\}) = r_1 + \cdots + r_n$.
+The keys union, and a key on both sides merges its two values by their kind:
+
+| the two values            | their merge                                       | so                                                            |
+|---------------------------|---------------------------------------------------|---------------------------------------------------------------|
+| recs                      | $r(k) + s(k)$ — recurse, key by key               | a nested rec merges at every depth                            |
+| anything else, `lst`s too | $x \uplus y$ — appended into a bag (a stream)     | equal values bulk, $5 \uplus 5 = \{2\}5$; a `lst` stays whole |
+
+A `lst` is an **atom** of the merge: two colliding `lst`s make a bag of `lst`s, $[1,2,3] \uplus [2,3]$, never their
+concatenation — the union is commutative, so its fold is defined over a bag. Rec `sum` declares `monoidic` and
+`commutative`, so `law_shard` distributes a rec merge as it distributes a sum of ints: each peer merges its share of
+the recs and the master merges the partial recs. Concatenating `lst` values is said by
+the expression, with a select's `+`: $[1,2,3] \mathbin{+\!\!+} [2,3]$ is `[a=>[1,2,3]]==[a=>+[2,3]]`.
+
+A coefficient is a **multiplicity**, read the way every access reads it — the outer $c$ multiplied into what it holds,
+$\{c\}[k \Rightarrow v] = [k \Rightarrow \{c\}v]$, all the way down to the merge's atoms, where $\{c\}v$ is $v$'s
+multiplicity in the bag (a `lst`'s too). A bulked rec therefore merges as the copies it stands for,
+$\{c\}r = r + \cdots + r$ ($c$ times), and a fold over a bag answers what it answers over the copies.
+
+A weekend of dog walks makes the rules concrete. Each day files one report: dog ⇒ kilometres per trail, plus the
+places visited.
+
+```mtron_pre
+/usr/walk/sat -> [mama=>[km=>[ridge=>12,lake=>5],visited=>[arroyo]],puppy=>[km=>[ridge=>12]],chelsea=>[km=>[lake=>5]]]
+/usr/walk/sun -> [mama=>[km=>[ridge=>9],visited=>[acequia,mesa]],puppy=>[km=>[lake=>5]],chelsea=>[km=>[lake=>5]]]
+*/usr/walk/sat + */usr/walk/sun
+```
+
+<!-- figure source: assets/tikz/cat-deep-merge.tex (same recipe) -->
+<img src="../assets/cat-deep-merge.png" alt="the deep merge of two walk reports: framed keys merge key by key, colliding values append into a bag, colliding lsts bag whole" width="100%" style="margin:0.3em 0 0 0"/>
+
+Every rule fires in that one merge:
+
+* every dog is in both reports, so each dog's rec merges — and so does each `km` rec, one level down;
+* `mama`'s `ridge` is in both: `12` and `9` append into the bag `{12,9}`, while `mama`'s `lake` is Saturday's alone and
+  is kept;
+* `puppy`'s two days share no trail, so the two `km` recs simply union;
+* `chelsea` walked the same loop on both days — two equal values, which bulk to `{2}5`;
+* `mama`'s `visited` values are `lst`s — atoms of the merge — so the two days' lists bag whole,
+  `{[arroyo],[acequia,mesa]}`.
+
+The merge keeps every partial; a **per-key fold** reduces them. `==` (`select`) applies a pattern rec key by key — `_`
+matches every key and a nested pattern descends — so the weekend's totals are one select away: `sum` reads `{12,9}` as
+$12 + 9$ and `{2}5` as $5 + 5$, while `visited=>_` keeps the bag of lists as it is.
+
+```mtron_pre
+*/usr/walk/sat.plus(*/usr/walk/sun)==[_=>[km=>[_=>sum()],visited=>_]]
+```
+
+To join the lists rather than bag them, the expression says so — a select's `+` concatenates the slots:
+
+```mtron_pre
+*/usr/walk/sat==[mama=>[visited=>+[acequia,mesa]]]
+```
+
+A bag of equal recs is one rec with a coefficient, and the merge reads it as the copies it stands for — the bulked
+`sum` is the explicit `+`:
+
+```mtron_pre
+{[puppy=>[km=>[ridge=>12]]],[puppy=>[km=>[ridge=>12]]]}
+{[puppy=>[km=>[ridge=>12]]],[puppy=>[km=>[ridge=>12]]]}.sum()
+[puppy=>[km=>[ridge=>12]]] + [puppy=>[km=>[ridge=>12]]]
+```
+
+**The keyed combiner.** This is how `law_shard` recombines a keyed fold. `group([k ⇒ h])` is a homomorphism from the
+bag into the recs of $h$'s monoid, so its combiner is computed from $h$'s rather than declared,
+$\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$:
+the peers' partial recs deep-merge, and each key folds through $h$'s combiner — exactly the select above. `merge()`
+bulks equal partials (two peers answering `[k=>1]` arrive as `{2}[k=>1]`), and the coefficient reading is what keeps
+both counted. A `lst`-valued fold recombines the same way: an `order`'s sorted partials bag whole per key — a bag of
+runs, never their slots — and `kmerge` merges the runs.
 
 ## the third lift — code as a vertex (`path::T`, `abstraction::T`)
 
@@ -406,6 +480,13 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 
 ```mtron_pre
 [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
+```
+
+A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
+`select([_=>sum()])` folds each key (see *the deep merge*).
+
+```mtron_pre
+[start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
 ```
 
 ### may / must — the fiber modality

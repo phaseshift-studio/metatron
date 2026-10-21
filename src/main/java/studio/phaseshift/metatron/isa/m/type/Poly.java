@@ -586,27 +586,56 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         }
 
         /**
-         * The deep union of two colliding values: recs merge key-by-key (recursing), lsts
-         * concatenate, and anything else appends into an objs set. This is the flattening
-         * behind {@code rec + rec} — e.g. {@code [a=>[c=>e]] + [a=>[c=>d]]} yields
+         * The deep union of two colliding values: recs merge key-by-key (recursing), and anything else appends into an
+         * objs set. This is the flattening behind {@code rec + rec} — e.g. {@code [a=>[c=>e]] + [a=>[c=>d]]} yields
          * {@code [a=>[c=>{e,d}]]} in one pass instead of {@code [a=>{[c=>e],[c=>d]}]}.
+         * <p>
+         * A LST IS AN ATOM OF THE MERGE: two colliding lsts make a bag of lsts, each kept whole —
+         * {@code [a=>[1,2,3]] + [a=>[2,3]]} is {@code [a=>{[1,2,3],[2,3]}]} — so the union is commutative and its fold
+         * ({@code sum}) is defined over a bag. Concatenating lst values is a select's {@code +}, said by the expression:
+         * {@code [a=>[1,2,3]]==[a=>+[2,3]]} is {@code [a=>[1,2,3,2,3]]}.
+         * <p>
+         * A COEFFICIENT IS A MULTIPLICITY, read as every access reads it: the outer {@code c} multiplied into what it
+         * holds ({@code {2}[a=>2]} holds {@code a=>{2}2}). A bulked operand therefore merges as the copies it stands for —
+         * {@code [=>] + {2}[a=>[b=>2]]} is {@code [a=>[b=>{2}2]]}, the value {@code [a=>[b=>2]] + [a=>[b=>2]]} computes —
+         * so a fold over a bulked stream ({@code sum}) answers what it answers over the copies.
          */
         public static Obj mergeObjRecursion(final Obj lhs, final Obj rhs) {
             if (lhs.isRec() && rhs.isRec())
                 return mergeRecRecursion(lhs.asRec(), rhs.asRec());
-            else if (lhs.isLst() && rhs.isLst())
-                return lhs.asLst().plus(rhs.asLst());
             else
                 return lhs.append(rhs);
         }
 
+        /**
+         * The rhs's entries merged into the lhs's. The lhs's own coefficient is the stream's ({@code {2}[a=>1] + [b=>2]}
+         * is that merge twice), so it stays on the result. Each rhs entry is read through its rel —
+         * {@link Rel#secondDirect()}: the rhs's {@code c} multiplied in, nothing auto-resolved. What the union multiplies
+         * is {@link #distributed} — the values of a bulked rhs, which are its copies, and both values of a collision, so
+         * no deeper merge is handed a coefficient — and a value it does not multiply is stored as it is, from either side.
+         */
         private static Rec mergeRecRecursion(final Rec lhs, final Rec rhs) {
+            final boolean bulked = !rhs.c().isOne();
             final Map<Obj, Obj> newMap = new LinkedHashMap<>(lhs.recValue());
             rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v
-                    ? o.jvm().get1()
-                    : mergeObjRecursion(v, o.jvm().get1())));
+                    ? (bulked ? distributed(o.secondDirect()) : o.secondDirect())
+                    : mergeObjRecursion(distributed(v), distributed(o.secondDirect()))));
             // build a fresh rec (not this.jvm()/clone(), which a Space no-ops) and re-tag it in place
             return rec(newMap).self(newMap, lhs.tid(), lhs.vid());
+        }
+
+        /**
+         * A value with its coefficient carried into what it holds — the form the union stores, so that a bulked operand
+         * and the copies it stands for merge to the same value. A rec pushes it into its entries, all the way down
+         * ({@code {2}[b=>[c=>1]]} is {@code [b=>[c=>{2}1]]}), read through its rels so nothing is auto-resolved; anything
+         * else keeps it — an atom of the merge, a lst included, whose coefficient already is its multiplicity in an objs
+         * set ({@code {2}1}, {@code {2}[1,2]}).
+         */
+        private static Obj distributed(final Obj value) {
+            if (value.c().isOne() || !value.isRec())
+                return value;
+            final Map<Obj, Obj> none = new LinkedHashMap<>();
+            return mergeRecRecursion(rec(none).self(none, value.c(cInt::one).tid(), value.vid()), value.asRec());
         }
     }
 }

@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.math.cat.Law;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.math.cat.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -177,10 +178,11 @@ public final class PlanInterpreter {
         final int cutIndex = 1 + captures.get(0).size();
         final Inst reducer = insts.get(cutIndex);
         // a self-combining fold re-applies the chain's own instruction (pre-resolution, exactly as the slaves carry
-        // it); a fold defined by derivation recombines through the fold its definition names
+        // it); a fold defined by derivation recombines through the fold its definition names; a keyed fold through
+        // the chain its pointwise combiner computes (the rec sum, then a per-key fold)
         final Inst keyed = typed.get(cutIndex - 1);
-        final Inst combined = LawTable.combiner(keyed, laws);
-        final Inst combiner = keyed == combined ? reducer : combined;
+        final Call combined = LawTable.combiner(keyed, laws);
+        final List<Inst> combiner = keyed == combined ? List.of(reducer) : combined.insts();
 
         final List<Obj> seed = insts.getFirst().arg(0).stream().toList();
         if (2 > seed.size())
@@ -208,7 +210,7 @@ public final class PlanInterpreter {
         // duplicates or drops it, and the budget bounds the bounce.
         final List<Obj> summands = new ArrayList<>();
         final List<Obj> routes = new ArrayList<>();
-        final mFluent<?> master = merge_().addInst(withoutHops(combiner)).addInsts(withoutHops(insts.subList(cutIndex + 1, insts.size())));
+        final mFluent<?> master = merge_().addInsts(withoutHops(combiner)).addInsts(withoutHops(insts.subList(cutIndex + 1, insts.size())));
         for (int s = 0; s < k; s++) {
             final List<Obj> part = new ArrayList<>();
             for (int j = s; j < seed.size(); j += k)
@@ -257,12 +259,12 @@ public final class PlanInterpreter {
 
     /**
      * Retype a bare chain instruction with its declared (dom/rng-qualified) tid, so {@code Form.of} and
-     * {@code LawTable.declares} read its coefficient shape and laws before resolution. An undeclared op
-     * stays bare and thereby matches no floatable/blocked slot — fail closed, as the hand-rolled scan did.
+     * {@code LawTable.declares} read its coefficient shape and laws before resolution — and a keyed fold's spec folds
+     * with it ({@link LawTable#keyed}). An undeclared op stays bare and thereby matches no floatable/blocked slot —
+     * fail closed, as the hand-rolled scan did.
      */
     private static Inst retype(final Inst inst, final Type carrier) {
-        final LawTable.Declared declared = LawTable.declared(inst.tid().basePath(), carrier);
-        return null == declared ? inst : inst.tid(declared.tid());
+        return LawTable.keyed(inst, carrier);
     }
 
     /**
