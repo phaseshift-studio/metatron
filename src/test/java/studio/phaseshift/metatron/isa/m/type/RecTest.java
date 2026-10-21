@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -45,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -303,6 +305,31 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * COPY ON WRITE through the deep merge: a bulked rec's values are read through their rels, the rec's coefficient
+     * multiplied in — and a bag read that way is a new bag, so the rec it came from keeps its own.
+     */
+    @Test
+    public void testMergeLeavesSourceBagsAlone() {
+        final Rec source = rec(uri("a"), objs(jnt(1), jnt(2)));
+        final Rec merged = rec().plus(source.c(cInt.of(2)).asRec());
+        AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse("[a=>{1,2}]"), source, true);
+        AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse("[a=>{int{2}::1,int{2}::2}]"), merged, true);
+    }
+
+    /**
+     * A parsed fold evaluated twice answers the same both times: evaluating it never edits the literals it was parsed
+     * with — here the bag inside a bulked rec, which the deep merge multiplies as it reads.
+     */
+    @Test
+    public void testFoldIsRepeatable() {
+        final Obj code = ObjmtronSerializer.parse("{[a=>{1,2}],[a=>{1,2}]}.sum()");
+        final Obj first = code.apply();
+        final Obj second = code.apply();
+        AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse("[a=>{int{2}::1,int{2}::2}]"), first, true);
+        AbstractMetatronTest.checkEquality(LOG, first, second, true);
     }
 
     @Test
