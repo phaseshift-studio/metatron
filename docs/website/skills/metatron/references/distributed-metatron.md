@@ -71,8 +71,8 @@ Only `wsspace` + `wsclient` carry **metatron-to-metatron** traffic today. The re
 
 | handler | transport | what it does | witness |
 |---|---|---|---|
-| `mtron_ws` | ws | applies the frame's mtron expression, returns the result | `mtron_wsHandler.java:54` |
-| `mtron_http` | http | same, over HTTP | `mtron_httpHandler.java` |
+| `mtron_ws` | ws | evaluates each frame's mtron expression once, returns the answer | `mtron_wsHandler.java` |
+| `mtron_http` | http | declared `mtron::T`, but does not evaluate yet: answers the request rec it received | `mtron_httpHandler.java` |
 | `web_httpHandler` | http | REST verbs → `writeToSpace` (`GET`/`POST`/`PUT`/`PATCH`/`DELETE`) | `web_httpHandler.java` |
 | `mcp_wsHandler` / `mcp_httpHandler` / `mcp_stdioHandler` | ws / http / stdio | MCP servers | `isa/web/space/*/handler/` |
 | `bin/wsplus` | ws | standalone CLI client (`-e` one-shot) | `bin/wsplus` |

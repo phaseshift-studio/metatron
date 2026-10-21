@@ -439,7 +439,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">web instruction set</h1>
-        <small>The /m/web vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document types, route tables, the mtron::T apply protocol, and the conventions a mount follows. TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP server, shipping an obj for remote evaluation (mtron::T), choosing a ?mimeq= rendering, or wondering why a route, an image, or a css file does not serve.</small><br/>
+        <small>The /m/web vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document types, route tables, the mtron::T evaluation surface, and the conventions a mount follows. TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP server, shipping an obj for remote evaluation (mtron::T), choosing a ?mimeq= rendering, or wondering why a route, an image, or a css file does not serve.</small><br/>
         <a href="web-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>web-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -526,7 +526,7 @@ mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/usr/person/2
 <tr><td><code>rest::T</code></td><td><code>/m/web/http/rest</code></td><td><code>http::T</code></td><td>a REST surface — get reads, put replaces, patch updates, delete unlinks, post creates</td></tr>
 <tr><td><code>ws::T</code></td><td><code>/m/web/ws</code></td><td><code>protocol::T</code></td><td>the websocket vocabulary</td></tr>
 <tr><td><code>mcp::T</code></td><td><code>/m/web/mcp</code></td><td><code>protocol::T</code></td><td>an MCP surface</td></tr>
-<tr><td><code>mtron::T</code></td><td><code>/m/web/mtron</code></td><td><code>protocol::T</code></td><td>the mtron-eval surface — ship an obj, it is applied, the result returns</td></tr>
+<tr><td><code>mtron::T</code></td><td><code>/m/web/mtron</code></td><td><code>protocol::T</code></td><td>one message is one expression, evaluated — its answer returns</td></tr>
 <tr><td><code>stream::T</code></td><td><code>/m/web/stream</code></td><td><code>protocol::T</code></td><td>the raw byte / server-sent-event stream surface</td></tr>
 <tr><td><code>sse::T</code></td><td><code>/m/web/sse</code></td><td><code>stream::T</code></td><td>a server-sent-events response — a chunked <code>text/event-stream</code> over http</td></tr>
 <tr><td><code>mcp_server::T</code></td><td><code>/m/web/mcp/mcp_server</code></td><td><code>mcp::T</code></td><td>an MCP server obj — <strong>transport-agnostic</strong></td></tr>
@@ -666,20 +666,29 @@ stopping before it leaves the subtree untouched. The ref is the fourth redirect,
 <p>router prefixes → the router's redirect table → mount tables → <code>!*</code> data edges</p>
 </li>
 </ul>
-<h3>the <code>mtron::T</code> apply protocol</h3>
-<p><code>mtron::T</code> is the code-execution surface: ship an obj, the handler <strong>applies</strong> it, the result comes back. Both
-realizations are the same three lines — <code>mtron_wsHandler</code>'s <code>ON_MESSAGE</code> is <code>lhs.apply(noobj())</code> then
-<code>send(rhs)</code>; <code>mtron_httpHandler</code> does the same in <code>ON_GET</code>/<code>ON_POST</code>, with the request rec as the lhs argument.
-Everything else the protocol needs follows from that:</p>
+<h3><code>mtron::T</code> — one message, one expression, evaluated</h3>
+<p><code>mtron::T</code> (<code>/m/web/mtron</code>) is the surface for running mtron on another machine: a client sends an expression, the
+endpoint's machine evaluates it, and the answer comes back. Nothing wraps the expression — the message <em>is</em> the
+program — and it runs against the endpoint's own machine, so a read inside it reads that machine's spaces. (A
+console's <code>*&lt;ws://host:port/x&gt;</code> reaches a peer this way: the network ships the read to the peer's <code>/mtron</code> endpoint.)</p>
+<p><strong><code>mtron_ws</code></strong> (the <code>/mtron</code> route in <code>boot.mtron</code>) is the realization that does this:</p>
 <ul>
-<li><strong>the incoming obj is the program.</strong> There is no command envelope. Shipped code derefs through the machine's
-own Router, so the handler never knows which space holds the data — <code>*&lt;http://…&gt;</code> from the console is this
-protocol.</li>
-<li><strong>failures are results.</strong> A thrown exception is sent as <code>fail(e)</code> — the wire carries <code>fail</code> objs like any obj.</li>
-<li><strong>the wire format is mtron text.</strong> Both handlers override <code>SEND</code> with <code>application/x-mtron</code> serialization.</li>
+<li><strong>one frame, one evaluation.</strong> The session reads each text frame with its machine's own parser and evaluates it
+exactly once, as the console does. The answer is not applied again, so an answer that is itself code comes back as
+itself: <code>[plus(2).plus(2)]==[as(inst::T)]&gt;-</code> answers the lambda, and <code>|start(7)</code> answers <code>start(7)</code>.</li>
+<li><strong>the answer is the whole value.</strong> A coefficient is part of it: <code>{3}34</code> answers <code>{3}34</code>.</li>
+<li><strong>failures are answers.</strong> A program that fails, or throws, answers its <code>fail</code>; the client never waits out its
+deadline for a reply that is not coming.</li>
+<li><strong>the connection picks the serialization.</strong> <code>?in=</code> and <code>?out=</code> on the connection uri choose the serializers —
+<code>application/x-mtron</code> both ways by default, <code>?out=application/x-mtron-ui</code> for the console's rendering, and
+<code>?out=application/json</code> for a json client (lossy by design: coefficients, vids and tids do not survive json).</li>
 </ul>
-<p>The carriers differ in one respect: http applies the body <em>to the request rec</em> (headers and params are visible to
-the code), while ws applies to <code>noobj()</code>. Code that must behave identically over both should be self-contained.</p>
+<pre><code>bin/wsplus -e '[plus(2).plus(2)]==[as(inst::T)]&gt;-' 'ws://localhost:8555/mtron?out=application/x-mtron-ui'
+==&gt;inst(#{*}::T){plus(2).plus(2)}
+</code></pre>
+<p><strong><code>mtron_http</code></strong> is declared an <code>mtron::T</code> but does not evaluate yet: every request, GET or POST, is answered with
+the request rec it arrived as — <code>method</code>, <code>uri</code>, <code>headers</code>, and <code>body</code> (parsed, not run) — in json, an http mount's
+default serialization. Ship code over <code>mtron_ws</code> until it does.</p>
 <h3>streaming a response (<code>sse::T</code>)</h3>
 <p>A mount is normally request/response — one body, then the handler closes. <code>sse::T</code> is the streaming exception: an
 http handler opens a chunked <code>text/event-stream</code> response and pushes any number of events before it closes. The

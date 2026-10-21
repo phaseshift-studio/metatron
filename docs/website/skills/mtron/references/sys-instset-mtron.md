@@ -73,10 +73,10 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.9M  6.1G  ...',
+    'tmpfs           6.1G  6.8M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
-    '/dev/nvme0n1p2  916G  543G  327G  ...',
-    'tmpfs            31G  177M   31G  ...',
+    '/dev/nvme0n1p2  916G  547G  323G  ...',
+    'tmpfs            31G  1.1M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -87,10 +87,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/501
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]@/sys/fail/502
@@ -163,10 +163,10 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     ...(23 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
-    '  Size: 44587     	Blocks: 88     ...',
-    'Device: 259,3	Inode: 25322019    L...',
+    '  Size: 16504     	Blocks: 40     ...',
+    'Device: 259,3	Inode: 22906902    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-21 00:39:26.810734...',
+    'Access: 2026-10-21 14:30:42.062766...',
    ...
 ```
 ### a shape of its own
@@ -177,7 +177,7 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::44587.0,
+==>[bB::16504.0,
     bB::4096.0,
     bB::4096.0,
     bB::4096.0,
@@ -254,10 +254,10 @@ mtron> */sys/env/HOME
 mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::696.0,
-    free_mem_jvm=>mB::359.6182,
+==>[total_mem_jvm=>mB::680.0,
+    free_mem_jvm=>mB::531.4970,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::336.3817,
+    used_mem_jvm=>mB::148.5029,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[run=>0,stop=>0]]

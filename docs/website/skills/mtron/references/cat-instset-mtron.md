@@ -4,7 +4,7 @@ description: |
   The category graph at `/m/math/cat`: every type is an **object** (a vertex) and every inst is a **morphism**
   (an edge). Lift a type with `.as(object::T)` to read the morphisms incident to it (`morphed_to` out-edges,
   `morphed_from` in-edges); lift an inst with `.as(morphism::T)` to read its endpoints (`src` dom, `trgt` rng)
-  and its whole-graph analysis (`family`, `contested`, `orbit`, `position`, `inverse`).
+  and its whole-graph analysis (`family`, `contested`, `orbit`, `position`, `inverse`, `combiner`).
   TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's
   siblings / inverse / connected component, when classifying an edge's coefficient shape (`form`), set-theoretic
   class (`class`), or declared process laws (`law`), when wiring the algebraic theories (`ring` / `field` /
@@ -491,12 +491,6 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
-           branch_collapse=>plan::[name=>branch_collapse,
-                                   cut=>[role=>add],
-                                   route=>[[target=>local,span=>[[span=>at]]]]],
-           branch_inline=>plan::[name=>branch_inline,
-                                 cut=>[role=>zero],
-                                 route=>[[target=>local,span=>[[span=>at]]]]],
            theory_involution=>plan::[name=>theory_involution,
                                      cut=>[law=>[involution]],
                                      route=>[[target=>local,span=>[[span=>at]]]]],
@@ -508,23 +502,11 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involu
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
-           branch_collapse=>plan::[name=>branch_collapse,
-                                   cut=>[role=>add],
-                                   route=>[[target=>local,span=>[[span=>at]]]]],
-           branch_inline=>plan::[name=>branch_inline,
-                                 cut=>[role=>zero],
-                                 route=>[[target=>local,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
                                           route=>[[target=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
-==>[path::[obj=>start(5),
-           branch_collapse=>plan::[name=>branch_collapse,
-                                   cut=>[role=>add],
-                                   route=>[[target=>local,span=>[[span=>at]]]]],
-           branch_inline=>plan::[name=>branch_inline,
-                                 cut=>[role=>zero],
-                                 route=>[[target=>local,span=>[[span=>at]]]]]]]
+==>[path::[obj=>start(5)]]
 ```
 **A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a *type-part* (laws, forms, adjacency of classifications) and a *value-residue* (operand
@@ -623,7 +605,7 @@ mtron> ws_client::[host=>ws://localhost:8555/mtron]
     close=>inst(){<j>},
     on_message=>print('received ${_}')]
 mtron> */network
-==>network::[host=>booger,
+==>network::[host=><127.0.0.1localhost>,
              status=>!inst(#{*}::T){<j>},
              q=>[subq::[pattern=>subq,
                         pre_read=>inst(uri::T){<j>},
@@ -650,12 +632,6 @@ mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
-           branch_collapse=>plan::[name=>branch_collapse,
-                                   cut=>[role=>add],
-                                   route=>[[target=>local,span=>[[span=>at]]]]],
-           branch_inline=>plan::[name=>branch_inline,
-                                 cut=>[role=>zero],
-                                 route=>[[target=>local,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
                                           route=>[[target=>local,span=>[[span=>at]]]]],
@@ -685,12 +661,6 @@ mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shar
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
-           branch_collapse=>plan::[name=>branch_collapse,
-                                   cut=>[role=>add],
-                                   route=>[[target=>local,span=>[[span=>at]]]]],
-           branch_inline=>plan::[name=>branch_inline,
-                                 cut=>[role=>zero],
-                                 route=>[[target=>local,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
                                           route=>[[target=>local,span=>[[span=>at]]]]]]]
@@ -704,12 +674,6 @@ mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
-           branch_collapse=>plan::[name=>branch_collapse,
-                                   cut=>[role=>add],
-                                   route=>[[target=>local,span=>[[span=>at]]]]],
-           branch_inline=>plan::[name=>branch_inline,
-                                 cut=>[role=>zero],
-                                 route=>[[target=>local,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
                                           route=>[[target=>local,span=>[[span=>at]]]]]]]
