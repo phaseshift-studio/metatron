@@ -15,12 +15,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 
 /**
  * MANY SERVERS, ONE SPACE: the distributed contract, tested over whichever space a suite opts into.
  *
- * <p>A machine that distributes work mints addresses under {@link machInstSet#COMPUTE} and knows nothing about what
+ * <p>A machine that distributes work mints addresses under {@link machInstSet} and knows nothing about what
  * answers them. That is the property worth testing per space rather than per machine: whatever backs the namespace --
  * memory, a filesystem, a table, a document store, a broker, a graph -- the same scenarios must produce the same
  * numbers and leave the same evidence behind. So this class holds the scenarios and the harness, and a subclass
@@ -39,7 +40,7 @@ public abstract class AbstractMultiServerSingleSpaceTest extends AbstractMetatro
     /**
      * the distributed namespace every machine mints into
      */
-    public static final fURI COMPUTE_ROOT = machInstSet.COMPUTE;
+    public static final fURI COMPUTE_ROOT = f("/usr/compute");
 
     /**
      * where the space is STORED -- independent of the namespace it exposes

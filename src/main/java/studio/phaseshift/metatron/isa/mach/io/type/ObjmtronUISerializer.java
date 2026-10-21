@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
@@ -488,28 +489,53 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth) {
         if (inst.isNoObj() || null == inst.tid() || inst.tid().basePath().name().startsWith("auto") || inst.tid().basePath().equals(FROM_INST_TID)) {
             return super.generateInst(sb, inst, depth + 1);
-        } else {
-            sb.append(inst.tid().basePath().small()).append("?").append(inst.tid().rng().small()).append("<=").append(inst.tid().dom().small());
-            inst.tid().qMap().forEach((key, value) -> {
-                if (!key.equals(Tokens.RNG) && !key.equals(Tokens.DOM)) {
-                    sb.append("&").append(key);
-                    if (null != value && !value.isEmpty())
-                        sb.append("=").append(value);
-                }
-            });
-            final String internal = inst.args().elements()
-                    .map(o -> {
-                        final StringBuilder temp = new StringBuilder();
-                        this.renderInstArg(temp, depth + 1, o);
-                        return this.cleanEnding(temp).toString();
-                    })
-                    .reduce(",", (a, b) -> a + b + ",");
-            sb.append("(")
-                    .append((inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)))
-                    .append(")")
-                    .append((inst.f() == null ? "" : "{" + inst.f() + "}"));
         }
+        final fURI tid = inst.tid();
+        sb.append(tid.basePath().small());
+        // the typing pair — rng<=dom — is drawn only when the tid actually refines its typing;
+        // the other q params are drawn whenever they are there, and then they carry the '?'
+        final StringBuilder params = new StringBuilder();
+        if (typingSpecified(tid))
+            params.append(tid.rng().small()).append("<=").append(tid.dom().small());
+        tid.qMap().forEach((key, value) -> {
+            if (!key.equals(Tokens.RNG) && !key.equals(Tokens.DOM)) {
+                if (params.length() > 0)
+                    params.append("&");
+                params.append(key);
+                if (null != value && !value.isEmpty())
+                    params.append("=").append(value);
+            }
+        });
+        if (params.length() > 0)
+            sb.append("?").append(params);
+        final String internal = inst.args().elements()
+                .map(o -> {
+                    final StringBuilder temp = new StringBuilder();
+                    this.renderInstArg(temp, depth + 1, o);
+                    return this.cleanEnding(temp).toString();
+                })
+                .reduce(",", (a, b) -> a + b + ",");
+        sb.append("(")
+                .append((inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)))
+                .append(")")
+                .append((inst.f() == null ? "" : "{" + inst.f() + "}"));
         return cleanEnding(sb);
+    }
+
+    /**
+     * Whether an instruction's typing pair — its {@code rng<=dom} — is worth drawing.  A tid that
+     * carries neither has nothing to draw: the pair's defaults are {@code #} (all, one), so every
+     * plain call used to render its absence as {@code plus?#<=#(1,2)}.  A tid that carries the
+     * {@code #{*}<=#{?}} pair — all, maybe-some to all, maybe — is drawn as nothing too: that is
+     * the typing an instruction is given when no typing is specified, so it states nothing a
+     * reader does not already know ({@code inst?#{*}<=#{?}(#{*}::T)} reads {@code inst(#{*}::T)}).
+     * Every other pair is a real refinement and stays.  Other q params are not affected — they are
+     * drawn whenever they exist, with or without the pair.
+     */
+    private static boolean typingSpecified(final fURI tid) {
+        if (!tid.hasDom() && !tid.hasRng())
+            return false;
+        return !(tid.dom().equals(ALL.maybe()) && tid.rng().equals(ALL.maybeSome()));
     }
 
     /**

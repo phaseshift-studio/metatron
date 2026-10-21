@@ -520,6 +520,33 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertFalse(shown.contains("\\"), String.format("a value's braces need no escape: %s", shown));
     }
 
+    /**
+     * AN INSTRUCTION'S TYPING IS DRAWN ONLY WHEN IT SAYS SOMETHING.  The pair is {@code rng<=dom}:
+     * {@code #{*}<=#{?}} (all, maybe-some to all, maybe) is the typing an untyped instruction is
+     * given, so drawing it states nothing — {@code inst?#{*}<=#{?}(#{*}::T)} reads
+     * {@code inst(#{*}::T)} — and a tid that carries no pair has none to draw, which is why a plain
+     * call used to render as {@code plus?#<=#(1,2)}.  Every other pair is a real refinement and
+     * stays, and so does every OTHER q param (the one that remains takes the {@code ?}).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "inst?#{*}<=#{?}(#{*}::T)   % inst(#{*}::T)           % the default typing draws as nothing",
+            "inst?#{*}<=#{?}&a=b(#{*}::T) % inst?a=b(#{*}::T)     % but another q param still draws",
+            "inst?a=b(#{*}::T)          % inst?a=b(#{*}::T)       % no pair, one param",
+            "inst?#{1}<=#{1}(#{*}::T)   % inst?#<=#(#{*}::T)      % a real pair stays",
+            "inst?str<=int(#{*}::T)     % inst?str<=int(#{*}::T)  % so does a named pair",
+            "inst?str<=int&a=b(#{*}::T) % inst?str<=int&a=b(#{*}::T) % a named pair with its param",
+            "plus(1,2)                  % plus(1,2)                % a plain call carries no typing noise",
+            "inst(1,2)                  % inst(1,2)                % and neither does a bare inst",
+    }, delimiter = '%')
+    public void testInstTypingIsDrawnOnlyWhenSpecified(final String code, final String expected, final String desc) {
+        // an inst literal is parsed, never applied: applying it would run the instruction
+        final Obj obj = ObjmtronSerializer.parse(code);
+        final String written = ObjmtronUISerializer.blackWhite().write(obj);
+        LOG.debug("%s => %s", code, written);
+        assertEquals(expected, written, String.format("%s: %s", desc, written));
+    }
+
     @Test
     public void testStreamOfLstsRendersInBlackAndWhite() {
         // the uncolored instances strip the markup instead of leaving it for a renderer, and a
