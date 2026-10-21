@@ -142,13 +142,13 @@ Composing them round-trips — from an object to its edges and back, or from an 
 
 `analysis` is one lazy `auto()` — evaluated with `>>analysis`. Inside it, each stat is itself lazy:
 
-| field       | what it is                                                                                                       |
-|-------------|------------------------------------------------------------------------------------------------------------------|
-| `family`    | the same-name siblings: $\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}$ — every registration of the same operator |
-| `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                        |
-| `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions |
-| `position`  | the edge's place among its siblings (a subset of the six kinds below)                                            |
-| `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                       |
+| field       | what it is                                                                                                                                                                                                                                                                                                                    |
+|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `family`    | the same-name siblings: $\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}$ — every registration of the same operator                                                                                                                                                                                                              |
+| `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                                                                                                                                                                                                                                     |
+| `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions                                                                                                                                                                                              |
+| `position`  | the edge's place among its siblings (a subset of the six kinds below)                                                                                                                                                                                                                                                         |
+| `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                                                                                                                                                                                                                                    |
 | `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`) |
 
 ### the six edge kinds
@@ -158,14 +158,14 @@ Composing them round-trips — from an object to its edges and back, or from an 
 <!-- figure source: assets/tikz/cat-positions.tex (same recipe) -->
 <img src="../assets/cat-positions.png" alt="the six position kinds: duplicate, ambiguous, incomparable, coupling, isochain, retract" width="100%" style="margin:0.3em 0 0 0"/>
 
-| kind           | the relation to the graph                                                        |
-|----------------|----------------------------------------------------------------------------------|
-| `duplicate`    | another morphism of the same family maps the same dom to the same rng            |
-| `ambiguous`    | contested by an incomparable sibling that *overlaps* it — dispatch has no winner |
-| `incomparable` | contested by an incomparable, *disjoint* sibling — dispatch stays total          |
+| kind           | the relation to the graph                                                               |
+|----------------|-----------------------------------------------------------------------------------------|
+| `duplicate`    | another morphism of the same family maps the same dom to the same rng                   |
+| `ambiguous`    | contested by an incomparable sibling that *overlaps* it — dispatch has no winner        |
+| `incomparable` | contested by an incomparable, *disjoint* sibling — dispatch stays total                 |
 | `coupling`     | an edge in the opposite direction links the same two objects — a candidate inverse pair |
-| `isochain`     | endpoints linked by a chain of couplings — one orbit of the reversible core      |
-| `retract`      | mutually reachable and round-trip idempotent — a subobject retraction            |
+| `isochain`     | endpoints linked by a chain of couplings — one orbit of the reversible core             |
+| `retract`      | mutually reachable and round-trip idempotent — a subobject retraction                   |
 
 `orbit` is the transitive closure of `coupling` — the connected component of the *reversible core* (the subgraph of
 edges that exist in both directions). It is a reachability class, coarser than isomorphism (which needs the round trip
@@ -226,19 +226,19 @@ type, and a type that models no such structure is left unchanged.
 <!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
 <img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
 
-| rewrite                  | reads                                                              | rule                                                                                                                 |
-|--------------------------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| `theory_unit_removal`    | every theory instance of the operand's type                        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                      |
-| `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role | $f \cdot f \leadsto \varepsilon$                                                                                     |
-| `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                             | $f \cdot f \leadsto f$                                                                                               |
-| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                              | $g \cdot f \leadsto f$                                                                                               |
-| `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form   | $f \cdot f \leadsto f$                                                                                               |
-| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                  | $\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))$, $\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))$ |
-| `inverse_cancellation`   | `analysis.inverse`                                                 | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                          |
-| `form_map_unwrap`        | the stream lift `map`                                              | $\mathrm{map}(f) \leadsto f$                                                                                         |
-| `derivation_contraction` | `derivation`                                                       | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$ |
-| `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]` | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients            |
-| `branch_inline`          | the additive role — `cut => [role => zero]`                          | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$ |
+| rewrite                  | reads                                                                                       | rule                                                                                                                                                     |
+|--------------------------|---------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `theory_unit_removal`    | every theory instance of the operand's type                                                 | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                          |
+| `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                         |
+| `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                   |
+| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$                                                                                                                                   |
+| `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                   |
+| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))$, $\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))$           |
+| `inverse_cancellation`   | `analysis.inverse`                                                                          | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                              |
+| `form_map_unwrap`        | the stream lift `map`                                                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                             |
+| `derivation_contraction` | `derivation`                                                                                | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                     |
+| `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]`                         | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                  |
+| `branch_inline`          | the additive role — `cut => [role => zero]`                                                 | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$            |
 | `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order` |
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
@@ -302,7 +302,8 @@ instructions were rewritten away:
 
 **Direction.** Every rule above either removes or preserves chain length, so a rule set that is only ever applied in
 that direction settles under any `rewriter::T` that iterates the rewrite stage to a fixpoint — the bundled
-`fixpoint_rewriter` (`fixpoint_rewriter::[max=>N]`, bounded iterations) is one such stage, not the only one. The dual of `derivation_contraction`, `derivation_expansion`
+`fixpoint_rewriter` (`fixpoint_rewriter::[max=>N]`, bounded iterations) is one such stage, not the only one. The dual of
+`derivation_contraction`, `derivation_expansion`
 ($\mathrm{minus} \leadsto \mathrm{plus} \cdot \mathrm{neg}$), is deliberately **not** registered: it trades the
 length back, so the pair would alternate forever and no stage could settle. Lowering to a target that lacks the
 derived operation is a policy, not a law.
@@ -345,11 +346,12 @@ real match. A rule the pruner does not know is never pruned.
 
 ### `abstraction::T` — the α-word
 
-| field | description                                                                                                                                                                                     |
-|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| field | description                                                                                                                                                                                                                                  |
+|-------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `obj` | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`: the surface a `plan::T`'s guard reads (its law/form/theory), the code and its descent staying anchored at `path::T.obj` |
 
-The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per instruction,
+The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per
+instruction,
 each already carrying `form`, `class`, `law`, and `analysis` — not a second concrete chain. Nor is it a vertex one
 descends through: no traversal runs over the abstraction, because it is only the lookup surface from which a `plan::T`
 derives its rewrite. The guard reads the laws/forms/theories off the word (`*…/obj/1/law`, `*…/obj/2/analysis/inverse`)
@@ -372,10 +374,10 @@ is introspectable and applicable wherever it is supplied.
 A plan is always the rec `[name, cut, route]`; what distinguishes a local plan from a distribution is what its `cut`
 names and where its `route` sends it:
 
-| shape            | the `cut` reads                                                                 | the `route`                                                          | example                                                                                     |
-|------------------|---------------------------------------------------------------------------------|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| **local**        | a declared process law — `[law => [...]]` — or a theory role — `[role => ...]`  | stays local (`target => none` / `local`)                               | `law_idempotent` → `cut => [law => [idempotent]]`; `theory_unit_removal` → `cut => [role => id]` |
-| **distribution** | a `form` + `law` anchor — the laws its `combiner` must declare                  | ships to `peers`, with the combiner re-applied locally                 | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`                    |
+| shape            | the `cut` reads                                                                | the `route`                                            | example                                                                                          |
+|------------------|--------------------------------------------------------------------------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **local**        | a declared process law — `[law => [...]]` — or a theory role — `[role => ...]` | stays local (`target => none` / `local`)               | `law_idempotent` → `cut => [law => [idempotent]]`; `theory_unit_removal` → `cut => [role => id]` |
+| **distribution** | a `form` + `law` anchor — the laws its `combiner` must declare                 | ships to `peers`, with the combiner re-applied locally | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`                         |
 
 The application is a **type method**, not a field: `lower(plan::T)` is one instruction registered in
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
@@ -390,22 +392,24 @@ ws_client::[host=>ws://localhost:8555/mtron]
 */network
 ```
 
-`*/network` reads back the machine's network block — the dialed `peer::T` at the named host. With the `machine::T`
+`*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
+`machine::T`
 now holding that `peer::T`, the `path::T` lists the distribution plan among its out-edges.
 
 ```mtron_pre
-[start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
+[{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)]
 ```
 
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
 `>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: the seed bulk partitioned into
 shards whose seed carries the remaining hop budget (`start?hops=0` at a leaf), each shard shipped by a
 `select([to(peer)])` to its roster member, merged, and recombined at home through the reducer's combiner (Thm 19). A
-peer handed a shard with budget left plans it again over its own peers, so the shards form a tree. The plan — not its application — is data, so the rewrite *schedule* and the out-edge
+peer handed a shard with budget left plans it again over its own peers, so the shards form a tree. The plan — not its
+application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
 
 ```mtron_pre
-[start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
+[{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
 ```
 
 ### may / must — the fiber modality
@@ -413,10 +417,10 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 An abstraction stands for its **fiber** — every concrete chain that lifts to it — so the moves a `path::T` exposes,
 decided by reading the abstraction, are claims quantified over that set in one of two strengths:
 
-| modality   | the claim                                                     | example                                                                             |
-|------------|---------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| **must** □ | the rule fires for *every* fiber member — its guard reads no value  | `law_shard` on $[\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]$   |
-| **may** ◇  | the rule fires for *some* members; undecidable without values | unit removal at $\mathrm{plus}(\mathrm{int})$ — only the $\mathrm{plus}(0)$ members |
+| modality   | the claim                                                          | example                                                                             |
+|------------|--------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| **must** □ | the rule fires for *every* fiber member — its guard reads no value | `law_shard` on $[\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]$   |
+| **may** ◇  | the rule fires for *some* members; undecidable without values      | unit removal at $\mathrm{plus}(\mathrm{int})$ — only the $\mathrm{plus}(0)$ members |
 
 Thus, the degree ordering $\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))$ holds: the abstraction licenses
 a move for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge
