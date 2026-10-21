@@ -85,9 +85,15 @@ public final class NoObj implements Obj, Inst {
         return this;
     } // TODO: should resolve to noobj (thus, like all other mono objs)
 
+    /**
+     * NOTHING HAS NO ADDRESS. {@code noobj} is not located anywhere, so it has no vid — the same {@code null} any
+     * unaddressed obj answers, and {@link #hasVID()} is false. Answering {@code NOOBJ_TID} gave every noobj one
+     * shared address, which made "nothing" look anchored: a wire reply that came back noobj (an absent read) was
+     * matched against that address instead of being treated as unanchored, and waited out its deadline.
+     */
     @Override
     public fURI vid() {
-        return NOOBJ_TID;
+        return null;
     }
 
     @Override

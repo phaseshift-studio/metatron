@@ -180,6 +180,13 @@ public final class PlanInterpreter {
 
         // emit (a·c + b·c)·c — the master gathers partials and re-applies the reducer at home; each slave
         // carries one factor of the bulk, the floatable run replicated, and a local partial reduce.
+        //
+        // A SLAVE SHIPS UNQUOTED. Nothing on this machine evaluates it: a multi-instruction chain is Code, never
+        // an Inst, so neither the lst nor select's at() auto-resolves it; to(<peer>) takes it as its lhs, raw; and
+        // the transport ships Network.write's message (start(slave).to(<>)) without computing it here (see
+        // Network.Helper.asTransport). The peer's evaluation of that start(...) is the one that runs the slave,
+        // so what comes back is its value, 12@<tag>. A quote would now be peeled on the far side instead, and
+        // whether the code it uncovers still runs is left to the peer's processor -- so there is none.
         final List<Obj> summands = new ArrayList<>();
         final List<Obj> routes = new ArrayList<>();
         final mFluent<?> master = merge_().addInst(reducer).addInsts(insts.subList(cutIndex + 1, insts.size()));
@@ -190,7 +197,7 @@ public final class PlanInterpreter {
             final mFluent<?> slave = start_(objs(part)).q("no_shard");
             slave.addInsts(insts.subList(1, cutIndex));
             slave.addInst(reducer);
-            summands.add(quoted(slave));
+            summands.add(slave);
             routes.add(to_(targets.get(s)).tryToInst());
         }
         final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
@@ -236,7 +243,7 @@ public final class PlanInterpreter {
         final int k = Math.min(targets.size(), seed.size());
 
         // emit — the master k-merges the sorted shards; each slave carries one factor of the bulk, the
-        // floatable run replicated, and a local order.
+        // floatable run replicated, and a local order. The slave ships unquoted, exactly as in shard.
         final List<Obj> summands = new ArrayList<>();
         final List<Obj> routes = new ArrayList<>();
         final mFluent<?> master = merge_().addInsts(kmerge_(selector).insts()).addInsts(insts.subList(cutIndex + 1, insts.size()));
@@ -247,27 +254,11 @@ public final class PlanInterpreter {
             final mFluent<?> slave = start_(objs(part)).q("no_shard");
             slave.addInsts(insts.subList(1, cutIndex));
             slave.addInsts(order_(selector).insts());
-            summands.add(quoted(slave));
+            summands.add(slave);
             routes.add(to_(targets.get(s)).tryToInst());
         }
         final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
         return emitted;
-    }
-
-    /**
-     * A SHARD IS QUOTED ONCE PER EVALUATION THAT STANDS BETWEEN IT AND THE PEER, so that the peer's evaluation is
-     * the one that RUNS it. One level is spent on this machine before the frame leaves (the round trip receives
-     * {@code block(chain)} for the {@code block(block(chain))} it routed), and the peer evaluates the frame it
-     * deserializes ({@code ObjmtronSerializer.read} evaluates the wire text), which spends the last level and runs
-     * the chain — so what the handler answers is the shard's value, {@code 12@<tag>}.
-     * <p>
-     * Quoted one level deeper, the peer only unquotes it and sends the chain back as CODE — and a master whose own
-     * read evaluates its replies then computes every shard itself: the answer is right and the work never leaves
-     * home (measured: the peers replied {@code start?no_shard({1,3,5}).plus(1).sum()} and the master read {@code 12}
-     * out of it; a master that only parses its replies fails instead, {@code unable to convert mcode to int::T}).
-     */
-    private static Obj quoted(final mFluent<?> slave) {
-        return block_(block_(slave));
     }
 
     /**
