@@ -24,11 +24,11 @@ import org.jline.utils.Status;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -41,14 +41,12 @@ import static org.slf4j.event.Level.WARN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -91,11 +89,10 @@ public class StatusLine implements Runnable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
-        final Real inBytes = mathInstSet.normalizeData(real((double) (Machine.current().memory().stats().ioStats().bytesRecv()), MATH_BYTE_TID, null));
-        final Real outBytes = mathInstSet.normalizeData(real((double) (Machine.current().memory().stats().ioStats().bytesSent()), MATH_BYTE_TID, null));
         this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
-        this.addWidget(f("in_bytes"), () -> " {{w}}\uD83D\uDCE5 {{%s}}%s::%.2f ".formatted(getForegroundColor(), inBytes.tid().name(), inBytes.realValue()));
-        this.addWidget(f("out_bytes"), () -> "{{w}}\uD83D\uDCE4 {{%s}}%s::%.2f ".formatted(getForegroundColor(), outBytes.tid().name(), outBytes.realValue()));
+        // the wire, not the machine's io counters: bytes-in/out mixed LLM tokens, MQTT payloads and database reads
+        // (see Stats.IOStats), and the widget froze them at construction besides. see WireStats
+        this.addWidget(f("net"), () -> netMarkup(getForegroundColor(), getBackgroundColor()));
         this.addWidget(f("time"), () -> "{{%s}}⏳{{%s}}%s ".formatted(this.runningTime() > 10000 ? "r" : "w", getForegroundColor(), timeFormat(this.runningTime())));
         this.addWidget(f("tokens"), () -> "\uD83E\uDD16 %s ".formatted(StatusLine.widgetData.at("tokens").orElse((Obj) jnt(0)).toCleanString()));
         this.addWidget(f("machine"), () -> "\uD83D\uDDA5️ %s ".formatted(Machine.current().vid()));
@@ -168,6 +165,26 @@ public class StatusLine implements Runnable {
     }
 
     /**
+     * The wire's gauge: completed round trips, frames received, frames sent.
+     * <p>
+     * It replaces the bytes-in/out widgets, which read {@code Stats.IOStats} — a counter fed by LLM token bytes,
+     * MQTT payloads and database reads as well as sockets, so it never measured the network — and which were
+     * computed once at construction and never changed again.
+     * <p>
+     * A wire that is answering is the normal state, so it reads quietly; a timeout tints the trip count red for
+     * as long as the window holds one. A pure function of {@link WireStats}, so it is tested like the banner.
+     */
+    static String netMarkup(final String fore, final String back) {
+        return "{{W}}⇄{{%s}}%d {{W}}↓{{%s}}%d {{W}}↑{{%s}}%d ".formatted(
+                back + "&" + (WireStats.timeouts() > 0 ? "r" : fore),
+                WireStats.roundTrips(),
+                back + "&" + fore,
+                WireStats.received(),
+                back + "&" + fore,
+                WireStats.sent());
+    }
+
+    /**
      * Clip a line to the display columns it has left, so the banner's tail is
      * what falls off the terminal's right edge.  Measured in display columns
      * rather than chars — jline knows a glyph's width where {@code String} does
@@ -209,7 +226,7 @@ public class StatusLine implements Runnable {
         boolean capped = false;
         int used = 0;   // the display columns already spent on this line
         for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
-            final String w = ws.getValue().apply(noobj()).strValue().replace("\n", " ");
+            final String w = this.renderWidget(ws);
             final String cap;
             if (capped || ws.getKey().uriValue().toString().endsWith("_")) {
                 cap = "";
@@ -243,6 +260,19 @@ public class StatusLine implements Runnable {
         }
         this.line.clear();
         this.line.add(builder.toAttributedString());
+    }
+
+    /**
+     * One widget's text, with a broken widget contained: an exception renders as a red {@code !name} instead of
+     * ending the render thread — which is what it used to do, freezing the bar for the rest of the session with
+     * nothing on screen to say why.
+     */
+    private String renderWidget(final Map.Entry<Uri, Call> widget) {
+        try {
+            return widget.getValue().apply(noobj()).strValue().replace("\n", " ");
+        } catch (final Exception e) {
+            return "{{r}}!" + widget.getKey().uriValue().name();
+        }
     }
 
     private String getBackgroundColor() {
@@ -296,21 +326,6 @@ public class StatusLine implements Runnable {
 
     public Level getState() {
         return this.state;
-    }
-
-    private static String bytesFormat(final long bytes) {
-        if (bytes < 1024)
-            return bytes + "B";
-        else if (bytes < 1024 * 1024)
-            return String.format("%.2fkB", bytes / 1024.0);
-        else if (bytes < 1024 * 1024 * 1024)
-            return String.format("%.2fmB", bytes / (1024.0 * 1024.0));
-        else if (bytes < 1024L * 1024L * 1024L * 1024L)
-            return String.format("%.2fgB", bytes / (1024.0 * 1024.0 * 1024.0));
-        else if (bytes < 1024L * 1024L * 1024L * 1024L * 1024L)
-            return String.format("%.2ftB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
-        else
-            return String.format("%.2fpB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0));
     }
 
     private static String timeFormat(final long millis) {

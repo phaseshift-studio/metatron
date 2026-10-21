@@ -703,6 +703,11 @@ public final class QCollection {
                     // subscriptions.logger().info("qless write to %s", vid.basePath());
                     if (vid.hasQ(SUBQ))
                         return noobj();
+                    // NOTHING ARMED is the common case on a hot source: the broadcast runs on every write to a
+                    // source that declares subq at all -- the network now does, so every write in the VM passes
+                    // here -- and an empty registry must cost one check, not a stream and a match per write
+                    if (subscriptions.isEmpty())
+                        return noobj();
                     subscriptions.elements().filter(e -> vid.basePath().bimatches(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
                                 subscriptions.logger().debug("spawning virtual thread for subscription code: %s", s);

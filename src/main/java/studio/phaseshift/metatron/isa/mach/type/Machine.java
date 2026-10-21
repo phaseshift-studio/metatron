@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -168,7 +169,16 @@ public interface Machine extends Rec, AutoCloseable {
         // read, and a RELATIVE name stays relative -- "in the machine" is memory's contract to interpret.
         final fURI aligned = vid.hasScheme() ? machine.memory().alignPrefix(vid) : vid;
         final fURI name = aligned.equals(vid.one()) ? vid : aligned;
-        final Obj dispatched = machine.network().read(name);
+        // THE NETWORK'S Q-PROCS APPLY HERE, not inside Network: the layer is the one place a vid is handed to a
+        // source, so a `?subq` on a peer address registers in THIS VM (the layer's pre_write consumes the write)
+        // instead of riding the wire and registering on the peer.
+        // THE GATE IS THE NETWORK'S OWN: it answers only addresses with a host (see Network.read/write). The layer
+        // must not run for an address the network does not claim — otherwise the network's subq would capture a
+        // purely local `?subq` registration that belongs to the space covering it.
+        final Network network = machine.network();
+        final Obj dispatched = null == name.host()
+                ? noobj()
+                : QProc.Layer.read(network, name, () -> network.read(name));
         if (!dispatched.isNoObj())
             return dispatched;
         // Local routing (~ resolution, relative→stack, absolute→space) lives in Memory.read, so there is exactly one
@@ -215,7 +225,12 @@ public interface Machine extends Rec, AutoCloseable {
         // aligned form lands, on the wire and in the index alike.
         final fURI alignedW = vid.hasScheme() ? machine.memory().alignPrefix(vid) : vid;
         final fURI name = alignedW.equals(vid.one()) ? vid : alignedW;
-        final Obj dispatched = machine.network().write(name, obj);
+        // the same layer as read, under the same host gate: a write the network's q-procs answer (a `?subq`
+        // registration) never reaches the wire, and the write's own answer is the network's reply
+        final Network network = machine.network();
+        final Obj dispatched = null == name.host()
+                ? noobj()
+                : QProc.Layer.write(network, name, obj, () -> network.write(name, obj));
         if (!dispatched.isNoObj())
             return dispatched;
         // Local pass-through to Memory (see read).

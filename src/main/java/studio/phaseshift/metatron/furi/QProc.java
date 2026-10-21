@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.furi;
 
 import studio.phaseshift.metatron.furi.q.BaseQ;
+import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -28,9 +29,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TriFunction;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -199,18 +200,21 @@ public interface QProc extends Rec {
                     (qProc.vid() != null && ((Obj) other).vid() != null && ((Obj) other).vid().equals(qProc.vid()));
         }
 
-        public static boolean checkSpaceQProcs(final Space space, final fURI vid) {
+        /**
+         * A query on a vid is answered only by a processor the SOURCE declares — {@code ?subq} on a source
+         * that never declared subq is a mistake worth naming, not a silent no-op.
+         *
+         * @param source the addressable the vid is handed to
+         * @param vid    the addressed vid
+         * @return true (a declaration mismatch throws instead of answering)
+         */
+        public static boolean checkQProcs(final Addressable source, final fURI vid) {
             if (vid.hasQ()) {
-                final AtomicBoolean check = new AtomicBoolean(true);
-                final List<String> qSpace = space.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
+                final List<String> qSpace = source.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
                 vid.qMap().keySet().stream().filter(k -> k.endsWith("q")).filter(k -> !k.equals(DOCQ)).forEach(k -> {
-                    if (!qSpace.contains(k)) {
-                        throw MTronException.of("no %s query processor attached to %s [%s]", k, space.vidOrTid(), space.pattern());
-                        //space.logger().warn("no %s query processor attached", k);
-                        //check.set(false);
-                    }
+                    if (!qSpace.contains(k))
+                        throw MTronException.of("no %s query processor attached to %s", k, source.pattern());
                 });
-                return check.get();
             }
             return true;
         }
@@ -352,6 +356,71 @@ public interface QProc extends Rec {
                     qProc.jvm().put(uri(INST), (Obj) jvm.get(f(INST)));
                 return qProc;
             }
+        }
+    }
+
+    /**
+     * THE Q-PROC PIPELINE — one implementation of the read and write sequences, so no source re-derives the
+     * order and no source has to know what a q-proc does.
+     * <p>
+     * A source hands the layer the access it would have performed on its own (the {@link Supplier}) and the
+     * layer brackets it: {@code pre_read} before and {@code post_read} after; {@code pre_write} before,
+     * {@code qless_write} (the broadcast) and {@code post_write} after. A q-proc that answers from its own hook
+     * — an {@code ?incrq} that assigns and stores, a {@code ?subq} that only registers — replaces the access
+     * rather than decorating it, which is what the pre hooks' answer already means.
+     * <p>
+     * The write's ANSWER is whatever the supplier returns: a space returns the obj the caller handed in (a
+     * store's own return value is bookkeeping, and a caller that wrote {@code x} expects {@code x} back), while a
+     * transport returns the peer's reply, which is the value its caller is actually waiting for.
+     */
+    final class Layer {
+
+        private Layer() {
+            // static only
+        }
+
+        /**
+         * the read pipeline: {@code pre_read} → the source's own read → {@code post_read}.
+         * <p>
+         * NO DECLARATION CHECK HERE. Which queries a source speaks is the source's own verdict, given where it
+         * finally handles the address ({@code AbstractSpace} calls {@link Helper#checkQProcs}); a source the
+         * dispatch merely OFFERS an address to — the network, which declines everything without a host — must not
+         * refuse a {@code ?incrq} that belongs to the space the write is on its way to.
+         *
+         * @param source the source the q-procs are declared on
+         * @param vid    the address read
+         * @param read   the access to run when no q-proc answers first
+         * @return the q-proc's answer, or the source's post-processed read
+         */
+        public static Obj read(final Addressable source, final fURI vid, final Supplier<Obj> read) {
+            if (!source.hasQProcs())
+                return read.get();             // the hot path: one map lookup, no list, straight to the source
+            final Lst qs = source.qs();
+            return Helper.processPreRead(qs, vid).orElseGet(() -> Helper.processPostRead(qs, vid, read.get()));
+        }
+
+        /**
+         * the write pipeline: {@code pre_write} → {@code qless_write} → the source's own write → {@code post_write}.
+         * <p>
+         * The broadcast runs BEFORE the access, which is where it has always run for a space. A source that
+         * ordered the two differently (see {@code mqttSpace}) is not routed through this layer yet — it keeps
+         * its own sequence until that difference is decided rather than silently normalized.
+         *
+         * @param source the source the q-procs are declared on
+         * @param vid    the address written
+         * @param obj    the value written
+         * @param write  the access to run when no q-proc answers first
+         * @return the q-proc's answer, or the source's post-processed write
+         */
+        public static Obj write(final Addressable source, final fURI vid, final Obj obj, final Supplier<Obj> write) {
+            if (!source.hasQProcs())
+                return write.get();            // the hot path: one map lookup, no list, straight to the source
+            final Lst qs = source.qs();
+            return Helper.processPreWrite(qs, vid, obj)
+                    .orElseGet(() -> Helper.processQlessWrite(qs, vid, obj).orElseGet(() -> {
+                        final Obj result = write.get();
+                        return Helper.processPostWrite(qs, vid, result).orElse(result);
+                    }));
         }
     }
 

@@ -10,7 +10,7 @@
 #
 # Build context must contain the assembled uber-jar, `target/metatron-*-jar-with-
 # dependencies.jar` — the output of `mvn package`.  No staging copy is needed:
-# `bin/metatron-docker image` packages it (inside metatron-build:24) and builds this
+# `bin/metatron-docker image` packages it (inside metatron-build:25) and builds this
 # image in one command, and CI runs `mvn package` before `docker build`.
 
 ARG METATRON_VERSION="0.1-SNAPSHOT"

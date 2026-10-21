@@ -166,4 +166,16 @@ public class RealTest extends AbstractAlgebraTest<Real> {
     public void testSum(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{2}3.2.prod()                        % 10.24",
+            "{1.1,2.2,3.3}.prod()                 % 7.986",
+            "{10.5,20.5,30.0}.prod()              % 6457.5",
+            "{-5.5,5.5}.prod()                    % -30.25",
+            "{1.5}.prod()                         % 1.5",
+    }, delimiter = '%')
+    public void testProd(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 }

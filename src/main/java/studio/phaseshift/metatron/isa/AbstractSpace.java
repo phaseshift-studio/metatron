@@ -75,16 +75,18 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         /*final fURI routedVID = Space.Helper.routeFromSpace(vid, this.routes());
         if (!routedVID.test(this.pattern()))
             return Machine.read(routedVID);*/
-        QProc.Helper.checkSpaceQProcs(this, vid);
-        return QProc.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
-            final Obj result = Space.Helper.resolveRead(this, vid, directReader());
-            return QProc.Helper.processPostRead(this.qs(), vid, result);
-        });
+        // A SPACE REFUSES A QUERY IT DOES NOT SPEAK. This is the source's own verdict, and it belongs here rather
+        // than in the layer: the network is offered every host-bearing address and declines most of them, so a
+        // check there would reject a ?incrq that belongs to the space the write is headed for.
+        QProc.Helper.checkQProcs(this, vid);
+        // the q-proc pipeline (pre_read, this space's read, post_read) has one home (QProc.Layer), so a source
+        // declares its q-procs and never re-derives the order
+        return QProc.Layer.read(this, vid, () -> Space.Helper.resolveRead(this, vid, this.directReader()));
     }
 
     @Override
     public Stream<IdObj> readStream(final fURI pattern) {
-        QProc.Helper.checkSpaceQProcs(this, pattern);
+        QProc.Helper.checkQProcs(this, pattern);
         final java.util.Optional<Obj> preRead = QProc.Helper.processPreRead(this.qs(), pattern);
         if (preRead.isPresent())
             return Stream.of(IdObj.of(pattern, preRead.get()));
@@ -133,12 +135,15 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
                 return fail("space %s requires %s at root; got %s", this.vid(), rootConstraint, obj.type());
             }
         }
-        QProc.Helper.checkSpaceQProcs(this, vid);
-        return QProc.Helper.processPreWrite(this.qs(), vid, obj)
-                .orElseGet(() -> QProc.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(() -> {
-                    Space.Helper.resolveWrite(LOG, this, vid, obj, this.directWriter(), this.directReader());
-                    return QProc.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
-                }));
+        // a space refuses a query it does not speak (see read: the check is the source's, not the layer's)
+        QProc.Helper.checkQProcs(this, vid);
+        // the write pipeline (pre_write, qless_write, this space's write, post_write) lives in QProc.Layer --
+        // the space's own answer is the obj the caller handed in: resolveWrite's return is bookkeeping, and
+        // handing it back would change what `x -> y` evaluates to
+        return QProc.Layer.write(this, vid, obj, () -> {
+            Space.Helper.resolveWrite(this.LOG, this, vid, obj, this.directWriter(), this.directReader());
+            return obj;
+        });
     }
 
     /**

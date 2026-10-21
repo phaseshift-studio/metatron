@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.network;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Network;
@@ -71,6 +72,10 @@ public class BasicNetwork extends MRec implements Network {
         // the status METHOD is a field of the component, not a Java-only accessor: `*/network/status` must reach
         // it, so the inst is installed on the rec it closes over (and invoked there with `()`).
         jvm.putIfAbsent(uri(STATUS), this.status());
+        // THE Q-PROCS A NETWORK SUPPORTS. subq is the one that matters: a subscription to a peer's namespace is
+        // LOCAL bookkeeping — `ws://peer/x/#?subq -> code` must register here and fire here — and the layer
+        // (QProc.Layer, applied by Machine.write) is what consumes the registration before it can reach the wire.
+        this.addQ(QCollection.subQ());
     }
 
     /**

@@ -41,10 +41,10 @@
     </licenses>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <maven.compiler.release>21</maven.compiler.release>
-        <java.version>21</java.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+        <maven.compiler.release>25</maven.compiler.release>
+        <java.version>25</java.version>
         <!-- SKIP BUILD PROCESSES -->
         <skipTests>false</skipTests>
         <skipAsciidoc>false</skipAsciidoc>
@@ -610,6 +610,10 @@
 
                     </execution>
                 </executions>
+                <configuration>
+                    <source>25</source>
+                    <target>25</target>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

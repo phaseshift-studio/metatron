@@ -148,7 +148,7 @@ public interface Int extends Mono, Ring.O<Int> {
                     //    Map.of(uri(LAW), laws(Category.Law.right_distributive))),
                     docWrap(instC(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Int) a).plus((Int) b)).intValue()), jnt(0)), "zero or more ints", "a single plus reduced int", Map.of(), "adds the lhs int stream into a single int", "{1,2,3,4}.sum() [-- 10 --]"),
                     //     Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.right_distributive))),
-                    instC(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() * (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(1)),
+                    instC(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().map(l -> l.c().isOne() ? l.intValue() : Math.powExact(l.intValue(), l.c().max().intValue())).reduce(inst.seed().intValue(), (a, b) -> a * b)), jnt(1)),
                     //    Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.right_distributive))),
                     instC(POW_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt((long) Math.pow(lhs.intValue(), inst.arg(0).intValue()))),
                     instC(MOD_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(lhs.intValue() % inst.arg(0).intValue())),

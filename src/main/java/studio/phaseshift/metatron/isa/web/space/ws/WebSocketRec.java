@@ -120,6 +120,9 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     @Override
     public void onMessage(final WebSocket conn, final Obj message) {
         try {
+            // the single inbound funnel: a client's onMessage delegates into this same method, so counting here
+            // counts every frame that arrived on any socket, handled or not
+            WireStats.received(this.peerName(), message.vid());
             this.at(uri(ON_MESSAGE)).apply(message);
         } catch (final Exception e) {
             LOG.error("error processing message: %s", e);

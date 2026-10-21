@@ -119,7 +119,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
         // An internal mirror, reached only through this field — it must NOT self-register into the
         // machine's space index. Registered, it carries the same pattern as the space itself, so
         // Memory.findSpace can resolve /t/... addresses to this empty cache instead of the space:
-        // the mqttSpace.write() override is then bypassed and any qproc write fails checkSpaceQProcs
+        // the mqttSpace.write() override is then bypassed and any qproc write fails checkQProcs
         // ("no subq query processor attached to memspace [/t/#]").
         this.cache = memSpace.unregistered(this.pattern(), null);
         if (this.at(SERIALIZER).isNoObj())

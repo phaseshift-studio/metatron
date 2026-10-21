@@ -132,9 +132,12 @@ public interface WebSocketObj extends Rec, Closeable {
                 // send as a websocket text frame so clients using onText listeners receive it
                 final String outgoing = new String(bytes.array(), StandardCharsets.UTF_8);
                 this.getWebSocket().send(outgoing);
+                WireStats.sent(this.peerName(), message.vid());
                 this.logger().status(DEBUG, "sent %s to %s", message, this.getWebSocket().getRemoteSocketAddress());
-            } else
+            } else {
                 this.getWebSocket().send(bytes);
+                WireStats.sent(this.peerName(), message.vid());
+            }
         } catch (final Exception e) {
             this.logger().status(ERROR, "error sending %s to %s: %s", message, this.getWebSocket().getRemoteSocketAddress(), e);
         }
@@ -255,10 +258,13 @@ public interface WebSocketObj extends Rec, Closeable {
                             return fail("send to %s failed: socket closed", peer);
                         }
                         this.logger().debug("sent tag=%s on %s, awaiting latch", tag, peer);
+                        final long startedMs = System.currentTimeMillis();
                         if (!waiter.latch().await(deadlineMs, TimeUnit.MILLISECONDS)) {
                             this.logger().warn("connection timeout: tag=%s on %s after %s ms (outstanding=%s)", tag, peer, deadlineMs, waiters.size());
+                            WireStats.timeout();
                             return fail("no reply from %s within %s ms", peer, deadlineMs);
                         }
+                        WireStats.roundTrip(System.currentTimeMillis() - startedMs);
                         this.logger().debug("filled tag=%s on %s", tag, peer);
                     } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();

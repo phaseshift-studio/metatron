@@ -397,17 +397,23 @@ public abstract class AbstractMetatronTest {
                 LOG.debug("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = ObjmtronSerializer.parse(code);
-            final Obj exParsed = ObjmtronSerializer.parse(expected);
+            final Obj cd = Machine.parse(code);
+            final Obj exParsed = Machine.parse(expected);
             final Obj ex = exParsed.isCall() ? exParsed.apply() : exParsed;
             final Obj actual = cd.apply(noobj());
             LOG.debug("testing %s => %s => %s [expected:%s]", code, code, actual, ex);
-            if (!actual.equals(ex) && actual.stream().anyMatch(Obj::isFail))
-                LOG.error("expectation led to failure: %s", actual);
-            if (ex.tid().hasPoly()) ///  TODO: how to handle generalization of a polynomial as it relates to equality
-                assertTrue(actual.test(ex));
-            else
-                assertEquals(ex, actual);
+            if (actual.isReal() && ex.isReal()) {
+                assertEquals(actual.realValue(), ex.realValue(), 0.00001d);
+                assertEquals(actual.c(), ex.c());
+                assertEquals(actual.tid(), ex.tid());
+            } else {
+                if (!actual.equals(ex) && actual.stream().anyMatch(Obj::isFail))
+                    LOG.error("expectation led to failure: %s", actual);
+                if (ex.tid().hasPoly()) ///  TODO: how to handle generalization of a polynomial as it relates to equality
+                    assertTrue(actual.test(ex));
+                else
+                    assertEquals(ex, actual);
+            }
             
           /*  final Obj acd = serializer.read(serializer.write(cd));
             final Obj aex = serializer.read(serializer.write(ex));

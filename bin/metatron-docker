@@ -5,13 +5,13 @@
 #
 #   run    (was bin/metatron-docker)       run any boot file in a disposable container
 #   dev    (was bin/metatron-dev-docker)   the container dev loop: jar -> image -> (re)start
-#          (the jar is built in metatron-build:24, so docker is the only host requirement)
+#          (the jar is built in metatron-build:25, so docker is the only host requirement)
 #   build  (was bin/metatron-build-docker) the isolated build/test/docs/console loop
 #
 # Two images, and which command builds each:
 #   metatron:dev        the app image (dist/docker/Dockerfile; COPYs the packaged
 #                       uber-jar from target/) -> `metatron-docker image`, or step 2 of `dev`
-#   metatron-build:24   the build/test image (dist/docker/Dockerfile.build: maven + JDK24
+#   metatron-build:25   the build/test image (dist/docker/Dockerfile.build: maven + JDK 25
 #                       + patchelf + python3)   ->  `metatron-docker build image`
 #
 # Usage:
@@ -44,7 +44,7 @@
 #   METATRON_IMAGE         app image tag        (default: metatron:dev)
 #   METATRON_USER          metatron user name   (default: $USER)
 #   METATRON_CONTAINER     dev container name   (default: metatron)
-#   METATRON_BUILD_IMAGE   build image tag      (default: metatron-build:24)
+#   METATRON_BUILD_IMAGE   build image tag      (default: metatron-build:25)
 #   METATRON_BUILD_NAME    build container name (default: metatron-build; a unique suffix is added)
 #   MAVEN_REPO             maven repo inside the build container (default: .build/m2/repository)
 #   METATRON_BUILD_TARGET  build output dir for build/test/docs (default: .docker-target;
@@ -86,7 +86,7 @@ case ":${PATH}:" in
 esac
 
 APP_IMAGE="${METATRON_IMAGE:-metatron:dev}"
-BUILD_IMAGE="${METATRON_BUILD_IMAGE:-metatron-build:24}"
+BUILD_IMAGE="${METATRON_BUILD_IMAGE:-metatron-build:25}"
 BUILD_NAME="${METATRON_BUILD_NAME:-metatron-build}-$(date +%s)-$$"
 MAVEN_REPO="${MAVEN_REPO:-.build/m2/repository}"
 # docker builds write here (bound at /work/target), never into the repo's
@@ -154,10 +154,10 @@ build_run() {
         "$BUILD_IMAGE" "$@"
 }
 
-# the build image auto-builds on first use (maven + JDK24 + patchelf + python3)
+# the build image auto-builds on first use (maven + JDK 25 + patchelf + python3)
 ensure_build_image() {
     if ! docker image inspect "$BUILD_IMAGE" >/dev/null 2>&1; then
-        echo "==> building $BUILD_IMAGE (maven + JDK24 + patchelf + python3)"
+        echo "==> building $BUILD_IMAGE (maven + JDK 25 + patchelf + python3)"
         D docker build -q -f dist/docker/Dockerfile.build -t "$BUILD_IMAGE" .
     fi
 }
@@ -211,7 +211,7 @@ metatron-docker: $BOOT_FILE
 
 # mvn package (skip tests) INSIDE the build container.  Building in the container
 # (rather than with a host ./mvnw) means `image`/`dev` need docker and nothing else,
-# and the jar is assembled by the same JDK24 image the test loop uses.  maven writes
+# and the jar is assembled by the same JDK 25 image the test loop uses.  maven writes
 # to the isolated $BUILD_TARGET dir (see build_run); we then copy the uber jar back
 # into the repo's target/ — no staging copy elsewhere, the Dockerfile COPYs
 # target/metatron-*-jar-with-dependencies.jar straight into the image.
@@ -353,7 +353,7 @@ cmd_build() {
             build_run /bin/sh -c "$*"
             ;;
         image)
-            echo "==> rebuilding $BUILD_IMAGE (maven + JDK24 + patchelf + python3)"
+            echo "==> rebuilding $BUILD_IMAGE (maven + JDK 25 + patchelf + python3)"
             D docker build -f dist/docker/Dockerfile.build -t "$BUILD_IMAGE" .
             ;;
         *)
