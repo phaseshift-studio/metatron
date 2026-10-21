@@ -149,6 +149,7 @@ Composing them round-trips — from an object to its edges and back, or from an 
 | `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions |
 | `position`  | the edge's place among its siblings (a subset of the six kinds below)                                            |
 | `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                       |
+| `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`) |
 
 ### the six edge kinds
 
@@ -238,8 +239,7 @@ type, and a type that models no such structure is left unchanged.
 | `derivation_contraction` | `derivation`                                                       | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$ |
 | `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]` | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients            |
 | `branch_inline`          | the additive role — `cut => [role => zero]`                          | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$ |
-| `law_shard`              | `form = reducer` ∧ `law ∋ monoidic`, `commutative` + a live peer roster | $[\mathrm{barrier}, \mathrm{seed}_{\{m\}}, \ldots] == [\mathrm{to}(), \mathrm{to}(a), \mathrm{to}(b)]$ (Thm 19) |
-| `order_shard`            | the `order` role — a sort op — + a live peer roster                  | the seed partitions, each peer sorts its shard, and the master $k$-merges the shards behind the barrier             |
+| `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order` |
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
 `monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
@@ -375,7 +375,7 @@ names and where its `route` sends it:
 | shape            | the `cut` reads                                                                 | the `route`                                                          | example                                                                                     |
 |------------------|---------------------------------------------------------------------------------|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
 | **local**        | a declared process law — `[law => [...]]` — or a theory role — `[role => ...]`  | stays local (`target => none` / `local`)                               | `law_idempotent` → `cut => [law => [idempotent]]`; `theory_unit_removal` → `cut => [role => id]` |
-| **distribution** | a `form` + `law` anchor, or a sort role                                         | ships to `peers` / `shuffle`, with the anchor re-applied locally       | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`; `order_shard` → `cut => [role => order]` |
+| **distribution** | a `form` + `law` anchor — the laws its `combiner` must declare                  | ships to `peers`, with the combiner re-applied locally                 | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`                    |
 
 The application is a **type method**, not a field: `lower(plan::T)` is one instruction registered in
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
@@ -399,8 +399,9 @@ now holding that `peer::T`, the `path::T` lists the distribution plan among its 
 
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
 `>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: the seed bulk partitioned into
-`no_shard` shards, each shard shipped by a `select([to(peer)])` to its roster member, merged, and the reducer
-re-applied at home (Thm 19). The plan — not its application — is data, so the rewrite *schedule* and the out-edge
+shards whose seed carries the remaining hop budget (`start?hops=0` at a leaf), each shard shipped by a
+`select([to(peer)])` to its roster member, merged, and recombined at home through the reducer's combiner (Thm 19). A
+peer handed a shard with budget left plans it again over its own peers, so the shards form a tree. The plan — not its application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
 
 ```mtron_pre
