@@ -773,7 +773,7 @@ kinds may sit in one row.</p>
 ==&gt;/sys/space/tbledoc/instset/#
 mtron&gt; */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id(),
+    recipient=&gt;isa?#&lt;=#(person/+/id).!*id?#&lt;=#(),
     uri::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/award
 ==&gt;/sys/space/tbledoc/instset/note=&gt;rec::T[?[{?}body=&gt;str::T,uri::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/note
 ==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,
@@ -823,76 +823,16 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/65
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/5
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/66
+==&gt;[body=&gt;'another one']@tbledoc:note/6
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==&gt;12
-==&gt;21
-==&gt;11
-==&gt;59
-==&gt;4
-==&gt;6
-==&gt;49
-==&gt;31
-==&gt;57
-==&gt;3
-==&gt;20
-==&gt;40
-==&gt;7
-==&gt;48
-==&gt;32
-==&gt;29
-==&gt;19
-==&gt;23
-==&gt;51
-==&gt;2
-==&gt;8
-==&gt;33
-==&gt;47
 ==&gt;1
-==&gt;22
-==&gt;10
-==&gt;18
-==&gt;58
-==&gt;50
-==&gt;9
-==&gt;34
-==&gt;46
-==&gt;17
-==&gt;26
-==&gt;53
-==&gt;62
-==&gt;63
-==&gt;27
-==&gt;35
-==&gt;45
-==&gt;61
-==&gt;16
-==&gt;52
-==&gt;64
-==&gt;24
-==&gt;28
-==&gt;44
-==&gt;36
-==&gt;65
-==&gt;56
-==&gt;60
-==&gt;41
-==&gt;15
-==&gt;55
-==&gt;37
-==&gt;39
-==&gt;43
-==&gt;13
-==&gt;25
-==&gt;66
-==&gt;14
-==&gt;54
-==&gt;42
+==&gt;3
+==&gt;2
+==&gt;4
 ==&gt;5
-==&gt;38
-==&gt;30
+==&gt;6
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC
@@ -909,7 +849,7 @@ mtron&gt; *tbledoc:person/+.count()                   [-- 0: a fresh mount has n
 ==&gt;5
 mtron&gt; */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
 ==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
+    recipient=&gt;isa?#&lt;=#(person/+/id).!*id?#&lt;=#()]]@/sys/space/tbledoc/instset/award
 ==&gt;/sys/space/tbledoc/instset/note=&gt;rec::T[?[{?}body=&gt;str::T]]@/sys/space/tbledoc/instset/note
 ==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,
     {?}age=&gt;int::T,

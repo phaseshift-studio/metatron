@@ -497,20 +497,20 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T).morphed_to()
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
-              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+              src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?bool&lt;=int(bool::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
-              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+              src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?bytes&lt;=int(bytes::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
-              trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+              src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
               analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?real&lt;=int(real::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
@@ -545,8 +545,8 @@ group/monoid instances. <code>theory::T</code> is the nominal super-type groupin
     name=&gt;plus,
     form=&gt;mapper,
     class=&gt;[endo],
-    src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
-    trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+    src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+    trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
     analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
     obj=&gt;plus?int&lt;=int(int::T),
     ...(1 more)]
@@ -815,7 +815,7 @@ The <code>==</code> between segments is a structural <code>select</code> — eac
 previous segment's result, so a descent <code>[seed] == [lift] == [lower₁] == [lower₂]</code> reads as a chain of witnesses. The
 three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
+==&gt;[path::[obj=&gt;start?#&lt;=#(5).plus?#&lt;=#(0).neg?#&lt;=#().neg?#&lt;=#(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -841,7 +841,7 @@ three steps below are the same vertex after each application — the path shrink
                                          [span=&gt;pre,flags=&gt;[floatable,no_seed]],
                                          [span=&gt;at]]]]]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]
-==&gt;[path::[obj=&gt;start(5).plus(0),
+==&gt;[path::[obj=&gt;start?#&lt;=#(5).plus?#&lt;=#(0),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -864,7 +864,7 @@ mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theo
                                          [span=&gt;pre,flags=&gt;[floatable,no_seed]],
                                          [span=&gt;at]]]]]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]==[lower(&gt;&gt;theory_unit_removal)]
-==&gt;[path::[obj=&gt;start(5),
+==&gt;[path::[obj=&gt;start?#&lt;=#(5),
            branch_collapse=&gt;plan::[name=&gt;branch_collapse,
                                    cut=&gt;[role=&gt;add],
                                    route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
@@ -905,16 +905,16 @@ and computes its cut/span/route without consulting the code below; the descent (
 ==&gt;[abstraction::[obj=&gt;[morphism[start]::[name=&gt;start,
                                           form=&gt;mapper,
                                           class=&gt;[endo],
-                                          src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
-                                          trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+                                          src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+                                          trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
                                           analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
                                           obj=&gt;start?#&lt;=#(5)],
                         morphism[plus?rng=int&amp;dom=int]::[
                          name=&gt;plus,
                          form=&gt;mapper,
                          class=&gt;[endo],
-                         src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
-                         trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+                         src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+                         trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
                          analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
                          obj=&gt;plus?#&lt;=#(0),
                          ...(1 more)],
@@ -928,8 +928,8 @@ and computes its cut/span/route without consulting the code below; the descent (
                                  retraction,
                                  mono,
                                  epi],
-                         src=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
-                         trgt=&gt;!inst?rng=#{*}&amp;dom=#{?}(&lt;#{*}&gt;::T),
+                         src=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
+                         trgt=&gt;!inst?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;},
                          analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
                          obj=&gt;neg?#&lt;=#(),
                          ...(1 more)],
@@ -989,7 +989,7 @@ mtron&gt; */network
 <p><code>*/network</code> reads back the machine's network block — the dialed <code>peer::T</code> at the named host. With the <code>machine::T</code>
 now holding that <code>peer::T</code>, the <code>path::T</code> lists the distribution plan among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
+==&gt;[path::[obj=&gt;start?#&lt;=#({1,2,3,4,5}).plus?#&lt;=#(10).sum?#&lt;=#(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
@@ -1016,7 +1016,7 @@ now holding that <code>peer::T</code>, the <code>path::T</code> lists the distri
 re-applied at home (Thm 19). The plan — not its application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start([block(block(block(start?no_shard({1,2,3,4,5}).plus(10).sum())))]).select([to(ws://localhost:8555)]).merge().sum(),
+==&gt;[path::[obj=&gt;start?#&lt;=#([block?#&lt;=#(block?#&lt;=#(start?#&lt;=#&amp;no_shard({1,2,3,4,5}).plus?#&lt;=#(10).sum?#&lt;=#()))]).select?#&lt;=#([to?#&lt;=#(ws://localhost:8555)]).merge?#&lt;=#().sum?#&lt;=#(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
                                        route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],

@@ -437,6 +437,11 @@ public interface Space extends Addressable, Rec, Closeable {
          * along the way.  Each result is an {@link IdPoly} whose fURI is the poly's
          * concrete address — making it trivial for callers to compute the remaining
          * path segments with {@code originalFuri.removePrefix(poly.furi())}.
+         * <p>
+         * final List<IdPoly> polys = space.read(newFuri).stream()
+         * .filter(Obj::isPoly)
+         * .map(oi -> IdPoly.of(newNewFuri, oi.asPoly()))
+         * .toList();
          */
         public static Stream<IdPoly> locateBasePoly(final Space space, final fURI furi) {
             fURI newFuri = furi.retract(1).resolve().asNode();

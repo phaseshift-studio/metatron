@@ -467,10 +467,6 @@ terminal widgets to spruce up the metatron</p>
                      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          inst=&gt;[as?str&lt;=widget(str::T){&lt;j&gt;},
-                 display?noobj{0}&lt;=widget(){&lt;j&gt;},
-                 nano?#{?}&lt;=#{?}(){&lt;j&gt;},
-                 less?noobj{0}&lt;=str(isa(int::T).else(10)){&lt;j&gt;}],
           type=&gt;[rec::T[][ctor?console&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/mach/ui/console,
                  uri::T[?union?#&lt;=#(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@/m/mach/ui/anchor,
                  rec::T[?[{?}border=&gt;str::T,
@@ -538,7 +534,11 @@ terminal widgets to spruce up the metatron</p>
                  widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?modal_widget&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/modal_widget,
                  widget::T[?[{?}data=&gt;rec::T,
    {?}context=&gt;int::T,
-   {?}total=&gt;int::T]][ctor?stack_bar_widget&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/stack_bar_widget]]@/m/mach/ui</code></pre>
+   {?}total=&gt;int::T]][ctor?stack_bar_widget&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/stack_bar_widget],
+          inst=&gt;[as?str&lt;=widget(str::T){&lt;j&gt;},
+                 display?noobj{0}&lt;=widget(){&lt;j&gt;},
+                 nano?#{?}&lt;=#{?}(){&lt;j&gt;},
+                 less?noobj{0}&lt;=str(isa?#&lt;=#(int::T).else?#&lt;=#(10)){&lt;j&gt;}]]@/m/mach/ui</code></pre>
                     </div>
                 </div>
             </div>
@@ -1011,8 +1011,8 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a stack bar widget" class="text-success">a stack bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}total" class="text-light">{?}total</a> <span class="text-light">=&gt;</span> <a href="#'the numerator of the percent (default: the sum of the data)'" class="text-info">&#39;the numerator of the percent (default: the sum of the data)&#39;</a>
-  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
+  <a href="#{?}total" class="text-light">{?}total</a> <span class="text-light">=&gt;</span> <a href="#'the numerator of the percent (default: the sum of the data)'" class="text-info">&#39;the numerator of the percent (default: the sum of the data)&#39;</a>
   <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#"the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)"" class="text-info">&quot;the sections: [key =&gt; int], each labelled by its key and drawn smallest first, largest last; the reserved key &lt;&gt; (the empty uri) is the what-is-left section — drawn last, wearing the unused section&#39;s style (dark by default)&quot;</a>
 </pre>
 </div>
@@ -1141,9 +1141,9 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a table widget" class="text-success">a table widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}metadata" class="text-light">{?}metadata</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows of data behind the display'" class="text-info">&#39;a lst of rows of data behind the display&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'a lst of obj table headers'" class="text-info">&#39;a lst of obj table headers&#39;</a>
   <a href="#{?}row" class="text-light">{?}row</a> <span class="text-light">=&gt;</span> <a href="#'a lst of poly table rows'" class="text-info">&#39;a lst of poly table rows&#39;</a>
-  <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'a lst of obj table headers'" class="text-info">&#39;a lst of obj table headers&#39;</a>
+  <a href="#{?}metadata" class="text-light">{?}metadata</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows of data behind the display'" class="text-info">&#39;a lst of rows of data behind the display&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_select_widget">
@@ -1182,10 +1182,10 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree select tool" class="text-success">a tree select tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
-  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
-  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+  <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
+  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget__tree_widget">
@@ -1226,12 +1226,12 @@ terminal widgets to spruce up the metatron</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree widget" class="text-success">a tree widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
-  <a href="#{?}flatten" class="text-light">{?}flatten</a> <span class="text-light">=&gt;</span> <a href="#'fold single-folder chains into one path row (default false)'" class="text-info">&#39;fold single-folder chains into one path row (default false)&#39;</a>
-  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
-  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
   <a href="#{?}expand" class="text-light">{?}expand</a> <span class="text-light">=&gt;</span> <a href="#'branch uris whose children are read regardless of max'" class="text-info">&#39;branch uris whose children are read regardless of max&#39;</a>
-  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
+  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
+  <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#{?}flatten" class="text-light">{?}flatten</a> <span class="text-light">=&gt;</span> <a href="#'fold single-folder chains into one path row (default false)'" class="text-info">&#39;fold single-folder chains into one path row (default false)&#39;</a>
+  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__ui__widget">
@@ -1296,7 +1296,7 @@ maps objs to nothing (rng_c = 0)</p>
         </span>
         <small class="text-muted code">/m/mach/ui/inst/less?rng=noobj{0}&amp;dom=/m/str</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__ui__inst__less?rng=noobj{0}&dom=__m__str-doc-0-tab').click();document.getElementById('__m__mach__ui__inst__less?rng=noobj{0}&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">less?<span class="code text-success">noobj{0}</span><=str(isa(int::T).else(10)){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__ui__inst__less?rng=noobj{0}&dom=__m__str-doc-0-tab').click();document.getElementById('__m__mach__ui__inst__less?rng=noobj{0}&dom=__m__str-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">less?<span class="code text-success">noobj{0}</span><=str(isa?#<=#(int::T).else?#<=#(10)){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-terminal">terminal</span> a \[ f(\tt{x}) \rightarrow \emptyset \] terminal page through the lines of an str

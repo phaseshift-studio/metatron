@@ -1100,8 +1100,8 @@
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
                         <printSummary>true</printSummary>
                         <parallel>classesAndMethods</parallel>
-                        <threadCount>6</threadCount>
-                        <forkCount>6</forkCount>
+                        <threadCount>4</threadCount>
+                        <forkCount>4</forkCount>
                         <reuseForks>true</reuseForks>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow

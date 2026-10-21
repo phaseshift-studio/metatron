@@ -530,9 +530,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
               mvn_exec=&gt;!ide:command?#&lt;=#('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::761,
+            runtime=&gt;millis::767,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/56d75c54]
+            output=&gt;!*/sys/tmp/b0d02962]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -764,11 +764,11 @@ with it, then save (<code>code/N.to</code>).</p>
          [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;'])&gt;&gt;.
          &gt;-?str&lt;=str{*}('
 ')].explain()
-==&gt;explanation::[format=&gt;!inst?rng=str&amp;dom=#{?}(),
+==&gt;explanation::[format=&gt;!inst?str&lt;=#{?}(){&lt;j&gt;},
                  desc=&gt;[rng=&gt;&lt;#&gt;,
                         insts=&gt;2,
                         rewrite=&gt;explanation::[
-                         format=&gt;!inst?rng=str&amp;dom=#{?}(),
+                         format=&gt;!inst?str&lt;=#{?}(){&lt;j&gt;},
                          desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],
                          per_inst=&gt;[[op=&gt;at,
                                      args=&gt;[/dev/scratch/idx/Echo/method/speak],
@@ -779,8 +779,8 @@ with it, then save (<code>code/N.to</code>).</p>
                                     [op=&gt;update,
                                      dom=&gt;&lt;#&gt;,
                                      rng=&gt;&lt;#&gt;,
-                                     args=&gt;[[body=&gt;split('
-   ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?rng=str&amp;dom=str{*}('
+                                     args=&gt;[[body=&gt;split?#&lt;=#('
+   ').as?#&lt;=#(rec::T).update?#&lt;=#([is?#&lt;=#(gt?#&lt;=#(2)).is?#&lt;=#(lt?#&lt;=#(4))=&gt;'return &quot;marko&quot;;']).rshift?#&lt;=#().merge?str&lt;=str{*}('
    ')]],
                                      form=&gt;mapper,
                                      c_dom=&gt;1,
@@ -794,8 +794,8 @@ with it, then save (<code>code/N.to</code>).</p>
                             [op=&gt;update,
                              dom=&gt;&lt;#&gt;,
                              rng=&gt;&lt;#&gt;,
-                             args=&gt;[[body=&gt;split('
-   ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?rng=str&amp;dom=str{*}('
+                             args=&gt;[[body=&gt;split?#&lt;=#('
+   ').as?#&lt;=#(rec::T).update?#&lt;=#([is?#&lt;=#(gt?#&lt;=#(2)).is?#&lt;=#(lt?#&lt;=#(4))=&gt;'return &quot;marko&quot;;']).rshift?#&lt;=#().merge?str&lt;=str{*}('
    ')]],
                              form=&gt;mapper,
                              c_dom=&gt;1,

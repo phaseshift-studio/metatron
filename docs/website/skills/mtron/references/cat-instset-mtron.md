@@ -75,20 +75,20 @@ mtron> int::T.as(object::T)
 mtron> int::T.as(object::T).morphed_to()
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
-              trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
+              src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+              trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
               analysis=>!inst?#<=#(#{*}::T){<j>},
               obj=>as?bool<=int(bool::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
-              trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
+              src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+              trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
               analysis=>!inst?#<=#(#{*}::T){<j>},
               obj=>as?bytes<=int(bytes::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
-              trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
+              src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+              trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
               analysis=>!inst?#<=#(#{*}::T){<j>},
               obj=>as?real<=int(real::T){<j>}]
 ==>morphism::[name=>as,
@@ -123,8 +123,8 @@ mtron> |plus?int<=int(int::T).as(morphism::T)
     name=>plus,
     form=>mapper,
     class=>[endo],
-    src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
-    trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
+    src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+    trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
     analysis=>!inst?#<=#(#{*}::T){<j>},
     obj=>plus?int<=int(int::T),
     ...(1 more)]
@@ -395,7 +395,7 @@ three steps below are the same vertex after each application — the path shrink
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==>[path::[obj=>start(5).plus(0).neg().neg(),
+==>[path::[obj=>start?#<=#(5).plus?#<=#(0).neg?#<=#().neg?#<=#(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
@@ -421,7 +421,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
                                          [span=>pre,flags=>[floatable,no_seed]],
                                          [span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]
-==>[path::[obj=>start(5).plus(0),
+==>[path::[obj=>start?#<=#(5).plus?#<=#(0),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
@@ -444,7 +444,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involu
                                          [span=>pre,flags=>[floatable,no_seed]],
                                          [span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
-==>[path::[obj=>start(5),
+==>[path::[obj=>start?#<=#(5),
            branch_collapse=>plan::[name=>branch_collapse,
                                    cut=>[role=>add],
                                    route=>[[target=>local,span=>[[span=>at]]]]],
@@ -485,16 +485,16 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
 ==>[abstraction::[obj=>[morphism[start]::[name=>start,
                                           form=>mapper,
                                           class=>[endo],
-                                          src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
-                                          trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
+                                          src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+                                          trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
                                           analysis=>!inst?#<=#(#{*}::T){<j>},
                                           obj=>start?#<=#(5)],
                         morphism[plus?rng=int&dom=int]::[
                          name=>plus,
                          form=>mapper,
                          class=>[endo],
-                         src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
-                         trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
+                         src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+                         trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
                          analysis=>!inst?#<=#(#{*}::T){<j>},
                          obj=>plus?#<=#(0),
                          ...(1 more)],
@@ -508,8 +508,8 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
                                  retraction,
                                  mono,
                                  epi],
-                         src=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
-                         trgt=>!inst?rng=#{*}&dom=#{?}(<#{*}>::T),
+                         src=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+                         trgt=>!inst?#{*}<=#{?}(#{*}::T){<j>},
                          analysis=>!inst?#<=#(#{*}::T){<j>},
                          obj=>neg?#<=#(),
                          ...(1 more)],
@@ -574,7 +574,7 @@ now holding that `peer::T`, the `path::T` lists the distribution plan among its 
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+==>[path::[obj=>start?#<=#({1,2,3,4,5}).plus?#<=#(10).sum?#<=#(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
@@ -603,7 +603,7 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start([block(block(block(start?no_shard({1,2,3,4,5}).plus(10).sum())))]).select([to(ws://localhost:8555)]).merge().sum(),
+==>[path::[obj=>start?#<=#([block?#<=#(block?#<=#(start?#<=#&no_shard({1,2,3,4,5}).plus?#<=#(10).sum?#<=#()))]).select?#<=#([to?#<=#(ws://localhost:8555)]).merge?#<=#().sum?#<=#(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],

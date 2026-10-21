@@ -363,7 +363,7 @@ mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types ar
 ==>/sys/space/tbledoc/instset/#
 mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-    recipient=>isa(person/+/id).!*id(),
+    recipient=>isa?#<=#(person/+/id).!*id?#<=#(),
     uri::T=><#>::T]]@/sys/space/tbledoc/instset/award
 ==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T,uri::T=><#>::T]]@/sys/space/tbledoc/instset/note
 ==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
@@ -426,76 +426,16 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/65
+==>[body=>'a note with a database-assigned key']@tbledoc:note/5
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/66
+==>[body=>'another one']@tbledoc:note/6
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>12
-==>21
-==>11
-==>59
-==>4
-==>6
-==>49
-==>31
-==>57
-==>3
-==>20
-==>40
-==>7
-==>48
-==>32
-==>29
-==>19
-==>23
-==>51
-==>2
-==>8
-==>33
-==>47
 ==>1
-==>22
-==>10
-==>18
-==>58
-==>50
-==>9
-==>34
-==>46
-==>17
-==>26
-==>53
-==>62
-==>63
-==>27
-==>35
-==>45
-==>61
-==>16
-==>52
-==>64
-==>24
-==>28
-==>44
-==>36
-==>65
-==>56
-==>60
-==>41
-==>15
-==>55
-==>37
-==>39
-==>43
-==>13
-==>25
-==>66
-==>14
-==>54
-==>42
+==>3
+==>2
+==>4
 ==>5
-==>38
-==>30
+==>6
 ```
 ## taking the space down
 
@@ -515,7 +455,7 @@ mtron> *tbledoc:person/+.count()                   [-- 0: a fresh mount has not 
 ==>5
 mtron> */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
 ==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-    recipient=>isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
+    recipient=>isa?#<=#(person/+/id).!*id?#<=#()]]@/sys/space/tbledoc/instset/award
 ==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T]]@/sys/space/tbledoc/instset/note
 ==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
     {?}age=>int::T,
