@@ -757,11 +757,11 @@ mtron&gt; *mydb:people/+/name                                      [-- all names
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
 ==&gt;[name=&gt;'stynx']
 mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
-==&gt;explanation::[format=&gt;!inst?rng=str&amp;dom=#{?}(),
+==&gt;explanation::[format=&gt;!inst?str&lt;=#{?}(){&lt;j&gt;},
                  desc=&gt;[rng=&gt;&lt;#&gt;,
                         insts=&gt;2,
                         rewrite=&gt;explanation::[
-                         format=&gt;!inst?rng=str&amp;dom=#{?}(),
+                         format=&gt;!inst?str&lt;=#{?}(){&lt;j&gt;},
                          desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;3],
                          per_inst=&gt;[[op=&gt;from,
                                      args=&gt;[mydb:people/+],
@@ -799,11 +799,11 @@ mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql r
 mtron&gt; *mydb:people/+.count()                                   [-- number of rows        --]
 ==&gt;3
 mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==&gt;explanation::[format=&gt;!inst?rng=str&amp;dom=#{?}(),
+==&gt;explanation::[format=&gt;!inst?str&lt;=#{?}(){&lt;j&gt;},
                  desc=&gt;[rng=&gt;int,
                         insts=&gt;1,
                         rewrite=&gt;explanation::[
-                         format=&gt;!inst?rng=str&amp;dom=#{?}(),
+                         format=&gt;!inst?str&lt;=#{?}(){&lt;j&gt;},
                          desc=&gt;[rng=&gt;int,insts=&gt;2],
                          per_inst=&gt;[[op=&gt;from,
                                      args=&gt;[mydb:people/+],

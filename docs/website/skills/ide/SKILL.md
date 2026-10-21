@@ -101,9 +101,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
               mvn_exec=>!ide:command?#<=#('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>millis::761,
+            runtime=>millis::767,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/56d75c54]
+            output=>!*/sys/tmp/b0d02962]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -356,11 +356,11 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
          [?>2.?<4 => 'return "marko";'])>>.
          >-?str<=str{*}('
 ')].explain()
-==>explanation::[format=>!inst?rng=str&dom=#{?}(),
+==>explanation::[format=>!inst?str<=#{?}(){<j>},
                  desc=>[rng=><#>,
                         insts=>2,
                         rewrite=>explanation::[
-                         format=>!inst?rng=str&dom=#{?}(),
+                         format=>!inst?str<=#{?}(){<j>},
                          desc=>[rng=><#>,insts=>2],
                          per_inst=>[[op=>at,
                                      args=>[/dev/scratch/idx/Echo/method/speak],
@@ -371,8 +371,8 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
                                     [op=>update,
                                      dom=><#>,
                                      rng=><#>,
-                                     args=>[[body=>split('
-   ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?rng=str&dom=str{*}('
+                                     args=>[[body=>split?#<=#('
+   ').as?#<=#(rec::T).update?#<=#([is?#<=#(gt?#<=#(2)).is?#<=#(lt?#<=#(4))=>'return "marko";']).rshift?#<=#().merge?str<=str{*}('
    ')]],
                                      form=>mapper,
                                      c_dom=>1,
@@ -386,8 +386,8 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
                             [op=>update,
                              dom=><#>,
                              rng=><#>,
-                             args=>[[body=>split('
-   ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?rng=str&dom=str{*}('
+                             args=>[[body=>split?#<=#('
+   ').as?#<=#(rec::T).update?#<=#([is?#<=#(gt?#<=#(2)).is?#<=#(lt?#<=#(4))=>'return "marko";']).rshift?#<=#().merge?str<=str{*}('
    ')]],
                              form=>mapper,
                              c_dom=>1,

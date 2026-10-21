@@ -112,12 +112,12 @@ mtron> */m/mach/ui/widget?docq
       {?}expand=>uri::T]][ctor?tree_widget<=#{?}(#{*}::T){<j>}]@/m/mach/ui/widget/tree_widget,
                               dom=>'maybe an obj',
                               rng=>'a tree widget',
-                              args=>[{?}expand=>'branch uris whose children are rea...',
-                                     {?}xref=>'xref=>[max=>N, code=><call>] cross...',
-                                     max=>'the max depth to traverse',
+                              args=>[max=>'the max depth to traverse',
                                      {?}flatten=>'fold single-folder chains into one...',
                                      root=>'the root uri to traverse from',
-                                     {?}code=>'transform obj prior to insertion i...'],
+                                     {?}code=>'transform obj prior to insertion i...',
+                                     {?}expand=>'branch uris whose children are rea...',
+                                     {?}xref=>'xref=>[max=>N, code=><call>] cross...'],
                               desc=>'[structural] the root uri space is...'],
           ...(10 more)]
 ```

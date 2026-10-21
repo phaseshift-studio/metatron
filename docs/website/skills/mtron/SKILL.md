@@ -38,8 +38,9 @@ implementation is responsible for the declared `/a/#` subset of the uri address 
 ```mtron
 mtron> memspace::[pattern=>/a/#]@/sys/space/a
 ```
-```mtron
-     1  2  3
+<!-- figure source: assets/tikz/mtron-graph.tex (render recipe in that file) -->
+<div style="display:flex; gap:1.5em; align-items:center; flex-wrap:wrap; margin:0.4em 0">
+<div style="flex:1 1 20em; min-width:17em"><pre style="margin:0"><code class="language-mtron">     1  2  3
   0   ⋮  ⋮  ⋮ 
   ⋮ ┌─x──y──z
  ─a─┤      
@@ -47,7 +48,13 @@ mtron> memspace::[pattern=>/a/#]@/sys/space/a
      ⋰  └─d──e
 [q=>r]   ⋮    ⋱
         'm'   [1.0,0xa5,true]
-```
+</code></pre></div>
+<div style="flex:0 1 45%; min-width:16em"><img src="assets/mtron-graph.png" alt="the /a graph: uri vertices a, x, y, z on the upper chain and b, c, d, e on the lower, drawn as circles and joined by solid edges; each uri is hung with its bare referent by a dotted line — 0 at a, 1 at x, 2 at y, 3 at z, [q=>r] at b, |plus(2) at c, 'm' at d, [1.0,0xa5,true] at e" style="width:100%; margin:0"/></div>
+</div>
+
+The same graph twice: the ASCII art on a character-cell grid, and the drawing. In the drawing the **circled** letters
+are the uris (the vertices of $U$), **solid** edges are uri **path adjacency** (their intra-edges), and **dotted**
+edges are **references to referents** (the inter-edges into $O$) onto the bare obj labels.
 
 To construct the graph, a path syntax is used to denote a unique uri address. The primitive `->` (sugar'd
 `ref`) instruction writes the **rhs** (right-hand side) obj to the **lhs** (left-hand side) uri.

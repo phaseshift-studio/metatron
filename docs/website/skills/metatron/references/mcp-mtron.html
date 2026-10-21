@@ -471,7 +471,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
                 headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron],
                 host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-                status=&gt;!inst?rng=bool&amp;dom=#{?}(),
+                status=&gt;!inst?bool&lt;=#{?}(){&lt;j&gt;},
                 tool=&gt;[execute_tool=&gt;tool::[
                  inst=&gt;inst?#{*}&lt;=#{?}(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
                  name=&gt;execute_tool,

@@ -467,7 +467,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                      pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent,
+          type=&gt;[int::T[?is?#&lt;=#(gte?#&lt;=#(0)).is?#&lt;=#(lte?#&lt;=#(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent,
                  int::T[is(gt(0))]@/m/math/nat,
                  lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
                  real::T@/m/math/datasize,
@@ -1103,7 +1103,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/percent</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[?is?#&lt;=#(gte?#&lt;=#(0)).is?#&lt;=#(lte?#&lt;=#(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100</p>

@@ -829,6 +829,8 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     protected StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
         if (obj.isInst()) {
             sb.append(this.writeInst(obj.asInst()));
+        } else if (obj.isCode()) {
+            sb.append(this.writeCode(obj.asCode()));
         } else if (obj.isReal()) {
             sb.append(this.writeReal(obj.asReal()));
         } else if (obj.isStr()) {

@@ -469,15 +469,22 @@ language and compiled and executed using any of the various types of <em>machine
 implementation is responsible for the declared <code>/a/#</code> subset of the uri address space (<code>#</code> is recursive wildcard).</p>
 <pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/a/#]@/sys/space/a
 </code></pre>
-<pre><code class="language-mtron">     1  2  3
+<!-- figure source: assets/tikz/mtron-graph.tex (render recipe in that file) -->
+<div style="display:flex; gap:1.5em; align-items:center; flex-wrap:wrap; margin:0.4em 0">
+<div style="flex:1 1 20em; min-width:17em"><pre style="margin:0"><code class="language-mtron">     1  2  3
   0   ⋮  ⋮  ⋮ 
   ⋮ ┌─x──y──z
  ─a─┤      
     └─b─┬─c ⋯ |plus(2) 
      ⋰  └─d──e
-[q=&gt;r]   ⋮    ⋱
+[q=>r]   ⋮    ⋱
         'm'   [1.0,0xa5,true]
-</code></pre>
+</code></pre></div>
+<div style="flex:0 1 45%; min-width:16em"><img src="assets/mtron-graph.png" alt="the /a graph: uri vertices a, x, y, z on the upper chain and b, c, d, e on the lower, drawn as circles and joined by solid edges; each uri is hung with its bare referent by a dotted line — 0 at a, 1 at x, 2 at y, 3 at z, [q=>r] at b, |plus(2) at c, 'm' at d, [1.0,0xa5,true] at e" style="width:100%; margin:0"/></div>
+</div>
+<p>The same graph twice: the ASCII art on a character-cell grid, and the drawing. In the drawing the <strong>circled</strong> letters
+are the uris (the vertices of \(U\)), <strong>solid</strong> edges are uri <strong>path adjacency</strong> (their intra-edges), and <strong>dotted</strong>
+edges are <strong>references to referents</strong> (the inter-edges into \(O\)) onto the bare obj labels.</p>
 <p>To construct the graph, a path syntax is used to denote a unique uri address. The primitive <code>-&gt;</code> (sugar'd
 <code>ref</code>) instruction writes the <strong>rhs</strong> (right-hand side) obj to the <strong>lhs</strong> (left-hand side) uri.</p>
 <pre><code class="language-mtron">mtron&gt; /a       -&gt; 0

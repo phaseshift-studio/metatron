@@ -37,7 +37,7 @@ mtron> """
                 url=><http://127.0.0.1:64342/stream>,
                 headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron],
                 host=><http://127.0.0.1:64342/stream>,
-                status=>!inst?rng=bool&dom=#{?}(),
+                status=>!inst?bool<=#{?}(){<j>},
                 tool=>[execute_tool=>tool::[
                  inst=>inst?#{*}<=#{?}(command=>'Command-line string with tool name and arguments'){<j>},
                  name=>execute_tool,
