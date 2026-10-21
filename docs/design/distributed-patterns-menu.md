@@ -29,6 +29,7 @@ neither is part of this path.
 | fact | consequence |
 |---|---|
 | a stream is a **bag**, bulked by coefficient: `{1,2,1}` is `{2}1, 2` | a fold over a stream must be commutative to exist at all; order lives in `lst`, so ship a `lst` when order matters |
+| a `lst` is **slot-oriented, never a bag**: a coefficient on a `lst` goes into its slots (`{2}[1,2]` is `[{2}1,{2}2]`); only the expression bags a `lst`'s slots (`[1,2,3]>-`); inside a rec merge a `lst` is an **atom** — colliding `lst`s make a bag of `lst`s, each whole (`[a=>[1,2,3]]+[a=>[2,3]]` is `[a=>{[1,2,3],[2,3]}]`), and concatenating them is a select's `+` (`[a=>[1,2,3]]==[a=>+[2,3]]`) | the rec merge is commutative, so rec `sum` is a defined fold over a bag; `lst` partials (G's `group([k⇒order(s)])`) reach their combiner as a bag of runs |
 | a fold reads a coefficient through its monoid: `c·x = x ⊕ … ⊕ x` | `merge()` bulks equal partials (`{2}6`), so a fold that misreads `c` makes the sharded answer differ from the local one |
 | the fan-out is **sequential** today | `applyFunction` resolves each `to(peer)`'s future before `select` sends the next shard: latency is Σ RTT (see D) |
 | targets are **dialed** peers only | accepted twins (keyed by the dialer's ephemeral port, no `host`) never receive shards |
@@ -42,13 +43,13 @@ neither is part of this path.
 
 |     | pattern                     | law                                                    | status                       |
 |-----|-----------------------------|--------------------------------------------------------|------------------------------|
-| A   | homomorphism shard          | `h(a ⊎ b) = h(a) ⊕ h(b)`                               | **done**: `sum`, `prod`, `count`, `order` |
+| A   | homomorphism shard          | `h(a ⊎ b) = h(a) ⊕ h(b)`                               | **done**: `sum`, `prod`, `count`, `order`, rec `sum` |
 | B   | data-local shard            | the store is the sum of its owners' stores             | needs a denotation decision  |
 | C   | authority push-down         | delegation (Thm 5 + a pure chain)                      | open                         |
 | D   | parallel fan-out            | Thm 5                                                  | open (plumbing)              |
 | E   | tree reduction              | associativity + commutativity: any bracketing, any shape | **v1 done**: `?hops=n`     |
 | F   | ordered fold                | associativity alone                                    | struck for streams; `lst` only |
-| G   | keyed reduce                | Thm 19 per key                                         | open; falls out of A         |
+| G   | keyed reduce                | Thm 19 per key                                         | **v1 done**: pointwise, `lst` values too |
 | H   | redundant / hedged shards   | idempotence                                            | open                         |
 | I   | span/route interpreter      | —                                                      | infrastructure               |
 | J   | algebraic aggregates        | a product monoid followed by a finalizer               | open                         |
@@ -81,6 +82,7 @@ map into such a fold recombines through that fold, looked up on its target objec
 | `sum`, `prod` | itself   | declares `monoidic` + `commutative`                                              |
 | `count`    | `sum`       | `count ≡ map(1)·sum`                                                             |
 | `order(s)` | `kmerge(s)` | `order(B) ≡ split([_])·kmerge(B)`, and `kmerge` declares `monoidic` + `commutative` |
+| rec `sum`  | itself      | the deep merge's fold declares `monoidic` + `commutative`: a `lst` is an atom of the merge, so colliding values (lsts included) bag in any order — distributed rec merging |
 
 ```
 slave_i:  start?hops=0(<part_i>).plus(1).count()
@@ -188,19 +190,37 @@ fold over a stream is undefined; order lives in `lst`. What remains is a `lst`-p
 into contiguous chunks, fold each, and concatenate in index order, for associative ops over ordered values. Low
 priority.
 
-### G. Keyed reduce — group-by
+### G. Keyed reduce — group-by — v1 done (2026-10-21)
 
-**Law.** Thm 19 per key. `group([k ⇒ h])` over a bag is the keyed merge of the per-shard groups, with `h`'s combiner
-per key. `rec + rec` already appends on a key collision (`Poly.mergeRecRecursion`), which is the free keyed-bag merge.
+**Law.** Thm 19 per key. `group([k ⇒ h])` is a homomorphism from the bag into the recs of `h`'s monoid, keyed by
+`k`: the partials merge by key, and each key's partials fold through `h`'s combiner.
+
+**Realized (v1).** The combiner is POINTWISE, computed from `h`'s and never named (`LawTable.pointwise`):
 
 ```
-slave_i:  start?hops=0(<part_i>).group([name=>count()])       [-- [ginger=>2,booger=>1] --]
-master:   …merge().sum(), then a per-key sum                     [-- [ginger=>{2,3},…] → [ginger=>5,…] --]
+combiner(group([k⇒h])) = sum()==[_=>combiner(h)]
+slave_i:  start?hops=0(<part_i>).group([mod(3)=>sum()])                    [-- [1=>1,0=>3,2=>5] --]
+master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=>sum()]   [-- [1=>{1,4},…] → [1=>5,…] --]
 ```
 
-**Needs.** A parametric combiner: `combiner(group([k⇒h]))` is the keyed merge with `combiner(h)` per key, so a
-pointwise monoid theory on `rec` and a derivation for `group`. A true shuffle (keys hash-routed peer to peer) needs
-slave-to-slave reach and pays only when the key space outgrows the master.
+The rec `sum` is the deep merge: colliding partials append into a bag, and a bulked partial (`merge()` bulks equal
+ones) reads as its copies — `Rec.plus` now reads coefficients through the merge (`Poly.Helper.distributed`). `==[_=>C]`
+is `select`, the per-key fold. `LawTable.keyed` types a group's spec folds with the carrier, so the combiner is legible
+before resolution. A nested `group` shards (its combiner is a chain, recursively), and E applies unchanged
+(`group?hops=2(…)`). Witnessed by `DistributedRewriteTransportTest` (scalar, uri- and lst-keyed, nested) and
+`TreeShardTransportTest` (`testKeyedTreeOverTransport`); `catInstSetTest#testAprioriPruning` pins what is declined.
+`group` itself now keys a bulked member by the member, not its multiplicity (`{1,1,2}.group([_=>count()])` is
+`[1=>2,2=>1]`, no longer `[{2}1=>2,2=>1]`).
+
+**Declined (no shard).** A value with no combiner (`mean`, a constant, `_`); a spec whose entries fold differently (a
+key keeps no record of the entry that claimed it, and the claim falls differently per part).
+
+**`lst` values shard too.** A `lst` is an atom of the deep merge, so an `order`'s sorted partials bag whole per key and
+`kmerge` merges the runs (`[a=>[1,2,3]]+[a=>[2,3]]` is the bag `[a=>{[1,2,3],[2,3]}]`; concatenating is a select's
+`+`, `[a=>[1,2,3]]==[a=>+[2,3]]`). `Lst.plus` now reads each operand's coefficient into its slots once (it squared it).
+
+**Left open.** The cat graph names no combiner for `group` (`combinerOf` answers single edges only). A true shuffle
+(keys hash-routed peer to peer) needs slave-to-slave reach and pays only when the key space outgrows the master.
 
 ### H. Redundant / hedged shards
 
@@ -320,8 +340,8 @@ Stage 3).
    plans written at an address. The expression (`?hops` on any instruction) and the plan's route are the other two
    layers, nearest first.
 3. **E's visited set.** Carried authorities, the origin only, or the dial graph's own direction.
-4. **G's parametric combiner.** A theory on `rec` plus a derivation for `group`, or a combiner computed from the value
-   inst directly.
+4. **G's parametric combiner.** Settled (v1): computed from the value inst directly (`LawTable.pointwise`); a `lst` is
+   an atom of the deep merge, so `lst`-valued partials bag whole (a bag of runs) and recombine too.
 5. **J's spelling.** How mtron writes several folds over one stream.
 6. **Exact-tid lookups.** `morphism::T` reads laws by exact tid, so poly-registered ops (`order`, `kmerge`) need their
    registered spelling on the cat-graph surface; the planner is unaffected.

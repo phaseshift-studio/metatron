@@ -258,14 +258,11 @@ public class catLiveness {
 
         /**
          * Whether the chain instruction's partials recombine — it has a computed {@link LawTable#combiner} once keyed
-         * with its declared n-tid, exactly as the shard plan keys it. The morphism carries the ORIGINAL instruction,
-         * so the key is re-derived from the carrier here.
+         * with its declared n-tid, exactly as the shard plan keys it ({@link LawTable#keyed}, a keyed fold's spec folds
+         * included). The morphism carries the ORIGINAL instruction, so the key is re-derived from the carrier here.
          */
         private static boolean combines(final Inst chain, final Type carrier) {
-            if (null == chain)
-                return false;
-            final LawTable.Declared declared = LawTable.declared(chain.tid().basePath(), carrier);
-            return null != declared && null != LawTable.combiner(chain.tid(declared.tid()));
+            return null != chain && null != LawTable.combiner(LawTable.keyed(chain, carrier));
         }
 
         /**

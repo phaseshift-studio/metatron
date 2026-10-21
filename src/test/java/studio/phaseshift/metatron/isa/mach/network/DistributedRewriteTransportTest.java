@@ -162,6 +162,24 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "{1,2,3,4,5,6}.plus(1).count()  % sum    % 6",
+            // a keyed fold recombines POINTWISE: the rec sum merges the partials by key (a bulked partial read as its
+            // copies), then each key folds through its value's own combiner -- sum through sum, count through sum
+            "{1,2,3,4,5,6}.group([mod(3)=>sum()])                      % sum % [1=>5,2=>7,0=>9]",
+            "{1,2,3,4,5,6}.plus(1).group([mod(3)=>count()])            % sum % [2=>2,0=>2,1=>2]",
+            "{1,2,3,4,5,6}.group([mod(2)=>prod()])                     % sum % [1=>15,0=>48]",
+            "{ginger,booger,ginger,fred}.group([_=>count()])           % sum % [ginger=>2,booger=>1,fred=>1]",
+            "{[a,b],[c,d],[a,b]}.group([_=>count()])                   % sum % [[a,b]=>2,[c,d]=>1]",
+            "{1,2,3,4,5,6}.group([mod(3)=>group([mod(2)=>sum()])])     % sum % [1=>[1=>1,0=>4],2=>[0=>2,1=>5],0=>[1=>3,0=>6]]",
+            // a bag of recs folds through the deep merge's own sum -- commutative, since a lst is an atom of the merge --
+            // so the partial recs recombine through it: keys union, colliding values bag (lsts whole), equal ones bulk
+            "{[a=>1],[b=>2],[a=>3]}.sum()                              % sum % [a=>{1,3},b=>2]",
+            "{[a=>1],[b=>2],[a=>1],[b=>2]}.sum()                       % sum % [a=>{1,1},b=>{2,2}]",
+            "{[mama=>[visited=>[arroyo]]],[mama=>[visited=>[acequia,mesa]]],[puppy=>[km=>5]]}.sum() % sum % [mama=>[visited=>{[arroyo],[acequia,mesa]}],puppy=>[km=>5]]",
+            // a lst-valued group recombines too: a lst is an atom of the deep merge, so a key's sorted partials bag
+            // whole -- a bag of runs, never their slots -- and kmerge merges the runs
+            "{1,2,3,4,5,6}.group([mod(3)=>order(_)])                   % sum % [1=>[1,4],2=>[2,5],0=>[3,6]]",
+            "{6,5,4,3,2,1}.plus(1).group([mod(2)=>order(_)])           % sum % [1=>[3,5,7],0=>[2,4,6]]",
+            "{1,2,3,4,5,6}.group([mod(3)=>group([mod(2)=>order(_)])])  % sum % [1=>[1=>[1],0=>[4]],2=>[0=>[2],1=>[5]],0=>[1=>[3],0=>[6]]]",
     }, delimiter = '%')
     void testCombinerShardsOverTransport(final String source, final String combiner, final String expected) {
         final DistributedComputation c = DistributedComputation.of(source);

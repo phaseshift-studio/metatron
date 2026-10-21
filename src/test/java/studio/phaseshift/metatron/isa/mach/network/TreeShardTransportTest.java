@@ -134,6 +134,28 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE KEYED TREE: a keyed fold planned at every level its budget allows. Peer 1 re-plans its part over its own
+     * peers and recombines their partial recs through the pointwise combiner, and the root recombines peer 1's the same
+     * way — the rec sum merges by key, then each key folds through its value's combiner. Each row: the source, its
+     * budget on the group % the recombined value.
+     */
+    @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the layout is the subject, not the value alone")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6,7,8}.plus(1).group?hops=2([mod(3)=>sum()])     % [2=>15,0=>18,1=>11]",
+            "{1,2,3,4,5,6,7,8}.group?hops=2([mod(4)=>count()])           % [1=>2,2=>2,3=>2,0=>2]",
+    }, delimiter = '%')
+    void testKeyedTreeOverTransport(final String source, final String expected) {
+        final Code master = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source)).asCode();
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID, SELECT_INST_TID), TransportRewriteHarness.ops(master),
+                "the root merges its child's partial rec by key, then folds each key: " + master);
+        final Code slave = Reduction.slaves(master).getFirst();
+        checkEquality(LOG, uri("1"), uri(slave.insts().getFirst().tid().qMap().get(HOPS)), true);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected),
+                TransportRewriteHarness.single(TransportRewriteHarness.evaluate(master)), true);
+    }
+
+    /**
      * THE INTERIOR NODE: peer 1, handed a slave with budget left, plans it over its own dialed peers — its compiled
      * code splits its part into one leaf ({@code hops=0}) per child, routed to peers 2 and 3, and recombines through
      * {@code sum}. Asked of peer 1 itself, so it is that machine's compiler, roster and rule set that decide.
