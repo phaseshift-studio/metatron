@@ -607,7 +607,6 @@ public class mInstSet extends AbstractInstSet {
                                             inst.arg(0) : uri().c(cInt.ZERO());
                                 }).create(), "a uri containing only a host:port component with port being optional")),
                 uri(CONST), lst(
-                        docWrap(noobj(), "a no object. if an inst domain is no zeroable (e.g. {0}/{?}/{*}) then the inst will not evaluate.")
                         /*docWrap(NONE, "a token uri denoting nothing. used for deleting obj in space.")*/),
                 uri(INST), lst(Stream.of(
                         Bool.BoolType.insts().stream(),

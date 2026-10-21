@@ -109,7 +109,7 @@ public class DatetimeTypeTest extends AbstractInstSetTest {
         final Type before = MType.T(MATH_DATETIME_TID);
         // an unrelated registry write bumps the type graph generation --
         // datetime must still resolve to the registered type afterwards
-        final Obj probeType = ObjmtronSerializer.parse("int::T@" + PROBE).apply();
+        final Obj probeType = ObjmtronSerializer.parse("int::T@" + PROBE);
         Machine.write(probeType.vid(), probeType);
         final Type after = MType.T(MATH_DATETIME_TID);
         assertEquals(before, after,
