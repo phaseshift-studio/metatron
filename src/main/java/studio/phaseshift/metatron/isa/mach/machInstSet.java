@@ -47,7 +47,6 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -123,43 +122,6 @@ public class machInstSet extends AbstractInstSet {
      */
     private static final fURI UP = f("..");
 
-    /**
-     * This machine's own name in the compute plan. The home is the branch the peers hang under — it is one of the
-     * machines, but not a peer of itself — so it is never shipped a worker, and its mailboxes are the ones the peers
-     * report to.
-     */
-    public static final String MACH_HOME = "a";
-
-    /**
-     * WHERE DISTRIBUTED STATE LIVES, and it is a plain namespace -- no scheme, no host, nothing that says what
-     * answers it. A root that named its backend would put the transport into the rewrite, which is the one thing
-     * this design cannot afford: the rewrite mints {@code /usr/compute/<home>/barrier/<peer>} and must not know or
-     * care whether a local memory space, a syncing subspace or a remote peer answers it. What varies between
-     * deployments is the SPACE MOUNTED OVER IT, never the address.
-     */
-    public static final fURI COMPUTE = f("/usr/compute");
-
-    /**
-     * Machine {@code machine}'s contiguous slice of the data: {@code per} elements each, taken in order, the HOME
-     * taking the first and the LAST machine taking whatever remains (so a remainder is never dropped, and a machine
-     * is empty only when there are fewer values than machines).
-     * <p>
-     * This is what makes a peer's mailbox predictable: its value is the reducer applied to ITS slice, so
-     * {@code {1,2,3}} over one peer ({@code per = ceil(3/2) = 2}) gives the home {@code {1,2}} and the peer
-     * {@code {3}} -- a mailbox of 6 for {@code plus(1).plus(2).sum()}, with the home folding 9.
-     */
-    static List<Obj> sliceOf(final List<Obj> values, final int machine, final int machines, final int per) {
-        final int from = Math.min(machine * per, values.size());
-        final int to = machine == machines - 1 ? values.size() : Math.min(from + per, values.size());
-        return values.subList(from, to);
-    }
-
-    /**
-     * The rewrite-rule namespace of the machine ISA -- one rule per name, mirroring {@code /m/inst/rewrite}.
-     * Rules registered under it are collected by {@link FixPointRewriter} and applied to every compiled code.
-     */
-    public static final fURI MACH_REWRITE_TID = MACH_INST_TID.extend(REWRITE);
-    public static final fURI GATHER_INST_TID = MACH_INST_TID.extend("gather");
 
     public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread");
     public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_THREAD_TID.extend("virtual");

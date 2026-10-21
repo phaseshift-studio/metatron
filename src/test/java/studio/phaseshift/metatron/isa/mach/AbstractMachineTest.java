@@ -66,7 +66,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     /**
      * where the peers and their mailboxes are declared
      */
-    protected static final fURI COMPUTE_ROOT = machInstSet.COMPUTE;
+    protected static final fURI COMPUTE_ROOT = f("/usr/compute");
 
     /**
      * for the run's log: which space ended up backing the compute namespace
@@ -105,16 +105,16 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         // and its values are what those machines must leave behind. So the declaration is that rec with the VALUES
         // DROPPED -- writing them would pre-fill the mailboxes, and the home's read-before-wait would then pass
         // without a single peer having run. One rec, two roles, and the peer count is a property of the row.
-        final Obj expectedHome = state.isRec() ? state.asRec().at(uri(MACH_HOME)) : noobj();
+        final Obj expectedHome = state.isRec() ? state.asRec().at(uri("a")) : noobj();
         final Obj expectedBoxes = expectedHome.isRec() ? expectedHome.asRec().at(uri(BARRIER)) : noobj();
         final Map<Obj, Obj> boxes = new LinkedHashMap<>();
         if (expectedBoxes.isRec())
             expectedBoxes.asRec().jvm().keySet().forEach(key -> boxes.put(key, rec(mutableMap())));
         Machine.write(COMPUTE_ROOT, rec(mutableMap(
-                uri(MACH_HOME), rec(mutableMap(uri(BARRIER), rec(boxes))))));
+                uri("a"), rec(mutableMap(uri(BARRIER), rec(boxes))))));
 
         final Obj roster = Machine.read(COMPUTE_ROOT);
-        final Obj homeBranch = roster.isRec() ? roster.asRec().at(uri(MACH_HOME)) : noobj();
+        final Obj homeBranch = roster.isRec() ? roster.asRec().at(uri("a")) : noobj();
         final Obj declaredBoxes = homeBranch.isRec() ? homeBranch.asRec().at(uri(BARRIER)) : noobj();
         final List<fURI> declared = declaredBoxes.isRec()
                 ? declaredBoxes.asRec().jvm().keySet().stream().filter(Obj::isUri).map(Obj::uriValue).toList()
@@ -179,7 +179,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         }
         for (final fURI peer : declared)
             LOG.debug("checkDistributedCode: mailbox for %s holds %s", peer.name(),
-                    Machine.read(COMPUTE_ROOT.extend(MACH_HOME).extend(BARRIER).extend(peer.name())));
+                    Machine.read(COMPUTE_ROOT.extend("a").extend(BARRIER).extend(peer.name())));
 
         final FutureObj<Obj> future = processor.applyAsync(noobj());
 
@@ -219,7 +219,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         // that reaches the space's own lifecycle -- measured twice, as the connection closing underneath the next
         // write. An empty barrier branch is enough to stand the rule down, because the rewrite's guard is "no peers
         // declared" and an empty rec IS that. Overwrite the state, never delete it from a space that must survive.
-        Machine.write(COMPUTE_ROOT.extend(MACH_HOME).extend(BARRIER), rec(CommonUtil.mutableMap()));
+        Machine.write(COMPUTE_ROOT.extend("a").extend(BARRIER), rec(CommonUtil.mutableMap()));
     }
 
     // ======================== the distribution plumbing ========================
@@ -255,7 +255,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     /**
      * where the compute space is STORED, independent of the namespace it exposes
      */
-    protected static final fURI COMPUTE_VID = f("/sys/space/compute");
+    protected static final fURI COMPUTE_VID = f("/usr/compute");
 
     /**
      * REGISTER WHATEVER SPACE BACKS THE COMPUTE NAMESPACE, supplied by the caller. This class names no space and
@@ -276,7 +276,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         for (final String peer : peers)
             boxes.put(uri(peer), rec(mutableMap()));
         Machine.write(COMPUTE_ROOT, rec(mutableMap(
-                uri(MACH_HOME), rec(mutableMap(uri(BARRIER), rec(boxes))))));
+                uri("a"), rec(mutableMap(uri(BARRIER), rec(boxes))))));
     }
 
     /**
