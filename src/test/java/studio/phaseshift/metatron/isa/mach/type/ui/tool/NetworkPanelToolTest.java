@@ -1,0 +1,245 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.mach.type.ui.tool;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
+import studio.phaseshift.metatron.isa.web.space.ws.WireTrace;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_NETWORK_PANEL_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/**
+ * The panel's LAYOUT, as a pure function: a snapshot and a policy in, text out. No terminal, no console.
+ * <p>
+ * The tool's own wiring — float on display, repaint on traffic — is exercised by the console harness; what can be
+ * pinned down here is that the numbers, the lanes, the clipping and the "this view is paused" marker are right.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class NetworkPanelToolTest extends AbstractMetatronTest {
+
+    private static final String PEER_A = "ws://alpha:8555/mtron";
+    private static final String PEER_B = "ws://beta:8555/mtron";
+
+    @BeforeEach
+    void resetWire() {
+        // the panel's type lives in the ui instruction set, which a bare boot does not import
+        InstSet.importInstSet(studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_ISA_TID);
+        WireStats.reset();
+        WireTrace.clear();
+        WireTrace.pause(false);
+    }
+
+    private static void exchange(final String peer, final String request, final long elapsedMs) {
+        WireTrace.exchange(peer, null, str(request), str("answer:" + request), System.currentTimeMillis(),
+                elapsedMs, WireTrace.Outcome.OK);
+    }
+
+    private static String plain(final String line) {
+        return Graphitty.strip(Graphitty.string(line));
+    }
+
+    private static List<String> lines(final boolean paused, final int maxRows, final String filter, final int width) {
+        return NetworkPanelTool.panelLines(WireTrace.snapshot(maxRows), paused, maxRows, filter, width);
+    }
+
+    /**
+     * The summary line leads with the three counts the status gauge shows, so the panel and the bar never disagree.
+     */
+    @Test
+    void shouldLeadWithTheWireCounts() {
+        exchange(PEER_A, "1.plus(1)", 4L);
+        exchange(PEER_A, "2.plus(2)", 6L);
+        final String summary = plain(lines(false, 12, "", 120).getFirst());
+        assertTrue(summary.contains("⇄2"), "two round trips completed: " + summary);
+        assertTrue(summary.contains("1 peer"), "one lane is described: " + summary);
+        // ↓/↑ ARE WIRE FACTS, counted where frames are (send/onMessage), not where exchanges are recorded: a
+        // hand-recorded exchange therefore leaves them at zero, which is the honest answer for this fixture
+        assertTrue(summary.contains("↓0") && summary.contains("↑0"),
+                "frames are counted by the socket tap, not invented by the ledger: " + summary);
+    }
+
+    /**
+     * A lane leads with its peer and its own totals, then that peer's newest exchanges — the request, because that
+     * is what a human reads; the reply is the detail view's job.
+     */
+    @Test
+    void shouldDrawALaneThenItsExchanges() {
+        exchange(PEER_A, "sqr(3)", 4L);
+        final List<String> lines = lines(false, 12, "", 120);
+        assertTrue(plain(lines.get(1)).contains(PEER_A), "the lane names its peer: " + plain(lines.get(1)));
+        assertTrue(plain(lines.get(1)).contains("⇄1"), "and counts its exchanges");
+        final String row = plain(lines.get(2));
+        assertTrue(row.contains("sqr(3)"), "the exchange shows the request that was sent: " + row);
+        assertTrue(row.contains("4ms"), "and how long the answer took: " + row);
+        assertTrue(row.contains("send_recv"), "and what kind of move it was: " + row);
+    }
+
+    /**
+     * The lanes are the traffic: the busiest peer is drawn first.
+     */
+    @Test
+    void shouldDrawTheMostRecentlyActivePeerFirst() {
+        exchange(PEER_A, "early", 1L);
+        CommonUtilSleep.sleep(5);
+        exchange(PEER_B, "later", 1L);
+        final List<String> lines = lines(false, 12, "", 120);
+        assertTrue(plain(lines.get(1)).contains(PEER_B), "the lane that spoke last leads: " + plain(lines.get(1)));
+    }
+
+    /**
+     * A filter keeps one lane — the panel's `peer` key.
+     */
+    @Test
+    void shouldDrawOnlyTheFilteredLane() {
+        exchange(PEER_A, "alpha says", 1L);
+        exchange(PEER_B, "beta says", 1L);
+        final List<String> lines = lines(false, 12, "beta", 120);
+        final String all = String.join("\n", lines.stream().map(NetworkPanelToolTest::plain).toList());
+        assertTrue(all.contains(PEER_B), "the filtered lane is drawn");
+        assertFalse(all.contains(PEER_A), "and the other one is not: " + all);
+    }
+
+    /**
+     * A paused panel SAYS so: a frozen view and a quiet wire must not look the same.
+     */
+    @Test
+    void shouldSayWhenTheViewIsPaused() {
+        exchange(PEER_A, "held", 1L);
+        assertTrue(plain(lines(true, 12, "", 120).getFirst()).contains("PAUSED"), "the header says the view is frozen");
+        assertFalse(plain(lines(false, 12, "", 120).getFirst()).contains("PAUSED"), "and says nothing when it is live");
+    }
+
+    /**
+     * The body is bounded, and every line fits the width it was given.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "12 % 12 % a normal panel holds at most its max rows",
+            "3  % 3  % and a short one holds fewer",
+    }, delimiter = '%')
+    void shouldBoundTheBodyAndClipEveryLine(final int maxRows, final int expectedMax, final String description) {
+        for (int i = 0; i < 20; i++)
+            exchange(PEER_A, "request-number-" + i, 1L);
+        final List<String> lines = lines(false, maxRows, "", 40);
+        assertTrue(lines.size() <= expectedMax, description + " (got " + lines.size() + ")");
+        for (final String line : lines)
+            assertTrue(plain(line).length() <= 40, description + " (line too wide: " + plain(line) + ")");
+    }
+
+    /**
+     * A timeout is drawn in the lane that suffered it, on the summary line and in the lane's own count.
+     */
+    @Test
+    void shouldMarkATimeoutOnTheSummaryAndTheLane() {
+        WireTrace.exchange(PEER_B, null, str("ping"), null, System.currentTimeMillis(), 30_000L,
+                WireTrace.Outcome.TIMEOUT);
+        final List<String> lines = lines(false, 12, "", 120);
+        assertTrue(plain(lines.getFirst()).contains("✗ 1"), "the summary counts the timeout with a cross, not a clock: " + plain(lines.getFirst()));
+        assertTrue(plain(lines.get(1)).contains("✗ 1"), "and the lane does too: " + plain(lines.get(1)));
+        assertTrue(plain(lines.get(2)).contains("timeout"), "the exchange says what happened: " + plain(lines.get(2)));
+    }
+
+    /**
+     * Empty is a state, and the panel names it rather than drawing a bare box.
+     */
+    @Test
+    void shouldSayWhenNoPeerHasSpoken() {
+        final String all = String.join("\n", lines(false, 12, "", 120).stream().map(NetworkPanelToolTest::plain).toList());
+        assertTrue(all.contains("no peers have spoken"), "an empty wire says so: " + all);
+    }
+
+    /**
+     * The panel's policy comes from its rec, and the registered type constructs it — `network_panel_tool::[…].display()`.
+     */
+    @Test
+    void shouldTakeItsPolicyFromItsRec() {
+        final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+        assertEquals(12, tool.max(), "rows default to the panel's default");
+        assertFalse(tool.paused(), "and the view starts live");
+        tool.max(30).pause(true);
+        assertEquals(30, tool.max(), "the rec carries the row count");
+        assertTrue(tool.paused(), "and the paused flag");
+        final String rendered = Graphitty.strip(Graphitty.string(tool.format()));
+        assertTrue(rendered.contains("PAUSED"), "so a rec-driven pause is drawn: " + rendered);
+        assertTrue(rendered.startsWith("┌"), "and it renders as a bordered panel: " + rendered.split("\n")[0]);
+    }
+
+    /**
+     * Without a console a tool must not throw: a boot file that displays a panel in a headless run should draw
+     * nothing, not fail the boot.
+     */
+    @Test
+    void shouldSurviveDisplayingWithoutAConsole() {
+        final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+        tool.run();   // no Console.LOCAL_INSTANCE in a test: the no-console branch, which must be total
+        tool.close();
+    }
+
+    /**
+     * The style decides the MODE: no style is the inspector (it takes the keyboard), an anchored style is the
+     * panel (passive). A default anchor must not turn every invocation into a panel.
+     */
+    @Test
+    void shouldChooseItsModeFromTheStylesItWasGiven() {
+        final NetworkPanelTool bare = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+        assertTrue(bare.modal(), "no style at all: the inspector");
+        // a real Style (as `style::[anchor=>...]` constructs), not a bare rec: the mode reads the style a tool was
+        // GIVEN, and a plain rec is not one
+        final studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style<NetworkPanelTool> style =
+                studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style.empty();
+        style.floatAt(studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface.Anchor.BOTTOM_RIGHT, 0, 0, 0);
+        final NetworkPanelTool anchored = new NetworkPanelTool(
+                mutableMap(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("style"), style),
+                UI_NETWORK_PANEL_TID, null);
+        assertFalse(anchored.modal(), "an anchor means the panel, which does not take the keyboard");
+    }
+
+    /**
+     * The type is registered, so a user can create the tool the way every other tool is created.
+     */
+    @Test
+    void shouldBeRegisteredAsAToolType() {
+        final studio.phaseshift.metatron.isa.m.type.Obj type =
+                studio.phaseshift.metatron.isa.mach.type.Machine.read(UI_NETWORK_PANEL_TID);
+        assertFalse(type.isNoObj(), "the panel's type is registered");
+        assertInstanceOf(studio.phaseshift.metatron.isa.m.type.Type.class, type, "and it is a type");
+    }
+
+    /** a tiny sleep helper, so the two chats in the ordering test are unambiguously seconds apart */
+    private static final class CommonUtilSleep {
+        private static void sleep(final long ms) {
+            studio.phaseshift.metatron.util.CommonUtil.sleepThread(ms);
+        }
+    }
+}

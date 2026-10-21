@@ -56,9 +56,9 @@ import java.util.Map;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ModalTool extends AbstractWidget<ModalTool> {
+public class ModalTool extends AbstractTool<ModalTool, ModalTool.Action> {
 
-    private enum Action {
+    enum Action {
         DISMISS,
         SCROLL_UP,
         SCROLL_DOWN,
@@ -71,9 +71,6 @@ public class ModalTool extends AbstractWidget<ModalTool> {
     private static final int WHEEL_ROWS = 3;
 
     private final PanelWidget panel;
-    private Attributes savedAttributes;
-    private boolean running = false;
-    private int totalHeightUsed = 0;
     /** Viewport over the modal's own body: rows off-screen are scrolled back into view, never dropped. */
     private int scrollOffset = 0;
     private int maxScrollOffset = 0;
@@ -127,69 +124,50 @@ public class ModalTool extends AbstractWidget<ModalTool> {
     }
 
     @Override
-    public void run() {
+    protected void onEnter() {
         Console.userMode.set(true);
         this.terminal.writer().print("\n");
-        this.savedAttributes = this.terminal.enterRawMode();
-        this.terminal.puts(InfoCmp.Capability.keypad_xmit);
-        this.terminal.puts(InfoCmp.Capability.cursor_invisible);
-        this.terminal.writer().flush();
-
-        // A styled modal floats at its anchor (e.g. anchor=>middle centers it
-        // on screen); otherwise it renders in-place below the prompt.  When
-        // floating, the console's FloatingSurface owns the pixels, so the key
-        // loop below only waits for a dismiss key (no per-iteration redraw).
+        // A styled modal floats at its anchor (e.g. anchor=>middle centers it); otherwise it renders in-place below
+        // the prompt. When floating, the console's surface owns the pixels, so the loop below only waits for a
+        // dismiss key and redraw() does nothing.
         final Stylable.Style<PanelWidget> style = this.panel.getStyle();
-        final boolean floats = Console.LOCAL_INSTANCE != null
-                && style != null && style.hasFloat();
-        this.floats = floats;
-        if (floats) {
-            // Constrain the panel to the terminal width before floating.  The
-            // surface clips lines wider than the terminal via Graphitty.strip(),
-            // which would strip the background/foreground color codes out of a
-            // wide body line.
+        this.floats = null != Console.LOCAL_INSTANCE && null != style && style.hasFloat();
+        if (this.floats) {
+            // constrain the panel to the terminal width before floating: the surface clips wider lines through
+            // Graphitty.strip(), which would strip the colors out of a wide body line
             final int avail = this.terminal.getWidth() - 6;
             if (avail > 20) this.panel.maxWidth(avail);
             final int floatW = style.width() > 0 ? style.width() : this.panel.width();
-            this.floatAt(Console.LOCAL_INSTANCE.getFloatingSurface(), style.anchor(),
-                    floatW, style.top(), style.left());
+            this.floatAt(Console.LOCAL_INSTANCE.getFloatingSurface(), style.anchor(), floatW, style.top(), style.left());
             Console.LOCAL_INSTANCE.getFloatingSurface().render();
         }
         if (this.terminal.hasMouseSupport())
             this.terminal.trackMouse(Terminal.MouseTracking.Normal);
-
-        this.running = true;
-        final BindingReader bindingReader = new BindingReader(this.terminal.reader());
-        final KeyMap<Action> keyMap = buildKeyMap();
-        while (this.running) {
-            if (!floats) redraw();
-            final Action action = bindingReader.readBinding(keyMap);
-            if (null == action) continue;
-            switch (action) {
-                case DISMISS -> this.running = false;
-                case SCROLL_UP -> this.scrollBy(-1);
-                case SCROLL_DOWN -> this.scrollBy(1);
-                case PAGE_UP -> this.scrollBy(-this.pageRows());
-                case PAGE_DOWN -> this.scrollBy(this.pageRows());
-                case MOUSE -> this.onMouse(bindingReader);
-            }
-        }
     }
 
     @Override
-    public void close() {
-        this.terminal.puts(InfoCmp.Capability.cursor_visible);
-        if (null != this.savedAttributes) {
-            this.terminal.setAttributes(this.savedAttributes);
-        }
-        this.terminal.puts(InfoCmp.Capability.keypad_local);
+    protected void onLeave() {
         if (this.terminal.hasMouseSupport())
             this.terminal.trackMouse(Terminal.MouseTracking.Off);
-        this.terminal.writer().flush();
-        super.close();
     }
 
-    private KeyMap<Action> buildKeyMap() {
+    @Override
+    protected boolean handle(final Action action) {
+        switch (action) {
+            case DISMISS -> {
+                return false;
+            }
+            case SCROLL_UP -> this.scrollBy(-1);
+            case SCROLL_DOWN -> this.scrollBy(1);
+            case PAGE_UP -> this.scrollBy(-this.pageRows());
+            case PAGE_DOWN -> this.scrollBy(this.pageRows());
+            case MOUSE -> this.onMouse(this.bindingReader());
+        }
+        return true;
+    }
+
+    @Override
+    protected KeyMap<Action> keyMap() {
         final KeyMap<Action> keyMap = new KeyMap<>();
         keyMap.bind(Action.DISMISS, "");             // Ctrl-D
         keyMap.bind(Action.DISMISS, Utilities.enter_key);  // Enter
@@ -255,8 +233,12 @@ public class ModalTool extends AbstractWidget<ModalTool> {
      * terminal width so long bodies stay on screen, and windowing it to the
      * terminal height so a long body scrolls instead of spilling.
      */
-    private void redraw() {
-        final WidgetCanvas canvas = beginRedraw(this.totalHeightUsed);
+    @Override
+    protected void redraw() {
+        // a floating modal is drawn by the console's surface; the loop only waits for its dismiss key
+        if (this.floats)
+            return;
+        final WidgetCanvas canvas = this.canvas();
         final int avail = this.terminal.getWidth() - 6;
         if (avail > 20) this.panel.maxWidth(avail);
 
@@ -274,7 +256,7 @@ public class ModalTool extends AbstractWidget<ModalTool> {
                 ? "{{w}}space/enter/ctrl-d{{g}}:dismiss {{w}}↑/↓{{g}}:scroll %d/%d {{X}}".formatted(
                         Math.min(this.scrollOffset + this.viewportRows, body), body)
                 : "{{w}}space/enter/ctrl-d{{g}}:dismiss {{X}}");
-        this.totalHeightUsed = canvas.finish();
+        this.settle(canvas);
     }
 
     @Override

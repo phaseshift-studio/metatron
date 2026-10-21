@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.CommandPalette;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.ModalTool;
+import studio.phaseshift.metatron.isa.mach.type.ui.tool.NetworkPanelTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.SwipePanelWidgetTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.tool.TreeSelectTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -98,6 +99,8 @@ public class uiInstSet extends AbstractInstSet {
     public static Type UI_MENU_BAR_TYPE;
     public static final fURI UI_TREE_SELECT_TOOL_TID = UI_WIDGET_TID.extend("tree_select_widget");
     public static Type UI_TREE_SELECT_TOOL_TYPE;
+    public static final fURI UI_NETWORK_PANEL_TID = UI_WIDGET_TID.extend("network_panel_tool");
+    public static Type UI_NETWORK_PANEL_TYPE;
     public static final fURI UI_SWIPE_PANEL_TID = UI_WIDGET_TID.extend("swipe_panel_widget");
     public static Type UI_SWIPE_PANEL_TYPE;
     public static final fURI UI_MODAL_TID = UI_WIDGET_TID.extend("modal_widget");
@@ -346,6 +349,21 @@ public class uiInstSet extends AbstractInstSet {
                                         uri(TITLE), "the title of the modal",
                                         uri(BODY), "the body content of the modal"),
                                 "a modal popup panel: space/enter/ctrl-d dismisses"),
+                        docWrap(UI_NETWORK_PANEL_TYPE = Type.Builder.build()
+                                        .tid(UI_WIDGET_TID)
+                                        .vid(UI_NETWORK_PANEL_TID)
+                                        .isaPredicate(rec(
+                                                uri(MAX).maybe().asUri(), INT_TYPE,
+                                                uri(PAUSE).maybe(), BOOL_TYPE,
+                                                uri(PEER).maybe(), URI_TYPE,
+                                                uri(STYLE).maybe().asUri(), T(UI_STYLE_TID)))
+                                        .constructor(arg -> new NetworkPanelTool(arg.jvm(), UI_NETWORK_PANEL_TID, arg.vid()))
+                                        .create(), "maybe an obj", "a network panel tool", Map.of(
+                                        uri(MAX), "body rows drawn (default 12)",
+                                        uri(PAUSE), "freeze what the panel draws, without stopping the capture",
+                                        uri(PEER), "draw only the lanes whose name contains this",
+                                        uri(STYLE).maybe(), "the panel's style: anchor places it, width/height size it"),
+                                "a live view of the exchanges between this machine and its peers; `.display()` it to watch, `@<panel> >>= [paused=>true]` to hold it still"),
                         docWrap(UI_STACK_BAR_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_STACK_BAR_TID)

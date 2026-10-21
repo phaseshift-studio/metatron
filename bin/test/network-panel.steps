@@ -1,0 +1,26 @@
+# Network panel smoke — one tool, two modes:
+#   * no anchor  -> the modal inspector (owns the keyboard, j/k scroll, q leaves)
+#   * anchored   -> the floating panel (passive; the console stays usable underneath)
+#
+#   bin/metatron-console --steps bin/test/network-panel.steps
+
+WAIT_CONSOLE
+
+# --- the inspector: keys are bound, it says so, and it lists the empty wire ---
+MARK inspect
+SEND network_panel_tool::[max=>6].display()
+WAIT scroll
+WAIT no peers have spoken
+
+# --- leaving it hands the terminal back ---
+MARK leave
+KEY q
+SLEEP 300
+SEND 1.plus(1)
+WAIT ==>2
+
+# --- the panel: anchored, so it is pinned and the prompt stays live ---
+MARK panel
+SEND network_panel_tool::[max=>6,style=>style::[anchor=>bottom_right,width=>70,height=>8]].display()
+WAIT net
+WAIT no peers have spoken

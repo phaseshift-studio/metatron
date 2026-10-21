@@ -719,6 +719,38 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.handleVID(sb, lst);
     }
 
+// ── Stream generation (objs) ─────────────────────────────────
+
+    /**
+     * A stream — a multiplicity, {@code {…}} in mtron and {@code Objs} in Java — written
+     * member by member through the same nested renderers a lst and a rec use.  A stream holds
+     * unrelated values with no keys and no order to lay out, so it draws on one line; what it
+     * must not do is hand its members to the plain serializer, which is what the nested path
+     * did before there was a stream arm ({@link #renderValue} and {@link #writeClip} had none,
+     * so a stream inside a rec fell through to {@code toShortString()}): there a uri was never
+     * tagged as a link, a wide member never measured the column it really sits at, and a
+     * string member was never clipped.
+     */
+    @Override
+    public String writeObjs(final Objs objs) {
+        return this.postWrite(this.generateObjs(new StringBuilder(), objs, 0).toString());
+    }
+
+    private StringBuilder generateObjs(final StringBuilder sb, final Objs objs, final int depth) {
+        // ZERO MEMBERS IS NOOBJ, not an empty bracket pair: MObjs.isNoObj() is jvm.isEmpty(), and
+        // the plain writer's stream arm draws that value as noobj — so must this one
+        if (objs.isNoObj())
+            return sb.append(this.writeNoObj(noobj()));
+        sb.append("{");
+        final AtomicInteger counter = new AtomicInteger(0);
+        objs.stream().forEach(v -> {
+            if (counter.getAndIncrement() > 0)
+                sb.append(",");
+            this.renderValue(sb, depth, v);
+        });
+        return sb.append("}");
+    }
+
 // ── Rec generation (clipped, nested) ─────────────────────────
 
     @Override
@@ -805,6 +837,8 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             this.generateRec(sb, v.as(), depth);
         } else if (v.isLst()) {
             this.generateLst(sb, v.as(), depth);
+        } else if (v.isObjs()) {
+            this.generateObjs(sb, v.as(), depth);
         } else if (v.isType()) {
             this.generateType(sb, v.asType(), depth);
         } else {
@@ -865,6 +899,11 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             this.generateRec(sb, obj.asRec(), 0);
         } else if (obj.isLst()) {
             this.generateLst(sb, obj.asLst(), 0);
+        } else if (obj.isObjs()) {
+            // a stream is drawn the way it is written at the top level, not handed to the plain
+            // serializer's toString(): that text carries no link tags and its members measure
+            // themselves from column zero
+            this.generateObjs(sb, obj.asObjs(), 0);
         } else if (obj.isUri()) {
             final int max = this.clipUri();
             final String uriStr = obj.uriValue().toString();

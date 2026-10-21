@@ -155,6 +155,46 @@ public class GraphittyTest extends AbstractMetatronTest {
     }
 
     /**
+     * A RULE MUST CLOSE.  With no {@code }} after the {@code {{} there is no tag to read, so the
+     * braces are the text they look like and the scan resumes just past the first of them — the
+     * rest of the line is not swallowed by a rule that never ended.  This is what keeps a value's
+     * own braces visible: a stream ({@code objs}, a multiplicity) can carry a coefficient on a
+     * member ({@code {2}[1,2,3]}), and the stream's opening brace directly in front of it spells
+     * {@code {{}, so {@code [a=>{[1,2,3],[2,3],[1,2,3]}]} used to draw as {@code [a=>} — the value
+     * and everything after it gone — and the bare stream as nothing at all.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{{2}[1,2,3]         % a coefficient inside a stream",
+            "[a=>{{2}[1,2,3]}]   % a rec holding such a stream",
+            "{{2}[1,2,3],{3}[4]  % two coefficient members",
+            "x{{y                % an open tag that was never finished",
+    }, delimiter = '%')
+    void testUnclosedRuleIsText(final String text, final String desc) {
+        assertEquals(text, Graphitty.strip(text), "an unclosed rule is not a rule: " + desc);
+        assertEquals(text, Graphitty.string(text), "and it renders as it is written: " + desc);
+    }
+
+    /**
+     * A rule must NAME something the renderer can act on.  A closed {@code {{…}}} whose name is
+     * no color, cursor move, link, syntax block or emoji shortcode is a value's own braces, and
+     * drawing the text is the only honest thing to do with it — consuming it as a tag would eat
+     * the value and everything up to the NEXT {@code }}, which is usually a later entry's markup:
+     * in {@code [a=>{[1,2,3],[2,3],[1,2,3]},b=>2]} the value's {@code {{2}} would run to the
+     * {@code }} of b's own key and the whole result drew as {@code [a=>b=>2]}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{{blah}}                                % {{blah}}                                % a name no rule has",
+            "x{{blah}}y                              % x{{blah}}y                              % and it keeps its neighbours",
+            "{{2}[1,2,3]}}                           % {{2}[1,2,3]}}                           % a closed coefficient, drawn as it is",
+            "[a=>{{2}[1,2,3],[2,3]},{{b}}b{{/b}}=>2] % [a=>{{2}[1,2,3],[2,3]},b=>2]            % a later entry's markup still resolves",
+    }, delimiter = '%')
+    void testUnknownRuleIsText(final String text, final String expected, final String desc) {
+        assertEquals(expected, Graphitty.strip(text), "an unknown rule is text: " + desc);
+    }
+
+    /**
      * A widget draws its border and colours THROUGH the lines of a block it renders, so a
      * block's markup is interleaved with its code: the decoration must still apply (it is
      * markup like any other) while the code is colorized as code.  This is the shape a

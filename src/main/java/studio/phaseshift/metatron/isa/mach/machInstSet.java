@@ -22,12 +22,11 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
@@ -47,7 +46,10 @@ import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -59,11 +61,11 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -136,11 +138,6 @@ public class machInstSet extends AbstractInstSet {
      * deployments is the SPACE MOUNTED OVER IT, never the address.
      */
     public static final fURI COMPUTE = f("/usr/compute");
-
-    /**
-     * the box a machine listens on for code to execute
-     */
-    public static final fURI MACH_RECV_INST_TID = MACH_INST_TID.extend("recv");
 
     /**
      * Machine {@code machine}'s contiguous slice of the data: {@code per} elements each, taken in order, the HOME
@@ -752,22 +749,28 @@ public class machInstSet extends AbstractInstSet {
                         // from that parent, which is exactly where the new frame belongs.
                         docWrap(instC(PUSH_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) -> {
                                     final Machine here = Machine.current();
+                                    final Machine pushed;
                                     if (inst.arg(0).isNoObj())
-                                        return here.push();
-                                    final fURI target = Machine.Helper.machineAddress(here, inst.arg(0).uriValue());
-                                    // a wire address names a PROCESS boundary, not a place in this tree: it is not split
-                                    // into container + leaf, because the authority IS the frame's identity
-                                    if (target.hasHost() || target.hasScheme())
-                                        return here.push(target);
-                                    // the container is the frame the target is a CHILD of — the target's PARENT ADDRESS.
-                                    // An EMPTY address here is not "nowhere": it is the ROOT's own address, and frameAt
-                                    // answers the root for it. (Reading it as "stay where you are" is what minted
-                                    // /sib-a/sib-b for push(<../sib-b>) instead of the sibling /sib-b.)
-                                    final fURI containerAddress = target.asNode().retract(1);
-                                    final Machine container = containerAddress.equals(here.vid())
-                                            ? here // the common case: a plain child of where we already stand — no read
-                                            : Helper.machineAt(here, containerAddress, "push");
-                                    return container.push(f(target.name()));
+                                        pushed = here.push();
+                                    else {
+                                        final fURI target = Machine.Helper.machineAddress(here, inst.arg(0).uriValue());
+                                        // a wire address names a PROCESS boundary, not a place in this tree: it is not
+                                        // split into container + leaf, because the authority IS the frame's identity
+                                        if (target.hasHost() || target.hasScheme())
+                                            pushed = here.push(target);
+                                        else {
+                                            // the container is the frame the target is a CHILD of — the target's
+                                            // PARENT ADDRESS. An EMPTY address here is not "nowhere": it is the
+                                            // ROOT's own address, and frameAt answers the root for it.
+                                            final fURI containerAddress = target.asNode().retract(1);
+                                            final Machine container = containerAddress.equals(here.vid())
+                                                    ? here // the common case: a plain child of where we already stand
+                                                    : Helper.machineAt(here, containerAddress, "push");
+                                            pushed = container.push(f(target.name()));
+                                        }
+                                    }
+                                    MachinePerspective.publish(pushed);
+                                    return pushed;
                                 }),
                                 "the lhs is not consulted: push acts on the machine the code is running in, and carries the value flowing through untouched",
                                 "the machine just minted and entered \\(c\\)",
@@ -790,13 +793,20 @@ public class machInstSet extends AbstractInstSet {
                                     final Machine here = Machine.current();
                                     if (here == Machine.root())
                                         throw MTronException.of("the root machine can not be closed via pop");
+                                    final Machine landed;
                                     if (inst.arg(0).isNoObj())
-                                        return here.pop();
-                                    final Machine named = inst.arg(0).isMachine() ? inst.arg(0).asMachine() : Helper.machineAt(here, inst.arg(0).uriValue(), "pop");
-                                    if (Helper.sameFrame(named, here))
-                                        return here.pop();
-                                    throw MTronException.of("pop(%s) is not the current machine (%s): a machine is discarded by the machine that holds it — discard the current machine with pop(), or move(<%s>) there first",
-                                            inst.arg(0), here.vid(), inst.arg(0));
+                                        landed = here.pop();
+                                    else {
+                                        final Machine named = inst.arg(0).isMachine()
+                                                ? inst.arg(0).asMachine()
+                                                : Helper.machineAt(here, inst.arg(0).uriValue(), "pop");
+                                        if (!Helper.sameFrame(named, here))
+                                            throw MTronException.of("pop(%s) is not the current machine (%s): a machine is discarded by the machine that holds it — discard the current machine with pop(), or move(<%s>) there first",
+                                                    inst.arg(0), here.vid(), inst.arg(0));
+                                        landed = here.pop();
+                                    }
+                                    MachinePerspective.publish(landed);
+                                    return landed;
                                 }),
                                 "the lhs is not consulted: pop acts on the machine the code is running in",
                                 "the machine that held the one discarded — \\(\\mathrm{pop}(f) \\mapsto \\mathrm{parent}(f)\\), so the current machine becomes \\(f\\)'s \\(..\\)",
@@ -809,8 +819,12 @@ public class machInstSet extends AbstractInstSet {
                                 "pop()               [-- at the root: refused, reset metatron instead --]"),
                         // move() is move(<..>): the NON-destructive way up, and the whole point of the motif —
                         // pop() destroys the frame it leaves, move() leaves it standing and reachable by address
-                        docWrap(instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) ->
-                                        Machine.current(Helper.machineAt(Machine.current(), inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue(), "move"))),
+                        docWrap(instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) -> {
+                                    final Machine moved = Machine.current(Helper.machineAt(Machine.current(),
+                                            inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue(), "move"));
+                                    MachinePerspective.publish(moved);
+                                    return moved;
+                                }),
                                 "the lhs is not consulted: move chooses the machine the next code runs in",
                                 "the machine moved to — \\(\\mathrm{move}(t) \\mapsto f\\) where \\(f\\) is the machine \\(t\\) addresses",
                                 Map.of(jnt(0), "\\(t\\), the address to stand in: `~` is the current machine, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling \\(b\\), and `../../..` walks up. Absent, \\(t = \\;..\\) — bare `move()` is `move(<..>)`"),
@@ -833,157 +847,8 @@ public class machInstSet extends AbstractInstSet {
                             ((AbstractThread) lhs).resume();
                             return lhs;
                         })
-                ))),
-                // uri(CONST), lst(docWrap(BasicMachine.of(MACH_MACHINE_TID, SYS.extend(MACH).extend(DEFAULT)),
-                //         mutableMap(
-                //                 uri(INSTSET), "machine instruction set architecture",
-                //                 uri(COMPILER), "machine rewriter, resolver, and type",
-                //                 uri(PROCESSOR), "machine execution engine",
-                //                 uri(MEMORY), "machine spatial memory include execution frame stack",
-                //                 uri(NETWORK), "machine cluster"),
-                //         "the default machine template used to generate machines")),
-                uri(REWRITE), lst(
-                        // A monoidic reducer is ALREADY a gather: isGather() is "the dom coefficient is
-                        // unbounded", and sum's dom is #{*}. resolve() therefore mints a barrier monad for it and
-                        // the processor already parks and accumulates into it. So this rule does not create a
-                        // rendezvous -- it marks where the rendezvous must be WIDENED to the machine's peers.
-                        docWrap(InstSet.Helper.rewriter(MACH_REWRITE_TID.extend("sum_gather"),
-                                        code -> {
-                                            // NO PEERS, NO DISTRIBUTION. The topology is the compute plan in space
-                                            // (/usr/compute): its home/barrier branch carries one key per peer this
-                                            // machine may rely on. Space is the mechanism already proven (the barrier
-                                            // mailbox), so the topology is read from it -- the transport layer can arrive
-                                            // later without moving the peer source.
-                                            // With an empty roster there is nothing to gather FROM, and the rule must not
-                                            // fire at all: measured, an inserted gather changes WHEN a coefficient is
-                                            // complete, which turns a surviving coefficient into a premature reduction.
-                                            // THE PEER COUNT IS THE BARRIER COUNT. The home's branch lists one barrier per
-                                            // peer, so declaring a cluster is writing a key per machine -- and it is the same
-                                            // rec the run leaves its reports in, so the topology IS the mailbox set rather than
-                                            // something kept beside it. Adding a peer is adding a key.
-                                            final Obj roster = Machine.read(COMPUTE);
-                                            final Obj home = roster.isRec() ? roster.asRec().at(uri(MACH_HOME)) : noobj();
-                                            final Obj boxes = home.isRec() ? home.asRec().at(uri(BARRIER)) : noobj();
-                                            if (!boxes.isRec() || boxes.asRec().jvm().isEmpty())
-                                                return code;
-                                            final List<Inst> insts = code.insts();
-                                            if (insts.stream().noneMatch(i -> i.tid().basePath().equals(SUM_INST_TID)))
-                                                return code;
-                                            // A WORKER FORM IS TERMINAL. It computes locally and reports, so distributing it
-                                            // again would put a gather in front of its OWN reduction and have it wait for a
-                                            // report only it could send -- a deadlock, and one that only shows on the shard
-                                            // (the home is immune because its compiled form already has a gather before the
-                                            // reducer, which is what the idempotence check below tests). A shipped worker ends
-                                            // by reporting to a mailbox, and that is what marks it.
-                                            final Inst last = insts.getLast();
-                                            if (last.tid().basePath().equals(TO_INST_TID)
-                                                    && last.arg(0).toString().contains("/barrier/"))
-                                                return code;
-                                            // IDEMPOTENT, and this is load-bearing: FixPointRewriter re-runs every rule
-                                            // until the code stops changing, so an unguarded insert adds a gather on each
-                                            // pass. A gather already sitting immediately before the reducer means this
-                                            // rule has fired.
-                                            for (int i = 1; i < insts.size(); i++)
-                                                if (insts.get(i).tid().basePath().equals(SUM_INST_TID)
-                                                        && insts.get(i - 1).tid().basePath().equals(BARRIER_INST_TID))
-                                                    return code;
-                                            // the declared peers, in a stable order so the compiled form is reproducible
-                                            // the barriers ARE the peers, so there is no home to filter out of them: the home
-                                            // is the branch they hang under, not one of them
-                                            final List<fURI> peers = boxes.asRec().jvm().keySet().stream()
-                                                    .filter(Obj::isUri)
-                                                    .map(Obj::uriValue)
-                                                    .sorted(Comparator.comparing(fURI::toString))
-                                                    .toList();
-                                            // ---- THE WORKER FORM, shipped to each peer's recv box ----
-                                            // The shard's code is the SAME prefix (it computes on its own data), then its own
-                                            // local reduction, then a report to THE MAILBOX THE HOME WAITS ON. The mailbox is
-                                            // minted from the identical expression the barriers above use, so the home's
-                                            // barrier(...) and the worker's to(...) cannot drift -- hand-writing both ends is
-                                            // what broke before.
-                                            //
-                                            // Shipping it is a SPACE WRITE, the mechanism already proven, and in a multi-JVM
-                                            // deployment the same write simply lands in a tbleSpace (Postgres) instead of
-                                            // memory: the mailbox stays a space, only its type changes.
-                                            final int sumAt = java.util.stream.IntStream.range(0, insts.size())
-                                                    .filter(i -> insts.get(i).tid().basePath().equals(SUM_INST_TID))
-                                                    .findFirst().orElse(-1);
-                                            if (sumAt < 0)
-                                                return code;
-                                            // THE DATA IS DISTRIBUTED TOO. start(...) carries it and is isInitial -- which is
-                                            // what makes each machine mint its own monads from it. So the start is SLICED
-                                            // across the machines and each form carries its own slice: the shard needs no
-                                            // start handed to it from outside, it arrives with its own data.
-                                            final int startAt = java.util.stream.IntStream.range(0, insts.size())
-                                                    .filter(i -> insts.get(i).tid().basePath().equals(START_INST_TID))
-                                                    .findFirst().orElse(-1);
-                                            // elements() is a lst's MEMBERS; stream() is a coefficient's. The start's arg can
-                                            // be either shape, and getting it wrong is silent -- stream() on a lst yields the
-                                            // lst itself as one element, which would slice the data into a single piece.
-                                            final List<Obj> data;
-                                            if (startAt < 0)
-                                                data = List.of();
-                                            else {
-                                                final Obj raw = insts.get(startAt).arg(0);
-                                                data = raw.isLst() ? raw.asLst().elements().toList() : raw.stream().toList();
-                                            }
-                                            // a contiguous slice per machine, the home taking the first
-                                            final int machines = peers.size() + 1;
-                                            final int per = data.isEmpty() ? 0
-                                                    : Math.max(1, (data.size() + machines - 1) / machines);
-                                            final fURI homeBoxes = COMPUTE.extend(MACH_HOME).extend("barrier");
-                                            for (int p = 0; p < peers.size(); p++) {
-                                                final fURI peer = peers.get(p);
-                                                final List<Inst> worker = new ArrayList<>(insts.size() + 2);
-                                                if (startAt >= 0)
-                                                    worker.add(instB(START_INST_TID, lst(objs(sliceOf(data, p + 1, machines, per)))));
-                                                worker.addAll(insts.subList(startAt + 1, sumAt));
-                                                worker.add(insts.get(sumAt));   // its own partial: for a monoid, a partial is a whole
-                                                // reports to THE HOME'S MAILBOX FOR IT -- the one the home's gather waits on
-                                                worker.add(instB(TO_INST_TID, lst(uri(homeBoxes.extend(peer.name())))));
-                                                // and the code is shipped to the PEER'S OWN INBOX, which is named by the peer
-                                                Machine.write(COMPUTE.extend(peer.name()).extend("recv"),
-                                                        MCode.of(worker));
-                                            }
-                                            final List<Inst> out = new ArrayList<>(insts.size() + peers.size());
-                                            boolean inserted = false;
-                                            for (int at = 0; at < insts.size(); at++) {
-                                                final Inst inst = insts.get(at);
-                                                if (at == startAt) {
-                                                    // the home keeps its own slice of the data, in place of the whole
-                                                    out.add(instB(START_INST_TID, lst(objs(sliceOf(data, 0, machines, per)))));
-                                                    continue;
-                                                }
-                                                if (!inserted && inst.tid().basePath().equals(SUM_INST_TID)) {
-                                                    // ONE barrier(uri) PER PEER, which is what barrier(uri::T) is for: each
-                                                    // waits on that peer's mailbox, and consecutive gathers chain (the loop
-                                                    // appends one gather's result into the next), so the peer partials land
-                                                    // in the same place the local coefficient does and the reducer sees one
-                                                    // complete coefficient.
-                                                    //
-                                                    // The address is minted HERE, once, from the peer's roster entry and the
-                                                    // reducer's own vid -- so the shard's shipped to(<same address>) cannot
-                                                    // drift from what this barrier waits on. That drift is exactly the bug we
-                                                    // hit writing these addresses by hand.
-                                                    // THE MAILBOX IS A SPACE PATH, not the peer's transport key: a
-                                                    // barrier writes and reads a SPACE address (it subscribes at the mailbox and
-                                                    // reads what has accumulated), so an authority like ws://localhost:8555
-                                                    // resolves to nothing and the barrier would wait on a mailbox no write can
-                                                    // reach. /usr/compute is already a real space -- the plan lives in
-                                                    // it -- so the mailboxes live under it, one per peer, named by the
-                                                    // peer's place in the plan. Single-JVM construction: 'a' is this
-                                                    // machine's name.
-                                                    for (final fURI peer : peers)
-                                                        out.add(instB(BARRIER_INST_TID, lst(uri(
-                                                                COMPUTE.extend(MACH_HOME).extend("barrier").extend(peer.name())))));
-                                                    inserted = true;
-                                                }
-                                                out.add(inst);
-                                            }
-                                            return inserted ? code.selfJVM(out).asCode() : code;
-                                        }),
-                                "gives a monoidic reducer its gather point: \\(\\mathrm{sum} \\leadsto \\mathrm{barrier} \\cdot \\mathrm{sum}\\)"))));
-        docWrap(this, "the machine instruction set of metatron: machines and their five components (instset, compiler, memory, network, processor), the network's peer and discovery types, the thread family, and the instructions that mint, choose, and discard machines");
+                )))));
+        docWrap(this, "the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor");
         super.setup();
 
     }

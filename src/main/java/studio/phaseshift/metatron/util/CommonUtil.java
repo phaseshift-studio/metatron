@@ -695,7 +695,7 @@ public final class CommonUtil {
         public BiConsumer<Map<Obj, Obj>, Rel> accumulator() {
             return (a, b) -> {
                 if (b.jvm().get0().isNoObj()) return;   // no-match marker — never a rec key
-                a.compute(b.jvm().get0(), (k, v) -> b.jvm().get1().isNoObj() ? v : (null == v ? b.jvm().get1() : v.append(b.jvm().get1())));
+                a.compute(b.jvm().get0(), (k, v) -> b.jvm().get1().isNoObj() ? v : (null == v ? b.jvm().get1().c(c -> c.mult(b.c())) : v.append(b.jvm().get1().c(c -> c.mult(b.c())))));
             };
         }
 

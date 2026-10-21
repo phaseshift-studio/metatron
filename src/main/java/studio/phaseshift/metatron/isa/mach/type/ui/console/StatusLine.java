@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -93,9 +94,16 @@ public class StatusLine implements Runnable {
         // the wire, not the machine's io counters: bytes-in/out mixed LLM tokens, MQTT payloads and database reads
         // (see Stats.IOStats), and the widget froze them at construction besides. see WireStats
         this.addWidget(f("net"), () -> netMarkup(getForegroundColor(), getBackgroundColor()));
-        this.addWidget(f("time"), () -> "{{%s}}⏳{{%s}}%s ".formatted(this.runningTime() > 10000 ? "r" : "w", getForegroundColor(), timeFormat(this.runningTime())));
+        // THE TIME THE CURRENT EVALUATION IS TAKING — the stopwatch the console has always shown, not a wall
+        // clock: it sits at the last job's duration between jobs and climbs while one runs, and that is the fact
+        // this widget exists for (a clock is on the terminal's own status line, or the user's shell).
+        this.addWidget(f("time"), () -> "{{%s}}⏳ {{%s}}%s ".formatted(this.runningTime() > 10000 ? "r" : "w", getForegroundColor(), timeFormat(this.runningTime())));
         this.addWidget(f("tokens"), () -> "\uD83E\uDD16 %s ".formatted(StatusLine.widgetData.at("tokens").orElse((Obj) jnt(0)).toCleanString()));
-        this.addWidget(f("machine"), () -> "\uD83D\uDDA5️ %s ".formatted(Machine.current().vid()));
+        // THE PERSPECTIVE, NOT THIS THREAD'S OWN. Machine.current() on the status line's thread is the root
+        // forever (the thread never moves), which is why this widget used to say "./" while an evaluation stood in
+        // a peer's frame; the published perspective is where the VM actually is (see Machine.perspective()).
+        this.addWidget(f("machine"), () -> "{{w}}\uD83D\uDDA5️ {{%s}}%s ".formatted(getForegroundColor(),
+                machineText(MachinePerspective.vid())));
         this.addWidget(f("message"), () -> StatusLine.bannerMarkup(getForegroundColor(), getBackgroundColor()));
         
         /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Machine.authority().stats().monadicStats().runningMonads()));
@@ -175,13 +183,12 @@ public class StatusLine implements Runnable {
      * as long as the window holds one. A pure function of {@link WireStats}, so it is tested like the banner.
      */
     static String netMarkup(final String fore, final String back) {
-        return "{{W}}⇄{{%s}}%d {{W}}↓{{%s}}%d {{W}}↑{{%s}}%d ".formatted(
-                back + "&" + (WireStats.timeouts() > 0 ? "r" : fore),
-                WireStats.roundTrips(),
-                back + "&" + fore,
-                WireStats.received(),
-                back + "&" + fore,
-                WireStats.sent());
+        // a timeout tints the trip count and nothing else: the bar is a glance, the timeouts themselves are the
+        // panel's to itemize (see NetworkPanelTool)
+        return " {{W}}⇄{{%s&[%s]}}%d {{W}}↓{{%s&[%s]}}%d {{W}}↑{{%s&[%s]}}%d".formatted(
+                WireStats.timeouts() > 0 ? "r" : fore, back, WireStats.roundTrips(),
+                fore, back, WireStats.received(),
+                fore, back, WireStats.sent());
     }
 
     /**
@@ -227,6 +234,9 @@ public class StatusLine implements Runnable {
         int used = 0;   // the display columns already spent on this line
         for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
             final String w = this.renderWidget(ws);
+            // a widget with nothing to say (the job stopwatch while idle) takes no separator and no columns
+            if (null == w || w.isEmpty())
+                continue;
             final String cap;
             if (capped || ws.getKey().uriValue().toString().endsWith("_")) {
                 cap = "";
@@ -326,6 +336,33 @@ public class StatusLine implements Runnable {
 
     public Level getState() {
         return this.state;
+    }
+
+    /**
+     * How many columns the machine widget may spend — a bar has better uses for its width than a full nested path,
+     * and {@code /network/peer/ws/host/port/ns} is longer than anything it could usefully displace.
+     */
+    private static final int MACHINE_BUDGET = 28;
+
+    /**
+     * The machine vid as the bar shows it: the published frame's LOCAL address (a frame standing in a peer is at a
+     * local path, never at the wire address), shortened from the LEFT when long, because the tail is what identifies
+     * the frame.
+     */
+    static String machineText(final fURI vid) {
+        final String text = null == vid ? "." : vid.toString();
+        if (text.length() <= MACHINE_BUDGET)
+            return text;
+        final String[] segments = text.split("/");
+        final StringBuilder tail = new StringBuilder();
+        for (int i = segments.length - 1; i >= 0; i--) {
+            final String candidate = 0 == tail.length() ? segments[i] : segments[i] + "/" + tail;
+            if (candidate.length() + 2 > MACHINE_BUDGET)
+                break;
+            tail.setLength(0);
+            tail.append(candidate);
+        }
+        return 0 == tail.length() ? "\u2026" : "\u2026/" + tail;
     }
 
     private static String timeFormat(final long millis) {
