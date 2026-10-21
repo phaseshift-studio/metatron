@@ -389,10 +389,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         WIRE_LOG.debug("read %s net=%s transport=%s", vid, System.identityHashCode(this), transport.isNoObj() ? "NONE" : "inst");
         if (transport.isNoObj())
             return noobj(); // authority not declared: not a peer this frame may reach
-        // A ws:// ADDRESS IS A WIRE ADDRESS, NOT A PLACE IN THIS MACHINE. Reading one asks the PEER for that path —
-        // the frame that stands in the peer has a local address of its own (/network/peer/<scheme>/<host>/<port>/<ns>,
-        // derived on push), and moving to it is an ordinary local read of a machine. So nothing here maps an
-        // authority to a frame: this is the data path, and only the data path.
+        // A ws:// ADDRESS IS A WIRE ADDRESS, NOT A PLACE IN THIS MACHINE. Reading one asks the PEER for that path.
+        // Nothing here maps an authority to a frame: this is the data path, and only the data path -- code reaches
+        // the peer by being shipped there in a plan (law_shard), never by a frame that stands in it.
         final Obj message = from_(vid.localize().toUri()).tryToInst();
         final Obj answer = transport.apply(message);
         WIRE_LOG.debug("read %s message=%s answer=%s", vid, message, answer);
@@ -464,15 +463,6 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                         .map(Obj::uriValue)
                         .forEach(mine::add);
             return mine;
-        }
-
-        /**
-         * The local address of the machine that stands in a peer, anchored on the root.
-         */
-        public static fURI peerPath(final fURI authority) {
-            final fURI base = ROOT_PEER.extend(authority.scheme() == null ? "ws" : authority.scheme())
-                    .extend(authority.host()).extend(authority.port());
-            return authority.localize().isEmpty() ? base : base.extend(authority.localize());
         }
 
         /**

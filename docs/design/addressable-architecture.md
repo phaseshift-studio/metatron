@@ -64,8 +64,9 @@ All three are *a union of Addressables with a precedence rule*. Two corollaries:
    other two already have — plus the deny arm membership needs, which is where the shapes legitimately differ
    (membership is a capability; an address is not).
 
-`RemoteMachine` is the existing proof of the recursion: a machine that is nothing but a peer-backed Addressable.
-The frame nest is an Addressable tree.
+The frame nest is an Addressable tree. (`RemoteMachine`, a machine that was nothing but a peer-backed Addressable,
+was removed on 2026-10-21: code reaches a peer by being shipped there in a `law_shard` plan, never through a frame
+that stands in it.)
 
 ## 3. Documentation is vocabulary
 

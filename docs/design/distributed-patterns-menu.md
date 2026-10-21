@@ -22,7 +22,9 @@ start([slave_1, …, slave_k]).select([to(p_1), …, to(p_k)]).merge().<combiner
 `select` pairs slave *i* with route *i*. `to(peer)` ships the slave unquoted through `Network.write` and the peer's
 transport (`asTransport`, a `send_recv?block` call); the peer evaluates the frame on receipt and replies. `merge()`
 streams the replies and the combiner recombines them. `clstrSpace` is dead code and `RemoteSpace` is going away;
-neither is part of this path.
+neither is part of this path. `RemoteMachine` and `RemoteProcessor` (a frame that stood in a peer and shipped every
+code application made in it) were relics and are removed (2026-10-21): the `law_shard` layout is the distribution
+architecture, and every entry here lowers to it. `PeerSpawn` (forking a peer JVM) stays, waiting for its instruction.
 
 **Facts every entry has to respect.**
 
@@ -142,6 +144,9 @@ result (`FutureObj.resolveFuture`, a blocking `get`) before `select` sends the n
 **Needs.** The gather (`merge`) as the await boundary, with `select`'s zip leaving transport futures in flight; the
 master taking a share of its own (k+1 parts); a timing test with forked peers (Σ vs max). D multiplies every other
 entry.
+
+**Spelling (Marko, 2026-10-21):** a virtual thread per route — `[virtual::[code=>to(ws://s1)],virtual::[code=>to(ws://s2)]]` —
+so each round trip waits on its own thread and the gather awaits them all.
 
 ### E. Tree reduction — `Route.tree(hops)` — v1 done (2026-10-21)
 
@@ -310,8 +315,8 @@ reads. This is C applied per step rather than once. With bulking, monads that la
 state merge their coefficients, so the network carries counts, not copies. That is the shape of vertex-centric
 message passing and of distributed graph traversal.
 
-**Needs.** A processor that, at a remote read, ships the continuation instead of pulling the value (`RemoteMachine`'s
-`applyCode` already ships a whole code application to a peer), and per-step routing by owner.
+**Needs.** At a remote read, ship the continuation instead of pulling the value, as a `law_shard` layout (C's, once per
+step), and per-step routing by owner.
 
 ### R. Durable results — `Route.space`
 
@@ -345,3 +350,55 @@ Stage 3).
 5. **J's spelling.** How mtron writes several folds over one stream.
 6. **Exact-tid lookups.** `morphism::T` reads laws by exact tid, so poly-registered ops (`order`, `kmerge`) need their
    registered spelling on the cat-graph surface; the planner is unaffected.
+
+## 5. Instructions the patterns want (Marko, 2026-10-21)
+
+Surfaced by `AbstractMultiServerSingleSpaceTest`: a master, three forked satellites, one MariaDB.
+
+- **`timeout(inst)`** is a wrapper, not a parameter of each instruction: `a.timeout(inst).catch(_).b.c`. It applies
+  `inst` under a deadline, and on expiry emits a `fail::T` that the next instruction can `catch()`. That makes a
+  deadline explicit and catchable. Today the only deadline is the hidden 2 s `FutureObj` wait, which turns any
+  workload longer than 2 s into a timeout fail. Open: how the duration is spelled (a `?ms` on `timeout`, per the
+  `?query` rule, or a time-typed argument).
+- **`>|`, fold-apply** — implemented (Marko, 2026-10-21): one instruction, written prefix (`>|[1,+2,+3]`), postfix
+  (`[1,+2,+3].>|`) or infix (`1.>|[+2,+3]`) — all `6`, and `10.>|[+3,+2,+3]` is `18`. The seed is the lhs, or the
+  lst's head when there is none, and the members apply left to right. Merge wedges a seed in without firing anything
+  — `1>-[+2,+3]` is the inert lst `[1,plus(2),plus(3)]` — and `1>-[+2,+3]>|` is `6`: the infix form is
+  wedge-then-fold, `x.>|L` is `x>-L>|`, and the lst between the two is a program held as data, open to ordinary lst
+  operations. A lst of instructions is inert until it is folded, so a workload's code can be a lst
+  (`>|*workload/code`) instead of a quoted code in a closure.
+- **`<|`, the backwards cascade** — Marko wanted it (2026-10-21), and it is expressible today with `swap`, his
+  "backwards apply": it "makes the lhs the arg and the arg the lhs", so `P.swap(x)` runs `P` on `x`.
+  `[plus(2).plus(2)]==[as(inst::T)]>-.swap(8)` is `12`, `[plus(2)]>-.swap(8)` is `10`, and the expression that wanted
+  `<|` is `[plus(2).plus(2)]==[as(lst::T)]==[as(code::T)]==[as(inst::T)]>-.swap(1)`, `5`. The program stays inside the
+  outer lst through the `==` chain and `>-` releases it only for `swap` to use (Marko: "work inside polys"). So `<|`
+  would be sugar for that tail — `P.<|x` for `P` as a lambda swapped onto `x`; Marko calls swap "super useful, but
+  arcane in semantics". The seed-first spellings stay closed to a computed program: parentheses after `>|` or `>-` do
+  not group (`1.>|(P)` and `1>-(P)` both stop at the `)` with "the expression is incomplete"), and without them the
+  operators chain left to right — `1.>|[plus(2).plus(2)]` is already `5` when `==[as(lst::T)]` sees it, and `1>-[…]`
+  wedges before `==` applies `as(lst::T)` to the `1`, which it refuses because it expects instructions (`1 is not a
+  lst::T`). `apply` is not it either: it takes a rec of bindings (`expected /m/rec (got [1])`).
+  Open: a program headed by `start` takes no input (`dom=noobj{0}`), so `swap(100)` is a type error, and Marko's
+  spelling for feeding it nothing is `swap(100;)` — `;` is `end()`, the terminal instruction of the inst ring. It
+  does not work yet: on the live server the `100` still reaches `start` as `{1}`, and in-process (all type checks
+  on) `end` fails its domain check with a `fail::T` lhs range. `swap(noobj)` answers nothing.
+- **Broadcast and keyed scatter over the peers.** `xyz.to(*/network/peers)` ships to every peer the current frame
+  holds, and `[booger.local=>…, chibi.local=>…, ginger.local=>…]==*/network/peers` pairs each payload with a peer by
+  KEY (a select), so no program names a port. Needs: `to` over a bag of addresses; `peer::T` applicable as its own
+  transport; peers keyed by name (today they are keyed by service authority, `ws://host:port`).
+- **Code as data** — mostly there (Marko, 2026-10-21): `[plus(2).plus(2)]==[as(lst::T)]` is
+  `[[plus(2),plus(2)]]`, `==[as(code::T)]` puts it back, and `[plus(2).plus(2)]==[as(inst::T)]` wraps the code in a
+  lambda, `inst(#{*}::T){plus(2).plus(2)}`, one instruction. The code rides in a lst so that `==` applies `as` to it
+  as a value; appended to the chain, `as` would become one more of its instructions. A templated read decomposes
+  too — `[*</usr/data/${*workload/xyz}/+>.count()]==[as(lst::T)]` is `[[*</usr/data/${*workload/xyz}/+>,count()]]` —
+  but the template sits inside slot 0's uri, one level further down, and that level is still to come: `as(lst::T)`
+  on an inst answers a `docs::` rec for `as?rng=lst&dom=inst` (`<no description>`), not a lst. A quote `|(…)`
+  (`/m/inst/block`) and a lone `plus(2)` (`/m/inst/plus`) are insts, not codes. Filling the template before the
+  code ships is what would let the receiver push the read down to SQL. Next (Marko): an obj that is not a
+  `call::T` converts as `map(obj)`, the constant instruction that answers it, so a wedged seed is simply a program's
+  first instruction. Open: what an inst's slots are (its arguments?) and where the op goes on the way back (its tid?).
+  On the wire, keep programs inside a poly: the ws handler applies a received result once more
+  (`mtron_wsHandler.java:70`, after the read has evaluated it), so a bare lambda arrives run — over wsplus
+  `[start(7).plus(1)]==[as(inst::T)]>-` is `8` where the console shows the lambda. A lst protects its members.
+- **Where am I** needs no instruction: `*~/network/host` (`booger`). Forked satellites on one host share that name,
+  though, so telling them apart needs the service authority.

@@ -1083,8 +1083,42 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{a,b,c}.swap(|mult(x))                       % {x/a,x/b,x/c}",
             "{a,b,c}.swap(|swap(mult(x)))                 % {a/x,b/x,c/x}",
             //"{a,b,c}.swap(|swap(swap(mult(x))))           % {x/a,x/b,x/c}",
+            "[plus(2)]>-.swap(8)                                                       % 10",
+            "[plus(2).plus(2)]==[as(inst::T)]>-.swap(8)                                % 12",
+            "[plus(2).plus(2)]==[as(lst::T)]==[as(code::T)]==[as(inst::T)]>-.swap(1)   % 5",
     }, delimiter = '%')
     public void testSwap(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[plus(2).plus(2)]==[tid()]                                       % [/m/code]",
+            "[|(plus(2).plus(2))]==[tid()]                                    % [/m/inst/block]",
+            "[plus(2)]==[tid()]                                               % [/m/inst/plus]",
+            "[plus(2).plus(2)]==[as(lst::T)]                                  % [[plus(2),plus(2)]]",
+            "[plus(2).plus(2)]==[as(lst::T)]==[as(code::T)]                   % [plus(2).plus(2)]",
+            "[plus(2).plus(2)]==[as(inst::T)]                                 % [inst?rng=#{*}&dom=#{?}(<#{*}>::T){plus(2).plus(2)}]",
+            "[*</usr/data/${*workload/xyz}/+>.count()]==[as(lst::T)]          % [[*</usr/data/${*workload/xyz}/+>,count()]]",
+            "[db=>4,code=>|(*workload/db.plus(2))](workload=>_){ !*workload/code.apply() }         % 6",
+    }, delimiter = '%')
+    public void testCodeAsData(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            ">|[1,+2,+3]                                  % 6",
+            "[1,+2,+3].>|                                 % 6",
+            "1.>|[+2,+3]                                  % 6",
+            "10.>|[+3,+2,+3]                              % 18",
+            "1.>|[+2,10,+3]                               % 13",
+            "1.>|[plus(2).plus(2)]                        % 5",
+            "1>-[+2,+3]                                   % [1,plus(2),plus(3)]",
+            "1>-[+2,+3]>|                                 % 6",
+            "1>-[plus(2),plus(2)]>|                       % 5",
+    }, delimiter = '%')
+    public void testCascade(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.mach.type.network.PeerSpawn;
-import studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.isa.sys.LogObj;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -48,11 +47,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_REMOTE_MACHINE_TID;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import java.io.File;
 import java.io.IOException;
@@ -372,8 +368,8 @@ public interface Machine extends Rec, AutoCloseable {
     /**
      * Apply code to a lhs <em>in this machine</em>: compile it against the machine's compiler, then run the compiled
      * form on its processor. This is the single place a {@link Code} hands off to a machine, which is what makes the
-     * machine the unit of execution — a machine that executes elsewhere (a {@code RemoteMachine}) overrides this one
-     * method and every caller above it (the console, {@code eval}, a nested code) follows without knowing.
+     * machine the unit of execution. Code reaches ANOTHER machine by being shipped there in a plan ({@code law_shard}:
+     * {@code start([code]).select([to(<peer>)]).merge()}), never by a frame here that stands in it.
      */
     default Obj applyCode(final Obj lhs, final Code code) {
         final Call call = code.tryToInst();
@@ -506,43 +502,19 @@ public interface Machine extends Rec, AutoCloseable {
      * Push a child machine whose vid strictly extends this machine's by {@code extension}, and return the child.
      * The extension is a uri because it is an expression: multi-segment, templated and composed steps all work.
      * <p>
-     * An extension carrying an <b>authority</b> is a different boundary: it names another mtron instance rather
-     * than another machine. That machine is forked as a separate OS process when the authority is on this same
-     * physical machine (a loopback host), and merely declared as a peer otherwise — see {@link PeerSpawn}.
+     * An extension carrying an <b>authority</b> is refused: it names another mtron instance rather than another
+     * machine, and a frame does not cross a process boundary. Code reaches another instance by being shipped there
+     * in a plan ({@code law_shard}); spawning that instance ({@link PeerSpawn}) is a mechanism still waiting for its
+     * instruction.
      */
     default Machine push(final fURI extension) {
-        // AN AUTHORITY IS A PROCESS BOUNDARY. Nothing below applies: a peer has its own vid, its own memory and
-        // its own lifetime, so it can neither descend from this machine nor share its memory. A HOST is the test
-        // rather than hasAuthority(), which also demands an explicit port — a pushed host without one gets a free
-        // port allocated, and the handle's vid then carries it.
-        if (null != extension && extension.hasHost()) {
-            // RESOLVE FIRST: the machine's address encodes the port, so the port has to exist before it is derived.
-            final fURI peer = PeerSpawn.resolve(extension);
-            // THE FRAME SPAWNS ITSELF, and it LIVES AT A LOCAL ADDRESS derived from the peer and anchored on the
-            // ROOT: <root>/network/peer/<scheme>/<host>/<port>/<namespace>. Because the address is a path in THIS
-            // machine, the machine registers where every machine does, ~-relative state (~/sys/fail, ~/thread) stays
-            // local, and a plain local read reaches it — no remote uri is ever written through the wire.
-            //
-            // ANCHORED ON THE ROOT, not on the current machine: a peer is a machine-level entity, and anchoring on
-            // the machine that happens to be current would nest the same peer's address under the pushed machine when a
-            // second push for the same authority happens from inside it (measured: <machine>/network/peer/…/worker
-            // for the second push where the first got /network/peer/…/worker).
-            //
-            // ITS CONNECTION IS THE FRAME'S OWN NETWORK LEVEL: network.peer is <service-uri> => peer::T, and the
-            // entry push was asked for carries the FULL declared address — the only thing that knows where the wire
-            // goes and what namespace the node mounts. The reach (the transport) is filled in by the machine's own
-            // constructor, and the level is built HERE rather than in that constructor because constructing a
-            // component inside a machine re-enters type resolution while that machine is current.
-            final BasicNetwork network = new BasicNetwork(mutableMap(
-                    uri(PEER), rec(mutableMap(
-                            PeerSpawn.service(peer),
-                            rec(uri(AUTHORITY), uri(peer.toString()))))));
-            return Machine.current(new RemoteMachine(
-                    mutableMap(
-                            uri(PATTERN), uri(ALL),
-                            uri(NETWORK), network),
-                    MACH_REMOTE_MACHINE_TID, Network.Helper.peerPath(peer)));
-        }
+        // AN AUTHORITY IS A PROCESS BOUNDARY, NOT A FRAME. A peer has its own vid, its own memory and its own
+        // lifetime, so it can neither descend from this machine nor share its memory -- and nothing here may stand in
+        // it either: the frame that did (it shipped every code application made in it) was a relic of the
+        // distribution the law_shard plans replaced. A HOST is the test rather than hasAuthority(), which also
+        // demands an explicit port.
+        if (null != extension && extension.hasHost())
+            throw MTronException.of("push(%s) names an authority: a machine is pushed within this process, and code reaches another one by being shipped in a plan (law_shard)", extension);
         final fURI parentVID = this.vid();
         // The ADDRESS ARITHMETIC IS SHARED with move and pop (Helper.machineAddress): `.`, `..` and `~` mean the
         // same thing to all three, so a spelling cannot mean "up" to one instruction and something else to
@@ -625,7 +597,8 @@ public interface Machine extends Rec, AutoCloseable {
         final Machine machine = CURRENT.get();
         if (null == machine)
             return this;
-        // A pushed peer's lifetime is its machine's: the process this machine forked is reaped with the machine.
+        // A spawned peer's lifetime is its machine's: a process this machine forked is reaped with the machine (a
+        // no-op for a machine that forked none).
         PeerSpawn.reap(machine);
         final Obj parent = machine.parent();
         if (!(parent instanceof Machine parentMachine))
