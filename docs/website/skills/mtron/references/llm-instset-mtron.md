@@ -28,7 +28,7 @@ mtron> model::[provider=> ollama,
                host    => <http://localhost:11434>,
                llm     => <qwen3.5:4b>]@qwen3
 ==>model::[skill=>[completion,vision,tools,thinking],
-           size=>gB::3.15716,
+           size=>gB::3.1571,
            context=>262144,
            provider=>ollama,
            protocol=>ollama,
@@ -43,7 +43,7 @@ mtron> [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
 ==>fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 10] @chatter.chat('what is the meaning o...
                  ^
-     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/500
+     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/469
 ```
 The `/usr/chatter/#` space serves a the default location for features to store their various constructions.
 
@@ -53,7 +53,7 @@ mtron> [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
 ==>fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
                  ^
-     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/501
+     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/470
 ```
 **A tool is an instruction.** There is no tool registry to populate: anything callable *is* a tool, and `mTool`
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a `tool_feature` can

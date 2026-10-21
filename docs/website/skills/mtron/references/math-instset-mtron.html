@@ -513,7 +513,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; [-- current system time --]
 mtron&gt; datetime_now()
-==&gt;datetime:://2026.10:2018/07/16/189?tz=-0600
+==&gt;datetime:://2026.10:2106/02/44/975?tz=-0600
 mtron&gt; [-- from record (goes through .as(uri::T) first) --]
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
@@ -615,11 +615,11 @@ mtron&gt; hour::24.0.as(day::T)
 ==&gt;day::1.0
 mtron&gt; [-- downward: value grows, unit shrinks --]
 mtron&gt; micros::1.0.as(nanos::T)
-==&gt;nanos::100
+==&gt;nanos::1000.0
 mtron&gt; millis::1.0.as(micros::T)
-==&gt;micros::100
+==&gt;micros::1000.0
 mtron&gt; second::1.0.as(millis::T)
-==&gt;millis::100
+==&gt;millis::1000.0
 mtron&gt; minute::1.0.as(second::T)
 ==&gt;second::60.0
 mtron&gt; hour::1.0.as(minute::T)
@@ -650,7 +650,7 @@ mtron&gt; hour::0.5.as(nanos::T)
 ==&gt;nanos::1.8E12
 mtron&gt; [-- bare real: re-label only, no conversion --]
 mtron&gt; 30000.0.as(minute::T)
-==&gt;minute::300
+==&gt;minute::30000.0
 </code></pre>
 <p>A converted value tests as its target unit:</p>
 <pre><code class="language-mtron">mtron&gt; millis::1000.0.as(second::T).matches(second::T)
@@ -663,16 +663,16 @@ mtron&gt; nanos::1000000.0.as(millis::T).matches(millis::T)
 <p>Time units require a real-backed value — an int-backed time is a type violation:</p>
 <pre><code class="language-mtron">mtron&gt; day::2.as(millis::T)         [-- int-backed time (bad) --]
 ==&gt;fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=day&amp;dom=#{?}(&lt;#{*}&gt;::T)]@day
-   	while parsing: day::2.as(millis::T)]@/sys/fail/513
+   	while parsing: day::2.as(millis::T)]@/sys/fail/482
 mtron&gt; hour::2.as(minute::T)        [-- int-backed time (bad) --]
 ==&gt;fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=hour&amp;dom=#{?}(&lt;#{*}&gt;::T)]@hour
-   	while parsing: hour::2.as(minute::T)]@/sys/fail/514
+   	while parsing: hour::2.as(minute::T)]@/sys/fail/483
 mtron&gt; nanos::2.as(millis::T)       [-- int-backed time (bad) --]
 ==&gt;fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=nanos&amp;dom=#{?}(&lt;#{*}&gt;::T)]@nanos
-   	while parsing: nanos::2.as(millis::T)]@/sys/fail/515
+   	while parsing: nanos::2.as(millis::T)]@/sys/fail/484
 mtron&gt; micros::2.as(millis::T)      [-- int-backed time (bad) --]
 ==&gt;fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=micros&amp;dom=#{?}(&lt;#{*}&gt;::T)]@micros
-   	while parsing: micros::2.as(millis::T)]@/sys/fail/516
+   	while parsing: micros::2.as(millis::T)]@/sys/fail/485
 </code></pre>
 <h5>relational operators</h5>
 <p><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>lte</code>, and <code>gte</code> auto-convert across units before comparing:</p>
@@ -720,11 +720,11 @@ mtron&gt; minute::60.0.gte(hour::1.0)
 </table>
 <pre><code class="language-mtron">mtron&gt; [-- below threshold: unchanged --]
 mtron&gt; nanos::1999.0.normalize()
-==&gt;nanos::199
+==&gt;nanos::1999.0
 mtron&gt; micros::1999.0.normalize()
-==&gt;micros::199
+==&gt;micros::1999.0
 mtron&gt; millis::1500.0.normalize()
-==&gt;millis::150
+==&gt;millis::1500.0
 mtron&gt; [-- cascade until stable --]
 mtron&gt; nanos::2000.0.normalize()
 ==&gt;micros::2.0
@@ -754,15 +754,15 @@ mtron&gt; tB::1024.0.as(pB::T)
 ==&gt;pB::1.0
 mtron&gt; [-- downward: value grows, unit shrinks --]
 mtron&gt; kB::1.0.as(bB::T)
-==&gt;bB::102
+==&gt;bB::1024.0
 mtron&gt; mB::1.0.as(kB::T)
-==&gt;kB::102
+==&gt;kB::1024.0
 mtron&gt; gB::1.0.as(mB::T)
-==&gt;mB::102
+==&gt;mB::1024.0
 mtron&gt; tB::1.0.as(gB::T)
-==&gt;gB::102
+==&gt;gB::1024.0
 mtron&gt; pB::1.0.as(tB::T)
-==&gt;tB::102
+==&gt;tB::1024.0
 mtron&gt; [-- multi-step: levels can be skipped --]
 mtron&gt; bB::1073741824.0.as(gB::T)
 ==&gt;gB::1.0
@@ -774,10 +774,10 @@ mtron&gt; [-- larger values, both directions --]
 mtron&gt; kB::2048.0.as(mB::T)
 ==&gt;mB::2.0
 mtron&gt; mB::2.0.as(kB::T)
-==&gt;kB::204
+==&gt;kB::2048.0
 mtron&gt; [-- bare real: re-label only, no conversion --]
 mtron&gt; 1024.0.as(kB::T)
-==&gt;kB::102
+==&gt;kB::1024.0
 </code></pre>
 <p>A converted value tests as its target unit:</p>
 <pre><code class="language-mtron">mtron&gt; bB::1024.0.as(kB::T).matches(kB::T)
@@ -816,12 +816,12 @@ mtron&gt; kB::1024.0.gte(mB::1.0)
 </table>
 <pre><code class="language-mtron">mtron&gt; [-- below threshold: unchanged --]
 mtron&gt; bB::1500.0.normalize()
-==&gt;bB::150
+==&gt;bB::1500.0
 mtron&gt; kB::1000.0.normalize()
-==&gt;kB::100
+==&gt;kB::1000.0
 mtron&gt; [-- cascade until stable --]
 mtron&gt; bB::1048576.0.normalize()
-==&gt;kB::102
+==&gt;kB::1024.0
 mtron&gt; kB::2048.0.normalize()
 ==&gt;mB::2.0
 mtron&gt; tB::2048.0.normalize()
@@ -841,28 +841,28 @@ mtron&gt; dm::10.0.as(meter::T)
 ==&gt;meter::1.0
 mtron&gt; [-- downward: value grows, unit shrinks --]
 mtron&gt; meter::1.0.as(cm::T)
-==&gt;cm::100
+==&gt;cm::100.0
 mtron&gt; km::1.0.as(meter::T)
-==&gt;meter::100
+==&gt;meter::1000.0
 mtron&gt; [-- multi-step: levels can be skipped --]
 mtron&gt; mm::1500000.0.as(km::T)
 ==&gt;km::1.5
 mtron&gt; km::0.5.as(cm::T)
-==&gt;cm::500
+==&gt;cm::50000.0
 mtron&gt; [-- cross-system: metric → imperial (25.4 mm = 1 inch) --]
 mtron&gt; meter::1.0.as(inch::T)
-==&gt;inch::39.37007
+==&gt;inch::39.3700
 mtron&gt; mm::127.0.as(inch::T)
 ==&gt;inch::5.0
 mtron&gt; km::1.0.as(mile::T)
-==&gt;mile::0.62137
+==&gt;mile::0.6213
 mtron&gt; [-- cross-system: imperial → metric --]
 mtron&gt; inch::1.0.as(cm::T)
 ==&gt;cm::2.54
 mtron&gt; yard::1.0.as(meter::T)
 ==&gt;meter::0.9144
 mtron&gt; mile::1.0.as(km::T)
-==&gt;km::1.60934
+==&gt;km::1.6093
 mtron&gt; [-- bare real: re-label only, no conversion --]
 mtron&gt; 5.0.as(meter::T)
 ==&gt;meter::5.0
@@ -926,21 +926,21 @@ mtron&gt; foot::1.0.as(inch::T)
 mtron&gt; yard::1.0.as(foot::T)
 ==&gt;foot::3.0
 mtron&gt; mile::1.0.as(yard::T)
-==&gt;yard::176
+==&gt;yard::1760.0
 mtron&gt; [-- multi-step: levels can be skipped --]
 mtron&gt; inch::18.0.as(foot::T)
 ==&gt;foot::1.5
 mtron&gt; yard::2200.0.as(mile::T)
 ==&gt;mile::1.25
 mtron&gt; mile::1.5.as(inch::T)
-==&gt;inch::950
+==&gt;inch::95040.0
 mtron&gt; [-- cross-system: imperial → metric (25.4 mm = 1 inch) --]
 mtron&gt; inch::1.0.as(mm::T)
-==&gt;mm::25.0
+==&gt;mm::25.4
 mtron&gt; foot::1.0.as(meter::T)
-==&gt;meter::0.30479
+==&gt;meter::0.3047
 mtron&gt; mile::1.0.as(km::T)
-==&gt;km::1.60934
+==&gt;km::1.6093
 mtron&gt; [-- bare real: re-label only, no conversion --]
 mtron&gt; 5.0.as(foot::T)
 ==&gt;foot::5.0
@@ -981,7 +981,7 @@ mtron&gt; inch::48.0.normalize()
 mtron&gt; foot::15.0.normalize()
 ==&gt;yard::5.0
 mtron&gt; yard::7200.0.normalize()
-==&gt;mile::4.09090
+==&gt;mile::4.0909
 </code></pre>
 <hr />
 <h3>instructions</h3>

@@ -55,12 +55,12 @@ mtron> {"mcpServers": {
             "intellij": {
             }
                   ^
-     unexpected ':']@/sys/fail/214
+     unexpected ':']@/sys/fail/213
 mtron> }}
 ==>fail::[parse error at line 1, col 1:
      }}
      ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/215
+     unclosed triple-quote — missing closing '"""']@/sys/fail/214
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -78,13 +78,13 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][fail][fail]@/sys/fail/216
-   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]@/sys/fail/217
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][fail][fail]@/sys/fail/215
+   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]@/sys/fail/216
 mtron> *a>>tool
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')@<0>]@/sys/fail/218
+==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')@<0>]@/sys/fail/217
 mtron> [-- => 3 --]
 ```
 ### WebSocket

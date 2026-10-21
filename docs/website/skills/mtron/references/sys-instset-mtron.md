@@ -54,8 +54,8 @@ mtron> *bash?docq
 ==>docs::[obj=>bash?lst[str]<=#{?}(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
-          args=>[cmd=>'the terminal command to evaluate (...',
-                 {?}timeout=>'a real number denoting timeout of ...'],
+          args=>[{?}timeout=>'a real number denoting timeout of ...',
+                 cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -73,10 +73,10 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.9M  6.1G  ...',
+    'tmpfs           6.1G  6.8M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
-    '/dev/nvme0n1p2  916G  540G  330G  ...',
-    'tmpfs            31G   58M   31G  ...',
+    '/dev/nvme0n1p2  916G  541G  329G  ...',
+    'tmpfs            31G  149M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -85,15 +85,15 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/517
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/486
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/518
+    [ProcBuilder<228>]]@/sys/fail/487
 ```
 ### batch
 
@@ -163,10 +163,10 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     ...(23 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
-    '  Size: 44514     	Blocks: 88     ...',
+    '  Size: 44587     	Blocks: 88     ...',
     'Device: 259,3	Inode: 25322019    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-20 00:11:11.366503...',
+    'Access: 2026-10-21 00:39:26.810734...',
    ...
 ```
 ### a shape of its own
@@ -177,13 +177,13 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::445,
-    bB::409,
-    bB::409,
-    bB::409,
-    bB::698,
-    bB::409,
-    bB::409,
+==>[bB::44587.0,
+    bB::4096.0,
+    bB::4096.0,
+    bB::4096.0,
+    bB::6984.0,
+    bB::4096.0,
+    bB::4096.0,
     ...(23 more)]
 ```
 Unit values test against each other's units:
@@ -196,7 +196,7 @@ And they filter a lst by the same predicate — the branches that fail are dropp
 
 ```mtron
 mtron> [bB::34192.0, bB::100.0]==[_ => ?>kB::30.0]==[_ => else(none)]
-==>[bB::341]
+==>[bB::34192.0]
 ```
 ### security modulators (q-params)
 
@@ -218,9 +218,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/523
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/492
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/524
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/493
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -254,10 +254,10 @@ mtron> */sys/env/HOME
 mtron> */sys/thread/+.count()
 ==>1
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::616,
-    free_mem_jvm=>mB::255.37882,
+==>[total_mem_jvm=>mB::696.0,
+    free_mem_jvm=>mB::323.5546,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::360.62117,
+    used_mem_jvm=>mB::372.4453,
     free_jvm=>percent::0,
     free_mach=>percent::0,
     thread=>[run=>0,stop=>0]]
@@ -330,7 +330,7 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
 ==>fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown> ...
                  ^
-     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/525
+     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/494
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ==>start?#<=#([space=>/sys/space,
      web=>[http/host=>http://localhost:8777,
@@ -344,9 +344,9 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
                     _,.---._      _,..."""]).print?#<=#('------------
    *boot...',*boot/args,'
    ------------
-   ').end?#<=#().print?#<=#('mounting instruction sets).end?#<=#().import?#<=#(/m/mach/io).end?#<=#().start?#<=#(memspace::[pattern=>/usr/#,
+   ').end?#<=#().print?#<=#('mounting instruction sets
+   {{...').end?#<=#().import?#<=#(/m/mach/io).end?#<=#().start?#<=#(memspace::[pattern=>/usr/#,
               q=>[typeq::[pattern=><T>,
-                          pre_read=>inst?#{*}<=#{?}(uri::T){<j>},
    ...
 ```
 ## walking the tree

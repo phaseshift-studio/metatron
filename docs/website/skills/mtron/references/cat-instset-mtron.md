@@ -186,13 +186,14 @@ Composing them round-trips — from an object to its edges and back, or from an 
 
 `analysis` is one lazy `auto()` — evaluated with `>>analysis`. Inside it, each stat is itself lazy:
 
-| field       | what it is                                                                                                       |
-|-------------|------------------------------------------------------------------------------------------------------------------|
-| `family`    | the same-name siblings: $\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}$ — every registration of the same operator |
-| `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                        |
-| `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions |
-| `position`  | the edge's place among its siblings (a subset of the six kinds below)                                            |
-| `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                       |
+| field       | what it is                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `family`    | the same-name siblings: $\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}$ — every registration of the same operator                                                                                                                                                                                                                                                                                                                                                         |
+| `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                                                                                                                                                                                                                                                                                                                                                                                |
+| `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions                                                                                                                                                                                                                                                                                                                                         |
+| `position`  | the edge's place among its siblings (a subset of the six kinds below)                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                                                                                                                                                                                                                                                                                                                                                                               |
+| `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`); a keyed fold (`group`) recombines pointwise through a chain — `sum`, then a per-key fold — that no single edge names, so it has none here |
 
 ### the six edge kinds
 
@@ -201,14 +202,14 @@ Composing them round-trips — from an object to its edges and back, or from an 
 <!-- figure source: assets/tikz/cat-positions.tex (same recipe) -->
 <img src="../assets/cat-positions.png" alt="the six position kinds: duplicate, ambiguous, incomparable, coupling, isochain, retract" width="100%" style="margin:0.3em 0 0 0"/>
 
-| kind           | the relation to the graph                                                        |
-|----------------|----------------------------------------------------------------------------------|
-| `duplicate`    | another morphism of the same family maps the same dom to the same rng            |
-| `ambiguous`    | contested by an incomparable sibling that *overlaps* it — dispatch has no winner |
-| `incomparable` | contested by an incomparable, *disjoint* sibling — dispatch stays total          |
+| kind           | the relation to the graph                                                               |
+|----------------|-----------------------------------------------------------------------------------------|
+| `duplicate`    | another morphism of the same family maps the same dom to the same rng                   |
+| `ambiguous`    | contested by an incomparable sibling that *overlaps* it — dispatch has no winner        |
+| `incomparable` | contested by an incomparable, *disjoint* sibling — dispatch stays total                 |
 | `coupling`     | an edge in the opposite direction links the same two objects — a candidate inverse pair |
-| `isochain`     | endpoints linked by a chain of couplings — one orbit of the reversible core      |
-| `retract`      | mutually reachable and round-trip idempotent — a subobject retraction            |
+| `isochain`     | endpoints linked by a chain of couplings — one orbit of the reversible core             |
+| `retract`      | mutually reachable and round-trip idempotent — a subobject retraction                   |
 
 `orbit` is the transitive closure of `coupling` — the connected component of the *reversible core* (the subgraph of
 edges that exist in both directions). It is a reachability class, coarser than isomorphism (which needs the round trip
@@ -269,21 +270,20 @@ type, and a type that models no such structure is left unchanged.
 <!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
 <img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
 
-| rewrite                  | reads                                                              | rule                                                                                                                 |
-|--------------------------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| `theory_unit_removal`    | every theory instance of the operand's type                        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                      |
-| `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role | $f \cdot f \leadsto \varepsilon$                                                                                     |
-| `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                             | $f \cdot f \leadsto f$                                                                                               |
-| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                              | $g \cdot f \leadsto f$                                                                                               |
-| `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form   | $f \cdot f \leadsto f$                                                                                               |
-| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                  | $\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))$, $\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))$ |
-| `inverse_cancellation`   | `analysis.inverse`                                                 | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                          |
-| `form_map_unwrap`        | the stream lift `map`                                              | $\mathrm{map}(f) \leadsto f$                                                                                         |
-| `derivation_contraction` | `derivation`                                                       | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$ |
-| `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]` | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients            |
-| `branch_inline`          | the additive role — `cut => [role => zero]`                          | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$ |
-| `law_shard`              | `form = reducer` ∧ `law ∋ monoidic`, `commutative` + a live peer roster | $[\mathrm{barrier}, \mathrm{seed}_{\{m\}}, \ldots] == [\mathrm{to}(), \mathrm{to}(a), \mathrm{to}(b)]$ (Thm 19) |
-| `order_shard`            | the `order` role — a sort op — + a live peer roster                  | the seed partitions, each peer sorts its shard, and the master $k$-merges the shards behind the barrier             |
+| rewrite                  | reads                                                                                       | rule                                                                                                                                                                                                                                                |
+|--------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `theory_unit_removal`    | every theory instance of the operand's type                                                 | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
+| `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
+| `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))$, $\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))$                                                                                                      |
+| `inverse_cancellation`   | `analysis.inverse`                                                                          | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
+| `form_map_unwrap`        | the stream lift `map`                                                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
+| `derivation_contraction` | `derivation`                                                                                | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
+| `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]`                         | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
+| `branch_inline`          | the additive role — `cut => [role => zero]`                                                 | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
+| `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
 `monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
@@ -291,7 +291,7 @@ distribution plan may anchor (its spans). The remaining labels are classificatio
 rewriter's guards and for reasoning, with no rewrite of their own: `commutative`, `unit`, `magmadic`, `nilpotent`,
 `kleene`, `partial`, `prime`, `cyclic`, `zero_divisor`, `left_distributive`, `right_distributive`, `action`.
 `commutative` is the cleanest case: a canonical form for a commutative operand would be a no-op where it is legal — a
-stream is a *bag* (`{3,1,2}` already equals `{1,2,3}`) — while for an `lst` it would be unsound, its order being
+stream (`{3,1,2}` already equals `{1,2,3}`) — while for an `lst` it would be unsound, its order being
 semantic. The law stays declared (it is what licenses the inverse-pair search) without a rewrite.
 
 The first two generalize a *ring's* unit and a *group's* inverse to every declared structure: the unit law is read
@@ -364,10 +364,102 @@ instructions were rewritten away:
 
 **Direction.** Every rule above either removes or preserves chain length, so a rule set that is only ever applied in
 that direction settles under any `rewriter::T` that iterates the rewrite stage to a fixpoint — the bundled
-`fixpoint_rewriter` (`fixpoint_rewriter::[max=>N]`, bounded iterations) is one such stage, not the only one. The dual of `derivation_contraction`, `derivation_expansion`
+`fixpoint_rewriter` (`fixpoint_rewriter::[max=>N]`, bounded iterations) is one such stage, not the only one. The dual of
+`derivation_contraction`, `derivation_expansion`
 ($\mathrm{minus} \leadsto \mathrm{plus} \cdot \mathrm{neg}$), is deliberately **not** registered: it trades the
 length back, so the pair would alternate forever and no stage could settle. Lowering to a target that lacks the
 derived operation is a policy, not a law.
+
+### the deep merge — the rec monoid a keyed fold recombines through
+
+`+` on recs is a **deep merge**, and `sum` is its fold: $\mathrm{sum} (\{r_1, \ldots, r_n\}) = r_1 + \cdots + r_n$.
+The keys union, and a key on both sides merges its two values by their kind:
+
+| the two values            | their merge                           | so                                                            |
+|---------------------------|---------------------------------------|---------------------------------------------------------------|
+| recs                      | $r(k) + s(k)$ — recurse, key by key   | a nested rec merges at every depth                            |
+| anything else, `lst`s too | $x \uplus y$ — appended into a stream | equal values bulk, $5 \uplus 5 = \{2\}5$; a `lst` stays whole |
+
+A `lst` is an **atom** of the merge: two colliding `lst`s make a stream of `lst`s, $[1,2,3] \uplus [2,3]$, never their
+concatenation — the union is commutative, so its fold is defined over a stream. Rec `sum` declares `monoidic` and
+`commutative`, so `law_shard` distributes a rec merge as it distributes a sum of ints: each peer merges its share of
+the recs and the master merges the partial recs. Concatenating `lst` values is said by
+the expression, with a select's `+`: $[1,2,3] \mathbin{+\!\!+} [2,3]$ is `[a=>[1,2,3]]==[a=>+[2,3]]`.
+
+A coefficient is a **multiplicity**, read the way every access reads it — the outer $c$ multiplied into what it holds,
+$\{c\}[k \Rightarrow v] = [k \Rightarrow \{c\}v]$, all the way down to the merge's atoms, where $\{c\}v$ is $v$'s
+multiplicity in the stream (a `lst`'s too). A bulked rec therefore merges as the copies it stands for,
+$\{c\}r = r + \cdots + r$ ($c$ times), and a fold over a stream answers what it answers over the copies.
+
+A weekend of dog walks makes the rules concrete. Each day files one report: dog ⇒ kilometres per trail, plus the
+places visited.
+
+```mtron
+mtron> /usr/walk/sat -> [mama=>[km=>[ridge=>12,lake=>5],visited=>[arroyo]],puppy=>[km=>[ridge=>12]],chelsea=>[km=>[lake=>5]]]
+==>[mama=>[km=>[ridge=>12,lake=>5],
+           visited=>[arroyo]],
+    puppy=>[km=>[ridge=>12]],
+    chelsea=>[km=>[lake=>5]]]
+mtron> /usr/walk/sun -> [mama=>[km=>[ridge=>9],visited=>[acequia,mesa]],puppy=>[km=>[lake=>5]],chelsea=>[km=>[lake=>5]]]
+==>[mama=>[km=>[ridge=>9],visited=>[acequia,mesa]],
+    puppy=>[km=>[lake=>5]],
+    chelsea=>[km=>[lake=>5]]]
+mtron> */usr/walk/sat + */usr/walk/sun
+==>[mama=>[km=>[ridge=>{12,9},lake=>5],
+           visited=>{[arroyo],[acequia,mesa]}],
+    puppy=>[km=>[ridge=>12,lake=>5]],
+    chelsea=>[km=>[lake=>{2}5]]]
+```
+<!-- figure source: assets/tikz/cat-deep-merge.tex (same recipe) -->
+<img src="../assets/cat-deep-merge.png" alt="the deep merge of two walk reports: framed keys merge key by key, colliding values append into a stream, colliding lsts stream whole" width="100%" style="margin:0.3em 0 0 0"/>
+
+Every rule fires in that one merge:
+
+* every dog is in both reports, so each dog's rec merges — and so does each `km` rec, one level down;
+* `mama`'s `ridge` is in both: `12` and `9` append into the stream `{12,9}`, while `mama`'s `lake` is Saturday's alone
+  and
+  is kept;
+* `puppy`'s two days share no trail, so the two `km` recs simply union;
+* `chelsea` walked the same loop on both days — two equal values, which bulk to `{2}5`;
+* `mama`'s `visited` values are `lst`s — atoms of the merge — so the two days' lists stream whole,
+  `{[arroyo],[acequia,mesa]}`.
+
+The merge keeps every partial; a **per-key fold** reduces them. `==` (`select`) applies a pattern rec key by key — `_`
+matches every key and a nested pattern descends — so the weekend's totals are one select away: `sum` reads `{12,9}` as
+$12 + 9$ and `{2}5` as $5 + 5$, while `visited=>_` keeps the stream of lists as it is.
+
+```mtron
+mtron> */usr/walk/sat.plus(*/usr/walk/sun)==[_=>[km=>[_=>sum()],visited=>_]]
+==>[mama=>[km=>[ridge=>21,lake=>5],
+           visited=>{[arroyo],[acequia,mesa]}],
+    puppy=>[km=>[ridge=>12,lake=>5]],
+    chelsea=>[km=>[lake=>10]]]
+```
+To join the lists rather than stream them, the expression says so — a select's `+` concatenates the slots:
+
+```mtron
+mtron> */usr/walk/sat==[mama=>[visited=>+[acequia,mesa]]]
+==>[mama=>[visited=>[arroyo,acequia,mesa]]]
+```
+A stream of equal recs is one rec with a coefficient, and the merge reads it as the copies it stands for — the bulked
+`sum` is the explicit `+`:
+
+```mtron
+mtron> {[puppy=>[km=>[ridge=>12]]],[puppy=>[km=>[ridge=>12]]]}
+==>{2}[puppy=>[km=>[ridge=>12]]]
+mtron> {[puppy=>[km=>[ridge=>12]]],[puppy=>[km=>[ridge=>12]]]}.sum()
+==>[puppy=>[km=>[ridge=>{2}12]]]
+mtron> [puppy=>[km=>[ridge=>12]]] + [puppy=>[km=>[ridge=>12]]]
+==>[puppy=>[km=>[ridge=>{2}12]]]
+```
+**The keyed combiner.** This is how `law_shard` recombines a keyed fold. `group([k ⇒ h])` is a homomorphism from the
+stream into the recs of $h$'s monoid, so its combiner is computed from $h$'s rather than declared,
+$\mathrm{combiner} (\mathrm{group} ([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select} ([\_ \Rightarrow \mathrm{combiner} (h)])$:
+the peers' partial recs deep-merge, and each key folds through $h$'s combiner — exactly the select above. `merge()`
+bulks equal partials (two peers answering `[k=>1]` arrive as `{2}[k=>1]`), and the coefficient reading is what keeps
+both counted. A `lst`-valued fold recombines the same way: an `order`'s sorted partials stream whole per key — a stream
+of
+runs, never their slots — and `kmerge` merges the runs.
 
 ## the third lift — code as a vertex (`path::T`, `abstraction::T`)
 
@@ -410,16 +502,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
                                      route=>[[target=>local,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
-                                          route=>[[target=>local,span=>[[span=>at]]]]],
-           order_shard=>plan::[name=>order_shard,
-                               cut=>[role=>order],
-                               route=>[[target=>local,
-                                        span=>[[span=>at],[span=>post]]],
-                                       [target=>shuffle,
-                                        span=>[
-                                         [span=>seed,flags=>[partition]],
-                                         [span=>pre,flags=>[floatable,no_seed]],
-                                         [span=>at]]]]]]]
+                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]
 ==>[path::[obj=>start?#<=#(5).plus?#<=#(0),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
@@ -433,16 +516,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involu
                                  route=>[[target=>local,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
-                                          route=>[[target=>local,span=>[[span=>at]]]]],
-           order_shard=>plan::[name=>order_shard,
-                               cut=>[role=>order],
-                               route=>[[target=>local,
-                                        span=>[[span=>at],[span=>post]]],
-                                       [target=>shuffle,
-                                        span=>[
-                                         [span=>seed,flags=>[partition]],
-                                         [span=>pre,flags=>[floatable,no_seed]],
-                                         [span=>at]]]]]]]
+                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
 ==>[path::[obj=>start?#<=#(5),
            branch_collapse=>plan::[name=>branch_collapse,
@@ -450,16 +524,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involu
                                    route=>[[target=>local,span=>[[span=>at]]]]],
            branch_inline=>plan::[name=>branch_inline,
                                  cut=>[role=>zero],
-                                 route=>[[target=>local,span=>[[span=>at]]]]],
-           order_shard=>plan::[name=>order_shard,
-                               cut=>[role=>order],
-                               route=>[[target=>local,
-                                        span=>[[span=>at],[span=>post]]],
-                                       [target=>shuffle,
-                                        span=>[
-                                         [span=>seed,flags=>[partition]],
-                                         [span=>pre,flags=>[floatable,no_seed]],
-                                         [span=>at]]]]]]]
+                                 route=>[[target=>local,span=>[[span=>at]]]]]]]
 ```
 **A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a *type-part* (laws, forms, adjacency of classifications) and a *value-residue* (operand
@@ -469,11 +534,12 @@ real match. A rule the pruner does not know is never pruned.
 
 ### `abstraction::T` — the α-word
 
-| field | description                                                                                                                                                                                     |
-|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| field | description                                                                                                                                                                                                                                  |
+|-------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `obj` | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`: the surface a `plan::T`'s guard reads (its law/form/theory), the code and its descent staying anchored at `path::T.obj` |
 
-The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per instruction,
+The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per
+instruction,
 each already carrying `form`, `class`, `law`, and `analysis` — not a second concrete chain. Nor is it a vertex one
 descends through: no traversal runs over the abstraction, because it is only the lookup surface from which a `plan::T`
 derives its rewrite. The guard reads the laws/forms/theories off the word (`*…/obj/1/law`, `*…/obj/2/analysis/inverse`)
@@ -536,10 +602,10 @@ is introspectable and applicable wherever it is supplied.
 A plan is always the rec `[name, cut, route]`; what distinguishes a local plan from a distribution is what its `cut`
 names and where its `route` sends it:
 
-| shape            | the `cut` reads                                                                 | the `route`                                                          | example                                                                                     |
-|------------------|---------------------------------------------------------------------------------|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| **local**        | a declared process law — `[law => [...]]` — or a theory role — `[role => ...]`  | stays local (`target => none` / `local`)                               | `law_idempotent` → `cut => [law => [idempotent]]`; `theory_unit_removal` → `cut => [role => id]` |
-| **distribution** | a `form` + `law` anchor, or a sort role                                         | ships to `peers` / `shuffle`, with the anchor re-applied locally       | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`; `order_shard` → `cut => [role => order]` |
+| shape            | the `cut` reads                                                                | the `route`                                            | example                                                                                          |
+|------------------|--------------------------------------------------------------------------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **local**        | a declared process law — `[law => [...]]` — or a theory role — `[role => ...]` | stays local (`target => none` / `local`)               | `law_idempotent` → `cut => [law => [idempotent]]`; `theory_unit_removal` → `cut => [role => id]` |
+| **distribution** | a `form` + `law` anchor — the laws its `combiner` must declare                 | ships to `peers`, with the combiner re-applied locally | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`                         |
 
 The application is a **type method**, not a field: `lower(plan::T)` is one instruction registered in
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
@@ -559,6 +625,11 @@ mtron> ws_client::[host=>ws://localhost:8555/mtron]
 mtron> */network
 ==>network::[host=>booger,
              status=>!inst?#{*}<=#{?}(#{*}::T){<j>},
+             q=>[subq::[pattern=>subq,
+                        pre_read=>inst?#{*}<=#{?}(uri::T){<j>},
+                        pre_write=>inst?#{*}<=#{?}(uri::T,#::T){<j>},
+                        qless_write=>inst?#{*}<=#{?}(uri::T,#::T){<j>},
+                        obj=>[,]]],
              peer=>[ws://localhost:8555=>peer::[
               authority=>ws://localhost:8555,
               host=>ws://localhost:8555/mtron,
@@ -569,7 +640,8 @@ mtron> */network
                        close=>inst?#{*}<=#{?}(){<j>},
                        on_message=>print?#<=#('received ${_}')]]]]
 ```
-`*/network` reads back the machine's network block — the dialed `peer::T` at the named host. With the `machine::T`
+`*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
+`machine::T`
 now holding that `peer::T`, the `path::T` lists the distribution plan among its out-edges.
 
 ```mtron
@@ -584,26 +656,32 @@ mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
            branch_inline=>plan::[name=>branch_inline,
                                  cut=>[role=>zero],
                                  route=>[[target=>local,span=>[[span=>at]]]]],
-           theory_involution=>plan::[name=>theory_involution,
-                                     cut=>[law=>[involution]],
-                                     route=>[[target=>local,span=>[[span=>at]]]]],
-           law_idempotent=>plan::[name=>law_idempotent,
-                                  cut=>[law=>[idempotent]],
-                                  route=>[[target=>local,span=>[[span=>at]]]]],
-           law_absorbing=>plan::[name=>law_absorbing,
-                                 cut=>[law=>[absorbing]],
-                                 route=>[[target=>local,span=>[[span=>at]]]]],
-           ...(7 more)]]
+           derivation_contraction=>plan::[name=>derivation_contraction,
+                                          cut=>[role=>derivation],
+                                          route=>[[target=>local,span=>[[span=>at]]]]],
+           law_shard=>plan::[name=>law_shard,
+                             cut=>[form=>reducer,
+                                   law=>[monoidic,commutative]],
+                             route=>[[target=>local,
+                                      span=>[[span=>at],[span=>post]]],
+                                     [target=>tree,
+                                      hops=>1,
+                                      span=>[
+                                       [span=>seed,flags=>[partition]],
+                                       [span=>pre,flags=>[floatable,no_seed]],
+                                       [span=>at]]]]]]]
 ```
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
 `>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: the seed bulk partitioned into
-`no_shard` shards, each shard shipped by a `select([to(peer)])` to its roster member, merged, and the reducer
-re-applied at home (Thm 19). The plan — not its application — is data, so the rewrite *schedule* and the out-edge
+shards whose seed carries the remaining hop budget (`start?hops=0` at a leaf), each shard shipped by a
+`select([to(peer)])` to its roster member, merged, and recombined at home through the reducer's combiner (Thm 19). A
+peer handed a shard with budget left plans it again over its own peers, so the shards form a tree. The plan — not its
+application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start?#<=#([block?#<=#(block?#<=#(start?#<=#&no_shard({1,2,3,4,5}).plus?#<=#(10).sum?#<=#()))]).select?#<=#([to?#<=#(ws://localhost:8555)]).merge?#<=#().sum?#<=#(),
+==>[path::[obj=>start?#<=#([start?#<=#&hops=0({1,2,3,4,5}).plus?#<=#(10).sum?#<=#()]).select?#<=#([to?#<=#(ws://localhost:8555)]).merge?#<=#().sum?#<=#(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        route=>[[target=>none,span=>[[span=>at]]]]],
@@ -613,25 +691,38 @@ mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shar
            branch_inline=>plan::[name=>branch_inline,
                                  cut=>[role=>zero],
                                  route=>[[target=>local,span=>[[span=>at]]]]],
-           order_shard=>plan::[name=>order_shard,
-                               cut=>[role=>order],
-                               route=>[[target=>local,
-                                        span=>[[span=>at],[span=>post]]],
-                                       [target=>shuffle,
-                                        span=>[
-                                         [span=>seed,flags=>[partition]],
-                                         [span=>pre,flags=>[floatable,no_seed]],
-                                         [span=>at]]]]]]]
+           derivation_contraction=>plan::[name=>derivation_contraction,
+                                          cut=>[role=>derivation],
+                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
+```
+A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
+`select([_=>sum()])` folds each key (see *the deep merge*).
+
+```mtron
+mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
+==>[path::[obj=>start?#<=#([start?#<=#&hops=0({1,2,3,4,5,6}).group?#<=#([mod?#<=#(3)=>sum?#<=#()])]).select?#<=#([to?#<=#(ws://localhost:8555)]).merge?#<=#().sum?#<=#().select?#<=#([id?#<=#()=>sum?#<=#()]),
+           theory_unit_removal=>plan::[name=>theory_unit_removal,
+                                       cut=>[role=>id],
+                                       route=>[[target=>none,span=>[[span=>at]]]]],
+           branch_collapse=>plan::[name=>branch_collapse,
+                                   cut=>[role=>add],
+                                   route=>[[target=>local,span=>[[span=>at]]]]],
+           branch_inline=>plan::[name=>branch_inline,
+                                 cut=>[role=>zero],
+                                 route=>[[target=>local,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[name=>derivation_contraction,
+                                          cut=>[role=>derivation],
+                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
 ```
 ### may / must — the fiber modality
 
 An abstraction stands for its **fiber** — every concrete chain that lifts to it — so the moves a `path::T` exposes,
 decided by reading the abstraction, are claims quantified over that set in one of two strengths:
 
-| modality   | the claim                                                     | example                                                                             |
-|------------|---------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| **must** □ | the rule fires for *every* fiber member — its guard reads no value  | `law_shard` on $[\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]$   |
-| **may** ◇  | the rule fires for *some* members; undecidable without values | unit removal at $\mathrm{plus}(\mathrm{int})$ — only the $\mathrm{plus}(0)$ members |
+| modality   | the claim                                                          | example                                                                             |
+|------------|--------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| **must** □ | the rule fires for *every* fiber member — its guard reads no value | `law_shard` on $[\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]$   |
+| **may** ◇  | the rule fires for *some* members; undecidable without values      | unit removal at $\mathrm{plus}(\mathrm{int})$ — only the $\mathrm{plus}(0)$ members |
 
 Thus, the degree ordering $\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))$ holds: the abstraction licenses
 a move for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge

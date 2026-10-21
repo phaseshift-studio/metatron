@@ -239,25 +239,10 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
   no-op, so writes there are silently dropped. The peer roster lives at `/sys/peer`.
 - **`push()` must mint a child, not the parent.** Use the 3-arg `clone` — `selfVID` *pins* an already-set vid, so a
   2-arg clone would silently keep the parent's address.
-- **A move is observable without owning the perspective.** `Machine.current()` is a thread-local, so an observer (a
-  status bar, a dashboard) asking there answers with the root forever. `move`, `push` and `pop` therefore publish
-  what they returned to `MachinePerspective`, which a reader on any thread can consult. The publication lives in the
-  INSTRUCTIONS, not in `Machine.push`/`pop`: a frame minted by the machine's own machinery is not the user changing
-  where they stand, and publishing it would make the bar flicker through internal frames. The published vid is always
-  LOCAL — a frame standing in a peer is at `/network/peer/ws/host/port/ns`, never at the wire address.
 - **A machine is a space, so its own read is a space read** (`AbstractSpace.read` → `Space.Helper.resolveRead`, q-procs
   and all). Address *resolution* belongs to memory: `BasicMemory.read`/`write` route an address to the space that covers
   it (`readAbsolute`/`writeAbsolute`) — which is why a bulk wildcard write reaches the space it names rather than the
   argument stack.
-- **Q-procs are applied where a vid is HANDED to a source, not inside a source.** `Addressable.qs()` declares what a
-  source speaks; `QProc.Layer` (called from `Machine.read`/`write`) applies `pre_read`/`post_read` and
-  `pre_write`/`qless_write`/`post_write`. Two rules keep it honest: the layer is entered only for an address the source
-  CLAIMS (the network is host-gated, exactly as `Network.read`/`write` are — otherwise the network's `subq` would capture
-  a purely local registration), and the declaration check (`checkQProcs`) stays in the source (`AbstractSpace`), because
-  only the source knows which queries it speaks. So `ws://peer/x/#?subq -> code` registers in THIS VM (the network
-  declares subq, and the layer's `pre_write` consumes the registration before it can ride the wire), while
-  `/local/x?incrq` still reaches the space that speaks incrq. The fast path is `Addressable.hasQProcs()` — one rec
-  lookup, no allocation — which is what preserves the no-allocation rule below.
 
 ## Migration state (why it reads as two systems at once)
 

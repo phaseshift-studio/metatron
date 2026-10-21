@@ -227,7 +227,7 @@ mtron> *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person -
 mtron> *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
 ==>181
 mtron> *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==>36.0
+==>36.2
 mtron> *tbledoc:person/+.==[name=>_]           [-- SELECT name FROM person --]
 ==>[name=>'xilo']
 ==>[name=>'marko']
@@ -426,16 +426,22 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/5
+==>[body=>'a note with a database-assigned key']@tbledoc:note/11
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/6
+==>[body=>'another one']@tbledoc:note/12
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>1
+==>12
 ==>3
+==>10
+==>11
 ==>2
 ==>4
 ==>5
 ==>6
+==>7
+==>8
+==>9
 ```
 ## taking the space down
 
