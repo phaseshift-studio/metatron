@@ -530,9 +530,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
               mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::742.0,
+            runtime=&gt;millis::810.0,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/98c232df]
+            output=&gt;!*/sys/tmp/4d8297bf]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -764,11 +764,11 @@ with it, then save (<code>code/N.to</code>).</p>
          [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;'])&gt;&gt;.
          &gt;-?str&lt;=str{*}('
 ')].explain()
-==&gt;explanation::[format=&gt;!inst?str&lt;=#{?}(){&lt;j&gt;},
+==&gt;explanation::[format=&gt;!inst?str&lt;=(){&lt;j&gt;},
                  desc=&gt;[rng=&gt;&lt;#&gt;,
                         insts=&gt;2,
                         rewrite=&gt;explanation::[
-                         format=&gt;!inst?str&lt;=#{?}(){&lt;j&gt;},
+                         format=&gt;!inst?str&lt;=(){&lt;j&gt;},
                          desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],
                          per_inst=&gt;[[op=&gt;at,
                                      args=&gt;[/dev/scratch/idx/Echo/method/speak],

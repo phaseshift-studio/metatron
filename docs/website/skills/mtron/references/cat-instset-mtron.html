@@ -1024,11 +1024,11 @@ and re-lifts the result to <code>path::T</code>. The plan carries no <code>resul
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
-               send=&gt;inst(){&lt;j&gt;},
-               send_recv=&gt;inst(){&lt;j&gt;},
-               close=&gt;inst(){&lt;j&gt;},
-               on_message=&gt;print('received ${_}')]
+==&gt;[host=&gt;ws://localhost:8555/mtron,
+    send=&gt;inst(){&lt;j&gt;},
+    send_recv=&gt;inst(){&lt;j&gt;},
+    close=&gt;inst(){&lt;j&gt;},
+    on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 ==&gt;network::[host=&gt;booger,
              status=&gt;!inst(#{*}::T){&lt;j&gt;},
@@ -1041,11 +1041,11 @@ mtron&gt; */network
               authority=&gt;ws://localhost:8555,
               host=&gt;ws://localhost:8555/mtron,
               transport=&gt;inst(#{*}::T){&lt;j&gt;},
-              client=&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
-                                  send=&gt;inst(){&lt;j&gt;},
-                                  send_recv=&gt;inst(){&lt;j&gt;},
-                                  close=&gt;inst(){&lt;j&gt;},
-                                  on_message=&gt;print('received ${_}')]]]]
+              client=&gt;[host=&gt;ws://localhost:8555/mtron,
+                       send=&gt;inst(){&lt;j&gt;},
+                       send_recv=&gt;inst(){&lt;j&gt;},
+                       close=&gt;inst(){&lt;j&gt;},
+                       on_message=&gt;print('received ${_}')]]]]
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>

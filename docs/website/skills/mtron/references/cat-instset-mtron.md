@@ -617,11 +617,11 @@ self-registers a `peer::T` into the network; that registration is the condition 
 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>ws_client::[host=>ws://localhost:8555/mtron,
-               send=>inst(){<j>},
-               send_recv=>inst(){<j>},
-               close=>inst(){<j>},
-               on_message=>print('received ${_}')]
+==>[host=>ws://localhost:8555/mtron,
+    send=>inst(){<j>},
+    send_recv=>inst(){<j>},
+    close=>inst(){<j>},
+    on_message=>print('received ${_}')]
 mtron> */network
 ==>network::[host=>booger,
              status=>!inst(#{*}::T){<j>},
@@ -634,11 +634,11 @@ mtron> */network
               authority=>ws://localhost:8555,
               host=>ws://localhost:8555/mtron,
               transport=>inst(#{*}::T){<j>},
-              client=>ws_client::[host=>ws://localhost:8555/mtron,
-                                  send=>inst(){<j>},
-                                  send_recv=>inst(){<j>},
-                                  close=>inst(){<j>},
-                                  on_message=>print('received ${_}')]]]]
+              client=>[host=>ws://localhost:8555/mtron,
+                       send=>inst(){<j>},
+                       send_recv=>inst(){<j>},
+                       close=>inst(){<j>},
+                       on_message=>print('received ${_}')]]]]
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
 `machine::T`

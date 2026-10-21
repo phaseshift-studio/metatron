@@ -467,40 +467,40 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                      pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent,
+          type=&gt;[int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent,
                  int::T[is(gt(0))]@/m/math/nat,
                  lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
                  real::T@/m/math/datasize,
                  uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/math/datetime,
-                 datasize::T[][ctor?bB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB,
-                 datasize::T[][ctor?kB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB,
-                 datasize::T[][ctor?mB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB,
-                 datasize::T[][ctor?gB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB,
-                 datasize::T[][ctor?tB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB,
-                 datasize::T[][ctor?pB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB,
+                 datasize::T[][ctor?bB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB,
+                 datasize::T[][ctor?kB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB,
+                 datasize::T[][ctor?mB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB,
+                 datasize::T[][ctor?gB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB,
+                 datasize::T[][ctor?tB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB,
+                 datasize::T[][ctor?pB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB,
                  real::T@/m/math/currency,
                  currency::T@/m/math/currency/usd,
                  currency::T@/m/math/currency/euro,
                  real::T@/m/math/time,
-                 time::T[][ctor?nanos&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos,
-                 time::T[][ctor?micros&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/micros,
-                 time::T[][ctor?millis&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/millis,
-                 time::T[][ctor?second&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/second,
-                 time::T[][ctor?minute&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/minute,
-                 time::T[][ctor?hour&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/hour,
-                 time::T[][ctor?day&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/day,
+                 time::T[][ctor?nanos&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos,
+                 time::T[][ctor?micros&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/micros,
+                 time::T[][ctor?millis&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/millis,
+                 time::T[][ctor?second&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/second,
+                 time::T[][ctor?minute&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/minute,
+                 time::T[][ctor?hour&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/hour,
+                 time::T[][ctor?day&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/day,
                  real::T@/m/math/metric,
-                 metric::T[][ctor?mm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm,
-                 metric::T[][ctor?cm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm,
-                 metric::T[][ctor?dm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm,
-                 metric::T[][ctor?meter&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter,
-                 metric::T[][ctor?km&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/km,
+                 metric::T[][ctor?mm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm,
+                 metric::T[][ctor?cm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm,
+                 metric::T[][ctor?dm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm,
+                 metric::T[][ctor?meter&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter,
+                 metric::T[][ctor?km&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/km,
                  real::T@/m/math/imperial,
-                 imperial::T[][ctor?inch&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch,
-                 imperial::T[][ctor?foot&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot,
-                 imperial::T[][ctor?yard&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard,
-                 imperial::T[][ctor?mile&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile],
-          inst=&gt;[datetime_now?datetime&lt;=#{?}(){&lt;j&gt;},
+                 imperial::T[][ctor?inch&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch,
+                 imperial::T[][ctor?foot&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot,
+                 imperial::T[][ctor?yard&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard,
+                 imperial::T[][ctor?mile&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile],
+          inst=&gt;[datetime_now?datetime&lt;=(){&lt;j&gt;},
                  plus?time&lt;=time(time::T){&lt;j&gt;},
                  plus?metric&lt;=metric(metric::T){&lt;j&gt;},
                  plus?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
@@ -531,19 +531,19 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                  as?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
                  as?imperial&lt;=metric(imperial::T){&lt;j&gt;},
                  as?metric&lt;=imperial(metric::T){&lt;j&gt;},
-                 cos?real&lt;=#{?}(as(real::T)){&lt;j&gt;},
-                 sin?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 tan?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 sqrt?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 atan?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 atan2?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 log?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 log10?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 exp?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 abs?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 ceil?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 floor?real&lt;=#{?}(real::T){&lt;j&gt;},
-                 round?int&lt;=#{?}(real::T){&lt;j&gt;}],
+                 cos?real&lt;=(as(real::T)){&lt;j&gt;},
+                 sin?real&lt;=(real::T){&lt;j&gt;},
+                 tan?real&lt;=(real::T){&lt;j&gt;},
+                 sqrt?real&lt;=(real::T){&lt;j&gt;},
+                 atan?real&lt;=(real::T){&lt;j&gt;},
+                 atan2?real&lt;=(real::T){&lt;j&gt;},
+                 log?real&lt;=(real::T){&lt;j&gt;},
+                 log10?real&lt;=(real::T){&lt;j&gt;},
+                 exp?real&lt;=(real::T){&lt;j&gt;},
+                 abs?real&lt;=(real::T){&lt;j&gt;},
+                 ceil?real&lt;=(real::T){&lt;j&gt;},
+                 floor?real&lt;=(real::T){&lt;j&gt;},
+                 round?int&lt;=(real::T){&lt;j&gt;}],
           const=&gt;[2.7182@/m/math/e?constq,
                   3.1415@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
@@ -752,7 +752,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/datasize/bB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?bB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?bB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a byte of data</p>
@@ -765,7 +765,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/metric/cm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?cm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?cm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a centimeter of distance (10 millimeters)</p>
@@ -830,7 +830,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/time/day</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?day&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/day</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?day&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/day</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a day of time (24 hours)</p>
@@ -843,7 +843,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/metric/dm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?dm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?dm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a decimeter of distance (10 centimeters)</p>
@@ -869,7 +869,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/imperial/foot</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?foot&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?foot&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a foot of distance (12 inches)</p>
@@ -882,7 +882,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/datasize/gB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?gB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?gB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a gigabyte (1024 megabytes) of data</p>
@@ -895,7 +895,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/time/hour</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?hour&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/hour</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?hour&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/hour</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an hour of time (60 minutes)</p>
@@ -921,7 +921,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/imperial/inch</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?inch&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?inch&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an inch of distance (25.4 millimeters)</p>
@@ -934,7 +934,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/datasize/kB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?kB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?kB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a kilobyte (1024 bytes) of data</p>
@@ -947,7 +947,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/metric/km</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?km&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/km</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?km&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/km</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a kilometer of distance (1000 meters)</p>
@@ -960,7 +960,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/datasize/mB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?mB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?mB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a megabyte (1024 kilobytes) of data</p>
@@ -973,7 +973,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/metric/meter</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?meter&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?meter&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a meter of distance (100 centimeters)</p>
@@ -999,7 +999,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/time/micros</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?micros&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/micros</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?micros&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/micros</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a microsecond of time</p>
@@ -1012,7 +1012,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/imperial/mile</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?mile&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?mile&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a mile of distance (1760 yards)</p>
@@ -1025,7 +1025,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/time/millis</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?millis&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/millis</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?millis&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/millis</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a millisecond of time</p>
@@ -1038,7 +1038,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/time/minute</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?minute&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/minute</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?minute&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/minute</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a minute of time (60 seconds)</p>
@@ -1051,7 +1051,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/metric/mm</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?mm&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">metric::T[][ctor?mm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a millimeter of distance</p>
@@ -1064,7 +1064,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/time/nanos</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?nanos&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?nanos&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a nanosecond of time</p>
@@ -1090,7 +1090,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/datasize/pB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?pB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?pB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a petabyte (1024 terabytes) of data</p>
@@ -1103,7 +1103,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/percent</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/percent</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100</p>
@@ -1116,7 +1116,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/time/second</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?second&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/time/second</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">time::T[][ctor?second&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/second</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a second of time (1000 millis)</p>
@@ -1129,7 +1129,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/datasize/tB</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?tB&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">datasize::T[][ctor?tB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a terabyte (1024 gigabytes) of data</p>
@@ -1168,7 +1168,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/imperial/yard</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?yard&lt;=#{?}(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imperial::T[][ctor?yard&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a yard of distance (3 feet)</p>
@@ -1185,7 +1185,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         <small class="text-muted code">/m/math/inst/abs?rng=/m/real&amp;dom=/m/math/cmplx</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0-tab').click();document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?real<=cmplx(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0-tab').click();document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0-tab').click();document.getElementById('__m__math__inst__abs?rng=__m__real&dom=__m__math__cmplx-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">abs?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex modulus: \(|a+bi|=\sqrt{a^2+b^2}\)
@@ -1223,7 +1223,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/atan?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__atan?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__atan?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__atan?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__atan?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the arctangent (radians) of a real</p>
@@ -1244,7 +1244,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/atan2?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__atan2?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__atan2?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan2?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__atan2?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__atan2?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">atan2?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the four quadrant arctangent of the two reals [x,y]</p>
@@ -1265,7 +1265,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/ceil?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__ceil?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__ceil?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">ceil?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__ceil?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__ceil?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">ceil?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the smallest real greater than or equal to the arg — the ceiling</p>
@@ -1305,7 +1305,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/cos?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cos?real<=<span class="code text-info">#{?}</span>(as(real::T)){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__cos?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cos?real<=(as(real::T)){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the cosine (radians) of a real</p>
@@ -1326,7 +1326,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/datetime_now?rng=/m/math/datetime&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__datetime_now?rng=__m__math__datetime&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__datetime_now?rng=__m__math__datetime&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">datetime_now?datetime<=<span class="code text-info">#{?}</span>(){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__datetime_now?rng=__m__math__datetime&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__datetime_now?rng=__m__math__datetime&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">datetime_now?datetime<=(){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> returns the current system datetime as a datetime uri</p>
@@ -1344,7 +1344,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/exp?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__exp?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__exp?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">exp?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__exp?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__exp?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">exp?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> e to the power of a real</p>
@@ -1365,7 +1365,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/floor?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__floor?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__floor?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">floor?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__floor?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__floor?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">floor?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the largest real less than or equal to the arg — the floor</p>
@@ -1386,7 +1386,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/log?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the natural logarithm of a real</p>
@@ -1407,7 +1407,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/log10?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log10?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__log10?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">log10?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the base-10 logarithm of a real</p>
@@ -1520,7 +1520,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/round?rng=/m/int&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__round?rng=__m__int&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__round?rng=__m__int&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">round?int<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__round?rng=__m__int&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__round?rng=__m__int&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">round?int<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the arg rounded to the nearest int</p>
@@ -1541,7 +1541,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/sin?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__sin?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__sin?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sin?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__sin?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__sin?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sin?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the sine (radians) of a real</p>
@@ -1562,7 +1562,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/sqrt?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__sqrt?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__sqrt?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sqrt?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__sqrt?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__sqrt?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sqrt?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the square root of a real</p>
@@ -1583,7 +1583,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         </span>
         <small class="text-muted code">/m/math/inst/tan?rng=/m/real&amp;dom=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__tan?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__tan?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">tan?real<=<span class="code text-info">#{?}</span>(real::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__tan?rng=__m__real&dom=#{?}-doc-0-tab').click();document.getElementById('__m__math__inst__tan?rng=__m__real&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">tan?real<=(real::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the tangent (radians) of a real</p>

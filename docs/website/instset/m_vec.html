@@ -476,7 +476,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                  lst::T@/m/vec/mtrx,
                  space::T[?[host=&gt;uri::T,
    driver=&gt;uri::T,
-   config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/vec/space/vecspace]]@/m/vec</code></pre>
+   config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/vec/space/vecspace]]@/m/vec</code></pre>
                     </div>
                 </div>
             </div>
@@ -600,7 +600,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
  {?}post_write=&gt;inst::T,
  {?}qless_write=&gt;inst::T,
  {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>

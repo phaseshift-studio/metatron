@@ -45,11 +45,11 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 
 ```mtron
 mtron> *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
-==>docs::[obj=>space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=#{?}(rec::T){<j>}]@/m/tble/space/tblespace,
+==>docs::[obj=>space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/tble/space/tblespace,
           desc=>'[structural] a metatron realizatio...',
           example=>['*<http://metatron.phaseshift.studi...']]
 mtron> *</m/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
-==>[llm_chat_schema=>inst?#{*}<=#{*}(){<j>}]
+==>[llm_chat_schema=>inst?<=#{*}(){<j>}]
 ```
 ## configuration
 
@@ -299,8 +299,8 @@ mtron> */m/tble?docq
                                     pre_write=>inst(uri::T,#::T){<j>},
                                     obj=>memspace::[pattern=><#>],
                                     inst=>instset::[pattern=><#>]]],
-                         const=>[[llm_chat_schema=>inst?#{*}<=#{*}(){<j>}]@/m/tble/helper],
-                         type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=#{?}(rec::T){<j>}]@/m/tble/space/tblespace],
+                         const=>[[llm_chat_schema=>inst?<=#{*}(){<j>}]@/m/tble/helper],
+                         type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/tble/space/tblespace],
                          inst=>[sql?rec{*}<=tblespace(str::T){<j>}],
                          rewrite=>[/m/tble/inst/rewrite/sql_count?code{?}<=code(){<j>},
                                    /m/tble/inst/rewrite/sql_sum?code{?}<=code(){<j>},
@@ -426,18 +426,20 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/13
+==>[body=>'a note with a database-assigned key']@tbledoc:note/15
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/14
+==>[body=>'another one']@tbledoc:note/16
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>12
 ==>11
+==>15
 ==>2
 ==>4
 ==>6
 ==>8
 ==>1
 ==>13
+==>16
 ==>3
 ==>10
 ==>14

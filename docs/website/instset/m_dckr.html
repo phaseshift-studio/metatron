@@ -467,7 +467,7 @@ an instruction set to manipulate docker and docker compose</p>
                      pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=#{?}(dckrspace::T){&lt;j&gt;}]@/m/dckr/space/dckrspace,
+          type=&gt;[space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=(dckrspace::T){&lt;j&gt;}]@/m/dckr/space/dckrspace,
                  rec::T[?[id=&gt;uri::T,{?}created=&gt;uri::T]]@/m/dckr/resource,
                  resource::T[?[{?}repo_tags=&gt;[uri::T],
    {?}size=&gt;real::T@/m/math/datasize,
@@ -679,7 +679,7 @@ matches docker_image::T</code></pre>
  {?}post_write=&gt;inst::T,
  {?}qless_write=&gt;inst::T,
  {?}pre_read=&gt;inst::T,
- {?}post_read=&gt;inst::T]][inst?qproc&lt;=#{?}(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
  {?}schema=&gt;instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
