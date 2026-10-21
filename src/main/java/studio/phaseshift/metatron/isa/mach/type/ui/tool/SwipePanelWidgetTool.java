@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
-import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.terminal.Attributes;
 import org.jline.utils.InfoCmp;
@@ -49,12 +48,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
+public class SwipePanelWidgetTool extends AbstractTool<SwipePanelWidgetTool, SwipePanelWidgetTool.Action> {
 
     private int currentIndex = 0;
-    private int totalHeightUsed = 0;
-    private Attributes savedAttributes;
-    private boolean running = false;
 
     // ── Selector / popup state (ExplainTool pattern) ─────────────────
     private int selectorItemIndex = -1;  // which item the table was built for
@@ -63,7 +59,7 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
     private boolean selectorFocused = false; // true after ↑↓, cleared by ←→
     private Widget<?> drillPopup;
 
-    private enum Action {
+    enum Action {
         QUIT, NEXT, PREV, PAGE_DOWN, PAGE_UP, UP_ROW, DOWN_ROW, SELECT
     }
 
@@ -89,51 +85,28 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
     // Lifecycle
     // =====================================================================
 
+    /**
+     * A swipe panel with nothing to swipe is not a tool: it presents nothing and never takes the keyboard.
+     */
     @Override
-    public void run() {
-        if (!this.has(OBJ)) return;
+    protected boolean modal() {
+        return this.has(OBJ);
+    }
+
+    @Override
+    protected void onEnter() {
         Console.userMode.set(true);
-        terminal.writer().print("\n");
-        savedAttributes = terminal.enterRawMode();
-        terminal.puts(InfoCmp.Capability.keypad_xmit);
-        terminal.puts(InfoCmp.Capability.cursor_invisible);
-        terminal.writer().flush();
-
-        // The tool owns the terminal's rows from here: its frames redraw in place and
-        // the console's screen does not paint the region under them (the panel would
-        // double on every key otherwise).
-        this.beginToolRun();
-        this.running = true;
-        BindingReader bindingReader = new BindingReader(terminal.reader());
-        KeyMap<Action> keyMap = buildKeyMap();
-
-        try {
-            while (running) {
-                redraw();
-                Action action = bindingReader.readBinding(keyMap);
-                handleAction(action);
-            }
-        } finally {
-            this.endToolRun(null);
-        }
+        this.terminal.writer().print("\n");
     }
 
     @Override
-    public void close() {
-        terminal.puts(InfoCmp.Capability.cursor_visible);
-        if (savedAttributes != null) {
-            terminal.setAttributes(savedAttributes);
-        }
-        terminal.puts(InfoCmp.Capability.keypad_local);
-        terminal.writer().flush();
-        super.close();
+    protected boolean handle(final Action action) {
+        this.handleAction(action);
+        return this.running();
     }
 
-    // =====================================================================
-    // Input
-    // =====================================================================
-
-    private KeyMap<Action> buildKeyMap() {
+    @Override
+    protected KeyMap<Action> keyMap() {
         KeyMap<Action> keyMap = new KeyMap<>();
         keyMap.bind(Action.NEXT, key(terminal, InfoCmp.Capability.key_right));
         keyMap.bind(Action.PREV, key(terminal, InfoCmp.Capability.key_left));
@@ -187,7 +160,7 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
                     selectorFocused = false;
                     break;
                 case QUIT:
-                    running = false;
+                    this.stop();
                     return;
                 default:
                     return;
@@ -200,7 +173,7 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
             case PREV -> currentIndex = Math.floorMod(currentIndex - 1, size);
             case PAGE_DOWN -> currentIndex = Math.floorMod(currentIndex + 5, size);
             case PAGE_UP -> currentIndex = Math.floorMod(currentIndex - 5, size);
-            case QUIT -> running = false;
+            case QUIT -> this.stop();
         }
         // Changing items clears selector state
         selectorTable = null;
@@ -212,8 +185,9 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
     // Rendering  (ExplainTool: redrawStack with inline popups)
     // =====================================================================
 
-    private void redraw() {
-        final WidgetCanvas canvas = beginRedraw(totalHeightUsed);
+    @Override
+    protected void redraw() {
+        final WidgetCanvas canvas = this.canvas();
 
         if (this.has(OBJ)) {
             final Obj current = this.at(OBJ).asLst().at(jnt(currentIndex));
@@ -266,7 +240,7 @@ public class SwipePanelWidgetTool extends AbstractWidget<SwipePanelWidgetTool> {
         }
         canvas.line(hint);
 
-        totalHeightUsed = canvas.finish();
+        this.settle(canvas);
     }
 
     /**

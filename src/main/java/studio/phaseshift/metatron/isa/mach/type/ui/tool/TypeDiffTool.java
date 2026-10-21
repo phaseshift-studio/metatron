@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
-import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.terminal.Attributes;
 import org.jline.utils.InfoCmp;
@@ -41,7 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
+public class TypeDiffTool extends AbstractTool<TypeDiffTool, TypeDiffTool.Action> {
 
     /* ---- status markers ---- */
     private static final String GOOD = "{{g}}O{{X}}";
@@ -49,7 +48,7 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
     private static final String MISSING = "noobj";
 
     /* ---- key map (exactly Explain's Action set) ---- */
-    private enum Action {
+    enum Action {
         QUIT, DOWN_ROW, UP_ROW, SELECT
     }
 
@@ -131,9 +130,6 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
     private final List<DiffRow> allRows = new ArrayList<>();
     private final Deque<DiffLevel> stack = new ArrayDeque<>();
 
-    private Attributes savedAttributes;
-    private boolean running = false;
-    private int totalHeightUsed = 0;
 
     public TypeDiffTool(final Obj instance, final Type type) {
         this.instance = instance;
@@ -257,47 +253,25 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
      * ================================================================ */
 
     @Override
-    public void run() {
-        savedAttributes = terminal.enterRawMode();
-        terminal.puts(InfoCmp.Capability.keypad_xmit);
-        terminal.puts(InfoCmp.Capability.cursor_invisible);
-        terminal.writer().flush();
-
-        pushLevel("", 0, 0, -1, -1);
-
-        // The tool owns the terminal's rows from here: its frames redraw in place and
-        // the console's screen does not paint the region under them (the table would
-        // double on every key otherwise).
-        this.beginToolRun();
-        this.running = true;
-        BindingReader bindingReader = new BindingReader(terminal.reader());
-        KeyMap<Action> keyMap = buildKeyMap();
-
-        try {
-            while (running && !stack.isEmpty()) {
-                redrawStack();
-                Action action = bindingReader.readBinding(keyMap);
-                handleAction(action);
-            }
-        } finally {
-            this.endToolRun(null);
-        }
+    protected void onEnter() {
+        this.pushLevel("", 0, 0, -1, -1);
     }
 
     @Override
-    public void close() {
-        terminal.puts(InfoCmp.Capability.cursor_visible);
-        if (savedAttributes != null) {
-            terminal.setAttributes(savedAttributes);
-        }
-        terminal.puts(InfoCmp.Capability.keypad_local);
-        terminal.writer().flush();
-        super.close();
+    protected KeyMap<Action> keyMap() {
+        return this.buildKeyMap();
     }
 
-    /* ================================================================
-     * Input  (cloned verbatim from Explain)
-     * ================================================================ */
+    @Override
+    protected boolean handle(final Action action) {
+        this.handleAction(action);
+        return this.running() && !this.stack.isEmpty();
+    }
+
+    @Override
+    protected void redraw() {
+        this.redrawStack();
+    }
 
     private KeyMap<Action> buildKeyMap() {
         KeyMap<Action> keyMap = new KeyMap<>();
@@ -324,7 +298,7 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
                 break;
             case QUIT:
                 popLevel();
-                if (stack.isEmpty()) running = false;
+                if (stack.isEmpty()) this.stop();
                 break;
         }
     }
@@ -358,7 +332,7 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
         final List<DiffLevel> levels = new ArrayList<>(stack);
         Collections.reverse(levels);
 
-        final WidgetCanvas canvas = beginRedraw(totalHeightUsed);
+        final WidgetCanvas canvas = this.canvas();
 
         for (int levelIdx = 0; levelIdx < levels.size(); levelIdx++) {
             final DiffLevel level = levels.get(levelIdx);
@@ -412,7 +386,7 @@ public class TypeDiffTool extends AbstractWidget<TypeDiffTool> {
                     totalFail));
         }
 
-        totalHeightUsed = canvas.finish();
+        this.settle(canvas);
     }
 
     /**

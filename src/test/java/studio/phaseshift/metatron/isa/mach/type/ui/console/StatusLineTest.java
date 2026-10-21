@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
@@ -110,14 +111,28 @@ public class StatusLineTest extends AbstractMetatronTest {
     }
 
     /**
+     * The machine widget shows the PUBLISHED perspective's vid: local, whole when it fits, shortened from the left
+     * when it does not (the tail is what identifies the frame).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            ".                                 % .                        % the root is one character",
+            "/usr/marko/scratch                % /usr/marko/scratch       % a local frame that fits is shown whole",
+            "/network/peer/ws/host/8555/mtron   % …/peer/ws/host/8555/mtron % a deep frame keeps its identifying tail",
+    }, delimiter = '%')
+    void testMachineText(final String vid, final String expected, final String description) {
+        assertEquals(expected, StatusLine.machineText(f(vid)), description);
+    }
+
+    /**
      * A wire that answers is the normal state and stays quiet; a timed-out one says so in color, without changing
      * the counts.
      */
     @Test
     void shouldTintTheTripCountOnlyWhenTheWireHasTimedOut() {
-        assertFalse(StatusLine.netMarkup("y", BACK).contains("r}}"), "an answering wire is quiet");
+        assertFalse(StatusLine.netMarkup("y", BACK).contains("{{r&"), "an answering wire is quiet");
         WireStats.timeout();
-        assertTrue(StatusLine.netMarkup("y", BACK).contains("r}}"), "a timeout is the one thing worth a color");
+        assertTrue(StatusLine.netMarkup("y", BACK).contains("{{r&"), "a timeout is the one thing worth a color");
         assertEquals("⇄0 ↓0 ↑0", Graphitty.strip(StatusLine.netMarkup("y", BACK)).trim(),
                 "the count is unchanged — only its color is");
     }

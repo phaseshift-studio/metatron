@@ -571,17 +571,36 @@ public class Graphitty {
                         buffer.charAt(i) == '{' &&
                         buffer.charAt(i + 1) == '{' &&
                         buffer.charAt(i + 2) != '{') {
+                    final int ruleAt = i;
                     i = i + 2;
                     final StringBuilder rule = new StringBuilder();
                     // final boolean end = buffer.charAt(i) == '/';
                     // if (end) i++;
+                    boolean closed = false;
                     for (int m = i; m < bufferLength; m++) {
                         if (m + 1 < bufferLength && buffer.charAt(m) == '}' && buffer.charAt(m + 1) == '}') {
                             i += 2;
+                            closed = true;
                             break;
                         }
                         rule.append(buffer.charAt(m));
                         i = m;
+                    }
+                    // NOT EVERY `{{` IS A TAG: it has to CLOSE (a `}}` to read a name to) and
+                    // NAME something this renderer can act on.  Otherwise it is a value whose own
+                    // braces spell `{{` — a stream's opening brace in front of a member's
+                    // multiplicity coefficient, {2}[1,2,3] — and the two braces are the text they
+                    // look like, with the scan resuming just past the first of them.  Read as a
+                    // tag, a value's `{{` consumed everything up to the next `}}` in the line; that
+                    // `}}` is usually markup belonging to a LATER entry, so a rec of
+                    // {a=>{[1,2,3],[2,3],[1,2,3]},b=>2} drew as `[a=>b=>2}` — a's value eaten by b's
+                    // own key — while a stream on its own drew as nothing at all.  The emoji
+                    // shortcode is the file's precedent for reading an unknown name as text: a
+                    // typo stays visible instead of vanishing.
+                    if (!closed || !this.isKnownRule(rule.toString())) {
+                        this.print("{");
+                        i = ruleAt;
+                        continue;
                     }
                     // {{link}}uri{{/link}}: the text between the tags is a candidate uri,
                     // and it is BOTH the label and the target ("the wrapped text is the
@@ -704,6 +723,44 @@ public class Graphitty {
         } finally {
             this.parseDepth--;
         }
+    }
+
+    /**
+     * Whether a rule names something this renderer can act on — a color or cursor rewrite, a
+     * close of one, a link, a syntax block, or an emoji shortcode.  A {@code {{…}}} that names
+     * none of those is not markup but a value whose braces spell {@code {{} (a stream's opening
+     * brace in front of a member's multiplicity coefficient, {@code {2}[1,2,3]}), so the caller
+     * draws it as the text it is instead of consuming the line as a tag.
+     */
+    private boolean isKnownRule(final String rule) {
+        if (rule.isEmpty())
+            return false;
+        if (LINK_RULE.contentEquals(rule) || 0 == rule.indexOf(LINK_RULE + ":"))
+            return true;
+        if (("/" + LINK_RULE).contentEquals(rule))
+            return true;
+        if (rule.indexOf(SYNTAX_RULE_PREFIX) >= 0)
+            return true;
+        for (final String piece : rule.split(RULE_SEPARATOR)) {
+            if (piece.isEmpty())
+                continue;
+            // an emoji shortcode — an unknown name renders as its literal ":name:", so it is one
+            if (piece.length() > 2 && ':' == piece.charAt(0) && ':' == piece.charAt(piece.length() - 1))
+                return true;
+            if (this.rewrites.containsKey(piece))
+                return true;
+            if ('/' == piece.charAt(0) && this.rewrites.containsKey(piece.substring(1)))
+                return true;    // the close of a known rule
+            if (piece.length() > 2
+                    && ("^<".equals(piece.substring(0, 2)) || "v<".equals(piece.substring(0, 2)))
+                    && this.rewrites.containsKey(piece.substring(0, 2)))
+                return true;    // a cursor move with its count
+            if (piece.length() > 1
+                    && Set.of('^', 'v', '<', '>', '|').contains(piece.charAt(0))
+                    && this.rewrites.containsKey(String.valueOf(piece.charAt(0))))
+                return true;    // a cursor move with its count
+        }
+        return false;
     }
 
     /**

@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_AT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -494,5 +495,55 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertTrue(written.startsWith("[instset=>"), String.format("the first failed slot rides the opening bracket: %s", written));
         assertTrue(written.contains("\n processor=>"), String.format("the second failed slot owns its indented line: %s", written));
         assertFalse(written.contains("{{"), String.format("no renderer markup in a fail message: %s", written));
+    }
+
+    /**
+     * A STREAM'S COEFFICIENT IS DRAWN AS IT IS, not escaped.  A stream — {@code objs}, a
+     * multiplicity — can carry a coefficient on a member: two equal members fold into
+     * {@code {2}[1,2,3]}, and the stream's opening brace directly in front of that coefficient
+     * spells {@code {{}, graphitty's rule opener.  Read as an unclosed rule, it used to consume
+     * everything to the end of the line, so {@code [a=>{[1,2,3],[2,3],[1,2,3]}]} drew as
+     * {@code [a=>} and the stream on its own drew as nothing at all.  A rule that never closes
+     * is not a rule (see GraphittyTest), so the braces reach the screen without a backslash.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>{[1,2,3],[2,3],[1,2,3]}] % [a=>{{2}[1,2,3],[2,3]}]",
+            "{[1,2,3],[2,3],[1,2,3]}      % {{2}[1,2,3],[2,3]}",
+    }, delimiter = '%')
+    public void testValueBracesAreTextNotMarkup(final String code, final String expected) {
+        final Obj obj = ObjmtronSerializer.parse(code).apply();
+        final String written = ObjmtronUISerializer.single().write(obj);
+        final String shown = Graphitty.strip(written);
+        LOG.debug("%s => %s (drawn as %s)", code, written, shown);
+        assertEquals(expected, shown, String.format("the value's braces belong to the value: %s", written));
+        assertFalse(shown.contains("\\"), String.format("a value's braces need no escape: %s", shown));
+    }
+
+    @Test
+    public void testStreamOfLstsRendersInBlackAndWhite() {
+        // the uncolored instances strip the markup instead of leaving it for a renderer, and a
+        // single pass is what makes that work: escaped for that pass, the coefficient's brace is
+        // data on the way out (a second pass would read it as a rule, as it used to)
+        final Obj obj = ObjmtronSerializer.parse("[a=>{[1,2,3],[2,3],[1,2,3]}]").apply();
+        final String written = ObjmtronUISerializer.blackWhite().write(obj);
+        LOG.debug("stream of lsts (black and white) => %s", written);
+        assertEquals("[a=>{{2}[1,2,3],[2,3]}]", written,
+                String.format("a stream's coefficient reaches an uncolored render too: %s", written));
+    }
+
+    @Test
+    public void testStreamMembersRenderThroughTheUiWriter() {
+        // a stream had no arm in the nested path, so a stream inside a rec fell through to the
+        // plain serializer's toString(): no link tags, and a member never measured the column it
+        // really sits at, which is also what left a wide member unclipped
+        final Obj obj = objs(lst(uri(f("/a/b"))), lst(jnt(1), jnt(2), jnt(3), jnt(4), jnt(5), jnt(6),
+                jnt(7), jnt(8), jnt(9), jnt(10), jnt(11), jnt(12)));
+        final String written = ObjmtronUISerializer.single().write(obj);
+        LOG.debug("stream members => %s", written);
+        assertTrue(written.contains("{{link}}"),
+                String.format("a uri inside a stream is tagged like any other: %s", written));
+        assertTrue(written.contains("...(2 more)"),
+                String.format("a member is clipped like the lst it is: %s", written));
     }
 }

@@ -261,10 +261,13 @@ public interface WebSocketObj extends Rec, Closeable {
                         final long startedMs = System.currentTimeMillis();
                         if (!waiter.latch().await(deadlineMs, TimeUnit.MILLISECONDS)) {
                             this.logger().warn("connection timeout: tag=%s on %s after %s ms (outstanding=%s)", tag, peer, deadlineMs, waiters.size());
-                            WireStats.timeout();
+                            WireTrace.exchange(peer, tag, message, null, startedMs, deadlineMs, WireTrace.Outcome.TIMEOUT);
                             return fail("no reply from %s within %s ms", peer, deadlineMs);
                         }
-                        WireStats.roundTrip(System.currentTimeMillis() - startedMs);
+                        final long elapsedMs = System.currentTimeMillis() - startedMs;
+                        // ONE ROW PER ROUND TRIP, recorded where both halves exist: the request that was sent and
+                        // the reply the latch released (fill() sets the obj before it counts down)
+                        WireTrace.exchange(peer, tag, message, waiter.obj().get(), startedMs, elapsedMs, WireTrace.Outcome.OK);
                         this.logger().debug("filled tag=%s on %s", tag, peer);
                     } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
@@ -404,6 +407,9 @@ public interface WebSocketObj extends Rec, Closeable {
                     waiter.fill(lhs);
                     return lhs;
                 }
+                // a frame no round trip was waiting for: an unsolicited push, and the only inbound move this VM
+                // has no other way to see (its arrival is a socket event, not a write)
+                WireTrace.push(this.peerName(), lhs);
                 this.logger().debug("WIRE unmatched frame passed to previous handler on %s", this.peerName());
                 return previous.isNoObj() ? lhs : previous.apply(lhs);
             }), MUTABLE);

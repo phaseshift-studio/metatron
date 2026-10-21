@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
-import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.terminal.Attributes;
 import org.jline.utils.InfoCmp;
@@ -50,11 +49,11 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ExplainTool extends AbstractWidget<ExplainTool> {
+public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
 
     private static final GraphittyLogger LOG = Graphitty.log(ExplainTool.class);
 
-    private enum Action {
+    enum Action {
         QUIT, DOWN_ROW, UP_ROW, RIGHT_COL, LEFT_COL, SELECT, SPACE
     }
 
@@ -123,9 +122,6 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
 
     private final Deque<ExplainLevel> stack = new ArrayDeque<>();
     private final Code rootCode;
-    private Attributes savedAttributes;
-    private boolean running = false;
-    private int totalHeightUsed = 0;  // Track how many lines we've used
     private String lastFrameMarkup = "";  // The last full frame, settled into the transcript on exit
 
     public ExplainTool(final Code code) {
@@ -133,52 +129,30 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
     }
 
     @Override
-    public void run() {
-        // Enter raw mode
-        terminal.writer().print("\n");
-        savedAttributes = terminal.enterRawMode();
-        terminal.puts(InfoCmp.Capability.keypad_xmit);
-        terminal.puts(InfoCmp.Capability.cursor_invisible);
-        terminal.writer().flush();
-
-        // Don't clear screen - draw below current position
-        // Get current cursor position as the base
-        // The row where we start drawing (below prompt)
-        //int baseRow = 0;  // We'll draw relative to current position
-
-        // From here the tool owns the terminal's rows: its frames redraw in place
-        // (their own cursor math), and the console's screen does not paint the region
-        // under them — which is how the table used to double itself on every key.
-        this.beginToolRun();
-        pushLevel(rootCode, 0, 0, -1, -1);  // Root has no parent spawn position
-
-        // Main event loop
-        this.running = true;
-        BindingReader bindingReader = new BindingReader(this.terminal.reader());
-        KeyMap<Action> keyMap = buildKeyMap();
-        try {
-            while (this.running && !this.stack.isEmpty()) {
-                redrawStack();
-                Action action = bindingReader.readBinding(keyMap);
-                handleAction(action);
-            }
-        } finally {
-            // Hand the terminal back on every exit — the last frame settles into
-            // the transcript, and the screen's region repaints from it.
-            this.endToolRun(this.lastFrameMarkup);
-        }
+    protected void onEnter() {
+        this.terminal.writer().print("\n");
+        this.pushLevel(this.rootCode, 0, 0, -1, -1);   // the root has no parent spawn position
     }
 
     @Override
-    public void close() {
-        // Restore terminal state
-        terminal.puts(InfoCmp.Capability.cursor_visible);
-        if (savedAttributes != null) {
-            terminal.setAttributes(savedAttributes);
-        }
-        terminal.puts(InfoCmp.Capability.keypad_local);
-        terminal.writer().flush();
-        super.close();
+    protected KeyMap<Action> keyMap() {
+        return this.buildKeyMap();
+    }
+
+    @Override
+    protected boolean handle(final Action action) {
+        this.handleAction(action);
+        return this.running() && !this.stack.isEmpty();
+    }
+
+    @Override
+    protected void redraw() {
+        this.redrawStack();
+    }
+
+    @Override
+    protected String finalFrame() {
+        return this.lastFrameMarkup;
     }
 
     private KeyMap<Action> buildKeyMap() {
@@ -239,7 +213,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             case QUIT:
                 popLevel();
                 if (stack.isEmpty()) {
-                    running = false;
+                    this.stop();
                 }
                 break;
         }
@@ -533,7 +507,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
         final List<ExplainLevel> levels = new ArrayList<>(stack);
         Collections.reverse(levels); // Draw bottom → top
 
-        final WidgetCanvas canvas = beginRedraw(totalHeightUsed);
+        final WidgetCanvas canvas = this.canvas();
 
         for (int levelIdx = 0; levelIdx < levels.size(); levelIdx++) {
             final ExplainLevel level = levels.get(levelIdx);
@@ -590,7 +564,7 @@ public class ExplainTool extends AbstractWidget<ExplainTool> {
             canvas.statusLine(hint);
         }
 
-        totalHeightUsed = canvas.finish();
+        this.settle(canvas);
         this.lastFrameMarkup = canvas.frameText();
     }
 

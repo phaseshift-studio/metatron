@@ -239,6 +239,12 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
   no-op, so writes there are silently dropped. The peer roster lives at `/sys/peer`.
 - **`push()` must mint a child, not the parent.** Use the 3-arg `clone` — `selfVID` *pins* an already-set vid, so a
   2-arg clone would silently keep the parent's address.
+- **A move is observable without owning the perspective.** `Machine.current()` is a thread-local, so an observer (a
+  status bar, a dashboard) asking there answers with the root forever. `move`, `push` and `pop` therefore publish
+  what they returned to `MachinePerspective`, which a reader on any thread can consult. The publication lives in the
+  INSTRUCTIONS, not in `Machine.push`/`pop`: a frame minted by the machine's own machinery is not the user changing
+  where they stand, and publishing it would make the bar flicker through internal frames. The published vid is always
+  LOCAL — a frame standing in a peer is at `/network/peer/ws/host/port/ns`, never at the wire address.
 - **A machine is a space, so its own read is a space read** (`AbstractSpace.read` → `Space.Helper.resolveRead`, q-procs
   and all). Address *resolution* belongs to memory: `BasicMemory.read`/`write` route an address to the space that covers
   it (`readAbsolute`/`writeAbsolute`) — which is why a bulk wildcard write reaches the space it names rather than the
