@@ -467,22 +467,30 @@ public final class PlanInterpreter {
     }
 
     /**
-     * Adjacent inverse pair with equal operands — the group law {@code f·f⁻¹ = 1}, read off the edge's declared
-     * {@code inverse} (either direction).
+     * Adjacent inverse pair with equal operands — {@code x.a().b() ↦ x} — read off {@code a}'s declared
+     * {@code inverse}, in that direction only. A declared inverse is one-sided: {@code inverse(f) = g} claims
+     * {@code x.f().g() = x} (f a section, g its retraction), never {@code x.g().f() = x} — on int,
+     * {@code x.mult(2).div(2)} is {@code x} but {@code 5.div(2).mult(2)} is 4.
      */
     private static boolean inversePair(final Inst a, final Inst b, final Type carrier) {
-        return isInverseOf(a, b, carrier) || isInverseOf(b, a, carrier);
+        return isInverseOf(a, b, carrier);
     }
 
     /**
      * Whether {@code b} is the declared inverse of {@code a} with equal operands. Endpoints are unavailable
-     * before resolution, so the operand type that selected the declaration is the type guard.
+     * before resolution, so the operand type that selected the declaration is the type guard. A literal zero
+     * operand never cancels: {@code mult(0)} has no inverse, and {@code plus(0)} is the unit law's anyway.
      */
     private static boolean isInverseOf(final Inst a, final Inst b, final Type carrier) {
         final LawTable.Declared declared = LawTable.declared(a.tid().basePath(), carrier);
         return null != declared && null != declared.entry().inverse()
                 && b.tid().basePath().equals(declared.entry().inverse().basePath())
-                && a.args().equals(b.args());
+                && a.args().equals(b.args())
+                && a.args().elements().noneMatch(PlanInterpreter::isZeroLiteral);
+    }
+
+    private static boolean isZeroLiteral(final Obj arg) {
+        return (arg.isInt() && 0L == arg.asInt().intValue()) || (arg.isReal() && 0.0d == arg.asReal().realValue());
     }
 
     /**

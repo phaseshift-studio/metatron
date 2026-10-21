@@ -236,7 +236,8 @@ public final class mInstSetLawTable extends LawTable {
         entry(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), PLUS_INST_TID.dom(INT_TID).rng(INT_TID),
                 new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())),
                 action);
-        entry(DIV_INST_TID.dom(INT_TID).rng(INT_TID), MULT_INST_TID.dom(INT_TID).rng(INT_TID), action);
+        // no inverse: int div truncates, so x.div(a).mult(a) is not x (5.div(2).mult(2) is 4); mult's inverse is div
+        entry(DIV_INST_TID.dom(INT_TID).rng(INT_TID), null, action);
         entry(NEG_INST_TID.dom(INT_TID).rng(INT_TID), NEG_INST_TID.dom(INT_TID).rng(INT_TID), involution);
         entry(ZERO_INST_TID.dom(INT_TID).rng(INT_TID), null, absorbing, idempotent);
         entry(ONE_INST_TID.dom(INT_TID).rng(INT_TID), null, idempotent);

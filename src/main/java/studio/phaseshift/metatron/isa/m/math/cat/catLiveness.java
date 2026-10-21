@@ -260,9 +260,8 @@ public class catLiveness {
                         profile.adjMonoidFold = true;
                 }
                 final fURI inverse = null == keyed ? null : inverseOf(keyed);
-                if (pastSeed
-                        && ((null != inverse && null != priorName && priorName.equals(inverse.name()))
-                        || (null != priorInverse && priorInverse.name().equals(name))))
+                // directional, as the rule is: the current op must be the PRIOR op's declared inverse (x.f().f⁻¹)
+                if (pastSeed && null != priorInverse && priorInverse.name().equals(name))
                     profile.adjInverse = true;
                 priorName = name;
                 priorInverse = inverse;
