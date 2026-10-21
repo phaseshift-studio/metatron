@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -242,6 +244,40 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertTrue(plain.contains("1.23456789"), String.format("the plain serializer keeps the exact value: %s", plain));
         assertTrue(ui.contains("1.2345"), String.format("the UI serializer quantizes to the display limit: %s", ui));
         assertFalse(ui.contains("1.23456789"), ui);
+    }
+
+    /**
+     * A REAL'S DISPLAY MUST NOT EAT ITS FRACTION. The display cap at four fraction digits used
+     * the length of the fractional PART where it meant the length of the WHOLE string, so every
+     * value whose integer part was long enough lost digits: {@code 5.5 * -5.5} (whose value is
+     * -30.25) rendered as {@code -30.0}, and even {@code -1.5} rendered as {@code -1.0}. The
+     * arithmetic was never wrong — only the rendering was.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.5 * -5.5      % -30.25",
+            "-1.5            % -1.5",
+            "30.25           % 30.25",
+            "123.456         % 123.456",
+            "1.23456789      % 1.2345",
+            "5.0             % 5.0",
+    }, delimiter = '%')
+    public void testRealDisplayKeepsItsFraction(final String code, final String expected) {
+        final String written = ObjmtronUISerializer.blackWhite().write(ObjmtronSerializer.parse(code).apply());
+        LOG.debug("%s => %s", code, written);
+        assertEquals(expected, written);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.23456789E7    % 1.2345E7",
+            "1.0E-10         % 1.0E-10",
+            "1.23456789E-7   % 1.2345E-7",
+    }, delimiter = '%')
+    public void testRealDisplayCapsTheFractionButKeepsTheExponent(final double value, final String expected) {
+        final String written = ObjmtronUISerializer.blackWhite().writeReal(real(value));
+        LOG.debug("%s => %s", value, written);
+        assertEquals(expected, written);
     }
 
     @Test

@@ -39,19 +39,19 @@ A distributed data-oriented computing language and virtual machine built in Java
 
 ### Requirements
 
-- **Java**: JDK 21+ to compile and run (CI uses Oracle JDK 24, jDeploy uses Temurin JDK 25)
+- **Java**: JDK 25+ to compile and run (CI uses Oracle JDK 25, jDeploy uses Temurin JDK 25)
 
 ### Build Environment (this container)
 
 Builds normally run in docker (see **Docker Build Loop** below), where the toolchain lives inside the repo under
-`.build/` (git-ignored). That same toolchain — `.build/jdk` (Temurin 24) and the `.build/m2/repository` cache — also
+`.build/` (git-ignored). That same toolchain — `.build/jdk` (Temurin 25) and the `.build/m2/repository` cache — also
 serves **this container** directly, so `./mvnw` works here as-is; on a **full host** a writable `$HOME` with its own
 JDK and Maven is used instead. Both cases are worth knowing, because a mismatch between them reads as a broken build:
 
 - **In this container `./mvnw` works — use it, don't work around it.** `$HOME/.mavenrc` (HOME is `/workspace` here)
-  points the wrapper at the repo's own toolchain: `JAVA_HOME=/workspace/.build/jdk` (Temurin 24) and
+  points the wrapper at the repo's own toolchain: `JAVA_HOME=/workspace/.build/jdk` (Temurin 25) and
   `MAVEN_OPTS=-Dmaven.repo.local=/workspace/.build/m2/repository` — the same cache the docker loop resolves into.
-  Verified 2026-10-04: `./mvnw -v` reports Temurin 24, `./mvnw -o -X validate` prints `Using local repository at
+  Verified 2026-10-04: `./mvnw -v` reports Temurin 25, `./mvnw -o -X validate` prints `Using local repository at
   /workspace/.build/m2/repository`, and `./mvnw -o -q test-compile` exits 0.
   A shell whose `HOME` is **not** `/workspace` breaks twice over: the launcher finds no `java` (nothing is on `PATH`)
   and the wrapper tries to create `$HOME/.m2/wrapper`, which is the read-only `/home/node`. Three variables make the
@@ -66,15 +66,15 @@ JDK and Maven is used instead. Both cases are worth knowing, because a mismatch 
   That is independent of the docker loop, which resolves into `.build/m2/repository` (see below); the two caches do
   not overlap. It also uses the JDK from `JAVA_HOME` (else the `java` on `PATH`), which on a host is
   usually *not* the `.build/jdk` the launcher runs on — the compiled classes are that other JDK's output.
-- **`bin/metatron`** prefers an explicit `JAVA_HOME`, else `.build/jdk/bin/java` when present (Temurin 24, matching
+- **`bin/metatron`** prefers an explicit `JAVA_HOME`, else `.build/jdk/bin/java` when present (Temurin 25, matching
   CI), else the `java` on `PATH`. It runs the dev loop from `target/classes` + the cached dependency classpath
   (`.mtron-classpath`), which holds **absolute** jar paths and is validated before use: a sidecar
   (`.mtron-classpath.sha256`) records the `pom.xml` the cache was resolved from, and the first cache entry must
   still exist. A cache from another `$HOME`, or one whose pom has changed, is re-resolved automatically — so a
   bare `NoClassDefFoundError` on some dependency class is a stale-cache symptom to check *here* first, not a
   missing dependency.
-- `.build/jdk21` exists for reference, but **tests must run on a JDK 24 build**: the pom's surefire `argLine`
-  includes `--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 24).
+- `.build/jdk21` exists for reference, but **tests must run on a JDK 25 build**: the pom's surefire `argLine`
+  includes `--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 25).
 - **`bin/` layout** — commands you *type* stay flat in `bin/` (`bin/metatron` is the launcher — the old
   `bin/metatron-dev` is retired — plus `bin/metatron-docker` for every docker job and `bin/metatron-console` for the
   pty console harness); sourced shell helpers live in `bin/lib/`; assets a command consumes live in `bin/test/`
@@ -106,19 +106,19 @@ bin/metatron-docker dev [--no-build]                # dev loop: package in docke
   latter two are **retired** — `bin/metatron-docker dev` and `bin/metatron-docker build …` replace them (a note that
   still names them is stale).
 - **`build …` is the agent-safe set**: no published ports, throwaway containers.
-- `image` and `dev` package the uber-jar **inside** `metatron-build:24` and then build `metatron:dev`, whose
+- `image` and `dev` package the uber-jar **inside** `metatron-build:25` and then build `metatron:dev`, whose
   Dockerfile COPYs `target/metatron-*-jar-with-dependencies.jar` directly — there is no staging copy in the repo root,
   and `.dockerignore` whitelists exactly that one file (plus `boot/`, `conf/`, the skills docs and `bin/wsplus`) into
   the
-  build context. So docker is the only host requirement — no host maven/JDK — and the jar comes from the same JDK24
+  build context. So docker is the only host requirement — no host maven/JDK — and the jar comes from the same JDK 25
   image the test loop uses. Order matters for the low-level path: package first (`mvn -DskipTests package`), then
   `docker build`.
 - `run` and `dev` publish 8555/8777 (they collide with a live server by design); `NO_PORTS=1` makes `run`
   publish nothing. **`dev` removes and recreates the container named `$METATRON_CONTAINER`
   (default `metatron`)** — never run it while that container is the server under test.
 - `DRY_RUN=1 bin/metatron-docker <anything>` prints the docker/mvn commands instead of running them.
-- Image `metatron-build:24` auto-builds on first use from `dist/docker/Dockerfile.build`
-  (maven + Temurin 24 + **patchelf** — patchelf is mandatory: the uber-jar ships a musl-built tree-sitter `.so` that
+- Image `metatron-build:25` auto-builds on first use from `dist/docker/Dockerfile.build`
+  (maven + Temurin 25 + **patchelf** — patchelf is mandatory: the uber-jar ships a musl-built tree-sitter `.so` that
   `ObjJavaSerializer` re-points at glibc on load; without it the VM dies with `UnsatisfiedLinkError` and parks forever
   on the `/sys/thread/main` latch instead of exiting — a hung, non-terminating java process is the symptom).
 - The repo mounts at `/work`; the container runs as the host user; **no ports are published** — the VM's 8555/8777 exist
@@ -271,8 +271,9 @@ reach the agent anyway. The technique that works, and has paid for itself repeat
 
 Two things that make the loop fast enough to be worth it:
 
-- Compile with **`.build/jdk/bin/javac`**. The PATH `javac` is JDK 25 and emits class file 69, which
-  the runtime rejects with `UnsupportedClassVersionError`. A targeted
+- Compile with **`.build/jdk/bin/javac`** — it is Temurin 25, the same major the build uses. Do not rely on
+  a PATH `javac`: a different major emits a class-file version the runtime rejects with
+  `UnsupportedClassVersionError`. A targeted
   `javac -cp "target/classes:src/main/resources:$(cat .mtron-classpath)" -d target/classes <files>`
   has no class-file-version trap.
 - A dev checkout (`bin/metatron` / `bin/drstynx`) runs `target/classes` and recompiles from source
@@ -566,7 +567,7 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
 |                         `.github/workflows/maven.yml` |                 `.github/workflows/docker.yml` |
 |------------------------------------------------------:|-----------------------------------------------:|
 |                                     Push/PR to `main` | Push to `main`, `v*` tags, `workflow_dispatch` |
-|                                         Oracle JDK 24 |                      Temurin JDK 25 (uber-jar) |
+|                                         Oracle JDK 25 |                      Temurin JDK 25 (uber-jar) |
 | `./mvnw install -Dtest='!httpSpaceTest,!fsSpaceTest'` |     `mvn package` → build & push image to GHCR |
 
 Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatron`) by the

@@ -377,22 +377,32 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     // ── Real writer ──────────────────────────────────────────────
-    // lossless + compact: a real writes its shortest round-trippable form (the exact
-    // double with superfluous trailing zeros dropped) and keeps a trailing .0 on whole
-    // numbers, so it never quantizes and never reads back as an int.
+    // compact for a reader: the display caps the fraction at four digits and keeps a
+    // trailing .0 on whole numbers, so a real (1.0) never reads back as an int (1).
 
     @Override
     public String writeReal(final Real real) {
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, real, true);
-        // lossless + compact: Double.toString is the shortest round-trippable form and
-        // keeps a trailing .0 on whole numbers, so a real (1.0) never reads back as an int (1)
+        // Double.toString is the shortest round-trippable form and keeps a trailing .0 on
+        // whole numbers, so a real (1.0) never reads back as an int (1)
         final String ds = Double.toString(real.jvm());
         // a non-finite real has no mantissa to shorten: "NaN" has no '.' at all, so the digit rule
         // below read indexOf(".") + 5 == 4 and sliced past the end (Range [0, 5) for length 3), while
         // "Infinity"/"-Infinity" were silently cut to "Infin". spell them whole instead.
-        final String ds2 = Double.isFinite(real.jvm()) ?
-                ds.substring(0, Math.min(ds.indexOf(".") + 5, ds.length() - ds.indexOf(".")) + 1) : ds;
+        final String ds2;
+        if (!Double.isFinite(real.jvm())) {
+            ds2 = ds;
+        } else {
+            final int dot = ds.indexOf(".");
+            final int exp = ds.indexOf("E");
+            final boolean hasExp = dot >= 0 && exp > dot;
+            // cap the fraction at four digits, but never swallow an exponent: "1.23456789E7"
+            // must keep its E7 or the rendered value changes magnitude. only the fraction
+            // before the E is capped.
+            final int end = dot < 0 ? ds.length() : Math.min(hasExp ? exp : ds.length(), dot + 5);
+            ds2 = ds.substring(0, end) + (hasExp ? ds.substring(exp) : "");
+        }
         sb.append(ds2);
         if (ds2.endsWith(".")) sb.append("0");
         this.handleVID(sb, real);

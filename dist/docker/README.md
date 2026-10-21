@@ -23,7 +23,7 @@ Self-contained metatron server image: runs the uber-jar headless against a boot 
 ## Build
 
 ```bash
-# one command — packages the uber-jar inside metatron-build:24 (docker is the only host
+# one command — packages the uber-jar inside metatron-build:25 (docker is the only host
 # requirement) and builds this image:
 bin/metatron-docker image
 

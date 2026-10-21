@@ -390,7 +390,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.mult(10)                                                       % {int{1}::10,int{1}::20,int{1}::30}",
             "{int{2}::1,int{3}::2,int{4}::3}.mult(10)                               % {int{2}::10,int{3}::20,int{4}::30}",
             "int{50}::10.mult(10)                                                   % int{50}::100",
-            // COUNT/SUM //
+            // COUNT/SUM/PROD //
+            "{2}3.prod()                                                            % 9",
             "{1,2,3}.sum().prod()                                                   % 6",
             "{1,2,3}.prod().sum()                                                   % 6",
             "{1,2,3}.sum?int<=int{3}().sum?int<=int()                               % 6",
@@ -453,9 +454,12 @@ public class mInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             //"{1,1.plus?int<=int(1),1.plus?int<=int(2),4}.prod()                   % 24",
+            "{1,{2}3}.prod()                                                        % 9",
+            "{2,{2}3}.prod()                                                        % 18",
+            "{{3}2,{2}3}.prod()                                                     % 72",
             "{1,2,3,4}.prod()                                                       % 24",
             "1.prod()                                                               % 1",
-            "int{5}::3.prod()                                                       % 15",
+            "int{5}::3.prod()                                                       % 243",
             "{a,b,c}.prod()                                                         % a/b/c",
             "{a/b,c/d,e/f}.prod()                                                   % a/b/c/d/e/f",
             // "{a/b,c/d,e/f}.sum()                                                    % <+/+{3}>",

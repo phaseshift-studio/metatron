@@ -18,10 +18,19 @@
 
 package studio.phaseshift.metatron.isa;
 
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.util.MTronException;
 
+import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 
 /**
  * Something a {@code vid} can be read from and written to — the one contract every data source a
@@ -31,8 +40,14 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  * then its {@code memory} (data memory), then its {@code instset} (instruction memory), and each of those is an
  * {@code Addressable} — the same {@code read}/{@code write} signatures, the same {@code noobj}-means-decline
  * convention, so the dispatch is a walk over uniform sources rather than three special cases. A {@link Space} is
- * the storage-shaped refinement of this contract (pattern, q-procs, routes); a component that is not a place —
+ * the storage-shaped refinement of this contract (pattern, routes); a component that is not a place —
  * the network, and eventually instruction memory — is an {@code Addressable} without being a {@code Space}.
+ * <p>
+ * <b>Q-procs belong to the contract, not to the storage shape.</b> {@link #qs()} declares the query processors
+ * a source supports, and the interception itself is one implementation ({@link QProc.Layer}) applied where a vid
+ * is handed to a source. That split is deliberate: a source says WHAT it supports and never re-derives the
+ * order in which pre/post/broadcast hooks run, so an already-unordered set of hand-rolled sequences
+ * ({@code AbstractSpace}, {@code mqttSpace}, {@code AbstractInstSet}) has one place to converge on.
  * <p>
  * The decline convention: a source that cannot answer for a vid returns {@code noobj} rather than throwing, so
  * the caller falls through to the next source. An uncovered address is an ordinary answer, not an error.
@@ -48,6 +63,48 @@ public interface Addressable {
     fURI pattern();
 
     /**
+     * THE Q-PROCS this source declares: the processors whose interception applies to reads and writes through
+     * it. A source backed by a {@link Rec} carries them in its own {@code ?qproc} entry — reflected into mtron
+     * and travelling with the rec — while a source with no rec behind it declares nothing.
+     * <p>
+     * Declaring is all a source does with q-procs: {@link QProc.Layer} applies them at the dispatch. A q-proc
+     * attached here therefore affects a read or write that is HANDED to this source, not one this source
+     * performs on itself by calling its own {@code read}/{@code write} directly.
+     */
+    default Lst qs() {
+        if (this instanceof Rec rec) {
+            final Obj qs = rec.at(uri(QPROC));
+            if (!qs.isNoObj())
+                return qs.asLst();
+        }
+        return lst(mutableList());
+    }
+
+    /**
+     * Does this source declare the given q-proc, matched by its pattern?
+     */
+    default boolean hasQ(final fURI qPattern) {
+        return this.qs().lstValue().stream().anyMatch(q -> qPattern.test(q.<QProc>as().pattern()));
+    }
+
+    /**
+     * Declare a q-proc on this source: added to the {@code ?qproc} entry of the rec behind it.
+     *
+     * @param qProc the processor to declare
+     * @return this source
+     * @throws MTronException when the source has no rec to declare it in
+     */
+    default Addressable addQ(final QProc qProc) {
+        if (!(this instanceof Rec rec))
+            throw MTronException.of("source %s cannot carry q-procs: it has no rec to declare them in", this.pattern());
+        final Obj key = uri(QPROC);
+        if (rec.at(key).isNoObj())
+            rec.at(key, lst(), MUTABLE);
+        rec.at(key).asLst().lstValue().add(qProc);
+        return this;
+    }
+
+    /**
      * INDEX a constructed obj into this source — the one verb for "a thing that exists enters the
      * jurisdiction": Memory indexes a space, Network indexes a protocol client, an instruction set indexes
      * an inst family. Construction is decoupled from infrastructure indexing (an obj exists whether or not
@@ -56,6 +113,18 @@ public interface Addressable {
      */
     default Obj index(final Obj member) {
         return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
+    }
+
+    /**
+     * Does this source declare ANY q-proc? The layer's fast path.
+     * <p>
+     * This is one map lookup and NO allocation, which is why it is separate from {@link #qs()} (which
+     * materializes an empty list when nothing is declared). The layer sits on {@code Machine.read}/{@code write} —
+     * the hottest path in the VM — and the overwhelming majority of sources declare nothing, so the common case
+     * must not allocate on the way to being left alone.
+     */
+    default boolean hasQProcs() {
+        return this instanceof Rec rec && !rec.at(uri(QPROC)).isNoObj();
     }
 
     /**

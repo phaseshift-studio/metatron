@@ -54,19 +54,13 @@ public interface Space extends Addressable, Rec, Closeable {
         return true;
     }
 
-    default Lst qs() {
-        return this.at(uri(QPROC)).orElse(lst(mutableList()));
-    }
-
-    default boolean hasQ(final fURI qPattern) {
-        return this.qs().lstValue().stream().anyMatch(q -> qPattern.test(q.<QProc>as().pattern()));
-    }
-
+    /**
+     * qs(), hasQ() and the declaration itself live on {@link Addressable}: every source can carry q-procs. A
+     * space narrows only the return type, so {@code space.addQ(...)} still chains as a Space.
+     */
+    @Override
     default Space addQ(final QProc qProc) {
-        final Obj key = uri(QPROC);
-        if (this.at(key).isNoObj())
-            this.at(key, lst(), MUTABLE);
-        this.at(key).asLst().lstValue().add(qProc);
+        Addressable.super.addQ(qProc);
         return this;
     }
 

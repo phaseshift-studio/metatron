@@ -30,10 +30,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
 
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
@@ -56,11 +59,13 @@ public class StatusLineTest extends AbstractMetatronTest {
     @BeforeEach
     void clearBannerBefore() {
         StatusLine.message(str(""));
+        WireStats.reset();
     }
 
     @AfterEach
     void clearBannerAfter() {
         StatusLine.message(str(""));
+        WireStats.reset();
     }
 
     /** What a terminal shows of the banner's markup: the envelope, then the messages. */
@@ -78,6 +83,37 @@ public class StatusLineTest extends AbstractMetatronTest {
         for (final String message : posted.split(";"))
             StatusLine.message(str(message.trim()));
         assertEquals("✉️  " + banner, visibleBanner(), description);
+    }
+
+    /**
+     * The wire's gauge: the three counts that replaced bytes-in/out, as the bar renders them.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "0  % 0 % 0 % ⇄0 ↓0 ↑0   % an idle wire reads as zeros, not as an error",
+            "12 % 8 % 4 % ⇄12 ↓8 ↑4  % trips, arrivals and departures are counted separately",
+    }, delimiter = '%')
+    void testNetGauge(final long trips, final long received, final long sent, final String expected, final String description) {
+        for (int i = 0; i < trips; i++)
+            WireStats.roundTrip(5);
+        for (int i = 0; i < received; i++)
+            WireStats.received("peer", null);
+        for (int i = 0; i < sent; i++)
+            WireStats.sent("peer", null);
+        assertEquals(expected, Graphitty.strip(StatusLine.netMarkup("y")), description);
+    }
+
+    /**
+     * A wire that answers is the normal state and stays quiet; a timed-out one says so in color, without changing
+     * the counts.
+     */
+    @Test
+    void shouldTintTheTripCountOnlyWhenTheWireHasTimedOut() {
+        assertFalse(StatusLine.netMarkup("y").contains("{{r}}"), "an answering wire is quiet");
+        WireStats.timeout();
+        assertTrue(StatusLine.netMarkup("y").contains("{{r}}"), "a timeout is the one thing worth a color");
+        assertEquals("⇄0 ↓0 ↑0", Graphitty.strip(StatusLine.netMarkup("y")),
+                "the count is unchanged — only its color is");
     }
 
     @Test
