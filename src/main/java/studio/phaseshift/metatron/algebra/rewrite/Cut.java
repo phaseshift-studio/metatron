@@ -47,9 +47,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * {@link Law#monoidic} (partials regroup, {@code c² = c}) and {@link Law#commutative} (order-free merge,
  * {@code ⟨X,⊕⟩} a commutative monoid).
  *
- * <p>A Cut is a {@code rec} — its state lives in the rec's map, keyed by {@code form} and {@code law}:
- * {@code [form => uri(form.name()), law => lst(uri(law.name()), ...)]}. Every accessor reads
- * {@code this.at(key)}; there are no Java fields.
+ * <p>A Cut is a {@code rec} — its state lives in the rec's map, in one of three encodings: a form and the
+ * laws demanded of it, {@code [form => uri(form.name()), law => lst(uri(law.name()), ...)]}; a theory role,
+ * {@code [role => uri(role)]}; or process laws alone, {@code [law => lst(uri(law.name()), ...)]}. Every
+ * accessor reads {@code this.at(key)}; there are no Java fields.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */

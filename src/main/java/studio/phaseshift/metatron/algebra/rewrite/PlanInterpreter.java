@@ -48,7 +48,6 @@ import static studio.phaseshift.metatron.Tokens.HOPS;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ID;
 import static studio.phaseshift.metatron.Tokens.INVERSE;
-import static studio.phaseshift.metatron.Tokens.OP;
 import static studio.phaseshift.metatron.Tokens.ZERO;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carrier;
@@ -71,7 +70,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * <p>The one-cut distribution milestone (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the live peer
  * roster, match the chain shape {@code [seed, {*}floatable, blocked cut, {*}tail]}, locate the cut, then
- * emit the {@code [chain...]==[to()...]} layout the SwarmProcessor consumes. The cut's law obligations
+ * emit the {@code start([slave...]).select([to(peer)...]).merge().<combiner>.<tail>} layout the processor runs.
+ * The cut's law obligations
  * ({@code monoidic} + {@code commutative}) ride on the {@code blocked} slot's COMBINER — the fold the partials
  * recombine through, computed by {@link LawTable#combiner} — so {@link PlanBuilder#create()}'s shape-derived
  * check and the match-time check are the same Thm 19 hypothesis, read off the fold that is re-applied.
@@ -88,9 +88,10 @@ public final class PlanInterpreter {
     }
 
     /**
-     * Lower the plan onto {@code code} — the single application point. A distribution plan (no {@code law})
-     * lowers through {@link #shard}; a law-driven plan dispatches on its declared {@code law}. An unknown plan
-     * is the identity.
+     * Lower the plan onto {@code code} — the single application point. Every plan is {@code [name, cut, route]},
+     * and what its cut names picks the transform ({@link #lowerCut}): a form cut distributes through
+     * {@link #shard}, a theory role or a process law selects a local fold. A plan whose cut names nothing
+     * known is the identity.
      */
     public static Code lower(final Plan plan, final Code code) {
         return lowerCut(plan, code);
@@ -638,7 +639,7 @@ public final class PlanInterpreter {
      * witness is read off object[code].law at rewrite time (for the code ring: branch).
      */
     private static Code branchCollapse(final Code code) {
-        return repeatedTerms(additiveWitness(T(CODE_TID)), T(CODE_TID), code);
+        return repeatedTerms(TheoryHelper.additiveWitness(T(CODE_TID)), T(CODE_TID), code);
     }
 
     /**
@@ -646,47 +647,7 @@ public final class PlanInterpreter {
      * member — {@code S(x) ↦ x}, the frame's own coefficient folded into it.
      */
     private static Code branchInline(final Code code) {
-        return oneTerm(additiveWitness(T(CODE_TID)), T(CODE_TID), code);
-    }
-
-    /**
-     * The op address of a type's declared additive structure — the law-indexed witness: the first theory
-     * instance of {@code object[T].law} that carries an additive role — the {@code add} role of a ring/field/rig,
-     * or the {@code op} role of an {@code add_*} monoid/group. The role is read with {@code atDirect} (no call
-     * evaluation; {@code rec.has} reports false on law keys that still resolve, so the noobj answer is the
-     * presence test), and the auto pointer is unwrapped with {@code getPointer} without resolving it. For the
-     * code ring this answers the branch address, for the int ring the plus address; a type declaring no additive
-     * structure answers null, which degrades the normalizers to the identity.
-     */
-    private static fURI additiveWitness(final Type type) {
-        fURI add = null;
-        for (final Map.Entry<Obj, Obj> instance : TheoryHelper.instances(type).jvm().entrySet()) {
-            if (!instance.getValue().isRec())
-                continue;
-            final Rec block = instance.getValue().asRec();
-            final String name = instance.getKey().isUri() ? instance.getKey().uriValue().name() : null;
-            if (null != name && name.startsWith("add_")) {
-                final fURI op = roleAddress(block, OP);
-                if (null != op)
-                    return op;  // the additive group's n-ary op (branch) — the form the normalizers fold
-            } else if (null == add)
-                add = roleAddress(block, ADD);
-        }
-        return add;
-    }
-
-    /**
-     * The op address a law block's role binds, or null when the role is absent or binds a literal: the value
-     * arrives as a {@code !*} auto pointer naming its target in its own argument, so the address is read
-     * without resolving — the target may be an as-yet-unresolved registration.
-     */
-    private static fURI roleAddress(final Rec block, final String role) {
-        final Obj holder = block.atDirect(uri(role));
-        if (holder.isNoObj())
-            return null;
-        if (holder.isUri())
-            return holder.uriValue();
-        return Obj.Helper.getPointer(holder).orElse(null);
+        return oneTerm(TheoryHelper.additiveWitness(T(CODE_TID)), T(CODE_TID), code);
     }
 
     /**

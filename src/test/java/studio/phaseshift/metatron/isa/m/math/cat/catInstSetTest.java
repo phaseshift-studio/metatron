@@ -705,6 +705,16 @@ public class catInstSetTest extends AbstractInstSetTest {
             "start({1,2,3}).group([mod(2)=>_])                         % law_shard  % false",
             // the deep merge's own fold is commutative (a lst is an atom of the merge), so a bag of recs shards as itself
             "start({[a=>1],[b=>2]}).sum()                              % law_shard  % true",
+            // the additive normalizers read the branch's member count: like terms need a pair (whether the two are
+            // alike is the value residue, so an unlike pair still licenses the collapse), a lone member inlines
+            "start(1).branch(+2,+2)                                    % branch_collapse  % true",
+            "start(1).branch(+2,+4)                                    % branch_collapse  % true",
+            "start(1).branch(+2)                                       % branch_collapse  % false",
+            "start(1).branch(+2)                                       % branch_inline    % true",
+            "start(1).branch(+2,+2)                                    % branch_inline    % false",
+            // a chain with no branch carries neither edge
+            "start(5).plus(0).neg().neg()                              % branch_collapse  % false",
+            "start(5).plus(0).neg().neg()                              % branch_inline    % false",
     }, delimiter = '%')
     void testAprioriPruning(final String code, final String rule, final boolean live) {
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse(code));

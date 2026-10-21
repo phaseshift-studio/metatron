@@ -70,7 +70,8 @@ public enum Law {
      */
     right_distributive,
     /**
-     * a non-associative binary op with an identity element
+     * a bare binary op — a magma: closure only, neither associativity nor an identity demanded (as {@link #monoidic}
+     * is a monoid). {@code mean} is the witness: commutative, but neither associative nor unital
      */
     magmadic,
     /**

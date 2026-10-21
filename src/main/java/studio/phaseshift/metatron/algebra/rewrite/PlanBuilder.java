@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * PlanBuilder — the fluent entry point of the algebraically-driven rewrite DSL. Declare the {@link Cut cut}
  * (the anchor), let the {@link Span spans} be induced around it, bind them to {@link Route routes}, and
- * {@link #create()} the {@link Plan} — a value a {@code Rewrite} interpreter lowers to code.
+ * {@link #create()} the {@link Plan} — a value {@link PlanInterpreter} lowers to code.
  *
  * <pre>{@code
  * final Cut  cut  = Cut.reducer(Law.monoidic, Law.commutative);
@@ -43,10 +43,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * final Span at   = Span.at();
  * final Span post = Span.after();
  *
- * final Plan shard = PlanBuilder.plan("shard")
+ * final Plan shard = PlanBuilder.plan("law_shard")
  *         .cut(cut)
- *         .route(Route.local(at, post))                                        // [to()]
- *         .route(Route.peers(Span.seed().partition(), pre.withoutSeed(), at))   // [to(a), to(b), ...]
+ *         .route(Route.local(at, post))                                          // home: merge().<combiner>.<tail>
+ *         .route(Route.tree(1, Span.seed().partition(), pre.withoutSeed(), at))  // [to(a), to(b), ...]
  *         .create();
  * }</pre>
  * <p>

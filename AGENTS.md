@@ -5,6 +5,8 @@ A distributed data-oriented computing language and virtual machine built in Java
 - **metatron** (lowercase): the runtime system / VM environment
 - **mtron** (lowercase): the functional programming language (like Java to JVM)
 
+This file holds the rules every session needs. The long references live in `docs/agents/` and are linked where they apply.
+
 ---
 
 ## Strict Rules
@@ -12,281 +14,73 @@ A distributed data-oriented computing language and virtual machine built in Java
 * Under no circumstance should you perform any git operations. Do not check out, do not stash, do not merge, do not
   commit, and do not push. Git is off limits.
 
+## Memory — Hindsight is the shared, harness-agnostic store
+
+This project is worked on from several agent harnesses (Claude Code, the DeepSeek harness, Codex, …). **Hindsight is
+the one project memory they all share** (MCP server `hindsight`, bank `coding-agent::metatron`). A harness's own
+memory — Claude Code's `~/.claude/projects/*/memory/`, `.remember/`, Codex notes — is visible to that harness alone.
+Treat Hindsight as the source of truth, and write to it.
+
+* **Read before acting.** Call `hindsight_search_knowledge_pages(query)` first: before fixing a reported bug, writing a
+  test, building something new, explaining why something is the way it is, or committing. Use
+  `hindsight_read_knowledge_page(id)` for a page worth reading in full, and `hindsight_reflect(query)` for the
+  reasoning behind a past decision. What it returns is a past record: check a claim that something works against
+  the code before relying on it.
+* **Write what you learn.** Ingest design rulings, findings, conventions and environment facts with
+  `hindsight_ingest_document(title, content)`: one document per topic, a specific title, dated, exact values kept.
+  Search first so you extend rather than duplicate. When you verify that a Hindsight fact is stale, ingest a
+  `Correction: <topic>` document stating what it claimed, what is true now, and the evidence.
+* **Track features.** Call `hindsight_capture_initiative(title, summary)` right before implementing a new feature or
+  capability. Call it again with `relates_to_page_id` whenever the feature's goal or scope changes. Skip bug fixes
+  and chores.
+* **Keep your harness's own memory too** if it has one — just never only there. Session transcripts may be captured
+  automatically, but a distilled ruling or finding needs an explicit write.
+* **Credit it.** When Hindsight content shapes a reply, say so (a `🧠 From Hindsight memory (<page>)` note), so the
+  user can tell recalled facts from fresh reading.
+* Some harnesses load the `hindsight_*` tools on demand (in Claude Code, via `ToolSearch`). If they are missing, the
+  server is not connected: say so rather than silently skipping memory.
+
 ## Build & Test
 
-### Commands
+**JDK 25+** is required to compile and run, and tests must run on JDK 25: the pom's surefire `argLine` uses
+`--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag. CI uses Oracle JDK 25.
 
 ```bash
-# Build with tests
-./mvnw install
-
-# Skip tests (fast dev loop)
-./mvnw install -DskipTests
-
-# Run all tests
-./mvnw test
-
-# Single test class
-./mvnw test -Dtest=memSpaceTest
-
-# Exclude tests (CI pattern)
-./mvnw test -Dtest='!httpSpaceTest,!fsSpaceTest'
-
-# Package uber-jar
-./mvnw clean package
-# Output: target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar
+./mvnw install                                    # build with tests
+./mvnw install -DskipTests                        # fast dev loop
+./mvnw test                                       # run all tests
+./mvnw test -Dtest=memSpaceTest                   # single test class
+./mvnw test -Dtest='!httpSpaceTest,!fsSpaceTest'  # exclude tests (CI pattern)
+./mvnw clean package                              # uber-jar: target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 
-### Requirements
-
-- **Java**: JDK 25+ to compile and run (CI uses Oracle JDK 25, jDeploy uses Temurin JDK 25)
-
-### Build Environment (this container)
-
-Builds normally run in docker (see **Docker Build Loop** below), where the toolchain lives inside the repo under
-`.build/` (git-ignored). That same toolchain — `.build/jdk` (Temurin 25) and the `.build/m2/repository` cache — also
-serves **this container** directly, so `./mvnw` works here as-is; on a **full host** a writable `$HOME` with its own
-JDK and Maven is used instead. Both cases are worth knowing, because a mismatch between them reads as a broken build:
-
-- **In this container `./mvnw` works — use it, don't work around it.** `$HOME/.mavenrc` (HOME is `/workspace` here)
-  points the wrapper at the repo's own toolchain: `JAVA_HOME=/workspace/.build/jdk` (Temurin 25) and
-  `MAVEN_OPTS=-Dmaven.repo.local=/workspace/.build/m2/repository` — the same cache the docker loop resolves into.
-  Verified 2026-10-04: `./mvnw -v` reports Temurin 25, `./mvnw -o -X validate` prints `Using local repository at
-  /workspace/.build/m2/repository`, and `./mvnw -o -q test-compile` exits 0.
-  A shell whose `HOME` is **not** `/workspace` breaks twice over: the launcher finds no `java` (nothing is on `PATH`)
-  and the wrapper tries to create `$HOME/.m2/wrapper`, which is the read-only `/home/node`. Three variables make the
-  wrapper independent of `HOME` — `JAVA_HOME`, `MAVEN_OPTS` (as above) and `MAVEN_USER_HOME=/workspace/.m2` — and the
-  container's compose exports all three; with only `.mavenrc`, prefix `HOME=/workspace` instead.
-  **Never hand-compile with `.build/jdk/bin/javac` and drive JUnit directly as a substitute for a build.** That
-  bypasses the pom — surefire's `argLine`, resource filtering, the test lifecycle — so a green hand-rolled run does
-  not mean the build passes. If the wrapper fails, fix the invocation (set the three variables, or `HOME=/workspace`)
-  and say so; do not silently substitute a different toolchain.
-- **On a full host** `./mvnw` is the stock Maven wrapper and does *not* self-configure: it does *not* read
-  `.build/m2/settings.xml`, so with no `~/.m2/settings.xml` the local repository is the default `~/.m2/repository`.
-  That is independent of the docker loop, which resolves into `.build/m2/repository` (see below); the two caches do
-  not overlap. It also uses the JDK from `JAVA_HOME` (else the `java` on `PATH`), which on a host is
-  usually *not* the `.build/jdk` the launcher runs on — the compiled classes are that other JDK's output.
-- **`bin/metatron`** prefers an explicit `JAVA_HOME`, else `.build/jdk/bin/java` when present (Temurin 25, matching
-  CI), else the `java` on `PATH`. It runs the dev loop from `target/classes` + the cached dependency classpath
-  (`.mtron-classpath`), which holds **absolute** jar paths and is validated before use: a sidecar
-  (`.mtron-classpath.sha256`) records the `pom.xml` the cache was resolved from, and the first cache entry must
-  still exist. A cache from another `$HOME`, or one whose pom has changed, is re-resolved automatically — so a
-  bare `NoClassDefFoundError` on some dependency class is a stale-cache symptom to check *here* first, not a
-  missing dependency.
-- `.build/jdk21` exists for reference, but **tests must run on a JDK 25 build**: the pom's surefire `argLine`
-  includes `--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag that JDK 21 rejects (this is why CI uses JDK 25).
-- **`bin/` layout** — commands you *type* stay flat in `bin/` (`bin/metatron` is the launcher — the old
-  `bin/metatron-dev` is retired — plus `bin/metatron-docker` for every docker job and `bin/metatron-console` for the
-  pty console harness); sourced shell helpers live in `bin/lib/`; assets a command consumes live in `bin/test/`
-  (e.g. `bin/test/console-smoke.steps`).
-
-### Docker Build Loop (the agent standard)
-
-Agents doing builds, tests, or docs-pipeline work should run them in docker rather than on the host:
-a live server (host VM or the `metatron` dev container) owns the host's 8555/8777 and gets rebuilt/restarted constantly,
-so host-side VM boots collide with it. The loop is isolated — no published ports, ephemeral unique-named containers,
-artifacts land back host-owned.
+**Agents build and test in docker** with `bin/metatron-docker build …` (no published ports, throwaway containers):
+a live server owns the host's 8555/8777 and is rebuilt constantly, so host-side VM boots collide with it.
 
 ```bash
-bin/metatron-docker build                     # mvn package (skip tests)
-bin/metatron-docker build test -Dtest=memSpaceTest  # test run in the container
-bin/metatron-docker build docs [dir|file.md]        # MarkdownRunner --html (site html via HTMLMarkdownSerializer)
-bin/metatron-docker build console --steps f.steps   # drive a real console in a pty (see below)
-bin/metatron-docker build shell '<cmd>'               # raw shell in the container
-bin/metatron-docker build image                     # rebuild the build image
-bin/metatron-docker help                            # the full reference
-
-# the other two jobs — neither is isolated, know what you are touching
-bin/metatron-docker                                 # run a boot file in a disposable container (ports published)
-bin/metatron-docker dev [--no-build]                # dev loop: package in docker -> app image -> run
+bin/metatron-docker build                             # package (skip tests)
+bin/metatron-docker build test -Dtest=memSpaceTest    # tests in the container
+bin/metatron-docker build docs [dir|file.md]          # docs pipeline (MarkdownRunner --html)
+bin/metatron-docker build console --steps f.steps     # drive a real console in a pty
+bin/metatron-docker help                              # the full reference
 ```
 
-- Every docker entry point is one script, `bin/metatron-docker`; the job is its subcommand. The three
-  jobs were formerly `bin/metatron-docker` / `bin/metatron-dev-docker` / `bin/metatron-build-docker`; the
-  latter two are **retired** — `bin/metatron-docker dev` and `bin/metatron-docker build …` replace them (a note that
-  still names them is stale).
-- **`build …` is the agent-safe set**: no published ports, throwaway containers.
-- `image` and `dev` package the uber-jar **inside** `metatron-build:25` and then build `metatron:dev`, whose
-  Dockerfile COPYs `target/metatron-*-jar-with-dependencies.jar` directly — there is no staging copy in the repo root,
-  and `.dockerignore` whitelists exactly that one file (plus `boot/`, `conf/`, the skills docs and `bin/wsplus`) into
-  the
-  build context. So docker is the only host requirement — no host maven/JDK — and the jar comes from the same JDK 25
-  image the test loop uses. Order matters for the low-level path: package first (`mvn -DskipTests package`), then
-  `docker build`.
-- `run` and `dev` publish 8555/8777 (they collide with a live server by design); `NO_PORTS=1` makes `run`
-  publish nothing. **`dev` removes and recreates the container named `$METATRON_CONTAINER`
-  (default `metatron`)** — never run it while that container is the server under test.
-- `DRY_RUN=1 bin/metatron-docker <anything>` prints the docker/mvn commands instead of running them.
-- Image `metatron-build:25` auto-builds on first use from `dist/docker/Dockerfile.build`
-  (maven + Temurin 25 + **patchelf** — patchelf is mandatory: the uber-jar ships a musl-built tree-sitter `.so` that
-  `ObjJavaSerializer` re-points at glibc on load; without it the VM dies with `UnsatisfiedLinkError` and parks forever
-  on the `/sys/thread/main` latch instead of exiting — a hung, non-terminating java process is the symptom).
-- The repo mounts at `/work`; the container runs as the host user; **no ports are published** — the VM's 8555/8777 exist
-  only in the container's netns, never on the host.
-- The build loop keeps its Maven cache **separate from the host's**: `Dockerfile.build` sets a local repository and
-  `bin/metatron-docker` overrides it with `-Dmaven.repo.local=/work/$MAVEN_REPO`, where `MAVEN_REPO` defaults to
-  `.build/m2/repository` (override it to share one cache, e.g. `MAVEN_REPO=~/.m2/repository`). So `.build/m2/repository`
-  serves the container only and `~/.m2/repository` serves `./mvnw` on the host; **neither is an orphan, and deleting
-  `.build/m2` just makes the next `build …` re-resolve** its dependencies. `.build/m2/settings.xml` is unreferenced —
-  the redirect is done with the flag above, not through a settings file. Every run gets a unique container name — never
-  hardcode a docker `--name` around these (a stale container from a killed run collides).
-- Docker builds **never touch the repo's `target/`**: the container's `/work/target` is bound to `.docker-target/` at
-  the repo root (auto-ignored by .gitignore's `.*`; override with `METATRON_BUILD_TARGET`). Fs (host) builds and
-  docker builds can therefore run without clobbering each other's artifacts. Jobs that hand an artifact off (`build`'s
-  package verb, `image`, `dev`) copy the uber jar back into `target/` afterwards — the Dockerfile COPY
-  keeps working. Docker test reports land in `.docker-target/surefire-reports/`.
-- Docs pipeline (`docs` subcommand): `MarkdownRunner` evaluates the ` ```mtron_pre ` blocks of
-  `docs/skills/*` and writes the single processed copy via `.metatron/skills`, which is a **symlink to
-  `docs/website/skills`**; `MarkdownRunner --html` renders the site HTML (body conversion via
-  `HTMLMarkdownSerializer`, page chrome assembled in the runner — this replaced the deleted
-  `docs/SkillHtmlRenderer`). `docs` also takes a single `.md` file (probe mode): a
-  `docs/skills/...` file lands in its `.metatron/skills/` slot, any other file goes to `_probe/`. Rule: every example in
-  a skill doc must be verified through this pipeline before shipping —
-  `fail::` lines in the processed output are broken examples.
-- Never kill the live server's java process or the `metatron` dev container.
+Rules that bite:
 
-#### Running the loop from inside the dev container (verified 2026-10-12)
+* **Read `Tests run:`, not the exit code.** `Tests run: 0` is not a pass, and `-Dtest=Class#` with an empty method
+  silently runs the whole suite.
+* **Never hand-compile with `javac` and drive JUnit as a substitute for a build.** That bypasses the pom (surefire's
+  `argLine`, resource filtering, the test lifecycle). If `./mvnw` fails, fix the invocation and say so.
+* **Never kill the live server's java process or the `metatron` dev container.** `bin/metatron-docker dev` recreates
+  the container named `$METATRON_CONTAINER`, so never run it while that container is the server under test.
+* `DRY_RUN=1 bin/metatron-docker <anything>` prints the docker/mvn commands it would run; check its `-v` paths before
+  trusting a result from inside the dev container.
 
-Works with **no setup at all**: `bin/metatron-docker` finds the docker CLI itself (it puts
-`/opt/dsh-tools/bin` on `PATH` when the binary is not already there) and derives the host repo path
-from the mount table, so a plain `bin/metatron-docker build test …` works from inside this container.
-The deployment's compose exports both as well — `PATH` and `METATRON_HOST_REPO` — which is the
-explicit form. Verified here with a plain invocation, nothing exported:
+The toolchain in detail (container vs host, the dev container, the docker loop's mounts and caches, JVM flags) is in
+[docs/agents/build-environment.md](docs/agents/build-environment.md). The pty console harness and file-trace debugging
+of a live console are in [docs/agents/console-harness.md](docs/agents/console-harness.md).
 
-    bin/metatron-docker build test -Dtest=fURIAwareIndexedSchemaTest
-    → 441 main + 270 test sources compiled, Tests run: 24, Failures: 0, Errors: 0, BUILD SUCCESS (13.9 s)
-
-- **Two repo paths, and they are not the same thing here.** `REPO` is local (`$(pwd)` = `/workspace`)
-  and is used for the build context, `mkdir` and `cp`; `HOST_REPO` is what the *daemon* resolves
-  (`METATRON_HOST_REPO`, `/home/killswitch/software/metatron`) and is what goes into `-v`. Because
-  `docker run -v` is resolved by the daemon, one path for both binds a non-existent host directory:
-  the loop then compiles an empty tree and can still report BUILD SUCCESS. On a host both are
-  `$(pwd)`. `HOST_REPO` is derived from the mount table (field 4 of the `/proc/self/mountinfo` entry
-  whose mount point is the repo — field 9 is the backing device, not the path) and `METATRON_HOST_REPO`
-  overrides it. **If `DRY_RUN=1` shows `-v /workspace:/work`, the derivation found no bind mount and
-  `METATRON_HOST_REPO` must be set by hand — that mount is wrong.**
-- **`.mavenrc` is `$HOME`-relative** for the same reason: the loop runs the container with
-  `HOME=/work`, so the toolchain shim resolves to `/work/.build/…` — the same tree under a different
-  prefix. Absolute `/workspace/…` paths name a directory that does not exist there and the build dies
-  before Maven starts. The log line `Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=/work/.build/m2/tmp`
-  is this working.
-- **The build/test container also gets the docker socket** (`-v /var/run/docker.sock` plus
-  `--group-add <socket gid>`) **and `TESTCONTAINERS_HOST_OVERRIDE`**, so the `tble`/`dcmnt`/`vec`
-  TestContainers classes run inside the loop. The nested containers publish to the *host*, so that
-  override is what makes their ports reachable — `localhost` would be the build container itself.
-
-Container facts that otherwise read as a broken build:
-
-- **The filesystem is read-only except `/workspace`, `/opt/dsh-tools` and tmpfs.** `mkdir` on a host
-  path from inside here fails with `Read-only file system`; that is the container, not a missing
-  checkout. Anything a job needs to write must land under the repo or `/opt/dsh-tools`.
-- The docker CLI is `/opt/dsh-tools/bin/docker` (static binary on the host-shared mount, added to
-  `PATH` by the compose). The socket is mounted and usable as the `node` user (gid 127), so both the
-  CLI and the HTTP API work.
-- `docker ps` costs nothing — prove the socket before blaming a test.
-- `DRY_RUN=1 bin/metatron-docker <anything>` prints the exact `docker run`; read its `-v` paths and
-  its `-e` flags before trusting any result from the loop.
-- **`Tests run: 0` is not a pass, and neither is an empty method name.** Surefire exits 0 and Maven
-  prints BUILD SUCCESS when `-Dtest=` selects nothing — including when the method you named is real
-  but is not a test (a `@BeforeAll` such as `setupMySQLDatabase` will do it). Worse, `-Dtest=Class#`
-  with an EMPTY method drops the method filter entirely and silently runs the whole suite (1986 tests
-  and two minutes here, with unrelated failures). Read the `Tests run:` line, not the exit code.
-- **A TestContainers class can fail to acquire the daemon during a full-suite run** with
-  `Could not find a valid Docker environment` (the `tble` MariaDB and PostgreSQL classes did, while
-  MySQL ran 652 tests against a live container in the same run). The socket and
-  `TESTCONTAINERS_HOST_OVERRIDE` are correct — re-run the affected class alone
-  (`bin/metatron-docker build test -Dtest=MariaDBTbleSpaceTest`) before calling it a wiring problem.
-
-### Driving the console in a pty (`bin/metatron-console`)
-
-Some behaviour only exists on a terminal: raw-mode keystrokes (`alt+b`, `ctrl-c`, arrows), the jline
-keymap, history, type-ahead, prompts, widgets, and the console's input handoff. A pty is the only way
-to exercise it, so `bin/metatron-console` boots a metatron VM with a console **in a pty** (python
-`pty.fork` — no `docker -t` needed), plays a step script at it, asserts on what came back, and prints
-a timestamped transcript.
-
-```bash
-# isolated — the agent standard, same container as the build/test loop (no ports)
-bin/metatron-docker build console --steps bin/test/console-smoke.steps
-bin/metatron-docker build console --run 'WAIT_CONSOLE; SEND 1; WAIT ==>1'
-
-# on the host (needs python3)
-bin/metatron-console --steps bin/test/console-smoke.steps
-bin/metatron-console --help           # every flag + the full step reference
-bin/metatron-console --list-keys      # KEY names: alt+b, ctrl+c, up, tab, shift+tab, ...
-```
-
-**What it gives you**
-
-| Capability | Detail                                                                                                                                                                                                                    |
-|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| boot       | default profile `boot/console.boot.mtron` — console-only, **no ports bound**, ~3s boot, safe beside the live server (`--boot` for any other profile)                                                                      |
-| safety     | the harness *refuses* a boot file that mentions 8555/8777 unless `--allow-ports`; the VM runs in a throwaway temp cwd (`--cwd repo` to override) so the user's `.metatron.history` and other repo state are never touched |
-| versions   | `--from jar` (default, the uber jar from `bin/metatron-docker build`) or `--from classes` (target/classes + `.mtron-classpath` → no jar build needed for a dev loop)                                                      |
-| keys       | `KEY alt+b`, `KEY ctrl+c`, `KEY up`, `TYPE` (no Enter), `SEND` (with Enter), `RAW b"\x1bb"` escape hatch                                                                                                                  |
-| assertions | `WAIT_CONSOLE`, `WAIT <text> [s]`, `WAIT_SINCE <mark> <text> [s]`, `SINCE <mark> <text>`, `SILENT <mark> <text> [s]`, `MARK`, `SLEEP`, `ECHO`, `NOTE`, `ELAPSED`                                                          |
-| matching   | case- **and** ANSI-insensitive, so `WAIT background` matches a colourised banner; failures print the transcript since the nearest mark                                                                                    |
-| output     | timestamped transcript, `--transcript FILE` (ANSI-stripped), `--raw FILE`, `--quiet`, `--cols/--rows`, `--timeout`; **exit code is non-zero if any check failed**                                                         |
-
-`bin/test/console-smoke.steps` is the worked example and the console regression suite — evaluation,
-history recall via `KEY up`, type-ahead kept while a job runs, `alt+b` backgrounding (asserting the
-prompt returns *before* the job finishes and the job's result still lands afterwards), ctrl-c
-stopping a job, and the `[q]` cancel offer. Run it after any console/UI change, and copy it as the
-starting point for your own scenario (`--steps my.steps`).
-
-**Cautions**
-
-- An image built before python3 was added cannot drive a console — the wrapper says so; rebuild with
-  `bin/metatron-docker build image`.
-- `--from classes` needs `target/classes`, `src/main/resources` and `.mtron-classpath` (run
-  `bin/metatron` once, or `./mvnw compile` + `./mvnw dependency:build-classpath -Dmdep.outputFile=.mtron-classpath`).
-- Assert on text, never on cursor position or colours (the pty is 110x40 by default; the console
-  renders differently at other sizes).
-- The harness never publishes ports and boots a portless profile by default — keep it that way, and
-  never point `--boot` at a profile that binds the live server's ports.
-
-### Diagnosing a live console from an agent (file traces)
-
-When a bug is in a UI someone else is driving — a click that does nothing, a key that is swallowed,
-a read that never returns — the agent cannot see the terminal, and printing a diagnostic does not
-reach the agent anyway. The technique that works, and has paid for itself repeatedly:
-
-- **Write the trace to a file inside the repo.** An agent sandbox has its own `/tmp` and its own PID
-  namespace: it cannot read the user's `/tmp` and cannot see the user's process. The repository is
-  the one place both sides can see. Default the path to `System.getProperty("user.dir") +
-  "/target/<name>.log"`, override with a system property, and append with
-  `Files.writeString(..., CREATE, APPEND)`.
-- **Never print the trace to the transcript.** Anything written at the prompt scrolls the rows under
-  the pointer, which is enough to break the very gesture being examined (a double click outright, and
-  a click diagnostic that prints on the first press makes the second press land on a moved row). A
-  screen diagnostic cannot diagnose the screen.
-- **A trace must never throw.** Wrap the whole write in a catch that swallows: a debugging aid that
-  can break the console it is watching is worse than no debugging aid.
-- **Log the decision, not the symptom.** The line that settles a UI bug names the values that chose
-  the branch — thread name, the flag that gated it, the row and column, what was found there. "no
-  output" is then a diagnosis of its own: the press never reached the console.
-- **Ask for one reproduction, then read the file yourself.** One click (or one keystroke) plus a file
-  the agent can open replaces a round of blind edits. Say "do it once and tell me you did", not
-  "paste the log".
-
-Two things that make the loop fast enough to be worth it:
-
-- Compile with **`.build/jdk/bin/javac`** — it is Temurin 25, the same major the build uses. Do not rely on
-  a PATH `javac`: a different major emits a class-file version the runtime rejects with
-  `UnsupportedClassVersionError`. A targeted
-  `javac -cp "target/classes:src/main/resources:$(cat .mtron-classpath)" -d target/classes <files>`
-  has no class-file-version trap.
-- A dev checkout (`bin/metatron` / `bin/drstynx`) runs `target/classes` and recompiles from source
-  when it is stale — so a targeted `javac` into `target/classes` reaches the user's console at the
-  next restart, with no jar build. Do not add `-sourcepath`: pulling in unrelated sources drags in
-  module-flagged ones (`com.sun.net.httpserver`) and fails.
-
-**Clean up when the bug is dead, and remove trace call sites by exact anchor.** Deleting them by
-index span (from a marker comment to the next one) takes whatever sits between the two — once an
-entire block of neighbouring members went with them, and only the compiler noticed. Delete the exact
-strings, compile immediately, and delete the log file.
-
-### Code Style
+## Code Style
 
 - In general, adopt existing patterns in the codebase.
 - Use American English spelling in variables and documentation (e.g. color not colour).
@@ -304,155 +98,31 @@ strings, compile immediately, and delete the log file.
   and many identically with no `isLst()`/`isRec()`/`isRel()`/`instanceof Poly` branching. Sort a read yourself when
   position matters. See the `stream()` note under Key Concepts.
 
-### Test Framework
+## Tests
 
-- **JUnit 5** (Jupiter), surefire 3.5.5
-- Test logging: `src/test/resources/logback-testing.xml`
-- All tests extend `AbstractMetatronTest` which handles boot/shutdown
+JUnit 5. Every test class extends `AbstractMetatronTest`, which boots and shuts down the VM.
 
-### Test Styles — `@ParameterizedTest` Preferred
+* **Prefer `@ParameterizedTest` + `@CsvSource` with `delimiter = '%'`.** Each row is a self-contained mtron
+  scenario, so a corner case is one CSV line. Don't name the parameterized test. Use a plain `@Test` only for
+  multi-step orchestration (concurrency, complex setup/teardown).
+* `@TestData` preloads data or configures metatron state before the test method runs.
+* Assert with the `AbstractMetatronTest` helpers — `checkCodeParseApply`, `checkCodeEvaluate`, `checkEquality`, and
+  `<ERROR>` as an expected value for the fail path — rather than `assertTrue/False`, which tell the reader nothing.
+* The canonical example of the style is `studio.phaseshift.metatron.isa.m.mInstSetTest`.
 
-- **Use `@ParameterizedTest` + `@CsvSource`** as the default pattern for new tests. Each CSV row is a self-contained
-  scenario using mtron string expressions. This keeps tests data-extensible — corner cases are one CSV line, not new
-  Java methods.
-- Don't name your `@ParameterizedTest` -- i.e. don't do `(name = "[{index}] {1}")`
-- Use standalone `@Test` methods only for multistep orchestration (e.g., concurrency tests, complex setup/teardown) or
-  non-tabular scenarios.
-- The `%` delimiter avoids collision with mtron syntax which use commas, pipes, semicolons.
-- The `@TestData` test method annotation enables preloading data (or configuring metatron state) prior to test
-  evaluation.
-
-**Example** — three scenarios, one test method:
-
-```java
-
-@ParameterizedTest()
-@TestData(value = {
-        "a -> 555",
-        "@/sys/thread/executor >>= noobj"
-})
-@CsvSource(value = {
-        "/c1 | \"immutable\" | \"mutated\" | blocks overwrite after constQ",
-        "/c2 | \"first\"     | \"second\"  | preserves initial value",
-}, delimiter = '%')
-void testConstQ(String uri, String initial, String mutate, String desc) { ...}
-```
-
-### `@Training` — Template-Based Training Data
-
-The `@Training` annotation turns a `@ParameterizedTest` + `@CsvSource` method into LLM fine-tuning data for
-`UnslothTrainingDatasetExtractor`. It is `@Repeatable`; each of `instruction`, `input`, and `output` is a template
-whose `{{{param}}}` holes are replaced by that column's row value. A hole substitutes only when its content is an
-exact match for a method parameter name (needs the `-parameters` compiler flag); anything else (e.g. an mtron
-`{{{expr}}}` template) is emitted verbatim.
-
-```java
-
-@Training(
-        instruction = "when the {{{rec}}} rec is rshifted by the {{{key}}} key, what is the result?",
-        input = "{{{rec}}}>>{{{key}}}",
-        output = "{{{value}}}")
-@ParameterizedTest
-@CsvSource(value = {
-        "[a=>b]   % c   % noobj",
-        "[a=>b]   % a   % b",
-}, delimiter = '%')
-void testKeyValue(String rec, String key, String value) { ...}
-```
-
-Each CSV row emits one `{instruction, input, output}` entry. Repeat the annotation to emit several entries per row.
-Methods with no `@Training` fall back to a two-column `expression → result` mapping (`?docq` operator context is
-woven into the instruction).
-
-**`{{{@TestData}}}` accessor** — when the method carries `@TestData`, the hole `{{{@TestData}}}` is replaced by
-the annotation's `value()` strings joined with newlines, so an entry can cite its preloaded setup data:
-
-```java
-
-@Training(instruction = "given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?",
-        output = "{{{expected}}}")
-@TestData(value = {
-        "x -> [address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"]",
-        "y -> [address/home/city=>\"santa fe\",address/work/city=>\"santa fe\"]"})
-@CsvSource(value = {
-        "[a=>1,b=>2,c=>3].select([a=>_,b=>_])   % [a=>1,b=>2]",
-}, delimiter = '%')
-void testSelect(String code, String expected) { ...}
-```
-
-Rendering throws `MTronException("attempting to access non-existent @TestData")` if the method has no `@TestData`.
-
-**`@Training.SkipTraining(reason)`** — nested annotation. When present on a method, the extractor emits no entries
-for it; use it for tests that don't map cleanly to `expression → result`:
-
-```java
-@Training.SkipTraining(reason = "too complicated to express easily")
-```
-
-See `UnslothTrainingDatasetExtractor` for the extraction logic and
-`.metatron/skills/mtron/references/unsloth-training-mtron.md` for the full training pipeline.
-
-- **Leverage static helpers** from `AbstractMetatronTest` for assertion logic:
-    - `checkCodeParseApply(LOG, code, expected)` — parse + apply mtron, assert result
-    - `checkCodeEvaluate(LOG, evaluate, fetch, expected)` — evaluate, fetch read-back, assert
-    - `checkEquality(LOG, a, b, equals)` — compare two objs with log output
-    - `<ERROR>` as an expected value triggers the fail-expected assertion path.
-    - avoid `assertTrue/False` assertions as they provide little information back to user on failure.
-
-### Canonical Test Examples
-
-The best example of the desired test-style can be found at:
-`studio.phaseshift.metatron.isa.m.mInstSetTest`
-
-### Test Bootstrap (Important)
-
-Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
-
-1. `TypeCheck.disable(TypeCheck.code_resolve)` — disables full code resolution requirement in tests (i.e. dynamic
-   resolution is 'ok')
-2. `BootLoader.BOOTING = true` — sets booting state
-3. `BootLoader.TESTING = true` — skips shutdown hook headless wait
-4. `BootLoader.load(...)` — initializes the VM
-
-### Test Infrastructure
-
-- **Test containers**: MySQL (3306), PostgreSQL (5432), MariaDB (3307) — run in CI
-    - a custom container example exists with ChromaDB.
-- **In-memory**: MongoDB (`mongo-java-server`), MQTT (`moquette-broker`)
-- SQLite JDBC available in both compile and test scope
-
----
+The full style guide, the `@Training` annotation (tests as LLM fine-tuning data), the test bootstrap and the test
+containers are in [docs/agents/testing.md](docs/agents/testing.md).
 
 ## Running
 
-### Run metatron
-
 ```bash
-# bin/metatron script (recommended)
 bin/metatron "[boot=><boot/boot.mtron>,log=>info]"
 ```
 
 `bin/metatron` supplies the required JVM flags and picks the launch mode: a dev checkout runs `BootLoader` from
-`target/classes` plus the cached dependency classpath, an installed deployment (`lib/metatron.jar`) runs the uber-jar.
-Both loop on `EXIT_RESET`, so `:reset` reboots the VM in place. Do not run the jar directly without these flags.
-
-### Required JVM Flags
-
-```
---enable-native-access=ALL-UNNAMED
---add-modules jdk.incubator.vector
---add-opens java.base/java.lang=ALL-UNNAMED
---add-opens java.base/java.lang.invoke=ALL-UNNAMED
---add-opens java.base/java.lang.reflect=ALL-UNNAMED
---add-opens java.base/java.util=ALL-UNNAMED
---add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED
---add-opens java.base/java.io=ALL-UNNAMED
---add-opens java.base/java.nio=ALL-UNNAMED
---add-opens java.base/java.net=ALL-UNNAMED
---add-opens java.base/sun.nio.cs=ALL-UNNAMED
-```
-
----
+`target/classes` plus the cached dependency classpath, and an installed deployment (`lib/metatron.jar`) runs the
+uber-jar. Both loop on `EXIT_RESET`, so `:reset` reboots the VM in place. Do not run the jar directly without the
+flags (they are listed in [docs/agents/build-environment.md](docs/agents/build-environment.md)).
 
 ## Architecture
 
@@ -507,19 +177,8 @@ A wildcard space read that matched several things hands you an `Objs` in Java. I
 obj alone**. So one code path covers "one match" and "many matches" with no shape inspection:
 
 ```java
-objs(jnt(1),jnt(2),
-
-jnt(3)).
-
-stream().
-
-forEach(...);   // many
-
-jnt(1).
-
-stream().
-
-forEach(...);                         // one — the same code
+objs(jnt(1), jnt(2), jnt(3)).stream().forEach(...);   // many
+jnt(1).stream().forEach(...);                         // one — the same code
 ```
 
 That uniformity is not luck: `MObjs.objs(...)` collapses an empty collection to `noobj()` and **a single element to that
@@ -562,19 +221,6 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
 
 ---
 
-## CI/CD
-
-|                         `.github/workflows/maven.yml` |                 `.github/workflows/docker.yml` |
-|------------------------------------------------------:|-----------------------------------------------:|
-|                                     Push/PR to `main` | Push to `main`, `v*` tags, `workflow_dispatch` |
-|                                         Oracle JDK 25 |                      Temurin JDK 25 (uber-jar) |
-| `./mvnw install -Dtest='!httpSpaceTest,!fsSpaceTest'` |     `mvn package` → build & push image to GHCR |
-
-Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatron`) by the
-`docker.yml` workflow — the Maven build itself does not touch Docker.
-
----
-
 ## Conventions
 
 1. **Packages**: `studio.phaseshift.metatron.isa.<domain>`
@@ -587,110 +233,28 @@ Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatr
 
 ---
 
-## MCP (Model Context Protocol)
+## Skills and docs
 
-- WebSocket handler: `mcp_mtron_wsHandler`
-- Test client: `bin/wsplus` — REPL + `-e` one-shot. **`bin/wsplus` is the only wsplus anyone edits.** The
-  copies at `docs/website/skills/{mtron,metatron}/scripts/wsplus` are build products: `bin/build-wsplus.py`
-  emits a bootstrap (inlining `bin/lib` and `conf/nanorc/mtron.nanorc`) followed by the unmodified body of
-  `bin/wsplus`, because that artifact is downloaded from the website and must run with nothing next to it.
-  They are refreshed by **every** build (the pom binds the bundler to `generate-resources`, and it skips
-  identical content), and `python3 bin/build-wsplus.py --check <dirs>` reports drift — printing `ok` or
-  `STALE` and exiting 1 — without writing a byte; `sh bin/test/build-wsplus.sh` runs it both ways.
-  "Bundled" does NOT cover its one third-party dependency: `bin/wsplus` imports `websockets` at runtime.
+* The agent skills live in `docs/skills/` (markdown; `.metatron/skills` links there). The hand-authored doc sources
+  are exactly three: `docs/skills/`, the human-oriented adocs in `docs/website/adoc/`, and the instruction-set API
+  reference derived from the instset source. **Everything else under `docs/website/` is generated and overwritten on
+  every build — never edit it by hand.**
+* When you create, rename or significantly change a Java class documented in a skill reference, update that
+  reference. Every example in a skill doc must pass the docs pipeline (`bin/metatron-docker build docs <file.md>`);
+  `fail::` lines in the processed output are broken examples.
+* Create or rewrite `.md` docs only when asked, or when the change is mechanical (a new class in a package map).
 
-### Python packages in this container
+Which reference to update for which class, and how: [docs/agents/skill-docs.md](docs/agents/skill-docs.md).
 
-- **`bin/wsplus` works out of the box here** (verified 2026-10-13). Its dependency `websockets` 17.2 — the
-  pure-Python wheel, so there is no ABI to match — is installed in the user site,
-  `/workspace/.local/lib/python3.13/site-packages`. It got there without pip, because pip was not
-  available and the system site is not writable: **a wheel is a zip**, so
-  `python3 -m zipfile -e PKG.whl "$(python3 -c 'import site; print(site.getusersitepackages())')"` is the
-  pip-free install. Python finds it automatically (`$HOME` is `/workspace` there and the user site is
-  enabled), so nothing needs exporting, and it lives under the repo mount — gitignored — so it survives
-  container recreates. Proof: `bin/wsplus -e '1 + 2' ws://192.168.1.61:8555/mtron` → `==>3`.
-- **pip is installed too** (26.2.1, same user site): `python3 -m pip install --user PKG`. This image's
-  Python is externally managed (PEP 668) and its system site is read-only, so `--user` is **required** and
-  both `/workspace/.pip/pip.conf` and `~/.config/pip/pip.conf` set `break-system-packages = true` (pip
-  actually reads the first for this container's `HOME`, which resolves `XDG_CONFIG_HOME` to
-  `/tmp/.config`). Check with `python3 -m pip config debug`. If a PEP 668 error appears anyway, prefix
-  `PIP_BREAK_SYSTEM_PACKAGES=1`.
+## MCP, CI and tooling
 
-## Skill Reference Docs
+* `bin/wsplus` is the WebSocket REPL and one-shot client (`bin/wsplus -e '<expr>' ws://<host>:8555/mtron`). It is the
+  only wsplus anyone edits; the copies under `docs/website/skills/*/scripts/` are build products.
+* CI: `.github/workflows/maven.yml` builds and tests pushes and PRs to `main`; `.github/workflows/docker.yml` builds
+  the image and publishes it to GHCR.
 
-The project maintains two skill sets under `.metatron/skills/`:
-
-| Skill        | Path                         | Purpose                                                               |
-|--------------|------------------------------|-----------------------------------------------------------------------|
-| **metatron** | `.metatron/skills/metatron/` | VM architecture, type system, boot process, MCP, UI architecture      |
-| **mtron**    | `.metatron/skills/mtron/`    | Language reference, examples, training pipeline, data-source adapters |
-
-Each skill has:
-
-- `SKILL.md` — index with a **References** section listing all `.md` docs
-- `references/*.md` — detailed topic docs (architecture, patterns, language spec)
-- `scripts/` — Python utilities (MCP client, training)
-- `assets/` — datasets, READMEs
-
-### When to Update
-
-Whenever you create, rename, or significantly change a Java class that is documented in a reference `.md`, update the
-corresponding file:
-
-| You changed…                                                              | Update…                                                                                                    |
-|---------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| A widget or UI class (`uiInstSet`, `TreeWidget`, `PanelWidget`, any tool) | `.metatron/skills/metatron/references/ui-instset-java.md`                                                  |
-| A type system class (`Type`, `MType`, `Inst`, `Code`)                     | `.metatron/skills/metatron/references/type-system-java.md` or `…-mtron.md`                                 |
-| A rewrite class (`RewriterBuilder`, `RewriteBuilder`)                     | `.metatron/skills/metatron/references/rewrite-system-java.md`                                              |
-| A space class (`tbleSpace`, `fsSpace`)                                    | `.metatron/skills/metatron/references/tble-space-java.md` or create a new space doc                        |
-| mtron language syntax or semantics                                        | `.metatron/skills/mtron/references/mtron-language-reference.md`                                            |
-| An MCP server/client class                                                | `.metatron/skills/metatron/references/mcp-mtron.md` or `.metatron/skills/mtron/references/mcp-server-*.md` |
-| A new data-source integration (`dckrSpace`, etc.)                         | `.metatron/skills/mtron/references/` — create a new doc                                                    |
-
-### How to Update
-
-1. **Add new classes to the package map** — every reference doc has a tree listing of Java files in the relevant
-   package. Add new files there.
-2. **Add new types to relevant tables** — e.g., the Tool→Widget dependency table in
-   `ui-instset-java.md`, or type registration tables elsewhere.
-3. **Update counts, examples, or signatures** if the change invalidates them.
-4. **Create a new `references/<topic>.md`** when adding a substantial new subsystem (a new space backend, a new
-   instruction set family, etc.). Follow the `---` YAML frontmatter convention with `name` and `description` fields. Add
-   the new file to the **References** list in the parent `SKILL.md`.
-5. **User-directed:** only create or update `.md` files when the user explicitly asks you to, or when the change is
-   clearly mechanical (adding a new class to an existing package map). For substantive documentation rewrites, confirm
-   with the user first.
-
-**IMPORTANT**: everything under `docs/website/` — **except `docs/website/adoc/`** — is generated on build and
-overwritten each run; never edit it by hand. The hand-authored sources are exactly three: the human-oriented adocs at
-`docs/website/adoc/`, the metatron API reference (`instset`) derived from source-code instruction sets, and the
-agent-oriented skills at `docs/skills/` (markdown). So `docs/website/skills/` is built from `docs/skills/`; edit the
-source, not the website copy. (`docs/skills` is also symlinked via `.metatron/skills`.)
-
-### Existing Docs
-
-- **metatron skill**: `references/` covers the type system (Java + mtron), UI architecture, rewrite system, tbleSpace,
-  and MCP client/servers.
-- **mtron skill**: `references/` covers the language reference, MCP server architecture, math instructions, HTTP
-  fetching, dckrSpace, answer-questions patterns, and the Unsloth training pipeline.
-
----
-
-## Tool Quirks — Write/Edit Truncation Bug (2026-07-03, fixed upstream)
-
-**IMPORTANT**: the following does not apply to DeepSeek Harness. If you are in DeepSeek Harness, skip this section.
-
-The Cowork-mode Edit and Write tools **silently truncate files when the content exceeds the pre-edit file's byte size**.
-The tool returns success even though the file is corrupted. Shell heredocs (`cat > f <<HEREDOC`) also fail for large
-files with the same symptom.
-
-**Reliable workaround:** Use Python `pathlib` for any file write 200+ lines (or ~4KB+) —
-`python3 -c "import pathlib; pathlib.Path('/abs/path').write_text(content)"`. Shows ~100% success in user logs.
-
-**Verification:** Always check `wc -c <file>` after writing/editing large files to confirm integrity. Line counts are
-unreliable since truncation can strip content unpredictably (missing loop variables, broken expressions, etc.).
-
----
+The MCP handler, wsplus bundling, Python packages in the dev container, CI and tool quirks are detailed in
+[docs/agents/build-environment.md](docs/agents/build-environment.md).
 
 ## Before Submitting
 
@@ -723,4 +287,3 @@ xerj def --prefix metatron "<Symbol>"           # exact go-to-definition
 prefix `ax` is empty, and neither `xerj search` nor `xerj def` will tell you that.
 Cite file:line for anything you rely on. Setup, corpora and caveats:
 [.xerj/README.md](./.xerj/README.md).
-

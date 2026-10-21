@@ -181,7 +181,7 @@ public class catRewrite {
 
     /**
      * The rewrite-name → plan registry — the bridge the path's out-edges look up when a rewrite rule has a
-     * declarative plan ({@code law} or {@code cut}/{@code route}) rather than a bare lambda. A Plan is now the {@code plan::T} rec
+     * declarative plan ({@code cut}/{@code route}) rather than a bare lambda. A Plan is the {@code plan::T} rec
      * itself, so there is no serialization step: the value is handed out as-is.
      */
     private static final Map<String, Plan> PLANS = new LinkedHashMap<>();
@@ -392,22 +392,24 @@ public class catRewrite {
 
                         // (6) the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
                         // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a
-                        // monoidic, commutative fold -- r itself (sum, prod), or the fold its derivation names
-                        // (count -> sum, order(s) -> kmerge(s)). The seed bulk is factored over the machine's peers,
-                        // the elementwise (floatable) run is replicated per factor with a local partial reduce, and
-                        // the combiner is applied once more behind a barrier at home:
+                        // monoidic, commutative fold -- r itself (sum, prod), the fold its derivation names
+                        // (count -> sum, order(s) -> kmerge(s)), or pointwise for a keyed group. The seed bulk is
+                        // factored over the machine's dialed peers, the elementwise (floatable) run is replicated per
+                        // factor with a local partial reduce, and the combiner is applied once more at home:
                         //
                         //   {1,2,3}.plus(2).sum()
-                        //     |->  [barrier(2).sum(), {1,3}.plus(2).sum(), {2}.plus(2).sum()]==[to(), to(<a>), to(<b>)]
+                        //     |->  start([start?hops=0({1,3}).plus(2).sum(), start?hops=0({2}).plus(2).sum()])
+                        //            .select([to(<a>), to(<b>)]).merge().sum()
                         //
-                        // to() with no arg is "stay"; to(<uri>) ships its summand to that peer. barrier(k) declares
-                        // its dom coefficient (the partial count) -- the SwarmProcessor side fills in both.
+                        // select pairs each slave with its route; to(<peer>) ships the slave unquoted, the peer's
+                        // evaluation answers its partial, and merge() gathers the partials for the combiner. A peer
+                        // with hop budget left re-plans its part over its own peers (the tree).
                         //
-                        // POLICY: the guard requires live remote peers, so on a lone machine the rule is the
-                        // identity and the default schedule is unchanged. Whether a NETWORKED machine should
-                        // auto-distribute every eligible chain at compile time, or only via an explicit
-                        // >>law_shard edge, is policy (cf. derivation_expansion above) -- gate shardTargets()
-                        // behind a plan flag / q-param to pull it out of the default fixpoint schedule.
+                        // POLICY: the guard requires dialed peers and a hop budget (the plan's tree route, or ?hops=n
+                        // on the chain; ?hops=0 opts a fold out), so on a lone machine the rule is the identity and the
+                        // default schedule is unchanged. Whether a NETWORKED machine should auto-distribute every
+                        // eligible chain at compile time, or only via an explicit >>law_shard edge, is policy (cf.
+                        // derivation_expansion above).
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_shard"),
                                 code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot r = (a \\cdot r + b \\cdot r) \\cdot \\mathrm{combiner}(r)\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer's combiner -- computed, never declared: \\(\\Sigma\\) and \\(\\Pi\\) recombine through themselves, \\(\\mathrm{count}\\) through \\(\\Sigma\\), \\(\\mathrm{order}(s)\\) through \\(\\mathrm{kmerge}(s)\\), \\(\\mathrm{group}([k \\Rightarrow h])\\) pointwise through \\(\\Sigma\\) then \\(\\mathrm{combiner}(h)\\) per key -- \\(\\{1,2,3\\}.f.\\mathrm{count} \\leadsto [\\{1,3\\}.f.\\mathrm{count},\\ \\{2\\}.f.\\mathrm{count}] == [\\mathrm{to}(a),\\ \\mathrm{to}(b)].\\Sigma\\)")
         );

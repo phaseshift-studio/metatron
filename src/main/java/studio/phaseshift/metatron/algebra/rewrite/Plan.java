@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.math.cat.Law;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -32,14 +31,14 @@ import static studio.phaseshift.metatron.Tokens.*;
 
 /**
  * Plan — a value, not a closure: the assembled result of {@link PlanBuilder#create()}. It is the declarative
- * form of a rewrite — the data a {@code Rewrite} interpreter lowers to {@code [chain...]==[to()...]} — and the
- * Java-side shape of the {@code plan::T} rec (category-native, so a plan is a morphism the {@code ^} lift
- * can carry, introspectable and writable in mtron rather than Java).
+ * form of a rewrite — the data {@link PlanInterpreter} lowers to code — and the Java-side shape of the
+ * {@code plan::T} rec: category-native, the morphism of the rewrite category ({@code path → path}),
+ * introspectable and writable in mtron rather than Java.
  *
- * <p>A Plan is itself the {@code rec}: a local law-driven plan is {@code [name => uri(name), law => uri(law)]},
- * a distribution plan is {@code [name => uri(name), cut => cutRec, route => lst(routeRecs)]}.
- * The concrete plan's tid is the {@code /m/math/cat/inst/rewrite/<name>_plan} refinement of the generic
- * {@code plan::T}. Every accessor reads {@code this.at(key)}; there are no Java fields.
+ * <p>A Plan is itself the {@code rec}, and every plan has the one shape
+ * {@code [name => uri(name), cut => cutRec, route => lst(routeRecs)]}. What distinguishes a local plan from a
+ * distribution is what its cut names — a form and laws, a theory role, or process laws — and where its routes
+ * send it. Its tid is {@code plan::T}. Every accessor reads {@code this.at(key)}; there are no Java fields.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -61,15 +60,6 @@ public class Plan extends MRec {
     public List<Route> routes() {
         final Obj routes = this.at(ROUTE);
         return routes.isNoObj() ? List.of() : routes.asLst().elements().map(o -> Route.of(o.asRec())).toList();
-    }
-
-    /**
-     * The process law this local plan embodies — the selector for a non-distribution rewrite — or null when the
-     * plan is a distribution (its {@code cut}/{@code route} are the selector/application).
-     */
-    public Law law() {
-        final Obj law = this.at(LAW);
-        return law.isNoObj() ? null : Law.valueOf(law.uriValue().name());
     }
 
     /**

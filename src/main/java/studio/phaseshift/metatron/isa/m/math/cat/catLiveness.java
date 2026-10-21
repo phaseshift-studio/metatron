@@ -160,6 +160,8 @@ public class catLiveness {
             case "law_poset" -> profile.adjPoset;
             case "inverse_cancellation" -> profile.adjInverse;
             case "form_map_unwrap" -> profile.mapWrap;
+            case "branch_collapse" -> profile.repeatedTerms;
+            case "branch_inline" -> profile.oneTerm;
             case "derivation_contraction" -> LawTable.derivations().stream()
                     .anyMatch(d -> profile.ops.contains(d.rhs().insts().getLast().tid().basePath().toString()));
             case "law_shard" ->
@@ -185,6 +187,8 @@ public class catLiveness {
         private boolean adjInverse;      // an adjacent pair on a declared opposing edge
         private boolean absorbing;       // an absorbing op with live code before it
         private boolean mapWrap;         // a map(f) wrapping an unwrappable instruction
+        private boolean repeatedTerms;   // an occurrence of the additive witness with two or more members (like terms need a pair)
+        private boolean oneTerm;         // an occurrence of the additive witness with exactly one member
         private boolean shard;           // a seed + a reducer with a combiner (law_shard's anchor)
 
         /**
@@ -196,6 +200,9 @@ public class catLiveness {
         private static Profile of(final List<Obj> morphisms) {
             final Profile profile = new Profile();
             final Map<Type, Boolean> modeled = new HashMap<>();
+            // the additive normalizers' op, read off the code ring's algebra exactly as their rules read it -- a ring
+            // declaring no additive structure has no witness, and neither normalizer is then ever live
+            final fURI additive = TheoryHelper.additiveWitness(T(CODE_TID));
             Type carrier = T(ALL);
             boolean carrierInverse = false;
             String priorName = null;
@@ -231,6 +238,14 @@ public class catLiveness {
                         profile.unit = true;  // op(id) needs an operand whose type models a theory
                     if (null != mapArgument(keyed, carrier))
                         profile.mapWrap = true;
+                    // the additive normalizers read the members' count; whether two members are like terms is the
+                    // value residue, so a pair only licenses the collapse while a lone member always inlines
+                    if (null != additive && additive.basePath().equals(keyed.tid().basePath())) {
+                        if (1 == keyed.args().count())
+                            profile.oneTerm = true;
+                        else if (1 < keyed.args().count())
+                            profile.repeatedTerms = true;
+                    }
                 }
                 if (pastSeed && laws.contains(Law.absorbing.name()))
                     profile.absorbing = true;
