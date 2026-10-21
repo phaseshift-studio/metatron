@@ -252,6 +252,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "|count?int<=#{*}().as(morphism::T)>>analysis>>combiner % /m/inst/sum?rng=/m/int&dom=/m/int{*}",
+            "|sum?rec<=rec{*}().as(morphism::T)>>analysis>>combiner % /m/inst/sum?rng=/m/rec&dom=/m/rec{*}",
     }, delimiter = '%')
     void testCombiner(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
@@ -692,6 +693,18 @@ public class catInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "start({1,2,3}).mean()  % law_shard  % false",
+            // a keyed fold's combiner is POINTWISE, computed from its spec's folds: count, sum and order recombine (a lst
+            // is an atom of the deep merge, so order's runs bag whole for kmerge), mean has no combiner
+            "start({1,2,3}).group([mod(2)=>count()])                   % law_shard  % true",
+            "start({1,2,3}).plus(1).group([mod(2)=>sum()])             % law_shard  % true",
+            "start({1,2,3}).group([mod(2)=>group([mod(3)=>sum()])])    % law_shard  % true",
+            "start({1,2,3}).group([mod(2)=>mean()])                    % law_shard  % false",
+            "start({1,2,3}).group([mod(2)=>sum(),mod(3)=>sum()])       % law_shard  % true",
+            "start({1,2,3}).group([mod(2)=>sum(),mod(3)=>count()])     % law_shard  % false",
+            "start({1,2,3}).group([mod(2)=>order(_)])                  % law_shard  % true",
+            "start({1,2,3}).group([mod(2)=>_])                         % law_shard  % false",
+            // the deep merge's own fold is commutative (a lst is an atom of the merge), so a bag of recs shards as itself
+            "start({[a=>1],[b=>2]}).sum()                              % law_shard  % true",
     }, delimiter = '%')
     void testAprioriPruning(final String code, final String rule, final boolean live) {
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse(code));

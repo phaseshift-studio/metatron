@@ -623,6 +623,24 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "{[a=>1],[a=>2]}.sum()                                                       % [a=>{1,2}]",
             "{[a=>1],[a=>2],[a=>3,b=>4]}.sum()                                           % [a=>{1,2,3},b=>4]",
             "{[a=>1,b=>2],[c=>3,d=>4]}.sum()                                             % [a=>1,b=>2,c=>3,d=>4]",
+            // a bulked rec is the copies it stands for: its coefficient is read into every value it holds
+            "[a=>2]-<[_,_]>-.sum()                                                       % [a=>{2}2]",
+            "[a=>2]-<[_,_,_]>-.sum()                                                     % [a=>{3}2]",
+            "[a=>1,b=>2]-<[_,_]>-.sum()                                                  % [a=>{2}1,b=>{2}2]",
+            "{[a=>1],[a=>1],[a=>2]}.sum()                                                % [a=>{1,1,2}]",
+            "{[a=>{2}1],[a=>{2}1]}.sum()                                                 % [a=>{4}1]",
+            "[a=>2]-<[_,_]>-.sum()==[_=>sum()]                                           % [a=>4]",
+            // ... all the way down, so a bulked fold is the deep merge of its copies
+            "[a=>[b=>2]]-<[_,_]>-.sum()                                                  % [a=>[b=>{2}2]]",
+            "[a=>[b=>2]]-<[_,_]>-.sum()                                                  % [a=>[b=>2]]+[a=>[b=>2]]",
+            "{[a=>[b=>1]],[a=>[b=>1]],[a=>[c=>2]]}.sum()                                 % [a=>[b=>{2}1,c=>2]]",
+            "[a=>[b=>[c=>1]],d=>3]-<[_,_]>-.sum()                                        % [a=>[b=>[c=>{2}1]],d=>{2}3]",
+            "[a=>[b=>[c=>1]],d=>3]-<[_,_,_]>-.sum()                                      % [a=>[b=>[c=>1]],d=>3]+[a=>[b=>[c=>1]],d=>3]+[a=>[b=>[c=>1]],d=>3]",
+            // a lst is an atom of the merge: colliding lsts bag whole, and a bulked lst is its copies in the bag
+            "{[a=>[1,2,3]],[a=>[2,3]],[a=>[1,2,3]]}.sum()                                % [a=>{[1,2,3],[2,3],[1,2,3]}]",
+            "[a=>[1,2]]-<[_,_]>-.sum()                                                   % [a=>{2}[1,2]]",
+            "[a=>[1,2]]-<[_,_]>-.sum()                                                   % [a=>[1,2]]+[a=>[1,2]]",
+            "[a=>[b=>[1,2]]]-<[_,_]>-.sum()                                              % [a=>[b=>{2}[1,2]]]",
     }, delimiter = '%')
     public void testSum(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -724,6 +742,21 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>[b=>[c=>1]]] + [a=>[b=>[c=>2]]]                % [a=>[b=>[c=>{1,2}]]]",
             "[a=>[b=>1,c=>2]] + [a=>[b=>3,d=>4]]               % [a=>[b=>{1,3},c=>2,d=>4]]",
             "[a=>[b=>1]] + [a=>[b=>+2]]                         % [a=>[b=>{1,plus(2)}]]",
+            // ── coefficients ── the lhs's is the stream's, so it stays on the result; a coefficient the merge
+            // multiplies is read into what it holds; a value nothing multiplies is kept as it is, from either side
+            "[a=>1]-<[_,_]>-.plus([b=>2])                       % {2}[a=>1,b=>2]",
+            "[a=>{2}1] + [a=>1]                                 % [a=>{3}1]",
+            "[a=>1] + [a=>{2}1]                                 % [a=>{3}1]",
+            "[a=>{2}[b=>1]] + [a=>[b=>2]]                       % [a=>[b=>{1,1,2}]]",
+            "[a=>[b=>2]] + [a=>{2}[b=>1]]                       % [a=>[b=>{2,1,1}]]",
+            "[a=>{2}[b=>1]] + [c=>3]                            % [a=>{2}[b=>1],c=>3]",
+            "[c=>3] + [a=>{2}[b=>1]]                            % [c=>3,a=>{2}[b=>1]]",
+            // a lst is an atom of the merge: colliding lsts make a bag of lsts, each kept whole -- concatenating them
+            // is a select's + ([a=>[1,2,3]]==[a=>+[2,3]]), said by the expression
+            "[a=>[1,2,3]] + [a=>[2,3]] + [a=>[1,2,3]]           % [a=>{[1,2,3],[2,3],[1,2,3]}]",
+            "[a=>[1,2,3]] + [a=>[2,3]]                          % [a=>{[1,2,3],[2,3]}]",
+            "[a=>[b=>[1]]] + [a=>[b=>[2],c=>[3]]]               % [a=>[b=>{[1],[2]},c=>[3]]]",
+            "[a=>[1,2,3]]==[a=>+[2,3]]                          % [a=>[1,2,3,2,3]]",
     }, delimiter = '%')
     public void testRecPlus(final String expression, final String expected) {
         final Obj result = ObjmtronSerializer.parse(expression).apply();

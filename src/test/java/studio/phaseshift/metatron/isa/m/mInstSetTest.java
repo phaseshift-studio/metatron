@@ -787,6 +787,11 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.group([_=>noobj])                                                    % [=>]",
             //"{[a,b],[c,d],[a,b]}.group([>-.prod()=>>-.count()])                           % [a/b=>4,c/d=>2]",
             "{[a,b],[c,d],[a,b]}.group([>-.prod?uri<=uri{*}()=>>-.count()])               % [a/b=>4,c/d=>2]", // should be uri{2}
+            // a key is an identity: a bulked member is counted by its group, never carried on the key
+            "{1,1,2}.group([_=>count()])                                                  % [1=>2,2=>1]",
+            "{ginger,ginger,fred}.group([_=>count()])                                     % [ginger=>2,fred=>1]",
+            "{[a,b],[c,d],[a,b]}.group([_=>count()])                                      % [[a,b]=>2,[c,d]=>1]",
+            "{4,4,7}.group([mod(3)=>sum()])                                               % [1=>15]",
             "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"

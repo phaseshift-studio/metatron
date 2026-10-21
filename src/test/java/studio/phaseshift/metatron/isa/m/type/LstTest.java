@@ -263,6 +263,13 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "lst::[1,2,3]>-.sum?int<=int{*}()                                                        % 6",
             "lst::[1,2,3]>-.sum().sum()                                                              % 6",
             "lst::[1,2,3]>-.sum()                                                                    % 6",
+            // the lst fold reads a bulked lst into its slots, once -- a lst is slot-oriented, never a bag of copies
+            "lst{2}::[1,2].sum()                                                                     % [{2}1,{2}2]",
+            "[1,2]-<[_,_]>-.sum()                                                                    % [{2}1,{2}2]",
+            "[1,2]-<[_,_,_]>-.sum()                                                                  % [{3}1,{3}2]",
+            "lst{2}::[{3}1,2].sum()                                                                  % [{6}1,{2}2]",
+            "lst{2}::[[1,2],3].sum()                                                                 % [{2}[1,2],{2}3]",
+            "[[1,2],3]-<[_,_]>-.sum()                                                                % [{2}[1,2],{2}3]",
     }, delimiter = '%')
     public void testCoefficients(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -379,6 +386,10 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[,].plus([a])                                                       % [a]",
             "[a].plus([,])                                                       % [a]",
             "[,].plus([,])                                                       % [,]",
+            // coefficients: the lhs's is the stream's, so it stays on the lst; the argument's is read into its slots, once
+            "lst{2}::[1,2].plus([3])                                             % lst{2}::[1,2,3]",
+            "[1].plus(lst{2}::[2,3])                                             % [1,{2}2,{2}3]",
+            "[1].plus(lst{2}::[{3}2])                                            % [1,{6}2]",
     }, delimiter = '%')
     public void testPlus(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
