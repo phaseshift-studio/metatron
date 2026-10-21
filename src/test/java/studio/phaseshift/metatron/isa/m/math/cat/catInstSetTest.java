@@ -530,6 +530,9 @@ public class catInstSetTest extends AbstractInstSetTest {
     @CsvSource(value = {
             "5.plus(3).minus(3)     % start(5)   % 5",
             "6.mult(2).div(2)       % start(6)   % 6",
+            "5.minus(3).plus(3)     % start(5)   % 5",
+            // a declared inverse is one-sided: int div truncates, so div·mult must not cancel
+            "5.div(2).mult(2)       % start(5).div(2).mult(2)   % 4",
     }, delimiter = '%')
     public void testInverseCancellation(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
