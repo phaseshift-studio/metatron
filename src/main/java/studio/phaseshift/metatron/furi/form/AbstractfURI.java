@@ -422,6 +422,14 @@ public abstract class AbstractfURI implements fURI {
             if (!this.name().equals(rhs.name()))
                 return false;
         }
+        // TODO: the bracket (poly) rule designed for rec traits (person[role]), not yet implemented. Walk the LHS's
+        //  entries rather than the rhs's: each lhs entry is a claim that the rhs entry at its position must accept,
+        //  lp.test(rp), where rp may be + (any one), # (the rest), or a generic (A, B, ...) that accepts any entry
+        //  within its coefficient -- today ninja.test(A) compares names and fails, as a generic is isGeneric(), not
+        //  hasPattern(). Then a bare lhs claims nothing and passes (person.test(person[ninja])), a bracketed lhs fails
+        //  a bare rhs (person[ninja].test(person)), and person[ninja].test(person[A]) passes. Erasure ("person[ninja]
+        //  is a person::T") becomes explicit at the type level, vid().polyLess(), and covariance (ninja refines role)
+        //  stays Obj.test's -- this method compares names, never types.
         if (!this.poly().isEmpty()) {
             if (!Objects.equals(this.poly(), rhs.poly())) {
                 if (null != this.poly() && null != rhs.poly()) {

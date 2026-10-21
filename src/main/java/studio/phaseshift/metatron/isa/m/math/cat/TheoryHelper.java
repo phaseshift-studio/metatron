@@ -195,6 +195,46 @@ public class TheoryHelper extends MRec {
         return inst.tid().basePath();
     }
 
+    /**
+     * The op address of a type's declared additive structure — the law-indexed witness: the first theory
+     * instance of {@code object[T].law} that carries an additive role — the {@code add} role of a ring/field/rig,
+     * or the {@code op} role of an {@code add_*} monoid/group. The role is read with {@code atDirect} (no call
+     * evaluation; {@code rec.has} reports false on law keys that still resolve, so the noobj answer is the
+     * presence test), and the auto pointer is unwrapped with {@code getPointer} without resolving it. For the
+     * code ring this answers the branch address, for the int ring the plus address; a type declaring no additive
+     * structure answers null, which degrades the additive normalizers — and their liveness — to the identity.
+     */
+    public static fURI additiveWitness(final Type type) {
+        fURI add = null;
+        for (final Map.Entry<Obj, Obj> instance : instances(type).jvm().entrySet()) {
+            if (!instance.getValue().isRec())
+                continue;
+            final Rec block = instance.getValue().asRec();
+            final String name = instance.getKey().isUri() ? instance.getKey().uriValue().name() : null;
+            if (null != name && name.startsWith("add_")) {
+                final fURI op = roleAddress(block, OP);
+                if (null != op)
+                    return op;  // the additive group's n-ary op (branch) — the form the normalizers fold
+            } else if (null == add)
+                add = roleAddress(block, ADD);
+        }
+        return add;
+    }
+
+    /**
+     * The op address a law block's role binds, or null when the role is absent or binds a literal: the value
+     * arrives as a {@code !*} auto pointer naming its target in its own argument, so the address is read
+     * without resolving — the target may be an as-yet-unresolved registration.
+     */
+    private static fURI roleAddress(final Rec block, final String role) {
+        final Obj holder = block.atDirect(uri(role));
+        if (holder.isNoObj())
+            return null;
+        if (holder.isUri())
+            return holder.uriValue();
+        return Obj.Helper.getPointer(holder).orElse(null);
+    }
+
     // ---- stable, algebra-specific conveniences (used by the shipped rewrites) -----------------------------------------
 
     public static Obj zeroElement(final fURI theoryTID, final Type type) {

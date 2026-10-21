@@ -4,7 +4,7 @@ description: |
   The category graph at `/m/math/cat`: every type is an **object** (a vertex) and every inst is a **morphism**
   (an edge). Lift a type with `.as(object::T)` to read the morphisms incident to it (`morphed_to` out-edges,
   `morphed_from` in-edges); lift an inst with `.as(morphism::T)` to read its endpoints (`src` dom, `trgt` rng)
-  and its whole-graph analysis (`family`, `contested`, `orbit`, `position`, `inverse`).
+  and its whole-graph analysis (`family`, `contested`, `orbit`, `position`, `inverse`, `combiner`).
   TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's
   siblings / inverse / connected component, when classifying an edge's coefficient shape (`form`), set-theoretic
   class (`class`), or declared process laws (`law`), when wiring the algebraic theories (`ring` / `field` /

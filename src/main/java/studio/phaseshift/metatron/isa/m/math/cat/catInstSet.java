@@ -18,12 +18,14 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
@@ -94,8 +96,9 @@ public class catInstSet extends AbstractInstSet {
      */
     public static Type ABSTRACTION_TYPE;
     /**
-     * {@code plan::T} — the morphism of the rewrite category: a rewrite rule (cut/span selector + route
-     * distribution) whose out-edge is a lambda that executes the plan to yield the rewritten path
+     * {@code plan::T} — the morphism of the rewrite category ({@code path → path}): a rewrite rule as data,
+     * {@code [name, cut, route]} — the cut is its selector, the routes its distribution — carrying no lambda;
+     * the one {@code lower(plan::T)} instruction applies it
      */
     public static Type PLAN_TYPE;
 
@@ -138,15 +141,24 @@ public class catInstSet extends AbstractInstSet {
      */
     public static Type CLASS_TYPE;
 
+    /**
+     * The law slot — the instruction the {@code ^} sugar appends ({@code c}): a predicate over an instruction that
+     * passes it on when it obeys the slot's law and answers noobj when it does not (a filter). The law is the slot's
+     * own name. {@code floatable} and {@code blocked} are read off the instruction's form, every other law off its
+     * declaration ({@link InstPattern#matches}), so a slot fails closed on an instruction nothing declares — and
+     * anything that is not an instruction obeys no law.
+     */
     public static Inst instLawLambda = instLambda((lhs, inst) -> {
-        if (inst.tid().basePath().name().equals(Law.floatable)) {
-
-        }
-        return noobj();
+        final Law law = Law.valueOf(inst.tid().basePath().name());
+        return lhs.isObjInst() && InstPattern.law(law).matches(lhs.asInst()) ? lhs : noobj();
     });
 
     public static Inst createInstLawLambda(final fURI id) {
-        return instLawLambda.tid(f(Law.valueOf(id.name()).name()).q(id.qMap()).poly(id.poly()));
+        final Law law = Arrays.stream(Law.values())
+                .filter(l -> l.name().equals(id.name()))
+                .findFirst()
+                .orElseThrow(() -> MTronException.of("%s is not a law", id.name()));
+        return instLawLambda.tid(f(law.name()).q(id.qMap()).poly(id.poly()));
     }
 
     public void setup() {

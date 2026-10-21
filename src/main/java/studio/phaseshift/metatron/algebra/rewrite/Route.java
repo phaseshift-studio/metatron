@@ -39,8 +39,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * The target is where the interesting variation lives, not a {@code master}/{@code slave} flag:
  *
  * <ul>
- *   <li>{@link #local()} — stay home ({@code to()} argless); the master assembles into the barrier near-ring
- *       {@code F_b} ({@code barrier(k)}) and re-applies the {@code F_r} reducer.</li>
+ *   <li>{@link #local()} — stay home; the master gathers the partials ({@code merge()}, the barrier near-ring
+ *       {@code F_b}) and re-applies the {@code F_r} reducer through its combiner.</li>
  *   <li>{@link #peers()} — the live roster, one {@code to(peer)} per peer (the fan-out the seed bulk factors over).</li>
  *   <li>{@link #peer(fURI)} — ship to one peer ({@code to(ws://...)}).</li>
  *   <li>{@link #space(fURI)} — a durable result ({@code to(space://...)}).</li>

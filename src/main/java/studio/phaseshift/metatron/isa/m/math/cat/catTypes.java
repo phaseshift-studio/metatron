@@ -212,7 +212,8 @@ public class catTypes {
                                     return path.selfTID(PATH_TID);
                                 })
                                 .create(), Map.of(
-                                uri(REWRITE), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)"),
+                                uri(OBJ), "the code \\(p\\) itself — the vertex",
+                                T(URI_TID).maybe(), "one out-edge per live rewrite \\(r\\), keyed by the rule's name and holding its \\(\\mathrm{plan}\\): \\(\\mathrm{lower}(\\mathrm{plan}_r)(p) = r(p)\\); a rule the abstraction proves the identity on \\(p\\) is no edge, so a normal form has none"),
                         "code as a categorical path incident to iso-semantic rewritten forms"),
                 docWrap(ABSTRACTION_TYPE = Type.Builder.build()
                                 .tid(CATEGORY_TID)
@@ -276,7 +277,7 @@ public class catTypes {
                                 uri(NAME), "the plan's name — the rewrite rule it embodies",
                                 uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws + theory) the plan anchors on",
                                 uri(ROUTE).maybe(), "the distribution: target + span regions the plan ships",
-                                uri(RESULT).maybe(), "the plan's out-edge: a lambda that executes the plan to yield the rewritten path::T"),
+                                uri(RESULT).maybe(), "only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T"),
                         "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)"),
                 docWrap(THEORY_TYPE = Type.Builder.build()
                         .tid(REC_TID)
