@@ -32,8 +32,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * One peer mtron instance, in its own OS process — the production twin of the test harness's {@code PeerNode}.
- * Forked by {@link PeerSpawn} when {@code push(<uri>)} names a loopback authority, it boots a VM, mounts the
- * pushed namespace as a store, serves that store over {@code mtron_ws}, and blocks until the parent reaps it.
+ * Forked by {@link PeerSpawn} for a loopback authority, it boots a VM, mounts the authority's namespace as a store,
+ * serves that store over {@code mtron_ws}, and blocks until the parent reaps it.
  * <p>
  * A separate process is the point: it has its own {@code Router}, its own spaces, its own serializer state, and
  * only a socket to the parent — which is exactly what makes an authority-routed read or write a real distributed

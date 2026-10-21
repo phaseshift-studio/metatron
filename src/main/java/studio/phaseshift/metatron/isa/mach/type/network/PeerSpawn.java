@@ -53,9 +53,13 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * The process half of {@code push(<uri>)}: when the pushed address carries an authority that is still on this
- * physical machine, the peer mtron instance that answers it is a real OS process — forked here, declared in the
- * {@code /network/roster} roster, and reaped when the frame that pushed it is popped.
+ * SPAWNING A PEER: when an authority is still on this physical machine, the mtron instance that answers it is a real
+ * OS process — forked here, declared in the {@code /network/roster} roster, and reaped with the machine that holds its
+ * connection ({@link #reap}, from {@code pop()} and {@code close()}).
+ * <p>
+ * THE MECHANISM HAS NO INSTRUCTION YET. It was the process half of a frame that stood in the peer and shipped every
+ * code application made in it; that frame is gone (code reaches a peer by being shipped there in a {@code law_shard}
+ * plan), and {@code push(<authority>)} is refused until spawning has an expression of its own.
  * <p>
  * This is the production form of the test harness's {@code PeerCluster}/{@code PeerNode} pair. The invariants it
  * keeps are the ones that make an authority-routed read a real distributed act:
@@ -96,12 +100,10 @@ public final class PeerSpawn {
 
     /**
      * Fork (when the authority is local) and declare a peer, then hand back the inst that reaches it. This is the
-     * process half only — nothing here builds a {@link RemoteMachine}: a frame is minted by its own constructor,
-     * which calls this.
+     * process half only: nothing here dials the peer or builds anything that stands in it.
      * <p>
-     * IDEMPOTENT BY ADDRESS, and that is what makes the constructor safe to run on materialisation: a frame read
-     * back from the roster, or entered by {@code move}, constructs again and must FIND the peer it declared rather
-     * than fork a twin.
+     * IDEMPOTENT BY ADDRESS: asking for an authority that is already declared FINDS the peer rather than forking a
+     * twin.
      */
     public static Obj spawn(final fURI requested) {
         final fURI authority = resolve(requested);
@@ -140,9 +142,9 @@ public final class PeerSpawn {
     }
 
     /**
-     * End a pushed frame's reach: destroy the process it forked, retract the roster entry it declared. Idempotent,
-     * and a no-op for a machine that never named an authority — so it is safe from both {@code pop()} and
-     * {@code close()}.
+     * End a machine's spawned reach: destroy the processes forked for the connections it holds, retract the roster
+     * entries declared for them. Idempotent, and a no-op for a machine whose connections were never spawned — so it
+     * is safe from both {@code pop()} and {@code close()}.
      */
     public static void reap(final Machine machine) {
         if (null == machine)
@@ -156,10 +158,10 @@ public final class PeerSpawn {
         final Obj parent = machine.parent();
         if (parent instanceof Machine parentMachine && network == parentMachine.atDirect(uri(NETWORK)))
             return;
-        // WHAT NAMES A PEER IS THE CONNECTION THE FRAME CARRIES: network.peer is <service-uri> => peer::T, and each
-        // entry's `authority` is what keys the process table. NOT the frame's vid: that is a local path
-        // (/network/peer/<scheme>/<host>/<port>/…), so it carries no authority — the earlier version tested the VID
-        // for one, returned early, and left every forked node running.
+        // WHAT NAMES A PEER IS THE CONNECTION THE MACHINE HOLDS: network.peer is <service-uri> => peer::T, and each
+        // entry's `authority` is what keys the process table. NOT the machine's vid: that is a local path, so it
+        // carries no authority — an earlier version tested the VID for one, returned early, and left every forked
+        // node running.
         network.<Network>as().peers().jvm().values().stream()
                 .filter(Obj::isRec)
                 .map(connection -> connection.asRec().<Obj>atDirect(uri(AUTHORITY)))

@@ -37,8 +37,6 @@ import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.IdentityRewrit
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
-import studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine;
-import studio.phaseshift.metatron.isa.mach.type.network.RemoteProcessor;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -76,30 +74,19 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
     public static final fURI ROOT_MACHINE_VID = f("/.");
-    /**
-     * The remote frame's own type — a <em>refinement</em> of {@code machine}, not the machine type itself. It has
-     * to be named separately because {@code machine::T} carries a constructor ({@code arg -> BasicMachine.of(...)}):
-     * an obj claiming that tid is REBUILT as a local machine the moment its type resolves, and resolving a type
-     * reads through {@code Machine} — which is what made a {@link studio.phaseshift.metatron.isa.mach.type.network.RemoteMachine}
-     * recurse until the stack died. A frame that executes on a peer therefore names its own type, which nothing
-     * reconstructs and which still tests as a machine.
-     */
-    public static final fURI MACH_REMOTE_MACHINE_TID = MACH_MACHINE_TID.extend("remote");
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
     /**
      * The frame inst — {@code push(<uri>)}. The uri decides the boundary: a relative one mints a child frame in
-     * this JVM, while one carrying an authority is a <em>process</em> boundary — a peer mtron instance is forked
-     * when that authority is on this same physical machine (see {@code PeerSpawn}), and merely declared otherwise.
+     * this JVM, while one carrying an authority is a <em>process</em> boundary, which a frame does not cross — code
+     * reaches another process by being shipped there in a plan ({@code law_shard}), so {@link Machine#push(fURI)}
+     * refuses it.
      */
     public static final fURI PUSH_INST_TID = MACH_INST_TID.extend("push");
 
     /**
      * The other two frame-choosing instructions: {@code pop()} leaves the frame it is handed, {@code move(<uri>)}
-     * chooses the frame the NEXT code runs in. Named here because their IDENTITY is what a remote frame has to
-     * test: these three choose where code runs, so a remote frame runs them where the choice is made, and the
-     * compiled form no longer carries the {@code rng=machine} that used to say so (see
-     * {@code RemoteProcessor.frameInstruction}).
+     * chooses the frame the NEXT code runs in.
      * <p>
      * All three SPEAK ONE ADDRESS DIALECT, and it is the {@code ..} motif: {@code ~} is the frame you stand in,
      * {@code ~/a} (or plain {@code a}) is its child, {@code ..} is its parent, {@code ../b} is the sibling
@@ -111,8 +98,8 @@ public class machInstSet extends AbstractInstSet {
      * MINTS the address, and that is licence to cross as well as descend: {@code push(<t>)} resolves {@code t} and
      * mints its LEAF from the frame at {@code t}'s PARENT — so {@code push(<../b>) == move(<..>).push(<b>)}, and a
      * sibling is minted from the shared parent rather than from beside it. An address that names a PROCESS
-     * boundary is not split that way: its authority IS its identity, so it is handed to {@code push} whole (see
-     * {@link Machine#push(fURI)}).
+     * boundary is not split that way: its authority IS its identity, so it is handed to {@code push} whole, which
+     * refuses it (see {@link Machine#push(fURI)}).
      */
     public static final fURI POP_INST_TID = MACH_INST_TID.extend("pop");
     public static final fURI MOVE_INST_TID = MACH_INST_TID.extend("move");
@@ -160,24 +147,15 @@ public class machInstSet extends AbstractInstSet {
             .create();
     public static Type MACH_CORE_THREAD_TYPE;
     public static Type MACH_MACHINE_TYPE;
-    public static Type MACH_REMOTE_MACHINE_TYPE;
 
     public static final fURI MACH_MACHINE_COMPONENT_TID = MACH_ISA_TID.extend("component");
     // the processor family — structural apply(code)->obj contract, then nominal monad marker, then concrete strategies
     public static final fURI MACH_PROCESSOR_TID = MACH_MACHINE_COMPONENT_TID.extend(PROCESSOR);
     public static final fURI MACH_MONAD_PROCESSOR_TID = MACH_PROCESSOR_TID.extend(MONAD);
     public static final fURI MACH_SWARM_PROCESSOR_TID = MACH_MONAD_PROCESSOR_TID.extend("swarm");
-    /**
-     * The processor of a machine that executes elsewhere — a refinement of {@code processor::T}, a sibling of
-     * {@code swarm::T} rather than a kind of swarm. It is a thread, so the console's foreground/background handling
-     * applies to it, but it does not share swarm's meaning: what makes it what it is, is that applying its code
-     * ships that code to the peer instead of running it.
-     */
-    public static final fURI MACH_REMOTE_PROCESSOR_TID = MACH_PROCESSOR_TID.extend("remote");
     public static Type MACH_PROCESSOR_TYPE;
     public static Type MACH_MONAD_PROCESSOR_TYPE;
     public static Type MACH_SWARM_PROCESSOR_TYPE;
-    public static Type MACH_REMOTE_PROCESSOR_TYPE;
     // the compiler family — structural apply(source)->code contract, then the four stage families it composes
     public static final fURI MACH_COMPILER_TID = MACH_MACHINE_COMPONENT_TID.extend(COMPILER);
     public static Type MACH_COMPILER_TYPE;
@@ -266,19 +244,6 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
                                         .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
                                 "a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result"),
-                        // A processor that ships — a sibling of swarm::T, not a kind of it. It is a thread, so the
-                        // console's handling applies, but the type says what the thing is: applying its code does not
-                        // run it, it hands the code to the peer and the peer's answer is the result. Named separately
-                        // so a machine's processor says what it is, the way every other component does.
-                        MACH_REMOTE_PROCESSOR_TYPE = docWrap(Type.Builder.build()
-                                        .tid(MACH_PROCESSOR_TID)
-                                        .vid(MACH_REMOTE_PROCESSOR_TID)
-                                        .isaPredicate(rec(uri(TRANSPORT).maybe().asUri(), INST_TYPE))
-                                        .constructor(arg -> RemoteProcessor.of(arg.asRec().at(uri(TRANSPORT))))
-                                        .create(),
-                                Map.of(uri(CODE), "the code to hand to the peer",
-                                        uri(TRANSPORT), "the reach the code is shipped through"),
-                                "the processor of a machine that executes elsewhere: applying code here ships it to the peer and answers with what the peer computed"),
                         // the compiler family — structural apply(source)->code contract holding its four stages
                         MACH_COMPILER_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_MACHINE_COMPONENT_TID)
@@ -598,7 +563,7 @@ public class machInstSet extends AbstractInstSet {
                                 source and cannot drift.
                                 """,
                                 "network::[name=>'local',roster=>[b=><ws://192.168.1.42:8555>],source=>[mdns=></m/web/mdns>]] [-- a network that knows a peer before dialing it --]",
-                                "network::[peer=>[<ws://localhost:39111>=>[authority=><ws://localhost:39111/worker>]]] [-- a machine whose reach is the one node it pushed --]"),
+                                "network::[peer=>[<ws://localhost:39111>=>[authority=><ws://localhost:39111/worker>]]] [-- a machine whose reach is the one node it holds --]"),
                         MACH_MACHINE_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MACH_MACHINE_TID)
@@ -622,46 +587,6 @@ public class machInstSet extends AbstractInstSet {
                                 peer group forms a shared computing workspace that is garbage collected when the
                                 machine is popped off the parent stack. the absolute root of the metatron graph
                                 (/.) is the root machine.
-                                """),
-                        // THE REMOTE FRAME WEARS ITS OWN TYPE, and the reason is a constructor. machine::T mints a
-                        // BasicMachine, so an obj claiming that tid is rebuilt locally the instant its type
-                        // resolves — and type resolution reads through Machine, so a frame that executes on a peer
-                        // recursed until the stack died. This refinement declares the same shape under its OWN
-                        // constructor: it still tests as a machine (its tid refines machine::T), but nothing
-                        // rebuilds it as a BasicMachine.
-                        MACH_REMOTE_MACHINE_TYPE = docWrap(Type.Builder.build()
-                                        .tid(MACH_MACHINE_TID)
-                                        .vid(MACH_REMOTE_MACHINE_TID)
-                                        // EVERY ARM IS A PLAIN TYPE, and that is not stylistic. A slot bound to an
-                                        // inst expression (isa_(…).else_(…)) is not an inert constraint: testing a
-                                        // rec runs the value it is tested against (Rec.test -> Obj.test ->
-                                        // testObjs -> Code.apply), so such an arm is APPLIED during the check —
-                                        // and `Machine.applyCode` then routes through the machine's processor
-                                        // while this frame is current. Measured: with an isa_/else_ arm on
-                                        // processor, the check spun metatron-main for 1000+ s of CPU and the VM
-                                        // never finished booting. The components of a remote frame are the ones a
-                                        // local machine binds (compiler, memory, network) plus its own shipping
-                                        // processor, so the plain types describe it exactly.
-                                        .isaPredicate(rec(
-                                                uri(INSTSET).maybe().asUri(), INSTSET_TYPE,
-                                                uri(COMPILER).maybe().asUri(), MACH_COMPILER_TYPE,
-                                                uri(MEMORY).maybe().asUri(), T(MACH_MEMORY_TID),
-                                                uri(NETWORK).maybe().asUri(), T(MACH_NETWORK_TID),
-                                                uri(PROCESSOR).maybe().asUri(), T(MACH_REMOTE_PROCESSOR_TID)))
-                                        // THE ONE PLACE A REMOTE FRAME IS BUILT. The frame does the rest itself: its
-                                        // constructor spawns or finds the peer, wires the components, and stamps the
-                                        // address, so this hands it only the rec it was declared with.
-                                        .constructor(arg -> new RemoteMachine(arg.asRec().jvm(), MACH_REMOTE_MACHINE_TID, arg.vid()))
-                                        .create(),
-                                Map.of(uri(PATTERN).maybe(), "the peer namespace this machine stands in"),
-                                """
-                                a machine that executes remotely. move(<authority>) stands in one, and every code
-                                application made on it is shipped to the peer answering for that authority, so
-                                nothing about the computation is local. It is deliberately thin — the connection it
-                                stands in (authority and transport), its parent machine's compiler, and its own
-                                shipping processor; it keeps no instset or memory of its own — which is exactly why
-                                it cannot be the machine type: machine's constructor would rebuild it here, the one
-                                thing it must not be.
                                 """),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()
@@ -717,7 +642,8 @@ public class machInstSet extends AbstractInstSet {
                                     else {
                                         final fURI target = Machine.Helper.machineAddress(here, inst.arg(0).uriValue());
                                         // a wire address names a PROCESS boundary, not a place in this tree: it is not
-                                        // split into container + leaf, because the authority IS the frame's identity
+                                        // split into container + leaf, because the authority IS its identity -- it is
+                                        // handed to Machine.push whole, which refuses it
                                         if (target.hasHost() || target.hasScheme())
                                             pushed = here.push(target);
                                         else {
@@ -737,12 +663,12 @@ public class machInstSet extends AbstractInstSet {
                                 "the lhs is not consulted: push acts on the machine the code is running in, and carries the value flowing through untouched",
                                 "the machine just minted and entered \\(c\\)",
                                 Map.of(jnt(0), "\\(t\\), the address to mint. The machine at that address's parent holds the new machine and only \\(\\mathrm{name}(t)\\) is newly made, so \\(\\mathrm{push}(t) = \\mathrm{move}(\\mathrm{parent}(t)) \\cdot \\mathrm{push}(\\mathrm{name}(t))\\); absent, an anonymous child is minted instead"),
-                                "mint a machine at an address in the machine tree and make it current. Constructive — it adds a machine, where move only chooses one. Because the leaf is minted from the address's parent, push can cross a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying an authority is a different boundary: a peer is forked when that authority is local and merely declared otherwise, and the machine created for it runs its code on the peer.",
+                                "mint a machine at an address in the machine tree and make it current. Constructive — it adds a machine, where move only chooses one. Because the leaf is minted from the address's parent, push can cross a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying an authority is a different boundary, one a machine does not cross: code reaches another process by being shipped there in a plan, so the address is refused.",
                                 "push(xyz)                              [-- mint /xyz --]",
                                 "push(<../b>)                           [-- the sibling b, minted from the shared parent: = move(<..>).push(b) --]",
                                 "push(<a/b>)                            [-- the descendant /a/b, minted from the machine at /a --]",
                                 "push()                                 [-- an anonymous child, \\(c = \\mathrm{mintShortUUID}(\\mathrm{vid}(\\mathrm{here}))\\) --]",
-                                "push(<ws://localhost:8555/worker>)     [-- a process boundary, not a place in this tree --]"),
+                                "push(<ws://localhost:8555/worker>)     [-- refused: a process boundary, not a place in this tree --]"),
                         // POP NAMES THE FRAME YOU STAND IN. `pop()` and `pop(<~>)` are ONE instruction, and an
                         // addressed pop must still RESOLVE to where you stand: the motif is understood (`..`
                         // folds, `~` is the base) but a frame you can only reach by ADDRESS is not yours to

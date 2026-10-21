@@ -206,8 +206,8 @@ public abstract class AbstractMachine extends MRec implements Machine {
 
     @Override
     public synchronized void close() {
-        // BEFORE the ownership guard: a handle to a forked peer must release its process whether or not this
-        // machine owns the memory index (it does not — its memory is a union over the parent's).
+        // BEFORE the ownership guard: a machine holding a spawned peer must release its process whether or not this
+        // machine owns the memory index (a pushed child does not — its memory is a union over the parent's).
         PeerSpawn.reap(this);
         // A pushed child shares its parent's memory (inheritance = walk parent()), so the child does not own the
         // index and must not clear it: clearing the shared memory here is what emptied the root's spaces on every

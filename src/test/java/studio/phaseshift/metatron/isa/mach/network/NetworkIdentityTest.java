@@ -133,8 +133,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
                     "a server the roster declares IS a peer this frame may dial");
             assertTrue(Network.Helper.peerAuthorities().isEmpty(),
                     "but the roster is the known servers, NOT the connections the machine holds: " + Network.Helper.peerAuthorities());
-            // THE CONNECTION IS THE MACHINE'S OWN REACH, and declaring one is what peers() reports — the same act
-            // PeerSpawn performs for a pushed peer (Machine.push builds the frame's own level the same way).
+            // THE CONNECTION IS THE MACHINE'S OWN REACH, and declaring one is what peers() reports.
             network.at(uri(PEER), rec(mutableMap(
                     uri("ws://localhost:21001"),
                     rec(mutableMap(uri(AUTHORITY), uri("ws://localhost:21001/n"))))), MUTABLE);

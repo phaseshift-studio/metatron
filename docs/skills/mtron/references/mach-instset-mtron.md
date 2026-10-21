@@ -1,8 +1,9 @@
 ---
 name: mach-instset
 description: |
-  The machine instruction set at `/m/mach`: a machine is metatron's unit of **process** — a `space::T` whose five
-  slots are its instruction set, compiler, memory, network and processor.
+  The machine instruction set at `/m/mach`: a machine is metatron's unit of **process** — a `rec::T` whose five
+  slots are its instruction set, compiler, memory, network and processor. Machines nest as frames (`push`, `move`,
+  `pop`) and distribute work by shipping code — workloads of config and code — to their peers.
 ---
 
 # mach instruction set (`/m/mach`)
@@ -21,7 +22,8 @@ A **machine** is metatron's unit of process: everything runs in one, and `/` is 
 
 Machines **nest**: a pushed child reads through to its parent's **memory**, so a child is a nested frame of reference
 rather than a copy of the world. Reach does not nest — see *network*: peers are the pushing machine's own, knowledge
-(the roster) is root-shared.
+(the roster) is root-shared. *Frames* covers the three instructions that choose where code runs, and *distribution*
+covers how work reaches a machine in another process: by shipping code to it.
 
 ## instset (instruction memory)
 
@@ -340,6 +342,159 @@ value shapes, retraction, roster and frame laws, and authority aliasing — as a
 The Java-level counterpart — the classes, the package layout, and the load-bearing invariants — lives in
 [machine architecture (Java)](../metatron/references/machine-architecture-java.md).
 
+## frames — `push`, `move`, `pop`
+
+The machine nest is a tree of **frames**, and three instructions choose where code runs. They speak one address
+dialect, the `..` motif — `~` is the frame you stand in, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling
+`b`, and `../../..` walks as far up as asked — and they differ only in what they do with the address:
+
+| instruction | what it does with the address                                                                                                                     |
+|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| `push(t)`   | **mints** the machine at `t` and makes it current. Only the leaf is new: $\mathrm{push}(t) = \mathrm{move}(\mathrm{parent}(t)) \cdot \mathrm{push}(\mathrm{name}(t))$, so a sibling is minted from the shared parent |
+| `move(t)`   | **walks** to the machine at `t` and closes nothing; `move()` is `move(<..>)`                                                                      |
+| `pop()`     | **discards** the current machine and lands on its `..` — a machine is discarded by the one that holds it                                         |
+
+A frame is an address, so the tree is walked like any other part of the metatron graph. A `*`-less `>>` walks the
+**uri graph** — a frame's child frames and its component slots, side by side — while `*…>>` walks the **obj graph**:
+the two graphs are linked by `->` and crossed by `*`.
+
+```mtron_pre
+push(xyz).vid()
+/.>>
+/xyz>>
+pop().vid()
+```
+
+Every pushed frame is a fresh **level** over its parent's — its own memory, instruction set and network — so it is a
+clean scope: what it writes, imports and dials is its own, and a pop retracts exactly that. Reach in particular starts
+empty: a pushed frame holds **no peers** until it dials one, which makes a frame the natural scope of a mini-cluster.
+
+**The authority boundary.** A frame lives in this process. `push(<ws://localhost:8555/worker>)` names another process,
+and is refused: code reaches a machine in another process by being *shipped* there (see *distribution*), never through
+a frame here that stands in it. Spawning that process — a new peer JVM — is a mechanism still waiting for its
+instruction.
+
+**Not yet**: `pop` retracts the frame but not its registration — the machine is gone, yet its structure stays written
+in the root's memory, so the tree still lists it:
+
+```mtron_pre
+/.>>
+```
+
+The same root cause makes a frame re-entered by address (`move(<x>)`, or a later evaluation) impossible to pop: the
+registered structure carries no link to its parent, and `pop` answers it unchanged. And all three instructions answer
+the whole machine — over a wire that is a large reply rather than a reference.
+
+## distribution — shipping code to peers
+
+Distribution is code shipped over the wire — `ws`, `http`, `mcp` — with results coming back as values. There is one
+mechanism, the layout `law_shard` emits (see [the category graph](cat-instset-mtron.md)): pair each code with a route,
+and gather the replies.
+
+```mtron
+start([w_1,w_2,w_3]).select([to(<s_1>),to(<s_2>),to(<s_3>)]).merge()   [-- zip: code i ships to peer i --]
+[w]-<[to(<s_1>),to(<s_2>),to(<s_3>)]                                   [-- broadcast: one code to every peer --]
+```
+
+`to(<peer>)` ships its lhs unevaluated; the peer evaluates it and replies with the value. A select (`==`) zips codes
+with routes, a split (`-<`) broadcasts one code — reach for the zip only when the payload differs per peer.
+
+### workloads — config and code in one closure
+
+A peer must receive *what to do* and *what to do it with* in one message: a binding made by one evaluation lives on
+that thread's frame stack, and is gone by the next message. So the payload is a **workload** — a rec of config and
+code — evaluated in a closure that binds it:
+
+```mtron_pre
+[db=>{4,5,6},code=>|(*workload/db.plus(2))](workload=>_){ !*workload/code.apply() }
+```
+
+`(workload=>_)` binds the rec on the evaluating frame's stack, and `|(…)` keeps the code inert until
+`!*workload/code.apply()` runs it inside that scope. A uri template in the code reads the workload when the read
+runs, so **one generic code serves every peer** — below, two workloads over one store of the dogs' walks, each pulling
+its own dog's partition, computing, and pushing the result back to the store:
+
+```mtron_pre
+/usr/walk/mama/1 -> [trail=>'ridge',km=>12]
+/usr/walk/mama/2 -> [trail=>'lake',km=>5]
+/usr/walk/puppy/1 -> [trail=>'ridge',km=>9]
+[dog=>'mama',code=>|(*</usr/walk/${*workload/dog}/+/km>.sum().to(</usr/walk/total/${*workload/dog}>))](workload=>_){ !*workload/code.apply() }
+[dog=>'puppy',code=>|(*</usr/walk/${*workload/dog}/+/km>.sum().to(</usr/walk/total/${*workload/dog}>))](workload=>_){ !*workload/code.apply() }
+*/usr/walk/total/+
+```
+
+**Construction is connection.** The config can carry a space. Constructing a space *is* connecting it, so a workload
+whose `db` is a `tblespace::T` rec binds the receiving peer's own connection to the same backend when it is evaluated
+there — as though the master's connection had crossed the wire:
+
+```mtron
+[db=>tblespace::[pattern=></usr/data/#>,host=><mariadb://…>,driver=><org.mariadb.jdbc.Driver>,route=>[</usr/data>=><>]]@/sys/space/data,
+ xyz=>'east',
+ code=>|(*</usr/data/${*workload/xyz}/+/amount>.sum().to(</usr/data/result/${*workload/xyz}/total>))](workload=>_){ !*workload/code.apply() }
+```
+
+A runtime template has one cost: the receiver compiles the code before the template is filled, so its compiler sees
+`${*workload/xyz}` where a table name should be, and a database push-down (`SUM` in SQL) cannot fire — the peer reads
+the rows and sums in mtron.
+
+### the latch — gather, refuse fails, count through coefficients
+
+The master's `merge()` is the latch: it completes when every peer has replied. Two properties of the gather decide what
+"every peer finished" means.
+
+**Equal replies bulk.** A stream is a bag, so three peers that each answer `34` arrive as *one* obj with coefficient
+3. Count through coefficients — mtron's `count()` — never by elements:
+
+```mtron_pre
+{34,34,34}
+{34,34,34}.count()
+```
+
+**A fail in the gather is a failed run, not a finished peer** — and `count()` counts a fail like any other obj, so a
+latch that only counts is fooled. Check the gather for fails before counting. A peer that **catches** its own failure
+answers the recovery instead, and the master never sees the fail:
+
+```mtron_pre
+1.plus(a).catch(34)
+```
+
+**Not yet**:
+
+* an uncaught failure does not arrive as itself — the master waits out its 2 s future and holds a timeout fail
+  (`future get timed out after 2000 ms`) in that peer's place, and the cause is lost;
+* the replies are awaited one at a time: each `to(<peer>)` resolves before the next route is sent, so latency is the
+  sum of the round trips. The direction is a virtual thread per route,
+  `[virtual::[code=>to(ws://s1)],virtual::[code=>to(ws://s2)]]`.
+
+**Where am I.** `*~/network/host` answers the host the current machine runs on — for a result that says where it was
+computed:
+
+```mtron
+*~/network/host       [-- booger --]
+```
+
+Peers forked on one host share it; telling them apart takes their service authority.
+
+### the worked example — one backend, three satellites
+
+`AbstractMultiServerSingleSpaceTest` puts the pieces together, and a backend opts in with a subclass —
+`MariaDBMultiServerSingleSpaceTest` is the first: one MariaDB in a container, and three satellites forked from the
+test JVM.
+
+<!-- figure source: assets/tikz/mach-workload.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
+<img src="../assets/mach-workload.png" alt="one master, three satellites, one shared MariaDB, drawn top to bottom. The master ships a workload to each satellite (solid arrows w1, w2, w3) as start([w1,w2,w3]).select([to(s1),to(s2),to(s3)]).merge(), and the acknowledgements come back up (dashed) into that merge, the latch. Each satellite is labelled with its binding — xyz=>'east', 'west', 'north' — and exchanges with the MariaDB below it (pull xyz/+, push result/xyz). A dotted arc from the master to MariaDB marks the master's own steps: 1. creates every table, 3. reads result/+. The legend: solid — a workload [db, xyz, code] ships, and evaluating it constructs the satellite's own space (construction is connection); dashed — the acknowledgements, merge() is the latch (no fail, counted through coefficients); dotted — the master's own writes and reads" width="100%" style="margin:0.3em 0 0 0"/>
+
+1. **The master sets up everything.** It starts the backend, mounts its own space, and creates every table — the
+   partitions and one result row per partition — before any satellite exists. A satellite boots with nothing but
+   `import(/m/tble)`, so it never runs DDL, and its first look at the backend already sees every table it will read.
+2. **One workload per satellite**, shipped in the `law_shard` layout: the backend's space, the satellite's partition,
+   and the row's code. The latch is the gather — no fail in it, three replies counted through coefficients — and
+   provenance is checked rather than assumed: a satellite holds a space only after evaluating its workload.
+3. **The master reads the results back** from the backend. Nothing but an acknowledgement ever travelled home.
+
+Every row of the suite is a computation over one partition — counts, sums, filters, a failure caught on the
+satellites and one left uncaught — so a new pattern is one CSV line, and a new backend is one subclass.
+
 ## appendix — the registered types
 
 Everything above is a subtype of `component::T` at `/m/mach/component` — except `machine::T` itself and the
@@ -350,7 +505,7 @@ non-component families, which hang directly off `/m/mach`:
 | compiler | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer` |
 | process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                   |
 | state    | `memory`, `network`, `instset`                                                                                                                                                                                                                      |
-| machine  | `machine` (at `/m/mach/machine`, a `space::T`)                                                                                                                                                                                                      |
+| machine  | `machine` (at `/m/mach/machine`, a `rec::T`)                                                                                                                                                                                                        |
 | the rest | `thread` / `virtual` / `core`, `peer`, `id_client`, `cluster`, `monad`, `component` (`/m/mach/component`, the root of every row above)                                                                                                              |
 
 ## appendix — writing another language
