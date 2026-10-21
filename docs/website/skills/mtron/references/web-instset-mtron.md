@@ -192,9 +192,9 @@ mtron> */usr/person/1                                              [-- straight 
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
 ==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from@0)]@/sys/fail/564
+==>fail::[inst apply failure: no mimeq query processor attached to http://# (at /m/inst/from@0)]@/sys/fail/533
 mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==>fail::[inst apply failure: no mimeq query processor attached to /sys/space/web/http [http://#] (at /m/inst/from@0)]@/sys/fail/565
+==>fail::[inst apply failure: no mimeq query processor attached to http://# (at /m/inst/from@0)]@/sys/fail/534
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

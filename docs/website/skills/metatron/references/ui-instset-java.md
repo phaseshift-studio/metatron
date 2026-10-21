@@ -53,8 +53,6 @@ isa.mach.type.ui.tool
   TreeSelectTool.java      ← interactive tree browser with nested obj inspection
   SwipePanelWidgetTool.java ← left-right swipe panel for browsing a stream of objs
   ModalTool.java          ← modal popup panel (title + body), dismiss on space/enter/ctrl-d
-  AbstractTool.java        ← the shared tool lifecycle (raw mode, key loop, canvas, restore)
-  NetworkPanelTool.java   ← floating view of the exchanges between this machine and its peers
 isa.mach.ui
   uiInstSet.java            ← mtron type/instruction registration for all UI types
 isa.m.type.reflect
@@ -1099,7 +1097,6 @@ moment the tool closes). The contract:
 | `TreeSelectTool`       | `TreeWidget` (navigable tree) + `PanelWidget` (detail panel)     |
 | `SwipePanelWidgetTool` | `PanelWidget` (obj display panel, docq + Highlighter formatting) |
 | `ModalTool`            | `PanelWidget` (title + body popup panel)                         |
-| `NetworkPanelTool`     | none — draws its own bordered body from `WireTrace.snapshot()`   |
 
 **Important:** These tools populate their `TableWidget`s via Java API (`addRow()`,
 `addMetadata()`). They rely on the `sync()` guard pattern (section 2) to prevent data corruption — without it,

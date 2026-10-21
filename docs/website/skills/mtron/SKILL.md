@@ -49,7 +49,7 @@ mtron> memspace::[pattern=>/a/#]@/sys/space/a
 [q=>r]   ⋮    ⋱
         'm'   [1.0,0xa5,true]
 </code></pre></div>
-<div style="flex:0 1 45%; min-width:16em"><img src="assets/mtron-graph.png" alt="the /a graph: uri vertices a, x, y, z on the upper chain and b, c, d, e on the lower, drawn as circles and joined by solid edges; each uri is hung with its bare referent by a dotted line — 0 at a, 1 at x, 2 at y, 3 at z, [q=>r] at b, |plus(2) at c, 'm' at d, [1.0,0xa5,true] at e" style="width:100%; margin:0"/></div>
+<div style="flex:0 1 22%"><img src="assets/mtron-graph.png" alt="the /a graph: uri vertices a, x, y, z on the upper chain and b, c, d, e on the lower, drawn as circles and joined by solid edges; each uri is hung with its bare referent by a dotted line — 0 at a, 1 at x, 2 at y, 3 at z, [q=>r] at b, |plus(2) at c, 'm' at d, [1.0,0xa5,true] at e" style="width:100%; margin:0"/></div>
 </div>
 
 The same graph twice: the ASCII art on a character-cell grid, and the drawing. In the drawing the **circled** letters

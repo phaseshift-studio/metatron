@@ -645,7 +645,7 @@ mtron&gt; *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM perso
 mtron&gt; *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
 ==&gt;181
 mtron&gt; *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==&gt;36.0
+==&gt;36.2
 mtron&gt; *tbledoc:person/+.==[name=&gt;_]           [-- SELECT name FROM person --]
 ==&gt;[name=&gt;'xilo']
 ==&gt;[name=&gt;'marko']
@@ -823,16 +823,22 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/5
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/11
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/6
+==&gt;[body=&gt;'another one']@tbledoc:note/12
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;1
+==&gt;12
 ==&gt;3
+==&gt;10
+==&gt;11
 ==&gt;2
 ==&gt;4
 ==&gt;5
 ==&gt;6
+==&gt;7
+==&gt;8
+==&gt;9
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC

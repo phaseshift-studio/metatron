@@ -142,13 +142,13 @@ Composing them round-trips — from an object to its edges and back, or from an 
 
 `analysis` is one lazy `auto()` — evaluated with `>>analysis`. Inside it, each stat is itself lazy:
 
-| field       | what it is                                                                                                       |
-|-------------|------------------------------------------------------------------------------------------------------------------|
-| `family`    | the same-name siblings: $\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}$ — every registration of the same operator |
-| `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                        |
-| `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions |
-| `position`  | the edge's place among its siblings (a subset of the six kinds below)                                            |
-| `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                       |
+| field       | what it is                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `family`    | the same-name siblings: $\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}$ — every registration of the same operator                                                                                                                                                                                                                                                                                                                                                         |
+| `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                                                                                                                                                                                                                                                                                                                                                                                |
+| `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions                                                                                                                                                                                                                                                                                                                                         |
+| `position`  | the edge's place among its siblings (a subset of the six kinds below)                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                                                                                                                                                                                                                                                                                                                                                                               |
 | `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`); a keyed fold (`group`) recombines pointwise through a chain — `sum`, then a per-key fold — that no single edge names, so it has none here |
 
 ### the six edge kinds
@@ -226,19 +226,19 @@ type, and a type that models no such structure is left unchanged.
 <!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
 <img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
 
-| rewrite                  | reads                                                              | rule                                                                                                                 |
-|--------------------------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| `theory_unit_removal`    | every theory instance of the operand's type                        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                      |
-| `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role | $f \cdot f \leadsto \varepsilon$                                                                                     |
-| `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                             | $f \cdot f \leadsto f$                                                                                               |
-| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                              | $g \cdot f \leadsto f$                                                                                               |
-| `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form   | $f \cdot f \leadsto f$                                                                                               |
-| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                  | $\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))$, $\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))$ |
-| `inverse_cancellation`   | `analysis.inverse`                                                 | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                          |
-| `form_map_unwrap`        | the stream lift `map`                                              | $\mathrm{map}(f) \leadsto f$                                                                                         |
-| `derivation_contraction` | `derivation`                                                       | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$ |
-| `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]` | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients            |
-| `branch_inline`          | the additive role — `cut => [role => zero]`                          | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$ |
+| rewrite                  | reads                                                                                       | rule                                                                                                                                                                                                                                                |
+|--------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `theory_unit_removal`    | every theory instance of the operand's type                                                 | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
+| `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
+| `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))$, $\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))$                                                                                                      |
+| `inverse_cancellation`   | `analysis.inverse`                                                                          | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
+| `form_map_unwrap`        | the stream lift `map`                                                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
+| `derivation_contraction` | `derivation`                                                                                | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
+| `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]`                         | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
+| `branch_inline`          | the additive role — `cut => [role => zero]`                                                 | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
 | `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
@@ -247,7 +247,7 @@ distribution plan may anchor (its spans). The remaining labels are classificatio
 rewriter's guards and for reasoning, with no rewrite of their own: `commutative`, `unit`, `magmadic`, `nilpotent`,
 `kleene`, `partial`, `prime`, `cyclic`, `zero_divisor`, `left_distributive`, `right_distributive`, `action`.
 `commutative` is the cleanest case: a canonical form for a commutative operand would be a no-op where it is legal — a
-stream is a *bag* (`{3,1,2}` already equals `{1,2,3}`) — while for an `lst` it would be unsound, its order being
+stream (`{3,1,2}` already equals `{1,2,3}`) — while for an `lst` it would be unsound, its order being
 semantic. The law stays declared (it is what licenses the inverse-pair search) without a rewrite.
 
 The first two generalize a *ring's* unit and a *group's* inverse to every declared structure: the unit law is read
@@ -302,31 +302,32 @@ instructions were rewritten away:
 
 **Direction.** Every rule above either removes or preserves chain length, so a rule set that is only ever applied in
 that direction settles under any `rewriter::T` that iterates the rewrite stage to a fixpoint — the bundled
-`fixpoint_rewriter` (`fixpoint_rewriter::[max=>N]`, bounded iterations) is one such stage, not the only one. The dual of `derivation_contraction`, `derivation_expansion`
+`fixpoint_rewriter` (`fixpoint_rewriter::[max=>N]`, bounded iterations) is one such stage, not the only one. The dual of
+`derivation_contraction`, `derivation_expansion`
 ($\mathrm{minus} \leadsto \mathrm{plus} \cdot \mathrm{neg}$), is deliberately **not** registered: it trades the
 length back, so the pair would alternate forever and no stage could settle. Lowering to a target that lacks the
 derived operation is a policy, not a law.
 
 ### the deep merge — the rec monoid a keyed fold recombines through
 
-`+` on recs is a **deep merge**, and `sum` is its fold: $\mathrm{sum}(\{r_1, \ldots, r_n\}) = r_1 + \cdots + r_n$.
+`+` on recs is a **deep merge**, and `sum` is its fold: $\mathrm{sum} (\{r_1, \ldots, r_n\}) = r_1 + \cdots + r_n$.
 The keys union, and a key on both sides merges its two values by their kind:
 
-| the two values            | their merge                                       | so                                                            |
-|---------------------------|---------------------------------------------------|---------------------------------------------------------------|
-| recs                      | $r(k) + s(k)$ — recurse, key by key               | a nested rec merges at every depth                            |
-| anything else, `lst`s too | $x \uplus y$ — appended into a bag (a stream)     | equal values bulk, $5 \uplus 5 = \{2\}5$; a `lst` stays whole |
+| the two values            | their merge                           | so                                                            |
+|---------------------------|---------------------------------------|---------------------------------------------------------------|
+| recs                      | $r(k) + s(k)$ — recurse, key by key   | a nested rec merges at every depth                            |
+| anything else, `lst`s too | $x \uplus y$ — appended into a stream | equal values bulk, $5 \uplus 5 = \{2\}5$; a `lst` stays whole |
 
-A `lst` is an **atom** of the merge: two colliding `lst`s make a bag of `lst`s, $[1,2,3] \uplus [2,3]$, never their
-concatenation — the union is commutative, so its fold is defined over a bag. Rec `sum` declares `monoidic` and
+A `lst` is an **atom** of the merge: two colliding `lst`s make a stream of `lst`s, $[1,2,3] \uplus [2,3]$, never their
+concatenation — the union is commutative, so its fold is defined over a stream. Rec `sum` declares `monoidic` and
 `commutative`, so `law_shard` distributes a rec merge as it distributes a sum of ints: each peer merges its share of
 the recs and the master merges the partial recs. Concatenating `lst` values is said by
 the expression, with a select's `+`: $[1,2,3] \mathbin{+\!\!+} [2,3]$ is `[a=>[1,2,3]]==[a=>+[2,3]]`.
 
 A coefficient is a **multiplicity**, read the way every access reads it — the outer $c$ multiplied into what it holds,
 $\{c\}[k \Rightarrow v] = [k \Rightarrow \{c\}v]$, all the way down to the merge's atoms, where $\{c\}v$ is $v$'s
-multiplicity in the bag (a `lst`'s too). A bulked rec therefore merges as the copies it stands for,
-$\{c\}r = r + \cdots + r$ ($c$ times), and a fold over a bag answers what it answers over the copies.
+multiplicity in the stream (a `lst`'s too). A bulked rec therefore merges as the copies it stands for,
+$\{c\}r = r + \cdots + r$ ($c$ times), and a fold over a stream answers what it answers over the copies.
 
 A weekend of dog walks makes the rules concrete. Each day files one report: dog ⇒ kilometres per trail, plus the
 places visited.
@@ -338,33 +339,34 @@ places visited.
 ```
 
 <!-- figure source: assets/tikz/cat-deep-merge.tex (same recipe) -->
-<img src="../assets/cat-deep-merge.png" alt="the deep merge of two walk reports: framed keys merge key by key, colliding values append into a bag, colliding lsts bag whole" width="100%" style="margin:0.3em 0 0 0"/>
+<img src="../assets/cat-deep-merge.png" alt="the deep merge of two walk reports: framed keys merge key by key, colliding values append into a stream, colliding lsts stream whole" width="100%" style="margin:0.3em 0 0 0"/>
 
 Every rule fires in that one merge:
 
 * every dog is in both reports, so each dog's rec merges — and so does each `km` rec, one level down;
-* `mama`'s `ridge` is in both: `12` and `9` append into the bag `{12,9}`, while `mama`'s `lake` is Saturday's alone and
+* `mama`'s `ridge` is in both: `12` and `9` append into the stream `{12,9}`, while `mama`'s `lake` is Saturday's alone
+  and
   is kept;
 * `puppy`'s two days share no trail, so the two `km` recs simply union;
 * `chelsea` walked the same loop on both days — two equal values, which bulk to `{2}5`;
-* `mama`'s `visited` values are `lst`s — atoms of the merge — so the two days' lists bag whole,
+* `mama`'s `visited` values are `lst`s — atoms of the merge — so the two days' lists stream whole,
   `{[arroyo],[acequia,mesa]}`.
 
 The merge keeps every partial; a **per-key fold** reduces them. `==` (`select`) applies a pattern rec key by key — `_`
 matches every key and a nested pattern descends — so the weekend's totals are one select away: `sum` reads `{12,9}` as
-$12 + 9$ and `{2}5` as $5 + 5$, while `visited=>_` keeps the bag of lists as it is.
+$12 + 9$ and `{2}5` as $5 + 5$, while `visited=>_` keeps the stream of lists as it is.
 
 ```mtron_pre
 */usr/walk/sat.plus(*/usr/walk/sun)==[_=>[km=>[_=>sum()],visited=>_]]
 ```
 
-To join the lists rather than bag them, the expression says so — a select's `+` concatenates the slots:
+To join the lists rather than stream them, the expression says so — a select's `+` concatenates the slots:
 
 ```mtron_pre
 */usr/walk/sat==[mama=>[visited=>+[acequia,mesa]]]
 ```
 
-A bag of equal recs is one rec with a coefficient, and the merge reads it as the copies it stands for — the bulked
+A stream of equal recs is one rec with a coefficient, and the merge reads it as the copies it stands for — the bulked
 `sum` is the explicit `+`:
 
 ```mtron_pre
@@ -374,11 +376,12 @@ A bag of equal recs is one rec with a coefficient, and the merge reads it as the
 ```
 
 **The keyed combiner.** This is how `law_shard` recombines a keyed fold. `group([k ⇒ h])` is a homomorphism from the
-bag into the recs of $h$'s monoid, so its combiner is computed from $h$'s rather than declared,
-$\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$:
+stream into the recs of $h$'s monoid, so its combiner is computed from $h$'s rather than declared,
+$\mathrm{combiner} (\mathrm{group} ([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select} ([\_ \Rightarrow \mathrm{combiner} (h)])$:
 the peers' partial recs deep-merge, and each key folds through $h$'s combiner — exactly the select above. `merge()`
 bulks equal partials (two peers answering `[k=>1]` arrive as `{2}[k=>1]`), and the coefficient reading is what keeps
-both counted. A `lst`-valued fold recombines the same way: an `order`'s sorted partials bag whole per key — a bag of
+both counted. A `lst`-valued fold recombines the same way: an `order`'s sorted partials stream whole per key — a stream
+of
 runs, never their slots — and `kmerge` merges the runs.
 
 ## the third lift — code as a vertex (`path::T`, `abstraction::T`)
@@ -419,11 +422,12 @@ real match. A rule the pruner does not know is never pruned.
 
 ### `abstraction::T` — the α-word
 
-| field | description                                                                                                                                                                                     |
-|-------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| field | description                                                                                                                                                                                                                                  |
+|-------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `obj` | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`: the surface a `plan::T`'s guard reads (its law/form/theory), the code and its descent staying anchored at `path::T.obj` |
 
-The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per instruction,
+The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per
+instruction,
 each already carrying `form`, `class`, `law`, and `analysis` — not a second concrete chain. Nor is it a vertex one
 descends through: no traversal runs over the abstraction, because it is only the lookup surface from which a `plan::T`
 derives its rewrite. The guard reads the laws/forms/theories off the word (`*…/obj/1/law`, `*…/obj/2/analysis/inverse`)
@@ -469,7 +473,7 @@ ws_client::[host=>ws://localhost:8555/mtron]
 now holding that `peer::T`, the `path::T` lists the distribution plan among its out-edges.
 
 ```mtron_pre
-[{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)]
+[start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
 ```
 
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
@@ -481,14 +485,14 @@ application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
 
 ```mtron_pre
-[{1,2,3,4,5}.plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
+[start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
 ```
 
 A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
 `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron_pre
-[{1,2,3,4,5,6}.group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
+[start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
 ```
 
 ### may / must — the fiber modality
