@@ -1757,21 +1757,32 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
     private static final String KV_PREFIX = "db:kvtest";
     private static final String[][] KV_SEED = {
-            {"a", "str('alpha')"}, {"b", "str('beta')"}, {"c", "str('gamma')"},
-            {"d", "str('delta')"}, {"e", "str('epsilon')"},
-            {"sub/x", "str('xray')"}, {"sub/y", "str('yankee')"},
-            {"deep/1/a", "str('deep_a')"}, {"deep/1/b", "str('deep_b')"},
-            {"deep/2/a", "str('deep_c')"},
+            {"a", "'alpha'"}, {"b", "'beta'"}, {"c", "'gamma'"},
+            {"d", "'delta'"}, {"e", "'epsilon'"},
+            {"sub/x", "'xray'"}, {"sub/y", "'yankee'"},
+            {"deep/1/a", "'deep_a'"}, {"deep/1/b", "'deep_b'"},
+            {"deep/2/a", "'deep_c'"},
     };
 
+    /**
+     * A seed write must land. The rows below count kv_store rows, so a seed that answers a fail (and stores nothing)
+     * would read as a count of zero rather than as the broken fixture it is.
+     */
     private static void seedKVData() {
-        for (final String[] kv : KV_SEED)
-            ObjmtronSerializer.parse(KV_PREFIX + "/" + kv[0] + " -> " + kv[1]).apply();
+        for (final String[] kv : KV_SEED) {
+            final String write = KV_PREFIX + "/" + kv[0] + " -> " + kv[1];
+            final Obj written = ObjmtronSerializer.parse(write).apply();
+            assertFalse(written.isFail(), "seed write failed: " + write + " => " + written);
+        }
     }
 
+    /**
+     * noobj deletes the row, so each case counts only its own seed. Writing {@code none} stored the uri {@code none}
+     * instead, and those leftover rows kept every case after the first passing once the seed had stopped landing.
+     */
     private static void cleanKVData() {
         for (final String[] kv : KV_SEED)
-            ObjmtronSerializer.parse(KV_PREFIX + "/" + kv[0] + " -> none").apply();
+            ObjmtronSerializer.parse(KV_PREFIX + "/" + kv[0] + " -> noobj").apply();
     }
 
     static Stream<Arguments> provideKVStoreRewriteTestCases() {
@@ -1798,6 +1809,30 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             runRewriteTest(description, code, expected);
         } finally {
             cleanKVData();
+        }
+    }
+
+    /**
+     * A write whose value computes to a fail stores nothing: the failed argument fails the write itself. The KV seed
+     * above was once {@code str('alpha')}, which names no instruction ({@code str} reads back the str::T type, which
+     * has no inst function) and so always computed to a fail. The write took that fail as its value and kv_store kept
+     * it as a row ({@code tid=/m/fail}, a value that does not even parse back), and the counts above, which count
+     * rows, passed on it.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "throw('boom')   % an explicit fail",
+            "str('alpha')    % a call to no instruction (the old kv seed)"
+    }, delimiter = '%', quoteCharacter = '^')
+    public void testKVFailedValueWritesNothing(final String value, final String description) {
+        final String address = KV_PREFIX + "/failed";
+        try {
+            final Obj written = ObjmtronSerializer.parse(address + " -> " + value).apply();
+            assertTrue(written.isFail(), description + ": the write should answer the fail, got: " + written);
+            final Obj stored = ObjmtronSerializer.parse("*" + address).apply();
+            assertTrue(stored.isNoObj(), description + ": nothing should be stored at " + address + ", got: " + stored);
+        } finally {
+            ObjmtronSerializer.parse(address + " -> noobj").apply();
         }
     }
 
