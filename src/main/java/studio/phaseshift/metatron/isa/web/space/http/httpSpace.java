@@ -122,44 +122,41 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     protected httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI vid) {
         super(server, config, HTTP_SPACE_TID, vid);
         this.cache = memSpace.of(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
-        try {
-            this.validateRoutes();
-            this.at(ROUTE).orElse(rec0()).elements().forEach(r -> {
-                final boolean hostRoute = r.first().uriValue().toString().startsWith(this.at(HOST).uriValue().toString());
-                final fURI left = hostRoute ? f(r.first().uriValue().toString().replaceFirst(this.at(HOST).uriValue().toString(), "")) : r.first().uriValue();
-                if (!hostRoute && r.first().uriValue().hasHost())
-                    return;
-                // the value is *rendered*, not uri-converted: a value that cannot convert must not be able to
-                // take the space down before it has served anything (see resolveRoute)
-                final Obj routeValue = r.second();
-                try {
-                    // A templated value has no boot-time target at all — its expressions need a request to bind
-                    // to — so it is resolved per request. Every other value is resolved once, here, exactly as
-                    // before: a code route value which materializes its target must not re-materialize it on
-                    // every request.
-                    final RouteLane fixed = webHelper.isTemplated(routeValue) ? null : this.resolveRoute(routeValue);
-                    if (null == fixed)
-                        LOG.info("mounting templated http route: %s => %s (addressed per request)", left.toString(), routeValue.toShortString());
-                    else
-                        LOG.info("processing http route: %s => %s => %s [%s]", r.first().uriValue().toString(), routeValue.toShortString(), left.toString(), fixed.kind());
-                    if (null != fixed && RouteLane.Kind.NONE == fixed.kind())
-                        LOG.warn("no lane for route %s => %s", left, routeValue.toShortString());
-                    else
-                        server.createContext(left.toString(), exchange -> this.handleRequest(exchange, left, routeValue, fixed));
-                } catch (final Exception e) {
-                    // one bad mount must not stop the space from serving its other mounts
-                    LOG.error("unable to mount %s => %s: %s", left, routeValue.toShortString(), e.getMessage());
-                }
-            });
-            LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(HTTP).toUri());
-            server.setExecutor(ThreadExecutor.instance());
-            Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-            LOG.debug("available routes: %s", this.at(ROUTE));
-            server.start();
-        } catch (final Exception e) {
-            LOG.error(MTronException.of(e));
-            LOG.warn("%s server not started: %s", this, e.getMessage());
-        }
+        // no catch-all around the table: one that cannot be processed fails the construction. Swallowed, it left the
+        // space mounted around a bound socket that was never started, which accepts connections and answers none.
+        this.validateRoutes();
+        this.at(ROUTE).orElse(rec0()).elements().forEach(r -> {
+            final boolean hostRoute = r.first().uriValue().toString().startsWith(this.at(HOST).uriValue().toString());
+            final fURI left = hostRoute ? f(r.first().uriValue().toString().replaceFirst(this.at(HOST).uriValue().toString(), "")) : r.first().uriValue();
+            if (!hostRoute && r.first().uriValue().hasHost())
+                return;
+            // the value is *rendered*, not uri-converted: a value that cannot convert must not be able to
+            // take the space down before it has served anything (see resolveRoute)
+            final Obj routeValue = r.second();
+            try {
+                // A templated value has no boot-time target at all — its expressions need a request to bind
+                // to — so it is resolved per request. Every other value is resolved once, here, exactly as
+                // before: a code route value which materializes its target must not re-materialize it on
+                // every request.
+                final RouteLane fixed = webHelper.isTemplated(routeValue) ? null : this.resolveRoute(routeValue);
+                if (null == fixed)
+                    LOG.info("mounting templated http route: %s => %s (addressed per request)", left.toString(), routeValue.toShortString());
+                else
+                    LOG.info("processing http route: %s => %s => %s [%s]", r.first().uriValue().toString(), routeValue.toShortString(), left.toString(), fixed.kind());
+                if (null != fixed && RouteLane.Kind.NONE == fixed.kind())
+                    LOG.warn("no lane for route %s => %s", left, routeValue.toShortString());
+                else
+                    server.createContext(left.toString(), exchange -> this.handleRequest(exchange, left, routeValue, fixed));
+            } catch (final Exception e) {
+                // one bad mount must not stop the space from serving its other mounts
+                LOG.error("unable to mount %s => %s: %s", left, routeValue.toShortString(), e.getMessage());
+            }
+        });
+        LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(HTTP).toUri());
+        server.setExecutor(ThreadExecutor.instance());
+        LOG.debug("available routes: %s", this.at(ROUTE));
+        server.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     // ──────────────────────────────────────────────
@@ -393,13 +390,28 @@ public class httpSpace extends AbstractSpace<HttpServer> {
 
     public static httpSpace of(final Rec config, final fURI vid) {
         try {
+            // HttpServer.create binds here, synchronously, so a lost bind throws before the space (which registers
+            // itself in memory as it is constructed) exists
             final HttpServer server = HttpServer.create(
                     new InetSocketAddress(config.at(HOST).uriValue().host(),
                             config.at(HOST).uriValue().port()), 0);
-            server.setExecutor(ThreadExecutor.instance());
-            return new httpSpace(server, config.jvm(), vid);
+            try {
+                server.setExecutor(ThreadExecutor.instance());
+                return Space.Helper.construct(() -> new httpSpace(server, config.jvm(), vid));
+            } catch (final RuntimeException e) {
+                // the port this factory bound is released with the space that never came to serve it. stop() alone
+                // does not release a server that never started: its channel is registered with the server's
+                // selector, so the close completes only on the next select, and only the dispatcher selects.
+                try {
+                    server.start();
+                } catch (final IllegalStateException alreadyStarted) {
+                    // the construction failed after starting it
+                }
+                server.stop(0);
+                throw e;
+            }
         } catch (final Exception e) {
-            throw MTronException.of(e);
+            throw MTronException.of(e, "unable to start http server at %s: %s", config.at(HOST), MTronException.translateMessage(e));
         }
     }
 

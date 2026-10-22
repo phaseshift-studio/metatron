@@ -242,7 +242,8 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     }
 
     public static mqttSpace of(final Rec config, final fURI vid) {
-        return new mqttSpace(config.jvm(), MQTT_SPACE_TID, vid);
+        // the constructor dials the broker after the space has mounted: a broker that is down must not leave it there
+        return Space.Helper.construct(() -> new mqttSpace(config.jvm(), MQTT_SPACE_TID, vid));
     }
 
     @Override

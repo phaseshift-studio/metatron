@@ -165,7 +165,17 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
             // entries).  The original map is the shared jvm() of the caller's Rec —
             // modifying it concurrently while another thread iterates it causes
             // ConcurrentModificationException.
-            return new tbleSpace(conn, new LinkedHashMap<>(config), TBLE_SPACE_TID, vid);
+            try {
+                // schema initialization runs after the space has mounted: a failure must not leave it there
+                return Space.Helper.construct(() -> new tbleSpace(conn, new LinkedHashMap<>(config), TBLE_SPACE_TID, vid));
+            } catch (final RuntimeException e) {
+                try {
+                    conn.close();
+                } catch (final SQLException closing) {
+                    e.addSuppressed(closing);
+                }
+                throw e;
+            }
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }

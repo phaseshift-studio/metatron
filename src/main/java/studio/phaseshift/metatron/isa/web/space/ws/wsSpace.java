@@ -23,6 +23,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -47,6 +48,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -220,15 +225,27 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
 
     public static wsSpace of(final Map<Obj, Obj> config, final fURI vid) {
         try {
+            // the server is listening once constructed (or the construction throws), and only then is the space
+            // built around it: a space registers itself in memory as it is constructed, so a lost bind must fail
+            // here rather than leave a space at its pattern that no client can reach
             final mWebSocketServer server = new mWebSocketServer(
                     config.get(uri(HOST)).autoResolve(noobj()).uriValue().host(),
                     config.get(uri(HOST)).autoResolve(noobj()).uriValue().port());
-            final wsSpace ws = new wsSpace(server, config, vid);
-            server.setSpace(ws);
-            server.onStart();
-            return ws;
+            try {
+                final wsSpace ws = Space.Helper.construct(() -> new wsSpace(server, config, vid));
+                server.setSpace(ws);
+                return ws;
+            } catch (final RuntimeException e) {
+                // the port this factory bound is released with the space that never came to serve it
+                try {
+                    server.stop(1000, "space not constructed");
+                } catch (final InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+                throw e;
+            }
         } catch (final Exception e) {
-            throw MTronException.of("unable to start ws server: %s", e);
+            throw MTronException.of(e, "unable to start ws server: %s", MTronException.translateMessage(e));
         }
     }
 
@@ -276,6 +293,11 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
          */
         protected final Map<WebSocket, fURI> accepted = java.util.Collections.synchronizedMap(new LinkedHashMap<>());
         protected final GraphittyLogger LOG = Graphitty.log(this);
+        /**
+         * the bind's outcome. Java-WebSocket binds on its own selector thread: success calls {@link #onStart()},
+         * and a failed bind is reported only to {@code onError(null, ex)}, after which the server shuts itself down.
+         */
+        protected final CompletableFuture<Void> started = new CompletableFuture<>();
 
         public mWebSocketServer(final String host, final int port) {
             super(new InetSocketAddress(host, port));
@@ -283,22 +305,43 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             this.setDaemon(true);
             this.baseURI = f("/").scheme("ws").host(host).port(port);
             if (Machine.loaded()) {
-                try {
-                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                        try {
-                            this.stop(1000, "server shutdown");
-                        } catch (final Exception e) {
-                            LOG.error(e);
-                        }
-                    }));
-                    this.start();
-                    LOG.info("server started: %s", this.getAddress());
-
-                } catch (final Exception e) {
-                    LOG.error(e);
-                }
+                this.start();
+                // a constructed server is a listening server. a lost bind (a port already in use) used to be a log
+                // line, then a silently dead server, then an unrelated "socket ... is not connected" on the first dial
+                this.awaitStart();
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    try {
+                        this.stop(1000, "server shutdown");
+                    } catch (final Exception e) {
+                        LOG.error(e);
+                    }
+                }));
+                LOG.info("server started: %s", this.getAddress());
             } else {
                 throw MTronException.of("unable to start server as router not loaded");
+            }
+        }
+
+        /**
+         * Wait for the bind: return once the server is listening, or throw why it is not.
+         */
+        private void awaitStart() {
+            try {
+                this.started.get(5000, TimeUnit.MILLISECONDS);
+            } catch (final ExecutionException e) {
+                // the selector thread's fatal path has already shut the server down
+                throw MTronException.of(e.getCause(), "unable to bind %s: %s",
+                        this.getAddress(), MTronException.translateMessage(e.getCause()));
+            } catch (final TimeoutException | InterruptedException e) {
+                // no outcome: shut the server down, or it could still bind later as a socket no space holds
+                try {
+                    this.stop(1000, "server did not start");
+                } catch (final InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+                if (e instanceof InterruptedException)
+                    Thread.currentThread().interrupt();
+                throw MTronException.of(e, "%s did not start: %s", this.getAddress(), e.getClass().getSimpleName());
             }
         }
 
@@ -506,6 +549,11 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
 
         @Override
         public void onError(final WebSocket conn, final Exception ex) {
+            // no connection: the error is the server's own, and before onStart() that means the bind failed
+            if (null == conn) {
+                this.started.completeExceptionally(ex);
+                return;
+            }
             try {
                 if (ignore(conn)) return;
                 final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
@@ -529,7 +577,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
 
         @Override
         public void onStart() {
-
+            this.started.complete(null);
         }
     }
 }

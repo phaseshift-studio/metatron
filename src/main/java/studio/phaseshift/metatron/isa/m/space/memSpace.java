@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.space;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -57,18 +58,21 @@ public class memSpace extends AbstractMemorySpace {
 
     protected memSpace(final Map<Obj, Obj> config, final fURI tid, final fURI vid, final boolean autoRegister) {
         super(new TopicTrie(), config, tid, vid, autoRegister);
+        load();
+        // only once the load has succeeded: a space whose load failed holds part of its data, and saving that at
+        // exit would overwrite the whole of it
         if (!this.at(DATA).isNoObj())
             Runtime.getRuntime().addShutdownHook(new Thread(() -> this.save()));
-        load();
     }
 
 
     public static memSpace of(final fURI pattern, final fURI vid) {
-        return new memSpace(mutableMap(uri(Tokens.PATTERN), uri(pattern)), vid);
+        return Space.Helper.construct(() -> new memSpace(mutableMap(uri(Tokens.PATTERN), uri(pattern)), vid));
     }
 
     public static memSpace of(final Rec config, final fURI vid) {
-        return new memSpace(mutableMap(config.jvm()), vid);
+        // loading persisted data runs after the space has mounted (the load writes through the machine into it)
+        return Space.Helper.construct(() -> new memSpace(mutableMap(config.jvm()), vid));
     }
 
     /**

@@ -52,7 +52,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Two constraints learned the hard way. (1) A route value must be uri-convertible *and* its vid must fall
  * inside a live space's pattern: the constructor logs {@code r.second().uriValue()}, so a value that cannot
  * convert throws inside the constructor, is caught, logged as "server not started" — and then every request
- * times out rather than failing. An instance-valued route is therefore only expressible by writing the
+ * times out rather than failing. (Since 2026-10-21 that catch is gone: a table the constructor cannot process
+ * fails the construction, which mounts nothing and releases the port.) An instance-valued route is therefore only
+ * expressible by writing the
  * instance into a space and naming that uri. (2) Bind and client on the same address family: the integration
  * base derives its client host from {@code HOST}, so {@code 127.0.0.1} keeps both on IPv4. Boots on an
  * ephemeral port, so it never collides with a running server — which is why {@code httpSpaceTest} is excluded
@@ -64,7 +66,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * Every route value must be uri-convertible *and* resolve in the Router — the invariant the base class's
  * {@code testHandlerTypeIsRegisteredInRouter} encodes. Violating the first kills the server at boot (the
- * constructor logs the value as a uri and its {@code catch} reports "server not started"); violating the
+ * constructor logs the value as a uri and its {@code catch} reported "server not started"; it now fails the
+ * construction); violating the
  * second fails that inherited test. Both are things {@code route::T} should enforce at boot rather than
  * leave to be discovered.
  * <p>

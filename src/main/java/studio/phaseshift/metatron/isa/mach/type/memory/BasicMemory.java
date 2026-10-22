@@ -147,7 +147,10 @@ public class BasicMemory extends MRec implements Memory {
         // parent's real spaces from inside a frame. Only addressable (vid'd) spaces enter the index.
         //if (null == space.vid())
         //   return; // TODO: spaces with null vids should not be indexed
-        this.spaces().jvm().put(null == space.vid() ? space.pattern().retractPattern().toUri() : space.vid().toUri(), space);
+        final Obj key = null == space.vid() ? space.pattern().retractPattern().toUri() : space.vid().toUri();
+        final Obj displaced = this.spaces().jvm().put(key, space);
+        // journaled, so a construction that fails after mounting can retract the mount (Space.Helper.construct)
+        Space.Helper.mounted(this, key, displaced, space);
     }
 
     @Override

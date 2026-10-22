@@ -162,19 +162,32 @@
              graphTraversalSource = TinkerGraph.open().traversal();
          }
          final boolean supportsUserIds = driverRemoteConnection == null;
-         final grphSpace space = new grphSpace(graphTraversalSource, grph.jvm(), vid, supportsUserIds);
-         space.remoteConnection = driverRemoteConnection;
+         try {
+             // schema discovery and the dataset load run after the space has mounted: a failure must not leave it there
+             return Space.Helper.construct(() -> {
+                 final grphSpace space = new grphSpace(graphTraversalSource, grph.jvm(), vid, supportsUserIds);
+                 space.remoteConnection = driverRemoteConnection;
 
-         // Load a pre-defined toy dataset if configured
-         grph.at(uri(DATASET)).ifPresent(datasetUri -> {
-             final java.util.function.Consumer<grphSpace> loader = GraphLoader.get(datasetUri.uriValue());
-             if (loader != null) {
-                 loader.accept(space);
-             } else {
-                 Graphitty.log(grphSpace.class).warn("unknown dataset key: %s", datasetUri);
+                 // Load a pre-defined toy dataset if configured
+                 grph.at(uri(DATASET)).ifPresent(datasetUri -> {
+                     final java.util.function.Consumer<grphSpace> loader = GraphLoader.get(datasetUri.uriValue());
+                     if (loader != null) {
+                         loader.accept(space);
+                     } else {
+                         Graphitty.log(grphSpace.class).warn("unknown dataset key: %s", datasetUri);
+                     }
+                 });
+                 return space;
+             });
+         } catch (final RuntimeException e) {
+             try {
+                 CommonUtil.close(graphTraversalSource);
+                 CommonUtil.close(driverRemoteConnection);
+             } catch (final RuntimeException closing) {
+                 e.addSuppressed(closing);
              }
-         });
-         return space;
+             throw e;
+         }
      }
 
      /**
