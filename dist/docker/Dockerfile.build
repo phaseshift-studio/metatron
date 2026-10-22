@@ -8,3 +8,27 @@ FROM maven:3.9-eclipse-temurin-25
 RUN apt-get update \
     && apt-get install -y --no-install-recommends patchelf python3 \
     && rm -rf /var/lib/apt/lists/*
+
+# docker CLI for dckrSpace: it shells out to the binary, unlike the TestContainers
+# classes which speak HTTP to the mounted socket. Static build, version-pinned to
+# match the deployment's /opt/dsh-tools/bin/docker so both agree with the daemon.
+ARG DOCKER_CLI_VERSION=27.3.1
+RUN set -eu; \
+    arch="$(uname -m)"; \
+    curl -fsSL "https://download.docker.com/linux/static/stable/${arch}/docker-${DOCKER_CLI_VERSION}.tgz" \
+      | tar -xz -C /tmp; \
+    mv /tmp/docker/docker /usr/local/bin/docker; \
+    rm -rf /tmp/docker; \
+    docker --version
+
+# compose plugin: the static docker CLI does NOT bundle it, so `docker compose` is an
+# unknown command and dckrSpaceTest.testComposeUpDown dies on --progress. Installed as a
+# cli-plugin so the spelling `docker compose` (as metatron invokes it) resolves.
+ARG COMPOSE_VERSION=2.29.7
+RUN set -eu; \
+    arch="$(uname -m)"; \
+    mkdir -p /usr/local/lib/docker/cli-plugins; \
+    curl -fsSL "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-${arch}" \
+      -o /usr/local/lib/docker/cli-plugins/docker-compose; \
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose; \
+    docker compose version

@@ -1,5 +1,5 @@
 [-- wsspace — ws server: mcp + mtron routes, plus user-supplied mcp servers. --]
-||inst?wsspace<=uri() {
+|inst?wsspace<=uri() {
   -<([host    => _,
       pattern => <ws://#>,
       route   => [/mcp   => mcp_mtron,

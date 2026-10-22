@@ -1,6 +1,6 @@
 [== tblespace on a local sqlite file in the writable data dir; a dckrspace-pulled
     sqlite container shares the same volume so data persists across recreates. ==]
-||inst?#{?}<=#{?}(user=>uri::T,storage=>uri::T){
+|inst?#{?}<=#{?}(user=>uri::T,storage=>uri::T){
   print("loading ${!*storage} sqlite container for user ${!*user}").
   from(docker:container/metatron).
   else(

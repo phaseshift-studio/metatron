@@ -169,7 +169,10 @@ public record DataPath(String db, String collection, String entry, String field,
         final fURI fprops;
         // Extension threshold stays at 4 — the sentinel sits at position 0
         // but collection/entry/field are always at positions 1/2/3.
-        if (vid.pathLength() > 4) {
+        // Use segmentLength (non-empty segments) rather than pathLength, which
+        // counts leading/trailing empty branch markers and would mis-slice a
+        // 3-segment wildcard like /g/+/+/ as subList(4,3).
+        if (vid.segmentLength() > 4) {
             final List<String> props = vid.segments().subList(4, vid.segmentLength());
             fprops = fURI.of(null, null, -1, props, vid.c(), null, vid.qMap(), vid.templates());
         } else {

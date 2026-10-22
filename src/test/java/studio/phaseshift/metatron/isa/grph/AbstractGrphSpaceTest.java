@@ -493,13 +493,11 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
 
     @ParameterizedTest
     @CsvSource(value = {
-            //  "*/g/+                                                   % true",
             "*/g/+.count()                                                                   % 2",
-            "*/g/+                                                                           % {edge::T@E,vrtx::T@V}",
-            "*/g/S                                                                           % modern::T",
-            //"*/g/S.vid().*(_)                                                             % 4",
-            //"*/g/S>>pattern.*_.count()                                                       % 5",
-            // "*/g/S>>pattern.*(_).vid()                                                        % {/m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows,/m/grph/schema/modern}",
+            "*/g/+                                                                           % {rec::T@V,rec::T@E}",
+            "*/g/+/+                                                                         % {person::T,software::T,knows::T,created::T}",
+            "*/g/V:person                                                                    % person::T",
+            "*/g/E:knows                                                                     % knows::T",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

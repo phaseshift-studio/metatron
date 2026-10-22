@@ -448,7 +448,6 @@
 
      private Iterator<IdObj> readCollection(final DataPath dp) {
          if (!dp.hasCollection()) return IteratorUtil.of();
-         System.err.println("READ-COLLECTION dp=" + dp + " wildcard=" + dp.collectionIsWildcard() + " coll=" + dp.collection());
 
          // -- wildcard: the V / E meta-collections, not the discovered label types --
          if (dp.collectionIsWildcard()) {
@@ -456,6 +455,24 @@
              return instSet.types().stream()
                      .filter(t -> "V".equals(t.vid().name()) || "E".equals(t.vid().name()))
                      .map(t -> IdObj.of(t.vid(), t)).iterator();
+         }
+
+         // -- element-kind qualified collection: V:<label> / E:<label> --
+         // e.g. /g/V:person resolves the person vertex label type; /g/E:knows
+         // resolves the knows edge label type.
+         final String collection = dp.collection();
+         final int colon = collection.indexOf(':');
+         if (colon > 0) {
+             final String label = collection.substring(colon + 1);
+             final fURI schemaBase = this.schemaBaseVID();
+             if (schemaBase != null) {
+                 final Space schemaSpace = Machine.current().memory().getSpaceFor(schemaBase);
+                 if (schemaSpace instanceof InstSet isa)
+                     return isa.types().stream()
+                             .filter(t -> t.vid().name().equalsIgnoreCase(label))
+                             .map(t -> IdObj.of(t.vid(), t)).iterator();
+             }
+             return IteratorUtil.of();
          }
 
          // -- shared SchemaSpace collection-level resolution --
@@ -558,6 +575,22 @@
                  final DataPath dp = this.annotateTypes(routed.segments().get(0).equals(this.pattern().segments().get(0)) ? DataPath.of(routed) : DataPath.withoutDB(routed));
                  if (!dp.hasCollection()) return IteratorUtil.of();
                  if (!dp.hasEntry()) return readCollection(dp);
+                 // /g/+/+ → every label type under the configured schema route
+                 // (person, software, knows, created), unlike /g/+ which returns
+                 // just the V/E meta-collections.
+                 if (dp.collectionIsWildcard() && dp.entryIsWildcard()) {
+                     final fURI schemaBase = this.schemaBaseVID();
+                     if (schemaBase != null) {
+                         final Space schemaSpace = Machine.current().memory().getSpaceFor(schemaBase);
+                         if (schemaSpace instanceof InstSet isa)
+                             return isa.types().stream()
+                                     // only the schema's own label types, not the
+                                     // schema type itself or instset/space infra types
+                                     .filter(t -> t.vid() != null && t.vid().hasPrefix(schemaBase) && !t.vid().equals(schemaBase))
+                                     .map(t -> IdObj.of(t.vid(), t)).iterator();
+                     }
+                     return IteratorUtil.of();
+                 }
                  if ("V".equals(dp.collection())) {
                      // ── OUT/IN traversal — route through graph, not Rec ──
                      if (dp.hasField() && ("OUT".equalsIgnoreCase(dp.field()) || "IN".equalsIgnoreCase(dp.field()))) {
@@ -722,6 +755,12 @@
              return true;
          if ("+".equals(c) || "#".equals(c))
              return true; // wildcard collection → schema resolution (readCollection)
+         // element-kind qualified collection: V:<label> / E:<label> → schema type read
+         final int colon = c.indexOf(':');
+         if (colon > 0) {
+             final String kind = c.substring(0, colon);
+             return "V".equalsIgnoreCase(kind) || "E".equalsIgnoreCase(kind);
+         }
          return this.isVertexLabel(c) || this.isEdgeLabel(c);
      }
 
@@ -733,7 +772,11 @@
       */
      private fURI relative(final fURI routed) {
          final fURI prefix = this.pattern().retractPattern();
-         return routed.hasPrefix(prefix) ? routed.removePrefix(prefix) : routed;
+         if (!routed.hasPrefix(prefix)) return routed;
+         // Keep the leading '/' so a ':' in the first remaining segment (e.g.
+         // V:person) is NOT re-parsed as a scheme separator.  removePrefix's
+         // string form drops it, turning "V:person" into scheme "V" + "person".
+         return f(routed.toString().substring(prefix.toString().length()));
      }
 
      /**

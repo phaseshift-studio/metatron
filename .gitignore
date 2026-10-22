@@ -55,3 +55,6 @@ hs_err_pid*
 replay_pid*
 
 .ai/
+
+# per-machine build-server config (see metatron-remote.env.example)
+metatron-remote.env

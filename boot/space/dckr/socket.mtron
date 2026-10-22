@@ -1,6 +1,6 @@
 [== dckrspace — orchestrate infra containers through the HOST docker socket.
     Requires the socket + docker group mounted at runtime (dist/docker/README.md). ==]
-||inst?dckrspace<=uri(){
+|inst?dckrspace<=uri(){
  -<[host     => _,
     pattern  => docker:#,
     progress => progress_table::[style => style::[body          => "{{y}}={{g}}",

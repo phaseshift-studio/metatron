@@ -157,6 +157,16 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return this.path(newPath);
     }
 
+    default fURI toPath() {
+        fURI temp = f("");
+        temp = temp.extend(this.hasScheme() ? this.scheme().replace("[", "/").replace("]", "/") : null).asNode();
+        temp = temp.extend(this.hasHost() ? this.host().replace(".", "/").replace(":", "/") : null);
+        if (-1 != this.port())
+            temp = temp.extend(this.port());
+        temp = temp.extend(this.pathString().replace(".", "/").replace(":", "/").replace("[", "/").replace("]", "/").replace("//", "/"));
+        return temp;
+    }
+
 
     default fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();
@@ -362,6 +372,23 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         if (m.matches() && m.group(1) != null) {
             return m.group(1).replace(".", "");  // "a.b." → "a.b"
         }
+        return null;
+    }
+
+    default String domain() {
+        if (this.hasHost() && this.host().contains(".")) {
+            final String[] split = this.host().split("\\.");
+            if (split.length > 2)
+                return split[1];
+            return split[0];
+        } else if (this.hasHost())
+            return this.host();
+        return null;
+    }
+
+    default String tldomain() {
+        if (this.hasHost() && this.host().contains("."))
+            return this.host().substring(this.host().lastIndexOf(".") + 1);
         return null;
     }
 

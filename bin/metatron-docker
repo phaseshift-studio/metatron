@@ -370,6 +370,24 @@ usage() {
     awk 'NR>1 && /^set -eu/ {exit} NR>1 {sub(/^# ?/, ""); print}' "$0"
 }
 
+# ---------- optional remote delegation ----------
+# METATRON_BUILD_REMOTE=1 routes the isolated `build ...` verbs through bin/metatron-remote,
+# which picks the least-loaded machine (ginger when it is not busier). run/dev/image stay
+# local: they publish 8555/8777 or need the jar in this tree. metatron-remote clears the flag
+# before any local fallback, so delegation cannot recurse.
+# optional local configuration (gitignored), shared with bin/metatron-remote
+for _cfg in "${METATRON_REMOTE_ENV:-$REPO/bin/test/metatron-remote.env}" \
+            "$REPO/metatron-remote.env"; do
+    if [ -r "$_cfg" ]; then set -a; . "$_cfg"; set +a; fi
+done
+
+# METATRON_REMOTE_ACTIVE marks "already inside the balancer": the config FILE sets the flag
+# too, so clearing the flag alone does not break the cycle.
+if [ "${METATRON_REMOTE_ACTIVE:-0}" != 1 ] && [ "${METATRON_BUILD_REMOTE:-0}" = 1 ] \
+   && [ "${1-}" = build ] && [ -x "$(dirname "$0")/metatron-remote" ]; then
+    exec "$(dirname "$0")/metatron-remote" "$@"
+fi
+
 case "${1-}" in
     "" | run)   [ $# -gt 0 ] && shift; cmd_run "$@" ;;
     image)      shift; cmd_image ;;

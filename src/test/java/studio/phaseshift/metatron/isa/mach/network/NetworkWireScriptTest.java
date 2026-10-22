@@ -171,17 +171,36 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
         return "ok";
     }
 
+    /**
+     * Poll until something accepts on host:port. A fixed sleep assumes the wsSpace is listening
+     * within it, which under load it need not be — the client then reports "socket ... is not
+     * connected" against a port that was never up. The probe connection is closed immediately;
+     * the ws server sees a failed handshake and ignores it.
+     */
+    private static void waitUntilAccepting(final String host, final int port, final long timeoutMs) {
+        final long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            try (java.net.Socket probe = new java.net.Socket()) {
+                probe.connect(new java.net.InetSocketAddress(host, port), 250);
+                return;
+            } catch (final java.io.IOException e) {
+                CommonUtil.sleepThread(25);
+            }
+        }
+        throw new IllegalStateException("nothing accepted on " + host + ":" + port + " within " + timeoutMs + "ms");
+    }
+
     private String startServer(final String name) {
         final int port = generatePort();
         this.bind(name + "_ip", "ws://127.0.0.1:" + port); // the loopback alias, for the same-service scripts
         this.servers.add(wsSpace.of(rec(
                 uri(NAME), uri("wire-script-" + name),
-                uri(HOST), uri("ws://localhost:" + port),
+                uri(HOST), uri("ws://127.0.0.1:" + port),
                 uri(PATTERN), uri("ws://#"),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
         ).jvm(), f("/sys/space/ws/wire-script-" + name)));
-        CommonUtil.sleepThread(300);
-        return "ws://localhost:" + port;
+        waitUntilAccepting("127.0.0.1", port, 10_000);
+        return "ws://localhost:" + port;   // the CLIENT still dials the name: that is the alias under test
     }
 
     /**

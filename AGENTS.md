@@ -57,6 +57,23 @@ Treat Hindsight as the source of truth, and write to it.
 **Agents build and test in docker** with `bin/metatron-docker build …` (no published ports, throwaway containers):
 a live server owns the host's 8555/8777 and is rebuilt constantly, so host-side VM boots collide with it.
 
+Those builds are **load balanced** across this workstation and the ginger build server. With
+`METATRON_BUILD_REMOTE=1` the isolated `build …` verbs are routed through `bin/metatron-remote`,
+which picks the least-loaded machine (ginger on a tie) and caps concurrent remote builds. `run`,
+`dev` and `image` always stay local — they publish ports or need the jar in this tree. Force a
+local build with `METATRON_BUILD_REMOTE=0`.
+
+Hosts, the cap and the delegation flag live in **`bin/test/metatron-remote.env`** (copy it from
+`bin/test/metatron-remote.env.example`; gitignored). Both scripts read it, so editing that one file changes
+behaviour for every session on this checkout — no exports, no recreate.
+
+Pin one machine when you want a specific box (it skips the load comparison):
+`bin/metatron-remote --host ginger.local mvn clean install`. Any command instead of a verb runs
+in the build container, so it gets JDK 25 and the dependency cache.
+
+`bin/metatron-remote status` shows what is running on both machines (with each build's phase),
+the recent history and the load on each. History lands in `~/.metatron-builds.log`.
+
 ```bash
 bin/metatron-docker build                             # package (skip tests)
 bin/metatron-docker build test -Dtest=memSpaceTest    # tests in the container

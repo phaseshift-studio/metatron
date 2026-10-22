@@ -84,6 +84,29 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "http://www.abc.com:123/a/b/c       | http/www/abc/com/123/a/b/c",
+            "http://www                         | http/www",
+            "a/b/c                              | a/b/c",
+            "www.abc.com/a/b/c                  | www/abc/com/a/b/c",
+            "www.abc.com:42/a/b/c               | www/abc/com/42/a/b/c",
+            "booger.local                       | booger/local",
+            "ws://booger.local:8555/mtron       | ws/booger/local/8555/mtron",
+            "192.168.1.61                       | 192/168/1/61",
+            "ws://192.168.1.61                  | ws/192/168/1/61",
+            "ws://192.168.1.61:8555             | ws/192/168/1/61/8555",
+            "abc.com                            | abc/com",
+            "a.b.abc.com                        | a/b/abc/com",
+            "[::1]                              | /1/",
+    }, delimiter = '|', nullValues = "null")
+    public void testToPath(final String furiA, final String furiB) {
+        final fURI fa = f(furiA);
+        final fURI fb = f(furiB);
+        LOG.debug("testing %s is the legal path of %si", fb, fa);
+        assertEquals(fb, fa.toPath());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "a       | b     | true",
             "aa      | b     | true",
             "aaa     | aa    | true",
