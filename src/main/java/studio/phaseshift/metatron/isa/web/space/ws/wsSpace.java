@@ -232,6 +232,14 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         }
     }
 
+    /**
+     * the server IS this space: its host is the socket it bound, so it is an address this machine answers on
+     */
+    @Override
+    public boolean listens() {
+        return true;
+    }
+
     @Override
     public void close() {
         LOG.debug("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this);

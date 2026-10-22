@@ -403,6 +403,14 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         }
     }
 
+    /**
+     * the server IS this space: its host is the socket it bound, so it is an address this machine answers on
+     */
+    @Override
+    public boolean listens() {
+        return true;
+    }
+
     @Override
     public void close() {
         this.sjvm().stop(0);

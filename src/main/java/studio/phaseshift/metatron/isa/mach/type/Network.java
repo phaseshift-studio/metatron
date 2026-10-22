@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -157,14 +158,6 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 || this.machines().elements()
                 .flatMap(kv -> Stream.concat(Stream.of(kv.first()), kv.second().stream()))
                 .filter(Obj::isUri).map(Obj::uriValue).anyMatch(known -> Helper.sameService(known, vid)));
-    }
-
-    /**
-     * Is this address <b>mine</b>? Alias-aware, because the boot binds a wildcard while a caller addresses
-     * loopback — and getting that wrong makes the boundary forward a request to itself.
-     */
-    default boolean own(final fURI vid) {
-        return vid.hasAuthority() && Helper.authorities().stream().anyMatch(mine -> Helper.sameService(mine, vid));
     }
 
     /**
@@ -550,15 +543,20 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * The authorities this machine <b>answers to</b>, from the {@code host} every mounted space declares.
-         * The announce side, and the other half of {@link Network#own(fURI)} — deliberately NOT
+         * The authorities this machine <b>answers on</b>: the {@code host} of every mounted space that
+         * {@link Space#listens() listens}. What discovery announces — deliberately NOT
          * {@link #peerAuthorities()}: that is who we have dialed, this is who we are.
+         * <p>
+         * A LISTENER'S HOST, NEVER A BACKEND'S. Every space may declare a {@code host}, but only a listener's is
+         * an address this machine answers on: a tblespace's is the database it dials OUT to, and it carries the
+         * database login ({@code boot/space/tble/mariadb.mtron} puts {@code ?user=…&password=…} on it). Reading
+         * every space's host made that login part of who this machine is, and mDNS multicast it.
          */
         public static Set<fURI> authorities() {
             final Set<fURI> mine = new LinkedHashSet<>();
             for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous())
                 memory.spaces().jvm().values().stream()
-                        .filter(Obj::isRec)
+                        .filter(space -> space instanceof Space listener && listener.listens())
                         .map(space -> space.asRec().<Obj>at(uri(HOST)))
                         .map(host -> host.isUri() ? host : (host.isInst() ? host.apply() : noobj()))
                         .filter(Obj::isUri)
