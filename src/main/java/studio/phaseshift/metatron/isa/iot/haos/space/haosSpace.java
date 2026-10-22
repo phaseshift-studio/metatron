@@ -91,7 +91,7 @@ public class haosSpace extends mqttSpace {
                     })).create();
 
     public static haosSpace of(final Rec config, final fURI vid) {
-        return new haosSpace(config.jvm(), vid);
+        return Space.Helper.construct(() -> new haosSpace(config.jvm(), vid));
     }
 
     protected haosSpace(final Map<Obj, Obj> config, final fURI vid) {

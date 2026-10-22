@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -36,6 +37,7 @@ import java.io.Closeable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.QPROC;
@@ -436,6 +438,65 @@ public interface Space extends Addressable, Rec, Closeable {
             if (Machine.loaded()) {
                 Machine.current().memory().removeSpace(space.vid());
             }
+        }
+
+        /**
+         * the mounts made by the constructions running on this thread, innermost construction on top, each
+         * construction's newest mount first: see {@link #construct(Supplier)}
+         */
+        private static final ThreadLocal<Deque<Deque<Runnable>>> CONSTRUCTIONS = ThreadLocal.withInitial(ArrayDeque::new);
+
+        /**
+         * Construct a space so that a failed construction mounts nothing.
+         * <p>
+         * A space mounts itself as the first step of its construction ({@link AbstractSpace}'s constructor), before
+         * its own constructor body runs, and it has to: a body that reads or writes through the machine reaches the
+         * space being built that way (memSpace loads its persisted data so). The price is that a construction that
+         * fails after that point leaves a half-built space claiming its vid. Under this guard every mount made while
+         * the construction runs (the space, and whatever it mounts on its way) is kept when the construction returns
+         * and retracted when it throws: the claim removed, or the predecessor it displaced put back. A nested
+         * construction's mounts are kept only as long as the enclosing construction's are.
+         * <p>
+         * Retracting is not closing. A half-built space's {@code close()} may assume a whole one (memSpace's saves
+         * over its persisted data, and {@code on_close} is user mtron), so what a construction acquired, its factory
+         * releases.
+         */
+        public static <S extends Space> S construct(final Supplier<S> construction) {
+            final Deque<Runnable> mounts = new ArrayDeque<>();
+            CONSTRUCTIONS.get().push(mounts);
+            try {
+                final S space = construction.get();
+                CONSTRUCTIONS.get().pop();
+                if (!CONSTRUCTIONS.get().isEmpty())
+                    mounts.descendingIterator().forEachRemaining(CONSTRUCTIONS.get().peek()::push);
+                return space;
+            } catch (final RuntimeException | Error e) {
+                CONSTRUCTIONS.get().pop();
+                mounts.forEach(Runnable::run);
+                throw e;
+            }
+        }
+
+        /**
+         * Journal a mount for the construction running on this thread, if one is: {@code memory}'s index now maps
+         * {@code key} to {@code space}, and mapped it to {@code displaced} (null for nothing) before. Called by the
+         * memory that took the mount.
+         */
+        public static void mounted(final Memory memory, final Obj key, final Obj displaced, final Space space) {
+            final Deque<Deque<Runnable>> constructions = CONSTRUCTIONS.get();
+            if (constructions.isEmpty())
+                return;
+            constructions.peek().push(() -> {
+                final Map<Obj, Obj> index = memory.spaces().jvm();
+                // a later mount at the key outranks the retraction: only this space's claim is withdrawn
+                if (index.get(key) != space)
+                    return;
+                if (null == displaced)
+                    index.remove(key);
+                else
+                    index.put(key, displaced);
+                space.logger().debug("retracted the mount at %s: its construction failed", key);
+            });
         }
 
 

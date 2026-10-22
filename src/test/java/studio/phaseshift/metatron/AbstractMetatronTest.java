@@ -31,6 +31,9 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,6 +41,7 @@ import java.util.Random;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -54,8 +58,50 @@ public abstract class AbstractMetatronTest {
     protected GraphittyLogger LOG = Graphitty.log(this);
     protected static GraphittyLogger STATIC_LOG = Graphitty.log(AbstractMetatronTest.class);
 
+    /**
+     * The ports {@link #generatePort()} draws from: above the live server's 8555/8777, and below the kernel's
+     * ephemeral range (32768+ on Linux, 49152+ on macOS and Windows). The kernel hands ephemeral ports to every
+     * outgoing connection, and a loopback client holding a port blocks a listener's bind on it even with
+     * SO_REUSEADDR on, so a port probed free inside that range can be taken by a dial before the server binds it.
+     * Below it, only another explicit bind can take a probed port.
+     */
+    private static final int PORT_FLOOR = 10000;
+    private static final int PORT_CEILING = 32768;
+    private static final int PORT_ATTEMPTS = 100;
+
+    /**
+     * A port nothing on this host holds. Surefire runs several forks at once, each starting servers, so a random
+     * port alone collides now and then, and the server that loses the bind surfaces later as a refused dial. A
+     * candidate is handed out only once a probe socket has bound it.
+     */
     public static int generatePort() {
-        return RANDOM.nextInt(10000, 65000);
+        return RANDOM.ints(PORT_ATTEMPTS, PORT_FLOOR, PORT_CEILING)
+                .filter(AbstractMetatronTest::isFree)
+                .findFirst()
+                .orElseThrow(() -> MTronException.of("no free port in [%s,%s) after %s attempts", PORT_FLOOR, PORT_CEILING, PORT_ATTEMPTS));
+    }
+
+    /**
+     * Can a server bind this port? The probe binds the wildcard address, so a socket on any local address refuses
+     * the port, and it binds with SO_REUSEADDR off (Java turns it on for server sockets), so a lingering TIME_WAIT
+     * or a client's local end refuses it too.
+     */
+    private static boolean isFree(final int port) {
+        try (final ServerSocket probe = new ServerSocket()) {
+            probe.setReuseAddress(false);
+            probe.bind(new InetSocketAddress(port));
+            return true;
+        } catch (final IOException e) {
+            return false;
+        }
+    }
+
+    /**
+     * The space the current machine's memory has mounted at {@code vid}, or noobj. Ask the index, not a read:
+     * {@code [..]@vid} anchors the config rec at the vid whether or not the construction it feeds succeeds.
+     */
+    protected static Obj mounted(final String vid) {
+        return Machine.current().memory().spaces().jvm().getOrDefault(f(vid).toUri(), noobj());
     }
 
     // the VM is booted once per test class, not once per test-case instance. the

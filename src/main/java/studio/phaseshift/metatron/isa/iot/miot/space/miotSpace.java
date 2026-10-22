@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.iot.miot.space;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -51,7 +52,7 @@ public class miotSpace extends mqttSpace {
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> miotSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     public static miotSpace of(final Rec config, final fURI vid) {
-        return new miotSpace(config.jvm(), vid);
+        return Space.Helper.construct(() -> new miotSpace(config.jvm(), vid));
     }
 
     protected miotSpace(final Map<Obj, Obj> config, final fURI vid) {

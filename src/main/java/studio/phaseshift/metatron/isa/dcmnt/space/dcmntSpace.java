@@ -162,7 +162,13 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
 
     public static dcmntSpace of(final Map<Obj, Obj> config, final fURI vid) {
         final MongoClient client = MongoClients.create(config.get(uri(HOST)).uriValue().toString());
-        return new dcmntSpace(client, config, DCMNT_SPACE_TID, vid);
+        try {
+            // schema discovery runs after the space has mounted: a store it cannot read must not leave it there
+            return Space.Helper.construct(() -> new dcmntSpace(client, config, DCMNT_SPACE_TID, vid));
+        } catch (final RuntimeException e) {
+            client.close();
+            throw e;
+        }
     }
 
     protected dcmntSpace(final MongoClient sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {

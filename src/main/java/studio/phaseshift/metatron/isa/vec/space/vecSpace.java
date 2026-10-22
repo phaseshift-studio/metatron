@@ -109,7 +109,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
 
     public static vecSpace of(final VectorDBClient client,
                               final Map<Obj, Obj> config, final fURI vid) {
-        return new vecSpace(client, new LinkedHashMap<>(config), vid);
+        return Space.Helper.construct(() -> new vecSpace(client, new LinkedHashMap<>(config), vid));
     }
 
     // =========================================================================
