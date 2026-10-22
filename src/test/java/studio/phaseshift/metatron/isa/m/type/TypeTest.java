@@ -690,6 +690,33 @@ public class TypeTest extends AbstractMetatronTest {
         assertTrue(T(f("something")).isNominal());
     }
 
+    /**
+     * A CALL SITE IS NOT THE DEFINITION. Dispatch hints, binds and re-types a copy of a definition, and a copy that
+     * kept the definition's address wrote itself back there: each generic cast below saved a variant of the
+     * {@code /m/type_test/as/1} edge into the instruction table, and the last cast then bound one of those variants
+     * and turned a rec into a chicken (testNominalTyping's last row, whenever the ancestry tests ran first in the
+     * same JVM). Dispatching an addressed definition must leave the table as the definitions left it.
+     */
+    @Test
+    @TestData(value = {
+            "person -> noobj",
+            "chicken -> noobj",
+            "being -> noobj",
+            "rec::T[?[name=>str::T,age=>int::T]]@being",
+            "being::T@person",
+            "being::T@chicken",
+            "person::[name=>'marko',age=>29]@marko",
+            "rec::T[?[age=>int::T]]@/m/type_test/creature",
+            "/m/type_test/creature::T[?[name=>str::T]]@/m/type_test/human",
+            "as?rng=/m/type_test/creature&dom=/m/type_test/human(/m/type_test/creature::T)@/m/type_test/as/1"})
+    public void testDispatchNeverWritesBackTheDefinition() {
+        final long defined = Machine.read(f("/m/inst/as")).stream().count();
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*marko.as(rec::T).as(A::T)", "<ERROR>");
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*marko.as(A::T)", "<ERROR>");
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*marko.as(rec::T).as(something::T).as(chicken::T)", "<ERROR>");
+        AbstractMetatronTest.checkEquality(LOG, jnt(defined), jnt(Machine.read(f("/m/inst/as")).stream().count()), true);
+    }
+
 
     @ParameterizedTest
     @TestData(value = {

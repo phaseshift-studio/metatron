@@ -65,7 +65,9 @@ public class GenericBinder extends MRec implements Binder {
         // 1. generics: bind the candidate's unresolved types to the lhs, and reject the candidate
         //    when an argument cannot be reconciled with the user's.
         final long t1 = System.nanoTime();
-        Inst bound = lhs.isInst() ? candidate : Inst.Helper.bindGenerics(lhs, candidate, userInst);
+        // binding copies the candidate (generics, args, coefficient): never at the definition's own address
+        final Inst unaddressed = Inst.Helper.unaddressed(candidate);
+        Inst bound = lhs.isInst() ? unaddressed : Inst.Helper.bindGenerics(lhs, unaddressed, userInst);
         if (null == bound)
             return null;
         if (!lhs.isInst() && !Inst.Helper.filterOnDomainAllowUnique(lhs, bound))
