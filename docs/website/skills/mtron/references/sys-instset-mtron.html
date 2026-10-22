@@ -494,22 +494,22 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'CONTRIBUTING.md',
     'Desktop',
     'dist',
-    ...(23 more)]
+    ...(16 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
-==&gt;['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.8M  6.1G  ...',
-    'efivarfs        128K   42K   82K  ...',
-    '/dev/nvme0n1p2  916G  547G  323G  ...',
-    'tmpfs            31G  1.1M   31G  ...',
-    'tmpfs           5.0M   20K  5.0M  ...',
-    'tmpfs            31G     0   31G  ...',
-    ...(3 more)]
+==&gt;['Filesystem             Size  Used ...',
+    'tmpfs                  6.1G  6.6M ...',
+    'efivarfs               128K   42K ...',
+    '/dev/nvme1n1p2         916G  548G ...',
+    'tmpfs                   31G  129M ...',
+    'tmpfs                  5.0M   20K ...',
+    'tmpfs                   31G     0 ...',
+    ...(4 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/501
+==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/507
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
 ==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
@@ -517,7 +517,7 @@ mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stder
     (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 3ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/sys/fail/502
+    [ProcBuilder&lt;228&gt;]]@/sys/fail/508
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
@@ -530,7 +530,7 @@ the same <code>==</code> projection:</p>
            'CONTRIBUTING.md',
            'Desktop',
            'dist',
-           ...(23 more)]]
+           ...(16 more)]]
 ==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
@@ -540,7 +540,7 @@ mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum() 
     'CONTRIBUTING.md',
     'Desktop',
     'dist',
-    ...(24 more)]
+    ...(17 more)]
 </code></pre>
 <p><code>==</code> is a <strong>select</strong> — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:</p>
@@ -576,13 +576,13 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     '  File: CONTRIBUTING.md',
     '  File: Desktop',
     '  File: dist',
-    ...(23 more)]
+    ...(16 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
-    '  Size: 16504     	Blocks: 40     ...',
+    '  Size: 17636     	Blocks: 40     ...',
     'Device: 259,3	Inode: 22906902    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-21 14:30:42.062766...',
+    'Access: 2026-10-21 23:08:56.678826...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -590,14 +590,14 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
 <code>Size</code>, extracted and typed <code>bB::T</code>, then converted to <code>kB::T</code> — the unit system
 converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du</code>:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash('stat ${_} | sed -n &quot;s/.*Size: \([0-9]*\).*/\1/p&quot;')&gt;&gt;0.as?int&lt;=str(int::T).as(bB::T)]
-==&gt;[bB::16504.0,
+==&gt;[bB::17636.0,
     bB::4096.0,
     bB::4096.0,
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
     bB::4096.0,
-    ...(23 more)]
+    ...(16 more)]
 </code></pre>
 <p>Unit values test against each other's units:</p>
 <pre><code class="language-mtron">mtron&gt; bB::34192.0.gt(kB::30.0)
@@ -627,9 +627,9 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/507
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/513
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/508
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/514
 </code></pre>
 <p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:</p>
@@ -653,10 +653,10 @@ no input to take, so it is shown rather than run:</p>
 mtron&gt; */sys/thread/+.count()
 ==&gt;1
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::680.0,
-    free_mem_jvm=&gt;mB::531.4970,
+==&gt;[total_mem_jvm=&gt;mB::640.0,
+    free_mem_jvm=&gt;mB::468.1020,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::148.5029,
+    used_mem_jvm=&gt;mB::171.8979,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
     thread=&gt;[run=&gt;0,stop=&gt;0]]
@@ -697,8 +697,6 @@ mtron&gt; fsspace::[
 mtron&gt; *&lt;mfs:pom.xml&gt;.tid()            [-- xml's mime --]
 ==&gt;/m/web/mime/xml
 mtron&gt; *&lt;mfs:boot/docs.mtron&gt;.tid()    [-- a .mtron file reads as the code it is --]
-==&gt;ERROR: monad obj coefficient is greater than inst dom coefficient:
-	memspace::[pattern=&gt;/usr/#,q=&gt;[typeq::[pattern=&gt;&lt;T&gt;,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T),pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T),qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T)],mintq::[pattern=&gt;mintq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T)],docq::[pattern=&gt;docq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T),pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T),obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],subq::[pattern=&gt;subq,pre_read=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T),pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T),qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T),obj=&gt;[,]],incrq::[pattern=&gt;incrq,pre_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,&lt;#&gt;::T)]]]@/sys/space/usr [{1} X=&gt; {0}] start?rng=A{**}&amp;dom=noobj{0}(fsspace::[pattern=&gt;local:#,route=&gt;[local:=&gt;/home/killswitch/],script=&gt;!*boot/script]@/sys/space/fs)@&lt;5&gt;
 </code></pre>
 <p>Three content types, one <code>*</code> — the tid is the referent's claim, and <code>.tid()</code> is how
 it is read out. A <code>.mtron</code> file is not lines: it parses into the objs it declares, so
@@ -714,24 +712,8 @@ is doing — the sugar is short precisely because it is legible once:</p>
 ==&gt;fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 5] *&lt;mfs:README.md?mimeq=text/markdown&gt; ...
                  ^
-     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/509
+     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/515
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
-==&gt;start([space=&gt;/sys/space,
-     web=&gt;[http/host=&gt;http://localhost:8777,
-           ws/host=&gt;ws://localhost:8555],
-     typer/stage=&gt;[inst_dom=&gt;true,
-                   inst_rng=&gt;true,
-                   type_pred=&gt;true,
-                   obj_write=&gt;true,
-                   code_resolve=&gt;false],
-     header=&gt;&quot;&quot;&quot;
-                    _,.---._      _,...&quot;&quot;&quot;]).print('------------
-   *boot...',*boot/args,'
-   ------------
-   ').end().print('mounting instruction sets
-   {{...').end().import(/m/mach/io).end().start(memspace::[pattern=&gt;/usr/#,
-              q=&gt;[typeq::[pattern=&gt;&lt;T&gt;,
-   ...
 </code></pre>
 <h3>walking the tree</h3>
 <p>Wildcards are space-side. <code>+</code> is one segment, <code>#</code> is the recursion:</p>

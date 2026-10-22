@@ -613,7 +613,7 @@ mtron> ws_client::[host=>ws://localhost:8555/mtron]
     close=>inst(){<j>},
     on_message=>print('received ${_}')]
 mtron> */network
-==>network::[host=>baa4d54aad7a,
+==>network::[host=>booger,
              status=>!inst(#{*}::T){<j>},
              q=>[subq::[pattern=>subq,
                         pre_read=>inst(uri::T){<j>},
