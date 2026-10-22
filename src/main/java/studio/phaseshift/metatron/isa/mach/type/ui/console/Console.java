@@ -111,6 +111,10 @@ public class Console extends MRec implements Closeable, Runnable {
             Paths.get("conf"),                                     // application-wide settings
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
     );
+    /**
+     * The console of this process, or null when there is none: set by the
+     * constructor and given back by {@link #close()}, together with the terminal.
+     */
     public static Console LOCAL_INSTANCE = null;
     /**
      * The vid of the console's repl VirtualThread — the root of console-owned
@@ -497,6 +501,20 @@ public class Console extends MRec implements Closeable, Runnable {
             terminal.close();
         } catch (final IOException e) {
             LOG.error(e);
+        } finally {
+            // A closed console is no console.  The process-wide handles the constructor
+            // claimed are given back — the instance, the terminal, and Graphitty's
+            // routing to it — so whatever runs next in this JVM takes its no-console
+            // branch: a modal tool presents instead of reading the keys of a console
+            // that is gone (in a reused test fork, a stdin nobody types into), and a
+            // widget is built headless instead of on a closed terminal that answers
+            // every call with "Terminal has been closed".  Only the current console
+            // gives them back — they are not an older one's to give
+            if (this == Console.LOCAL_INSTANCE) {
+                Console.LOCAL_INSTANCE = null;
+                Console.terminal = null;
+                Graphitty.init(null);
+            }
         }
     }
 

@@ -64,6 +64,9 @@ public class ConsoleWidgetMousePointerTest extends AbstractMetatronTest {
     public void tearDown() {
         if (null != this.console) {
             this.console.getFloatingSurface().clear();
+            // every method builds a console, and a console is process-wide: one left open is found by
+            // the classes this fork runs next
+            closeConsole(this.console);
         }
     }
 

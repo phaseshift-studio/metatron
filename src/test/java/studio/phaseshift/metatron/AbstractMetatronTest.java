@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -134,8 +135,26 @@ public abstract class AbstractMetatronTest {
 
     @AfterAll
     public static void end() {
-        BootLoader.close();
-        BOOTED = false;
+        try {
+            // A console is process-wide (Console.LOCAL_INSTANCE and its terminal are static) and surefire reuses its
+            // forks, so a console one class leaves open is found by every class the fork runs after it: widgets float
+            // onto its surface and tools take their mode from it (that is how NetworkPanelToolTest once hung a fork).
+            if (null != Console.LOCAL_INSTANCE)
+                closeConsole(Console.LOCAL_INSTANCE);
+        } finally {
+            BootLoader.close();
+            BOOTED = false;
+        }
+    }
+
+    /**
+     * Close a console a test built. {@link Console#close()} gives back the console statics; the floating surface's
+     * render thread is a daemon it leaves to the process exit, and in a reused fork that thread would poll every
+     * couple of milliseconds for the rest of the run, so it is stopped here.
+     */
+    protected static void closeConsole(final Console console) {
+        console.close();
+        console.getFloatingSurface().shutdown();
     }
 
     /**

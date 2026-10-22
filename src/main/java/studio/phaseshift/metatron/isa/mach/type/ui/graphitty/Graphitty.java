@@ -291,10 +291,19 @@ public class Graphitty {
     private static volatile java.util.function.Consumer<String> terminalWriter;
 
     /**
-     * Register the terminal output stream. Called once by Console at startup.
+     * Register the terminal output stream. Called once by Console at startup,
+     * and with null when the console closes.
+     *
+     * <p>A new output starts without a writer bridge: a bridge belongs to the
+     * output it was installed for, and one left over from an earlier terminal
+     * (an earlier console's surface, a test's) would carry this terminal's
+     * writes to that one — closed, by then, in a test JVM that builds console
+     * after console.  The console's own surface installs a bridge when it is
+     * built.
      */
     public static void init(final OutputStream terminalOutput) {
         Graphitty.terminalOutput = terminalOutput;
+        Graphitty.terminalWriter = null;
     }
 
     /**
