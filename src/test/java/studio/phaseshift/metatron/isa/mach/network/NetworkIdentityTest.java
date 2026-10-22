@@ -24,10 +24,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.*;
+import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,8 +49,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * different answers, and blurring them is what left the authority guard with no answer at all. This suite pins:
  *
  * <ul>
- *   <li><b>mine is derived, not declared</b> — the authorities this machine answers to come from the {@code host}
- *       every mounted space declares, so there is no self-authority declaration to drift out of step</li>
+ *   <li><b>mine is derived, not declared</b> — the authorities this machine answers on come from the {@code host}
+ *       every mounted LISTENER declares, so there is no self-authority declaration to drift out of step</li>
+ *   <li><b>a backend is not mine</b> — a database's or a broker's {@code host} is where this machine dials out
+ *       to, and it carries the login; it is never an authority, so discovery never announces it</li>
  *   <li><b>aliases collapse</b> — a server bound to {@code 0.0.0.0} is reachable as {@code localhost}, and getting
  *       that wrong makes the boundary forward a request to itself</li>
  *   <li><b>membership is never emergent</b> — a uri cannot make itself a peer by being addressed, and an undeclared
@@ -58,9 +64,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class NetworkIdentityTest extends AbstractMetatronTest {
 
     /**
-     * Register a space that CLAIMS a host, which is the only place an authority of this machine comes from.
-     * Registration writes the space at its own vid, which needs an owner for the pattern — hence the BOOTING
-     * guard the other machine suites use.
+     * Register a space that CARRIES a host without listening on it — the shape of every backend space: a
+     * tblespace's database, an mqttspace's broker. Registration writes the space at its own vid, which needs an
+     * owner for the pattern — hence the BOOTING guard the other machine suites use.
      */
     private static void mountSpaceWithHost(final fURI vid, final fURI host) {
         final boolean booting = BootLoader.BOOTING;
@@ -75,30 +81,92 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
     }
 
     /**
-     * "Mine" is a fact about what is mounted, never a second declaration — so mounting a server is what makes this
-     * machine answer to its authority.
+     * Mount a real LISTENER: its server binds the host, which is the only place an authority of this machine comes
+     * from. Patterned as the boot's are ({@code ws://#}): a web space indexes a cache beside itself under its
+     * RETRACTED pattern, so a {@code <vid>/#} pattern would retract onto the vid and evict the listener it serves.
      */
-    @Test
-    public void testAuthoritiesAreDerivedFromMountedSpaces() {
-        assertFalse(Network.Helper.authorities().contains(f("ws://0.0.0.0:19191")),
-                "nothing has claimed that authority yet");
-        mountSpaceWithHost(f("/sys/space/network-identity"), f("ws://0.0.0.0:19191"));
-        assertTrue(Network.Helper.authorities().contains(f("ws://0.0.0.0:19191")),
-                "a mounted space's declared host IS an authority this machine answers to: " + Network.Helper.authorities());
+    private static Space mountListener(final String scheme, final fURI host, final fURI vid) {
+        final Map<Obj, Obj> config = mutableMap(uri(PATTERN), uri(scheme + "://#"), uri(HOST), uri(host.toString()));
+        return "http".equals(scheme) ? httpSpace.of(rec(config), vid) : wsSpace.of(config, vid);
     }
 
     /**
-     * The boot binds the wildcard while a peer addresses loopback. If those are not one service, the boundary
-     * forwards a request to itself — so this is a loop guard, not a nicety.
+     * Unmount by vid AND by pattern, which is where that cache is indexed. Removing a space closes nothing — the
+     * caller closes what it built.
      */
-    @Test
-    public void testOwnIsAliasAware() {
-        final Network network = Machine.current().network();
-        mountSpaceWithHost(f("/sys/space/network-identity-alias"), f("ws://0.0.0.0:19193"));
-        assertTrue(network.own(f("ws://localhost:19193/x")), "localhost and 0.0.0.0 are one service");
-        assertTrue(network.own(f("ws://127.0.0.1:19193/x")), "and so is 127.0.0.1");
-        assertFalse(network.own(f("ws://localhost:19194/x")), "a different port is a different service");
-        assertFalse(network.own(f("ws://elsewhere:19193/x")), "and a different host certainly is");
+    private static void unmount(final Space space) {
+        Machine.current().memory().removeSpace(space.vid());
+        Machine.current().memory().removeSpace(space.pattern());
+    }
+
+    /**
+     * "Mine" is a fact about what LISTENS, never a second declaration — so mounting a server is what makes this
+     * machine answer on its authority. One row per kind of server a machine mounts.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws   % a websocket server binds its host",
+            "http % and so does an http server",
+    }, delimiter = '%')
+    public void testAMountedListenersHostIsAnAuthority(final String scheme, final String desc) {
+        final fURI host = f(scheme + "://0.0.0.0:" + generatePort());
+        final fURI vid = f("/sys/space/network-identity-" + scheme);
+        assertFalse(Network.Helper.authorities().contains(host), "nothing has claimed that authority yet");
+        final Space listener = mountListener(scheme, host, vid);
+        try {
+            assertTrue(listener.listens(), desc);
+            assertTrue(Network.Helper.authorities().contains(host),
+                    desc + ", so its host IS an authority this machine answers on: " + Network.Helper.authorities());
+        } finally {
+            unmount(listener);
+            listener.close();
+        }
+    }
+
+    /**
+     * A BACKEND IS NOT MINE. A space's {@code host} is as often where it dials OUT to — a database, a broker, a graph
+     * server — and that connection string carries the login: {@code boot/space/tble/mariadb.mtron} puts
+     * {@code ?user=…&password=…} on it. None of it is an address this machine answers on, so none of it is an
+     * authority, and discovery — which announces the authorities — never multicasts it. The scheme decides
+     * nothing: the gremlin row is {@code ws://} exactly as a listener is.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "mariadb://127.0.0.1:3306/metatron?user=archivist&password=quill-and-ink % quill-and-ink % a database login rides the query",
+            "mariadb://archivist:quill-and-ink@127.0.0.1:3306/metatron              % quill-and-ink % or the userinfo",
+            "mariadb://archivist:7341@127.0.0.1:3306/metatron                       % 7341          % where a numeric password parses as the PORT",
+            "mqtt://ginger.local:1883                                                % ginger.local  % a broker on another box is that box's",
+            "ws://ginger.local:8182/gremlin                                          % ginger.local  % and a ws backend is still a backend",
+    }, delimiter = '%')
+    public void testABackendsHostIsNeverAnAuthority(final String host, final String forbidden, final String desc) {
+        final fURI vid = f("/sys/space/network-identity-backend");
+        mountSpaceWithHost(vid, f(host));
+        try {
+            assertFalse(Network.Helper.authorities().contains(f(host)), desc + ": " + Network.Helper.authorities());
+            assertTrue(Network.Helper.authorities().stream().noneMatch(mine -> mine.toString().contains(forbidden)),
+                    desc + " — and no authority carries any of it: " + Network.Helper.authorities());
+        } finally {
+            Machine.current().memory().removeSpace(vid);
+        }
+    }
+
+    /**
+     * ALIASES COLLAPSE. The boot binds the wildcard while a peer addresses loopback; if those are not one service,
+     * the boundary forwards a request to itself — so this is a loop guard, not a nicety. Pinned on
+     * {@link Network.Helper#sameService} itself: it is the comparison every reach decision goes through
+     * ({@code transportOf}, {@code isPeer}, the ensure-peered scan).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws://0.0.0.0:19193 % ws://localhost:19193/x % true  % localhost and 0.0.0.0 are one service",
+            "ws://0.0.0.0:19193 % ws://127.0.0.1:19193/x % true  % and so is 127.0.0.1",
+            "ws://0.0.0.0:19193 % ws://[::1]:19193/x     % true  % and the IPv6 loopback",
+            "ws://0.0.0.0:19193 % ws://localhost:19194/x % false % a different port is a different service",
+            "ws://0.0.0.0:19193 % ws://elsewhere:19193/x % false % and a different host certainly is",
+    }, delimiter = '%')
+    public void testAliasesCollapseIntoOneService(final String bound, final String addressed, final boolean same,
+                                                  final String desc) {
+        assertEquals(same, Network.Helper.sameService(f(bound), f(addressed)), desc);
     }
 
     /**
@@ -110,7 +178,8 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
         final Network network = Machine.current().network();
         final fURI stranger = f("ws://never-declared:19999/x");
         assertFalse(network.isPeer(stranger), "a uri must not make itself a peer merely by being addressed");
-        assertFalse(network.own(stranger), "and it is not mine either");
+        assertTrue(Network.Helper.authorities().stream().noneMatch(mine -> Network.Helper.sameService(mine, stranger)),
+                "and it is not mine either: " + Network.Helper.authorities());
         final Obj read = network.read(stranger);
         assertTrue(read.isNoObj(), "an undeclared authority resolves to noobj rather than dialing: " + read);
     }
@@ -142,7 +211,9 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
                     rec(mutableMap(uri(AUTHORITY), uri("ws://localhost:21001"))))), MUTABLE);
             assertEquals(Set.of(f("ws://localhost:21001")), Network.Helper.peerAuthorities(),
                     "the members' authorities ARE the peers — declared, not emergent");
-            assertFalse(network.own(f("ws://localhost:21001/usr/x")), "a declared peer is not mine");
+            assertTrue(Network.Helper.authorities().stream()
+                            .noneMatch(mine -> Network.Helper.sameService(mine, f("ws://localhost:21001"))),
+                    "a declared peer is not mine: " + Network.Helper.authorities());
         } finally {
             cluster.close();
             Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));

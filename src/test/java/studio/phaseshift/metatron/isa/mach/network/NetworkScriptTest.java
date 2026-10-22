@@ -59,12 +59,12 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *                                  write a Java-side answer to /m/networkProbe/&lt;name&gt;
  * </pre>
  * <p>
- * "Is this address MINE?" is deliberately NOT a directive. {@code own()} and {@link Network.Helper#authorities()}
- * still answer it, and {@code authorities()} is still what mDNS announces, but nothing ROUTES on it: the listener
+ * "Is this address MINE?" is deliberately NOT a directive. {@link Network.Helper#authorities()} still answers it —
+ * the mounted listeners, which is what mDNS announces — but nothing ROUTES on it: the listener
  * declines a self co-mount with its loopback test ({@code Network.accept}), and reach is decided by
  * {@code transportOf}'s service comparison. The identity half therefore belongs to {@code NetworkIdentityTest},
  * which asks the predicates directly — and a suite that needs a mounted authority can add its own directive;
- * {@code NetworkIdentityTest}'s mount helper is the eight-line recipe.
+ * {@code NetworkIdentityTest}'s {@code mountListener} is the recipe.
  * <p>
  * THE ROSTER IS A CONTAINER, AND THAT IS A TRAP WORTH NAMING. The address {@code /network/roster} holds
  * {@code [discover, machine]}, so {@code network().roster()} answers the CONTAINER — not the list of machines

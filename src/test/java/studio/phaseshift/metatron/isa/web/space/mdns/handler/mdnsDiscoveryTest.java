@@ -23,15 +23,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -42,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * A DISCOVERY PROTOCOL'S WHOLE CONTRACT, pinned: it is live because it exists, dead because it was closed, its
@@ -62,6 +69,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *       anything written inside that loop arrives once per interface</li>
  *   <li><b>a heard machine lands under its own key</b> as {@code <machine> => uri{+}}, several addresses in ONE
  *       entry, a re-heard address not duplicating, and {@code discover} surviving every machine write</li>
+ *   <li><b>only a listener's dialable address leaves the box</b> — a backend's host and its login, a listener's
+ *       query and any userinfo reach neither the TXT record nor the roster</li>
  * </ul>
  * The admission path above {@link mdnsDiscovery#roster} is deliberately NOT exercised here: it needs multicast,
  * a second host and a resolved {@code ServiceInfo}, none of which a unit test can fabricate. {@code
@@ -91,6 +100,11 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
     private static final fURI FIRST = f("ws://203.0.113.7:9999/mtron");
     private static final fURI SECOND = f("ws://198.51.100.4:9999/mtron");
+
+    /**
+     * A BACKEND'S HOST as {@code boot/space/tble/mariadb.mtron} writes one: the database login rides the query
+     */
+    private static final String BACKEND = "mariadb://127.0.0.1:3306/metatron?user=archivist&password=quill-and-ink";
 
     @AfterEach
     public void clearRoster() {
@@ -330,6 +344,76 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
         }
     }
 
+    /**
+     * ONLY THE ADDRESS A PEER DIALS IS ANNOUNCED, and the TXT record is built from it alone. What is announced is
+     * multicast to every box on the link and filed in the roster, so a listener's query — configuration, a
+     * parameter today and a token tomorrow — is dropped, and an address carrying userinfo is refused outright: a
+     * fURI has no userinfo component, so {@code user@} welds into the host and a numeric password parses as the
+     * PORT, and nothing can be stripped back out of that.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws://0.0.0.0:8555                                 % ws://0.0.0.0:8555       % a bare listener is announced as it stands",
+            "ws://0.0.0.0:8555/mtron                           % ws://0.0.0.0:8555/mtron % its path is the route a peer dials",
+            "ws://0.0.0.0:8555/mtron?out=application/x-mtron   % ws://0.0.0.0:8555/mtron % a query is configuration, never announced",
+            "http://0.0.0.0:8777?user=archivist&password=quill % http://0.0.0.0:8777     % so a login in the query goes with it",
+            "ws://archivist@0.0.0.0:8555                       % null                    % userinfo welds into the host: refused, not stripped",
+            "ws://archivist:7341@0.0.0.0:8555                  % null                    % a numeric password parses as the PORT: refused",
+            "ws://archivist:quill@0.0.0.0:8555                 % null                    % any other password leaves no port at all",
+            "ws://0.0.0.0                                      % null                    % no port is nothing a peer can dial",
+    }, delimiter = '%', nullValues = "null")
+    public void testOnlyTheDialableAddressIsAnnounced(final String authority, final String expected,
+                                                      final String desc) {
+        final fURI surface = mdnsDiscovery.announceable(f(authority));
+        if (null == expected) {
+            assertNull(surface, desc + ": " + surface);
+            return;
+        }
+        assertEquals(expected, surface.toString(), desc);
+        mdnsDiscovery.txt(surface).values().forEach(entry -> {
+            assertFalse(entry.contains("?"), desc + " — no query reaches the TXT record: " + entry);
+            assertFalse(entry.contains("@"), desc + " — nor any userinfo: " + entry);
+        });
+    }
+
+    /**
+     * A BACKEND'S LOGIN NEVER LEAVES THE BOX. A credentialed space mounted beside a listener — the pair
+     * {@code boot/space/tble/mariadb.mtron} and a web server make — reaches neither the announced set, nor a TXT
+     * record, nor the roster, while the listener reaches all three. The listener is the CONTROL: without it, a
+     * handler that announced nothing at all would pass.
+     */
+    @Test
+    public void testABackendsLoginIsNeverAnnounced() {
+        final fURI listening = f("ws://0.0.0.0:" + generatePort());
+        final fURI backend = f("/sys/space/mdns-backend");
+        // patterned as the boot's are: a <vid>/# pattern would retract onto the vid, and the cache a web space
+        // indexes beside itself would evict the listener from the index
+        final wsSpace listener = wsSpace.of(mutableMap(
+                uri(PATTERN), uri("ws://#"),
+                uri(HOST), uri(listening.toString())), f("/sys/space/mdns-listener"));
+        mountBackend(backend);
+        final mdnsDiscovery handler = handler();
+        try {
+            // THE ANNOUNCED SET needs no multicast: it is what every responder registers
+            final List<String> surfaces = handler.surfaces().stream().map(fURI::toString).toList();
+            assertTrue(surfaces.contains(listening.toString()), "the listener is announced: " + surfaces);
+            surfaces.forEach(surface -> assertFalse(leaks(surface), "a backend is never a surface: " + surfaces));
+            handler.surfaces().forEach(surface -> mdnsDiscovery.txt(surface).values().forEach(entry ->
+                    assertFalse(leaks(entry), "no TXT entry carries the backend: " + entry)));
+            // THE ROSTER is written as each responder announces, so it needs one
+            assumeTrue(awaitStatus(handler, true, 20000L), "no multicast-capable interface here — mdns is inert");
+            assertTrue(machineRows().contains(listening.toString()),
+                    "the listener's own row is the control: " + roster());
+            machineRows().forEach(row -> assertFalse(leaks(row), "no roster row carries the backend: " + roster()));
+        } finally {
+            handler.close();
+            Machine.current().memory().removeSpace(backend);
+            Machine.current().memory().removeSpace(listener.vid());
+            Machine.current().memory().removeSpace(listener.pattern());
+            listener.close();
+        }
+    }
+
     @Test
     public void testADiscoveredMachineLandsInRosterMachine() {
         final mdnsDiscovery handler = handler();
@@ -379,10 +463,54 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
     }
 
     /**
-     * the start is handed to the ThreadExecutor, so liveness is awaited rather than asserted outright
+     * a space that CARRIES a host without listening on it — the shape of every backend space. BOOTING-guarded as
+     * the machine suites mount theirs: registration writes the space at its own vid.
      */
+    private static void mountBackend(final fURI vid) {
+        final boolean booting = BootLoader.BOOTING;
+        BootLoader.BOOTING = true;
+        try {
+            Machine.current().memory().addSpace(memSpace.of(rec(
+                    uri(PATTERN), uri(vid.toString() + "/#"),
+                    uri(HOST), uri(BACKEND)), vid));
+        } finally {
+            BootLoader.BOOTING = booting;
+        }
+    }
+
+    /**
+     * the backend, its login, or a query — none of which may appear in anything announced
+     */
+    private static boolean leaks(final String text) {
+        return Stream.of("mariadb", "archivist", "quill-and-ink", "password", "?").anyMatch(text::contains);
+    }
+
+    /**
+     * every key and every address in {@code roster/machine}, as uri TEXT — an Obj's own rendering would carry its
+     * vid, and a roster write can hand one out
+     */
+    private static List<String> machineRows() {
+        final Obj machines = machines();
+        final List<String> rows = new ArrayList<>();
+        if (machines.isRec())
+            machines.asRec().jvm().forEach((machine, addresses) -> {
+                rows.add(machine.isUri() ? machine.uriValue().toString() : machine.toString());
+                addresses.stream().map(address -> address.isUri() ? address.uriValue().toString() : address.toString())
+                        .forEach(rows::add);
+            });
+        return rows;
+    }
+
     private static boolean awaitStatus(final mdnsDiscovery handler, final boolean expected) {
-        final long endTime = System.currentTimeMillis() + 5000L;
+        return awaitStatus(handler, expected, 5000L);
+    }
+
+    /**
+     * the start is handed to the ThreadExecutor, so liveness is awaited rather than asserted outright. A handler
+     * with surfaces to register takes longer to go live: each registration is probed before it is announced.
+     */
+    private static boolean awaitStatus(final mdnsDiscovery handler, final boolean expected, final long millis) {
+        final long endTime = System.currentTimeMillis() + millis;
         while (System.currentTimeMillis() < endTime) {
             if (expected == handler.status())
                 return true;

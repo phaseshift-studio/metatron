@@ -51,9 +51,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * DISCOVERY OVER mDNS — announces the authorities this machine answers to on the local network, and writes what it
- * hears from others into {@link Network#ROOT_ROSTER}. It serves no bytes: a peer list is its whole product, which
- * is why it feeds the roster rather than answering an address.
+ * DISCOVERY OVER mDNS — announces the listeners this machine answers on to the local network (never a backend it
+ * dials out to: see {@link #surfaces()}), and writes what it hears from others into {@link Network#ROOT_ROSTER}.
+ * It serves no bytes: a peer list is its whole product, which is why it feeds the roster rather than answering an
+ * address.
  * <p>
  * ITS WHOLE INTERFACE IS ITS EXISTENCE. Construction starts it, {@code close()} stops it, and deleting it from
  * the roster's {@code discovery} bag is how it is turned off — there is no {@code start()} to remember and no
@@ -253,14 +254,13 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * THE MACHINE THAT ANSWERS AN ENDPOINT, which is not always this one. A space mounted here may declare a host
-     * on another box — a broker at {@code mqtt://other.local:1883} is in THIS machine's authorities and is that
-     * machine's endpoint — and filing it under this machine's name would have the table assert we answer what
-     * another host answers.
+     * THE MACHINE A SURFACE IS FILED UNDER. Every surface is a listener of this machine — a backend's host, such as
+     * a broker at {@code mqtt://other.local:1883}, is never one (see {@link Network.Helper#authorities()}) — but
+     * not every surface spells this machine's name.
      * <p>
-     * A wildcard or loopback authority IS this machine: {@code 0.0.0.0} means every local address, so it keys to
-     * {@link #exposed()}. Anything else keys by the host it names, which is the only machine identity the uri
-     * carries — an address rather than a name when that is all it has.
+     * A wildcard or loopback bind IS this machine: {@code 0.0.0.0} means every local address, so it keys to
+     * {@link #exposed()}. A bind to one interface keys by the host it names, which is the only machine identity the
+     * uri carries — an address rather than a name when that is all it has.
      */
     private fURI machineOf(final fURI authority) {
         final String host = authority.host();
@@ -309,9 +309,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
         for (final InetAddress address : this.localAddresses()) {
             try {
                 final JmDNS mdns = JmDNS.create(address, this.hostName);
-                Network.Helper.authorities().stream()
-                        .filter(authority -> null != authority.host() && authority.port() > 0)
-                        .forEach(authority -> this.announce(mdns, service, authority));
+                this.surfaces().forEach(surface -> this.announce(mdns, service, surface));
                 mdns.addServiceListener(service.toString(), new PeerListener(mdns));
                 mdns.addServiceListener(service.toString(), new PeerListener(mdns));
                 synchronized (this.lifecycle) {
@@ -383,18 +381,60 @@ public class mdnsDiscovery extends MRec implements Closeable {
     }
 
     /**
-     * register the authority as a service instance, its route in the TXT so a browser can dial it
+     * WHAT THIS MACHINE ANNOUNCES: every listener it answers on, each reduced to the address a peer dials. Read per
+     * responder, as the authorities always were — a boot may mount its listeners after constructing this handler.
+     * <p>
+     * VISIBLE FOR TESTING, like {@link #roster}: this set is everything that leaves the box, so it is the surface a
+     * leak would show on, and it is checkable without multicast.
      */
-    private void announce(final JmDNS mdns, final fURI service, final fURI authority) {
+    List<fURI> surfaces() {
+        return Network.Helper.authorities().stream()
+                .map(mdnsDiscovery::announceable)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    /**
+     * THE ADDRESS A PEER DIALS, and nothing a space's config carried along with it: scheme, host, port and path,
+     * the {@code ?query} dropped. A listener's query is configuration — a parameter today, a token tomorrow — and
+     * what is announced is multicast to every box on the link, cached by each of them and filed in the roster.
+     * <p>
+     * USERINFO IS REFUSED, NOT STRIPPED. A fURI has no userinfo component, so a {@code user:pass@} lands welded
+     * into another one: {@code archivist@0.0.0.0} parses as the host, and in {@code archivist:7341@0.0.0.0:8555}
+     * the password parses as the PORT. Nothing can be stripped back out of that, so an address carrying an
+     * {@code @} is not announced at all — and neither is one without a host and a port, which nothing can dial.
+     *
+     * @return the address to announce, or {@code null} when there is none
+     */
+    static fURI announceable(final fURI authority) {
+        final fURI address = authority.basePath();
+        return null == address.host() || address.port() <= 0 || address.toString().contains("@") ? null : address;
+    }
+
+    /**
+     * THE TXT RECORD of one surface. Its route is the surface's PATH — {@code basePath()} before
+     * {@code localize()}, because localize keeps the query — so the record cannot carry one even if handed an
+     * address that was never made {@link #announceable}.
+     * <p>
+     * SEPARATE TXT ENTRIES, never one comma-joined string: getPropertyString returns everything after the FIRST
+     * '=', so "route=/,version=0.1" comes back as route=[/,version=0.1] — measured.
+     */
+    static Map<String, String> txt(final fURI surface) {
+        return Map.of(ROUTE, surface.basePath().localize().toString(), SCHEME, scheme(surface.scheme()),
+                VERSION, METATRON_VERSION);
+    }
+
+    /**
+     * register one surface as a service instance, its route in the TXT so a browser can dial it
+     */
+    private void announce(final JmDNS mdns, final fURI service, final fURI surface) {
         try {
-            // SEPARATE TXT ENTRIES, never one comma-joined string: getPropertyString returns everything after the
-            // FIRST '=', so "route=/,version=0.1" comes back as route=[/,version=0.1] — measured.
-            mdns.registerService(ServiceInfo.create(service.toString(), this.instanceName(authority), authority.port(), 0, 0,
-                    Map.of(ROUTE, authority.localize().toString(), SCHEME, scheme(authority.scheme()),
-                            VERSION, METATRON_VERSION)));
-            this.roster(this.machineOf(authority), authority);
+            mdns.registerService(ServiceInfo.create(service.toString(), this.instanceName(surface), surface.port(), 0, 0,
+                    txt(surface)));
+            this.roster(this.machineOf(surface), surface);
         } catch (final IOException e) {
-            this.LOG.warn("mdns: cannot announce %s (%s)", authority, e.getMessage());
+            this.LOG.warn("mdns: cannot announce %s (%s)", surface, e.getMessage());
         }
     }
 
