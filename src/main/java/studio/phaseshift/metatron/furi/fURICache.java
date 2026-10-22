@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * The global String -> {@link fURI} cache.
@@ -149,6 +150,16 @@ public final class fURICache {
     public static int size() {
         final Pool pool = POOL.get();
         return pool.live.size() + (null == pool.retired ? 0 : pool.retired.size());
+    }
+
+    /**
+     * The number of cached uris whose key passes the test, across both generations. The pool is the JVM's, so a
+     * caller measuring its own share while other threads intern counts its keys here; {@link #size()} counts theirs too.
+     */
+    static int count(final Predicate<String> key) {
+        final Pool pool = POOL.get();
+        return (int) (pool.live.keySet().stream().filter(key).count()
+                + (null == pool.retired ? 0 : pool.retired.keySet().stream().filter(key).count()));
     }
 
     /** The configured ceiling on cached uris ({@code -Dmetatron.furi.intern.max}, default 65536). */
