@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -117,7 +118,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
     /**
      * This level's members: {@code <key> => peer::T}, where the KEY is the dial's own address as a valid local path,
-     * one per surface ({@link Helper#keyOf}: {@code ws://booger:8555/mtron} is {@code ws/booger/8555/mtron}). So a
+     * one per surface ({@link Helper#keyOf}: {@code ws://localhost:8555/mtron} is {@code ws/localhost/8555/mtron}). So a
      * member is addressable at {@code ~/network/peer/<key>} — read field by field, deleted to hang it up — and the
      * service it reaches is the {@code authority} it carries, never its key.
      */
@@ -273,8 +274,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             if (client.isRec() && client != transport)
                 peer.asRec().at(uri(CLIENT), client, MUTABLE);
             peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
-            final Obj kept = Helper.without(this.peers(), kv -> kv.first().uriValue().equals(key));
-            this.at(uri(PEER), kept.isNoObj() ? rec(uri(key), peer) : kept.asRec().plus(rec(uri(key), peer)), MUTABLE);
+            final Rec kept = Helper.without(this.peers(), kv -> kv.first().uriValue().equals(key));
+            this.at(uri(PEER), kept.isEmpty() ? rec(uri(key), peer) : kept.plus(rec(uri(key), peer)), MUTABLE);
         }
         // THE CONNECTION THIS ONE REPLACES IS CLOSED -- outside the lock, because closing a link is a hang-up and a
         // hang-up retracts (it finds nothing: its member is already gone). Close-before-clear, as everywhere.
@@ -357,9 +358,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * Retract members, by what the address names: a peer KEY ({@code ws/booger/8555/mtron}) names that member; a
-     * wire uri with a route ({@code ws://booger:8555/mtron}) names that surface; a bare authority
-     * ({@code ws://booger:8555}) names every surface of the service. Answers what was dropped — the member, or a bag
+     * Retract members, by what the address names: a peer KEY ({@code ws/localhost/8555/mtron}) names that member; a
+     * wire uri with a route ({@code ws://localhost:8555/mtron}) names that surface; a bare authority
+     * ({@code ws://localhost:8555}) names every surface of the service. Answers what was dropped — the member, or a bag
      * of them — or noobj when the address held nothing here.
      */
     default Obj disconnect(final fURI address) {
@@ -369,7 +370,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             dropped = this.peers().elements().filter(kv -> kv.first().isUri() && named.test(kv)).map(Rel::second).toList();
             if (dropped.isEmpty())
                 return noobj();
-            this.at(uri(PEER), Helper.without(this.peers(), named), MUTABLE);
+            // the zero rec is noobj as a value, but a field written with one keeps it: write noobj so the field goes
+            final Rec kept = Helper.without(this.peers(), named);
+            this.at(uri(PEER), kept.isEmpty() ? noobj() : kept, MUTABLE);
         }
         // CLEAR, THEN CLOSE. The members leave the map under the lock and what they held is closed outside it:
         // closing a link is its owner's hang-up, and a hang-up retracts -- which would come straight back into
@@ -620,51 +623,32 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * The peer map without the members the predicate names — absent rather than empty once nothing is left,
-         * because an EMPTY rec is not the same value as an absent one (the component predicate's map idiom rejects
-         * the empty rec's noobj entry — measured).
+         * The peer map without the members the predicate names — the zero rec once nothing is left, so the field
+         * reads absent rather than empty: an EMPTY rec is not the same value as an absent one (the component
+         * predicate's map idiom rejects the empty rec's noobj entry — measured).
          */
-        static Obj without(final Rec peers, final java.util.function.Predicate<Rel> named) {
+        static Rec without(final Rec peers, final java.util.function.Predicate<Rel> named) {
             final List<Rel> kept = peers.elements()
                     .filter(kv -> !kv.first().isUri() || !named.test(kv))
                     .toList();
-            return kept.isEmpty() ? noobj() : rec(kept.stream());
+            return kept.isEmpty() ? noobjRec() : rec(kept.stream());
         }
 
         /**
-         * THE PEER KEY — the dial's own address as a LEGAL local path, one per surface:
-         * {@code ws://booger.local:8555/mtron?name=me} is {@code ws/booger/local/8555/mtron}. Scheme, every label of
-         * the host, port, then the route, and never a {@code ?q}: the identity the dial spends and the serializers
+         * THE PEER KEY — the dial's own address as a LEGAL local path, one per surface: {@link fURI#toPath()} of the
+         * dial, so {@code ws://peer.local:8555/mtron?name=me} is {@code ws/peer/local/8555/mtron}. Scheme, every label
+         * of the host, port, then the route, and never a {@code ?q}: the identity the dial spends and the serializers
          * that ride the session name no connection (a {@code ?clientq} once leaked into the key this way — measured).
          * <p>
          * LEGAL MEANS NO DOTS AND NO COLONS IN A SEGMENT. A dotted first segment reads as a host, so a host is split
-         * into its labels in order ({@code 192.168.1.61} is {@code 192/168/1/61}) — never kept whole, and never merged,
-         * since a dropped boundary lets two machines share a key and the redial of one would hang up the other. This
-         * is the shape {@code fURI.toPath()} gives, which replaces the body below once it is on this branch; the one
-         * step it does not take is the alias: a loopback host is spelled {@code localhost} first, so {@code 127.0.0.1}
-         * and {@code [::1]} key the connection {@code localhost} already holds.
+         * into its labels in order ({@code 10.0.0.7} is {@code 10/0/0/7}) — never kept whole, and never merged, since a
+         * dropped boundary lets two machines share a key and the redial of one would hang up the other. The one step
+         * {@code toPath()} does not take is the alias: a loopback host is spelled {@code localhost} first, so
+         * {@code 127.0.0.1} and {@code [::1]} key the connection {@code localhost} already holds.
          */
         public static fURI keyOf(final fURI dial) {
-            final List<String> segments = new ArrayList<>();
-            if (null != dial.scheme())
-                segments.add(dial.scheme());
             final String host = dial.host();
-            if (null != host && !host.isEmpty())
-                Helper.legal(isLoopbackHost(host) ? "localhost" : host, segments);
-            if (dial.port() > 0)
-                segments.add(String.valueOf(dial.port()));
-            dial.path().forEach(segment -> Helper.legal(segment, segments));
-            return f(String.join("/", segments));
-        }
-
-        /**
-         * a name split into legal path segments: every label between dots or colons (an IPv6 literal's groups too),
-         * in order, with the brackets and empty labels dropped
-         */
-        private static void legal(final String name, final List<String> into) {
-            for (final String label : name.replace("[", "").replace("]", "").split("[.:]"))
-                if (!label.isEmpty())
-                    into.add(label);
+            return (null != host && isLoopbackHost(host) ? dial.host("localhost") : dial).toPath();
         }
 
         /**
