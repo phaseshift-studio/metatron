@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -116,6 +117,8 @@ public interface WebSocketObj extends Rec, Closeable {
 
     @Override
     default void close() {
+        // the trips still in flight are answered before their slots go: a closed socket delivers no reply
+        this.abandon("closed");
         WAITERS.remove(this);       // identity-keyed, so released with the socket
         ROUTED.remove(this);
         try {
@@ -193,6 +196,22 @@ public interface WebSocketObj extends Rec, Closeable {
      * swapped, so no two round trips can shadow each other's handler or restore out of order.
      */
     Map<WebSocketObj, Obj> ROUTED = Collections.synchronizedMap(new IdentityHashMap<>());
+
+    /**
+     * ANSWER EVERY ROUND TRIP IN FLIGHT with a fail: the connection under them is gone, so no reply can arrive, and
+     * waiting out each deadline would only turn a known loss into an anonymous timeout. The slots themselves stay —
+     * each trip removes its own as it returns.
+     *
+     * @param why what happened to the connection, for the fail's text
+     */
+    default void abandon(final String why) {
+        final Map<fURI, Waiter> waiters = WAITERS.get(this);
+        if (null == waiters || waiters.isEmpty())
+            return;
+        final String peer = this.peerName();
+        this.logger().debug("abandoning %s round trip(s) on %s: %s", waiters.size(), peer, why);
+        waiters.values().forEach(waiter -> waiter.fill(fail("connection to %s %s before its reply arrived", peer, why)));
+    }
 
     /**
      * A NAME FOR THIS SOCKET, for a fail a human can act on: the host it dialed, else the remote it accepted
@@ -348,6 +367,12 @@ public interface WebSocketObj extends Rec, Closeable {
      */
     default boolean awaitOpen(final long deadlineMs) {
         final long endTime = System.currentTimeMillis() + Math.min(deadlineMs, DEFAULT_OPEN_WAIT_MS);
+        // A LINK THAT IS DOWN IS ASKED TO COME BACK — NOW. A request is the moment reach matters, so it does not
+        // wait out the supervisor's backoff: a dialed connection its owner did not hang up redials on demand, within
+        // the link's own connect timeout, and the request goes out on the connection that answers. A redial that is
+        // refused leaves the socket closed, and the loop below says so at once.
+        if (this.getWebSocket() instanceof Network.Link link && !link.connected() && !link.hungUp())
+            link.redial();
         while (System.currentTimeMillis() < endTime) {
             final WebSocket socket = this.getWebSocket();
             if (null != socket && socket.isOpen())

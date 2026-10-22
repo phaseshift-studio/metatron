@@ -181,7 +181,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     private void handleRequest(final HttpExchange exchange, final fURI mount, final Obj routeValue,
                                final RouteLane fixed) throws IOException {
         // the FULL connection uri — scheme + the server's own authority + the dialed path and its
-        // ?q processors (?clientq=<name> is the dialer's identity) — defined once at the request
+        // ?q processors (?name=<name> is the dialer's identity) — defined once at the request
         // boundary so the co-mount and the handlers see what the client actually dialed.
         final fURI connection = f(exchange.getRequestURI().toString()).scheme("http")
                 .host(fURI.hostOf(exchange.getLocalAddress())).port(exchange.getLocalAddress().getPort());

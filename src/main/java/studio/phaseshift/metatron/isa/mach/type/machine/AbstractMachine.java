@@ -209,6 +209,13 @@ public abstract class AbstractMachine extends MRec implements Machine {
         // BEFORE the ownership guard: a machine holding a spawned peer must release its process whether or not this
         // machine owns the memory index (a pushed child does not — its memory is a union over the parent's).
         PeerSpawn.reap(this);
+        // A FRAME'S REACH ENDS WITH THE FRAME. The network level this machine OWNS -- a pushed child's NetworkUnion,
+        // the root's at shutdown -- is closed: its supervision stops and every dial it made is hung up. Until this,
+        // a pop retracted the child's LISTING (the level was discarded) while its sockets stayed open. Ownership is
+        // the component's own parent link, so a clone that still points at another machine's level closes nothing.
+        final Network network = this.network();
+        if (network.machine() == this)
+            network.close();
         // A pushed child shares its parent's memory (inheritance = walk parent()), so the child does not own the
         // index and must not clear it: clearing the shared memory here is what emptied the root's spaces on every
         // pop(). Only the machine the memory was parented to — the root — tears the index down.

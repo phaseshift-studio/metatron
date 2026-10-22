@@ -30,16 +30,19 @@ answers addresses, while `Machine` the interface stays a `Rec`.
 ```
 isa/mach/type/Machine.java            ← Machine interface + Component + Machine0 (the contract)
 isa/mach/type/Memory.java             ← Memory interface (relative bindings + absolute space index)
-isa/mach/type/Network.java            ← Network interface (peer roster + authority arithmetic)
+isa/mach/type/Network.java            ← Network interface (peers + roster + authority arithmetic) + Network.Link
 isa/mach/type/Compiler.java           ← Compiler interface (rewrite → resolve → type) + resolve memo
 isa/mach/type/Processor.java          ← Processor interface + Processor.Helper (the runtime core)
 isa/mach/type/ComponentUnion.java     ← frame wrapper: previous()/current(), read-through, close-current
-isa/mach/type/memory/MemoryUnion.java ← the ONE implementation today: frame memory (pattern-aware at())
-                                        (there is no NetworkUnion or InstSetUnion — see "The five components")
+isa/mach/type/memory/MemoryUnion.java ← the ONE read-through union today: frame memory (pattern-aware at())
+                                        (no InstSetUnion; NetworkUnion is a level of its own — see "The five components")
 isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
-isa/mach/type/machine/BasicNetwork.java     ← one level of network (roster is the rec)
+isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec)
+isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
+isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
+isa/mach/type/network/PeerSpace.java        ← <vid>/network/peer/# as an address space: members read and deleted by path
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
                                         enclosing machine's (via `previous`)
 isa/mach/type/compiler/…                     ← Compiler impls + parser/rewriter/resolver/typer stages
@@ -54,7 +57,7 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 | Component | Interface (extends)                   | One-line job                                         | Frame behaviour                   |
 |-----------|---------------------------------------|------------------------------------------------------|-----------------------------------|
 | Memory    | `Space, Machine.Component, Closeable` | relative bindings (names) + absolute index of spaces | accumulates (`MemoryUnion`)       |
-| Network   | `Machine.Component, Closeable`        | peer roster `authority → transport`, `own`/`isPeer`  | **shared** today: the roster lives at `/sys/peer`, so a child's declaration is the parent's. The union is intended, and needs the roster moved onto the component plus a deny arm |
+| Network   | `Addressable, Machine.Component, Closeable` | this frame's peers `service → peer::T` + the root-shared roster, `own`/`isPeer`, supervision of links | a level of its own (`NetworkUnion`): knowledge (the roster at `/network/roster`) is shared, reach (`peer`) is never inherited, and a pop hangs up the frame's dials |
 | InstSet   | `Space` (via `AbstractInstSet`)       | the vocabulary: types/insts/rewrites/sugars; `import` lands here | accumulates — `BasicInstSet` is own structure over its imports over the enclosing machine's ISA; membership in the rec under `reference` |
 | Compiler  | `Machine.Component, Rec`              | `code::T → code::T` in three stages                  | constructive (inherited/replaced) |
 | Processor | `mThread, Machine.Component`          | `code::T → obj`; the monadic execution engine        | constructive                      |
@@ -99,7 +102,7 @@ Nesting is **read-through via `previous`**, built at push time, one level per co
 |-----------|-----------------------------------------------------------------------------------------------|
 | memory    | `MemoryUnion(this.memory())` — the child's own spaces over the enclosing memory's               |
 | instset   | `BasicInstSet(this.instset())` — the child's own declarations over the enclosing vocabulary     |
-| network   | **shared** today: the roster lives at `/sys/peer`, so a child's declaration is the parent's — the union is intended, and needs the roster moved onto the component plus a deny arm |
+| network   | `NetworkUnion()` — a fresh level, NOT a read-through: reach starts empty, knowledge is the one root roster, and the level's supervision is its own |
 
 Reads go **through** (own first, then `previous`), writes reach only the own level, and a popped frame takes its own
 spaces and imports with it: it can never close what it inherited. Release is structural, not bookkeeping.
@@ -118,6 +121,47 @@ Writes reach only the own structure, which is what makes a shared library safe t
 read of the vocabulary is a **schema query** — dom/rng admission down the refinement lattice, ranked
 closest-to-the-token — reached through `Machine.read`: a caller reaching for `instset()` directly is an optimization of
 that read, never the door.
+
+## Peer supervision — the network's index kept true
+
+`index` and `drop` are the network's adjoint pair; supervision keeps the map honest between them. The ruling
+(2026-10-21): **only the owner's hang-up removes a peer** — whatever the far side does is a failure, redialed in place.
+The close code cannot carry that distinction anyway: a metatron server shutting down closes its session cache before
+it stops, so its clients see `1000` whether it is restarting or gone.
+
+| piece                                  | what it does                                                                                                                                                             |
+|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Network.Link`                         | the protocol-neutral contract a client holding a live connection implements: `connected()` (local, no trip), `hungUp()` (its owner closed it — final), `redial()` (in place, bounded) |
+| `PeerSupervisor`                       | one per network level, in a static identity registry. `watch` comes from `Network.index` of a link; `release` from `Network.close()`, BEFORE the members are disconnected. Every 500 ms, AS the level's machine: hung up → drop; connected → clear the schedule; down → redial on a virtual thread, 0.5 s doubling to 10 s, one attempt in flight |
+| `Network.Helper.retract`               | the dual of `Helper.index`: the owner's `close()` drops the member whose client IS that object (identity, under the level's lock) from every supervised level, at once |
+| `WebSocketRecClient`                   | the first `Link`: `reconnect()` + a bounded wait (`CONNECT_TIMEOUT_MS`, which also bounds the TCP connect). `reset()`'s own `closeBlocking()` lands in `close()` — recognized by the redialer thread, so it is not a hang-up. A redial that never opens does not replay `on_close`/`on_error` |
+| `WebSocketRec.onClose` / `WebSocketObj` | a failed link `abandon`s its in-flight round trips (each answered with a fail at once) and keeps `ROUTED`, so the redialed connection does not wrap a second router; `awaitOpen` redials on demand |
+
+**Members are addresses (2026-10-21).** A member's key is the dial's own address as a path, one per surface
+(`Network.Helper.keyOf`: `ws://booger.local:8555/mtron?name=me` → `ws/booger/local/8555/mtron` — a legal path, every
+host label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; the shape `fURI.toPath()`
+gives, which replaces `keyOf`'s body once it is on this branch), and the service it reaches is the `authority` field — wire dispatch (`transportOf`, `isPeer`,
+`peerOf`) and `law_shard`'s routes match on that, never on the key. `Machine.bootstrap()` mounts a `PeerSpace` at
+`<vid>/network/peer/#` (indexed at `<vid>/sys/space/network`): it stores nothing and answers from the network on every
+read, so `*</network/peer/ws/booger/8555/mtron/authority>` walks a member by the space's base-poly read, and a noobj
+write there is `Network.disconnect` — destruction on deletion from mtron. Every other write is refused (a peer is
+constructed, not written). `index` keeps **no two equivalent connections**: a fresh client at a held key closes the
+member there and takes its place, while indexing the same client again is idempotent; `connect` still skips the dial
+when the surface is held. `disconnect(address)` reads what the address names — a key that member, a wire uri with a
+route that surface, a bare authority every surface of the service.
+
+Three consumers read the link: `PlanInterpreter.shardTargets` plans only over `Network.Helper.online` peers (an outage
+shrinks the fan-out), `Network.status` probes a `peer::T`'s transport (it reported every dialed peer `known`) and
+answers `down` for an offline link without a trip, and `index`/`connect` treat a hung-up member as absent so a fresh
+dial is never handed a dead peer.
+
+Two Java-side facts the design depends on. `index`, `accept` and `disconnect` serialize the peer map's
+read-modify-write on the level, and `disconnect` clears under the lock but closes outside it — closing a link is a
+hang-up, and a hang-up comes back through `retract`. And `AbstractMachine.close()` now closes the network level the
+machine OWNS (`network.machine() == this`): before, a pop discarded the child's listing and left its sockets open,
+because `AbstractMachine.close()` overrides the `Machine.close()` that closed it. And `BootLoader.close()` runs
+`PeerSupervisor.closeAll()` after the root's close, so a frame that dialed and was never popped cannot keep a supervisor
+ticking into whatever boots next in the JVM.
 
 ## How one evaluation flows
 
@@ -236,7 +280,7 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
 - **`ComponentUnion.previous()` is a rec entry (`>>previous`), never a Java field, and never `Obj.orElse`.** The parent
   fallback must be lazy — `orElse` evaluates the parent unconditionally on every hit.
 - **Never write a roster under `/sys/mach`.** The machine claims that address and `AbstractSpace`'s default writer is a
-  no-op, so writes there are silently dropped. The peer roster lives at `/sys/peer`.
+  no-op, so writes there are silently dropped. The roster lives at `/network/roster`.
 - **`push()` must mint a child, not the parent.** Use the 3-arg `clone` — `selfVID` *pins* an already-set vid, so a
   2-arg clone would silently keep the parent's address.
 - **A machine is a space, so its own read is a space read** (`AbstractSpace.read` → `Space.Helper.resolveRead`, q-procs
@@ -252,11 +296,8 @@ The Router→Machine migration is **not finished**. `Router.java` is deleted, bu
 - `Memory.ARG_STACK` (`argFrames`) is marked **temporary** — the old per-instruction arg stack, moved into `Memory`
   so `Router` could be deleted; it is meant to fold into the frame chain.
 - `ExecutionStack` still wraps reads/writes and instruction apply.
-- `BasicNetwork.transportOf` still falls back to `/sys/peer` (a TODO notes the roster should become a frame-level
-  projection).
 
-Any cleanup that lands these three (drop `stackSpace`, fold `argFrames` into the frame chain, retire the `/sys/peer`
-fallback) removes the "two scoping mechanisms at once" ambiguity that is the main source of the current complexity.
+Any cleanup that lands these two (drop `stackSpace`, fold `argFrames` into the frame chain) removes the "two scoping mechanisms at once" ambiguity that is the main source of the current complexity.
 
 ---
 

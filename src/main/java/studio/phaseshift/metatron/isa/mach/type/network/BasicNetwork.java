@@ -79,12 +79,13 @@ public class BasicNetwork extends MRec implements Network {
     }
 
     /**
-     * Release what this level dialed. The roster holds transports today, which are insts and hold no resource —
-     * but the declaration is what makes the reach correct the moment a frame's roster holds a live connection,
-     * rather than leaving a socket to leak silently.
+     * Release what this level dialed. The reach goes first ({@link Network#close()}: supervision released, every
+     * member disconnected — which is what hangs up a client, since a {@code peer::T} is a rec and closing the rec
+     * closes nothing it holds), then the level's own fields.
      */
     @Override
     public void close() {
+        Network.super.close();
         this.jvm().values().forEach(CommonUtil::close);
         this.jvm().clear();
     }

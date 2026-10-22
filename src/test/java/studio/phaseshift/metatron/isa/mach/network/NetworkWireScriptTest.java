@@ -121,8 +121,8 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
                 "PROBE_Q_LEAK", args -> this.probe("qleak", jnt(this.network().peers().keys()
                         .map(Obj::uriValue).anyMatch(key -> !key.qMap().isEmpty()) ? 1 : 0)),
                 // THE SHAPE AUDIT: walk every entry of the peer map and verify the peer::T contract —
-                // uri key, q-clean key, rec value tid\u0027d peer::T, authority present and same-service as
-                // its key, transport an inst. Writes \u0027ok\u0027 or the FIRST violation\u0027s own words, so the
+                // uri key, q-clean key, rec value tid\u0027d peer::T, authority present, the key the dial\u0027s
+                // own path, transport an inst. Writes \u0027ok\u0027 or the FIRST violation\u0027s own words, so the
                 // script\u0027s failure message names the broken field rather than a count.
                 "PROBE_SHAPE", args -> this.probe("shape", str(this.auditPeerShape())),
                 // retraction is a DIRECTIVE, deliberately not an inst: the language's retraction is the
@@ -159,8 +159,11 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             final studio.phaseshift.metatron.isa.m.type.Obj authority = peer.asRec().at(uri(AUTHORITY));
             if (!authority.isUri())
                 return "peer has no authority uri: " + key;
-            if (!Network.Helper.sameService(key.uriValue(), authority.uriValue()))
-                return "authority is not the key\u0027s service: " + key + " vs " + authority;
+            // the key is the dial\u0027s own address as a path, one per surface -- what keyOf makes of where it was dialed
+            final studio.phaseshift.metatron.isa.m.type.Obj host = peer.asRec().at(uri(HOST));
+            final fURI dialed = host.isUri() ? host.uriValue() : authority.uriValue();
+            if (!Network.Helper.keyOf(dialed).equals(key.uriValue()))
+                return "key is not the dial\u0027s path: " + key + " vs " + Network.Helper.keyOf(dialed);
             final studio.phaseshift.metatron.isa.m.type.Obj transport = peer.asRec().at(uri(TRANSPORT));
             if (!transport.isObjInst())
                 return "peer has no transport inst: " + key;

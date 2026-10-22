@@ -105,7 +105,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) -> {
                         try {
-                            // THE IDIOMATIC DIAL: ws_client::[pattern=><ws://host:port/mtron?clientq=me>] —
+                            // THE IDIOMATIC DIAL: ws_client::[pattern=><ws://host:port/mtron?name=me>] —
                             // the claim derives the host (pattern retracted), the constructor connects, and
                             // on success the client indexes itself into the network as a space's constructor
                             // indexes into Memory. Indexing is a BACKGROUND behavior: it never fails the
@@ -367,7 +367,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 if (null == remote)
                     return;
                 // the FULL connection uri: the resource descriptor carries the dialed path and its ?q
-                // processors (?clientq=<name> is the dialer's identity), so the co-mount sees what the
+                // processors (?name=<name> is the dialer's identity), so the co-mount sees what the
                 // dialer actually dialed, not just where the socket came from.
                 final String descriptor = null == conn.getResourceDescriptor() ? "/" : conn.getResourceDescriptor();
                 final fURI authority = f(descriptor).scheme("ws").host(fURI.hostOf(remote)).port(remote.getPort());

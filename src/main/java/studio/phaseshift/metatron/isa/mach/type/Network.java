@@ -68,6 +68,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * <b>Denotation is not scoped by this component.</b> Scoping decides which peers a frame can reach; it never
  * changes what an absolute URI means. An unreachable authority fails loudly rather than resolving elsewhere.
+ * <p>
+ * <b>The index is kept true.</b> A member whose client is a {@link Link} is supervised for as long as it is
+ * indexed: a connection that fails is redialed in place (on a capped backoff, and at once when a request needs it),
+ * and only its OWNER's hang-up takes it out of the map — the client closed or deleted, {@link #drop} /
+ * {@link #disconnect}, the frame popped. Connection on creation, destruction on deletion: whatever the far side
+ * does is a failure, and the peer stays listed, offline, until it answers again.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -108,8 +114,25 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         return this.at(SOURCE).orElse(rec());
     }
 
+    /**
+     * This level's members: {@code <key> => peer::T}, where the KEY is the dial's own address as a valid local path,
+     * one per surface ({@link Helper#keyOf}: {@code ws://booger:8555/mtron} is {@code ws/booger/8555/mtron}). So a
+     * member is addressable at {@code ~/network/peer/<key>} — read field by field, deleted to hang it up — and the
+     * service it reaches is the {@code authority} it carries, never its key.
+     */
     default Rec peers() {
         return this.at(PEER).orElse(rec());
+    }
+
+    /**
+     * The member at a peer KEY, or noobj.
+     */
+    default Obj peerAt(final fURI key) {
+        return this.peers().elements()
+                .filter(kv -> kv.first().isUri() && kv.first().uriValue().equals(key))
+                .map(Rel::second)
+                .filter(Obj::isRec)
+                .findFirst().orElse(noobj());
     }
 
     /**
@@ -151,7 +174,16 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * local memory.
      */
     default Obj transportOf(final fURI authority) {
-        final Obj declared = Stream.concat(this.peers().elements(), this.machines().elements())
+        // A DIALED PEER ANSWERS BY THE AUTHORITY IT CARRIES -- its key is a local path, and two surfaces of one
+        // service may both be members: the first that carries a transport answers the wire
+        final Obj dialed = this.peers().values()
+                .filter(peer -> Helper.sameService(Helper.authorityOf(peer), authority))
+                .map(peer -> peer.asRec().<Obj>at(TRANSPORT))
+                .filter(reach -> !reach.isNoObj())
+                .findFirst().orElse(noobj());
+        if (!dialed.isNoObj())
+            return dialed;
+        final Obj declared = this.machines().elements()
                 .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), authority))
                 .map(Rel::second)
                 .map(reach -> reach.isRec() ? reach.asRec().at(TRANSPORT) : reach)
@@ -195,9 +227,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // the caller that has a uri and a dialer vid rather than a type literal: it constructs through
         // Helper.dial and lets register() do what the constructor would have done (register is ensure-peered,
         // so a self-registered client is found, not double-minted).
-        final fURI service = Helper.serviceOf(dialURI);
-        final Obj existing = this.peerOf(service);
-        if (!existing.isNoObj())
+        // ENSURE-PEERED, as an optimization: a surface this level already holds is not dialed twice. A member its
+        // owner hung up is not one to answer -- it is retracted, and the dial below replaces it.
+        final Obj existing = this.peerAt(Helper.keyOf(dialURI));
+        if (!existing.isNoObj() && !Helper.hungUp(existing))
             return existing;
         final Obj dialed = Helper.dial(dialURI, handler);
         WIRE_LOG.debug("connect %s handler=%s net=%s dialed=%s", dialURI, handler, System.identityHashCode(this), dialed);
@@ -210,11 +243,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * INDEX — {@link studio.phaseshift.metatron.isa.Addressable#index}, the network's arm: a protocol client that has CONNECTED
-     * writes itself here, and the peer::T is minted FROM the client. Ensure-peered: an authority already
-     * held answers its existing peer, so a constructor's background indexing and a connect() over the same
-     * client converge on one entry. The claim is read from the client itself — {@code pattern} (retracted)
-     * first, {@code host} second — so {@code index(client)} needs nothing but the client.
+     * INDEX — {@link studio.phaseshift.metatron.isa.Addressable#index}, the network's arm: a protocol client that has
+     * CONNECTED writes itself here, at its KEY ({@link Helper#keyOf}), and the peer::T is minted FROM the client. NO
+     * TWO EQUIVALENT CONNECTIONS: a fresh construction at a key the level already holds closes the member there and
+     * takes its place, while indexing the SAME client again (a constructor's background index, then connect() over
+     * that client) is idempotent. The claim is read from the client itself — {@code pattern} (retracted) first,
+     * {@code host} second — so {@code index(client)} needs nothing but the client.
      */
     @Override
     default Obj index(final Obj client) {
@@ -223,35 +257,50 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     default Obj index(final Obj client, final fURI dialURI) {
-        final fURI service = Helper.serviceOf(dialURI);
-        final Obj existing = this.peerOf(service);
-        if (!existing.isNoObj())
-            return existing;
-        // a client answers either the transport itself or a rec whose send_recv is the transport (the
-        // client is kept on the peer so disconnect can hang up) -- adapted in ONE place, Helper.asTransport.
-        final Obj transport = Helper.asTransport(client);
-        WIRE_LOG.debug("index %s transport=%s isObjInst=%s", dialURI, transport, transport.isObjInst());
-        if (!transport.isObjInst())
-            return noobj();
-        final Obj peer = rec(
-                uri(AUTHORITY), uri(service),
-                uri(HOST), uri(dialURI),
-                uri(TRANSPORT), transport);
-        if (client.isRec() && client != transport)
-            peer.asRec().at(uri(CLIENT), client, MUTABLE);
-        peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
-        this.at(uri(PEER), this.peers().plus(rec(uri(service), peer)), MUTABLE);
+        final fURI key = Helper.keyOf(dialURI);
+        final Obj peer;
+        final Obj displaced;
+        // ONE WRITER AT A TIME: the peer map is read, extended and written back, and a dial, a listener's accept and
+        // the supervisor's retraction can arrive on three threads at once -- unserialized, the later write drops the
+        // earlier one's member
+        synchronized (this) {
+            displaced = this.peerAt(key);
+            if (displaced.isRec() && client == displaced.asRec().<Obj>atDirect(uri(CLIENT)))
+                return displaced;
+            // a client answers either the transport itself or a rec whose send_recv is the transport (the
+            // client is kept on the peer so disconnect can hang up) -- adapted in ONE place, Helper.asTransport.
+            final Obj transport = Helper.asTransport(client);
+            WIRE_LOG.debug("index %s key=%s transport=%s isObjInst=%s", dialURI, key, transport, transport.isObjInst());
+            if (!transport.isObjInst())
+                return noobj();
+            peer = rec(
+                    uri(AUTHORITY), uri(Helper.serviceOf(dialURI)),
+                    uri(HOST), uri(dialURI),
+                    uri(TRANSPORT), transport);
+            if (client.isRec() && client != transport)
+                peer.asRec().at(uri(CLIENT), client, MUTABLE);
+            peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
+            final Obj kept = Helper.without(this.peers(), kv -> kv.first().uriValue().equals(key));
+            this.at(uri(PEER), kept.isNoObj() ? rec(uri(key), peer) : kept.asRec().plus(rec(uri(key), peer)), MUTABLE);
+        }
+        // THE CONNECTION THIS ONE REPLACES IS CLOSED -- outside the lock, because closing a link is a hang-up and a
+        // hang-up retracts (it finds nothing: its member is already gone). Close-before-clear, as everywhere.
+        if (displaced.isRec())
+            Helper.release(displaced);
+        // A LINK IS SUPERVISED FROM THE MOMENT IT IS INDEXED: what the index granted, the index keeps true -- a
+        // failed connection is redialed, an owner's hang-up is retracted. Idempotent per level.
+        if (client instanceof Link)
+            studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor.watch(this);
         return peer;
     }
 
     /**
-     * The peer this level holds for a service, or noobj — the ensure-peered scan, in one place.
+     * The first member this level holds for a SERVICE — matched by the authority it carries, so any of its surfaces —
+     * or noobj. {@link #peerAt} is the exact lookup, by key.
      */
     default Obj peerOf(final fURI service) {
-        return this.peers().elements()
-                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
-                .map(Rel::second)
-                .filter(Obj::isRec)
+        return this.peers().values()
+                .filter(peer -> Helper.sameService(Helper.authorityOf(peer), service))
                 .findFirst().orElse(noobj());
     }
 
@@ -276,26 +325,27 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // upgrade), so a server that exposes the full connection uri mints a NAMED peer on accept.
         final String name = remote.qMap().get(NAME);
         final fURI service = remote.path(List.of()).removeQ(NAME);
-        final Obj existing = this.peers().elements()
-                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
-                .map(Rel::second)
-                .filter(Obj::isRec)
-                .findFirst().orElse(noobj());
-        if (!existing.isNoObj())
-            return existing;
-        final Obj transport = Helper.asTransport(session);
-        if (!transport.isObjInst())
-            return noobj();
-        final Obj peer = rec(
-                uri(AUTHORITY), uri(service),
-                uri(TRANSPORT), transport);
-        if (null != name && !name.isEmpty())
-            peer.asRec().at(uri(NAME), str(name), MUTABLE);
-        if (session.isRec() && session != transport)
-            peer.asRec().at(uri(CLIENT), session, MUTABLE);
-        peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
-        this.at(uri(PEER), this.peers().plus(rec(uri(service), peer)), MUTABLE);
-        return peer;
+        // the co-mount is keyed like a dial: the remote's socket authority and the route it dialed, as a path
+        final fURI key = Helper.keyOf(remote);
+        // serialized with index and disconnect: the listener accepts on its own worker threads
+        synchronized (this) {
+            final Obj existing = this.peerAt(key);
+            if (!existing.isNoObj())
+                return existing;
+            final Obj transport = Helper.asTransport(session);
+            if (!transport.isObjInst())
+                return noobj();
+            final Obj peer = rec(
+                    uri(AUTHORITY), uri(service),
+                    uri(TRANSPORT), transport);
+            if (null != name && !name.isEmpty())
+                peer.asRec().at(uri(NAME), str(name), MUTABLE);
+            if (session.isRec() && session != transport)
+                peer.asRec().at(uri(CLIENT), session, MUTABLE);
+            peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
+            this.at(uri(PEER), this.peers().plus(rec(uri(key), peer)), MUTABLE);
+            return peer;
+        }
     }
 
     /**
@@ -313,24 +363,26 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         return this.disconnect(id);
     }
 
-    default Obj disconnect(final fURI authority) {
-        final fURI service = authority.path(List.of()).removeQ(NAME);
-        final Rec peers = this.peers();
-        final Obj keyed = peers.elements()
-                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), service))
-                .map(kv -> (Obj) kv)
-                .findFirst().orElse(noobj());
-        if (keyed.isNoObj())
-            return noobj();
-        final Obj peer = keyed.asRel().second();
-        // the member is a rec and a rec is not closeable -- its VALUES hold the closeables (the
-        // protocol client), so the displaced values are what the contract receives, then the peer.
-        if (peer.isRec())
-            peer.asRec().values().forEach(v -> Helper.writeComplete(noobj(), v));
-        Helper.writeComplete(noobj(), peer);
-        final List<Obj> kept = peers.elements().filter(kv -> !kv.equals(keyed)).map(kv -> (Obj) kv).toList();
-        this.at(uri(PEER), kept.isEmpty() ? noobj() : rec(kept.stream().map(Obj::asRel)), MUTABLE);
-        return peer;
+    /**
+     * Retract members, by what the address names: a peer KEY ({@code ws/booger/8555/mtron}) names that member; a
+     * wire uri with a route ({@code ws://booger:8555/mtron}) names that surface; a bare authority
+     * ({@code ws://booger:8555}) names every surface of the service. Answers what was dropped — the member, or a bag
+     * of them — or noobj when the address held nothing here.
+     */
+    default Obj disconnect(final fURI address) {
+        final java.util.function.Predicate<Rel> named = Helper.naming(address);
+        final List<Obj> dropped;
+        synchronized (this) {
+            dropped = this.peers().elements().filter(kv -> kv.first().isUri() && named.test(kv)).map(Rel::second).toList();
+            if (dropped.isEmpty())
+                return noobj();
+            this.at(uri(PEER), Helper.without(this.peers(), named), MUTABLE);
+        }
+        // CLEAR, THEN CLOSE. The members leave the map under the lock and what they held is closed outside it:
+        // closing a link is its owner's hang-up, and a hang-up retracts -- which would come straight back into
+        // this map.
+        dropped.forEach(Helper::release);
+        return objs(dropped.toArray(Obj[]::new));
     }
 
     /**
@@ -358,7 +410,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * what was configured, and a report that hid the failures would be worse than no report.
      * <p>
      * Reads its own {@code peer} field first and falls back to the roster path, so the method works both when it
-     * is invoked on the stored singleton and when it is applied as a bare inst.
+     * is invoked on the stored singleton and when it is applied as a bare inst. A dialed peer is probed through the
+     * transport its {@code peer::T} carries (see {@link Helper#probe}).
      */
     default Obj status(final Obj lhs) {
         final Obj field = lhs.isRec() ? lhs.asRec().at(uri(PEER)) : noobj();
@@ -367,7 +420,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             return noobj(); // nothing declared: an empty cluster, not an error
         return objs(roster.asRec().jvm().entrySet().stream()
                 .filter(e -> e.getKey().isUri() && !e.getValue().isNoObj())   // a hollow key is not a machine
-                .map(e -> Helper.probe(e.getKey(), e.getValue())));
+                // a member reports the authority it reaches; its key is only where it sits in this map
+                .map(e -> Helper.probe(null == Helper.authorityOf(e.getValue()) ? e.getKey() : uri(Helper.authorityOf(e.getValue())),
+                        e.getValue())));
     }
 
     /**
@@ -424,8 +479,53 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         return transport.apply(message);
     }
 
+    /**
+     * Close this level: its reach ends with it. Supervision stops FIRST -- hanging up the members below is a
+     * retraction, not a failure to repair -- and then every member is disconnected, which is what actually hangs up
+     * a client: a peer::T is a rec, and closing the rec would close nothing it holds.
+     */
     default void close() {
-        this.peers().values().forEach(CommonUtil::close);
+        studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor.release(this);
+        this.peers().keys().filter(Obj::isUri).map(Obj::uriValue).toList().forEach(this::disconnect);
+    }
+
+    /**
+     * A LINK — what a protocol client that HOLDS a live connection tells the network about it. The network never
+     * learns a protocol: it asks these three questions of any member whose client answers them, and supervises
+     * by the answers ({@link studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor}).
+     * <ul>
+     *     <li>{@link #connected()} — is the connection up right now? Local and cheap: no round trip.</li>
+     *     <li>{@link #hungUp()} — did the client's OWNER close it? That is the one explicit shutdown, and it is
+     *     final: a hung-up member is dropped from the peer map and never redialed. Everything else that ends a
+     *     connection — the far side restarting, shutting down, crashing, refusing — is a failure.</li>
+     *     <li>{@link #redial()} — re-establish the connection IN PLACE, bounded, answering whether it came back.</li>
+     * </ul>
+     * IN PLACE, NOT REBUILT. The client is the connection's identity: a handle stored at an address must stay the
+     * live connection, so that deleting it there hangs up what is actually connected. A failure is repaired inside
+     * the object rather than by constructing a new one beside it — which would leave the stored handle dead and the
+     * deletion closing nothing.
+     * <p>
+     * A member whose client is not a link — a loop client, a connectionless transport, a listener's co-mount — is
+     * not supervised: it has no connection of its own to lose, or (the co-mount) its dialer owns it.
+     */
+    interface Link {
+
+        /**
+         * @return true when the connection is up right now
+         */
+        boolean connected();
+
+        /**
+         * @return true once the client's owner closed it — the explicit shutdown, never redialed
+         */
+        boolean hungUp();
+
+        /**
+         * Re-establish the connection in place, within the link's own connect timeout. A hung-up link declines.
+         *
+         * @return true when the connection is up afterwards
+         */
+        boolean redial();
     }
 
     class Helper {
@@ -442,7 +542,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         public static Set<fURI> peerAuthorities(final Network network) {
-            return network.peers().keys().map(Obj::uriValue).collect(Collectors.toSet());
+            return network.peers().values().map(Helper::authorityOf).filter(Objects::nonNull).collect(Collectors.toSet());
         }
 
         public static Set<fURI> peerAuthorities() {
@@ -488,6 +588,126 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
+         * RETRACTION IS A BACKGROUND BEHAVIOR TOO — the dual of {@link #index(Obj)}. A client its OWNER closed calls
+         * this from its close, and every level that indexed it drops the member: destruction on deletion, so a
+         * client deleted at the address that held it ({@code /usr/peer/x -> noobj}, close-before-clear) leaves no
+         * dead peer behind. Like indexing it can never fail the close: the client is closed either way.
+         */
+        public static void retract(final Obj client) {
+            try {
+                studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor.retract(client);
+            } catch (final Exception e) {
+                // the client is closed either way; the index just didn't observe it
+            }
+        }
+
+        /**
+         * Is this member REACHABLE right now? A {@link Link} answers for itself, locally — no round trip. A member
+         * without one (a loop client, a connectionless transport, a listener's co-mount) is reachable exactly when
+         * it carries a transport: it holds no connection of its own to lose.
+         */
+        public static boolean online(final Obj peer) {
+            if (!peer.isRec())
+                return false;
+            return peer.asRec().<Obj>atDirect(uri(CLIENT)) instanceof Link link
+                    ? link.connected()
+                    : peer.asRec().<Obj>atDirect(uri(TRANSPORT)).isObjInst();
+        }
+
+        /**
+         * Did this member's OWNER hang it up? The one explicit shutdown: such a member is dropped, never redialed.
+         */
+        public static boolean hungUp(final Obj peer) {
+            return peer.isRec() && peer.asRec().<Obj>atDirect(uri(CLIENT)) instanceof Link link && link.hungUp();
+        }
+
+        /**
+         * The peer map without the members the predicate names — absent rather than empty once nothing is left,
+         * because an EMPTY rec is not the same value as an absent one (the component predicate's map idiom rejects
+         * the empty rec's noobj entry — measured).
+         */
+        static Obj without(final Rec peers, final java.util.function.Predicate<Rel> named) {
+            final List<Rel> kept = peers.elements()
+                    .filter(kv -> !kv.first().isUri() || !named.test(kv))
+                    .toList();
+            return kept.isEmpty() ? noobj() : rec(kept.stream());
+        }
+
+        /**
+         * THE PEER KEY — the dial's own address as a LEGAL local path, one per surface:
+         * {@code ws://booger.local:8555/mtron?name=me} is {@code ws/booger/local/8555/mtron}. Scheme, every label of
+         * the host, port, then the route, and never a {@code ?q}: the identity the dial spends and the serializers
+         * that ride the session name no connection (a {@code ?clientq} once leaked into the key this way — measured).
+         * <p>
+         * LEGAL MEANS NO DOTS AND NO COLONS IN A SEGMENT. A dotted first segment reads as a host, so a host is split
+         * into its labels in order ({@code 192.168.1.61} is {@code 192/168/1/61}) — never kept whole, and never merged,
+         * since a dropped boundary lets two machines share a key and the redial of one would hang up the other. This
+         * is the shape {@code fURI.toPath()} gives, which replaces the body below once it is on this branch; the one
+         * step it does not take is the alias: a loopback host is spelled {@code localhost} first, so {@code 127.0.0.1}
+         * and {@code [::1]} key the connection {@code localhost} already holds.
+         */
+        public static fURI keyOf(final fURI dial) {
+            final List<String> segments = new ArrayList<>();
+            if (null != dial.scheme())
+                segments.add(dial.scheme());
+            final String host = dial.host();
+            if (null != host && !host.isEmpty())
+                Helper.legal(isLoopbackHost(host) ? "localhost" : host, segments);
+            if (dial.port() > 0)
+                segments.add(String.valueOf(dial.port()));
+            dial.path().forEach(segment -> Helper.legal(segment, segments));
+            return f(String.join("/", segments));
+        }
+
+        /**
+         * a name split into legal path segments: every label between dots or colons (an IPv6 literal's groups too),
+         * in order, with the brackets and empty labels dropped
+         */
+        private static void legal(final String name, final List<String> into) {
+            for (final String label : name.replace("[", "").replace("]", "").split("[.:]"))
+                if (!label.isEmpty())
+                    into.add(label);
+        }
+
+        /**
+         * The authority a member reaches — the service it carries, never its key — or null for a value that is not
+         * a member (a roster's bare transport, a discovered address).
+         */
+        public static fURI authorityOf(final Obj peer) {
+            if (!peer.isRec())
+                return null;
+            final Obj authority = peer.asRec().atDirect(uri(AUTHORITY));
+            return authority.isUri() ? authority.uriValue() : null;
+        }
+
+        /**
+         * What a retraction's address names (see {@link Network#disconnect}): a key that member, a wire uri with a
+         * route that surface, a bare authority every surface of the service.
+         */
+        static java.util.function.Predicate<Rel> naming(final fURI address) {
+            if (null == address.host())
+                return kv -> kv.first().uriValue().equals(address);
+            final boolean surface = address.path().stream().anyMatch(segment -> !segment.isEmpty());
+            if (surface) {
+                final fURI key = keyOf(address);
+                return kv -> kv.first().uriValue().equals(key);
+            }
+            final fURI service = serviceOf(address);
+            return kv -> sameService(authorityOf(kv.second()), service);
+        }
+
+        /**
+         * Close what a member held — the displaced half of close-before-clear. A member is a rec and a rec is not
+         * closeable: its VALUES hold the closeables (the protocol client), so the values are what the contract
+         * receives, then the member.
+         */
+        static void release(final Obj peer) {
+            if (peer.isRec())
+                peer.asRec().values().forEach(value -> Helper.writeComplete(noobj(), value));
+            Helper.writeComplete(noobj(), peer);
+        }
+
+        /**
          * The service KEY for any client-facing uri: bare authority, with exactly the processor the dial
          * spends (?name) retracted — every other ?q rides through.
          */
@@ -510,6 +730,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         public static boolean sameService(final fURI a, final fURI b) {
+            if (null == a || null == b)
+                return false;
             return Objects.equals(a.authority(), b.authority())
                     || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
         }
@@ -607,14 +829,22 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         /**
          * one declared peer, asked once: {@code [authority, transport, status=>[kind=>up|down, time=>ms]]}
          */
-        static Rec probe(final Obj authority, final Obj transport) {
+        static Rec probe(final Obj authority, final Obj reach) {
             final long start = System.currentTimeMillis();
+            // A DIALED PEER IS NOT ITS TRANSPORT. The peer map's value is a peer::T that CARRIES one, and handing the
+            // rec over as though it were the transport reported every dialed peer `known` (measured): the probe asks
+            // what the peer::T holds. A peer whose link says it is down is down -- no round trip to learn it.
+            final boolean dialed = reach.isRec()
+                    && studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID.equals(reach.tid().basePath());
+            final Obj transport = dialed ? reach.asRec().<Obj>atDirect(uri(TRANSPORT)) : reach;
             // AN ADDRESS IS NOT A TRANSPORT. A discovered machine is written as a uri (or a uri{+}), so applying
             // the PROBE inst to it answers noobj and reports a LIVE machine down. It has simply not been dialed:
-            // that is "known", and "down" stays reserved for a transport that was tried and did not answer.
-            final boolean address = !transport.isNoObj() && !transport.isObjInst();
+            // that is "known", and "down" stays reserved for a transport that was tried and did not answer. A
+            // peer::T with no transport is the same fact in the other spelling: an authority alone, known here and
+            // not reachable from here.
+            final boolean address = dialed ? !transport.isObjInst() : !transport.isNoObj() && !transport.isObjInst();
             boolean up = false;
-            if (!address) {
+            if (!address && (!dialed || Helper.online(reach))) {
                 try {
                     // a silent peer does NOT answer noobj — the declared transports report it as a fail, so both
                     // spellings of "nothing came back" have to count as down or a dead peer reads as healthy

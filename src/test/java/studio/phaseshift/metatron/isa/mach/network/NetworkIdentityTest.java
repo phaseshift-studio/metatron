@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
@@ -133,12 +135,13 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
                     "a server the roster declares IS a peer this frame may dial");
             assertTrue(Network.Helper.peerAuthorities().isEmpty(),
                     "but the roster is the known servers, NOT the connections the machine holds: " + Network.Helper.peerAuthorities());
-            // THE CONNECTION IS THE MACHINE'S OWN REACH, and declaring one is what peers() reports.
+            // THE CONNECTION IS THE MACHINE'S OWN REACH, and declaring one is what peers() reports. A member sits at
+            // its dial's own path and carries the service it reaches as its authority.
             network.at(uri(PEER), rec(mutableMap(
-                    uri("ws://localhost:21001"),
-                    rec(mutableMap(uri(AUTHORITY), uri("ws://localhost:21001/n"))))), MUTABLE);
+                    uri(Network.Helper.keyOf(f("ws://localhost:21001/n"))),
+                    rec(mutableMap(uri(AUTHORITY), uri("ws://localhost:21001"))))), MUTABLE);
             assertEquals(Set.of(f("ws://localhost:21001")), Network.Helper.peerAuthorities(),
-                    "the connection keys ARE the peers — declared, not emergent");
+                    "the members' authorities ARE the peers — declared, not emergent");
             assertFalse(network.own(f("ws://localhost:21001/usr/x")), "a declared peer is not mine");
         } finally {
             cluster.close();
@@ -202,5 +205,25 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
         } finally {
             Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));
         }
+    }
+
+    /**
+     * A PEER KEY IS A LEGAL PATH: the dial's scheme, every label of its host, its port and its route, one segment
+     * each — no dot and no colon survives into a segment, no {@code ?q} reaches the key, and a loopback alias is
+     * spelled {@code localhost}, so the aliases of one service share one member. Each row: the dial % its key.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws://booger:8555/mtron              % ws/booger/8555/mtron",
+            "ws://booger.local:8555/mtron        % ws/booger/local/8555/mtron",
+            "ws://192.168.1.61:8555/mtron        % ws/192/168/1/61/8555/mtron",
+            "ws://192.168.2.61:8555/mtron        % ws/192/168/2/61/8555/mtron",
+            "ws://localhost:8555/mtron?name=me   % ws/localhost/8555/mtron",
+            "ws://127.0.0.1:8555/mtron           % ws/localhost/8555/mtron",
+            "ws://booger:8555                    % ws/booger/8555",
+            "loop://self                         % loop/self",
+    }, delimiter = '%')
+    public void testAPeerKeyIsALegalPath(final String dial, final String key) {
+        assertEquals(f(key), Network.Helper.keyOf(f(dial)), "the key of " + dial);
     }
 }
