@@ -138,8 +138,10 @@ public class SpecificitySelector extends MRec implements Selector {
 
         // a single candidate needs no scoring: the legacy shortcut binds it directly, with the
         // replacement dom/rng hint and without the nominal-domain gate the scored path applies.
-        if (viable.size() == 1)
-            return binder.apply(lhs, userInst, this.hintReplace(Inst.Helper.unaddressed(viable.getFirst()), userInst));
+        if (viable.size() == 1) {
+            final Inst hinted = this.hintReplace(Inst.Helper.unaddressed(viable.getFirst()), userInst);
+            return null == hinted ? null : binder.apply(lhs, userInst, hinted);
+        }
 
         // score by specificity, then take the first candidate the binder can make concrete.
         return viable.stream()
@@ -174,6 +176,10 @@ public class SpecificitySelector extends MRec implements Selector {
      * note), so the split is preserved and named here rather than hidden in a fast path.
      */
     private Inst hintReplace(final Inst candidate, final Inst userInst) {
+        // a hint may stand in for a compatible declared domain, never for one the definition refuses
+        // ("abc".band?int{?}<=str on an int band): such a candidate is not viable at all
+        if (userInst.hasDom() && !Inst.Helper.admitsIgnoringCoefficient(candidate, userInst.dom()))
+            return null;
         final long t0 = System.nanoTime();
         Inst hinted = userInst.hasDom() ? candidate.dom(userInst.dom()) : candidate;
         hinted = userInst.hasRng() ? hinted.rng(userInst.rng()) : hinted;
