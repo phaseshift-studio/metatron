@@ -39,7 +39,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiPredicate;
+import java.util.function.IntPredicate;
+import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.ADD;
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
@@ -50,7 +51,8 @@ import static studio.phaseshift.metatron.Tokens.ID;
 import static studio.phaseshift.metatron.Tokens.INVERSE;
 import static studio.phaseshift.metatron.Tokens.ZERO;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carrier;
+import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carriers;
+import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.comparisonOf;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.declares;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.mapArgument;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.same;
@@ -162,9 +164,9 @@ public final class PlanInterpreter {
 
         final Cut cut = plan.cut();
         final Law[] laws = cut.laws().toArray(Law[]::new);
-        final Type carrier = insts.getFirst().arg(0).type();
-        final List<Inst> body = insts.subList(1, insts.size());
-        final List<Inst> typed = body.stream().map(i -> retype(i, carrier)).toList();
+        // each body instruction keyed at the carrier flowing into it, not the seed's
+        final List<Type> carriers = carriers(code);
+        final List<Inst> typed = IntStream.range(1, insts.size()).mapToObj(i -> retype(insts.get(i), carriers.get(i))).toList();
 
         // the one-cut shape: [ {*}floatable, blocked (recombined by a fold declaring the cut's laws), {*}tail ]
         final List<List<Inst>> captures = InstPattern.match(
@@ -307,8 +309,11 @@ public final class PlanInterpreter {
         // bare-identity test for it. isUnit still fires on a sole unit such as [plus(0)]; if that
         // removal ever proves wrong, gate isUnit on !sole too (keep every single-instruction chain).
         final boolean sole = 1 == insts.size();
+        // the identity morphism is read off the code ring once per pass, and only when a bare op could be it
+        final fURI identity = insts.stream().anyMatch(i -> i.args().isEmpty())
+                ? TheoryHelper.compositionIdentity(T(CODE_TID)) : null;
         final List<Inst> kept = insts.stream()
-                .filter(i -> !isUnit(i, laws) && (!isIdentity(i, laws) || sole))
+                .filter(i -> !isUnit(i, laws) && (!isIdentity(i, identity) || sole))
                 .toList();
         return kept.size() == insts.size() ? code : code(kept);
     }
@@ -337,26 +342,17 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The bare-identity test: an instruction with no operands that <em>is</em> a theory's identity operation
-     * (the role holds an instruction, not a literal) — the code ring's {@code id}. Its occurrence in a chain
-     * is the identity morphism, hence dead weight.
+     * The bare-identity test: an instruction with no operands that <em>is</em> the identity of chain composition
+     * ({@link TheoryHelper#compositionIdentity}) — the code ring's {@code id}. Its occurrence in a chain is the
+     * identity morphism, hence dead weight. An identity of another operation is not: the additive group's
+     * {@code id} is end, composition's zero, and taking it for the identity turned {@code 5.end()} into {@code 5}.
      */
-    private static boolean isIdentity(final Inst inst, final Map<Type, Rec> laws) {
-        if (!inst.args().isEmpty())
+    private static boolean isIdentity(final Inst inst, final fURI identity) {
+        if (null == identity || !inst.args().isEmpty())
             return false;
         if (!cInt.ONE().equals(inst.c()))
             return false;   // id{n} is a multiplicity, not a no-op
-        for (final Map.Entry<Obj, Obj> instance : laws.computeIfAbsent(T(CODE_TID), TheoryHelper::instances).jvm().entrySet()) {
-            if (!instance.getValue().isRec())
-                continue;
-            final Rec block = instance.getValue().asRec();
-            for (final String role : TheoryHelper.IDENTITY_ROLES) {
-                final fURI identity = TheoryHelper.identityAddress(block, role);
-                if (null != identity && inst.tid().basePath().equals(identity))
-                    return true;
-            }
-        }
-        return false;
+        return inst.tid().basePath().equals(identity);
     }
 
     /**
@@ -367,8 +363,8 @@ public final class PlanInterpreter {
         final List<Inst> insts = code.insts();
         if (2 > insts.size())
             return code;
-        final Type carrier = carrier(code);
-        final List<Inst> collapsed = collapsePairs(insts, (a, b) -> same(a, b) && isInvolution(a, carrier));
+        final List<Type> carriers = carriers(code);
+        final List<Inst> collapsed = collapsePairs(insts, i -> same(insts.get(i), insts.get(i + 1)) && isInvolution(insts.get(i), carriers.get(i)));
         return collapsed.size() == insts.size() ? code : code(collapsed);
     }
 
@@ -384,13 +380,14 @@ public final class PlanInterpreter {
     }
 
     /**
-     * Collapse adjacent pairs the predicate accepts to nothing — the equation {@code f·f ↦ ε}.
+     * Collapse adjacent pairs the predicate accepts to nothing — the equation {@code f·f ↦ ε}. The predicate is
+     * handed the pair's first position, so it can read the carrier there.
      */
-    private static List<Inst> collapsePairs(final List<Inst> insts, final BiPredicate<Inst, Inst> match) {
+    private static List<Inst> collapsePairs(final List<Inst> insts, final IntPredicate pairAt) {
         final List<Inst> result = new ArrayList<>();
         int i = 0;
         while (i < insts.size()) {
-            if (i + 1 < insts.size() && match.test(insts.get(i), insts.get(i + 1)))
+            if (i + 1 < insts.size() && pairAt.test(i))
                 i += 2; // f·f => ε — drop the pair
             else
                 result.add(insts.get(i++));
@@ -406,20 +403,21 @@ public final class PlanInterpreter {
         final List<Inst> insts = code.insts();
         if (2 > insts.size())
             return code;
-        final Type carrier = carrier(code);
-        final List<Inst> collapsed = collapseKeep(insts, (a, b) -> same(a, b) && declares(a, carrier, Law.idempotent));
+        final List<Type> carriers = carriers(code);
+        final List<Inst> collapsed = collapseKeep(insts, i -> same(insts.get(i), insts.get(i + 1)) && declares(insts.get(i), carriers.get(i), Law.idempotent));
         return collapsed.size() == insts.size() ? code : code(collapsed);
     }
 
     /**
      * Collapse adjacent pairs the predicate accepts to a single instance — the equation {@code f·f ↦ f} shared
-     * by the idempotent law and a monoidic fold (a reduction of one element is that element).
+     * by the idempotent law and a monoidic fold (a reduction of one element is that element). The predicate is
+     * handed the pair's first position, so it can read the carrier there.
      */
-    private static List<Inst> collapseKeep(final List<Inst> insts, final BiPredicate<Inst, Inst> match) {
+    private static List<Inst> collapseKeep(final List<Inst> insts, final IntPredicate pairAt) {
         final List<Inst> result = new ArrayList<>();
         int i = 0;
         while (i < insts.size()) {
-            if (i + 1 < insts.size() && match.test(insts.get(i), insts.get(i + 1))) {
+            if (i + 1 < insts.size() && pairAt.test(i)) {
                 result.add(insts.get(i)); // f·f => f — keep one
                 i += 2;
             } else
@@ -436,8 +434,9 @@ public final class PlanInterpreter {
         final List<Inst> insts = code.insts();
         if (2 > insts.size())
             return code;
-        final Type carrier = carrier(code);
-        final List<Inst> collapsed = collapseKeep(insts, (a, b) -> same(a, b) && a.c().equals(b.c()) && isFold(a, carrier));
+        final List<Type> carriers = carriers(code);
+        final List<Inst> collapsed = collapseKeep(insts, i -> same(insts.get(i), insts.get(i + 1))
+                && insts.get(i).c().equals(insts.get(i + 1).c()) && isFold(insts.get(i), carriers.get(i)));
         return collapsed.size() == insts.size() ? code : code(collapsed);
     }
 
@@ -449,8 +448,8 @@ public final class PlanInterpreter {
         final List<Inst> insts = code.insts();
         if (2 > insts.size())
             return code;
-        final Type carrier = carrier(code);
-        final List<Inst> collapsed = collapsePairs(insts, (a, b) -> inversePair(a, b, carrier));
+        final List<Type> carriers = carriers(code);
+        final List<Inst> collapsed = collapsePairs(insts, i -> inversePair(insts.get(i), insts.get(i + 1), carriers.get(i)));
         return collapsed.size() == insts.size() ? code : code(collapsed);
     }
 
@@ -494,8 +493,10 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The poset law (local): compose adjacent comparisons of the same ordered type to the stricter single
-     * bound — {@code gt(a)·gt(b) ↦ gt(max(a,b))}.
+     * The poset law (local): adjacent FILTERS on comparisons of the same ordered type compose to the filter on the
+     * stricter bound — {@code is(gt(a))·is(gt(b)) ↦ is(gt(max(a,b)))}, since {@code x > a ∧ x > b ⇔ x > max(a,b)}.
+     * Only filters compose: a bare comparison answers a bool, so {@code x.gt(a).gt(b)} compares that bool with
+     * {@code b}, and reading it as {@code x.gt(max(a,b))} changed what it means.
      */
     private static Code posetRemoval(final Code code) {
         final List<Inst> insts = code.insts();
@@ -503,9 +504,10 @@ public final class PlanInterpreter {
             return code;
         final List<Inst> out = new ArrayList<>(insts.size());
         boolean changed = false;
-        final Type carrier = carrier(code);
+        // a filter hands on what it passes, so both comparisons test the first filter's carrier
+        final List<Type> carriers = carriers(code);
         for (int i = 0; i < insts.size(); i++) {
-            final Inst composed = (i + 1 < insts.size()) ? posetCompose(insts.get(i), insts.get(i + 1), carrier) : null;
+            final Inst composed = (i + 1 < insts.size()) ? posetCompose(insts.get(i), insts.get(i + 1), carriers.get(i)) : null;
             if (null != composed) {
                 out.add(composed);
                 changed = true;
@@ -517,19 +519,38 @@ public final class PlanInterpreter {
     }
 
     /**
-     * Compose two adjacent comparisons of the same ordered type to the stricter single bound — the poset law
-     * {@code x > a ∧ x > b ⇔ x > max(a, b)}. Null when the pair is not composable.
+     * Compose two adjacent filters — the same filter ({@code is} or {@code filter}), each on the same comparison,
+     * declared {@code poset} at their carrier — to one filter on the stricter bound, the poset law
+     * {@code x > a ∧ x > b ⇔ x > max(a, b)}. Null when the pair does not compose.
      */
     private static Inst posetCompose(final Inst a, final Inst b, final Type carrier) {
-        if (!sameOp(a, b) || !declares(a, carrier, Law.poset) || 1 != a.args().count() || 1 != b.args().count())
+        if (!sameOp(a, b))
             return null;
-        final String op = a.tid().basePath().name();
+        final Inst first = comparisonOf(a);
+        final Inst second = comparisonOf(b);
+        if (null == first || null == second || !sameOp(first, second) || !declares(first, carrier, Law.poset)
+                || 1 != first.args().count() || 1 != second.args().count())
+            return null;
+        final Obj bound = stricter(first, second);
+        if (null == bound)
+            return null;
+        // the composed comparison goes back in the shape the filter held it: an instruction, or a one-instruction code
+        final Inst comparison = first.args(lst(bound));
+        return a.args(lst(a.arg(0).isInst() ? comparison : code(List.of(comparison))));
+    }
+
+    /**
+     * The stricter of two bounds of the same comparison — the larger for {@code gt}/{@code gte}, the smaller for
+     * {@code lt}/{@code lte} — or null when the bounds are not two ints, two reals, or two strs.
+     */
+    private static Obj stricter(final Inst first, final Inst second) {
+        final String op = first.tid().basePath().name();
         final boolean upper = op.equals(GT_INST_TID.name()) || op.equals(GTE_INST_TID.name());
         final boolean lower = op.equals(LT_INST_TID.name()) || op.equals(LTE_INST_TID.name());
         if (!upper && !lower)
             return null;
-        final Obj x = a.arg(0);
-        final Obj y = b.arg(0);
+        final Obj x = first.arg(0);
+        final Obj y = second.arg(0);
         final Obj bound;
         if (x.isInt() && y.isInt())
             bound = jnt(upper ? Math.max(x.asInt().intValue(), y.asInt().intValue()) : Math.min(x.asInt().intValue(), y.asInt().intValue()));
@@ -540,7 +561,7 @@ public final class PlanInterpreter {
             bound = (upper ? 0 <= comparison : 0 >= comparison) ? x : y;
         } else
             return null;
-        return a.args(lst(bound));
+        return bound;
     }
 
     /**
@@ -551,35 +572,87 @@ public final class PlanInterpreter {
         final List<Inst> insts = code.insts();
         boolean changed = false;
         final List<Inst> out = new ArrayList<>(insts.size());
-        final Type carrier = carrier(code);
-        for (final Inst inst : insts) {
-            final Obj wrapped = mapArgument(inst, carrier);
+        final List<Type> carriers = carriers(code);
+        for (int i = 0; i < insts.size(); i++) {
+            final Obj wrapped = mapArgument(insts.get(i), carriers.get(i));
             if (null != wrapped) {
                 out.add(wrapped.asInst());
                 changed = true;
             } else
-                out.add(inst);
+                out.add(insts.get(i));
         }
         return changed ? code(out) : code;
     }
 
     /**
-     * The absorbing law (local): an absorbing op swallows the chain before it, so everything from the seed to
-     * the first absorbing op is dead code — {@code …·g·zero ↦ …·zero}.
+     * The absorbing law (local): an absorbing op is a constant of the chain, so the run before it that cannot change
+     * what it answers is dead code — {@code …·g·zero ↦ …·zero}. Each absorbing op swallows its predecessors back to
+     * the first one that is not {@link #absorbable}, and never the seed.
      */
     private static Code absorbingRemoval(final Code code) {
         final List<Inst> insts = code.insts();
         final int seed = (!insts.isEmpty() && START_INST_TID.equals(insts.get(0).tid().basePath())) ? 1 : 0;
-        final Type carrier = carrier(code);
-        for (int i = seed; i < insts.size(); i++)
-            if (declares(insts.get(i), carrier, Law.absorbing)) {
-                if (i <= seed)
-                    return code;
-                final List<Inst> out = new ArrayList<>(insts.subList(0, seed));
-                out.addAll(insts.subList(i, insts.size()));
-                return code(out);
-            }
-        return code;
+        final List<Type> carriers = carriers(code);
+        final List<Integer> kept = new ArrayList<>(insts.size());   // positions, so each reads its own carrier
+        for (int i = 0; i < insts.size(); i++) {
+            final Inst inst = insts.get(i);
+            final LawTable.Declared absorber = i < seed || !declares(inst, carriers.get(i), Law.absorbing)
+                    ? null : LawTable.declared(inst.tid().basePath(), carriers.get(i));
+            if (null != absorber)
+                while (kept.size() > seed && absorbable(insts.get(kept.getLast()), absorber.tid(), carriers.get(kept.getLast())))
+                    kept.removeLast();
+            kept.add(i);
+        }
+        return kept.size() == insts.size() ? code : code(kept.stream().map(insts::get).toList());
+    }
+
+    /**
+     * Whether an absorbing op may swallow the instruction before it: removing {@code prior} must not change what the
+     * absorber answers. Read off declarations alone, so an undeclared op (no legible form) is never swallowed:
+     * <ul>
+     *   <li><b>pure</b> — {@code prior} declares {@link Law#pure}. An instruction that does not is effectful, so
+     *       an undeclared op (side, print, to) stops the run.</li>
+     *   <li><b>multiplicity</b> — a terminal absorber (rng {@code {0}}) answers noobj whatever reaches it, so any
+     *       pure op goes. Any other absorber answers a constant PER OBJ, so {@code prior} must hand it one obj per
+     *       obj: a coefficient-one {@code mapper}, or a {@code filter} when the absorber is non-strict — its
+     *       {@code {?}} dom fires on the noobj the filter leaves, while a strict absorber never sees it
+     *       ({@code {1,2,3}.is(gt(1)).zero()} is {@code {2}0}, and {@code {1,2,3}.sum().zero()} is {@code 0}).</li>
+     *   <li><b>carrier</b> — the absorber's law was read for the chain's carrier, so {@code prior} must map that
+     *       carrier to itself: {@code 5.as(str::T).zero()} is str's zero, {@code ''}, not int's.</li>
+     * </ul>
+     */
+    private static boolean absorbable(final Inst prior, final fURI absorber, final Type carrier) {
+        final LawTable.Declared declared = LawTable.declared(prior.tid().basePath(), carrier);
+        if (null == declared || !declares(prior, carrier, Law.pure))
+            return false;
+        if (absorber.rng().c().isZero())
+            return true;
+        if (!cInt.ONE().equals(prior.c()) || !isEndo(declared.tid(), carrier))
+            return false;
+        final Inst.Form form = Inst.Form.of(prior.tid(declared.tid()));
+        return Inst.Form.mapper == form || (Inst.Form.filter == form && !isStrict(absorber));
+    }
+
+    /**
+     * Whether the declared op maps the chain's carrier to itself — dom and rng both the carrier's base type, or both
+     * the one generic ({@code A ⇒ A}). Both ends, because the declaration was found by EITHER end matching the
+     * carrier: {@code as?int<=str} answers an int carrier too.
+     */
+    private static boolean isEndo(final fURI declared, final Type carrier) {
+        final fURI dom = declared.dom().basePath();
+        final fURI rng = declared.rng().basePath();
+        if (!dom.equals(rng))
+            return false;
+        return dom.isGeneric() || (null != carrier.vid() && dom.equals(carrier.vid().basePath()));
+    }
+
+    /**
+     * Whether the declared op is strict — its dom excludes noobj ({@code {1}}, {@code {+}}), so the noobj a filter
+     * leaves never fires it; a {@code {?}} or {@code {*}} dom fires on it.
+     */
+    private static boolean isStrict(final fURI declared) {
+        final Long min = declared.dom().c().min();
+        return null != min && 0L < min;
     }
 
     /**

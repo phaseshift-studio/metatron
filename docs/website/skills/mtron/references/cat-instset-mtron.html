@@ -664,7 +664,10 @@ are computed; proper (non-split) mono/epi classification requires composition, w
 <p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>mInstSetLawTable</code> (the declared process
 laws):</p>
 <pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;law
-==&gt;[commutative,right_distributive,action]
+==&gt;[commutative,
+    right_distributive,
+    action,
+    pure]
 </code></pre>
 <table>
 <thead>
@@ -684,6 +687,7 @@ laws):</p>
 <tr><td><code>nilpotent</code></td><td>some power is zero — \(f^n = 0\)</td></tr>
 <tr><td><code>floatable</code></td><td>the coefficient commutes through the stream ring's parallel/serial structure</td></tr>
 <tr><td><code>blocked</code></td><td>cannot float past a barrier — a reduce anchors the coefficient</td></tr>
+<tr><td><code>pure</code></td><td>no effect: the result depends on the lhs and args alone (never inferred)</td></tr>
 <tr><td><code>partial</code></td><td>pass-through-or-drop \(\{0,1\}\) — the optional (maybe) lift of a value</td></tr>
 <tr><td><code>kleene</code></td><td>the reflexive-transitive iterate \(a^{*}\) — a Kleene closure</td></tr>
 <tr><td><code>prime</code></td><td>atomic — no nontrivial factorization</td></tr>
@@ -706,9 +710,9 @@ type, and a type that models no such structure is left unchanged.</p>
 <tr><td><code>theory_unit_removal</code></td><td>every theory instance of the operand's type</td><td>\(\mathrm{op}(\mathrm{id}) \leadsto \varepsilon\)</td></tr>
 <tr><td><code>theory_involution</code></td><td>\(\mathrm{law} \ni \mathrm{involution}\), or the declared <code>inv</code> role</td><td>\(f \cdot f \leadsto \varepsilon\)</td></tr>
 <tr><td><code>law_idempotent</code></td><td>\(\mathrm{law} \ni \mathrm{idempotent}\)</td><td>\(f \cdot f \leadsto f\)</td></tr>
-<tr><td><code>law_absorbing</code></td><td>\(\mathrm{law} \ni \mathrm{absorbing}\)</td><td>\(g \cdot f \leadsto f\)</td></tr>
+<tr><td><code>law_absorbing</code></td><td>\(\mathrm{law} \ni \mathrm{absorbing}\)</td><td>\(g \cdot f \leadsto f\) for a pure \(g\) handing \(f\) one obj per obj: a mapper of the carrier, a filter too when \(f\)'s dom is non-strict, any \(g\) when \(f\) answers noobj</td></tr>
 <tr><td><code>law_monoidic</code></td><td>\(\mathrm{law} \ni \mathrm{monoidic}\) + the <code>reducer</code>/<code>join</code> form</td><td>\(f \cdot f \leadsto f\)</td></tr>
-<tr><td><code>law_poset</code></td><td>\(\mathrm{law} \ni \mathrm{poset}\)</td><td>\(\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))\), \(\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))\)</td></tr>
+<tr><td><code>law_poset</code></td><td>\(\mathrm{law} \ni \mathrm{poset}\)</td><td>\(\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))\), \(\min\) for <code>lt</code> — filters only: a bare <code>gt</code> answers a bool</td></tr>
 <tr><td><code>inverse_cancellation</code></td><td><code>analysis.inverse</code></td><td>\(f(a) \cdot f^{-1}(a) \leadsto \varepsilon\)</td></tr>
 <tr><td><code>form_map_unwrap</code></td><td>the stream lift <code>map</code></td><td>\(\mathrm{map}(f) \leadsto f\)</td></tr>
 <tr><td><code>derivation_contraction</code></td><td><code>derivation</code></td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
@@ -719,7 +723,10 @@ type, and a type that models no such structure is left unchanged.</p>
 </table>
 <p><strong>Most declared laws carry no rule.</strong> Five of them back a rule directly — <code>involution</code>, <code>idempotent</code>, <code>absorbing</code>,
 <code>monoidic</code>, <code>poset</code> — and <code>floatable</code> and <code>blocked</code> do not drive a rule of their own but constrain where a
-distribution plan may anchor (its spans). The remaining labels are classification predicates, recorded for the
+distribution plan may anchor (its spans). <code>pure</code> constrains every rule that moves, drops or replicates code: only a
+declared-pure instruction is swallowed by <code>law_absorbing</code> or replicated into <code>law_shard</code>'s floatable run, and an
+instruction that does not declare it is effectful (<code>to</code>, <code>print</code>, <code>side</code> stay where they are). The remaining labels
+are classification predicates, recorded for the
 rewriter's guards and for reasoning, with no rewrite of their own: <code>commutative</code>, <code>unit</code>, <code>magmadic</code>, <code>nilpotent</code>,
 <code>kleene</code>, <code>partial</code>, <code>prime</code>, <code>cyclic</code>, <code>zero_divisor</code>, <code>left_distributive</code>, <code>right_distributive</code>, <code>action</code>.
 <code>commutative</code> is the cleanest case: a canonical form for a commutative operand would be a no-op where it is legal — a
@@ -749,8 +756,9 @@ mtron&gt; {1,2,3}.sum().sum()
 ==&gt;6
 mtron&gt; 5.plus(3).zero()
 ==&gt;0
-mtron&gt; &quot;m&quot;.gt(&quot;a&quot;).gt(&quot;z&quot;)
-==&gt;false
+mtron&gt; {1,2,3,4,5}.is(gt(1)).is(gt(3))
+==&gt;4
+==&gt;5
 </code></pre>
 <p>The two <em>relational</em> declarations — the opposing edge and the defining equation — underlie the final two rules:</p>
 <pre><code class="language-mtron">mtron&gt; 5.plus(3).minus(3)
@@ -1012,7 +1020,7 @@ self-registers a <code>peer::T</code> into the network; that registration is the
     close=&gt;inst(){&lt;j&gt;},
     on_message=&gt;print('received ${_}')]
 mtron&gt; */network
-==&gt;network::[host=&gt;&lt;127.0.0.1localhost&gt;,
+==&gt;network::[host=&gt;baa4d54aad7a,
              status=&gt;!inst(#{*}::T){&lt;j&gt;},
              q=&gt;[subq::[pattern=&gt;subq,
                         pre_read=&gt;inst(uri::T){&lt;j&gt;},

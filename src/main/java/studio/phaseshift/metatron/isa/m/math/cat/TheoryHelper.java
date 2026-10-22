@@ -25,8 +25,10 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -151,9 +153,9 @@ public class TheoryHelper extends MRec {
             new String[]{OR, ZERO}, new String[]{AND, ONE}, new String[]{JOIN, BOTTOM}, new String[]{MEET, TOP});
 
     /**
-     * The identity roles whose value is an <em>operation</em> rather than a literal — the multiplicative
-     * side ({@code one}, {@code id}) of a theory whose identity is a morphism, e.g. the code ring's
-     * {@code id}. A bare occurrence of one of these is the identity morphism and drops out of a chain.
+     * The identity roles that may hold an <em>operation</em> rather than a literal ({@code one}, {@code id}), e.g.
+     * the code ring's {@code id}. Such an identity is the identity morphism only when its operation is composition
+     * — see {@link #compositionIdentity} — since the code ring's additive group also names an {@code id}: end.
      */
     public static final List<String> IDENTITY_ROLES = List.of(ONE, ID);
 
@@ -219,6 +221,39 @@ public class TheoryHelper extends MRec {
                 add = roleAddress(block, ADD);
         }
         return add;
+    }
+
+    /**
+     * The op address of the identity MORPHISM — the identity of chain composition, read off the type's declared
+     * algebra: its multiplicative op is the {@code mul} role ({@code compose} for the code ring), and a theory
+     * instance whose operation is that op contributes its operation-valued identity ({@code ring.one},
+     * {@code mult_monoid.id}: both {@code id}). The identity of any OTHER operation is no identity morphism: the
+     * additive group's {@code id} is end, the identity of branch, which under composition is the ZERO. Null when
+     * the type declares no multiplicative structure, so no bare op is taken for the identity.
+     */
+    public static fURI compositionIdentity(final Type type) {
+        final Collection<Obj> blocks = instances(type).jvm().values();
+        final fURI compose = blocks.stream()
+                .filter(Obj::isRec)
+                .map(block -> roleAddress(block.asRec(), MUL))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+        if (null == compose)
+            return null;
+        for (final Obj block : blocks) {
+            if (!block.isRec())
+                continue;
+            for (final String[] roles : UNIT_ROLES) {
+                final fURI op = IDENTITY_ROLES.contains(roles[1]) ? roleAddress(block.asRec(), roles[0]) : null;
+                if (null != op && compose.basePath().equals(op.basePath())) {
+                    final fURI identity = identityAddress(block.asRec(), roles[1]);
+                    if (null != identity)
+                        return identity;
+                }
+            }
+        }
+        return null;
     }
 
     /**

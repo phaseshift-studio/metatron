@@ -210,6 +210,7 @@ laws):
 | `nilpotent`          | some power is zero — $f^n = 0$                                               |
 | `floatable`          | the coefficient commutes through the stream ring's parallel/serial structure |
 | `blocked`            | cannot float past a barrier — a reduce anchors the coefficient               |
+| `pure`               | no effect: the result depends on the lhs and args alone (never inferred)     |
 | `partial`            | pass-through-or-drop $\{0,1\}$ — the optional (maybe) lift of a value        |
 | `kleene`             | the reflexive-transitive iterate $a^{*}$ — a Kleene closure                  |
 | `prime`              | atomic — no nontrivial factorization                                         |
@@ -231,9 +232,9 @@ type, and a type that models no such structure is left unchanged.
 | `theory_unit_removal`    | every theory instance of the operand's type                                                 | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
 | `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
 | `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
-| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$ for a pure $g$ handing $f$ one obj per obj: a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj                                                                               |
 | `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
-| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{gt}(a) \cdot \mathrm{gt}(b) \leadsto \mathrm{gt}(\max(a, b))$, $\mathrm{lt}(a) \cdot \mathrm{lt}(b) \leadsto \mathrm{lt}(\min(a, b))$                                                                                                      |
+| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
 | `inverse_cancellation`   | `analysis.inverse`                                                                          | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
 | `form_map_unwrap`        | the stream lift `map`                                                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
 | `derivation_contraction` | `derivation`                                                                                | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
@@ -243,7 +244,10 @@ type, and a type that models no such structure is left unchanged.
 
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
 `monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
-distribution plan may anchor (its spans). The remaining labels are classification predicates, recorded for the
+distribution plan may anchor (its spans). `pure` constrains every rule that moves, drops or replicates code: only a
+declared-pure instruction is swallowed by `law_absorbing` or replicated into `law_shard`'s floatable run, and an
+instruction that does not declare it is effectful (`to`, `print`, `side` stay where they are). The remaining labels
+are classification predicates, recorded for the
 rewriter's guards and for reasoning, with no rewrite of their own: `commutative`, `unit`, `magmadic`, `nilpotent`,
 `kleene`, `partial`, `prime`, `cyclic`, `zero_divisor`, `left_distributive`, `right_distributive`, `action`.
 `commutative` is the cleanest case: a canonical form for a commutative operand would be a no-op where it is legal — a
@@ -271,7 +275,7 @@ The process laws act on the chain, each gated by the operand type's declaration:
 2.zero().zero()
 {1,2,3}.sum().sum()
 5.plus(3).zero()
-"m".gt("a").gt("z")
+{1,2,3,4,5}.is(gt(1)).is(gt(3))
 ```
 
 The two *relational* declarations — the opposing edge and the defining equation — underlie the final two rules:

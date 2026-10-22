@@ -71,19 +71,19 @@ public final class mathInstSetLawTable extends LawTable {
     }
 
     private void loadCmplx() {
-        entry(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), MINUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), commutative, right_distributive, action);
-        entry(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), DIV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), commutative, right_distributive, action);
+        entry(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), MINUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), commutative, right_distributive, action, pure);
+        entry(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), DIV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), commutative, right_distributive, action, pure);
         entry(MINUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID),
                 new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())),
-                action);
+                action, pure);
         entry(DIV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID),
                 new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())),
-                right_distributive, action);
-        entry(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), involution);
-        entry(INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), involution);
-        entry(CONJUGATE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), CONJUGATE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), involution);
-        entry(ZERO_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), null, absorbing, idempotent);
-        entry(ONE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), null, idempotent);
+                right_distributive, action, pure);
+        entry(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), involution, pure);
+        entry(INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), involution, pure);
+        entry(CONJUGATE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), CONJUGATE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), involution, pure);
+        entry(ZERO_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), null, absorbing, idempotent, pure);
+        entry(ONE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), null, idempotent, pure);
     }
 
     @Override

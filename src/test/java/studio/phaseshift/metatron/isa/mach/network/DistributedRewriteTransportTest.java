@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -55,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.MERGE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -187,6 +189,25 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
         assertEquals(List.of(START_INST_TID, SELECT_INST_TID, MERGE_INST_TID, M_ISA_INST_TID.extend(combiner)),
                 ops.subList(0, Math.min(4, ops.size())), "the master recombines the partials through the combiner: " + ops);
         checkEquality(LOG, ObjmtronSerializer.parse(expected), c.result(), true);
+    }
+
+    /**
+     * AN EFFECT STAYS HOME. The floatable run is replicated into every peer, so only a declared-{@code pure}
+     * instruction floats: {@code side} is a mapper by its form but declares nothing, so a fold behind it is not
+     * sharded, anywhere in the run, while the same fold behind a pure mapper is. Each row: the fold % whether the
+     * master ships it to the peers (a select) % its value.
+     */
+    @Training.SkipTraining(reason = "the rows run over forked peers; whether the layout ships is the subject, not the value alone")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6}.plus(1).sum()                          % true   % 27",
+            "{1,2,3,4,5,6}.plus(1).side(plus(1)).sum()            % false  % 27",
+            "{1,2,3,4,5,6}.plus(1).side(plus(1)).plus(1).sum()    % false  % 33",
+    }, delimiter = '%')
+    void testOnlyPureRunsFloat(final String source, final boolean shipped, final String expected) {
+        final Code rewritten = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source).asCode()).asCode();
+        checkEquality(LOG, bool(shipped), bool(TransportRewriteHarness.ops(rewritten).contains(SELECT_INST_TID)), true);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), TransportRewriteHarness.single(TransportRewriteHarness.evaluate(rewritten)), true);
     }
 
     private static void assertSlice(final List<Obj> slice, final int... expected) {

@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PATH_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carrier;
+import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carriers;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.maybeNotIdentity;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
@@ -227,11 +227,13 @@ public class catTypes {
                                     if (!source.isCode())
                                         return noobj();
                                     final Code code = source.asCode();
-                                    final Type carrier = carrier(code);
+                                    final List<Type> carriers = carriers(code);
                                     final List<Obj> morphisms = new ArrayList<>();
-                                    for (final Inst chain : code.insts()) {
-                                        // the declared n-tid keys the chain instruction into the law table in-graph
-                                        final LawTable.Declared declared = LawTable.declared(chain.tid().basePath(), carrier);
+                                    for (int i = 0; i < code.insts().size(); i++) {
+                                        final Inst chain = code.insts().get(i);
+                                        // the declared n-tid keys the chain instruction into the law table in-graph, read at
+                                        // the carrier flowing into it
+                                        final LawTable.Declared declared = LawTable.declared(chain.tid().basePath(), carriers.get(i));
                                         final Inst keyed = null == declared ? chain : chain.tid(declared.tid());
                                         Obj morphism;
                                         try {
