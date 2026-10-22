@@ -20,10 +20,12 @@ package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
 import studio.phaseshift.metatron.isa.web.space.ws.WireTrace;
@@ -34,7 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_NETWORK_PANEL_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -43,6 +47,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <p>
  * The tool's own wiring — float on display, repaint on traffic — is exercised by the console harness; what can be
  * pinned down here is that the numbers, the lanes, the clipping and the "this view is paused" marker are right.
+ * <p>
+ * The exception is a run, which reads the console and its terminal to decide whether to take the keyboard: a console
+ * that another class left in a reused fork once put this class's run into a key loop that hung the suite.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -200,10 +207,40 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
      * nothing, not fail the boot.
      */
     @Test
+    @Timeout(60)
     void shouldSurviveDisplayingWithoutAConsole() {
-        final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
-        tool.run();   // no Console.LOCAL_INSTANCE in a test: the no-console branch, which must be total
-        tool.close();
+        // "no console" is made here, not assumed: the console is process-wide, a reused fork may still hold one from
+        // a class that ran earlier, and the bare panel is the inspector, which would take that console's keyboard
+        final Console console = Console.LOCAL_INSTANCE;
+        Console.LOCAL_INSTANCE = null;
+        try {
+            final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+            tool.run();   // the no-console branch, which must be total
+            tool.close();
+        } finally {
+            Console.LOCAL_INSTANCE = console;
+        }
+    }
+
+    /**
+     * The hang this class once caused: a console built earlier in the same JVM (a reused surefire fork) put the bare
+     * panel — the inspector, which takes the keyboard — into a key loop on a stdin that nobody types into. A test
+     * JVM's terminal is dumb, and a dumb terminal cannot be a tool's keyboard, so the tool presents and returns.
+     */
+    @Test
+    @Timeout(60)
+    void shouldReturnWhileAConsoleIsLiveOnADumbTerminal() {
+        final Console console = new Console(rec(), f("/sys/network_panel_test"));
+        try {
+            assertTrue(Console.getTerminal().getType().startsWith("dumb"),
+                    "a test JVM's streams are pipes, so its terminal is dumb: " + Console.getTerminal().getType());
+            final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+            assertTrue(tool.modal(), "a bare panel is the inspector, which would take the keyboard");
+            tool.run();   // returns: a regression meets the timeout instead of hanging the fork
+            tool.close();
+        } finally {
+            closeConsole(console);
+        }
     }
 
     /**

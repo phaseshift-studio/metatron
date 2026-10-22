@@ -75,8 +75,13 @@ public class AccordionWidgetTest extends AbstractWidgetTest {
         final String r = a.format();
         assertTrue(r.contains("[-]"));
         assertTrue(r.contains("Hi"));
-        new Console(rec(), f("/sys/console")); // TODO: move to AbstractWidgetTest and force all widgets to test run()
-        a.run();
+        // TODO: move to AbstractWidgetTest and force all widgets to test run()
+        final Console console = new Console(rec(), f("/sys/console"));
+        try {
+            a.run();
+        } finally {
+            closeConsole(console);   // a console is process-wide: closing it is what keeps it out of the next class
+        }
     }
 
     @Test

@@ -113,8 +113,9 @@ public abstract class AbstractTool<W extends AbstractTool<W, A>, A> extends Abst
     }
 
     /**
-     * Present the tool passively — no raw mode, no loop — when {@link #modal()} is false. Default: print the
-     * widget's format once (a script, a pipe, a headless run).
+     * Present the tool passively — no raw mode, no loop — when {@link #modal()} is false, when there is no console,
+     * or when the terminal cannot be a keyboard (see {@link #interactive(org.jline.terminal.Terminal)}). Default:
+     * print the widget's format once (a script, a pipe, a headless run).
      */
     protected void present() {
         final org.jline.terminal.Terminal terminal = Console.getTerminal();
@@ -197,11 +198,11 @@ public abstract class AbstractTool<W extends AbstractTool<W, A>, A> extends Abst
 
     @Override
     public final void run() {
-        if (!this.modal() || null == Console.LOCAL_INSTANCE) {
+        final org.jline.terminal.Terminal terminal = this.terminal;
+        if (!this.modal() || null == Console.LOCAL_INSTANCE || !interactive(terminal)) {
             this.present();
             return;
         }
-        final org.jline.terminal.Terminal terminal = this.terminal;
         this.savedAttributes = terminal.enterRawMode();
         terminal.puts(InfoCmp.Capability.keypad_xmit);
         terminal.puts(InfoCmp.Capability.cursor_invisible);
@@ -217,9 +218,9 @@ public abstract class AbstractTool<W extends AbstractTool<W, A>, A> extends Abst
             while (this.running) {
                 this.redraw();
                 final A action = this.bindingReader.readBinding(keyMap);
-                if (null == action)
-                    continue;
-                if (!this.handle(action))
+                // jline answers null only at the end of input (a closed stdin, a drained pipe): no key will ever
+                // come, and asking again would redraw as fast as the CPU allows — the input is over, and so is the tool
+                if (null == action || !this.handle(action))
                     this.running = false;
             }
         } catch (final IOError e) {
@@ -232,6 +233,21 @@ public abstract class AbstractTool<W extends AbstractTool<W, A>, A> extends Abst
             this.onLeave();
             this.restoreTerminal();
         }
+    }
+
+    /**
+     * Whether a terminal can be a tool's keyboard. jline falls back to a DUMB terminal when no stream is a tty — a
+     * pipe, a CI log, an IDE's run window, a test JVM — and a dumb terminal has no raw mode and no cursor addressing:
+     * the frames cannot redraw in place, and the keys arrive (if ever) a line at a time. A tool presents there
+     * instead, which is also what keeps a headless boot from parking on a stdin that nobody types into. Both of
+     * jline's dumb types count: it picks the colored one whenever {@code TERM} is set or an IDE is the parent.
+     */
+    private static boolean interactive(final org.jline.terminal.Terminal terminal) {
+        if (null == terminal)
+            return false;
+        final String type = terminal.getType();
+        return !org.jline.terminal.Terminal.TYPE_DUMB.equals(type)
+                && !org.jline.terminal.Terminal.TYPE_DUMB_COLOR.equals(type);
     }
 
     /**
