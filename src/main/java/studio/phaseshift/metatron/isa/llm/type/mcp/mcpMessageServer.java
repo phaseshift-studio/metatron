@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -380,12 +381,12 @@ public class mcpMessageServer {
         final fURI sessF = inst.arg(SESSION, 2).uriValue();
         final int max = Math.min(inst.arg(MAX, 3).orElse(jnt(DEFAULT_MAX_MESSAGES)).asInt().intValue().intValue(), HARD_MAX_MESSAGES);
         // search over the bus window (sentinel-safe, pair-safe) — a
-        // case-sensitive regex find() against each record's text
-        final java.util.regex.Pattern rx = java.util.regex.Pattern.compile(pattern);
+        // case-sensitive regex find() against each record's text; the pattern is an agent's, so it is guarded
+        final java.util.regex.Pattern rx = CommonUtil.guardPattern(pattern);
         final List<Rec> window = storeAt(rootF, sessF).busWindow(sessF, max);
         final List<Obj> hits = new ArrayList<>();
         for (final Rec message : window)
-            if (message.at(uri(TEXT)).isStr() && rx.matcher(Str.Helper.cleanString(message.at(uri(TEXT)))).find())
+            if (message.at(uri(TEXT)).isStr() && CommonUtil.findSafely(rx, Str.Helper.cleanString(message.at(uri(TEXT)))))
                 hits.add(withIdentity(message));
         Collections.reverse(hits);
         return lst(hits);

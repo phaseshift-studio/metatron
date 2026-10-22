@@ -136,8 +136,20 @@ public final class CommonUtil {
      * must become a named failure, never a raw SOR on the worker thread.
      */
     public static <R> R withMatcher(final Pattern pattern, final String text, final Function<Matcher, R> body) {
+        return overflowNet(pattern, () -> body.apply(pattern.matcher(text)));
+    }
+
+    /**
+     * {@code text.split(regex)} for a user regex: {@link Pattern#split(CharSequence)} under the same
+     * StackOverflowError net as {@link #withMatcher}.
+     */
+    public static String[] splitSafely(final Pattern pattern, final String text) {
+        return overflowNet(pattern, () -> pattern.split(text));
+    }
+
+    private static <R> R overflowNet(final Pattern pattern, final Supplier<R> body) {
         try {
-            return body.apply(pattern.matcher(text));
+            return body.get();
         } catch (final StackOverflowError e) {
             throw MTronException.of("regex overflowed (pathological pattern/text): %s", pattern);
         }

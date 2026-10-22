@@ -36,6 +36,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Supplier;
@@ -425,23 +426,18 @@ public abstract class AbstractMetatronTest {
 
     public static void checkCodeParseApply(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
+            final List<Obj> results;
             try {
                 final Obj cd = code.contains(";") ? ObjmtronSerializer.parse(code).apply() : ObjmtronSerializer.parse(code);
-                final Obj actual2 = cd.apply(noobj());
-                LOG.debug("testing %s <= %s", cd, actual2.type());
-                actual2.stream().forEach(actual -> {
-                    if (!(cd.isFail() || actual.isFail())) {
-                        if (cd.isFail())
-                            cd.<Fail>as().jvm().printStackTrace();
-                        if (actual.isFail())
-                            actual.<Fail>as().jvm().printStackTrace();
-                        LOG.debug("testing %s => %s [expected:%s]", cd, actual, expected);
-
-                    }
-                });
+                // walk the result here, exactly once: a lazy stream is consumed by its walk and may throw only then
+                results = (cd.isFail() ? cd : cd.apply(noobj())).stream().toList();
             } catch (final Exception e) {
-                LOG.debug("testing %s => %s", code, e.getMessage());
+                // a throw is the failure the row expects
+                LOG.debug("testing %s => %s [expected:%s]", code, e.getMessage(), expected);
+                return;
             }
+            LOG.debug("testing %s => %s [expected:%s]", code, results, expected);
+            assertTrue(results.stream().anyMatch(Obj::isFail), Graphitty.string("should have failed: %s => %s", code, results));
         } else {
             final Obj cd = Machine.parse(code);
             final Obj exParsed = Machine.parse(expected);

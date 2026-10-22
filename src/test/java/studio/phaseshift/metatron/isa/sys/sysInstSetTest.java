@@ -22,12 +22,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.sys.space.fsSpace;
 
 import java.nio.file.FileSystems;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -56,5 +58,15 @@ public class sysInstSetTest extends AbstractInstSetTest {
     @Test
     public void testFindFile() {
         assertEquals(1, ObjmtronSerializer.parse("find_file(name=><find_read_write_file.txt>,root=><test:.>)").apply().stream().toList().size());
+    }
+
+    @Test
+    public void testFindFileRegexIsGuarded() {
+        // a regex name still searches the tree ...
+        final Obj found = ObjmtronSerializer.parse("find_file(name=>'find_read_write_file\\.txt$',root=><test:.>,pattern=>true)").apply();
+        assertFalse(found.isFail(), "a plain regex must still search: " + found);
+        assertEquals(1, found.asLst().lstValue().size());
+        // ... but a nested quantifier is refused before it can backtrack against every path in it
+        checkCodeParseApply(LOG, "find_file(name=>'(f+)+$',root=><test:.>,pattern=>true)", "<ERROR>");
     }
 }

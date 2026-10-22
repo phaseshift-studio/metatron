@@ -94,12 +94,26 @@ public class UriTest extends AbstractAlgebraTest<Uri> {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "a/b/c.split(/)                  % [a,b,c]",
-            "a/b/c.split(f(\"(a+)+$\"))      % <ERROR>",
-            "a/b/c.split(f(\"(x?)*y\"))      % <ERROR>",
-            "a/b/c.split(f(\"(.*)*\"))        % <ERROR>",
-    }, delimiter = '%')
+            "a/b/c.split(/)                          % [a,b,c]",
+            // the regex must reach split as a uri (mtron has no f() to build one)
+            "a/b/c.split('(a+)+$'.as(uri::T))        % <ERROR>",
+            "a/b/c.split('(x?)*y'.as(uri::T))        % <ERROR>",
+            "a/b/c.split('(.*)*'.as(uri::T))         % <ERROR>",
+    }, delimiter = '%', quoteCharacter = '~')
     public void testSplitRegexGuard(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // has and the select projection's q rules take a regex too, so they refuse the same shape split does
+            "a/b/c.has('(a+)+$')                                        % <ERROR>",
+            "<http://webpage.com/a?debug=true>.select([q=>['(d+)+'=>_]]) % <ERROR>",
+            "a/b/c.has('b/c$')                                          % a/b/c",
+            "a/b/c.has('^b')                                            % noobj",
+            "<http://webpage.com/a?debug=true>.select([q=>['de.*'=>_]]) % <http://webpage.com/a?debug=true>",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testRegexGuard(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
@@ -131,7 +145,8 @@ public class UriTest extends AbstractAlgebraTest<Uri> {
             "a/b/c.-</                        % [a,b,c]",
             "ab/c.-</                         % [ab,c]",
             "abc.-</                          % [abc]",
-            "-</abc                           % <ERROR>",
+            // no lhs: -</abc is split(/abc) applied to nothing, and nothing splits to nothing
+            "-</abc                           % noobj",
             "<http://www.com/a/b/c>.-</       % [http:,<>,<www.com>,a,b,c]",
             "<////>.-</                       % [<>]",
             "<////a>.-</                      % [<>,<>,<>,<>,a]",

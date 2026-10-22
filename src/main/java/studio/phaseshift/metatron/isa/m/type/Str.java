@@ -31,7 +31,6 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.STR_TID;
@@ -352,20 +351,21 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     final String regex = Str.Helper.cleanString(entry.getKey());
                     final Obj replacement = entry.getValue();
 
-                    final Pattern pattern = REGEX_CACHE.computeIfAbsent(regex, Pattern::compile);
-                    final Matcher matcher = pattern.matcher(current);
+                    final Pattern pattern = REGEX_CACHE.computeIfAbsent(regex, CommonUtil::guardPattern);
+                    // the regex runs under the overflow net; the replacements (arbitrary mtron) run outside it
+                    final String text = current;
+                    final List<MatchResult> matches = CommonUtil.withMatcher(pattern, text, matcher -> matcher.results().toList());
                     final StringBuilder sb = new StringBuilder();
                     int lastEnd = 0;
 
-                    while (matcher.find()) {
-                        sb.append(current, lastEnd, matcher.start());
-                        String matchText = matcher.group();
+                    for (final MatchResult match : matches) {
+                        sb.append(text, lastEnd, match.start());
 
                         // RECURSION: This will now propagate the ProjectionFailureException upwards
-                        sb.append(project(matchText, replacement));
-                        lastEnd = matcher.end();
+                        sb.append(project(match.group(), replacement));
+                        lastEnd = match.end();
                     }
-                    sb.append(current.substring(lastEnd));
+                    sb.append(text.substring(lastEnd));
                     current = sb.toString();
                 }
                 return current;
@@ -400,34 +400,35 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     //   Map.of(uri(LAW), laws(Category.Law.involution), uri(INVERSE), uri(REVERSE_INST_TID.dom(STR_TID).rng(STR_TID)))),
                     instC(ZERO_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.asStr().zero()),
                     //    Map.of(uri(LAW), laws(Category.Law.unit, Category.Law.idempotent))),
-                    docWrap(instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.strValue()).find() ? lhs : noobj()),
+                    docWrap(instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.strValue()) ? lhs : noobj()),
                             "an str to check", "whether the domain matches arg", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
                     //    Map.of(uri(LAW), laws(Category.Law.boolean_))),
                     // docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), lst(T(STR_TID)), (lhs, inst) ->
                     //                 lst(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str).map(Obj::<Obj>as).toList())),
                     //         "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),
-                    docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID), lst(STR_TYPE), (lhs, inst) -> Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str).collect(new CommonUtil.LstCollector())),
+                    docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID), lst(STR_TYPE), (lhs, inst) -> Arrays.stream(CommonUtil.splitSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.strValue())).map(MStr::str).collect(new CommonUtil.LstCollector())),
                             "a str to split", "lst encoded components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and insert components into an ordered lst"),
                     //     Map.of(uri(INVERSE), uri(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID)))),
                     docWrap(instC(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.stream().map(Obj::<String>jvmAs).reduce((a, b) -> a + inst.arg(0).strValue() + b).orElse(""))),
                             "an str barrier", "the join of the str barrier", Map.of(jnt(0), "the join token"), "join the barrier given the str arg"),
                     //    Map.of(uri(LAW), laws(Category.Law.monoidic), uri(INVERSE), uri(SPLIT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID)))),
                     docWrap(instC(SELECT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID), lst(T(STR_TID)), (lhs, inst) -> {
-                                final Pattern pattern = REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v);
-                                final Matcher matcher = pattern.matcher(lhs.strValue());
-                                if (matcher.groupCount() == 0) {
-                                    return lst(matcher.results().map(MatchResult::group).map(MStr::str).map(Obj::<Obj>as).toList());
-                                } else {
-                                    return lst(matcher.results().map(mr -> {
-                                        final List<Obj> groups = new ArrayList<>();
-                                        groups.add(str(mr.group())); // full match
-                                        for (int i = 1; i <= mr.groupCount(); i++) {
-                                            final String g = mr.group(i);
-                                            groups.add(str(g != null ? g : ""));
-                                        }
-                                        return (Obj) lst(groups);
-                                    }).toList());
-                                }
+                                final Pattern pattern = REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern);
+                                return CommonUtil.withMatcher(pattern, lhs.strValue(), matcher -> {
+                                    if (matcher.groupCount() == 0) {
+                                        return lst(matcher.results().map(MatchResult::group).map(MStr::str).map(Obj::<Obj>as).toList());
+                                    } else {
+                                        return lst(matcher.results().map(mr -> {
+                                            final List<Obj> groups = new ArrayList<>();
+                                            groups.add(str(mr.group())); // full match
+                                            for (int i = 1; i <= mr.groupCount(); i++) {
+                                                final String g = mr.group(i);
+                                                groups.add(str(g != null ? g : ""));
+                                            }
+                                            return (Obj) lst(groups);
+                                        }).toList());
+                                    }
+                                });
                             }),
                             "a str to split by regex",
                             "the regex capture groups (or full matches) of the lhs str",

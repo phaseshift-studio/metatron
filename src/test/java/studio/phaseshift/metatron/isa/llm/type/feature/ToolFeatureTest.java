@@ -158,6 +158,9 @@ public class ToolFeatureTest extends AbstractFeatureTest {
             "echo all clear                                               % echo .* ~ ls .*     % \\bsecret\\b         % false   % all clear",
             "echo secret_free                                             % echo .* ~ ls .*     % \\bsecret\\b         % false   % secret_free",
             "echo the secret is out                                       % echo .* ~ ls .*     % \\bsecret\\b         % true    % reject patterns match",
+            // a policy pattern of the catastrophic shape is itself refused, so the command never runs
+            "echo guarded allow                                           % (e+)+               % null                % true    % nested quantifiers",
+            "echo guarded reject                                          % .*                  % (h+)+               % true    % nested quantifiers",
             "x=metatron; echo $x                                          % .*                  % null                % false   % metatron",
             "echo $(echo inner)                                           % .*                  % null                % false   % inner",
             "echo 'single quoted'                                         % .*                  % null                % false   % single quoted",

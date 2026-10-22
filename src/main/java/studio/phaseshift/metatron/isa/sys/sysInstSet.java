@@ -42,6 +42,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -216,9 +217,9 @@ public class sysInstSet extends AbstractInstSet {
                                         uri(MAX).maybe(), INT_TYPE,
                                         uri(DEPTH).maybe(), INT_TYPE), (lhs, inst) -> {
                                     final boolean regex = inst.arg(PATTERN, 2).orElse(BOOL_FALSE).boolValue();
-                                    final Pattern pattern = regex ? Pattern.compile(inst.arg(NAME, 0).strValue()) : null;
+                                    final Pattern pattern = regex ? CommonUtil.guardPattern(inst.arg(NAME, 0).strValue()) : null;
                                     try (final Stream<Obj> uris = start_(inst.arg(ROOT, 1).orElse(uri("<mfs:.>"))).repeat_(rshift_(), loop_().is_(gt_(inst.arg(DEPTH, 4).orElse(jnt(MAX_DIRECTORY_DEPTH)))), BOOL_TRUE).apply().stream()
-                                            .filter(p -> regex ? pattern.matcher(p.uriValue().toString()).find() : p.uriValue().toString().contains(inst.arg(NAME, 0).strValue()))
+                                            .filter(p -> regex ? CommonUtil.findSafely(pattern, p.uriValue().toString()) : p.uriValue().toString().contains(inst.arg(NAME, 0).strValue()))
                                             .limit(inst.arg(MAX, 3).orElse(jnt(MAX_FILE_RESULTS)).intValue().intValue())) {
                                         return lst(uris);
                                     } catch (final Exception e) {
@@ -312,11 +313,11 @@ public class sysInstSet extends AbstractInstSet {
                                             final Lst reject = Optional.ofNullable(inst.tid().qValue(REJECT, Lst.class)).orElse(lst());
                                             final String workingDirectory = Optional.ofNullable(inst.tid().qValue(DIR, String.class)).orElse(System.getProperty("user.dir"));
                                             if (!allow.isEmpty()) {
-                                                if (allow.elements().map(Obj::strValue).noneMatch(a -> Pattern.compile(a).matcher(command).matches()))
+                                                if (allow.elements().map(Obj::strValue).noneMatch(a -> CommonUtil.withMatcher(CommonUtil.guardPattern(a), command, Matcher::matches)))
                                                     throw MTronException.of("allowed patterns do not match command: %s {{r}}not in{{/r}} %s", command, allow);
                                             }
                                             if (!reject.isEmpty()) {
-                                                final Optional<String> p = reject.elements().map(Obj::strValue).filter(a -> Pattern.compile(a).matcher(command).find()).findFirst();
+                                                final Optional<String> p = reject.elements().map(Obj::strValue).filter(a -> CommonUtil.findSafely(CommonUtil.guardPattern(a), command)).findFirst();
                                                 if (p.isPresent())
                                                     throw MTronException.of("reject patterns match command: %s {{r}}in{{/r}} %s", command, p.get());
                                             }
