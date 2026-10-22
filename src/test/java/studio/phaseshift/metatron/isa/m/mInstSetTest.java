@@ -199,6 +199,32 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    // a generic one-obj inst (side, filter, vid: dom A{1}) right after a bulk seed (int{6}) binds A to the seed's
+    // element type. Left unbound, its rng fell back to # and the reducer after it could not resolve, so it ran per
+    // obj: {1,2,3,4,5,6}.side(plus(1)).sum() answered {1,2,3,4,5,6}.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6}.side(plus(1)).sum()                                              % 21",
+            "{1,2,3,4,5,6}.plus(1).side(plus(1)).sum()                                      % 27",
+            "{1,2,3,4,5,6}.side(plus(1)).count()                                            % 6",
+            "{1,2,3,4,5,6}.side(plus(1)).side(plus(1)).sum()                                % 21",
+            "{1,2,3,4,5,6}.side(plus(1)).side(plus(1)).count()                              % 6",
+            "{1,2,3,4,5,6}.side(plus(1)).sum().plus(1)                                      % 22",
+            "{1,2,3,4,5,6}.side(plus(1)).plus(1)                                            % {2,3,4,5,6,7}",
+            "{1,2,3,4,5,6}.side(plus(10)).filter(gt(3)).sum()                               % 15",
+            "{1,2,3}.side(_).sum()                                                          % 6",
+            "{3}2.side(plus(1)).sum()                                                       % 6",
+            "{int{2}::1,2,3}.side(plus(1)).sum()                                            % 7",
+            "{1.0,2.0}.side(plus(1.0)).sum()                                                % 3.0",
+            "{\"a\",\"b\"}.side(plus(\"c\")).sum()                                          % \"ab\"",
+            "{1,2,3,4}.filter(gt(2)).sum()                                                  % 7",
+            "{1,2,3,4}.filter(gt(2)).side(plus(1)).sum()                                    % 7",
+            "{1,2,3}.vid(abc).sum()                                                         % 6",
+    }, delimiter = '%')
+    public void testGatherAfterSeed(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "{4}1.plus?int{5}<=int{5}(2)                                                    % <ERROR>",

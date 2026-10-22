@@ -185,6 +185,29 @@ public class InstTest extends AbstractObjTest {
     }
 
     /**
+     * A one-obj dom over a bulk lhs ({@code c > 1}) binds its generic to the lhs's element type, since the
+     * processor applies the inst one obj at a time. Exact on dom and rng: {@link #testBindGenerics} accepts any
+     * compatible result, and an unbound rng ({@code #}) is compatible with everything, so it cannot see the
+     * regression ({@code {1,2,3}.side(plus(1)).sum()} answered {@code {1,2,3}}).
+     */
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
+            // lhs              % def (userInst)   % spec (apiInst)            % expected resolution
+            "{1,2}             % test()           % test?A<=A()               % test?int<=int()",
+            "{1,2,3}           % test(2)          % test?A<=A(A::T)           % test?int<=int(int::T)",
+            "{3}'hello'        % test()           % test?A<=A()               % test?str<=str()",
+            "{2}true           % test()           % test?A{?}<=A()            % test?bool{?}<=bool()",
+            "{1,2}             % test()           % test?bool<=A()            % test?bool<=int()",
+    })
+    public void testBindGenericsBulkLhs(final String lhs, final String def, final String spec, final String resolution) {
+        final Inst result = Inst.Helper.bindGenerics(ObjmtronSerializer.parse(lhs.trim()), ObjmtronSerializer.parse(spec.trim()), ObjmtronSerializer.parse(def.trim()));
+        final Inst expected = ObjmtronSerializer.parse(resolution.trim());
+        assertNotNull(result);
+        assertEquals(expected.tid().dom(), result.tid().dom());
+        assertEquals(expected.tid().rng(), result.tid().rng());
+    }
+
+    /**
      * Tests that dom/rng types propagate correctly through instruction chains.
      * Each case verifies both the computed value and the result's type (the chain's rng).
      * Interesting cases: chains that cross type boundaries (int→str, str→int, lst→int).
