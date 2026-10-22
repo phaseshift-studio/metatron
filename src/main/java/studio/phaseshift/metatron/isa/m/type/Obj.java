@@ -50,9 +50,7 @@ import static java.lang.System.lineSeparator;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -80,9 +78,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
-import static studio.phaseshift.metatron.util.CommonUtil.indent;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
-import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
+import static studio.phaseshift.metatron.util.CommonUtil.*;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Feature.HasThread, Cloneable, Predicate<Obj> {
@@ -432,7 +428,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default boolean isNoObj() {
-        return this.c().isZero();
+        return fURI.Singleton.NOOBJ.equals(this.jvm()) || this.c().isZero();
     }
 
     default boolean isNothing() {
@@ -530,11 +526,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this instanceof Machine;
     }
 
+
     default Obj autoResolve(final Obj obj) {
+        if (!this.isInst())
+            return this;
         final fURI base = this.tid().basePath();
-        return this.isInst() && (base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID) || this.asInst().isInitial()) ?
-                this.apply(obj).c(c -> obj.isNoObj() ? c : c.mult(obj.c())) :
-                this;
+        final boolean auto = base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID);
+        if (!auto && !this.asInst().isInitial())
+            return this;
+        // an auto inst reads the poly holding it; an initial inst maps nothing to objs, so it runs from noobj
+        return this.apply(auto ? obj : noobj()).c(c -> obj.isNoObj() ? c : c.mult(obj.c()));
         //   return Obj.Helper.getAutoPointer(this).map(Router::read).orElse(this);
     }
 
@@ -597,6 +598,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Bool) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -605,6 +608,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Bytes) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -613,6 +618,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return this.isNoObj() ? int0() : (Int) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -621,6 +628,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return this.isNoObj() ? real0() : (Real) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -629,6 +638,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return this.isNoObj() ? str0() : (Str) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -637,6 +648,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return this.isNoObj() ? uri0() : (Uri) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -647,8 +660,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         if (this instanceof Fail fail)
             throw MTronException.of("asRec onto a fail: %s", fail.message());
         try {
-            return this.isNoObj() ? rec0() : (Rec) this;
+            return this.isNoObj() ? noobjRec() : (Rec) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -657,6 +672,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return this.isNoObj() ? lst0() : (Lst) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -665,6 +682,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return this.isNoObj() ? rel0() : (Rel) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -673,6 +692,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Poly<?, ?>) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -687,6 +708,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Inst) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -695,6 +718,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Code) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -703,6 +728,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Call) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -711,6 +738,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (StatefulMonad) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -719,6 +748,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Machine) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -727,6 +758,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Type) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -735,6 +768,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         try {
             return (Objs) this;
         } catch (final Exception e) {
+            if (this.isFail() || this.isCaughtFail())
+                throw this.asFail().asException();
             throw MTronException.of(e);
         }
     }
@@ -758,48 +793,64 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     default boolean boolValue() {
         if (this.isBool())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), BOOL_TYPE);
     }
 
     default ByteBuffer bytesValue() {
         if (this.isBytes())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), BYTES_TYPE);
     }
 
     default Long intValue() {
         if (this.isInt())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, this.isType() ? "type" : "value", T(tid()), INT_TYPE);
     }
 
     default Double realValue() {
         if (this.isReal())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), REAL_TYPE);
     }
 
     default String strValue() {
         if (this.isStr())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), STR_TYPE);
     }
 
     default fURI uriValue() {
         if (this.isUri())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), URI_TYPE);
     }
 
     default List<Obj> lstValue() {
         if (this.isLst())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), LST_TYPE);
     }
 
     default Iterable<Obj> objsValue() {
         if (this.isObjs())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), OBJS_TID);
     }
 
@@ -807,36 +858,48 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     default Map<Obj, Obj> recValue() {
         if (this.isRec())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), REC_TYPE);
     }
 
     default Pair<Obj, Obj> relValue() {
         if (this.isRel())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), REL_TYPE);
     }
 
     default Tuple.Triplet<Poly<?, ?>, Inst.f, Obj> instValue() {
         if (this.isInst())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), INST_TYPE);
     }
 
     default List<Inst> codeValue() {
         if (this.isCode())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), CODE_TYPE);
     }
 
     default Obj typeValue() {
         if (this.isType())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), TYPE_TYPE);
     }
 
     default List<Obj> monadValue() {
         if (this.isMonad())
             return this.jvm();
+        if (this.isFail() || this.isCaughtFail())
+            throw this.asFail().asException();
         throw MTronException.of(xxxValue, this, T(tid()), MACH_MONAD_TYPE);
     }
 
