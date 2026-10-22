@@ -18,9 +18,12 @@
 
 package studio.phaseshift.metatron.isa.iot;
 
+import io.moquette.broker.ClientDescriptor;
 import io.moquette.broker.Server;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.List;
 
 /**
  * Simple example of how to embed the broker in another project
@@ -38,6 +41,13 @@ public final class MoquetteServer {
 
     public static void clear() {
 
+    }
+
+    /**
+     * the identifiers of the clients the running broker holds a connection for
+     */
+    public static List<String> clients() {
+        return mqttBroker.listConnectedClients().stream().map(ClientDescriptor::getClientID).toList();
     }
 
     public static void run() {

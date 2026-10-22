@@ -18,8 +18,6 @@
 
 package studio.phaseshift.metatron.isa.iot.miot.space;
 
-import com.hivemq.client.mqtt.MqttClient;
-import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -29,7 +27,6 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -54,17 +51,11 @@ public class miotSpace extends mqttSpace {
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> miotSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     public static miotSpace of(final Rec config, final fURI vid) {
-        final Mqtt5Client client = MqttClient.builder()
-                .identifier(config.at(uri(CLIENT).orElse(uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits())))).uriValue().toString())
-                .serverHost(config.at(HOST).uriValue().host())
-                .serverPort(config.at(HOST).uriValue().port())
-                .useMqttVersion5()
-                .build();
-        return new miotSpace(client, config.jvm(), vid);
+        return new miotSpace(config.jvm(), vid);
     }
 
-    protected miotSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
-        super(client, config, MIOT_SPACE_TID, vid);
+    protected miotSpace(final Map<Obj, Obj> config, final fURI vid) {
+        super(config, MIOT_SPACE_TID, vid);
     }
 
     @Override

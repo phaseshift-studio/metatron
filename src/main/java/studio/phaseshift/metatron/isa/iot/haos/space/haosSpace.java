@@ -18,8 +18,6 @@
 
 package studio.phaseshift.metatron.isa.iot.haos.space;
 
-import com.hivemq.client.mqtt.MqttClient;
-import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
@@ -29,7 +27,6 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Map;
-import java.util.UUID;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -94,17 +91,11 @@ public class haosSpace extends mqttSpace {
                     })).create();
 
     public static haosSpace of(final Rec config, final fURI vid) {
-        final Mqtt5Client client = MqttClient.builder()
-                .identifier(config.at(uri(CLIENT).orElse(uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits())))).uriValue().toString())
-                .serverHost(config.at(HOST).uriValue().host())
-                .serverPort(config.at(HOST).uriValue().port())
-                .useMqttVersion5()
-                .build();
-        return new haosSpace(client, config.jvm(), vid);
+        return new haosSpace(config.jvm(), vid);
     }
 
-    protected haosSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
-        super(client, config, HAOS_SPACE_TID, vid);
+    protected haosSpace(final Map<Obj, Obj> config, final fURI vid) {
+        super(config, HAOS_SPACE_TID, vid);
     }
 
     public Obj read(final fURI vid) {
