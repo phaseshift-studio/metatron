@@ -141,8 +141,8 @@ public class NetworkQProcTest extends AbstractMetatronTest {
     void shouldFireAPeerSubscriptionLocally() {
         Machine.write(f(UNREACHABLE + "/#").addQ("subq"), code());
         assertEquals(1, subscriptions(), "one subscription is armed for the whole peer namespace");
-        // a plain write to a peer address: the layer broadcasts it to the subscriptions before the transport
-        // (which here does not exist) ever sees it
+        // a plain write to a peer address: the layer broadcasts it to the subscriptions once the transport has had
+        // it -- here the network declines (there is no transport), so the wire never sees it
         assertEquals(str("payload"), Machine.write(f(UNREACHABLE + "/x"), str("payload")),
                 "the write still answers what it wrote: the broadcast does not consume it");
         CommonUtil.sleepThread(700);   // the broadcast applies its code on a virtual thread, as subq always has

@@ -55,11 +55,15 @@ public class BaseQ extends MRec implements QProc {
     protected final fURI queryPattern;
 
     public BaseQ(final Map<Obj, Obj> jvm, final fURI queryPattern, final fURI tid) {
+        this(jvm, queryPattern, tid, false);
+    }
+
+    protected BaseQ(final Map<Obj, Obj> jvm, final fURI queryPattern, final fURI tid, final boolean broadcasts) {
         super(jvm, tid, null);
         this.jvm().put(uri(PATTERN), uri(queryPattern));
         this.queryPattern = queryPattern;
         this.onRead = new BaseOnRead(this.at(PRE_READ).as(), this.at(POST_READ).as());
-        this.onWrite = new BaseOnWrite(this.at(PRE_WRITE).as(), this.at(POST_WRITE).as(), this.at(QLESS_WRITE).as());
+        this.onWrite = new BaseOnWrite(this.at(PRE_WRITE).as(), this.at(POST_WRITE).as(), this.at(QLESS_WRITE).as(), broadcasts);
     }
 
     @Override
@@ -132,8 +136,16 @@ public class BaseQ extends MRec implements QProc {
     }
 
     public static class BaseOnWrite extends MRec implements QProc.OnWrite {
+
+        private final boolean broadcasts;
+
         public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite) {
+            this(preWrite, postWrite, qlessWrite, false);
+        }
+
+        public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite, final boolean broadcasts) {
             super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite), REC_TID, null);
+            this.broadcasts = broadcasts;
         }
 
         public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
@@ -164,6 +176,11 @@ public class BaseQ extends MRec implements QProc {
         public boolean hasQlessHandler() {
             return !this.at(QLESS_WRITE).isNoObj();
         }
+
+        @Override
+        public boolean broadcasts() {
+            return this.broadcasts;
+        }
     }
 
     public static QProc create(final fURI tid, final fURI pattern,
@@ -172,12 +189,26 @@ public class BaseQ extends MRec implements QProc {
                                final BiFunction<fURI, Obj, Obj> preWrite,
                                final TriFunction<fURI, Obj, Obj, Obj> postWrite,
                                final BiFunction<fURI, Obj, Obj> qlessWrite) {
+        return create(tid, pattern, preRead, postRead, preWrite, postWrite, qlessWrite, false);
+    }
+
+    /**
+     * @param broadcasts true when {@code qlessWrite} is a broadcast rather than a guard (see
+     *                   {@link QProc.OnWrite#broadcasts()})
+     */
+    public static QProc create(final fURI tid, final fURI pattern,
+                               final Function<fURI, Obj> preRead,
+                               final BiFunction<fURI, Obj, Obj> postRead,
+                               final BiFunction<fURI, Obj, Obj> preWrite,
+                               final TriFunction<fURI, Obj, Obj, Obj> postWrite,
+                               final BiFunction<fURI, Obj, Obj> qlessWrite,
+                               final boolean broadcasts) {
         return new BaseQ(cleanMap(mutableMap(
                 uri(PATTERN), uri(pattern),
                 null == preRead ? noobj() : uri(PRE_READ), null == preRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (lhs, inst) -> preRead.apply(inst.arg(0).uriValue())),
                 null == postRead ? noobj() : uri(POST_READ), null == postRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
                 null == preWrite ? noobj() : uri(PRE_WRITE), null == preWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> preWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
                 null == postWrite ? noobj() : uri(POST_WRITE), null == postWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL), T(ALL)), (lhs, inst) -> postWrite.apply(inst.arg(0).uriValue(), inst.arg(1), inst.arg(2))),
-                null == qlessWrite ? noobj() : uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1))))), pattern, tid);
+                null == qlessWrite ? noobj() : uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1))))), pattern, tid, broadcasts);
     }
 }

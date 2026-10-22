@@ -39,8 +39,7 @@ import studio.phaseshift.metatron.util.*;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -52,6 +51,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
@@ -81,6 +81,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.indent;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -1415,25 +1416,28 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> {
                                 try {
                                     final fURI mailbox = inst.arg(0).uriValue();
-                                    final AtomicReference<Obj> result = new AtomicReference<>(lhs);
-                                    final CountDownLatch latch = new CountDownLatch(1);
+                                    // ONE REPORT, FIRST DELIVERY WINS. A report stored between the subscribe and the read reaches
+                                    // the barrier twice -- published, and read -- and is still one report.
+                                    final CompletableFuture<Obj> report = new CompletableFuture<>();
                                     // SUBSCRIBE FIRST. A subscription only sees writes made AFTER it is registered, so it must be in
-                                    // place before any peer can report -- otherwise a fast shard reports into the void.
-                                    Machine.write(mailbox.addQ(SUBQ_PATTERN.toString()), rec(uri(CODE), instLambda(o -> {
-                                        result.set(result.get().append(o));
-                                        latch.countDown();
-                                        return noobj();
-                                    })));
+                                    // place before any peer can report -- otherwise a fast shard reports into the void. It must be
+                                    // a sub::T: subq takes any other obj for the code ITSELF, and a rec applied answers itself, so
+                                    // the barrier's code never ran. The code receives the publication, pub::[mailbox, report].
+                                    Machine.write(mailbox.addQ(SUBQ_PATTERN.toString()), rec(mutableMap(
+                                            uri(TARGET), uri(mailbox),
+                                            uri(CODE), instLambda(pub -> {
+                                                final Obj published = pub.asLst().at(1);
+                                                if (!published.isNoObj())
+                                                    report.complete(published);
+                                                return noobj();
+                                            })), SUBQ_SUB_TID, null));
                                     // THEN READ, BEFORE WAITING. A peer may have reported before we subscribed, and that write is
                                     // invisible to the subscription -- so reading first is what keeps the barrier from waiting
                                     // forever. Waiting before reading inverts the whole point of subscribe-then-read.
                                     final Obj already = Machine.read(mailbox);
-                                    if (!already.isNoObj()) {
-                                        result.set(result.get().append(already));
-                                        latch.countDown();
-                                    }
-                                    latch.await();
-                                    return result.get();
+                                    if (!already.isNoObj())
+                                        report.complete(already);
+                                    return lhs.append(report.get());
                                 } catch (final Exception e) {
                                     throw MTronException.of(e);
                                 }

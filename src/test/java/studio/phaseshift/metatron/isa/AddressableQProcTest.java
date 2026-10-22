@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -139,36 +140,58 @@ public class AddressableQProcTest extends AbstractMetatronTest {
     }
 
     /**
-     * The write pipeline: a pre_write answer stands in for the source's own write, the broadcast runs before it
-     * and does not consume it, and a post_write lands after it.
+     * The write pipeline: a pre_write answer stands in for the source's own write; a qless GUARD runs before it and,
+     * answering, stands in for it too; a qless BROADCAST runs only once it has landed, and never for a write a guard
+     * refused; a post_write lands after it. {@code seen} is how many of the source's writes had happened when a qless
+     * handler ran (-1: none ran) -- the column that says before or after.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "pre    % 99 % 0 % 0 % the pre_write answer stands in for the source's own write",
-            "post   % 7  % 1 % 0 % the post_write sees the write after it happened",
-            "qless  % 7  % 1 % 1 % the broadcast runs before the write and does not consume it",
-            "none   % 7  % 1 % 0 % with no handler the source's own write is the answer",
+            "pre       % 99 % 0 % 0 % -1 % the pre_write answer stands in for the source's own write",
+            "post      % 7  % 1 % 0 % -1 % the post_write sees the write after it happened",
+            "guard     % 7  % 1 % 1 % 0  % a guard runs before the write and, answering noobj, lets it through",
+            "veto      % 13 % 0 % 1 % 0  % a guard that answers stands in for the write, which never happens",
+            "broadcast % 7  % 1 % 1 % 1  % the broadcast runs once the write has landed and does not consume it",
+            "refused   % 13 % 0 % 0 % -1 % a write a guard refused is never broadcast, whatever the declaration order",
+            "none      % 7  % 1 % 0 % -1 % with no handler the source's own write is the answer",
     }, delimiter = '%')
-    void testWritePipeline(final String stage, final long expected, final int sourceWrites, final int broadcasts, final String description) {
+    void testWritePipeline(final String stage, final long expected, final int sourceWrites, final int qlessRuns,
+                           final int seen, final String description) {
         final Ledger ledger = new Ledger(f("/t/ledger/@"));
         final AtomicInteger qless = new AtomicInteger();
-        final QProc proc = switch (stage) {
-            case "pre" -> QProc.Helper.build(f("/m/qproc/shove"), f("shove"))
-                    .preWrite((vid, obj) -> jnt(99)).create();
-            case "post" -> QProc.Helper.build(f("/m/qproc/shove"), f("shove"))
-                    .postWrite((vid, oldObj, newObj) -> newObj).create();
-            case "qless" -> QProc.Helper.build(f("/m/qproc/shove"), f("shove"))
-                    .qlessWrite((vid, obj) -> {
-                        qless.incrementAndGet();
-                        return noobj();
-                    }).create();
-            default -> QProc.Helper.build(f("/m/qproc/shove"), f("shove")).create();
+        final AtomicInteger seenWrites = new AtomicInteger(-1);
+        final BiFunction<fURI, Obj, Obj> witness = (vid, obj) -> {
+            qless.incrementAndGet();
+            seenWrites.set(ledger.writes.get());
+            return noobj();
         };
-        ledger.addQ(proc);
+        switch (stage) {
+            case "pre" -> ledger.addQ(QProc.Helper.build(f("/m/qproc/shove"), f("shove"))
+                    .preWrite((vid, obj) -> jnt(99)).create());
+            case "post" -> ledger.addQ(QProc.Helper.build(f("/m/qproc/shove"), f("shove"))
+                    .postWrite((vid, oldObj, newObj) -> newObj).create());
+            case "guard" -> ledger.addQ(QProc.Helper.build(f("/m/qproc/shove"), f("shove"))
+                    .qlessWrite(witness).create());
+            case "veto" -> ledger.addQ(QProc.Helper.build(f("/m/qproc/shove"), f("shove"))
+                    .qlessWrite((vid, obj) -> {
+                        witness.apply(vid, obj);
+                        return jnt(13);
+                    }).create());
+            case "broadcast" -> ledger.addQ(QProc.Helper.build(f("/m/qproc/shove"), f("shove"))
+                    .broadcast(witness).create());
+            case "refused" -> {
+                // the broadcast is declared FIRST: a layer that ran every qless handler in declaration order would
+                // publish the write before the guard refused it
+                ledger.addQ(QProc.Helper.build(f("/m/qproc/tell"), f("tell")).broadcast(witness).create());
+                ledger.addQ(QProc.Helper.build(f("/m/qproc/shove"), f("shove")).qlessWrite((vid, obj) -> jnt(13)).create());
+            }
+            default -> ledger.addQ(QProc.Helper.build(f("/m/qproc/shove"), f("shove")).create());
+        }
         final fURI vid = f("/t/ledger/x").addQ("shove");
         assertEquals(jnt(expected), QProc.Layer.write(ledger, vid, jnt(7), () -> ledger.write(vid, jnt(7))), description);
         assertEquals(sourceWrites, ledger.writes.get(), description);
-        assertEquals(broadcasts, qless.get(), description);
+        assertEquals(qlessRuns, qless.get(), description);
+        assertEquals(seen, seenWrites.get(), description);
     }
 
     /**
