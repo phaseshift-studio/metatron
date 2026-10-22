@@ -33,7 +33,6 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -42,11 +41,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * THE PEER MAP AS AN ADDRESS SPACE — a machine's {@code <vid>/network/peer/#}, mounted at bootstrap, so every member of
  * the machine's reach sits at a valid path and destruction on deletion works from mtron:
  * <pre>
- *   *</network/peer/ws/booger/8555/mtron>             [-- the peer::T --]
- *   *</network/peer/ws/booger/8555/mtron/authority>   [-- one of its fields --]
- *   *</network/peer/ws/#>                             [-- every ws member --]
- *   </network/peer/ws/booger/8555/mtron> -> noobj      [-- hang up: the member leaves the map --]
- *   </network/peer> -> noobj                           [-- hang up every member --]
+ *   *</network/peer/ws/localhost/8555/mtron>             [-- the peer::T --]
+ *   *</network/peer/ws/localhost/8555/mtron/authority>   [-- one of its fields --]
+ *   *</network/peer/ws/#>                                [-- every ws member --]
+ *   </network/peer/ws/localhost/8555/mtron> -> noobj     [-- hang up: the member leaves the map --]
+ *   </network/peer> -> noobj                             [-- hang up every member --]
  * </pre>
  * IT STORES NOTHING. Every read answers from the machine's network component as it stands, so the map is never copied
  * and never stale, and every write is the network's own retraction ({@link Network#disconnect}). This is the mount
@@ -111,7 +110,7 @@ public final class PeerSpace extends AbstractSpace<Object> {
             if (at.equals(this.prefix.asNode()))
                 network.peers().keys().filter(Obj::isUri).map(Obj::uriValue).toList().forEach(network::disconnect);
             else {
-                final fURI key = this.keyOf(at);
+                final fURI key = this.memberKey(at);
                 if (null != key)
                     network.disconnect(key);
             }
@@ -120,12 +119,11 @@ public final class PeerSpace extends AbstractSpace<Object> {
     }
 
     /**
-     * the member key an address names: what follows {@code <vid>/network/peer/}, or null for an address outside it
+     * the member key an address names — what follows {@code <vid>/network/peer/}, in the one encoding every key has
+     * ({@link fURI#toPath()}) — or null for an address outside it
      */
-    private fURI keyOf(final fURI at) {
-        final String path = at.toString();
-        final String base = this.prefix.asNode().toString() + "/";
-        return path.startsWith(base) && path.length() > base.length() ? f(path.substring(base.length())) : null;
+    private fURI memberKey(final fURI at) {
+        return at.hasPrefix(this.prefix) && !at.equals(this.prefix.asNode()) ? at.removeSubpath(this.prefix).toPath() : null;
     }
 
     @Override

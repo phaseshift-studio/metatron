@@ -550,7 +550,7 @@ public class machInstSet extends AbstractInstSet {
                                         .create(),
                                 Map.of(uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
                                         uri(ROSTER).maybe(), "known machines, connectionless: a declared peer is <authority> => transport, a discovered machine is <host> => uri{+} (every address it answers at); transportOf reads both",
-                                        uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/booger/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
+                                        uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(SOURCE).maybe(), "the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism",
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"),
                                 """

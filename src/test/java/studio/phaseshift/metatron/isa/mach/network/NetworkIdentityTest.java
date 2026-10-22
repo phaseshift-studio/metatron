@@ -285,13 +285,13 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "ws://booger:8555/mtron              % ws/booger/8555/mtron",
-            "ws://booger.local:8555/mtron        % ws/booger/local/8555/mtron",
-            "ws://192.168.1.61:8555/mtron        % ws/192/168/1/61/8555/mtron",
-            "ws://192.168.2.61:8555/mtron        % ws/192/168/2/61/8555/mtron",
+            "ws://peer:8555/mtron                % ws/peer/8555/mtron",
+            "ws://peer.local:8555/mtron          % ws/peer/local/8555/mtron",
+            "ws://10.0.0.7:8555/mtron            % ws/10/0/0/7/8555/mtron",
+            "ws://10.0.0.8:8555/mtron            % ws/10/0/0/8/8555/mtron",
             "ws://localhost:8555/mtron?name=me   % ws/localhost/8555/mtron",
             "ws://127.0.0.1:8555/mtron           % ws/localhost/8555/mtron",
-            "ws://booger:8555                    % ws/booger/8555",
+            "ws://peer:8555                      % ws/peer/8555",
             "loop://self                         % loop/self",
     }, delimiter = '%')
     public void testAPeerKeyIsALegalPath(final String dial, final String key) {
