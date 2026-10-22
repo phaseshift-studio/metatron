@@ -143,7 +143,12 @@ public final class CommonRewrites {
                     final fURI rawUri = ref.uriValue();
                     final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(rawUri);
                     final fURI resolvedUri = space != null ? space.redirect(rawUri, true) : rawUri;
-                    final DataPath dp = DataPath.withoutDB(resolvedUri);
+                    // When the redirect did not strip the space prefix (no route
+                    // matched — e.g. a wildcard collection like /g/+), the URI is
+                    // still absolute and its first segment is the space prefix, so
+                    // `of` decomposes it as db/collection.  Once routed it is
+                    // relative and `withoutDB` is the right call.
+                    final DataPath dp = resolvedUri.isAbsolute() ? DataPath.of(resolvedUri) : DataPath.withoutDB(resolvedUri);
                     // An empty field segment (from asBranch() trailing "/")
                     // is a branch marker, not a real field — allow it.
                     return !dp.collectionIsWildcard()

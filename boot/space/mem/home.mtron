@@ -1,5 +1,5 @@
 [-- memspace — in-memory home space. --]
-||inst?memspace<=uri(){
+|inst?memspace<=uri(){
   [pattern => </usr/${_}/#>,
    q       => [docq::[=>], subq::[=>], 
                mimeq::[=>],lineq::[=>],lockq::[=>], 

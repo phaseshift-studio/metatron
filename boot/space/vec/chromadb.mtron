@@ -4,7 +4,7 @@
      up --wait) before the space is built.
      args (the caller supplies the defaults from boot/args):
        saddr, sport, simg ==]
-||inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T){
+|inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T){
   print("chromadb: pulling container from ${!*simg}").
   from(docker:container/metatron_chroma).
   else(*simg -< [services => -< [chroma => -< [

@@ -1,5 +1,5 @@
 [-- httpspace — http server with the mcp route.  Binds 0.0.0.0 for the container. --]
-||inst?httspace<=uri() { 
+|inst?httspace<=uri() { 
   -<([host    => _,
       q       => [mimeq::[=>]],
       pattern => http://#,

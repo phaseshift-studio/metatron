@@ -4,7 +4,7 @@
      connections before the space is built.  the only host requirement is docker.
      args (the caller supplies the defaults from boot/args; s* = server, db* = db):
        saddr, sport, simg, db, dbuser, dbpass ==]
-||inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T,database=>str::T,dbuser=>str::T,password=>str::T){
+|inst?#{?}<=#{?}(saddr=>uri::T,sport=>int::T,simg=>str::T,database=>str::T,dbuser=>str::T,password=>str::T){
   print("mariadb: pulling container for ${!*database}").
   from(docker:container/metatron_mariadb).
   else(

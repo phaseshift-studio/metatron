@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.grph;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -46,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Isolated
+@Execution(ExecutionMode.SAME_THREAD)
 public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
 
     public TinkerGrphSpaceTest() {
@@ -66,7 +69,6 @@ public class TinkerGrphSpaceTest extends AbstractGrphSpaceTest {
                 uri(ROUTE), rec(
                         uri("/g/V"), uri("V"),
                         uri("/g/E"), uri("E"),
-                        //  uri("/g/+"), uri("+"),
                         uri("/g/S"), uri(MODERN_SCHEMA_TID)));
 
         // ── rewrite test space config (pattern /grt/#) ──

@@ -1,0 +1,352 @@
+#!/usr/bin/env bash
+# bin/metatron-remote — run the container build loop on the least-loaded machine.
+#
+#   bin/metatron-remote build test -Dtest=X     # same arguments as bin/metatron-docker
+#   bin/metatron-remote mvn clean install       # any command, run in the build container
+#   bin/metatron-remote status                  # what runs where, and how loaded
+#   bin/metatron-remote --host ginger.local mvn clean install   # pin a machine
+#   bin/metatron-remote --dry-run build         # print the decision, run nothing
+#
+# Configuration lives in bin/test/metatron-remote.env (gitignored; copy the .example).
+# Everything else has a default here.
+#
+# WHY A REMOTE TREE: the loop bind-mounts the repo, and bind mounts resolve on the
+# DAEMON. A remote daemon cannot see this machine's checkout, so the tree is rsynced to
+# ~/build/metatron/<sanitized-path> and METATRON_HOST_REPO points at that copy.
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# ---------- configuration ----------
+for _cfg in "${METATRON_REMOTE_ENV:-}" \
+            "$REPO_ROOT/bin/test/metatron-remote.env" \
+            "$REPO_ROOT/metatron-remote.env" \
+            "${XDG_CONFIG_HOME:-$HOME/.config}/metatron/remote.env"; do
+    [ -n "$_cfg" ] || continue
+    if [ -r "$_cfg" ]; then set -a; . "$_cfg"; set +a; fi
+done
+
+HOSTS=()
+if [ -n "${METATRON_BUILD_HOSTS:-}" ]; then
+    IFS=',' read -ra _raw <<< "${METATRON_BUILD_HOSTS}"
+    for _h in "${_raw[@]}"; do
+        _h="$(printf '%s' "$_h" | tr -d '[:space:]')"
+        [ -n "$_h" ] && HOSTS+=("$_h")
+    done
+fi
+[ ${#HOSTS[@]} -gt 0 ] || HOSTS=("${METATRON_BUILD_HOST:-killswitch@ginger.local}")
+
+REMOTE_BASE="${METATRON_BUILD_ROOT:-build/metatron}"
+MAX_BUILDS="${METATRON_MAX_REMOTE_BUILDS:-0}"
+MAX_WAIT="${METATRON_MAX_BUILD_WAIT:-1800}"
+FALLBACK="${METATRON_BUILD_FALLBACK:-0}"
+LOCAL_LABEL="${METATRON_LOCAL_LABEL:-booger}"
+LOG_FILE="${METATRON_BUILD_LOG:-$HOME/.metatron-builds.log}"
+SSH_OPTS=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=4)
+
+# Colour: on a tty unless NO_COLOR is set; CLICOLOR_FORCE=1 adds it even into a pipe (handy
+# for `... | less -R`). Escapes live in variables so the plain paths read normally.
+if [ -n "${CLICOLOR_FORCE:-}" ] && [ "${CLICOLOR_FORCE}" != 0 ]; then USE_COLOR=1
+elif [ -n "${NO_COLOR:-}" ]; then USE_COLOR=0
+elif [ -t 1 ]; then USE_COLOR=1
+else USE_COLOR=0; fi
+if [ "$USE_COLOR" = 1 ]; then
+    C_RED=$'\033[1;31m'; C_GRN=$'\033[1;32m'; C_YEL=$'\033[1;33m'
+    C_BLU=$'\033[1;36m'; C_CYN=$'\033[1;36m'; C_BLD=$'\033[1m'
+    C_MAG=$'\033[1;35m'; C_OFF=$'\033[0m'
+else
+    C_RED=""; C_GRN=""; C_YEL=""; C_BLU=""; C_CYN=""; C_BLD=""; C_MAG=""; C_OFF=""
+fi
+
+say()  { printf '%s==>%s %s\n' "$C_CYN" "$C_OFF" "$*"; }
+warn() { printf '%s==>%s %s\n' "$C_YEL" "$C_OFF" "$*"; }
+die() { echo "metatron-remote: $*" >&2; exit 1; }
+q()   { printf '%q ' "$@"; }
+
+# ---------- probing ----------
+# Remote bodies are heredocs fed to `sh -s`, so the remote shell sees exactly what is
+# written here. Nested quoting through ssh has silently mangled these twice.
+probe_host() {  # host -> load<TAB>cores<TAB>running<TAB>gid<TAB>ip
+    ssh "${SSH_OPTS[@]}" "$1" sh -s <<'PROBE' 2>/dev/null
+awk '{print $1}' /proc/loadavg
+nproc
+docker ps -q --filter name=metatron-build 2>/dev/null | wc -l | tr -d ' '
+stat -c %g /var/run/docker.sock 2>/dev/null || echo 0
+hostname -I 2>/dev/null | awk '{print $1}'
+PROBE
+}
+
+mem_of() {  # local|host -> "usedgb<TAB>pct"
+    if [ "$1" = local ]; then
+        free -m | awk '/^Mem:/{printf "%d\t%d", $3/1024, $3*100/$2}'
+    else
+        ssh "${SSH_OPTS[@]}" "$1" sh -s <<'MEM' 2>/dev/null
+free -m | awk '/^Mem:/{printf "%d\t%d", $3/1024, $3*100/$2}'
+MEM
+    fi
+}
+
+mvn_of() {  # local|host -> "pid  cmdline" for host-side maven, one per line
+    if [ "$1" = local ]; then
+        pgrep -fa '(^|/)(mvn|mvnw)(\.sh)?( |$)' 2>/dev/null | grep -v 'pgrep -fa' | cut -c1-70
+    else
+        ssh "${SSH_OPTS[@]}" "$1" "pgrep -fa '(^|/)(mvn|mvnw)(\.sh)?( |\$)' 2>/dev/null | grep -v 'pgrep -fa' | cut -c1-70" 2>/dev/null
+    fi
+    return 0
+}
+
+builds_of() {  # local|host -> "name<TAB>status"
+    if [ "$1" = local ]; then
+        docker ps --filter name=metatron-build --format '{{.Names}}	{{.Status}}' 2>/dev/null
+    else
+        ssh "${SSH_OPTS[@]}" "$1" sh -s <<'BLD' 2>/dev/null
+docker ps --filter name=metatron-build --format '{{.Names}}	{{.Status}}'
+BLD
+    fi
+}
+
+phase_of() {  # local|host container -> starting|compiling|testing
+    local logs
+    if [ "$1" = local ]; then logs="$(docker logs --tail 400 "$2" 2>&1)"
+    else logs="$(ssh "${SSH_OPTS[@]}" "$1" "docker logs --tail 400 '$2' 2>&1" 2>/dev/null)"; fi
+    case "$logs" in
+        *"Tests run:"*)                                   printf 'testing' ;;
+        *"Compiling "*" source files"*|*maven-compiler*)  printf 'compiling' ;;
+        *)                                                printf 'starting' ;;
+    esac
+}
+
+score() {  # load cores running -> per-core load + in-flight builds
+    awk -v l="$1" -v c="$2" -v r="$3" 'BEGIN { if (c < 1) c = 1; printf "%.2f", l / c + r }'
+}
+
+record() {  # machine args rc duration
+    printf '%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" "$3" "$4" \
+        >> "$LOG_FILE" 2>/dev/null || true
+}
+
+human_age() {  # ISO-8601 UTC -> 12s | 5min | 1hr30min | 2d3hr
+    local then_s now_s d
+    then_s="$(date -u -d "$1" +%s 2>/dev/null)" || { printf '?'; return; }
+    now_s="$(date -u +%s)"
+    d=$(( now_s - then_s )); [ "$d" -lt 0 ] && d=0
+    if   [ "$d" -lt 60 ];   then printf '%ds' "$d"
+    elif [ "$d" -lt 3600 ]; then printf '%dmin' "$(( d / 60 ))"
+    elif [ "$d" -lt 86400 ]; then printf '%dhr%02dmin' "$(( d / 3600 ))" "$(( (d % 3600) / 60 ))"
+    else printf '%dd%02dhr' "$(( d / 86400 ))" "$(( (d % 86400) / 3600 ))"
+    fi
+}
+
+svc_row() {  # label load cores building mem_gb mem_pct
+    local mc=""
+    if [ "${6:-0}" -ge 90 ] 2>/dev/null; then mc="$C_RED"
+    elif [ "${6:-0}" -ge 70 ] 2>/dev/null; then mc="$C_YEL"
+    else mc="$C_GRN"; fi
+    printf '  %-13s load %-6s  %s cores  %s building  mem %s%sgb (%s%%)%s\n' \
+        "$1" "$2" "$3" "$4" "$mc" "$5" "$6" "$C_OFF"
+}
+
+# ---------- arguments ----------
+DRY=0
+PIN_HOST=""
+ARGS=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --dry-run|-n) DRY=1; shift ;;
+        --host)        [ $# -ge 2 ] || { echo "--host needs a host name" >&2; exit 2; }
+                       PIN_HOST="$2"; shift 2 ;;
+        --host=*)      PIN_HOST="${1#--host=}"; shift ;;
+        *)             ARGS+=("$1"); shift ;;
+    esac
+done
+[ ${#ARGS[@]} -gt 0 ] || { echo "usage: bin/metatron-remote [--dry-run] <verb|command> [args...]" >&2; exit 2; }
+VERB="${ARGS[0]}"
+
+# an unknown verb is a command for the build container
+case "$VERB" in
+    status|build|run|dev|image|help|-h|--help) ;;
+    *) ARGS=(build shell "${ARGS[*]}"); VERB=build ;;
+esac
+
+# ---------- status ----------
+if [ "$VERB" = status ]; then
+    printf "%smetatron builds%s\n" "$C_BLD" "$C_OFF"
+    echo
+    n_loc=0; n_rem=0
+    while IFS=$'\t' read -r name st; do
+        [ -z "${name:-}" ] && continue
+        n_loc=$((n_loc + 1))
+        ph="$(phase_of local "$name")"
+        case "$ph" in testing) pc="$C_BLU" ;; compiling) pc="$C_MAG" ;; *) pc="$C_YEL" ;; esac
+        printf '  %s%-11s%s %-14s %-30s %s\n' "$pc" "[$ph]" "$C_OFF" "$LOCAL_LABEL" "$name" "$st"
+    done <<< "$(builds_of local)"
+
+    for h in "${HOSTS[@]}"; do
+        lbl="${h#*@}"
+        if probe="$(probe_host "$h")" && [ -n "$probe" ]; then
+            { IFS= read -r p_load; IFS= read -r p_cores; IFS= read -r p_run; } <<< "$probe"
+            while IFS=$'\t' read -r name st; do
+                [ -z "${name:-}" ] && continue
+                n_rem=$((n_rem + 1))
+                ph="$(phase_of "$h" "$name")"
+                case "$ph" in testing) pc="$C_BLU" ;; compiling) pc="$C_MAG" ;; *) pc="$C_YEL" ;; esac
+                printf '  %s%-11s%s %-14s %-30s %s\n' "$pc" "[$ph]" "$C_OFF" "$lbl" "$name" "$st"
+            done <<< "$(builds_of "$h")"
+            read -r m_gb m_pct <<< "$(mem_of "$h" | tr '\t' ' ')" || true
+            svc_row "$lbl" "$p_load" "$p_cores" "$p_run" "${m_gb:-0}" "${m_pct:-0}"
+        else
+            printf '  %s%-13s unreachable%s\n' "$C_RED" "$lbl" "$C_OFF"
+        fi
+    done
+    # host-side maven (a bare ./mvnw or mvn) runs outside docker and would otherwise be invisible
+    for _where in local "${HOSTS[@]}"; do
+        [ "$_where" = local ] && _lbl="$LOCAL_LABEL" || _lbl="${_where#*@}"
+        while IFS= read -r _proc; do
+            [ -z "${_proc:-}" ] && continue
+            printf '  %-11s %-14s %s\n' "${C_YEL}[mvn]${C_OFF}" "$_lbl" "$_proc"
+            _saw_mvn=1
+        done <<< "$(mvn_of "$_where")"
+    done
+
+    if [ "$n_loc" = 0 ] && [ "$n_rem" = 0 ] && [ "${_saw_mvn:-0}" = 0 ]; then
+        echo "  (no build running — wrapper containers and host mvn both checked)"
+    fi
+
+    if [ -s "$LOG_FILE" ]; then
+        echo
+        echo "recent"
+        tail -8 "$LOG_FILE" | while IFS=$'\t' read -r ts mach args rc dur; do
+            [ -z "${ts:-}" ] && continue
+            if [ "$rc" = "0" ]; then tag="${C_GRN}[complete]${C_OFF}"; out="ok"
+            else tag="${C_RED}[failed]${C_OFF}"; out="exit $rc"; fi
+            printf '  %s %-13s %s%-32.32s%s %-9s %8s ago\n' \
+                "$tag" "$mach" "$C_MAG" "$args" "$C_OFF" "$out" "$(human_age "$ts")"
+        done
+        echo
+        awk -F'\t' '{n++; if ($4=="0") ok++; else bad++} END {printf "  %d finished: %d ok, %d failed\n", n, ok, bad}' "$LOG_FILE"
+    fi
+
+    echo
+    read -r l_gb l_pct <<< "$(mem_of local | tr '\t' ' ')" || true
+    svc_row "$LOCAL_LABEL" "$(awk '{print $1}' /proc/loadavg)" "$(nproc)" 0 "${l_gb:-0}" "${l_pct:-0}"
+    echo "  cap: ${MAX_BUILDS} concurrent builds per host"
+    exit 0
+fi
+
+# ---------- local-only verbs ----------
+case "$VERB" in
+    run|dev|image|help|-h|--help)
+        # these publish 8555/8777 or need the jar in this tree
+        METATRON_REMOTE_ACTIVE=1 METATRON_BUILD_REMOTE=0 exec "$REPO_ROOT/bin/metatron-docker" "${ARGS[@]}" ;;
+esac
+
+# `mvn clean` cannot work remotely: the loop bind-mounts .docker-target over /work/target,
+# and a mount point cannot be deleted. Say so instead of letting maven fail on it.
+case "${ARGS[*]}" in
+    *" clean "*|*" clean"|clean\ *)
+        warn "note: 'clean' cannot delete /work/target — the loop bind-mounts it. Use 'mvn install' (incremental), or 'build' for a fresh package." ;;
+esac
+
+# ---------- pick a machine ----------
+LOCAL_SCORE="$(score "$(awk '{print $1}' /proc/loadavg)" "$(nproc)" 0)"
+BEST_HOST=""; BEST_SCORE=""
+
+if [ -n "$PIN_HOST" ]; then
+    for h in "${HOSTS[@]}"; do
+        [ "$h" = "$PIN_HOST" ] || [ "${h#*@}" = "$PIN_HOST" ] && { BEST_HOST="$h"; break; }
+    done
+    [ -n "$BEST_HOST" ] || die "--host ${PIN_HOST} is not in METATRON_BUILD_HOSTS (known: ${HOSTS[*]})"
+    probe="$(probe_host "$BEST_HOST")" || die "--host ${BEST_HOST} is unreachable"
+    { IFS= read -r BEST_LOAD; IFS= read -r BEST_CORES; IFS= read -r BEST_RUN
+      IFS= read -r BEST_GID; IFS= read -r BEST_IP; } <<< "$probe"
+    BEST_SCORE="$(score "$BEST_LOAD" "$BEST_CORES" "$BEST_RUN")"
+    say "pinned to ${BEST_HOST} (load ${BEST_LOAD} / ${BEST_CORES} cores + ${BEST_RUN} building)"
+    WHERE=remote
+fi
+[ -n "$PIN_HOST" ] || for h in "${HOSTS[@]}"; do
+    if probe="$(probe_host "$h")" && [ -n "$probe" ]; then
+        { IFS= read -r p_load; IFS= read -r p_cores; IFS= read -r p_run
+          IFS= read -r p_gid; IFS= read -r p_ip; } <<< "$probe"
+        s="$(score "$p_load" "$p_cores" "$p_run")"
+        say "${h#*@} score ${s}   (load ${p_load} / ${p_cores} cores + ${p_run} building)"
+        # strict <: the first host in the list wins an exact tie (preference order)
+        if [ -z "$BEST_SCORE" ] || awk -v a="$s" -v b="$BEST_SCORE" 'BEGIN { exit !(a < b) }'; then
+            BEST_HOST="$h"; BEST_SCORE="$s"; BEST_LOAD="$p_load"; BEST_CORES="$p_cores"
+            BEST_RUN="$p_run"; BEST_GID="$p_gid"; BEST_IP="$p_ip"
+        fi
+    else
+        say "${h#*@} unreachable"
+    fi
+done
+[ -n "$PIN_HOST" ] || say "${LOCAL_LABEL} score ${LOCAL_SCORE}   (load/cores, no in-flight weight)"
+
+if [ -n "$PIN_HOST" ]; then
+    :                                 # already decided above
+elif [ "${METATRON_FORCE_REMOTE:-0}" = 1 ] && [ -n "$BEST_HOST" ]; then
+    WHERE=remote                      # explicit override, e.g. to warm/verify a host
+elif [ -n "$BEST_HOST" ] && awk -v g="$BEST_SCORE" -v b="$LOCAL_SCORE" 'BEGIN { exit !(g <= b) }'; then
+    WHERE=remote
+elif [ -n "$BEST_HOST" ] || [ "$FALLBACK" = 1 ]; then
+    WHERE=local
+else
+    die "no build host reachable — check ssh (ssh -o BatchMode=yes ${HOSTS[0]} true); set METATRON_BUILD_FALLBACK=1 to build here"
+fi
+
+if [ "$WHERE" = local ]; then
+    if [ "$DRY" = 1 ]; then say "would run locally: $(q "${ARGS[@]}")"; exit 0; fi
+    say "running on ${LOCAL_LABEL} (local)"
+    started=$(date +%s)
+    set +e
+    METATRON_REMOTE_ACTIVE=1 METATRON_BUILD_REMOTE=0 "$REPO_ROOT/bin/metatron-docker" "${ARGS[@]}"
+    rc=$?
+    set -e
+    record "$LOCAL_LABEL" "${ARGS[*]}" "$rc" "$(( $(date +%s) - started ))s"
+    exit "$rc"
+fi
+
+# ---------- run remotely ----------
+TREE="${REMOTE_BASE}/$(printf '%s' "$REPO_ROOT" | sed 's|^/||; s|/|_|g')"
+say "running on ${BEST_HOST#*@} (${TREE})"
+if [ "$DRY" = 1 ]; then
+    say "would rsync ${REPO_ROOT}/ -> ${BEST_HOST}:~/${TREE}/"
+    say "would run: cd ~/${TREE} && METATRON_HOST_REPO=\$PWD TESTCONTAINERS_HOST_OVERRIDE=${BEST_IP} METATRON_DOCKER_GID=${BEST_GID} bin/metatron-docker $(q "${ARGS[@]}")"
+    exit 0
+fi
+
+if [ "$MAX_BUILDS" -gt 0 ] 2>/dev/null; then
+    waited=0
+    while :; do
+        running="$(probe_host "$BEST_HOST" | sed -n '3p')"
+        [ "${running:-0}" -lt "$MAX_BUILDS" ] && break
+        [ "$waited" -ge "$MAX_WAIT" ] && die "gave up after ${waited}s waiting for a slot (${running}/${MAX_BUILDS} busy)"
+        say "waiting for a slot on ${BEST_HOST#*@}: ${running}/${MAX_BUILDS} busy (${waited}s)"
+        sleep 10; waited=$((waited + 10))
+    done
+fi
+
+ssh "${SSH_OPTS[@]}" "$BEST_HOST" "mkdir -p ~/${TREE}"
+# .build/ is rsync-excluded, so a bad symlink in it would survive every sync; only a real
+# directory is valid (a link to a host path is invisible inside the container).
+ssh "${SSH_OPTS[@]}" "$BEST_HOST" "if [ -L ~/${TREE}/.build/m2 ]; then rm -f ~/${TREE}/.build/m2; fi"
+say "syncing ${REPO_ROOT} -> ${BEST_HOST#*@}:~/${TREE}"
+rsync -a --delete \
+    --exclude 'target/' --exclude '.docker-target/' --exclude '.build/' --exclude '.git/' \
+    --exclude '*.bak-*' --exclude '.metatron.history' --exclude '.mtron-classpath*' \
+    "$REPO_ROOT/" "${BEST_HOST}:~/${TREE}/"
+
+started=$(date +%s)
+set +e
+# A pty makes mvn line-buffer (and colourise) instead of block-buffering through a pipe.
+# Only when stdout IS a terminal: an agent capturing output wants the plain pipe.
+TTY_OPT=""
+[ -t 1 ] && TTY_OPT="-tt"
+ssh $TTY_OPT "${SSH_OPTS[@]}" "$BEST_HOST" "cd ~/${TREE} && METATRON_REMOTE_ACTIVE=1 METATRON_BUILD_REMOTE=0 METATRON_HOST_REPO=\$PWD METATRON_DOCKER_GID=${BEST_GID} TESTCONTAINERS_HOST_OVERRIDE=${BEST_IP} bin/metatron-docker $(q "${ARGS[@]}")"
+rc=$?
+set -e
+
+# artifacts back: reports first (what an agent reads), then the jar
+for d in .docker-target target; do
+    rsync -a "${BEST_HOST}:~/${TREE}/${d}/" "$REPO_ROOT/${d}/" 2>/dev/null || true
+done
+record "${BEST_HOST#*@}" "${ARGS[*]}" "$rc" "$(( $(date +%s) - started ))s"
+exit "$rc"
