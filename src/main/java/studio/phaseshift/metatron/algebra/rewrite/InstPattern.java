@@ -116,8 +116,10 @@ public final class InstPattern {
      * nothing matches no law-bearing slot, fail closed, never guess. The two form-derived laws are the
      * exception: {@code floatable} (Thm 6, {@code F_m ∪ F_f ∪ F_fm}) and {@code blocked} (Thm 17,
      * {@code F_r ∪ F_b}) are read off the inst's {@link Inst.Form form}, since they are declared nowhere
-     * in the table. The inst is expected to carry its declared (dom/rng-qualified) tid, so the form and
-     * the declared-law lookups both resolve pre-resolution.
+     * in the table. A floatable run is also replicated into every peer, so it must be declared
+     * {@link Law#pure}: a write or a print is no less a mapper by its form, and floated it would run once
+     * per part. The inst is expected to carry its declared (dom/rng-qualified) tid, so the form and the
+     * declared-law lookups both resolve pre-resolution.
      */
     public boolean matches(final Inst inst) {
         if (null != this.form && Inst.Form.of(inst) != this.form)
@@ -130,7 +132,7 @@ public final class InstPattern {
 
     private static boolean satisfies(final Inst inst, final Law law) {
         return switch (law) {
-            case floatable -> Inst.Form.of(inst).isFloatable();
+            case floatable -> Inst.Form.of(inst).isFloatable() && LawTable.declares(inst.tid(), Law.pure);
             case blocked -> Inst.Form.of(inst).isBlocked();
             default -> LawTable.declares(inst.tid(), law);
         };

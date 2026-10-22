@@ -142,8 +142,8 @@ public class catRewrite {
             .create();
 
     /**
-     * The poset plan — cut a poset comparison ({@code law => [poset]}): adjacent comparisons compose to the
-     * stricter bound.
+     * The poset plan — cut a poset comparison ({@code law => [poset]}): adjacent filters on the same comparison
+     * compose to the filter on the stricter bound.
      */
     private static final Cut POSET_CUT = Cut.law(Law.poset);
     private static final Plan POSET_PLAN = PlanBuilder.plan("law_poset")
@@ -357,10 +357,10 @@ public class catRewrite {
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_idempotent"),
                                 code -> PlanInterpreter.lower(IDEMPOTENT_PLAN, code)), "the idempotent law \\(f \\cdot f \\leadsto f\\) for any operation whose declared process laws include \\(\\mathrm{idempotent}\\) -- \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{zero} \\cdot \\mathrm{zero} \\leadsto \\mathrm{zero}\\)"),
 
-                        // (2c) the absorbing law: an absorbing operation swallows the chain it is applied to
-                        // (f . g = f), so every operation before it is dead code.
+                        // (2c) the absorbing law: an absorbing operation is a constant of the chain (f . g = f), so
+                        // the pure run before it that hands it one obj per obj is dead code.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_absorbing"),
-                                code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(f \\circ g = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so everything before it is dead code -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\(x + 3 \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\)"),
+                                code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(f \\circ g = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber's dom is non-strict, and any pure operation when the absorber answers noobj -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\(x + 3 \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
 
                         // (2d) the monoidic law on a fold: a fold of a fold is the fold (reducing one element is
                         // the identity of the reduction), so an adjacent identical reducer/join collapses.
@@ -368,10 +368,10 @@ public class catRewrite {
                                 code -> PlanInterpreter.lower(MONOIDIC_PLAN, code)), "the monoidic law on a fold (\\(\\mathrm{reducer}\\)/\\(\\mathrm{join}\\) form): a fold of a fold is the fold, \\(f \\cdot f \\leadsto f\\) -- \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\), \\(\\mathrm{merge} \\cdot \\mathrm{merge} \\leadsto \\mathrm{merge}\\)"),
 
 
-                        // (2f) the poset law: compose adjacent comparisons of the same order -- the stricter
-                        // bound wins, so the two filters are one filter.
+                        // (2f) the poset law: adjacent filters on comparisons of the same order -- the stricter
+                        // bound wins, so the two filters are one filter. Bare comparisons answer bools and never compose.
                         docWrap(InstSet.Helper.rewriter(rewriteTID("law_poset"),
-                                code -> PlanInterpreter.lower(POSET_PLAN, code)), "the poset law \\(x > a \\wedge x > b \\iff x > \\max(a, b)\\): adjacent comparisons of the same ordered type compose to the stricter bound -- \\(\\mathrm{gt}(a) \\cdot \\mathrm{gt}(b) \\leadsto \\mathrm{gt}(\\max(a, b))\\), \\(\\mathrm{lt}(a) \\cdot \\mathrm{lt}(b) \\leadsto \\mathrm{lt}(\\min(a, b))\\)"),
+                                code -> PlanInterpreter.lower(POSET_PLAN, code)), "the poset law \\(x > a \\wedge x > b \\iff x > \\max(a, b)\\): adjacent filters on comparisons of the same ordered type compose to the filter on the stricter bound -- \\(\\mathrm{is}(\\mathrm{gt}(a)) \\cdot \\mathrm{is}(\\mathrm{gt}(b)) \\leadsto \\mathrm{is}(\\mathrm{gt}(\\max(a, b)))\\), \\(\\mathrm{is}(\\mathrm{lt}(a)) \\cdot \\mathrm{is}(\\mathrm{lt}(b)) \\leadsto \\mathrm{is}(\\mathrm{lt}(\\min(a, b)))\\); a bare comparison answers a bool, so \\(x.\\mathrm{gt}(a).\\mathrm{gt}(b)\\) is left as it is"),
 
                         // (3a) inverse cancellation: an adjacent declared inverse pair with equal operands
                         // cancels to the identity -- the group law g . g^-1 = 1, read off Entry.inverse.

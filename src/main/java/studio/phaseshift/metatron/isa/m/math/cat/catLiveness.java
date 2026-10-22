@@ -20,14 +20,23 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FILTER_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.GTE_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.GT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.IS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LTE_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MAP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -47,14 +56,107 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class catLiveness {
 
     /**
-     * The carrier type of a code chain — the {@link #carrierOf carrier} of the seed (the {@code start(x)} wrapper's
-     * arg). Argless ops ({@code neg()}) have no arg to derive it from, so the rewrite reads it off the seed.
+     * The carrier flowing INTO each instruction of the chain, index-aligned with {@code code.insts()}: the type a rule
+     * reads that instruction's laws at. Reading every law at the SEED's type let real's {@code div⁻¹ = mult} cancel an
+     * int's truncating division, so {@code 5.5.as(int::T).div(2).mult(2)} answered 5, not 4.
+     * <p>
+     * The types are the compiler's own: the chain is probed with the machine's resolver before it is rewritten, so a
+     * law is read for the contract dispatch picks — its dom, so a {@code nat} reads the int {@code plus} it admits.
+     * The probe is trusted while the type it threads stays concrete. Where it stops, its later answers rest on a
+     * guessed token, so the rest of the chain is probed again from the carrier that instruction hands on: the same
+     * one when it maps a generic to itself ({@code is}, {@code A ⇒ A}), else {@code #}, against which only the
+     * contracts that hold for every carrier resolve.
      */
-    public static Type carrier(final Code code) {
+    public static List<Type> carriers(final Code code) {
+        final Map.Entry<Code, List<Type>> last = LAST_CARRIERS.get();
+        if (null != last && last.getKey() == code)
+            return last.getValue();
+        final List<Type> carriers = Collections.unmodifiableList(resolveCarriers(code));
+        LAST_CARRIERS.set(Map.entry(code, carriers));
+        return carriers;
+    }
+
+    /**
+     * The last chain {@link #carriers} typed on this thread. The rules of one rewrite pass are handed the SAME code
+     * object until one of them changes it, and each would otherwise probe the resolver again. Identity, not equality:
+     * a hit is that very object, typed moments ago.
+     */
+    private static final ThreadLocal<Map.Entry<Code, List<Type>>> LAST_CARRIERS = new ThreadLocal<>();
+
+    private static List<Type> resolveCarriers(final Code code) {
         final List<Inst> insts = code.insts();
-        if (!insts.isEmpty() && START_INST_TID.equals(insts.get(0).tid().basePath()))
-            return carrierOf(insts.get(0).arg(0));
-        return T(ALL);
+        final List<Type> carriers = new ArrayList<>(insts.size());
+        Type carrier = T(ALL);
+        List<Inst> probe = probe(noobj(), code);
+        int offset = 0;     // the chain position the current probe starts at
+        for (int i = 0; i < insts.size(); i++) {
+            final Inst inst = insts.get(i);
+            carriers.add(carrier);
+            if (START_INST_TID.equals(inst.tid().basePath())) {
+                carrier = inst.args().isEmpty() ? T(ALL) : carrierOf(inst.arg(0));
+                continue;
+            }
+            Inst resolved = null == probe ? null : probe.get(i - offset);
+            // unresolved where the probe threaded its own token: that token may carry a coefficient the dom refuses
+            // (is hands on int{?}, and plus wants int), which the walked carrier — a base type — does not, so the
+            // rest of the chain is probed again from here before the type is given up
+            if ((null == resolved || !resolved.tid().hasDom()) && offset < i
+                    && null != carrier.vid() && !ALL.basePath().equals(carrier.vid().basePath())) {
+                offset = i;
+                probe = probe(carrier, code(insts.subList(i, insts.size())));
+                resolved = null == probe ? null : probe.getFirst();
+            }
+            final fURI dom = concrete(resolved, true);
+            if (null != dom)
+                carriers.set(i, T(dom));
+            final fURI rng = concrete(resolved, false);
+            if (null != rng) {
+                carrier = T(rng);
+                continue;
+            }
+            carrier = passesThrough(resolved) ? carrier : T(ALL);
+            offset = i + 1;
+            probe = offset < insts.size() ? probe(carrier, code(insts.subList(offset, insts.size()))) : null;
+        }
+        return carriers;
+    }
+
+    /**
+     * The chain resolved by the machine's resolver from {@code lhs}, index-aligned with the chain, or null when it
+     * cannot be: a probe only, so it never fails the rewrite that asked. The whole chain goes through the resolver's
+     * memo (keyed by code identity); a restarted rest is a fresh code each time, so it bypasses the memo.
+     */
+    private static List<Inst> probe(final Obj lhs, final Code code) {
+        try {
+            final Resolver resolver = Machine.current().compiler().resolver();
+            final Code resolved = lhs.isNoObj()
+                    ? resolver.apply(lhs, code)
+                    : Resolver.Helper.resolveCode(lhs, code, resolver.selector(), resolver.binder());
+            return resolved.insts().size() == code.insts().size() ? resolved.insts() : null;
+        } catch (final Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * The base type at a resolved instruction's dom (or rng), or null when it has none, or it is generic or
+     * {@code #} — a type no law is declared at.
+     */
+    private static fURI concrete(final Inst resolved, final boolean dom) {
+        if (null == resolved || !(dom ? resolved.tid().hasDom() : resolved.tid().hasRng()))
+            return null;
+        final fURI type = (dom ? resolved.tid().dom() : resolved.tid().rng()).basePath();
+        return type.isGeneric() || type.equals(ALL.basePath()) ? null : type;
+    }
+
+    /**
+     * Whether a resolved instruction maps a generic to itself ({@code A ⇒ A}), handing on the carrier it consumes.
+     */
+    private static boolean passesThrough(final Inst resolved) {
+        if (null == resolved || !resolved.tid().hasDom() || !resolved.tid().hasRng())
+            return false;
+        final fURI dom = resolved.tid().dom().basePath();
+        return dom.isGeneric() && dom.equals(resolved.tid().rng().basePath());
     }
 
     /**
@@ -117,6 +219,23 @@ public class catLiveness {
     }
 
     /**
+     * The comparison a filter tests — {@code is(gt(a))} or {@code filter(gt(a))}, whose one argument is
+     * {@code gt(a)} (an instruction, or a one-instruction code) — or null when the instruction is no filter of one
+     * comparison. A bare {@code gt(a)} is no filter: it answers a bool, which is why only filters compose.
+     */
+    public static Inst comparisonOf(final Inst filter) {
+        final fURI op = filter.tid().basePath();
+        if ((!IS_INST_TID.equals(op) && !FILTER_INST_TID.equals(op)) || 1 != filter.args().count() || !filter.arg(0).isCall())
+            return null;
+        final List<Inst> insts = filter.arg(0).<Call>as().asCode().insts();
+        if (1 != insts.size())
+            return null;
+        final String name = insts.getFirst().tid().basePath().name();
+        return name.equals(GT_INST_TID.name()) || name.equals(GTE_INST_TID.name())
+                || name.equals(LT_INST_TID.name()) || name.equals(LTE_INST_TID.name()) ? insts.getFirst() : null;
+    }
+
+    /**
      * Whether an instruction declares a process law for the carrier's type. The chain instruction carries no
      * endpoints (the rewriter runs before resolution), so the declaration is resolved by op address,
      * disambiguated by the operand type — never guessed across types.
@@ -141,11 +260,26 @@ public class catLiveness {
         if (morphisms.isEmpty())
             return false; // every rewrite is the identity on the empty word
         try {
-            return live(Profile.of(morphisms), rewrite);
+            return live(profileOf(morphisms), rewrite);
         } catch (final Exception e) {
             return true; // the profile failed to compute — cannot prove identity, so keep the edge (never prune when unsure)
         }
     }
+
+    /**
+     * The profile of an abstraction's morphisms, computed once per lift: a path asks every rule of the same morphism
+     * list in turn, so the last list profiled on this thread (by identity) answers again.
+     */
+    private static Profile profileOf(final List<Obj> morphisms) {
+        final Map.Entry<List<Obj>, Profile> last = LAST_PROFILE.get();
+        if (null != last && last.getKey() == morphisms)
+            return last.getValue();
+        final Profile profile = Profile.of(morphisms);
+        LAST_PROFILE.set(Map.entry(morphisms, profile));
+        return profile;
+    }
+
+    private static final ThreadLocal<Map.Entry<List<Obj>, Profile>> LAST_PROFILE = new ThreadLocal<>();
 
     /**
      * The rule dispatch shared by both profiles — each case is the necessary half of that rule's own guard.
@@ -183,7 +317,7 @@ public class catLiveness {
         private boolean adjInvolution;   // an adjacent same-op pair declaring involution, or any adjacent same-op pair under a carrier with a declared inverse role
         private boolean adjIdempotent;   // an adjacent same-op pair declaring idempotent
         private boolean adjMonoidFold;   // an adjacent same-op reducer/join pair declaring monoidic
-        private boolean adjPoset;        // an adjacent same-op pair declaring poset
+        private boolean adjPoset;        // an adjacent pair of the same filter on the same poset comparison
         private boolean adjInverse;      // an adjacent pair on a declared opposing edge
         private boolean absorbing;       // an absorbing op with live code before it
         private boolean mapWrap;         // a map(f) wrapping an unwrappable instruction
@@ -203,16 +337,23 @@ public class catLiveness {
             // the additive normalizers' op, read off the code ring's algebra exactly as their rules read it -- a ring
             // declaring no additive structure has no witness, and neither normalizer is then ever live
             final fURI additive = TheoryHelper.additiveWitness(T(CODE_TID));
-            Type carrier = T(ALL);
-            boolean carrierInverse = false;
+            // the carrier at each position, exactly as the rules read it (carriers): the chain is the morphisms' carried
+            // instructions, and a morphism carrying none leaves every position unknown
+            final List<Rec> blocks = morphisms.stream().filter(Obj::isRec).map(Obj::asRec).toList();
+            final List<Inst> chain = blocks.stream().filter(b -> b.has(uri(OBJ))).map(b -> b.at(OBJ).asInst()).toList();
+            final List<Type> carriers = chain.size() == blocks.size() ? carriers(code(chain)) : null;
+            final Map<Type, Boolean> inverses = new HashMap<>();
+            boolean priorCarrierInverse = false;
+            Inst priorComparison = null;
+            Type priorCarrier = T(ALL);
             String priorName = null;
             fURI priorInverse = null;
             boolean pastSeed = false;
             boolean hasSeed = false;
-            for (final Obj m : morphisms) {
-                if (!m.isRec())
-                    continue;
-                final Rec morphism = m.asRec();
+            for (int i = 0; i < blocks.size(); i++) {
+                final Rec morphism = blocks.get(i);
+                final Type carrier = null == carriers ? T(ALL) : carriers.get(i);
+                final boolean carrierInverse = inverses.computeIfAbsent(carrier, t -> !TheoryHelper.invInst(t).isNoObj());
                 final Inst keyed = morphism.has(uri(OBJ)) ? morphism.at(OBJ).asInst() : null;
                 final String name = morphism.has(uri(NAME)) ? morphism.at(NAME).uriValue().name()
                         : (null == keyed ? null : keyed.tid().basePath().name());
@@ -222,10 +363,6 @@ public class catLiveness {
                         : List.of();
                 if (Inst.Form.initial.name().equals(form) || (null != keyed && START_INST_TID.equals(keyed.tid().basePath()))) {   // the seed: start (op address) or initial form — the bare start reads as mapper pre-resolution, so the op address is the reliable seed marker
                     hasSeed = true;
-                    if (null != keyed && 0 < keyed.args().count()) {
-                        carrier = carrierOf(keyed.arg(0));
-                        carrierInverse = !TheoryHelper.invInst(carrier).isNoObj();
-                    }
                     continue;
                 }
                 if (hasSeed && Inst.Form.reducer.name().equals(form) && combines(keyed, carrier))
@@ -250,11 +387,15 @@ public class catLiveness {
                 if (pastSeed && laws.contains(Law.absorbing.name()))
                     profile.absorbing = true;
                 if (pastSeed && null != name && name.equals(priorName)) {
-                    if (carrierInverse || laws.contains(Law.involution.name()))
+                    // the pair's carrier is its first member's, as the rule reads it
+                    if (priorCarrierInverse || laws.contains(Law.involution.name()))
                         profile.adjInvolution = true;
                     if (laws.contains(Law.idempotent.name()))
                         profile.adjIdempotent = true;
-                    if (laws.contains(Law.poset.name()))
+                    // two of the same filter on the same comparison, poset-declared at the first one's carrier
+                    final Inst comparison = null == keyed ? null : comparisonOf(keyed);
+                    if (null != comparison && null != priorComparison && sameOp(comparison, priorComparison)
+                            && declares(priorComparison, priorCarrier, Law.poset))
                         profile.adjPoset = true;
                     if ((Inst.Form.reducer.name().equals(form) || Inst.Form.join.name().equals(form)) && laws.contains(Law.monoidic.name()))
                         profile.adjMonoidFold = true;
@@ -265,6 +406,9 @@ public class catLiveness {
                     profile.adjInverse = true;
                 priorName = name;
                 priorInverse = inverse;
+                priorCarrierInverse = carrierInverse;
+                priorComparison = null == keyed ? null : comparisonOf(keyed);
+                priorCarrier = carrier;
                 pastSeed = true;
             }
             return profile;

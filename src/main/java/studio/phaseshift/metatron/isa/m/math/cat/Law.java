@@ -54,6 +54,13 @@ public enum Law {
      */
     blocked,
     /**
+     * the effect axis: the result is a function of the lhs and args alone, and applying it changes nothing else — no
+     * write, no print, no spawn. Declared, never inferred: an instruction that does not declare {@code pure} is
+     * effectful, so a rule that moves, drops or replicates code ({@code law_absorbing}'s swallowed prefix,
+     * {@code law_shard}'s floatable run) admits only declared-pure instructions
+     */
+    pure,
+    /**
      * a monoid/group acting on a carrier — {@code f(gh)x = f(g)f(h)x}
      */
     action,

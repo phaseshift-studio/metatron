@@ -62,6 +62,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * {@link #typeLawsUncached(Type)} for its object laws. See {@link mInstSetLawTable} for the base types'
  * instance.
  *
+ * <p>Purity is declared, never inferred: an entry lists {@link Law#pure} when its instruction is a value operation,
+ * and an instruction that does not — undeclared, or declared without it — is effectful, so no rule moves, drops or
+ * replicates it.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class LawTable {

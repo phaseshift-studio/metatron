@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -38,15 +40,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -86,17 +93,17 @@ public class catInstSetTest extends AbstractInstSetTest {
     public void testIntFamilyShipsItsAlgebra() {
         // the declarations ship with the Int registrations — read the shipped algebra back through ?catq
         checkCodeParseApply(LOG, "*/m/inst/plus?int<=int>>form", "mapper");
-        checkCodeParseApply(LOG, "*/m/inst/plus?int<=int>>law", "[commutative,right_distributive,action]");
+        checkCodeParseApply(LOG, "*/m/inst/plus?int<=int>>law", "[commutative,right_distributive,action,pure]");
         checkCodeParseApply(LOG, "*/m/inst/plus?int<=int>>analysis>>inverse", "/m/inst/minus?rng=/m/int&dom=/m/int");
         checkCodeParseApply(LOG, "*/m/inst/plus?int<=int>>analysis>>position", "[incomparable,retract]");
         checkCodeParseApply(LOG, "*/m/inst/sum?int<=int{*}>>form", "reducer");
-        checkCodeParseApply(LOG, "*/m/inst/sum?int<=int{*}>>law", "[monoidic,commutative,right_distributive]");
+        checkCodeParseApply(LOG, "*/m/inst/sum?int<=int{*}>>law", "[monoidic,commutative,right_distributive,pure]");
         checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int>>form", "mapper");
-        checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int>>law", "[right_distributive]");
+        checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int>>law", "[right_distributive,poset,pure]");
         checkCodeParseApply(LOG, "*/m/inst/minus?int<=int>>analysis>>inverse", "/m/inst/plus?rng=/m/int&dom=/m/int");
-        checkCodeParseApply(LOG, "*/m/inst/neg?int<=int>>law", "[involution]");
+        checkCodeParseApply(LOG, "*/m/inst/neg?int<=int>>law", "[involution,pure]");
         checkCodeParseApply(LOG, "*/m/inst/neg?int<=int>>analysis>>inverse", "/m/inst/neg?rng=/m/int&dom=/m/int");
-        checkCodeParseApply(LOG, "*/m/inst/zero?int<=int>>law", "[absorbing,idempotent]");
+        checkCodeParseApply(LOG, "*/m/inst/zero?int<=int>>law", "[absorbing,idempotent,pure]");
         // the wrapped insts must still apply — regression pins for the wrap mechanics
         checkCodeParseApply(LOG, "1.plus(2)", "3");
         checkCodeParseApply(LOG, "{1,2,3}.sum()", "6");
@@ -295,13 +302,13 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            // "*plus?int<=int.take(1).as(morphism::T)>>law   % [commutative,right_distributive,action]",
-            //"|mult?int<=int(int::T).as(morphism::T)>>law     % [commutative,right_distributive,action]",
-            "|minus?int<=int(int::T).as(morphism::T)>>law    % [action]",
-            "|gt?bool<=int(int::T).as(morphism::T)>>law      % [right_distributive]",
-            "|div?int<=int(int::T).as(morphism::T)>>law      % [action]",
-            "|sum?int<=int{*}().as(morphism::T)>>law         % [monoidic,commutative,right_distributive]",
-            "|prod?int<=int{*}().as(morphism::T)>>law        % [monoidic,commutative,right_distributive]",
+            // "*plus?int<=int.take(1).as(morphism::T)>>law   % [commutative,right_distributive,action,pure]",
+            //"|mult?int<=int(int::T).as(morphism::T)>>law     % [commutative,right_distributive,action,pure]",
+            "|minus?int<=int(int::T).as(morphism::T)>>law    % [action,pure]",
+            "|gt?bool<=int(int::T).as(morphism::T)>>law      % [right_distributive,poset,pure]",
+            "|div?int<=int(int::T).as(morphism::T)>>law      % [action,pure]",
+            "|sum?int<=int{*}().as(morphism::T)>>law         % [monoidic,commutative,right_distributive,pure]",
+            "|prod?int<=int{*}().as(morphism::T)>>law        % [monoidic,commutative,right_distributive,pure]",
     }, delimiter = '%')
     void testMorphismLaws(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
@@ -371,6 +378,10 @@ public class catInstSetTest extends AbstractInstSetTest {
             "true.mult(true)    % start(true)       % true",
             // code ring — the identity operation itself is the identity morphism
             "5.id()             % start(5)          % 5",
+            // ...but only composition's identity: end is the additive group's id, and under composition the ZERO
+            "5.end()            % start(5).end()          % noobj",
+            "5.plus(1).end()    % start(5).plus(1).end()  % noobj",
+            "5.id().end()       % start(5).end()          % noobj",
     }, delimiter = '%')
     public void testUnitRemoval(final String code, final String expected, final String expectedResult) throws Exception {
         final Code firstStage = ObjmtronSerializer.parse(code);
@@ -441,6 +452,9 @@ public class catInstSetTest extends AbstractInstSetTest {
             "\"ab\".reverse().reverse()  % start(\"ab\")  % \"ab\"",
             "true.not().not()       % start(true)       % true",
             "2.0.inv().inv()        % start(2.0)        % 2.0",
+            // read at each position's type: inv is real's involution after the cast, and is (A => A) keeps int
+            "5.as(real::T).inv().inv()        % start(5).as(real::T)        % 5.0",
+            "{1,2,3}.is(gt(1)).neg().neg()    % start({1,2,3}).is(gt(1))    % {2,3}",
     }, delimiter = '%')
     public void testInvolutions(final String code, final String expected, final String expectedResult) throws Exception {
         final Code firstStage = ObjmtronSerializer.parse(code);
@@ -485,16 +499,85 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     /**
      * {@code law_absorbing} — an operation declared {@code absorbing} is a constant of the chain
-     * ({@code f ∘ g = f}), so everything before it is dead code.
+     * ({@code f ∘ g = f}), so the run before it is dead code — but only the run that cannot change what it answers:
+     * a pure instruction that hands it one obj per obj (a mapper of its carrier) and keeps that carrier.
      */
     @ParameterizedTest
     @CsvSource(value = {
             "5.plus(3).zero()    % start(5).zero()   % 0",
             "5.mult(2).zero()    % start(5).zero()   % 0",
             "5.plus(3).plus(4).zero()  % start(5).zero()  % 0",
+            "{1,2,3}.plus(1).zero()               % start({1,2,3}).zero()               % {3}0",
+            // a filter drops objs a strict absorber never sees, a fold changes the count, a cast changes the carrier
+            "{1,2,3}.is(gt(1)).zero()             % start({1,2,3}).is(gt(1)).zero()     % {2}0",
+            "{1,2,3}.sum().zero()                 % start({1,2,3}).sum().zero()         % 0",
+            "5.as(str::T).zero()                  % start(5).as(str::T).zero()          % \"\"",
+            // an instruction that does not declare pure is effectful, so it stays
+            "5.side(plus(1)).zero()               % start(5).side(plus(1)).zero()       % 0",
+            // the run stops at the first instruction it may not take
+            "5.plus(1).is(gt(0)).plus(2).zero()   % start(5).plus(1).is(gt(0)).zero()   % 0",
+            // every absorber takes its own run, in one pass
+            "5.plus(1).zero().plus(2).zero()      % start(5).zero()                     % 0",
     }, delimiter = '%')
     public void testAbsorbing(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * The identity MORPHISM is the identity of chain composition, read off the type's multiplicative op. The code
+     * ring's additive group names an identity too — end, the identity of branch — and under composition end is the
+     * ZERO: taking it for the identity made {@code 5.end()} answer 5. A type whose identities are literals
+     * ({@code int}'s 0 and 1) has no identity morphism. Each row: the type % its composition identity.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/m/code   % /m/inst/id",
+            "/m/int    % noobj",
+            "/m/real   % noobj",
+            "/m/str    % noobj",
+    }, delimiter = '%')
+    void testCompositionIdentity(final String type, final String expected) {
+        final fURI identity = TheoryHelper.compositionIdentity(T(f(type)));
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), null == identity ? noobj() : uri(identity), true);
+    }
+
+    /**
+     * The carrier flowing into each instruction — the type its laws are read at — as the compiler's resolver types
+     * the chain: a cast hands on its target, a generic that maps a type to itself ({@code is}) hands on its own, and
+     * a refinement reads the laws of the contract it admits. Each row: the chain % the carrier entering each
+     * instruction, seed first.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.plus(1).neg()                 % # /m/int /m/int",
+            "5.5.as(int::T).div(2).mult(2)   % # /m/real /m/int /m/int",
+            "5.as(real::T).inv().inv()       % # /m/int /m/real /m/real",
+            "5.as(str::T).zero()             % # /m/int /m/str",
+            "{1,2,3}.is(gt(1)).neg()         % # /m/int /m/int",
+            "5.plus(1).is(gt(0)).plus(2).zero()   % # /m/int /m/int /m/int /m/int",
+            "{1,2,3}.is(gt(1)).plus(2).zero()     % # /m/int /m/int /m/int",
+    }, delimiter = '%')
+    void testCarriers(final String code, final String expected) {
+        final List<Type> carriers = catLiveness.carriers(ObjmtronSerializer.parse(code).asCode());
+        checkEquality(LOG, str(expected), str(carriers.stream().map(t -> t.vid().toString()).collect(Collectors.joining(" "))), true);
+    }
+
+    /**
+     * A floatable run is replicated into every peer, so the slot admits only a declared-{@code pure} instruction: a
+     * mapper by its form is not enough. {@code side} is a mapper that declares nothing, so it never floats, and a fold
+     * behind it is not sharded. Each row: the op % its dom % its rng % whether it floats.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "plus   % /m/int  % /m/int   % true",
+            "neg    % /m/int  % /m/int   % true",
+            "gt     % /m/int  % /m/bool  % true",
+            "plus   % /m/real % /m/real  % true",
+            "side   % /m/int  % /m/int   % false",
+    }, delimiter = '%')
+    void testFloatableRequiresPure(final String op, final String dom, final String rng, final boolean floats) {
+        final Inst inst = instB(M_ISA_INST_TID.extend(op).dom(f(dom)).rng(f(rng)), lst());
+        checkEquality(LOG, bool(floats), bool(InstPattern.law(Law.floatable).matches(inst)), true);
     }
 
     /**
@@ -511,15 +594,42 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * {@code law_poset} — adjacent comparisons of an ordered type compose to the stricter single bound.
+     * {@code law_poset} — adjacent filters on the same comparison of an ordered type compose to the filter on the
+     * stricter bound ({@code x > a ∧ x > b ⇔ x > max(a, b)}).
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "\"m\".gt(\"a\").gt(\"z\")  % start(\"m\").gt(\"z\")  % false",
-            "\"m\".lt(\"z\").lt(\"a\")  % start(\"m\").lt(\"a\")  % false",
+            "{1,2,3,4,5}.is(gt(1)).is(gt(3))            % start({1,2,3,4,5}).is(gt(3))            % {4,5}",
+            "{1,2,3,4,5}.is(gt(3)).is(gt(1))            % start({1,2,3,4,5}).is(gt(3))            % {4,5}",
+            "{1,2,3,4,5}.is(lt(4)).is(lt(2))            % start({1,2,3,4,5}).is(lt(2))            % 1",
+            "{1,2,3,4,5}.is(gte(2)).is(gte(4))          % start({1,2,3,4,5}).is(gte(4))           % {4,5}",
+            "{1,2,3,4,5}.is(lte(4)).is(lte(2))          % start({1,2,3,4,5}).is(lte(2))           % {1,2}",
+            "{1,2,3,4,5}.filter(gt(1)).filter(gt(3))    % start({1,2,3,4,5}).filter(gt(3))        % {4,5}",
+            "{1.0,2.5,3.5}.is(gt(1.5)).is(gt(2.0))      % start({1.0,2.5,3.5}).is(gt(2.0))        % {2.5,3.5}",
+            "{\"a\",\"m\",\"z\"}.is(gt(\"b\")).is(gt(\"n\"))    % start({\"a\",\"m\",\"z\"}).is(gt(\"n\"))    % \"z\"",
+            // only the same comparison composes
+            "{1,2,3,4,5}.is(gt(1)).is(lt(4))            % start({1,2,3,4,5}).is(gt(1)).is(lt(4))  % {2,3}",
+            "{1,2,3,4,5}.is(gt(1)).is(gte(3))           % start({1,2,3,4,5}).is(gt(1)).is(gte(3)) % {3,4,5}",
     }, delimiter = '%')
     public void testPoset(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * {@code law_poset} leaves bare comparisons alone: {@code gt} answers a bool, so in {@code x.gt(a).gt(b)} the
+     * second comparison tests that bool against {@code b}, and {@code x.gt(max(a, b))} would mean something else. Only
+     * the rewritten shape is asserted: what a bool compared with an int or str answers is not this rule's subject.
+     * Each row: the chain % the chain the category leaves.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"m\".gt(\"a\").gt(\"z\")   % start(\"m\").gt(\"a\").gt(\"z\")",
+            "\"m\".lt(\"z\").lt(\"a\")   % start(\"m\").lt(\"z\").lt(\"a\")",
+            "5.gt(1).gt(3)              % start(5).gt(1).gt(3)",
+    }, delimiter = '%')
+    void testPosetLeavesComparisons(final String code, final String expected) {
+        final Call secondStage = ObjmtronSerializer.parse(expected);
+        checkEquality(LOG, secondStage, catRewrite(ObjmtronSerializer.parse(code)).tryToInst(), true);
     }
 
     /**
@@ -533,6 +643,9 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.minus(3).plus(3)     % start(5)   % 5",
             // a declared inverse is one-sided: int div truncates, so div·mult must not cancel
             "5.div(2).mult(2)       % start(5).div(2).mult(2)   % 4",
+            // read at each position's type, not the seed's: after the cast to int, div has no inverse
+            "5.5.as(int::T).div(2).mult(2)   % start(5.5).as(int::T).div(2).mult(2)   % 4",
+            "5.as(real::T).mult(2).div(2)    % start(5).as(real::T)                   % 5.0",
     }, delimiter = '%')
     public void testInverseCancellation(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
@@ -718,6 +831,10 @@ public class catInstSetTest extends AbstractInstSetTest {
             // a chain with no branch carries neither edge
             "start(5).plus(0).neg().neg()                              % branch_collapse  % false",
             "start(5).plus(0).neg().neg()                              % branch_inline    % false",
+            // law_poset composes filters on the same comparison, never bare comparisons
+            "start({1,2,3}).is(gt(1)).is(gt(2))                        % law_poset        % true",
+            "start({1,2,3}).is(gt(1)).is(lt(3))                        % law_poset        % false",
+            "start(\"m\").gt(\"a\").gt(\"z\")                              % law_poset        % false",
     }, delimiter = '%')
     void testAprioriPruning(final String code, final String rule, final boolean live) {
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse(code));
