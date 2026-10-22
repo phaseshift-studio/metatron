@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -111,7 +112,14 @@ public class WebSocketRec extends MRec implements WebSocketObj {
         try {
             LOG.status(DEBUG, "{{y}}%s {{g}}<=> {{y}}%s{{X}} closed: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.vid(), this.getOtherVID() == null ? "{{r}}noobj" : this.getOtherVID(), code, reason);
             this.at(uri(ON_CLOSE)).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
-            this.close();
+            // A LINK THAT FAILED HAS NOT ENDED. A dialed connection its owner did not hang up is being supervised
+            // back, so it is not closed here: the round trips in flight on it are answered at once (they would
+            // otherwise wait out their whole deadline for a reply that cannot come), and its router stays installed,
+            // so the redialed connection keeps the one router rather than wrapping a second around it.
+            if (this.socket instanceof Network.Link link && !link.hungUp())
+                this.abandon("closed with code " + code + (null == reason || reason.isBlank() ? "" : ": " + reason));
+            else
+                this.close();
         } catch (final Exception e) {
             LOG.error("error processing close: %s", e);
         }

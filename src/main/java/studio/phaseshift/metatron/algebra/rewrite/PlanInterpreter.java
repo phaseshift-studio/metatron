@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.ADD;
+import static studio.phaseshift.metatron.Tokens.AUTHORITY;
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
 import static studio.phaseshift.metatron.Tokens.DERIVATION;
 import static studio.phaseshift.metatron.Tokens.HOPS;
@@ -286,9 +288,17 @@ public final class PlanInterpreter {
      */
     private static List<Obj> shardTargets() {
         try {
-            return Machine.current().network().peers().elements()
-                    .filter(peer -> peer.second().isRec() && peer.second().asRec().at(uri(HOST)).isUri())
-                    .map(Rel::first)
+            // AN OFFLINE PEER IS NO TARGET. A dialed peer whose link is down stays in the map (it is being
+            // redialed), but a shard shipped down it answers `not connected` and that fail poisons the reduction --
+            // so an outage SHRINKS the fan-out instead, and the fold completes on the peers that answer. The seed
+            // bulk is factored over whatever is left, so nothing is dropped and nothing is computed twice.
+            // the route is the WIRE address the peer answers at -- its authority -- never its key, which is a local
+            // path (where the member sits in the map) and would ship the shard nowhere
+            return Machine.current().network().peers().values()
+                    .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
+                    .filter(Network.Helper::online)
+                    .map(peer -> (Obj) peer.asRec().atDirect(uri(AUTHORITY)))
+                    .filter(Obj::isUri)
                     .toList();
         } catch (final Exception e) {
             return List.of();

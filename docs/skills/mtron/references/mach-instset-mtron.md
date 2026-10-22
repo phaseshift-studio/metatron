@@ -286,16 +286,22 @@ itself a read — so instruction memory is not re-entered from there.
 
 ## network — reach and knowledge
 
-`network::T` indexes the machine's **reach**: a map $\mathit{service} \Rightarrow \mathit{peer}$ whose key is the bare
-authority (`scheme://host:port`) and whose value is a `peer::T`.
+`network::T` indexes the machine's **reach**: a map $\mathit{key} \Rightarrow \mathit{peer}$, one member per
+**surface**, whose value is a `peer::T`. The key is the dial's own address as a legal path — scheme, every label of the
+host, port, route, and never a `?q`: `ws://booger:8555/mtron?name=marko` sits at `ws/booger/8555/mtron`, so the member
+*is* an address, `~/network/peer/ws/booger/8555/mtron`. A legal path carries no dot in any segment (a dotted first
+segment reads as a host), so a host is split into its labels: `ws://booger.local:8555/mtron` is
+`ws/booger/local/8555/mtron` and `ws://192.168.1.61:8555/mtron` is `ws/192/168/1/61/8555/mtron`. Two routes of one
+service (`/mtron` and `/mcp` on one port) are two members; a loopback alias is spelled `localhost`, so `127.0.0.1` keys
+the member `localhost` already holds.
 
-| field       | what it is                                                                            |
-|-------------|---------------------------------------------------------------------------------------|
-| `authority` | the service key — the one field a peer cannot lack                                    |
-| `host`      | where it was dialed, route and `?q` processors included (`ws://h:p/mtron?clientq=me`) |
-| `name`      | the identity the dialer announced                                                     |
-| `transport` | an inst, $\mathit{message} \mapsto \mathit{answer}$ — the reach itself                |
-| `client`    | the protocol client the dial constructed, held for the hang-up                        |
+| field       | what it is                                                                         |
+|-------------|------------------------------------------------------------------------------------|
+| `authority` | the service it reaches (`scheme://host:port`) — the one field a peer cannot lack   |
+| `host`      | where it was dialed, route and `?q` processors included (`ws://h:p/mtron?name=me`) |
+| `name`      | the identity the dialer announced                                                  |
+| `transport` | an inst, $\mathit{message} \mapsto \mathit{answer}$ — the reach itself             |
+| `client`    | the protocol client the dial constructed, held for the hang-up                     |
 
 One type, **two honest states**: an `authority` alone is *known, not reachable from here* — the form a peer reference
 takes after crossing a wire; an authority with a `transport` is reachable.
@@ -304,19 +310,28 @@ takes after crossing a wire; an authority with a `transport` is reachable.
 client *is* the dial, and indexing is a background behavior of a valid construction —
 
 ```mtron
-ws_client::[pattern=><ws://localhost:8555/mtron?clientq=marko>]
+ws_client::[pattern=><ws://localhost:8555/mtron?name=marko>]
 ```
 
 The claim (`pattern`, retracted to the dialable address) derives the host; on success the client indexes itself into
 the network exactly as `memspace::[pattern=>xyz/#]` indexes into Memory. The lifecycle is one adjoint pair on the
 addressable contract: $\mathrm{index} (m)$ — a thing that exists enters the jurisdiction — and its dual
 $\mathrm{drop} (id)$ — $id \mapsto \mathrm{noobj}$, the universal close. What index granted, drop retracts; a displaced
-value is closed (close-before-clear), so "write noobj" and "hang up" are one act.
+value is closed (close-before-clear), so "write noobj" and "hang up" are one act — at the member's own address:
 
-**Identity rides the dial.** The `?clientq` processor on the connection uri *is* the identity exchange — no announce
+```mtron
+*</network/peer/ws/booger/8555/mtron/authority>   [-- a member, field by field --]
+</network/peer/ws/booger/8555/mtron> -> noobj      [-- hang up: the member leaves the map --]
+</network/peer> -> noobj                           [-- hang up every member --]
+```
+
+**No two equivalent connections.** Dialing a surface the machine already holds closes the connection there and the new
+one takes its key; the identity a dial announces is no part of the surface.
+
+**Identity rides the dial.** The `?name` parameter on the connection uri *is* the identity exchange — no announce
 message, no anonymous-then-upgrade: the listener co-mounts a **named** inbound peer the moment the socket opens
-(server : peer :: constructor : instance). The service key spends exactly that one processor; every other `?q` rides
-through.
+(server : peer :: constructor : instance). It is a plain session parameter, like `?in=` and `?out=`, rather than a
+q-processor; the key carries none of them, while `host` keeps the dial as it was written.
 
 **The identity element.** `id_client::T` (`/m/mach/id_client`) is the identity of the protocol-client family, bound
 to the scheme `loop:`: its constructor is the dial, its `send_recv` applies the shipped message against the local
@@ -328,16 +343,44 @@ code ships as written: `1.plus(2).send_recv(|plus(45))` evaluates `plus(45)` at 
 monad. Insts are total, $P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a transport never errors — it answers a smaller set,
 and $\emptyset$ (noobj) is a legal answer, not an exception.
 
+**Supervision keeps the index true.** Between the index that granted a peer and the drop that retracts it, the
+network watches every peer whose client holds a live connection — a *link*, `ws_client` today — and keeps the listing
+honest. Connection on creation, destruction on deletion, and only the owner deletes:
+
+| what happened                                                              | what the network does                                                                                                  |
+|----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| the far side went away — restart, shutdown, crash, refusal                 | a **failure**: the peer stays listed, offline, and is redialed *in place* on a capped backoff (0.5 s doubling to 10 s) |
+| a request needs a peer that is offline                                     | the request redials **on demand** (within its 5 s open wait), so the first request after a restart heals the link      |
+| the owner hung up — the client closed or deleted, `drop`, the frame popped | the one **explicit shutdown**: the peer leaves the map at once and is never redialed                                   |
+
+A dial made before its far side is up is a peer too — offline until the far side answers. Deleting the address that
+holds a client is the hang-up, by close-before-clear:
+
+```mtron
+/usr/peer/booger -> ws_client::[pattern=><ws://booger:8555/mtron?name=marko>]   [-- dial, index, supervise --]
+/usr/peer/booger -> noobj                                                    [-- hang up: the peer leaves the map --]
+```
+
+Redialing in place is the point: the client *is* the connection's identity, so the handle stored at
+`/usr/peer/booger` stays the live connection across outages, and deleting it hangs up what is actually connected. While
+a peer is offline, `*~/network/status` reports it `down` without a round trip, a round trip in flight when its link
+dropped is answered at once with a fail rather than waiting out its deadline, and `law_shard` plans only over the peers
+that answer — an outage shrinks the fan-out instead of poisoning the fold.
+
 **Two laws across the frame stack** — `push` mints each child its own network level, the same parade as its memory and
 its instset:
 
 1. **knowledge is shared** — the roster is one listing at the root address (memory's base frame, machine-global): a
    declaration made standing anywhere is every frame's fact;
 2. **reach is not** — peers are neither inherited (not even shadowed) nor shared with children: a connection belongs
-   to exactly the machine that dialed it, a pop retracts precisely its dials, and a sibling never sees them.
+   to exactly the machine that dialed it, a pop retracts precisely its dials — its sockets hung up and its supervision
+   ended — and a sibling never sees them.
 
-The frame-stack laws and the wire are pinned by scripted runs over live sockets: wire equalities, `?clientq` naming,
-value shapes, retraction, roster and frame laws, and authority aliasing — as are the loop and ws equalities.
+The frame-stack laws and the wire are pinned by scripted runs over live sockets: wire equalities, `?name` naming,
+value shapes, retraction, roster and frame laws, and authority aliasing — as are the loop and ws equalities, the
+supervision rows (a restart redialed, a dial before the far side is up, a deleted handle, a pop's hang-up), and the
+addressing rows (a member at its dial's path, deleted there, replaced by a redial, two surfaces side by side, a frame's
+members at its own `~`).
 
 The Java-level counterpart — the classes, the package layout, and the load-bearing invariants — lives in
 [machine architecture (Java)](../metatron/references/machine-architecture-java.md).

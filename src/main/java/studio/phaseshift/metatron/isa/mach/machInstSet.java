@@ -550,7 +550,7 @@ public class machInstSet extends AbstractInstSet {
                                         .create(),
                                 Map.of(uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
                                         uri(ROSTER).maybe(), "known machines, connectionless: a declared peer is <authority> => transport, a discovered machine is <host> => uri{+} (every address it answers at); transportOf reads both",
-                                        uri(PEER).maybe(), "machine's own connections: <service-uri> => peer::T",
+                                        uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/booger/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(SOURCE).maybe(), "the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism",
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"),
                                 """
@@ -563,7 +563,7 @@ public class machInstSet extends AbstractInstSet {
                                 source and cannot drift.
                                 """,
                                 "network::[name=>'local',roster=>[b=><ws://192.168.1.42:8555>],source=>[mdns=></m/web/mdns>]] [-- a network that knows a peer before dialing it --]",
-                                "network::[peer=>[<ws://localhost:39111>=>[authority=><ws://localhost:39111/worker>]]] [-- a machine whose reach is the one node it holds --]"),
+                                "network::[peer=>[<ws/localhost/39111/worker>=>[authority=><ws://localhost:39111>]]] [-- a machine whose reach is the one node it holds --]"),
                         MACH_MACHINE_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MACH_MACHINE_TID)

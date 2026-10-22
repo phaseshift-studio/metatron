@@ -220,7 +220,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
         // the response changed on the SERVER, driven solely by the query param. The contract being
         // pinned is the handler's: web_httpHandler reads with qprocLess() and spends ?mimeq on the
         // RESPONSE — the processor negotiates the serialization, it never alters the far side's read.
-        // (?clientq rides the connection uri the same way and is spent by the network's accept.)
+        // (?name rides the connection uri the same way and is spent by the network's accept.)
         final java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
         final java.net.http.HttpResponse<String> plain = client.send(
                 java.net.http.HttpRequest.newBuilder()
