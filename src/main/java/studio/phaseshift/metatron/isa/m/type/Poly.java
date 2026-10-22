@@ -152,7 +152,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     class Helper {
         public static <OBJ extends Obj> OBJ autoToggle(final Obj parent, final Obj obj, final boolean autoResolve) {
-            return (autoResolve ? obj.autoResolve(parent) : obj).parent(parent);
+            return null == obj ? (OBJ) noobj() : (null != parent && autoResolve ? obj.autoResolve(parent) : obj).parent(parent);
         }
 
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {

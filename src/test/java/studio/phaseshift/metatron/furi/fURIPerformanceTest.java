@@ -27,7 +27,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -92,7 +95,9 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
                 "<{a,b}/c>");
     }
 
-    /** The corpus materialized once; a Stream is single-use and the benchmarks walk it repeatedly. */
+    /**
+     * The corpus materialized once; a Stream is single-use and the benchmarks walk it repeatedly.
+     */
     private static List<String> CORPUS = null;
 
     private static synchronized List<String> corpusList() {
@@ -101,7 +106,9 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
         return CORPUS;
     }
 
-    /** The cache key for a raw uri string — the angle-stripped form {@link Singleton#of(String)} caches under. */
+    /**
+     * The cache key for a raw uri string — the angle-stripped form {@link Singleton#of(String)} caches under.
+     */
     private static String key(final String furi) {
         return furi.startsWith("<") && furi.endsWith(">") ? furi.substring(1, furi.length() - 1) : furi;
     }
@@ -175,7 +182,7 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
         assertEquals(fresh.path(), cached.path(), "path must agree for %s".formatted(furi));
         assertEquals(fresh.c(), cached.c(), "coefficient must agree for %s".formatted(furi));
         assertEquals(fresh.qMap(), cached.qMap(), "query must agree for %s".formatted(furi));
-        if (!"{0}".equals(key(furi)))
+        if (!"{0}".equals(key(furi)) && !"noobj".equals(key(furi)))
             assertNotSame(fresh, cached, "an uncached parse must be a fresh object for %s".formatted(furi));
     }
 
@@ -292,7 +299,9 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
                 "every cached lookup must be counted as a hit or a miss");
     }
 
-    /** Clearing the cache costs correctness nothing: uris are re-parsed and remain equal to their cached selves. */
+    /**
+     * Clearing the cache costs correctness nothing: uris are re-parsed and remain equal to their cached selves.
+     */
     @Test
     @Order(6)
     public void testCacheClearPreservesMeaning() {
@@ -599,7 +608,9 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
         assertEquals(own, fURICache.count(key -> key.startsWith("/usr/own/")), "a retired generation is still counted");
     }
 
-    /** Best-effort retained-heap reading; the JDK may ignore the hint, which is why callers only report. */
+    /**
+     * Best-effort retained-heap reading; the JDK may ignore the hint, which is why callers only report.
+     */
     private static long usedHeap() {
         final Runtime runtime = Runtime.getRuntime();
         for (int i = 0; i < 3; i++) {

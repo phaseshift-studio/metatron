@@ -275,7 +275,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 peer.asRec().at(uri(CLIENT), client, MUTABLE);
             peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
             final Rec kept = Helper.without(this.peers(), kv -> kv.first().uriValue().equals(key));
-            this.at(uri(PEER), kept.isEmpty() ? rec(uri(key), peer) : kept.plus(rec(uri(key), peer)), MUTABLE);
+            this.at(uri(PEER), null == kept || kept.isEmpty() ? rec(uri(key), peer) : kept.plus(rec(uri(key), peer)), MUTABLE);
         }
         // THE CONNECTION THIS ONE REPLACES IS CLOSED -- outside the lock, because closing a link is a hang-up and a
         // hang-up retracts (it finds nothing: its member is already gone). Close-before-clear, as everywhere.
@@ -372,7 +372,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 return noobj();
             // the zero rec is noobj as a value, but a field written with one keeps it: write noobj so the field goes
             final Rec kept = Helper.without(this.peers(), named);
-            this.at(uri(PEER), kept.isEmpty() ? noobj() : kept, MUTABLE);
+            this.at(uri(PEER), null == kept || kept.isEmpty() ? noobj() : kept, MUTABLE);
         }
         // CLEAR, THEN CLOSE. The members leave the map under the lock and what they held is closed outside it:
         // closing a link is its owner's hang-up, and a hang-up retracts -- which would come straight back into

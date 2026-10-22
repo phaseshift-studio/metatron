@@ -1022,7 +1022,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         // Singleton.of(String) below.
         public static final fURI ALL = new XXPXXXfURI(List.of("#"));
         public static final fURI WILD_ONE = new XXPXXXfURI(List.of("+"));
-        public static final fURI NOOBJ = f("noobj").zero();
+        public static final fURI NOOBJ = fURI.of(null, null, -1, List.of("noobj"), cInt.ZERO(), List.of(), Map.of(), null);
 
         public final static fURI empty() {
             return XXXXXXfURI.INSTANCE;
@@ -1061,6 +1061,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         static fURI parse(final String furiParse) {
             if ("{0}".equals(furiParse))
                 return Singleton.NOOBJ;
+
             if ("/".equals(furiParse))
                 return fURI.of(null, null, -1, List.of("", ""), cInt.ONE(), List.of(), Map.of(), null);
 
