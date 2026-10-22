@@ -138,12 +138,12 @@ it stops, so its clients see `1000` whether it is restarting or gone.
 | `WebSocketRec.onClose` / `WebSocketObj` | a failed link `abandon`s its in-flight round trips (each answered with a fail at once) and keeps `ROUTED`, so the redialed connection does not wrap a second router; `awaitOpen` redials on demand |
 
 **Members are addresses (2026-10-21).** A member's key is the dial's own address as a path, one per surface
-(`Network.Helper.keyOf`: `ws://booger.local:8555/mtron?name=me` → `ws/booger/local/8555/mtron` — a legal path, every
-host label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; the shape `fURI.toPath()`
-gives, which replaces `keyOf`'s body once it is on this branch), and the service it reaches is the `authority` field — wire dispatch (`transportOf`, `isPeer`,
+(`Network.Helper.keyOf`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every
+host label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()`
+of the dial, the loopback alias spelled first), and the service it reaches is the `authority` field — wire dispatch (`transportOf`, `isPeer`,
 `peerOf`) and `law_shard`'s routes match on that, never on the key. `Machine.bootstrap()` mounts a `PeerSpace` at
 `<vid>/network/peer/#` (indexed at `<vid>/sys/space/network`): it stores nothing and answers from the network on every
-read, so `*</network/peer/ws/booger/8555/mtron/authority>` walks a member by the space's base-poly read, and a noobj
+read, so `*</network/peer/ws/localhost/8555/mtron/authority>` walks a member by the space's base-poly read, and a noobj
 write there is `Network.disconnect` — destruction on deletion from mtron. Every other write is refused (a peer is
 constructed, not written). `index` keeps **no two equivalent connections**: a fresh client at a held key closes the
 member there and takes its place, while indexing the same client again is idempotent; `connect` still skips the dial
