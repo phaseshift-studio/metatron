@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PATH_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carriers;
+import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.contracts;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.maybeNotIdentity;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
@@ -102,12 +103,16 @@ public class catTypes {
                                         uri(DERIVATION).maybe(), rec(uri(LHS), CODE_TYPE, uri(RHS), CODE_TYPE)))
                                 .constructor(arg -> {
                                     final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
-                                    final Inst inst = objInstRec.at(OBJ).asInst();
+                                    // read directly: an initial instruction held in a rec is auto-resolved on an ordinary read
+                                    final Inst inst = objInstRec.atDirect(OBJ).asInst();
                                     final LawTable.Entry entry = LawTable.lawsOf(inst.tid());
+                                    // no table entry and no contract of its own: the form and class are read off the dom/rng
+                                    // its registrations agree on, so start's {0} => A is initial, not the bare # => # mapper
+                                    final List<Inst> shapes = null == entry && !inst.tid().hasDom() ? registrations(inst) : List.of(inst);
                                     final Map<Obj, Obj> block = new LinkedHashMap<>();
                                     block.put(uri(NAME), uri(inst.tid().name()));
-                                    block.put(uri(FORM), uri(Inst.Form.of(inst).name()));
-                                    final Lst clazz = catGraph.clazz(inst);
+                                    block.put(uri(FORM), uri(formOf(shapes, inst).name()));
+                                    final Lst clazz = classOf(shapes);
                                     if (0 < clazz.count())
                                         block.put(uri(CLASS), clazz);
                                     block.put(uri(SRC), auto_(instLambda(o -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst()));
@@ -228,6 +233,7 @@ public class catTypes {
                                         return noobj();
                                     final Code code = source.asCode();
                                     final List<Type> carriers = carriers(code);
+                                    final List<Inst> contracts = contracts(code);
                                     final List<Obj> morphisms = new ArrayList<>();
                                     for (int i = 0; i < code.insts().size(); i++) {
                                         final Inst chain = code.insts().get(i);
@@ -248,6 +254,8 @@ public class catTypes {
                                         else {
                                             final Rec block = morphism.asRec();
                                             block.at(uri(OBJ), chain, MUTABLE);
+                                            if (null == declared)
+                                                attachShape(block, chain, contracts.get(i));
                                             morphisms.add(block);
                                         }
                                     }
@@ -364,5 +372,51 @@ public class catTypes {
                                 uri(ZERO), ALL_TYPE))
                         .create(), "the theory of near-rings \\(\\langle N, +, \\cdot, 0 \\rangle\\): \\(+\\) a group, \\(\\cdot\\) a monoid, one-sided distributivity, no multiplicative \\(1\\) (reserved for barrier types)")
         );
+    }
+
+    /**
+     * The op's registered contracts — the dom/rng a bare instruction gleans its shape from — or the instruction itself
+     * when nothing is registered under its op.
+     */
+    private static List<Inst> registrations(final Inst inst) {
+        // read from the Java list, not catGraph.family's lst: a poly holding an initial contract ({0} => A) evaluates it
+        final List<Inst> registered = catGraph.instructions().stream()
+                .filter(registration -> registration.tid().basePath().equals(inst.tid().basePath())).toList();
+        return registered.isEmpty() ? List.of(inst) : registered;
+    }
+
+    /**
+     * Attach the form and class of the contract the resolver picked for an op the law table does not declare: the
+     * seed's {@code {0} => A} reads initial and is no endomorphism. The contract is read here and never stored, since a
+     * rec or lst holding an initial instruction evaluates it.
+     */
+    private static void attachShape(final Rec morphism, final Inst chain, final Inst contract) {
+        if (null == contract || !contract.tid().hasDom() || !contract.tid().basePath().equals(chain.tid().basePath()))
+            return;
+        morphism.at(uri(FORM), uri(Inst.Form.of(contract).name()), MUTABLE);
+        final Lst clazz = catGraph.clazz(contract);
+        morphism.at(uri(CLASS), 0 < clazz.count() ? clazz : noobj(), MUTABLE);
+    }
+
+    /**
+     * The form the shapes agree on, else the instruction's own: one registration ({@code start}) or overloads of one
+     * coefficient shape decide it, and overloads that disagree decide nothing.
+     */
+    private static Inst.Form formOf(final List<Inst> shapes, final Inst inst) {
+        final Set<Inst.Form> forms = new HashSet<>();
+        shapes.forEach(shape -> forms.add(Inst.Form.of(shape)));
+        return 1 == forms.size() ? forms.iterator().next() : Inst.Form.of(inst);
+    }
+
+    /**
+     * The class labels every shape carries — sound, since a label is only forced when every contract the op might
+     * run under forces it.
+     */
+    private static Lst classOf(final List<Inst> shapes) {
+        if (1 == shapes.size())
+            return catGraph.clazz(shapes.getFirst());
+        final List<Obj> common = new ArrayList<>(catGraph.clazz(shapes.getFirst()).lstValue());
+        shapes.stream().skip(1).forEach(shape -> common.retainAll(catGraph.clazz(shape).lstValue()));
+        return lst(common);
     }
 }

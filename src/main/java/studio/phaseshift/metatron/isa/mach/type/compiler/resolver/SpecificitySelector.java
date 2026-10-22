@@ -130,7 +130,7 @@ public class SpecificitySelector extends MRec implements Selector {
                 .filter(i -> (userInst.tid().basePath().equals(AS_INST_TID) && 1 == i.args().count() && userInst.args().count() == 1) ||
                         (i.tid().hasQ(MONAD_IN) || i.tid().hasQ(MONAD_OUT)) ||
                         this.checkArgs(userInst.args(), i.args()))
-                .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(Tokens.M_ISA_INST_TID)))
+                .filter(i -> !lhs.isObjInst() || (i.dom().baseTypeID().equals(Tokens.M_ISA_INST_TID)))
                 .toList();
 
         if (viable.isEmpty())

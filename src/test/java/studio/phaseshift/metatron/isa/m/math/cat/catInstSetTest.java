@@ -44,6 +44,8 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.Tokens.CLASS;
+import static studio.phaseshift.metatron.Tokens.FORM;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
@@ -560,6 +562,68 @@ public class catInstSetTest extends AbstractInstSetTest {
     void testCarriers(final String code, final String expected) {
         final List<Type> carriers = catLiveness.carriers(ObjmtronSerializer.parse(code).asCode());
         checkEquality(LOG, str(expected), str(carriers.stream().map(t -> t.vid().toString()).collect(Collectors.joining(" "))), true);
+    }
+
+    /**
+     * An abstraction's morphisms carry each instruction's own form and class. An op the law table declares is keyed by
+     * its entry. One it does not is keyed by the contract the resolver picks, so the seed reads initial ({@code start}
+     * is registered {@code {0} => A}) instead of the bare instruction's {@code # => #} mapper and endomorphism, and the
+     * maybe-dom {@code is} reads standard. Each row: the chain % each morphism's form, seed first % each morphism's
+     * class labels ({@code -} for none).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start({1,2,3}).mult(20).sum()        % initial mapper reducer    % - endo endo",
+            "start({1,2,3}).is(gt(1)).sum()       % initial standard reducer  % - endo endo",
+            "start({1,2,3}).side(plus(1)).sum()   % initial mapper reducer    % - endo endo",
+            "5.plus(0).neg()                      % initial mapper mapper     % - endo endo,iso,auto,section,retraction,mono,epi",
+    }, delimiter = '%')
+    void testAbstractionReadsEachContractsShape(final String code, final String forms, final String classes) {
+        final List<Rec> morphisms = catInstSet.ABSTRACTION_TYPE.constructor().apply(ObjmtronSerializer.parse(code).asCode())
+                .asRec().at(OBJ).asLst().elements().map(Obj::asRec).toList();
+        checkEquality(LOG, str(forms), str(morphisms.stream().map(m -> m.at(FORM).uriValue().name()).collect(Collectors.joining(" "))), true);
+        checkEquality(LOG, str(classes), str(morphisms.stream().map(catInstSetTest::classLabels).collect(Collectors.joining(" "))), true);
+    }
+
+    /**
+     * A bare instruction lifted on its own has no chain to resolve it in, so an op the law table does not declare
+     * gleans its form and class from the dom/rng its registrations agree on: the seed's one contract is initial, and
+     * {@code is}'s maybe-dom generic is standard. Each row: the instruction % its form % its class labels
+     * ({@code -} for none).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start(5)        % initial    % -",
+            "is(gt(1))       % standard   % endo",
+            "side(plus(1))   % mapper     % endo",
+    }, delimiter = '%')
+    void testBareMorphismGleansItsShapeFromItsRegistrations(final String inst, final String form, final String clazz) {
+        final Rec morphism = catInstSet.MORPHISM_TYPE.constructor().apply(ObjmtronSerializer.parse(inst).asCode().insts().getLast()).asRec();
+        checkEquality(LOG, str(form), str(morphism.at(FORM).uriValue().name()), true);
+        checkEquality(LOG, str(clazz), str(classLabels(morphism)), true);
+    }
+
+    /**
+     * A typed instruction lifts with its own contract's shape, and the lift reads its argument without evaluating it.
+     * Held in the lift's rec and read the ordinary way, an initial one ({@code start?int{3}<=noobj{0}}) would be
+     * auto-resolved. Each row: the instruction % its form % its class labels ({@code -} for none).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start?int{3}<=noobj{0}({1,2,3})   % initial  % -",
+            "plus?int<=int(1)                  % mapper   % endo",
+    }, delimiter = '%')
+    void testTypedMorphismLiftsWithoutEvaluatingIt(final String inst, final String form, final String clazz) {
+        final Rec morphism = catInstSet.MORPHISM_TYPE.constructor().apply(ObjmtronSerializer.parse(inst.trim())).asRec();
+        checkEquality(LOG, str(form), str(morphism.at(FORM).uriValue().name()), true);
+        checkEquality(LOG, str(clazz), str(classLabels(morphism)), true);
+    }
+
+    /** A morphism's class labels, comma-joined, or {@code -} when it carries none. */
+    private static String classLabels(final Rec morphism) {
+        return morphism.has(uri(CLASS))
+                ? morphism.at(CLASS).asLst().lstValue().stream().map(l -> l.uriValue().name()).collect(Collectors.joining(","))
+                : "-";
     }
 
     /**

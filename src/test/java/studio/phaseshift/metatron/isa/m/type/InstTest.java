@@ -185,6 +185,25 @@ public class InstTest extends AbstractObjTest {
     }
 
     /**
+     * noobj implements Inst (it is the zero of the instruction ring), but it is no instruction a higher-order candidate
+     * applies to, so the resolver's inst-lhs gates read {@code isObjInst()}. A typed initial instruction, which carries
+     * its contract and no function, resolves from noobj and runs. Before, the selector kept only {@code /m/inst}-dom
+     * candidates for a noobj lhs, and the typed tid named no registration: "unable to locate inst-f noobj::T => start…".
+     * Each row: the typed instruction % what it yields from noobj.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "start?int{3}<=noobj{0}({1,2,3})   % {1,2,3}",
+            "start?int<=noobj{0}(5)            % 5",
+    }, delimiter = '%')
+    public void testTypedInitialResolvesFromNoObj(final String typed, final String expected) {
+        final Inst inst = ObjmtronSerializer.parse(typed.trim());
+        assertFalse(inst.hasf(), "a parsed instruction carries its contract but no function");
+        assertTrue(inst.resolve(noobj()).isObjInst(), () -> "unresolved from noobj: " + inst);
+        assertEquals(ObjmtronSerializer.parse(expected.trim()), inst.apply(noobj()));
+    }
+
+    /**
      * A one-obj dom over a bulk lhs ({@code c > 1}) binds its generic to the lhs's element type, since the
      * processor applies the inst one obj at a time. Exact on dom and rng: {@link #testBindGenerics} accepts any
      * compatible result, and an unbound rng ({@code #}) is compatible with everything, so it cannot see the

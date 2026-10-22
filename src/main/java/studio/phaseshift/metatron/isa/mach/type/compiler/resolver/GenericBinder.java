@@ -67,10 +67,11 @@ public class GenericBinder extends MRec implements Binder {
         final long t1 = System.nanoTime();
         // binding copies the candidate (generics, args, coefficient): never at the definition's own address
         final Inst unaddressed = Inst.Helper.unaddressed(candidate);
-        Inst bound = lhs.isInst() ? unaddressed : Inst.Helper.bindGenerics(lhs, unaddressed, userInst);
+        // an instruction lhs (higher-order) binds nothing; noobj is an Inst too (the ring's zero) but binds like any obj
+        Inst bound = lhs.isObjInst() ? unaddressed : Inst.Helper.bindGenerics(lhs, unaddressed, userInst);
         if (null == bound)
             return null;
-        if (!lhs.isInst() && !Inst.Helper.filterOnDomainAllowUnique(lhs, bound))
+        if (!lhs.isObjInst() && !Inst.Helper.filterOnDomainAllowUnique(lhs, bound))
             return null;
         // 2. arguments: resolve the user's args against the bound candidate (this is where nested
         //    code arguments are compiled), then seed an initial inst's range from its own argument

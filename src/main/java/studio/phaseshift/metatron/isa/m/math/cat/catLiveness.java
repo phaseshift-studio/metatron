@@ -68,24 +68,43 @@ public class catLiveness {
      * contracts that hold for every carrier resolve.
      */
     public static List<Type> carriers(final Code code) {
-        final Map.Entry<Code, List<Type>> last = LAST_CARRIERS.get();
-        if (null != last && last.getKey() == code)
-            return last.getValue();
-        final List<Type> carriers = Collections.unmodifiableList(resolveCarriers(code));
-        LAST_CARRIERS.set(Map.entry(code, carriers));
-        return carriers;
+        return typing(code).carriers();
     }
 
     /**
-     * The last chain {@link #carriers} typed on this thread. The rules of one rewrite pass are handed the SAME code
+     * The contract the resolver picks for each instruction of the chain, index-aligned with {@code code.insts()}, read
+     * in the same probe as {@link #carriers}; null where none resolves. An op the law table does not declare is keyed
+     * by it, so its form is its own: the seed's {@code {0} ⇒ A} is initial, where the bare instruction's {@code # ⇒ #}
+     * reads as a mapper.
+     */
+    public static List<Inst> contracts(final Code code) {
+        return typing(code).contracts();
+    }
+
+    /** The carrier flowing into each instruction and the contract it resolves to, from one probe of the chain. */
+    private record Typing(List<Type> carriers, List<Inst> contracts) {
+    }
+
+    private static Typing typing(final Code code) {
+        final Map.Entry<Code, Typing> last = LAST_TYPING.get();
+        if (null != last && last.getKey() == code)
+            return last.getValue();
+        final Typing typing = resolveTyping(code);
+        LAST_TYPING.set(Map.entry(code, typing));
+        return typing;
+    }
+
+    /**
+     * The last chain {@link #typing} typed on this thread. The rules of one rewrite pass are handed the SAME code
      * object until one of them changes it, and each would otherwise probe the resolver again. Identity, not equality:
      * a hit is that very object, typed moments ago.
      */
-    private static final ThreadLocal<Map.Entry<Code, List<Type>>> LAST_CARRIERS = new ThreadLocal<>();
+    private static final ThreadLocal<Map.Entry<Code, Typing>> LAST_TYPING = new ThreadLocal<>();
 
-    private static List<Type> resolveCarriers(final Code code) {
+    private static Typing resolveTyping(final Code code) {
         final List<Inst> insts = code.insts();
         final List<Type> carriers = new ArrayList<>(insts.size());
+        final List<Inst> contracts = new ArrayList<>(insts.size());
         Type carrier = T(ALL);
         List<Inst> probe = probe(noobj(), code);
         int offset = 0;     // the chain position the current probe starts at
@@ -93,6 +112,7 @@ public class catLiveness {
             final Inst inst = insts.get(i);
             carriers.add(carrier);
             if (START_INST_TID.equals(inst.tid().basePath())) {
+                contracts.add(seedContract(inst, null == probe ? null : probe.get(i - offset)));
                 carrier = inst.args().isEmpty() ? T(ALL) : carrierOf(inst.arg(0));
                 continue;
             }
@@ -106,6 +126,7 @@ public class catLiveness {
                 probe = probe(carrier, code(insts.subList(i, insts.size())));
                 resolved = null == probe ? null : probe.getFirst();
             }
+            contracts.add(resolved);
             final fURI dom = concrete(resolved, true);
             if (null != dom)
                 carriers.set(i, T(dom));
@@ -118,7 +139,19 @@ public class catLiveness {
             offset = i + 1;
             probe = offset < insts.size() ? probe(carrier, code(insts.subList(offset, insts.size()))) : null;
         }
-        return carriers;
+        return new Typing(Collections.unmodifiableList(carriers), Collections.unmodifiableList(contracts));
+    }
+
+    /**
+     * The seed's contract: the one the chain's probe resolved, else the seed resolved alone. Its dom is
+     * {@code noobj}, so it answers whatever stream it arrives in, and a probe that fails further along
+     * the chain does not leave the seed untyped.
+     */
+    private static Inst seedContract(final Inst seed, final Inst resolved) {
+        if (null != resolved && resolved.tid().hasDom())
+            return resolved;
+        final List<Inst> alone = probe(noobj(), code(List.of(seed)));
+        return null == alone ? null : alone.getFirst();
     }
 
     /**
@@ -361,7 +394,7 @@ public class catLiveness {
                 final List<String> laws = morphism.has(uri(LAW))
                         ? morphism.at(LAW).asLst().lstValue().stream().map(l -> l.uriValue().name()).toList()
                         : List.of();
-                if (Inst.Form.initial.name().equals(form) || (null != keyed && START_INST_TID.equals(keyed.tid().basePath()))) {   // the seed: start (op address) or initial form — the bare start reads as mapper pre-resolution, so the op address is the reliable seed marker
+                if (Inst.Form.initial.name().equals(form) || (null != keyed && START_INST_TID.equals(keyed.tid().basePath()))) {   // the seed: an initial form (start's contract, {0} => A) or, where neither the chain nor its registrations typed it, the op address
                     hasSeed = true;
                     continue;
                 }
