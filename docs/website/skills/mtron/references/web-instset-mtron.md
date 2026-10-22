@@ -41,7 +41,7 @@ mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-m
    name: web instruction set
    description: |
      The `/m/web` vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document
-     types, route tables, the `mtron::T` apply protocol, and the conventions a mount follows.
+     types, route tables, the `mtron::T` evaluation surface, and the conventions a mount follows.
      TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP
      server, shipping an obj for remote evaluation (`mtron::T`), choosing a `?mimeq=` rendering, or wondering why
      a route, an image, or a css file does not serve.
@@ -192,9 +192,9 @@ mtron> */usr/person/1                                              [-- straight 
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
 ==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==>fail::[inst apply failure: no mimeq query processor attached to http://# (at /m/inst/from@0)]@/sys/fail/548
+==>fail::[inst apply failure: no mimeq query processor attached to http://# (at /m/inst/from@0)]@/sys/fail/554
 mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==>fail::[inst apply failure: no mimeq query processor attached to http://# (at /m/inst/from@0)]@/sys/fail/549
+==>fail::[inst apply failure: no mimeq query processor attached to http://# (at /m/inst/from@0)]@/sys/fail/555
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

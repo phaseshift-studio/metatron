@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.LST_TID;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
@@ -87,7 +88,8 @@ public class ObjSQLSerializer extends AbstractObjSerializer<Object> {
 
     public ObjSQLSerializer(final Map<String, Map<String, fURI>> logicalTypes) {
         super(OBJ_SQL_SERIALIZER_TID, OBJ_SQL_SERIALIZER_VID);
-        this.logicalTypes = logicalTypes;
+        this.logicalTypes = new ConcurrentHashMap<>();
+        this.logicalTypes.putAll(logicalTypes);
     }
 
     // ---- ObjSerializer core -------------------------------------------------
