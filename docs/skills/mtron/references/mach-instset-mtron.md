@@ -288,10 +288,10 @@ itself a read — so instruction memory is not re-entered from there.
 
 `network::T` indexes the machine's **reach**: a map $\mathit{key} \Rightarrow \mathit{peer}$, one member per
 **surface**, whose value is a `peer::T`. The key is the dial's own address as a legal path — scheme, every label of the
-host, port, route, and never a `?q`: `ws://booger:8555/mtron?name=marko` sits at `ws/booger/8555/mtron`, so the member
-*is* an address, `~/network/peer/ws/booger/8555/mtron`. A legal path carries no dot in any segment (a dotted first
-segment reads as a host), so a host is split into its labels: `ws://booger.local:8555/mtron` is
-`ws/booger/local/8555/mtron` and `ws://192.168.1.61:8555/mtron` is `ws/192/168/1/61/8555/mtron`. Two routes of one
+host, port, route, and never a `?q`: `ws://localhost:8555/mtron?name=marko` sits at `ws/localhost/8555/mtron`, so the member
+*is* an address, `~/network/peer/ws/localhost/8555/mtron`. A legal path carries no dot in any segment (a dotted first
+segment reads as a host), so a host is split into its labels: `ws://peer.local:8555/mtron` is
+`ws/peer/local/8555/mtron` and `ws://10.0.0.7:8555/mtron` is `ws/10/0/0/7/8555/mtron`. Two routes of one
 service (`/mtron` and `/mcp` on one port) are two members; a loopback alias is spelled `localhost`, so `127.0.0.1` keys
 the member `localhost` already holds.
 
@@ -320,9 +320,9 @@ $\mathrm{drop} (id)$ — $id \mapsto \mathrm{noobj}$, the universal close. What 
 value is closed (close-before-clear), so "write noobj" and "hang up" are one act — at the member's own address:
 
 ```mtron
-*</network/peer/ws/booger/8555/mtron/authority>   [-- a member, field by field --]
-</network/peer/ws/booger/8555/mtron> -> noobj      [-- hang up: the member leaves the map --]
-</network/peer> -> noobj                           [-- hang up every member --]
+*</network/peer/ws/localhost/8555/mtron/authority>   [-- a member, field by field --]
+</network/peer/ws/localhost/8555/mtron> -> noobj     [-- hang up: the member leaves the map --]
+</network/peer> -> noobj                             [-- hang up every member --]
 ```
 
 **No two equivalent connections.** Dialing a surface the machine already holds closes the connection there and the new
@@ -357,12 +357,12 @@ A dial made before its far side is up is a peer too — offline until the far si
 holds a client is the hang-up, by close-before-clear:
 
 ```mtron
-/usr/peer/booger -> ws_client::[pattern=><ws://booger:8555/mtron?name=marko>]   [-- dial, index, supervise --]
-/usr/peer/booger -> noobj                                                    [-- hang up: the peer leaves the map --]
+/usr/peer/local -> ws_client::[pattern=><ws://localhost:8555/mtron?name=marko>]   [-- dial, index, supervise --]
+/usr/peer/local -> noobj                                                          [-- hang up: the peer leaves the map --]
 ```
 
 Redialing in place is the point: the client *is* the connection's identity, so the handle stored at
-`/usr/peer/booger` stays the live connection across outages, and deleting it hangs up what is actually connected. While
+`/usr/peer/local` stays the live connection across outages, and deleting it hangs up what is actually connected. While
 a peer is offline, `*~/network/status` reports it `down` without a round trip, a round trip in flight when its link
 dropped is answered at once with a fail rather than waiting out its deadline, and `law_shard` plans only over the peers
 that answer — an outage shrinks the fan-out instead of poisoning the fold.
@@ -375,6 +375,14 @@ its instset:
 2. **reach is not** — peers are neither inherited (not even shadowed) nor shared with children: a connection belongs
    to exactly the machine that dialed it, a pop retracts precisely its dials — its sockets hung up and its supervision
    ended — and a sibling never sees them.
+
+**Who a machine is: what it listens on.** A machine's own authorities — what mDNS announces for it and what the roster
+files under its name — are exactly its **listening** surfaces: a space that binds a server socket (`wsspace`,
+`httpspace`) says so, and nothing else counts. A backend the machine *dials* — a `tblespace`, `mqttspace`, `grphspace`
+or `vecspace` host — is reach, never identity, so its host, a `?user=…&password=…` login included, never leaves the
+machine in an announcement, a roster key or a TXT route; an address that carries userinfo is refused outright rather
+than stripped. There is no "is this mine" predicate either: the owner of a connection is always the machine it is
+attached to.
 
 The frame-stack laws and the wire are pinned by scripted runs over live sockets: wire equalities, `?name` naming,
 value shapes, retraction, roster and frame laws, and authority aliasing — as are the loop and ws equalities, the
@@ -513,7 +521,7 @@ answers the recovery instead, and the master never sees the fail:
 computed:
 
 ```mtron
-*~/network/host       [-- booger --]
+*~/network/host       [-- localhost --]
 ```
 
 Peers forked on one host share it; telling them apart takes their service authority.
