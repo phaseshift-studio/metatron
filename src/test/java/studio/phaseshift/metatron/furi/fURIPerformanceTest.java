@@ -542,6 +542,9 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
      * The budget is a CEILING, not a reservation: the cache's memory tracks the distinct addresses actually seen, and
      * only approaches the budget if that many distinct addresses really pass through. Reported, not asserted — a
      * GC-based heap delta in a JVM that is also running the VM is approximate, and the exact bound is asserted above.
+     * <p>
+     * The pool is the JVM's, and a reused fork still runs threads that earlier classes started, which go on interning
+     * while this one measures. So the exact bound counts this test's own addresses, and the budget bounds the whole pool.
      */
     @Test
     @Order(12)
@@ -556,11 +559,44 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
             Singleton.of("/usr/fp/" + i + "/age");
         final long loaded = usedHeap();
         final int size = fURICache.size();
-        report("fURI cache footprint: %d distinct addresses retained %d entries, %.1f MB (%.0f bytes/entry), budget %d, rotations %d",
-                distinct, size, (loaded - baseline) / 1024.0 / 1024.0, size == 0 ? 0.0 : (double) (loaded - baseline) / size,
+        final int own = fURICache.count(key -> key.startsWith("/usr/fp/"));
+        report("fURI cache footprint: %d distinct addresses retained %d entries (%d more from other threads), %.1f MB (%.0f bytes/entry), budget %d, rotations %d",
+                distinct, own, size - own, (loaded - baseline) / 1024.0 / 1024.0, size == 0 ? 0.0 : (double) (loaded - baseline) / size,
                 fURICache.max(), fURICache.rotations());
-        assertTrue(size <= distinct, "no more entries than distinct addresses were offered can be cached");
+        assertTrue(own <= distinct, "no more entries than distinct addresses were offered can be cached (%d of %d)".formatted(own, distinct));
         assertTrue(size <= fURICache.max(), "the footprint check must stay within the budget");
+    }
+
+    /**
+     * A caller's share of the pool stays countable while another thread interns, and after its generation retires:
+     * {@link fURICache#count} is how the footprint check above measures itself in a pool the whole JVM shares.
+     */
+    @Test
+    @Order(13)
+    public void testOwnEntriesStayCountableUnderConcurrentInterningAndRotation() throws Exception {
+        fURICache.clear();
+        final long rotationsAtClear = fURICache.rotations();
+        final int own = 5_000;
+        final int noise = 2_000;
+        final CountDownLatch started = new CountDownLatch(1);
+        final Thread interner = new Thread(() -> {
+            started.countDown();
+            for (int i = 0; i < noise; i++)
+                Singleton.of("/usr/noise/" + i);
+        });
+        interner.start();
+        started.await();
+        for (int i = 0; i < own; i++)
+            Singleton.of("/usr/own/" + i);
+        interner.join();
+        assertEquals(own, fURICache.count(key -> key.startsWith("/usr/own/")), "the caller's entries are its own to count");
+        assertEquals(noise, fURICache.count(key -> key.startsWith("/usr/noise/")), "and the other thread's are its own");
+        assertTrue(fURICache.size() >= own + noise, "both share one pool, so its size is no one caller's count");
+        // turn a generation over, unless another thread already has: the caller's entries retire with it, and a
+        // retired entry is still cached
+        for (int i = 0; fURICache.rotations() == rotationsAtClear; i++)
+            Singleton.of("/usr/turnover/" + i);
+        assertEquals(own, fURICache.count(key -> key.startsWith("/usr/own/")), "a retired generation is still counted");
     }
 
     /** Best-effort retained-heap reading; the JDK may ignore the hint, which is why callers only report. */
