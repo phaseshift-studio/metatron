@@ -73,7 +73,7 @@ public class FirstFindSelector extends MRec implements Selector {
                 .map(Obj::asInst)
                 .filter(i -> (i.args().isEmpty() && userInst.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= userInst.args().count())
                 .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(M_ISA_INST_TID)))
-                .map(i -> binder.apply(lhs, userInst, this.hint(i, userInst)))
+                .map(i -> binder.apply(lhs, userInst, this.hint(Inst.Helper.unaddressed(i), userInst)))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);

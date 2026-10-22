@@ -94,10 +94,10 @@ public class SpecificitySelector extends MRec implements Selector {
                     final Obj fromOrAtObj = Machine.read(fromOrAt.get());
                     if (!fromOrAtObj.isNothing() && !fromOrAtObj.isCall()) {
                         userInst.logger().debug("fast from/at() resolution: %s", fromOrAt.get());
-                        return Inst.Helper.bindQ(lhs, userInst, Machine.read(userInst.tid()).asInst().args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome())));
+                        return Inst.Helper.bindQ(lhs, userInst, Inst.Helper.unaddressed(Machine.read(userInst.tid()).asInst()).args(lst(fromOrAt.get().toUri())).rng(T(fromOrAtObj.typeId().maybeSome())));
                     }
                 }
-                return Inst.Helper.bindQ(lhs, userInst, Machine.read(userInst.tid()).asInst().args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome())));
+                return Inst.Helper.bindQ(lhs, userInst, Inst.Helper.unaddressed(Machine.read(userInst.tid()).asInst()).args(lst(uri(fromOrAt.get()))).rng(T(ALL.maybeSome())));
             }
         }
         // a cast names its target type in its own argument, and the binder rebinds the resolved
@@ -109,7 +109,7 @@ public class SpecificitySelector extends MRec implements Selector {
                     .rng(Obj.Helper.specificTypeId(userInst.arg(0)))).stream().toList();
             if (!result.isEmpty()) {
                 userInst.logger().debug("fast as() resolution: %s", result);
-                return Inst.Helper.bindQ(lhs, userInst, result.getFirst().asInst());
+                return Inst.Helper.bindQ(lhs, userInst, Inst.Helper.unaddressed(result.getFirst().asInst()));
             }
         }
         /////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ public class SpecificitySelector extends MRec implements Selector {
         if (lhs.isPoly()) {
             final Obj fetched = Resolver.Helper.getPolyAutoInst(lhs.asPoly(), uri(basePath));
             if (fetched.isObjInst())
-                return Inst.Helper.bindQ(lhs, userInst, fetched.asInst());
+                return Inst.Helper.bindQ(lhs, userInst, Inst.Helper.unaddressed(fetched.asInst()));
         }
         final long t0 = System.nanoTime();
         final Obj fetched = Machine.read(basePath);
@@ -139,14 +139,14 @@ public class SpecificitySelector extends MRec implements Selector {
         // a single candidate needs no scoring: the legacy shortcut binds it directly, with the
         // replacement dom/rng hint and without the nominal-domain gate the scored path applies.
         if (viable.size() == 1)
-            return binder.apply(lhs, userInst, this.hintReplace(viable.getFirst(), userInst));
+            return binder.apply(lhs, userInst, this.hintReplace(Inst.Helper.unaddressed(viable.getFirst()), userInst));
 
         // score by specificity, then take the first candidate the binder can make concrete.
         return viable.stream()
                 .filter(apiInst -> apiInst.dom().isGeneric() || !apiInst.dom().isNominal() || Obj.Helper.specificType(lhs).testByID(apiInst.dom()))
                 .map(apiInst -> Tuple.Pair.with(this.scoreSpecificity(lhs, userInst, apiInst), apiInst))
                 .sorted(Comparator.comparingInt((Tuple.Pair<Integer, Inst> scored) -> scored.get0()).reversed())
-                .map(scored -> binder.apply(lhs, userInst, this.hintCompose(scored.get1(), userInst)))
+                .map(scored -> binder.apply(lhs, userInst, this.hintCompose(Inst.Helper.unaddressed(scored.get1()), userInst)))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);

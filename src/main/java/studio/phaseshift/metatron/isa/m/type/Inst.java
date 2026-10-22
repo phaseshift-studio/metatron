@@ -355,6 +355,9 @@ public interface Inst extends Call {
         // if they all have the same domain coefficient as the lhs obj,
         // then that can be hard coded into the compilation
         Obj resolved2 = Machine.read(this.tid());
+        // re-typed and re-argued below: an unaddressed copy, or the re-typed definition writes itself back
+        if (resolved2.isObjInst())
+            resolved2 = Helper.unaddressed(resolved2.asInst());
         final List<cInt> uniqueDomains = resolved2.stream().map(v -> v.tid().dom().c()).distinct().toList();
         final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.getFirst().equals(lhs.tid().c())) ? this.dom(lhs.type()) : this;
         this.logger().trace("performing runtime resolution of %s => %s", lhs, domainInst);
@@ -612,6 +615,19 @@ public interface Inst extends Call {
             final Obj aNorm = a.c(cInt.ONE());
             final Obj bNorm = b.isType() ? b.asType().c(cInt.ONE()) : b.c(cInt.ONE());
             return aNorm.test(bNorm);
+        }
+
+        /**
+         * The definition dispatch is about to change, without the address it was read from. Hinting, binding and
+         * re-typing all copy the definition, and a copy that kept the definition's vid would write itself back there
+         * as it is constructed ({@link Obj.Helper#objCheckAndSave(Obj)}), so every call would add its own variant to
+         * the instruction table. A call site is not the definition: it must never claim the definition's address.
+         *
+         * @param candidate the definition as read from its space
+         * @return the same inst with no vid ({@code candidate} itself when it has none)
+         */
+        public static Inst unaddressed(final Inst candidate) {
+            return null == candidate.vid() ? candidate : candidate.clone().selfVID(null).as();
         }
 
         public static Inst bindQ(final Obj lhs, final Inst userInst, final Inst apiInst) {
