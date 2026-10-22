@@ -858,9 +858,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([isa(uri::T[?c])=>_])                                                           % [c=>3]",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([?(uri::T[?c])=>_])                                                             % [c=>3]",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([isa(uri::T)=>is(gt(1))])                                                       % [c=>3]",
-            "{[a=>1],[2=>2],[c=>3]}.isa(noobj)                                                                                         % <ERROR>",
-            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa(noobj)                                                                          % <ERROR>",
-            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa()                                                                               % <ERROR>",
+            // isa() is a filter, not an assertion: nothing tests as noobj (nor as a missing arg), so the stream empties
+            "{[a=>1],[2=>2],[c=>3]}.isa(noobj)                                                                                         % noobj",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa(noobj)                                                                          % noobj",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa()                                                                               % noobj",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([noobj=>is(gt(1))])                                                             % {[a=>1],[2=>2],[c=>3]}",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([=>])                                                                           % {[a=>1],[2=>2],[c=>3]}",
             "[a=>1,b=>2,c=>3].select([z=>_])                                                                                           % noobj",
@@ -1038,7 +1039,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "[a=>1,b=>2].as(lst::T)                                                                                      % [(0=>(a=>1)),(1=>(b=>2))]",
             ///  /////////////////////////////////////
             "[a,b].as(lst::T)                                                                                            % [a,b]",
-            "[a,b].as(lyst::T)                                                                                           % <ERROR>",
+            // [,] is the empty lst, so lyst admits every lst (as [=>] lets reck admit every rec): only a non-lst is refused
+            "[a,b].as(lyst::T)                                                                                           % lyst::[a,b]",
+            "5.as(lyst::T)                                                                                               % <ERROR>",
             "[a,b].as(rec::T)                                                                                            % [0=>a,1=>b]",
             "[a,b].as(reck::T)                                                                                           % reck::[0=>a,1=>b]",
             "[a,b].as(rec::T).as(lst::T)                                                                                 % [(0=>(0=>a)),(1=>(1=>b))]",

@@ -165,6 +165,23 @@ public class StrTest extends AbstractAlgebraTest<Str> {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a quantified group ending in a quantifier is refused before it can backtrack: has, split, select, >>= rules
+            "'aaaa'.has('(a+)+$')                                                              % <ERROR>",
+            "'xxxy'.split('(x?)*y')                                                            % <ERROR>",
+            "'ab3cd'.select('(.*)*')                                                           % <ERROR>",
+            "'abc de fgh'>>=['(b+)+' => 'xx']                                                  % <ERROR>",
+            // ... while the same instructions still take a regex that is not that shape
+            "'aaaa'.has('a+$')                                                                 % \"aaaa\"",
+            "'a,b;c'.split('[,;]')                                                             % ['a','b','c']",
+            "'ab3cd'.select('(?:[a-z])+')                                                      % ['ab','cd']",
+            "'abc de fgh'>>=['(?:b)+' => 'xx']                                                 % \"axxc de fgh\"",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testRegexGuard(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
 
     /*@ParameterizedTest
     @CsvSource(value = {

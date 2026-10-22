@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
@@ -375,5 +376,54 @@ public class CommonUtilTest extends AbstractMetatronTest {
                         "agent::[feature => [body => \"\", style => 1]]@<dr>",
                         "console::[header => 1]@/usr/marko/console"),
                 CommonUtil.splitOnNonQuotedSequence(source, ';', false));
+    }
+
+    // =========================================================================
+    // user-regex guards — the shape check, and the overflow net behind it
+    // =========================================================================
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "(a+)+$         % true",
+            "(x?)*y         % true",
+            "(.*)*          % true",
+            "^(.+)+z        % true",
+            "(\\s*)*        % true",
+            "a+$            % false",
+            "(?:ab)*        % false",
+            "([a-z]+\\.)*   % false",
+            "(a|b)*         % false",
+    })
+    public void testGuardPattern(final String pattern, final boolean rejected) {
+        if (rejected)
+            assertTrue(assertThrows(MTronException.class, () -> CommonUtil.guardPattern(pattern)).getMessage().contains("nested quantifiers"));
+        else
+            assertEquals(pattern, CommonUtil.guardPattern(pattern).pattern());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "a/b/c       % /",
+            "a/b/c/      % /",
+            "/a/b        % /",
+            "''          % /",
+            "a.b.c       % \\.",
+            "a,b;;c      % [,;]",
+            "x1y22z      % \\d+",
+    })
+    public void testSplitSafelyIsStringSplit(final String text, final String regex) {
+        assertArrayEquals(text.split(regex), CommonUtil.splitSafely(CommonUtil.guardPattern(regex), text));
+    }
+
+    @Test
+    public void testOverflowNetNamesTheFailure() {
+        // (a|b)* slips the shape check, but the engine recurses once per repetition, so a long subject overflows
+        final String subject = "ab".repeat(500_000);
+        final MTronException matching = assertThrows(MTronException.class,
+                () -> CommonUtil.withMatcher(CommonUtil.guardPattern("(a|b)*"), subject, Matcher::matches));
+        assertTrue(matching.getMessage().contains("regex overflowed"), matching.getMessage());
+        final MTronException splitting = assertThrows(MTronException.class,
+                () -> CommonUtil.splitSafely(CommonUtil.guardPattern("(a|b)*c"), subject));
+        assertTrue(splitting.getMessage().contains("regex overflowed"), splitting.getMessage());
     }
 }

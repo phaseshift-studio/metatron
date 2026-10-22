@@ -340,7 +340,7 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
 
 
     final class UriType {
-        private final static Map<String, Pattern> REGEX_CACHE = new HashMap<>();
+        private final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
@@ -361,11 +361,11 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
                                 QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), Helper.parseQ(kv.getValue()))))).c(c -> c.mult(lhs.c()));
                     }),
                     instC(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.uriValue().path(lhs.asUri().uriValue().path().reversed()))),
-                    docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.uriValue().toString()).find() ? lhs : noobj()),
+                    docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.uriValue().toString()) ? lhs : noobj()),
                             "a uri to check", "whether the domain matches arg regex", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
-                    docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> (lhs.uriValue().test(inst.arg(0).uriValue()) || REGEX_CACHE.compute(inst.arg(0).uriValue().toString(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.uriValue().toString()).find()) ? lhs : noobj()),
+                    docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> (lhs.uriValue().test(inst.arg(0).uriValue()) || CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).uriValue().toString(), CommonUtil::guardPattern), lhs.uriValue().toString())) ? lhs : noobj()),
                             "a uri to check", "whether the domain matches arg regex", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
-                    instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
+                    instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(CommonUtil.splitSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).uriValue().toString(), CommonUtil::guardPattern), lhs.uriValue().toString())).map(MUri::uri))),
                     instC(MERGE_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj")))),
                    /* instC(RSHIFT_INST_TID.dom(URI_TID).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) ->
                             objs(inst.arg(0).stream().map(u -> {
@@ -646,8 +646,8 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
                         Obj matchingRule = null;
                         for (Map.Entry<Obj, Obj> entry : qRules.asRec().recValue().entrySet()) {
                             final String entryKeyString = Str.Helper.cleanString(entry.getKey());
-                            final Pattern pattern = REGEX_CACHE.computeIfAbsent(entryKeyString, Pattern::compile);
-                            if (pattern.asPredicate().test(k)) {
+                            final Pattern pattern = REGEX_CACHE.computeIfAbsent(entryKeyString, CommonUtil::guardPattern);
+                            if (CommonUtil.findSafely(pattern, k)) {
                                 matchingRule = entry.getValue();
                                 break;
                             }

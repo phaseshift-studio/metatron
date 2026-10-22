@@ -543,19 +543,19 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
     // ========================================
 
     @ParameterizedTest
-    @Disabled
     @CsvSource(value = {
             "(a+)+$",
             "^(.+)+z",
     }, delimiter = '%')
     public void searchMessagesRejectsCatastrophicPatterns(final String pattern) {
         final String toolName = mcp.at(TOOL).asRec().keys().filter(r -> r.uriValue().name().contains("search_messages")).findFirst().get().uriValue().toString();
-        final Obj response = mcp.handleMessage(request(91, "tools/call", rec(
+        // over the wire, as mcpRequest() sends it: the schema-aware JSON entry is what makes ROOT a uri
+        final Obj response = mcp.handleMessage(ObjJSONSerializer.simple().write(request(91, "tools/call", rec(
                 uri(NAME), str(toolName),
                 uri("arguments"), rec(
                         uri(ROOT), str(LEDGER),
                         uri(PATTERN), str(pattern),
-                        uri(SESSION), uri(STORM_SESSION)))));
+                        uri(SESSION), uri(STORM_SESSION))))).toString());
         final boolean rejected = response.isFail()
                 || response.isRec() && !response.asRec().at(uri("error")).isNoObj();
         assertTrue(rejected, "nested-quantifier pattern must be rejected, not crash the worker: " + pattern);
