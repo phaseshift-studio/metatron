@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.util.TriFunction;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -94,6 +95,18 @@ public interface QProc extends Rec {
         }
 
         default boolean hasQlessHandler() {
+            return false;
+        }
+
+        /**
+         * WHAT the qless handler is, which decides WHEN it runs ({@link Layer#write}). A GUARD (lockq, constq, typeq)
+         * judges the write, may answer for it, and so runs before the access. A BROADCAST (subq) only tells others
+         * that a write happened, so it runs once the write has landed: a subscriber that registers and then reads
+         * must find the write in one place or the other.
+         *
+         * @return true when the qless handler is a broadcast rather than a guard
+         */
+        default boolean broadcasts() {
             return false;
         }
 
@@ -267,10 +280,33 @@ public interface QProc extends Rec {
             return Optional.ofNullable(found ? acc : null);
         }
 
+        /**
+         * Every qless handler, guard and broadcast alike, in declaration order: for a source that runs its own write
+         * sequence instead of the layer's ({@code mqttSpace}).
+         */
         public static Optional<Obj> processQlessWrite(final Lst qs, final fURI vid, final Obj obj) {
+            return processQless(qs, vid, obj, w -> true);
+        }
+
+        /**
+         * The qless GUARDS, before the access: an answer stands in for the write, which then never happens.
+         */
+        public static Optional<Obj> processQlessGuards(final Lst qs, final fURI vid, final Obj obj) {
+            return processQless(qs, vid, obj, w -> !w.broadcasts());
+        }
+
+        /**
+         * The qless BROADCASTS, once the access has landed. They have no answer to give: the write already happened.
+         */
+        public static void processQlessBroadcasts(final Lst qs, final fURI vid, final Obj obj) {
+            processQless(qs, vid, obj, QProc.OnWrite::broadcasts);
+        }
+
+        private static Optional<Obj> processQless(final Lst qs, final fURI vid, final Obj obj,
+                                                  final Predicate<QProc.OnWrite> kind) {
             Obj acc = null;
             for (final QProc q : qs.<QProc>elements().toList()) {
-                if (q.onWrite().filter(QProc.OnWrite::hasQlessHandler).isPresent()) {
+                if (q.onWrite().filter(QProc.OnWrite::hasQlessHandler).filter(kind).isPresent()) {
                     final Optional<Obj> r = q.onWrite().get().qlessWrite(vid, obj);
                     if (r.isPresent())
                         acc = acc == null ? r.get() : acc.append(r.get());
@@ -307,6 +343,7 @@ public interface QProc extends Rec {
 
             protected final fURI pattern;
             protected final fURI tid;
+            protected boolean broadcasts = false;
 
             protected Builder(final fURI tid, final fURI pattern) {
                 this.pattern = pattern;
@@ -333,9 +370,21 @@ public interface QProc extends Rec {
                 return this;
             }
 
+            /**
+             * The qless handler as a GUARD: it runs before the access, and an answer stands in for the write.
+             */
             public Builder qlessWrite(final BiFunction<fURI, Obj, Obj> qlessWrite) {
                 this.jvm.put(QLESS_WRITE, qlessWrite);
                 return this;
+            }
+
+            /**
+             * The qless handler as a BROADCAST: it runs once the access has landed, and its answer is ignored (see
+             * {@link OnWrite#broadcasts()}).
+             */
+            public Builder broadcast(final BiFunction<fURI, Obj, Obj> broadcast) {
+                this.broadcasts = true;
+                return this.qlessWrite(broadcast);
             }
 
             public Builder obj(final fURI key, final Obj value) {
@@ -349,7 +398,8 @@ public interface QProc extends Rec {
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(POST_READ),
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(PRE_WRITE),
                         (TriFunction<fURI, Obj, Obj, Obj>) this.jvm.get(POST_WRITE),
-                        (BiFunction<fURI, Obj, Obj>) this.jvm.get(QLESS_WRITE));
+                        (BiFunction<fURI, Obj, Obj>) this.jvm.get(QLESS_WRITE),
+                        this.broadcasts);
                 if (jvm.containsKey(f(OBJ)))
                     qProc.jvm().put(uri(OBJ), (Obj) jvm.get(f(OBJ)));
                 if (jvm.containsKey(f(INST)))
@@ -364,8 +414,9 @@ public interface QProc extends Rec {
      * order and no source has to know what a q-proc does.
      * <p>
      * A source hands the layer the access it would have performed on its own (the {@link Supplier}) and the
-     * layer brackets it: {@code pre_read} before and {@code post_read} after; {@code pre_write} before,
-     * {@code qless_write} (the broadcast) and {@code post_write} after. A q-proc that answers from its own hook
+     * layer brackets it: {@code pre_read} before and {@code post_read} after; {@code pre_write} and the
+     * {@code qless_write} guards before, the {@code qless_write} broadcasts and {@code post_write} after (see
+     * {@link OnWrite#broadcasts()}). A q-proc that answers from its own hook
      * — an {@code ?incrq} that assigns and stores, a {@code ?subq} that only registers — replaces the access
      * rather than decorating it, which is what the pre hooks' answer already means.
      * <p>
@@ -400,11 +451,15 @@ public interface QProc extends Rec {
         }
 
         /**
-         * the write pipeline: {@code pre_write} → {@code qless_write} → the source's own write → {@code post_write}.
+         * the write pipeline: {@code pre_write} → the {@code qless_write} guards → the source's own write → the
+         * {@code qless_write} broadcasts → {@code post_write}.
          * <p>
-         * The broadcast runs BEFORE the access, which is where it has always run for a space. A source that
-         * ordered the two differently (see {@code mqttSpace}) is not routed through this layer yet — it keeps
-         * its own sequence until that difference is decided rather than silently normalized.
+         * A GUARD runs BEFORE the access, because it may refuse it. A BROADCAST runs AFTER it, because only a
+         * landed write is news. Broadcasting first lost writes: a subscriber that registered and then read between
+         * a writer's broadcast and its store found the write in neither place, so a barrier's subscribe-then-read
+         * could wait forever on a report sitting in its mailbox (MachineSwarmMigrationTest). It also published
+         * writes a guard went on to refuse. A source that orders its write differently ({@code mqttSpace} runs
+         * every qless handler after its own write) is not routed through this layer yet and keeps its own sequence.
          *
          * @param source the source the q-procs are declared on
          * @param vid    the address written
@@ -417,8 +472,9 @@ public interface QProc extends Rec {
                 return write.get();            // the hot path: one map lookup, no list, straight to the source
             final Lst qs = source.qs();
             return Helper.processPreWrite(qs, vid, obj)
-                    .orElseGet(() -> Helper.processQlessWrite(qs, vid, obj).orElseGet(() -> {
+                    .orElseGet(() -> Helper.processQlessGuards(qs, vid, obj).orElseGet(() -> {
                         final Obj result = write.get();
+                        Helper.processQlessBroadcasts(qs, vid, obj);
                         return Helper.processPostWrite(qs, vid, result).orElse(result);
                     }));
         }

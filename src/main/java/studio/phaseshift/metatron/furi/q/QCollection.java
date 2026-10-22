@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -664,7 +665,10 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static QProc subQ() {
-        final Lst subscriptions = lst(new ArrayList<>());
+        // ONE REGISTRY, MANY THREADS: a subscriber adds while every writing thread scans. A copy-on-write list gives
+        // each scan a snapshot (a plain list may throw when a subscription lands mid-scan) and makes a registration
+        // visible to the next writer's scan.
+        final Lst subscriptions = lst(new CopyOnWriteArrayList<>());
         return QProc.Helper.build(SUBQ_TID, SUBQ_PATTERN)
                 .obj(f(OBJ), subscriptions)
                 .preRead(vid -> {
@@ -699,7 +703,9 @@ public final class QCollection {
                     //LOG.debug("current subscriptions: %s", subscriptions);
                     return subscription;
                 })
-                .qlessWrite((vid, obj) -> {
+                // A BROADCAST, NOT A GUARD: it runs once the write has landed (QProc.Layer.write), so a subscriber
+                // that registers and then reads finds every write in one place or the other
+                .broadcast((vid, obj) -> {
                     // subscriptions.logger().info("qless write to %s", vid.basePath());
                     if (vid.hasQ(SUBQ))
                         return noobj();
