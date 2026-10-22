@@ -503,7 +503,19 @@ public interface Inst extends Call {
         public static boolean filterOnDomainAllowUnique(final Obj lhs, final Inst apiInst) {
             if (lhs.isNoObj())
                 return true; // noobj lhs means "any domain is acceptable"
-            return (lhs.testByID(apiInst.dom()) || lhs.test(apiInst.dom())) || (apiInst.dom().c().isOne() && lhs.c().gt(cInt.ONE()) && lhs.c(cInt.ONE()).testByID(apiInst.dom()));
+            return (lhs.testByID(apiInst.dom()) || lhs.test(apiInst.dom())) || (Helper.appliesPerObject(lhs, apiInst.dom()) && lhs.c(cInt.ONE()).testByID(apiInst.dom()));
+        }
+
+        /**
+         * Whether a one-obj domain ({@code {1}}) meets a bulk lhs ({@code c > 1}): the processor applies the inst to
+         * the lhs one obj at a time (or once and multiplies, for a bulked obj), so the inst sees the lhs's ELEMENT
+         * type. The domain gate ({@link #filterOnDomainAllowUnique}) and the generic binder ({@link #bindGenerics})
+         * must agree on this. When only the gate admitted it, a generic {@code A => A} inst (side, filter, ...) right
+         * after a seed resolved with {@code A} unbound, its rng fell back to {@code #}, and the reducer after it could
+         * not resolve, so it ran per obj: {@code {1,2,3}.side(plus(1)).sum()} answered {@code {1,2,3}}, not {@code 6}.
+         */
+        public static boolean appliesPerObject(final Obj lhs, final Obj dom) {
+            return dom.c().isOne() && lhs.c().gt(cInt.ONE());
         }
 
 
@@ -615,7 +627,8 @@ public interface Inst extends Call {
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst, final Map<fURI, fURI> generics) {
             final GraphittyLogger LOG = Graphitty.log(lhs);
             Inst apiInstTemp = apiInst;
-            if (apiInstTemp.dom().typeId().one().isGeneric() && !lhs.isNoObj() && lhs.type().c().within(apiInstTemp.dom().c())) {
+            if (apiInstTemp.dom().typeId().one().isGeneric() && !lhs.isNoObj()
+                    && (lhs.type().c().within(apiInstTemp.dom().c()) || Helper.appliesPerObject(lhs.type(), apiInstTemp.dom()))) {
                 generics.put(apiInstTemp.dom().typeId().one(), lhs.type().typeId().one());
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
             }
