@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -356,8 +357,13 @@ public interface Inst extends Call {
         // then that can be hard coded into the compilation
         Obj resolved2 = Machine.read(this.tid());
         // re-typed and re-argued below: an unaddressed copy, or the re-typed definition writes itself back
-        if (resolved2.isObjInst())
+        if (resolved2.isObjInst()) {
             resolved2 = Helper.unaddressed(resolved2.asInst());
+            // a declared domain is a contract: this fallback adapts a coefficient or binds an undeclared domain, but
+            // it never re-types a declared one to an lhs that domain refuses ("abc".band on an int band)
+            if (!Helper.admitsIgnoringCoefficient(resolved2.asInst(), lhs))
+                return noobj();
+        }
         final List<cInt> uniqueDomains = resolved2.stream().map(v -> v.tid().dom().c()).distinct().toList();
         final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.getFirst().equals(lhs.tid().c())) ? this.dom(lhs.type()) : this;
         this.logger().trace("performing runtime resolution of %s => %s", lhs, domainInst);
@@ -591,11 +597,59 @@ public interface Inst extends Call {
                 final AtomicInteger counter = new AtomicInteger(0);
                 return rec(apiInst.args().asRec().elements()
                         .map(kv -> {
-                            Obj this_arg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
-                            return rel(kv.first(), kv.second().isObjCall() ? kv.second().apply(this_arg) : this_arg);
+                            final Obj this_arg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
+                            return rel(kv.first(), Helper.bindParam(kv.first(), kv.second(), this_arg));
                         }));
             } else
                 throw MTronException.of("inst args must be a lst or rec: %s", apiInst);
+        }
+
+        /**
+         * Bind one argument to its named parameter. A filter ({@code ?T}), a default ({@code else(x)}) or any other
+         * call parameter is applied to the argument, as it always was. A CONVERSION ({@code as(T)}) is strict, since
+         * the argument must convert:
+         * <ul>
+         * <li>after a code argument it runs on the code's value, not on the code itself: {@code as(T)} applied to
+         * {@code _} only relabeled the code, so {@code -5.band(_,_)} bound -5 as a nat;</li>
+         * <li>a missing argument is a failure, not a noobj that every later step reads as nothing.</li>
+         * </ul>
+         */
+        private static Obj bindParam(final Obj name, final Obj param, final Obj arg) {
+            if (!param.isObjCall())
+                return arg;
+            if (!Helper.isConversion(param))
+                return param.apply(arg);
+            if (arg.isNoObj())
+                return fail("missing argument %s for %s", name, param);
+            return arg.isObjCall() ? arg.<Call>as().mult(param.as()) : param.apply(arg);
+        }
+
+        private static boolean isConversion(final Obj param) {
+            final List<Inst> insts = param.<Call>as().insts();
+            return !insts.isEmpty() && insts.getFirst().tid().basePath().equals(AS_INST_TID);
+        }
+
+        /**
+         * Whether a definition's declared domain admits an lhs, or a caller's domain hint, coefficients aside. A
+         * declared domain is a contract: resolution may adapt a coefficient or bind a generic, but re-typing a declared
+         * domain to something it refuses runs the definition on a value it was never written for ({@code "abc".band}
+         * on an int band). Undeclared and generic domains admit anything, and so do the lhs kinds resolution passes
+         * through on their way elsewhere: noobj (the empty set), a fail or the fail type (resolved only so the fail
+         * can propagate through the inst) and code (higher-order).
+         *
+         * @param definition the definition as declared
+         * @param lhs        the lhs, or the domain a caller hinted
+         * @return false only when the declared domain refuses it outright
+         */
+        public static boolean admitsIgnoringCoefficient(final Inst definition, final Obj lhs) {
+            if (!definition.hasDom() || lhs.isNoObj() || lhs.isFail() || lhs.isCall())
+                return true;
+            final fURI lhsId = Obj.Helper.specificTypeId(lhs);
+            if (lhsId.isGeneric() || lhsId.basePath().equals(FAIL_TID) || Obj.Helper.specificTypeId(definition.dom()).isGeneric())
+                return true;
+            // coefficients aside means on BOTH sides: #{*} is the wildcard a gather hints, and # still admits it
+            final Obj lhsOne = lhs.isType() ? lhs.asType().c(cInt.ONE()) : lhs.c(cInt.ONE());
+            return typeCompatibleIgnoreCoefficient(lhsOne, definition.dom().c(cInt.ONE()));
         }
 
         /**

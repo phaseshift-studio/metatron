@@ -73,7 +73,9 @@ public class FirstFindSelector extends MRec implements Selector {
                 .map(Obj::asInst)
                 .filter(i -> (i.args().isEmpty() && userInst.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= userInst.args().count())
                 .filter(i -> !lhs.isInst() || (i.dom().baseTypeID().equals(M_ISA_INST_TID)))
-                .map(i -> binder.apply(lhs, userInst, this.hint(Inst.Helper.unaddressed(i), userInst)))
+                .map(i -> this.hint(Inst.Helper.unaddressed(i), userInst))
+                .filter(Objects::nonNull)
+                .map(hinted -> binder.apply(lhs, userInst, hinted))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
@@ -84,6 +86,9 @@ public class FirstFindSelector extends MRec implements Selector {
      * cast rebind (the first-match strategy has never applied one).
      */
     private Inst hint(final Inst candidate, final Inst userInst) {
+        // as in SpecificitySelector.hintReplace: a hint never stands in for a declared domain that refuses it
+        if (userInst.hasDom() && !Inst.Helper.admitsIgnoringCoefficient(candidate, userInst.dom()))
+            return null;
         Inst hinted = userInst.hasDom() ? candidate.dom(userInst.dom()) : candidate;
         hinted = userInst.hasRng() ? hinted.rng(userInst.rng()) : hinted;
         return hinted;

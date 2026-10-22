@@ -27,7 +27,9 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
@@ -187,12 +189,22 @@ public interface Processor extends mThread, Machine.Component {
                 // inst already carries ?block, so no second bindQ is needed at apply time.
                 cinst = resolveRuntime(clhs, original);
                 modulateC = true;
+                if (cinst.isNoObj())
+                    return fail(MTronException.of("unable to locate inst-f %s::T => %s", Obj.Helper.specificTypeId(clhs).name(), original, clhs));
                 if (!instDomRngMatch(clhs, cinst.dom()))
                     return fail("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst);
             }
             final Obj rhs = applyFunction(clhs, cinst, original, isMonadicInst);
             final cInt cc = cinst.c();
             return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
+        }
+
+        /**
+         * The first computed argument that is an uncaught fail, if any: positional args in order, then named values.
+         */
+        private static Optional<Obj> failedArg(final Poly<?, ?> args) {
+            final Stream<Obj> values = args.isLst() ? args.lstValue().stream() : args.recValue().values().stream();
+            return values.filter(Obj::isUncaughtFail).findFirst();
         }
 
         /**
@@ -218,6 +230,13 @@ public interface Processor extends mThread, Machine.Component {
                     final Inst cin1 = cinst;
                     final Obj clhs1 = clhs;
                     cinst = ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst_args, cin1.tid() + ""), () -> applyArgs(clhs1, cin1));
+                    // an argument that failed to compute fails the inst, as a failed lhs already does: bound into an
+                    // argument, the fail would be read as a plain value (false, nothing) and vanish
+                    if (!cinst.isCatch() && !cinst.isBlocking()) {
+                        final Optional<Obj> failed = Helper.failedArg(cinst.args());
+                        if (failed.isPresent())
+                            return failed.get();
+                    }
                     Memory.argStack().push(cinst.args());
                     try {
                         final Inst cin2 = cinst;
