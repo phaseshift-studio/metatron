@@ -318,11 +318,14 @@ public class MObjs implements Objs {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.jvm.size(), this.vid);
+        return this.isNoObj() ? noobj().hashCode() : Objects.hash(this.jvm.size(), this.vid);
     }
 
     @Override
     public boolean equals(final Object other) {
+        // zero members is the one zero: equal to any zero-coefficient obj, no bulking needed
+        if (this.isNoObj() && other instanceof Obj otherObj && otherObj.isNoObj())
+            return true;
         final Obj a;
         final Obj b;
         a = this.attemptBulk(true).tryToShrink();

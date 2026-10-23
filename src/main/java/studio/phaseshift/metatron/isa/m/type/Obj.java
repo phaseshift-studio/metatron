@@ -1109,8 +1109,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return Optional.empty();
         }
 
+        /**
+         * Every zero-coefficient obj is the one zero ({@code int{0} == str{0} == noobj}), and {@link #objEquals} says so,
+         * so every zero hashes as noobj: an {@code int{0}} key must find a {@code noobj} one.
+         */
         public static int objHashCode(final Obj obj) {
-            return Objects.hash((Object) obj.jvm()); /*obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().one());*/
+            return obj.isNoObj() ? noobj().hashCode() : Objects.hash((Object) obj.jvm());
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
