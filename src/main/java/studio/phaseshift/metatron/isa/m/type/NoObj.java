@@ -113,7 +113,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public boolean test(final Obj rhs) {
-        return rhs.isNoObj() || rhs.c().isZeroable() || (rhs.hasVID() && rhs.vid().equals(NOOBJ_TID)) || rhs.tid().equals(NOOBJ_TID);
+        return rhs.isNoObj() || rhs.c().isZeroable() || (rhs.hasVID() && rhs.vid().isZero());
     }
 
     @Override

@@ -34,6 +34,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.INT_TID;
 import static studio.phaseshift.metatron.Tokens.LST_TID;
+import static studio.phaseshift.metatron.Tokens.URI_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NONE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -132,6 +134,23 @@ public class NoObjTest extends AbstractMetatronTest {
         assertFalse(jnt(0).isNoObj());
         assertNotEquals(noobj(), jnt(0));
         assertFalse(set.contains(jnt(0)));
+    }
+
+    @Test
+    public void testZeroContentIsNoObjWhateverItsName() {
+        // {0} is the only zero, not the label noobj. self() swaps content in place, past the MUri constructor's
+        // zero rule, so the uri keeps coefficient 1: only its content says zero
+        final Obj named = uri("a").self(f("noobj").zero(), URI_TID, null);
+        final Obj unnamed = uri("a").self(f("notnoobj").zero(), URI_TID, null);
+        for (final Obj zero : List.of(named, unnamed)) {
+            assertFalse(zero.c().isZero(), zero + " keeps its own coefficient");
+            assertTrue(zero.isNoObj(), zero + " holds a zero address");
+            assertEquals(noobj(), zero);
+            assertEquals(noobj().hashCode(), zero.hashCode());
+        }
+        // the name alone is an ordinary uri: noobj (c=1) names the concept, it is not the zero
+        assertFalse(uri("noobj").isNoObj());
+        assertFalse(uri("notnoobj").isNoObj());
     }
 
     @Test

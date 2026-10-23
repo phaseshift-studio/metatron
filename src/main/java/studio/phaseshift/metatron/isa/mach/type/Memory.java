@@ -347,7 +347,7 @@ public interface Memory extends Space, Machine.Component, Closeable {
      * event. A caller that must distinguish a miss asks {@link #hasSpaceFor}.
      */
     default <SPACE extends Space> SPACE getSpaceFor(final fURI vid) {
-        if (vid.test(NOOBJ))
+        if (vid.isZero()) // a {0} address addresses nothing, whatever its name
             return noobjSpace.single();
         final SPACE space = this.findSpace(vid);
         if (null != space)

@@ -428,7 +428,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default boolean isNoObj() {
-        return fURI.Singleton.NOOBJ.equals(this.jvm()) || this.c().isZero();
+        // {0} is the only zero: a zero coefficient, or a uri whose content is a zero address, whatever its name
+        return this.c().isZero() || (this.jvm() instanceof fURI furi && furi.isZero());
     }
 
     default boolean isNothing() {
@@ -995,7 +996,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (isAuto(rhs))
                 return true;
             if (lhs.isNoObj())
-                return rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID);
+                return rhs.tid().c().isZeroable();
             if (rhs.isNoObj())
                 return lhs.c().isZeroable();
             if (rhs.isType() && rhs.asType().isNominal()) {
