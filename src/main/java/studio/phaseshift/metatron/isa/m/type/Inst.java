@@ -792,7 +792,11 @@ public interface Inst extends Call {
             }
             ///  hail mary
             if (apiInstTemp.dom().typeId().one().isGeneric() || apiInstTemp.dom().typeId().one().equals(ALL)) {
-                apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
+                // a zero lhs binds nothing (the first branch above refuses it too): binding here would mint a noobj
+                // type present once, which nothing inhabits, so the generic stays open for the runtime lhs to bind.
+                // the call's own ?rng<=dom hints still apply
+                if (!lhs.isNoObj())
+                    apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
                 apiInstTemp = apiInstTemp.tid(Helper.apiOrUser(apiInstTemp.typeId(), userInst.typeId(), generics));
             }
             LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, apiInstTemp, apiInst);
