@@ -68,11 +68,14 @@ public class MFail extends MObj implements Fail {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.tid, this.jvm().getMessage(), this.jvm().getCause() != null);
+        return this.isNoObj() ? Obj.Helper.objHashCode(this) : Objects.hash(this.tid, this.jvm().getMessage(), this.jvm().getCause() != null);
     }
 
     @Override
     public boolean equals(final Object other) {
+        // a zero-coefficient fail is no object at all: it is the one zero, like every {0}
+        if (this.isNoObj() && other instanceof Obj otherObj && otherObj.isNoObj())
+            return true;
         if (!(other instanceof Fail that))
             return false;
         if (!Objects.equals(this.tid(), that.tid()))

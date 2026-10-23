@@ -178,7 +178,8 @@ public class MType extends MObj implements Type {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.vid(), this.jvm());
+        // a zero-coefficient type equals every zero (above), so it hashes as one
+        return this.isNoObj() ? Obj.Helper.objHashCode(this) : Objects.hash(this.vid(), this.jvm());
         //  return Objects.hash(this.vid(), this.tid());
     }
 

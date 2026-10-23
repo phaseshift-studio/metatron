@@ -121,7 +121,7 @@ public class MInst extends MObj implements Inst {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.tid, this.vid);
+        return this.isNoObj() ? Obj.Helper.objHashCode(this) : Objects.hash(this.tid, this.vid);
     }
 
     @Override
@@ -148,6 +148,9 @@ public class MInst extends MObj implements Inst {
 
     @Override
     public boolean equals(final Object other) {
+        // a zero-coefficient inst is the one zero, as noobj (itself an Inst) already says from its side
+        if (this.isNoObj() && other instanceof Obj otherObj && otherObj.isNoObj())
+            return true;
         return (other instanceof Inst otherInst) &&
                 Objects.equals(this.tid, otherInst.tid()) &&
                 Objects.equals(this.args(), otherInst.args()) &&

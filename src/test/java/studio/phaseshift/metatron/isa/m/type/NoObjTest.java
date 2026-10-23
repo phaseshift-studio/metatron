@@ -23,12 +23,30 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.INT_TID;
+import static studio.phaseshift.metatron.Tokens.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NONE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Obj.none;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -59,7 +77,14 @@ public class NoObjTest extends AbstractMetatronTest {
             "'meta'              |str{0}::'meta'         |false",
             "noobj               |#{0}                   |true",
             "noobj{0}            |noobj{0}               |true",
-            "noobj{1}            |noobj{1}               |true"},
+            "noobj{1}            |noobj{1}               |true",
+            // the only zero is {0}: every zero-coefficient obj is the one zero, whatever its type or label
+            "int{0}::10          |str{0}::'tron'         |true",
+            "real{0}::1.5        |noobj                  |true",
+            "notnoobj{0}         |noobj                  |true",
+            "notnoobj{0}         |int{0}::10             |true",
+            "0                   |noobj                  |false",
+            "0                   |int{0}::0              |false"},
             delimiter = '|')
     public void testNoObjEquality(final String o1, final String o2, final boolean match) {
         final Obj obj1 = mParser.m_obj().parse(o1).get();
@@ -68,10 +93,42 @@ public class NoObjTest extends AbstractMetatronTest {
         if (match) {
             assertEquals(obj1, obj2);
             assertEquals(obj2, obj1);
+            assertEquals(obj1.hashCode(), obj2.hashCode(), "equal objs must hash alike");
         } else {
             assertNotEquals(obj1, obj2);
             assertNotEquals(obj2, obj1);
         }
+    }
+
+    @Test
+    public void testEveryZeroIsTheOneZero() {
+        // one zero-coefficient obj per class that implements equals/hashCode itself (or through Obj.Helper)
+        final List<Obj> zeros = List.of(
+                noobj(),                                                  // NoObj
+                jnt(10).c(cInt.ZERO()),                                   // MInt
+                str("tron").c(cInt.ZERO()),                               // MStr
+                real(1.5).c(cInt.ZERO()),                                 // MReal
+                uri("notnoobj").c(cInt.ZERO()),                           // MUri
+                lst(List.<Obj>of(jnt(1), jnt(2)), LST_TID.zero(), null),  // MLst: a coefficient on a lst goes into its slots
+                rec(Map.<Obj, Obj>of(uri("a"), jnt(1))).c(cInt.ZERO()),   // MRec
+                instB(PLUS_INST_TID, lst(jnt(1))).c(cInt.ZERO()),         // MInst
+                T(INT_TID).c(cInt.ZERO()),                                // MType
+                objs0(),                                                  // MObjs: zero members
+                fail("no object").c(cInt.ZERO()));                        // MFail
+        zeros.forEach(zero -> assertTrue(zero.isNoObj(), zero + " should have coefficient {0}, has " + zero.c()));
+        for (final Obj a : zeros) {
+            for (final Obj b : zeros) {
+                assertEquals(a, b, a + " and " + b + " are both {0}");
+                assertEquals(a.hashCode(), b.hashCode(), a + " and " + b + " are equal, so they must hash alike");
+            }
+        }
+        final Set<Obj> set = new HashSet<>(zeros);
+        assertEquals(1, set.size(), "every zero is the one zero: " + set);
+        zeros.forEach(zero -> assertTrue(set.contains(zero)));
+        // the value 0 has coefficient 1: it is a number, not the zero object
+        assertFalse(jnt(0).isNoObj());
+        assertNotEquals(noobj(), jnt(0));
+        assertFalse(set.contains(jnt(0)));
     }
 
     @ParameterizedTest
