@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 
 import java.util.HashSet;
 import java.util.List;
@@ -208,10 +209,8 @@ public class NoObjTest extends AbstractMetatronTest {
         assertSame(NOOBJ_TYPE, noobj().asType());             // was a failed cast
         // every zero is the one zero: a zero int asked to be a str is the str's noobj
         assertSame(Str.STR_NOOBJ, jnt(5).c(cInt.ZERO()).asStr());
-        // a Type casts to itself, zero or not: the zero root is still the root parentType() walks up to
-        final Type zeroRoot = ALL_TYPE.c(cInt.ZERO()).asType();
-        assertTrue(zeroRoot.isRootType());
-        assertSame(zeroRoot, zeroRoot.parentType());
+        // a Type casts to itself, zero or not
+        assertSame(NOOBJ_TYPE, NOOBJ_TYPE.asType());
         // the empty values are values, present and empty, not zeros
         assertFalse(str("").asStr().isNoObj());
         assertFalse(lst().asLst().isNoObj());
@@ -245,6 +244,29 @@ public class NoObjTest extends AbstractMetatronTest {
             delimiter = '%')
     public void testNothingFillsAnOperandSlot(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    public void testAZeroTypeMadeAnyWayIsTheNoObjType() {
+        // nothing refines to nothing however the zero is reached: through T(...), through c(0), or as the root's zero
+        assertSame(NOOBJ_TYPE, T(INT_TID).c(cInt.ZERO()));
+        assertSame(NOOBJ_TYPE, T(INT_TID).c(cInt.ZERO()).type());
+        assertSame(NOOBJ_TYPE, ALL_TYPE.c(cInt.ZERO()));
+        // the noobj type's parent is the root itself, so a walk up the parents ends (the root's zero is noobj again)
+        assertSame(ALL_TYPE, NOOBJ_TYPE.parentType());
+        assertTrue(NOOBJ_TYPE.apply(jnt(5)).isNoObj());
+        // a non-zero coefficient keeps its type
+        assertNotSame(NOOBJ_TYPE, T(INT_TID).c(cInt.ONE()));
+        assertFalse(T(INT_TID).c(cInt.ONE()).isNoObj());
+    }
+
+    @Test
+    public void testAStreamHoldsNoZeros() {
+        // MObjs never holds a zero member: its constructor flattens zeros out, append skips them, and the factories
+        // shrink, so a stream of zeros is noobj itself and never a bag hashed by its size
+        assertSame(noobj(), MObjs.objs(List.<Obj>of(jnt(5).c(cInt.ZERO()), str("a").c(cInt.ZERO()))));
+        assertTrue(objs0().append(jnt(5).c(cInt.ZERO())).isNoObj());
+        assertSame(noobj(), MObjs.objs(List.<Obj>of(jnt(5), jnt(6))).c(cInt.ZERO()));
     }
 
     @Test
