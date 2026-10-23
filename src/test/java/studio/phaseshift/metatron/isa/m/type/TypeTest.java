@@ -630,7 +630,10 @@ public class TypeTest extends AbstractMetatronTest {
             "int{2,5}::3               | /m/int{2,5}",
             "int{0}::3                 | /m/int{0}",
             "int{5,5}::3               | /m/int{5}",
-            "int{0}::T                 | /m/int{0}"
+            // a zero VALUE keeps its tid (int{0}::3 above); a zero TYPE is the noobj type, whatever it is named:
+            // nothing refines to nothing
+            "int{0}::T                 | noobj{0}",
+            "notnoobj{0}::T            | noobj{0}"
     }, delimiter = '|')
     public void testTypeTID(final String type, final String expectedTID) {
         LOG.debug("testing type %s == tid %s", type, expectedTID);

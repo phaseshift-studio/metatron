@@ -34,9 +34,11 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.INT_TID;
 import static studio.phaseshift.metatron.Tokens.LST_TID;
+import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.Tokens.URI_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NONE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Obj.none;
@@ -151,6 +153,22 @@ public class NoObjTest extends AbstractMetatronTest {
         // the name alone is an ordinary uri: noobj (c=1) names the concept, it is not the zero
         assertFalse(uri("noobj").isNoObj());
         assertFalse(uri("notnoobj").isNoObj());
+    }
+
+    @Test
+    public void testEveryZeroTypeIsTheNoObjType() {
+        // nothing refines to nothing: a {0} tid or vid resolves to the one noobj type, whatever it is named
+        assertSame(NOOBJ_TYPE, T(NOOBJ_TID));
+        assertSame(NOOBJ_TYPE, T(INT_TID.zero()));
+        assertSame(NOOBJ_TYPE, T(f("notnoobj").zero()));
+        assertSame(NOOBJ_TYPE, T(INT_TID.zero(), f("person"), null, null));   // a zero tid under a name
+        assertSame(NOOBJ_TYPE, T(INT_TID, f("person").zero(), null, null));   // a zero vid
+        assertSame(NOOBJ_TYPE, noobj().type());
+        assertSame(noobj().rng(), noobj().type());
+        assertSame(NOOBJ_TYPE, jnt(5).c(cInt.ZERO()).type());
+        // zeroable is not zero: int{?} still admits one int
+        assertNotSame(NOOBJ_TYPE, T(INT_TID.maybe()));
+        assertNotSame(NOOBJ_TYPE, T(INT_TID));
     }
 
     @Test
