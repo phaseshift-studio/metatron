@@ -37,7 +37,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -310,7 +309,7 @@ public class BasicMemory extends MRec implements Memory {
     }
 
     public Obj read(final fURI vid) {
-        if (null == vid || NOOBJ.equals(vid.basePath()) || vid.isZero()) // || READ_AS_NOOBJ.contains(vid))
+        if (null == vid || vid.isZero()) // || READ_AS_NOOBJ.contains(vid))
             return noobj();
         if (vid.equals(this.vid()) || vid.equals(vid.id()))
             return this;

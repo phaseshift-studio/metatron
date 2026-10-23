@@ -164,12 +164,13 @@ public class catAudit {
         final List<Type> types = Machine.read(AS_INST_TID).stream()
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
-                .flatMap(inst -> List.of(inst.dom().vid(), inst.rng().vid()).stream())
-                .map(fURI::basePath)
+                .flatMap(inst -> List.of(inst.dom(), inst.rng()).stream())
+                .filter(type -> !type.isNoObj()) // noobj is the {0} type: drop it before basePath() drops the coefficient
+                .map(type -> type.vid().basePath())
                 .distinct()
                 .sorted(Comparator.comparing(fURI::toString))
                 .map(vid -> T(vid))
-                .filter(t -> !t.isGeneric() && !t.isRootType() && !t.vid().basePath().equals(NOOBJ_TID))
+                .filter(t -> !t.isGeneric() && !t.isRootType())
                 .toList();
         for (final Type src : types) {
             for (final Type dst : types) {

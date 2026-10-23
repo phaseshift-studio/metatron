@@ -61,7 +61,7 @@ public class haosSpace extends mqttSpace {
         }
 
         public static EntityType of(final fURI tid) {
-            if (null == tid || tid.basePath().equals(NOOBJ_TID) || tid.isZero()) return NONE;
+            if (null == tid || tid.isZero()) return NONE;
             for (final EntityType type : values())
                 if (type.type.vid().equals(tid)) return type;
             return NONE;
