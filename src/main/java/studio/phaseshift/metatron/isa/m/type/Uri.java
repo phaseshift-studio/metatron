@@ -54,6 +54,14 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
 
     Uri ONE = uri("");
 
+    // Uri with coefficient {0}: noobj typed as a Uri, for a method that answers a Uri or nothing.
+    // its payload is the zero address itself (the MUri constructor reads its payload)
+    Uri URI_NOOBJ = new MUri(NOOBJ, URI_TID.zero(), null);
+
+    static Uri uri_noobj() {
+        return URI_NOOBJ;
+    }
+
     static Uri uri0() {
         return (Uri) uri("").c(cInt.ZERO());
     }

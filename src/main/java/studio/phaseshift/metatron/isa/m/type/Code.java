@@ -35,6 +35,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public interface Code extends Call {
 
+    // Code with coefficient {0}: noobj typed as a Code, for a method that answers a Code or nothing.
+    Code CODE_NOOBJ = new MCode(List.of(), CODE_TID.zero(), null);
+
+    static Code code_noobj() {
+        return CODE_NOOBJ;
+    }
+
     @Override
     Code clone(final Object jvm, final fURI tid, final fURI vid);
 

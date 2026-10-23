@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.isa.m.type.impl.MReal;
 import net.objecthunter.exp4j.ExpressionBuilder;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.MultGroup;
@@ -46,6 +47,13 @@ public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
 
     Real ZERO = real(0.0d);
     Real ONE = real(1.0d);
+
+    // Real with coefficient {0}: noobj typed as a Real, for a method that answers a Real or nothing.
+    Real REAL_NOOBJ = new MReal(null, REAL_TID.zero(), null);
+
+    static Real real_noobj() {
+        return REAL_NOOBJ;
+    }
 
     public static Real real0() {
         return real(0.0, REAL_TID.zero(), null);

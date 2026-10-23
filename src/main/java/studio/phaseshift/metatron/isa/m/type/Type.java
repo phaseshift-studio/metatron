@@ -46,6 +46,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Type extends Obj {
 
+    // the type of nothing: every {0} type resolves to it (MType.T), so this is the one typed zero for Type
+    static Type type_noobj() {
+        return NOOBJ_TYPE;
+    }
+
     Type TYPE_TYPE = T(f("T"));
     GraphittyLogger LOG = Graphitty.log(Type.class);
 

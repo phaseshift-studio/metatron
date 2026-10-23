@@ -52,6 +52,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public interface Str extends Mono, PlusMonoid.O<Str> {
     Str ZERO = str("");
 
+    // Str with coefficient {0}: noobj typed as a Str, for a method that answers a Str or nothing.
+    Str STR_NOOBJ = new MStr(null, STR_TID.zero(), null);
+
+    static Str str_noobj() {
+        return STR_NOOBJ;
+    }
+
     @Override
     Str clone(final Object jvm, final fURI tid, final fURI vid);
 

@@ -117,7 +117,7 @@ public class NoObjTest extends AbstractMetatronTest {
                 uri("notnoobj").c(cInt.ZERO()),                           // MUri
                 lst(List.<Obj>of(jnt(1), jnt(2)), LST_TID.zero(), null),  // MLst: a coefficient on a lst goes into its slots
                 rec(Map.<Obj, Obj>of(uri("a"), jnt(1))).c(cInt.ZERO()),   // MRec
-                noobjRec(),                                               // MRec: Rec.NOOBJ_REC
+                noobjRec(),                                               // MRec: Rec.REC_NOOBJ
                 instB(PLUS_INST_TID, lst(jnt(1))).c(cInt.ZERO()),         // MInst
                 T(INT_TID).c(cInt.ZERO()),                                // MType
                 objs0(),                                                  // MObjs: zero members
@@ -172,8 +172,36 @@ public class NoObjTest extends AbstractMetatronTest {
     }
 
     @Test
+    public void testEveryInterfaceHasItsTypedNoObj() {
+        // noobj typed as each interface -- a real Int, Str, Rec, ... with coefficient {0} -- so a method can answer
+        // that type or nothing without an <O extends Obj> cast. each is the one zero.
+        assertTypedNoObj(Int.int_noobj(), Int.INT_NOOBJ, Int.class);
+        assertTypedNoObj(Real.real_noobj(), Real.REAL_NOOBJ, Real.class);
+        assertTypedNoObj(Str.str_noobj(), Str.STR_NOOBJ, Str.class);
+        assertTypedNoObj(Bool.bool_noobj(), Bool.BOOL_NOOBJ, Bool.class);
+        assertTypedNoObj(Bytes.bytes_noobj(), Bytes.BYTES_NOOBJ, Bytes.class);
+        assertTypedNoObj(Uri.uri_noobj(), Uri.URI_NOOBJ, Uri.class);
+        assertTypedNoObj(Lst.lst_noobj(), Lst.LST_NOOBJ, Lst.class);
+        assertTypedNoObj(Rec.rec_noobj(), Rec.REC_NOOBJ, Rec.class);
+        assertTypedNoObj(Rel.rel_noobj(), Rel.REL_NOOBJ, Rel.class);
+        assertTypedNoObj(Code.code_noobj(), Code.CODE_NOOBJ, Code.class);
+        assertSame(NOOBJ_TYPE, Type.type_noobj());
+    }
+
+    private static void assertTypedNoObj(final Obj zero, final Obj constant, final Class<? extends Obj> iface) {
+        assertSame(constant, zero, iface.getSimpleName() + "'s accessor answers its constant");
+        assertTrue(iface.isInstance(zero), zero.getClass().getSimpleName() + " is a " + iface.getSimpleName());
+        assertTrue(zero.isNoObj(), iface.getSimpleName() + "'s zero has coefficient {0}");
+        assertEquals(noobj(), zero);
+        assertEquals(zero, noobj());
+        assertEquals(noobj().hashCode(), zero.hashCode());
+        assertSame(NOOBJ_TYPE, zero.type(), iface.getSimpleName() + "'s zero is of the noobj type");
+        assertEquals("noobj", zero.toString());
+    }
+
+    @Test
     public void testNoObjRecIsTheZeroRec() {
-        // Rec.NOOBJ_REC once initialized through asRec(), which answers a zero with noobjRec() -- the field itself,
+        // Rec.REC_NOOBJ once initialized through asRec(), which answers a zero with noobjRec() -- the field itself,
         // still null mid-initialization -- so noobjRec() and noobj().asRec() were null
         assertNotNull(noobjRec());
         assertTrue(noobjRec().isRec());

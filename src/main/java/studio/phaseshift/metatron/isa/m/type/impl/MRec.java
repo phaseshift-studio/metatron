@@ -69,7 +69,7 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec noobjRec() {
-        return Rec.NOOBJ_REC;
+        return Rec.REC_NOOBJ;
     }
 
     public static Rec rec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {

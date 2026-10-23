@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.isa.m.type.impl.MInt;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -46,6 +47,14 @@ public interface Int extends Mono, Ring.O<Int> {
 
     Int ZERO = jnt(0L);
     Int ONE = jnt(1L);
+
+    // Int with coefficient {0}: noobj typed as an Int, for a method that answers an Int or nothing.
+    // the coefficient says absent, so the payload is never read: null
+    Int INT_NOOBJ = new MInt(null, INT_TID.zero(), null);
+
+    static Int int_noobj() {
+        return INT_NOOBJ;
+    }
 
     public static Int int0() {
         return jnt(0, INT_TID.zero(), null);
