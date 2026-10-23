@@ -228,6 +228,25 @@ public class NoObjTest extends AbstractMetatronTest {
         assertEquals("noobj", zero.toString());
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            // plus(int::T) takes one int: nothing fills it, whatever payload the zero carries. type checking stays on
+            // kind and type ({2}3 still fills it); computed operands are checked when computed. nothing is spelled noobj
+            // here: in an argument, {0} is the stream holding one 0, so 1.plus({0}) is 1.plus(0)
+            "1.plus(2)                  % 3",
+            "1.plus(plus(1))            % 3",
+            "1.plus({2}3)               % 4",
+            "1.plus({0}2)               % <ERROR>",
+            "1.plus(noobj)              % <ERROR>",
+            "1.mult({0}2)               % <ERROR>",
+            "1.minus({0}2)              % <ERROR>",
+            "2.div(noobj)               % <ERROR>",
+            "'''a''.plus({0}''b'')'     % <ERROR>"},
+            delimiter = '%')
+    public void testNothingFillsAnOperandSlot(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @Test
     public void testNoObjRecIsTheZeroRec() {
         // Rec.REC_NOOBJ once initialized through asRec(), which answers a zero with noobjRec() -- the field itself,
