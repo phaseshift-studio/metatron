@@ -644,6 +644,12 @@ public interface Inst extends Call {
         public static boolean admitsIgnoringCoefficient(final Inst definition, final Obj lhs) {
             if (!definition.hasDom() || lhs.isNoObj() || lhs.isFail() || lhs.isCall())
                 return true;
+            // an initial (dom {0}) consumes nothing, so resolution refuses it no lhs: a code headed by an initial applies
+            // to any lhs (a template's nested {{{ 1 }}} under 1.map(...)). its domain is the noobj type, which rightly
+            // admits only nothing -- the admission is the initial's, not the type's. (mid-chain, the processor still
+            // refuses to split a {1} obj into a {0} dom: x.start(1) is not a chain step.)
+            if (definition.isInitial())
+                return true;
             final fURI lhsId = Obj.Helper.specificTypeId(lhs);
             if (lhsId.isGeneric() || lhsId.basePath().equals(FAIL_TID) || Obj.Helper.specificTypeId(definition.dom()).isGeneric())
                 return true;

@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 
 
@@ -76,6 +77,12 @@ public class MType extends MObj implements Type {
         if (null == BootLoader.ROOT_MACHINE)
             // class-init phase, before a machine exists to hold a graph: resolve directly (no memo)
             return T0(tid, vid, predicate, constructor);
+        // NOTHING REFINES TO NOTHING. a {0} tid or vid is the noobj type whatever it is named: there is nothing in
+        // nothing to refine, so the set cannot get any smaller. a constant, answered before the memo -- it needs no
+        // cache entry, no watch and no invalidation. NOOBJ_TYPE is null only while it is itself being built
+        // (Type.Builder.create() resolves through here), and that one construction takes the ordinary path.
+        if (null != NOOBJ_TYPE && ((null != tid && tid.isZero()) || (null != vid && vid.isZero())))
+            return NOOBJ_TYPE;
         final TypeGraph.Key key = new TypeGraph.Key(tid, vid, predicate, constructor);
         return Machine.current().memory().typeGraph().memo(key, () -> T0(tid, vid, predicate, constructor));
     }
