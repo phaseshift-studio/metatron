@@ -399,12 +399,13 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                         nextBarrier.obj().append(result);
                     } else if (nextInst.isBatching()) {
                         Machine.current().memory().stats().monadicStats().incrBarrierMonads(-1L);
-                        this.running().append(statefulMonad(result, nextInst, noobjRec(), code));
+                        // a monad born past a barrier starts with an empty state, like every fresh monad above
+                        this.running().append(statefulMonad(result, nextInst, rec0(), code));
                         Machine.current().memory().stats().monadicStats().incrRunningMonads(1L);
                     } else {
                         LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
-                            final StatefulMonad n = statefulMonad(o, nextInst, noobjRec(), code);
+                            final StatefulMonad n = statefulMonad(o, nextInst, rec0(), code);
                             Machine.current().memory().stats().monadicStats().incrBarrierMonads(-1L);
                             LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
                             this.running().append(n);

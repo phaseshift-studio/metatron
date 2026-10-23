@@ -51,7 +51,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     Rec EMPTY_REC = rec(immutableMap());
-    Rec NOOBJ_REC = rec(immutableMap()).c(cInt.ZERO()).asRec();
+    // cast, not asRec(): asRec() answers a zero with noobjRec(), i.e. this field, which is still null while it initializes
+    Rec NOOBJ_REC = (Rec) rec(immutableMap()).c(cInt.ZERO());
 
     @Override
     default Stream<Rel> indexedStream() {

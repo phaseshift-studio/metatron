@@ -44,7 +44,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -111,6 +113,7 @@ public class NoObjTest extends AbstractMetatronTest {
                 uri("notnoobj").c(cInt.ZERO()),                           // MUri
                 lst(List.<Obj>of(jnt(1), jnt(2)), LST_TID.zero(), null),  // MLst: a coefficient on a lst goes into its slots
                 rec(Map.<Obj, Obj>of(uri("a"), jnt(1))).c(cInt.ZERO()),   // MRec
+                noobjRec(),                                               // MRec: Rec.NOOBJ_REC
                 instB(PLUS_INST_TID, lst(jnt(1))).c(cInt.ZERO()),         // MInst
                 T(INT_TID).c(cInt.ZERO()),                                // MType
                 objs0(),                                                  // MObjs: zero members
@@ -129,6 +132,22 @@ public class NoObjTest extends AbstractMetatronTest {
         assertFalse(jnt(0).isNoObj());
         assertNotEquals(noobj(), jnt(0));
         assertFalse(set.contains(jnt(0)));
+    }
+
+    @Test
+    public void testNoObjRecIsTheZeroRec() {
+        // Rec.NOOBJ_REC once initialized through asRec(), which answers a zero with noobjRec() -- the field itself,
+        // still null mid-initialization -- so noobjRec() and noobj().asRec() were null
+        assertNotNull(noobjRec());
+        assertTrue(noobjRec().isRec());
+        assertTrue(noobjRec().isNoObj());
+        assertEquals(noobj(), noobjRec());
+        assertNotNull(noobj().asRec());
+        assertTrue(noobj().asRec().isRec());
+        assertTrue(noobj().asRec().isNoObj());
+        // the empty rec is a value: present, with no fields
+        assertFalse(rec0().isNoObj());
+        assertNotEquals(noobj(), rec0());
     }
 
     @ParameterizedTest
