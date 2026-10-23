@@ -165,6 +165,10 @@ public class MType extends MObj implements Type {
 
     @Override
     public Type clone(final Object jvm, final fURI tid, final fURI vid) {
+        // a type derived to coefficient {0} (c(0), tid(x{0})) is the noobj type, as T() answers it. NOOBJ_TYPE is null only
+        // while it is itself being built
+        if (null != NOOBJ_TYPE && null != tid && tid.isZero())
+            return NOOBJ_TYPE;
         return new MType((Tuple.Pair<Call, Call>) jvm, tid, vid, false);
     }
 

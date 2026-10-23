@@ -302,6 +302,9 @@ public interface Type extends Obj {
     default Type parentType() {
         if (this.isRootType())
             return this;
+        // nothing refines to nothing: the noobj type's parent is the root itself (the root with {0} is noobj again)
+        if (this.isNoObj())
+            return ALL_TYPE;
         if (this.tid().equals(this.vid()))
             return ALL_TYPE.c(this.c()).asType();
         return T(this.tid());
