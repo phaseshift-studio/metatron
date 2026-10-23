@@ -57,20 +57,14 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.int0;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Real.real0;
-import static studio.phaseshift.metatron.isa.m.type.Rel.rel0;
-import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.uri0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -597,7 +591,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Bool asBool() {
         try {
-            return (Bool) this;
+            // a Bool casts to itself, zero or not (the zero root is a parent type); any other zero is Bool's noobj
+            return this instanceof Bool || !this.isNoObj() ? (Bool) this : Bool.bool_noobj();
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -607,7 +602,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Bytes asBytes() {
         try {
-            return (Bytes) this;
+            // a Bytes casts to itself, zero or not (the zero root is a parent type); any other zero is Bytes's noobj
+            return this instanceof Bytes || !this.isNoObj() ? (Bytes) this : Bytes.bytes_noobj();
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -617,7 +613,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Int asInt() {
         try {
-            return this.isNoObj() ? int0() : (Int) this;
+            return this.isNoObj() ? Int.int_noobj() : (Int) this;
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -627,7 +623,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Real asReal() {
         try {
-            return this.isNoObj() ? real0() : (Real) this;
+            return this.isNoObj() ? Real.real_noobj() : (Real) this;
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -637,7 +633,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Str asStr() {
         try {
-            return this.isNoObj() ? str0() : (Str) this;
+            return this.isNoObj() ? Str.str_noobj() : (Str) this;
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -647,7 +643,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Uri asUri() {
         try {
-            return this.isNoObj() ? uri0() : (Uri) this;
+            return this.isNoObj() ? Uri.uri_noobj() : (Uri) this;
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -661,7 +657,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         if (this instanceof Fail fail)
             throw MTronException.of("asRec onto a fail: %s", fail.message());
         try {
-            return this.isNoObj() ? noobjRec() : (Rec) this;
+            return this.isNoObj() ? Rec.rec_noobj() : (Rec) this;
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -671,7 +667,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Lst asLst() {
         try {
-            return this.isNoObj() ? lst0() : (Lst) this;
+            return this.isNoObj() ? Lst.lst_noobj() : (Lst) this;
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -681,7 +677,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Rel asRel() {
         try {
-            return this.isNoObj() ? rel0() : (Rel) this;
+            return this.isNoObj() ? Rel.rel_noobj() : (Rel) this;
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -717,7 +713,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Code asCode() {
         try {
-            return (Code) this;
+            // a Code casts to itself, zero or not (the zero root is a parent type); any other zero is Code's noobj
+            return this instanceof Code || !this.isNoObj() ? (Code) this : Code.code_noobj();
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();
@@ -757,7 +754,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default Type asType() {
         try {
-            return (Type) this;
+            // a Type casts to itself, zero or not (the zero root is a parent type); any other zero is Type's noobj
+            return this instanceof Type || !this.isNoObj() ? (Type) this : Type.type_noobj();
         } catch (final Exception e) {
             if (this.isFail() || this.isCaughtFail())
                 throw this.asFail().asException();

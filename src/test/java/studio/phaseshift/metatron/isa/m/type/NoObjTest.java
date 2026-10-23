@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.Tokens.LST_TID;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.Tokens.URI_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NONE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
@@ -186,6 +187,34 @@ public class NoObjTest extends AbstractMetatronTest {
         assertTypedNoObj(Rel.rel_noobj(), Rel.REL_NOOBJ, Rel.class);
         assertTypedNoObj(Code.code_noobj(), Code.CODE_NOOBJ, Code.class);
         assertSame(NOOBJ_TYPE, Type.type_noobj());
+    }
+
+    @Test
+    public void testAsXOfAZeroIsItsTypedNoObj() {
+        // the asX() bridge: noobj asked to be an X answers X's noobj, a real X that is still nothing
+        assertSame(Int.INT_NOOBJ, noobj().asInt());
+        assertSame(Real.REAL_NOOBJ, noobj().asReal());
+        assertSame(Str.STR_NOOBJ, noobj().asStr());          // was "" (coefficient 1): an absent str is not the empty str
+        assertSame(Bool.BOOL_NOOBJ, noobj().asBool());        // was a failed cast
+        assertSame(Bytes.BYTES_NOOBJ, noobj().asBytes());     // was a failed cast
+        assertSame(Uri.URI_NOOBJ, noobj().asUri());
+        assertSame(Lst.LST_NOOBJ, noobj().asLst());          // was [] (coefficient 1): an absent lst is not the empty lst
+        assertSame(Rec.REC_NOOBJ, noobj().asRec());
+        assertSame(Rel.REL_NOOBJ, noobj().asRel());
+        // noobj is an Inst, and Call.asCode() casts an inst to its one-step code: [noobj] has coefficient 1, a program
+        // that yields nothing, not the zero program. a zero that is no Call (was a failed cast) is Code's noobj
+        assertFalse(noobj().asCode().isNoObj());
+        assertSame(Code.CODE_NOOBJ, jnt(5).c(cInt.ZERO()).asCode());
+        assertSame(NOOBJ_TYPE, noobj().asType());             // was a failed cast
+        // every zero is the one zero: a zero int asked to be a str is the str's noobj
+        assertSame(Str.STR_NOOBJ, jnt(5).c(cInt.ZERO()).asStr());
+        // a Type casts to itself, zero or not: the zero root is still the root parentType() walks up to
+        final Type zeroRoot = ALL_TYPE.c(cInt.ZERO()).asType();
+        assertTrue(zeroRoot.isRootType());
+        assertSame(zeroRoot, zeroRoot.parentType());
+        // the empty values are values, present and empty, not zeros
+        assertFalse(str("").asStr().isNoObj());
+        assertFalse(lst().asLst().isNoObj());
     }
 
     private static void assertTypedNoObj(final Obj zero, final Obj constant, final Class<? extends Obj> iface) {
