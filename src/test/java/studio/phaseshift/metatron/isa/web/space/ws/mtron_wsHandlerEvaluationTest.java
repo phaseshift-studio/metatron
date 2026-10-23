@@ -49,9 +49,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -112,9 +110,9 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "start(7).plus(1)                       % 8",
-            "[start(7).plus(1)]==[as(inst::T)]>-    % inst?rng=#{*}&dom=#{?}(<#{*}>::T){start(7).plus(1)}",
-            "[plus(2).plus(2)]==[as(inst::T)]>-     % inst?rng=#{*}&dom=#{?}(<#{*}>::T){plus(2).plus(2)}",
-            "[plus(2).plus(2)]==[as(inst::T)]       % [inst?rng=#{*}&dom=#{?}(<#{*}>::T){plus(2).plus(2)}]",
+            "[start(7).plus(1)]==[as(inst::T)]>-    % inst?#<=#(){start(7).plus(1)}",
+            "[plus(2).plus(2)]==[as(inst::T)]>-     % inst?#<=#(){plus(2).plus(2)}",
+            "[plus(2).plus(2)]==[as(inst::T)]       % [inst?#<=#(){plus(2).plus(2)}]",
             "|start(7)                              % start(7)",
             "[plus(1),plus(2)]                      % [plus(1),plus(2)]",
             "[a=>plus(1)]                           % [a=>plus(1)]",
@@ -134,7 +132,7 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "start(7).plus(1)                       % 8",
-            "[start(7).plus(1)]==[as(inst::T)]>-    % inst?rng=#{*}&dom=#{?}(<#{*}>::T){start(7).plus(1)}",
+            "[start(7).plus(1)]==[as(inst::T)]>-    % inst?#<=#(){start(7).plus(1)}",
             "|start(7)                              % start(7)",
             "fail::[a]                              % <ERROR>",
     }, delimiter = '%')
@@ -159,7 +157,7 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "start(7).plus(1)                       % 8",
-            "[plus(2).plus(2)]==[as(inst::T)]>-     % inst?rng=#{*}&dom=#{?}(<#{*}>::T){plus(2).plus(2)}",
+            "[plus(2).plus(2)]==[as(inst::T)]>-     % inst?#<=#(){plus(2).plus(2)}",
             "noobj                                  % noobj",
     }, delimiter = '%')
     void testAnIPv6ClientIsAnswered(final String code, final String expected) throws Exception {
