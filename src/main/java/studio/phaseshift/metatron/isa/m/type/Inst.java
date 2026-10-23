@@ -379,6 +379,10 @@ public interface Inst extends Call {
             return null == args ? domainInst : domainInst.args(args);
         } else {
             LOG.debug("resolved %s from global router", resolved2);
+            // the closest match relaxes kind and type, but nothing fills a slot that takes something: the selector's
+            // binder refuses a zero operand, and attaching it here would hand the definition the zero's payload
+            if (!Helper.argsFillSlots(resolved2.asInst(), domainInst))
+                return noobj();
             final Inst resolve2 = resolved2.<Inst>as().args(domainInst.args()).c(domainInst.c()); //.resolve(lhs);
             return resolve2.hasRng() ? resolve2 : resolve2.rng(T(ALL_STAR));
         }
@@ -641,6 +645,31 @@ public interface Inst extends Call {
          * @param lhs        the lhs, or the domain a caller hinted
          * @return false only when the declared domain refuses it outright
          */
+        /**
+         * Whether the user's literal arguments can fill the definition's declared slots. A slot that takes something
+         * cannot be filled by nothing: {@code plus(int::T)} takes one int, and a {@code {0}2} (or noobj) brings none,
+         * whatever payload the zero carries. This is existence, not type checking, which stays on kind and type: only
+         * a zero arg against a declared, non-zeroable type slot is refused. Computed args (calls), call-shaped slots
+         * and rec-shaped (named) args pass, and a {@code {?}} slot still opts into absence.
+         *
+         * @param definition the definition as declared
+         * @param userInst   the call whose args would fill its slots
+         * @return false only when a literal zero would fill a slot that takes something
+         */
+        public static boolean argsFillSlots(final Inst definition, final Inst userInst) {
+            if (!definition.args().isLst() || !userInst.args().isLst())
+                return true;
+            final List<Obj> slots = definition.args().lstValue();
+            final List<Obj> given = userInst.args().lstValue();
+            for (int i = 0; i < Math.min(slots.size(), given.size()); i++) {
+                final Obj slot = slots.get(i);
+                final Obj arg = given.get(i);
+                if (arg.isNoObj() && !arg.isObjCall() && slot.isType() && !slot.c().isZeroable())
+                    return false;
+            }
+            return true;
+        }
+
         public static boolean admitsIgnoringCoefficient(final Inst definition, final Obj lhs) {
             if (!definition.hasDom() || lhs.isNoObj() || lhs.isFail() || lhs.isCall())
                 return true;
