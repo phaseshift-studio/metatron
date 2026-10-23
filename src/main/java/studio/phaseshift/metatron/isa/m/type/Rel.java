@@ -51,6 +51,13 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>, PlusMonoid.O<Rel> {
 
+    // Rel with coefficient {0}: noobj typed as a Rel, for a method that answers a Rel or nothing.
+    Rel REL_NOOBJ = rel(Pair.with(noobj(), noobj()), REL_TID.zero(), null);
+
+    static Rel rel_noobj() {
+        return REL_NOOBJ;
+    }
+
     public static Rel rel0() {
         return rel(Pair.with(noobj(), noobj()), REL_TID.zero(), null);
     }

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.isa.m.type.impl.MBytes;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -41,6 +42,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
+
+    // Bytes with coefficient {0}: noobj typed as a Bytes, for a method that answers a Bytes or nothing.
+    Bytes BYTES_NOOBJ = new MBytes(null, Tokens.BYTES_TID.zero(), null);
+
+    static Bytes bytes_noobj() {
+        return BYTES_NOOBJ;
+    }
 
     @Override
     Bytes clone(final Object jvm, final fURI tid, final fURI vid);

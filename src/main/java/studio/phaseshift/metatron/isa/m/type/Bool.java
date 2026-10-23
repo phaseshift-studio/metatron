@@ -41,6 +41,13 @@ public interface Bool extends Mono {
     Bool BOOL_TRUE = bool(true);
     Bool BOOL_FALSE = bool(false);
 
+    // Bool with coefficient {0}: noobj typed as a Bool, for a method that answers a Bool or nothing.
+    Bool BOOL_NOOBJ = bool(null, Tokens.BOOL_TID.zero(), null);
+
+    static Bool bool_noobj() {
+        return BOOL_NOOBJ;
+    }
+
     @Override
     Bool clone(final Object jvm, final fURI tid, final fURI vid);
 
