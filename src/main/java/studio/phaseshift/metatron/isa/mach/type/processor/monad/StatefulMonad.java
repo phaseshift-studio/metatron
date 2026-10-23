@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -178,7 +177,8 @@ public interface StatefulMonad extends Monad<Lst> {
     }
 
     default Rec state() {
-        return Optional.ofNullable(this.jvm().asLst().jvm()).map(o -> (Rec) o.get(2)).orElse(rec());
+        // a zero (absent) state reads as the empty one
+        return this.jvm().asLst().jvm().get(2).orElse(rec());
     }
 
     default Inst inst() {

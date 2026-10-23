@@ -718,6 +718,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.repeat(code=>_.repeat(code=>plus(1),until=>loop().is(eq(2))),until=>loop().is(eq(4)))                                            % 9",
             "1.repeat(code=>_.repeat(code=>mult(2),until=>loop().is(eq(3))),until=>loop().is(eq(2)))                                            % 64",
             "1.repeat(code=>_.repeat(code=>_.repeat(code=>plus(1),until=>loop().is(eq(2))),until=>loop().is(eq(2))),until=>loop().is(eq(2)))    % 9",
+            // a repeat past a barrier: the reducer's monad hands repeat a fresh state to count its loops in
+            "{1,2,3}.sum().repeat(code=>plus(1),until=>loop().is(eq(2)))                                                                        % 8",
     }, delimiter = '%')
     public void testRepeat(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
