@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.branch_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -173,7 +174,7 @@ public interface Code extends Call {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(CODE_TID).rng(Tokens.LST_TID), lst(LST_TYPE), (lhs, _) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c -> c.mult(lhs.c()))),
-                    instC(AS_INST_TID.dom(CODE_TID).rng(Tokens.INST_TID), lst(INST_TYPE), (lhs, _) -> lhs.asCode().codeValue().size() == 1 ? lhs.asCode().codeValue().getFirst() : instLambda(lhs.asCode()).c(c -> c.mult(lhs.c()))),
+                    instC(AS_INST_TID.dom(CODE_TID).rng(Tokens.INST_TID), lst(INST_TYPE), (lhs, _) -> lhs.asCode().codeValue().size() == 1 ? lhs.asCode().codeValue().getFirst() : instC(M_ISA_INST_TID.dom(lhs.asCode().insts().getFirst().dom().tid()).rng(lhs.asCode().insts().getLast().rng().tid()), lst(), lhs.asCode()).c(lhs.c())),
                     // the ring's "·" — serial composition: lhs ∘ rhs = lhs's insts followed by rhs's insts (a then b)
                     instC(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID), lst(CODE_TYPE), (lhs, inst) -> {
                         final List<Inst> insts = new ArrayList<>();
