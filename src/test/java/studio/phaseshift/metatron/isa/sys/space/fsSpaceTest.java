@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
 import java.nio.file.FileSystems;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -231,7 +232,8 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
     @Override
     @Test
     public void testMonoUpdate() {
-        cleanBefore();
+        // this test's own seed data, and nothing else -- the template is copied once per class (setupInstSet)
+        deleteMonoUpdateSeeds();
         // Write seed data inline — @TestData seed evaluation runs before @BeforeEach,
         // so the fsspace isn't registered with the Router yet.  By the time this test
         // method runs, the space is live.
@@ -279,7 +281,38 @@ public class fsSpaceTest extends AbstractSpaceTest implements LineQTest {
                 assertEquals(expectedObj, readObj, Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: update: " + make(updateExpression) + " | read: " + make(readExpression)));
             }
         } finally {
-            Machine.current().memory().write(make("$$/#"), noobj());
+            deleteMonoUpdateSeeds();
+        }
+    }
+
+    /**
+     * What testMonoUpdate seeds, and nothing else. It used to wipe the whole space -- {@code cleanBefore()} first and
+     * {@code $$/#} (the space root) last -- which took the class's template data with it, so every method JUnit ran
+     * after it found an empty test:file/: testFileSystem and testFileAsInstruction, under a reverse-alphabetical run
+     * order.
+     */
+    private static void deleteMonoUpdateSeeds() {
+        for (final String seeded : new String[]{"people", "companies"}) {
+            final java.nio.file.Path dir = TARGET_DIR.toPath().resolve(seeded);
+            if (java.nio.file.Files.exists(dir))
+                CommonUtil.deleteDirectory(dir);
+        }
+    }
+
+    /**
+     * THE TEMPLATE IS COPIED ONCE PER CLASS (setupInstSet), so every test leaves it as it found it. Checked after each
+     * test, so a test that deletes template data fails itself, whatever the method order, instead of a later test that
+     * reads the data.
+     */
+    @AfterEach
+    void templateDataSurvives() throws java.io.IOException {
+        try (final java.util.stream.Stream<java.nio.file.Path> template = java.nio.file.Files.walk(SOURCE_DIR.toPath())) {
+            final List<String> missing = template
+                    .map(path -> SOURCE_DIR.toPath().relativize(path))
+                    .filter(relative -> !java.nio.file.Files.exists(TARGET_DIR.toPath().resolve(relative)))
+                    .map(java.nio.file.Path::toString)
+                    .toList();
+            assertTrue(missing.isEmpty(), "this test deleted template data that setupInstSet copies once per class: " + missing);
         }
     }
 

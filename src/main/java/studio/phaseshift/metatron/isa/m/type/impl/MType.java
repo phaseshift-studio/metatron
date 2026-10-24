@@ -139,12 +139,21 @@ public class MType extends MObj implements Type {
                         final boolean useRequested = null != tid && null != vid;
                         final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
                         final fURI derivedVID = useRequested ? bigVID : obj.vid();
+                        // A NAME-ONLY REQUEST IS A REFERENCE, NOT A DEFINITION: it never registers what it derives.
+                        // The derived type carries the stored type's address, and registering it by construction
+                        // (canonical coefficient, vid != tid) claimed an address the request never defined. A
+                        // call-site refinement replaced its name's definition: nat::T[is(gt(100))] made nat "an int
+                        // over 100". A name holding a variant of another type re-registered that variant at the
+                        // other type's address: bignat, seeded with nat::T[is(gt(100))], wrote it over /m/math/nat
+                        // whenever bignat::T resolved. Only a request that names both a base and a vid
+                        // (X::T[...]@name) defines the name, as a re-registration and Type.Builder do.
                         // The coefficient is folded into the tid BEFORE construction so the constructor's
                         // canonical-only registration rule sees the final coefficient -- a variant must not
                         // register itself after the fact.
                         return checkPolyPoly(new MType(Tuple.Pair.with(
                                 null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                                null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), derivedTID, derivedVID).as()); // coefficient specific type doesn't exist, create it
+                                null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), derivedTID, derivedVID,
+                                useRequested && null != derivedVID && !derivedTID.equals(derivedVID)).as()); // coefficient specific type doesn't exist, create it
                     }
                 }
             } finally {
