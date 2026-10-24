@@ -356,14 +356,16 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(MAX).maybe().asUri(), INT_TYPE,
                                                 uri(PAUSE).maybe(), BOOL_TYPE,
                                                 uri(PEER).maybe(), URI_TYPE,
+                                                uri(TITLE).maybe().asUri(), STR_TYPE,
                                                 uri(STYLE).maybe().asUri(), T(UI_STYLE_TID)))
                                         .constructor(arg -> new NetworkPanelTool(arg.jvm(), UI_NETWORK_PANEL_TID, arg.vid()))
                                         .create(), "maybe an obj", "a network panel tool", Map.of(
                                         uri(MAX), "body rows drawn (default 12)",
                                         uri(PAUSE), "freeze what the panel draws, without stopping the capture",
                                         uri(PEER), "draw only the lanes whose name contains this",
+                                        uri(TITLE).maybe(), "the accordion header's title (default \"net\")",
                                         uri(STYLE).maybe(), "the panel's style: anchor places it, width/height size it"),
-                                "a live view of the exchanges between this machine and its peers; `.display()` it to watch, `@<panel> >>= [paused=>true]` to hold it still"),
+                                "a live, foldable accordion view of the exchanges between this machine and its peers; `.display()` it to watch, `@<panel> >>= [paused=>true]` to hold it still, `@<panel> >>= [expanded=>false]` to fold it"),
                         docWrap(UI_STACK_BAR_TYPE = Type.Builder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_STACK_BAR_TID)

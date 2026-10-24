@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
@@ -42,7 +41,6 @@ import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
-import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
@@ -57,7 +55,8 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -633,21 +632,19 @@ public class machInstSet extends AbstractInstSet {
                         MACH_CORE_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_CORE_THREAD_TID)
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)),
-                                                (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
+                                        .constructor(cthread -> new CoreThread(cthread.jvm(), MACH_CORE_THREAD_TID, cthread.vid()))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent core thread",
                                 "core::[code=>ping(<phaseshift.studio:80>),loop=>second::1.0]@~/thread/ping"),
                         MACH_VIRTUAL_THREAD_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_VIRTUAL_THREAD_TID)
-                                        .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)),
-                                                (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()).applyAsync(lhs)))
+                                        .constructor(vthread -> new VirtualThread(vthread.jvm(), MACH_VIRTUAL_THREAD_TID, vthread.vid()))
                                         .create(), null, null, Map.of(),
                                 "run a concurrent virtual thread",
                                 "virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@~/thread/ping")),
                 uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
-                        instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
+                       /* instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("~/thread");
                             final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
                             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();
@@ -655,7 +652,7 @@ public class machInstSet extends AbstractInstSet {
                                 thread.jvm().put(uri(SOURCE), auto_from_(uri(parent.vid())).tryToInst());
                             thread.applyAsync(lhs);
                             return thread;
-                        }),
+                        }),*/
                         // PUSH AT AN ADDRESS IS move-to-its-PARENT then push-its-NAME — the algebra Marko gave:
                         // push(<../b>) == move(<..>).push(<b>). So the frame that HOLDS the new machine is the one
                         // at the address's parent, and only the LEAF is minted: a sibling comes from the shared

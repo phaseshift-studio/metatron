@@ -29,9 +29,11 @@ import studio.phaseshift.metatron.isa.mach.type.Network;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.AUTHORITY;
 import static studio.phaseshift.metatron.Tokens.HOST;
@@ -119,6 +121,53 @@ public final class Places {
                 .map(a -> (Obj) uri(a))
                 .toList();
         return lst(uris);
+    }
+
+    /**
+     * This machine's own place — the {@code origin} a located {@code path::T} carries: the transports it answers on
+     * (its listeners), never its dials. {@code noobj} when nothing listens (a program on a silent machine is not
+     * placeable). The identity is the first authority's host as {@code //host}, the root frame.
+     */
+    public static Obj self() {
+        final List<fURI> authorities = Network.Helper.authorities().stream()
+                .sorted(Comparator.comparing(fURI::toString))
+                .toList();
+        if (authorities.isEmpty())
+            return noobj();
+        final String host = authorities.getFirst().host();
+        if (null == host)
+            return noobj();
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        jvm.put(uri(OBJ), uri("//" + host));
+        jvm.put(uri(AUTHORITY), lst(authorities.stream().map(a -> (Obj) uri(a)).toList()));
+        return new Place(jvm, PLACE_TID, null);
+    }
+
+    /**
+     * The places this machine can distribute code to — its dialed peers, one place per distinct host. {@code noobj}
+     * when nothing is dialed (a distribution rule has no reach). The origin is deliberately NOT here: it is where the
+     * code starts, not where it can go.
+     */
+    public static Obj reachable() {
+        final Set<String> hosts = new LinkedHashSet<>();
+        // the roster (known): every machine discovery declared, dialed or not — the candidate set is roster ∪ peers
+        Machine.current().network().machines().elements()
+                .filter(kv -> kv.first().isUri())
+                .forEach(kv -> hosts.add(kv.first().uriValue().toString()));
+        // the peer map (realized): the authorities this machine actually dialed (a dialed peer carries a host)
+        Machine.current().network().peers().values()
+                .filter(Obj::isRec)
+                .filter(peer -> peer.asRec().has(uri(HOST)))
+                .map(Network.Helper::authorityOf)
+                .filter(Objects::nonNull)
+                .map(fURI::host)
+                .filter(Objects::nonNull)
+                .forEach(hosts::add);
+        final List<Obj> places = hosts.stream()
+                .map(host -> place(uri("//" + host)))
+                .filter(p -> !p.isNoObj())
+                .toList();
+        return places.isEmpty() ? noobj() : lst(places);
     }
 
     /**

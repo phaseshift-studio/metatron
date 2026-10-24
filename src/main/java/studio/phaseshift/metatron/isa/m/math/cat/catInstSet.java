@@ -55,6 +55,7 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI CAT_INST_TID = CAT_ISA_TID.extend("inst");
     public static final fURI CAT_C_INST_TID = CAT_INST_TID.extend("c");
     public static final fURI CAT_LOWER_INST_TID = CAT_INST_TID.extend("lower");
+    public static final fURI CAT_BIND_INST_TID = CAT_INST_TID.extend("bind");
     public static final fURI CATEGORY_TID = CAT_ISA_TID.extend("category");
     public static final fURI MORPHISM_TID = CATEGORY_TID.extend("morphism");
     public static final fURI OBJECT_TID = CATEGORY_TID.extend("object");
@@ -179,10 +180,23 @@ public class catInstSet extends AbstractInstSet {
                 uri(TYPE), catTypes.registered(this),
                 uri(INST), lst(
                         instC(CAT_LOWER_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(PLAN_TYPE), (lhs, inst) -> {
-                            // lower(plan::T): path → path — read the plan rec, apply it to the path's code, re-lift.
+                            // lower(plan::T): path → path — read the plan rec, apply it to the path's code, re-lift,
+                            // carrying the realized placement (where the emitter shipped the shard).
                             final Plan plan = Plan.of(inst.arg(0).asRec());
                             final Code code = lhs.asRec().at(OBJ).asCode();
-                            return PATH_TYPE.constructor().apply(PlanInterpreter.lower(plan, code));
+                            return PATH_TYPE.constructor().apply(realized(PlanInterpreter.lower(plan, code)));
+                        }),
+                        instC(CAT_BIND_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(PLAN_TYPE), (lhs, inst) -> {
+                            // bind(plan::T): path → path — the cut-less operator: re-route located code. Requires a
+                            // cut-less plan and a path with an origin; declined (noobj) otherwise.
+                            final Plan plan = Plan.of(inst.arg(0).asRec());
+                            if (null != plan.cut())
+                                return noobj();
+                            final Rec path = lhs.asRec();
+                            if (path.at(ORIGIN).isNoObj())
+                                return noobj();
+                            final Code code = path.atDirect(OBJ).asCode();
+                            return PATH_TYPE.constructor().apply(realized(PlanInterpreter.bind(plan, code)));
                         }),
                         instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs)),
@@ -230,5 +244,34 @@ public class catInstSet extends AbstractInstSet {
         objectRec.jvm().put(uri(LAW), rec(theories));
         // Machine.write(type.vidOrTid().addQ(CATQ_PATTERN.toString()), objectRec.tid(catInstSet.OBJECT_TID));
         return type;
+    }
+
+    /**
+     * The realized placement of an emitted layout — the {@code select([to(uri)…])} routes, lifted to places, keyed by
+     * the shard's AT span. {@code noobj} when the emitter shipped nothing (the layout has no {@code select}).
+     */
+    static Obj realizedWhere(final Code emitted) {
+        final List<Obj> places = emitted.insts().stream()
+                .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
+                .findFirst()
+                .map(select -> select.arg(0).asLst().lstValue().stream()
+                        .map(route -> route.asInst().arg(0).uriValue().host())
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .map(host -> Places.place(uri("//" + host)))
+                        .filter(p -> !p.isNoObj())
+                        .toList())
+                .orElse(List.of());
+        if (places.isEmpty())
+            return noobj();
+        return rec(rec(uri(SPAN), uri("at")), lst(places));
+    }
+
+    /**
+     * The re-lift source: the emitted code, or a rec carrying the realized {@code where} when the emitter shipped.
+     */
+    static Obj realized(final Code emitted) {
+        final Obj where = realizedWhere(emitted);
+        return where.isNoObj() ? emitted : rec(mutableMap(uri(OBJ), emitted, uri(WHERE), where));
     }
 }

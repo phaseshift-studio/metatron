@@ -107,7 +107,10 @@ public class Cut extends MRec {
     public static Cut of(final Inst.Form form, final Law... laws) {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(FORM), uri(form.name()));
-        jvm.put(uri(LAW), lst(Arrays.stream(laws).map(l -> (Obj) uri(l.name())).toList()));
+        // a form-only cut declares no laws: omit the key rather than write an empty lst, which the plan::T
+        // predicate's lst(law::T) rejects (an empty lst reads as noobj)
+        if (0 < laws.length)
+            jvm.put(uri(LAW), lst(Arrays.stream(laws).map(l -> (Obj) uri(l.name())).toList()));
         return new Cut(jvm, REC_TID, null);
     }
 

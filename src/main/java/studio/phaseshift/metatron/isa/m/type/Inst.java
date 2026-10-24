@@ -267,7 +267,7 @@ public interface Inst extends Call {
                 base.equals(SELECT_INST_TID) ||
                 base.equals(FILTER_INST_TID) ||
                 base.equals(FORK_INST_TID) ||
-                base.equals(THREAD_INST_TID) ||
+                // base.equals(THREAD_INST_TID) ||
                 base.equals(ORDER_INST_TID) ||
                 base.equals(KMERGE_INST_TID) ||
                 base.equals(AS_INST_TID) ||

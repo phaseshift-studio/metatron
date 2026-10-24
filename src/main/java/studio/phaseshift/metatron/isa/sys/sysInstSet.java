@@ -91,6 +91,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @InstSet.JREService(vid = "/m/sys")
 public class sysInstSet extends AbstractInstSet {
     public static final fURI SYS = f("/sys");
+    public static final fURI CURRENT_SYS = f("~/sys");
     public static final fURI SYS_ISA_TID = M_ISA_TID.extend("sys");
     public static final fURI SYS_INST_TID = SYS_ISA_TID.extend("inst");
     public static final fURI SYS_BASH_INST_TID = SYS_INST_TID.extend("bash");

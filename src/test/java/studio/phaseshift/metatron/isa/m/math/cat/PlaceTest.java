@@ -149,4 +149,13 @@ public class PlaceTest extends AbstractInstSetTest {
         checkCodeParseApply(LOG, "<//ginger.local>.as(place::T)>>authority", "[<ws://localhost:8555>]");
         checkCodeParseApply(LOG, "<//ginger.local>.as(place::T)>>status", "known");
     }
+
+    /**
+     * The machine's own place (the {@code path.origin} source) requires an authority: a silent machine — nothing
+     * listens — has no origin, so a program on it is not placeable.
+     */
+    @Test
+    public void testSelfPlaceRequiresAuthority() {
+        checkEquality(LOG, noobj(), Places.self(), true);
+    }
 }

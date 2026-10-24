@@ -21,12 +21,10 @@ package studio.phaseshift.metatron.isa.mach.type.thread;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.NotDetachable;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.Tokens.CODE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -43,7 +41,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class VirtualThread extends AbstractThread implements NotDetachable {
 
     public VirtualThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(mutableMap(jvm), tid, null == vid ? CommonUtil.mintShortUUID(f("~/thread"), true) : vid);
+        super(mutableMap(jvm), tid, vid);
     }
 
     protected VirtualThread() {

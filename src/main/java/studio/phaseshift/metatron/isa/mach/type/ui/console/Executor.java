@@ -131,10 +131,9 @@ public final class Executor {
                     final Code compiled = machine.compiler().apply(resolvedResult).asCode();
                     final Processor mach = machine.processor().code(compiled);
                     final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
-                    mach.onHalt(o -> {
-                        defaultOnHalt.accept(o);  // persist in HALTED collection
-                        //this.printResult(o);      // display
-                    });
+                    // persist in HALTED collection
+                    //this.printResult(o);      // display
+                    mach.onHalt(defaultOnHalt::accept);
                     // Track machine in both places for interruption
                     this.console.machine = mach;
                     if (this.console.getActivePane() != null) {
@@ -147,14 +146,6 @@ public final class Executor {
                         backgrounded = true;
                     } else {
                         computeResult.set(future.get());
-                        // THE SESSION ADOPTS WHERE THE WORK ENDED. The worker started where this thread stood and
-                        // published where it finished (ThreadExecutor carries the frame of reference both ways); a
-                        // prompt persists between statements, so it is the thing that must adopt it. Without this
-                        // the move is real but invisible here -- and with it, no console special-casing of results,
-                        // no auto_xxx hook: the boundary is the thread, and the session is this thread.
-                        if (mach instanceof studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread worker
-                                && null != worker.landedPerspective())
-                            Machine.current(worker.landedPerspective());
                     }
                 } else {
                     computeResult.set(this.console.input.apply(resolvedResult));

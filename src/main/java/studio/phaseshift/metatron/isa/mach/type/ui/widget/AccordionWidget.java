@@ -61,10 +61,19 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
     // ── constructor ────────────────────────────────────────────────
 
     public AccordionWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        this(jvm, tid, vid, true);
+    }
+
+    /**
+     * As {@link #AccordionWidget(Map, fURI, fURI)}, but a subclass that owns its style defaults (a panel that
+     * computes them rather than materialising a {@code Style} into the rec on construction, which the checker can
+     * reject under {@code code_resolve}) passes {@code false} and writes its own defaults.
+     */
+    protected AccordionWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid, final boolean materializeStyle) {
         super(new ConcurrentHashMap<>(jvm), tid, vid);
         // The style lives in the rec (materialised with this widget's defaults
         // on first construction), never in a Java field a re-hydration loses.
-        this.readStyle();
+        if (materializeStyle) this.readStyle();
     }
 
     // ── convenience constructors ───────────────────────────────────
@@ -133,7 +142,15 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
     }
 
     public List<String> bodyLines() {
-        return this.getLines(this.read(), K_BODY);
+        return this.bodySource(this.read());
+    }
+
+    /**
+     * The body lines this box renders, given {@code fields} already read once this pass. A subclass that draws a
+     * LIVE body — content computed rather than stored in the rec — overrides this; the default is the rec's body.
+     */
+    protected List<String> bodySource(final Map<Obj, Obj> fields) {
+        return this.getLines(fields, K_BODY);
     }
 
     public AccordionWidget clearBody() {
@@ -175,7 +192,7 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
     public boolean onClick(final int row, final int col) {
         if (row != 0) return false;
         final Map<Obj, Obj> fields = this.read();   // the same anchored read the render draws from
-        final String ind = indicator(this.getBool(fields, K_EXP, true), this.getLines(fields, K_BODY));
+        final String ind = indicator(this.getBool(fields, K_EXP, true), this.bodySource(fields));
         final int start = 3 + Highlighter.visualLength(this.drawnTitle(this.getStr(fields, K_TITLE),
                 ind, Style.from(this.get(fields, STYLE_KEY)).width()));
         if (col < start || col >= start + INDICATOR_WIDTH) return false;
@@ -213,7 +230,7 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
     public int height() {
         final Map<Obj, Obj> fields = this.read();   // one anchored read, like format()
         if (!this.getBool(fields, K_EXP, true)) return 2;
-        final List<String> lines = this.displayLines(this.getLines(fields, K_BODY),
+        final List<String> lines = this.displayLines(this.bodySource(fields),
                 Style.from(this.get(fields, STYLE_KEY)));
         return lines.isEmpty() ? 2 : lines.size() + 2;
     }
@@ -224,7 +241,8 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
     private List<String> displayLines(final List<String> body, final Style<AccordionWidget> style) {
         final int floatW = style.width();
         if (floatW <= 0) return body;
-        return Stylable.Style.wrapLines(body, floatW - 3);
+        // the body is inset one column from BOTH borders, so it has floatW - 4 columns (two borders, two insets)
+        return Stylable.Style.wrapLines(body, floatW - 4);
     }
 
     /**
@@ -256,7 +274,7 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
         final long __p1 = System.nanoTime();
         final String title = this.getStr(fields, K_TITLE);
         final boolean expanded = this.getBool(fields, K_EXP, true);
-        final List<String> body = this.getLines(fields, K_BODY);
+        final List<String> body = this.bodySource(fields);
         final Style<AccordionWidget> style = Style.from(this.get(fields, STYLE_KEY));
 
         // A folded accordion shows nothing but its header, so the header says how
@@ -324,7 +342,7 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
             for (final String line : displayLines) {
                 sb.append(Widget.X).append(border.leftSide()).append(Widget.X)
                         .append(style.foreground()).append(" ").append(Highlighter.highlightLine(language, line))
-                        .repeat(" ", Math.max(0, width - Highlighter.visualLength(line) - 1))
+                        .repeat(" ", Math.max(0, width - Highlighter.visualLength(line) - 2)).append(" ")
                         .append(Widget.X).append(border.rightSide()).append(Widget.X).append("\n");
             }
             // a style height taller than the content pads the body with blank

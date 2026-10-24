@@ -21,8 +21,11 @@ package studio.phaseshift.metatron;
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -33,6 +36,8 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.EmojiTable;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.LogObj;
@@ -51,9 +56,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
 
@@ -63,15 +66,20 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TYPER_TYPE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_INST_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -489,20 +497,20 @@ public class BootLoader implements Rec, Feature.SelfClone {
             else {
                 args.at(LOCAL, uri(hostname), MUTABLE);
             }
-            /*final fURI SYS_VID = f("/sys");
+            final fURI SYS_VID = f("/sys");
+
             final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
             sysSpace.addQ(QCollection.docQ());
             sysSpace.addQ(QCollection.subQ());
             sysSpace.addQ(QCollection.incrQ());
             sysSpace.addQ(QCollection.mimeQ());
             sysSpace.addQ(QCollection.lockQ());
-            sysSpace.write(f("/sys?docq"), QCollection.Docs.doc("local system resources"));
-            sysSpace.write(f("/sys/mach?docq"), QCollection.Docs.doc("machine templates"));
-            sysSpace.write(f("/sys/mach/default?docq"), QCollection.Docs.doc("default machine template"));
-            sysSpace.write(f("~/space?docq"), QCollection.Docs.doc("local system space mounts"));
-            sysSpace.write("/sys/info", auto_(instB(SYS_INST_TID.extend("sys_stat"), lst())).tryToInst());
-            sysSpace.write(f("/sys/info?docq"), QCollection.Docs.doc("local physical machine information"));
-            sysSpace.write(f("~/thread?docq"), QCollection.Docs.doc("metatron threads globally"));*/
+            Machine.write(f("/sys?docq"), QCollection.Docs.doc("local system resources"));
+            Machine.write(f("/sys/mach?docq"), QCollection.Docs.doc("machine templates"));
+            Machine.write(f("/sys/mach/default?docq"), QCollection.Docs.doc("default machine template"));
+            Machine.write("/sys/info", auto_(instB(SYS_INST_TID.extend("sys_stat"), lst())).tryToInst());
+            Machine.write(f("/sys/info?docq"), QCollection.Docs.doc("local physical machine information"));
+            Machine.write(f("/sys/thread?docq"), QCollection.Docs.doc("metatron threads globally"));
             // published before the root is minted: bootstrap seeds the sink during construction, so [log=>…] must be readable by then
             LOG_LEVELS = rec(args.at(LOGG).orElse(uri(TRACE)), lst(uri(ALL)));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
@@ -517,28 +525,28 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Machine.current(Machine.root());   // the boot runs as root: every library registers where it is written
             //Machine.current().memory().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROOT_MACHINE.vid());
-           /* sysSpace.write(Machine.relativeToCurrent("/sys/typer/stage"), typerRec);
-            sysSpace.write(Machine.relativeToCurrent("/sys/tracer"), tracer);
-            sysSpace.write(Machine.relativeToCurrent("/sys/rewriter"), rewriter);
-            sysSpace.write(Machine.relativeToCurrent("/sys/tmp"), str("""
-                                                                      
-                                                                      use /sys/tmp as a temporary location for objs.
-                                                                      note that /sys/tmp can be automatically garbage collected at any time.
-                                                                      
-                                                                      """));
-            sysSpace.write(Machine.relativeToCurrent("/sys/emoji"), EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));*/
+            Machine.write(f("/sys/typer/stage"), typerRec);
+            Machine.write(f("/sys/tracer"), tracer);
+            Machine.write(f("/sys/rewriter"), rewriter);
+            Machine.write(f("/sys/tmp"), str("""
+                                             
+                                             use /sys/tmp as a temporary location for objs.
+                                             note that /sys/tmp can be automatically garbage collected at any time.
+                                             
+                                             """));
+            Machine.write(f("/sys/emoji"), EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));
             // LOAD STDIO INSTRUCTIONS
-           /* sysSpace.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+            Machine.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
                 final Object arg = inst.arg(0).jvm();
                 if (arg != null)
                     System.out.println(arg);
                 return lhs;
             }), "maybe an obj", "maybe an obj", Map.of(), "prints arg jvm object to the terminal and emits lhs obj as rhs obj"));
-            sysSpace.write("/sys/io/stdin", block_(docWrap(instC(f("/sys/io/stdin").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> {
+            Machine.write("/sys/io/stdin", block_(docWrap(instC(f("/sys/io/stdin").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> {
                 final Scanner scanner = new Scanner(System.in);
                 final String input = scanner.nextLine();
                 return str(input);
-            }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());*/
+            }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());
             // Machine.authority().registerRedirect(f("stdout"), f("/sys/io/stdout"));
             // Machine.authority().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
@@ -553,10 +561,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             InstSet.mount(sys);
             sys.setup();
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
-            /*System.getenv().entrySet().stream()
+            System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
                     .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::name)))
-                    .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()));*/
+                    .forEach(kv -> Machine.write(kv.getKey(), kv.getValue()));
 
             //
             final InstSet mach = new machInstSet();
@@ -564,13 +572,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             mach.setup();
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Machine.write(f("boot/args"), args);
-            // Establish the system root thread so boot-spawned threads
-            // (console, agents) inherit it as source via CURRENT_THREAD.
-            // The task blocks on SHUTDOWN_LATCH — stays in 'run' until shutdown.
             Thread.currentThread().setName("metatron-main");
             LOG.info("starting system thread");
             final CoreThread systemThread = docWrap(CoreThread.core(
-                    instLambda((lhs, inst) -> {
+                    instLambda(_ -> {
                         try {
                             SHUTDOWN_LATCH.await();
                         } catch (final InterruptedException e) {
@@ -578,9 +583,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         }
                         return noobj();
                     }),
-                    f("~/thread/main")), "this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure");
+                    mThread.CURRENT_SYS_THREAD.extend("main")), "this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure");
             systemThread.applyAsync();
-            Machine.write("~/thread/main", systemThread);
+            Machine.write(mThread.CURRENT_SYS_THREAD.extend("main"), systemThread);
             BootLoader.CURRENT_THREAD.set(systemThread);
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
