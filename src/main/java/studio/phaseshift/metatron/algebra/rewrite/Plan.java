@@ -68,6 +68,14 @@ public class Plan extends MRec {
     }
 
     /**
+     * Whether any relocation decision ships code to a peer — the plan is a distribution rule (or a semantic rule
+     * with a distributed shape) that needs reach to be live.
+     */
+    public boolean distributed() {
+        return this.where().stream().anyMatch(placement -> placement.shape().distributes());
+    }
+
+    /**
      * Reconstruct a Plan from a raw {@code rec} — the read-side of the same {@code name/cut/where} encoding.
      */
     public static Plan of(final Rec rec) {

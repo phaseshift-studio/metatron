@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
+import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -190,24 +191,37 @@ public class catTypes {
                                 .vid(PATH_TID)
                                 .isaPredicate(rec(
                                         uri(OBJ), CODE_TYPE,
+                                        uri(ORIGIN).maybe(), T(PLACE_TID),
+                                        uri(WHERE).maybe(), REC_TYPE,
+                                        uri(PEER).maybe(), lst(REC_TYPE),
                                         T(URI_TID).maybe(), T(PLAN_TID)))
                                 .constructor(arg -> {
                                     final Rec path = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                                     final Code code = path.atDirect(OBJ);
                                     if (!code.isCode())
                                         return noobj();
+                                    // the location coordinate: attach the machine's own place as origin when the path
+                                    // has none — a program is placeable only where it answers (bind requires it)
+                                    if (path.at(ORIGIN).isNoObj()) {
+                                        final Obj origin = Places.self();
+                                        if (!origin.isNoObj())
+                                            path.at(ORIGIN, origin, MUTABLE);
+                                    }
                                     // the plan-driven liveness reads the abstraction, not the code: lift ONCE, then
                                     // each rewrite's out-edge is materialized iff its selector matches the morphism
                                     // list's form/law/name fields — decided endogenously (the abstraction already
                                     // computed them), so it is type-checking-independent.
                                     final Obj abstraction = ABSTRACTION_TYPE.constructor().apply(code);
                                     final List<Obj> morphisms = abstraction.isNoObj() ? List.of() : abstraction.asRec().at(OBJ).asLst().elements().toList();
+                                    final Obj reach = Places.reachable();   // the distribution candidates, read once per lift
                                     for (final Inst rewrite : self.rewrites()) {
                                         try {
                                             if (!maybeNotIdentity(morphisms, rewrite))
                                                 continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
-                                            final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
                                             final Plan plan = catRewrite.planOf(rewrite.tid().name());
+                                            if (null != plan && plan.distributed() && (reach.isNoObj() || 1 > PlanInterpreter.hops(plan, code)))
+                                                continue; // a distribution rule needs reach AND a hop budget: no peers or ?hops=0 → identity
+                                            final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
                                             final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), PLAN_TID, null) : plan;
                                             path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
                                         } catch (final Exception e) {
@@ -218,15 +232,20 @@ public class catTypes {
                                 })
                                 .create(), Map.of(
                                 uri(OBJ), "the code \\(p\\) itself — the vertex",
+                                uri(ORIGIN).maybe(), "where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)",
+                                uri(WHERE).maybe(), "the realized placement — span → place, written by the pass that applied a distribution rule",
+                                uri(PEER).maybe(), "the peer recs the deployment used",
                                 T(URI_TID).maybe(), "one out-edge per live rewrite \\(r\\), keyed by the rule's name and holding its \\(\\mathrm{plan}\\): \\(\\mathrm{lower}(\\mathrm{plan}_r)(p) = r(p)\\); a rule the abstraction proves the identity on \\(p\\) is no edge, so a normal form has none"),
                         "code as a categorical path incident to iso-semantic rewritten forms"),
                 docWrap(ABSTRACTION_TYPE = Type.Builder.build()
                                 .tid(CATEGORY_TID)
                                 .vid(ABSTRACTION_TID)
                                 .isaPredicate(rec(
-                                        uri(OBJ), lst(T(MORPHISM_TID))))
+                                        uri(OBJ), lst(T(MORPHISM_TID)),
+                                        uri(WHERE).maybe(), lst(T(CATEGORY_TID))))
                                 .constructor(arg -> {
-                                    final Obj source = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec().at(OBJ) : arg;
+                                    final boolean located = arg.isRec() && arg.asRec().has(uri(OBJ));
+                                    final Obj source = located ? arg.asRec().at(OBJ) : arg;
                                     if (source.isLst())
                                         return arg.asRec().selfTID(ABSTRACTION_TID);    // already lifted
                                     if (!source.isCode())
@@ -259,10 +278,18 @@ public class catTypes {
                                             morphisms.add(block);
                                         }
                                     }
-                                    return rec(uri(OBJ), lst(morphisms)).selfTID(ABSTRACTION_TID);
+                                    final Rec abstraction = rec(uri(OBJ), lst(morphisms));
+                                    // the place-class word (§11.4): where the code can GO — its dialed peers — or the
+                                    // realized placement when the pass has written one. Computed for any code, not just
+                                    // a located path: the reach is the machine's, not the program's.
+                                    final Obj word = located ? placeWord(arg.asRec()) : Places.reachable();
+                                    if (!word.isNoObj())
+                                        abstraction.at(uri(WHERE), word, MUTABLE);
+                                    return abstraction.selfTID(ABSTRACTION_TID);
                                 })
                                 .create(), Map.of(
-                                uri(OBJ), "the abstract word \\(\\alpha(f_1 \\cdot \\ldots \\cdot f_n) = \\alpha(f_1) \\cdot \\ldots \\cdot \\alpha(f_n)\\): each chain instruction as its \\(\\mathrm{morphism}\\) carrying law, form, class and analysis, with the ORIGINAL inst in \\(\\mathrm{obj}\\) so \\(\\gamma\\) (walk \\(\\mathrm{obj}\\) in order) recovers the exact code"),
+                                uri(OBJ), "the abstract word \\(\\alpha(f_1 \\cdot \\ldots \\cdot f_n) = \\alpha(f_1) \\cdot \\ldots \\cdot \\alpha(f_n)\\): each chain instruction as its \\(\\mathrm{morphism}\\) carrying law, form, class and analysis, with the ORIGINAL inst in \\(\\mathrm{obj}\\) so \\(\\gamma\\) (walk \\(\\mathrm{obj}\\) in order) recovers the exact code",
+                                uri(WHERE).maybe(), "the α place-class word: the located path's places as a list (the α image of \\(\\mathrm{path}.where\\) / \\(\\mathrm{path}.origin\\)) — the surface a placement guard reads"),
                         "code lifted pointwise along \\(\\alpha\\) into the classification alphabet — the pure search surface a plan's selector reads"),
                 docWrap(PLAN_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
@@ -275,7 +302,8 @@ public class catTypes {
                                                 uri(LAW).maybe().asUri(), lst(LAW_TYPE),
                                                 uri(ROLE).maybe().asUri(), URI_TYPE),
                                         uri(WHERE).maybe(), lst(rec(
-                                                uri(TARGET), URI_TYPE,
+                                                uri(SHAPE), URI_TYPE,
+                                                uri(TARGET).maybe(), ALL_TYPE,
                                                 uri(SPAN), lst(rec(
                                                         uri(SPAN), URI_TYPE,
                                                         uri(FLAGS).maybe(), lst(URI_TYPE))))).maybe()))
@@ -439,5 +467,18 @@ public class catTypes {
         final List<Obj> common = new ArrayList<>(catGraph.clazz(shapes.getFirst()).lstValue());
         shapes.stream().skip(1).forEach(shape -> common.retainAll(catGraph.clazz(shape).lstValue()));
         return lst(common);
+    }
+
+    /**
+     * The place-class word (§11.4): a located path's realized placement (span → place) abstracted into a list of
+     * places, or its origin when nothing has been realized — the α word of locations, the same lift as the
+     * instruction word. {@code noobj} for an unlocated path.
+     */
+    private static Obj placeWord(final Rec path) {
+        final Obj where = path.at(WHERE);
+        if (where.isRec() && !where.asRec().jvm().isEmpty())
+            return lst(where.asRec().values().toList());
+        // the place-class word is where the code can GO — its dialed peers — not where it starts (the origin)
+        return Places.reachable();
     }
 }

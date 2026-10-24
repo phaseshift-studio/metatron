@@ -203,63 +203,40 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     /**
-     * Without a console a tool must not throw: a boot file that displays a panel in a headless run should draw
-     * nothing, not fail the boot.
+     * Without a console the panel must still format — a boot file that renders it headless should draw the box, not
+     * throw.
      */
     @Test
     @Timeout(60)
-    void shouldSurviveDisplayingWithoutAConsole() {
-        // "no console" is made here, not assumed: the console is process-wide, a reused fork may still hold one from
-        // a class that ran earlier, and the bare panel is the inspector, which would take that console's keyboard
+    void shouldFormatWithoutAConsole() {
         final Console console = Console.LOCAL_INSTANCE;
         Console.LOCAL_INSTANCE = null;
         try {
             final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
-            tool.run();   // the no-console branch, which must be total
-            tool.close();
+            assertTrue(Graphitty.strip(Graphitty.string(tool.format())).startsWith("┌"),
+                    "the panel formats to a bordered box without a console");
         } finally {
             Console.LOCAL_INSTANCE = console;
         }
     }
 
     /**
-     * The hang this class once caused: a console built earlier in the same JVM (a reused surefire fork) put the bare
-     * panel — the inspector, which takes the keyboard — into a key loop on a stdin that nobody types into. A test
-     * JVM's terminal is dumb, and a dumb terminal cannot be a tool's keyboard, so the tool presents and returns.
+     * The panel is a foldable accordion: the header's {@code [-]} folds it to just its header, and {@code [+]} (with
+     * the body line count) unfolds it again.
      */
     @Test
-    @Timeout(60)
-    void shouldReturnWhileAConsoleIsLiveOnADumbTerminal() {
-        final Console console = new Console(rec(), f("/sys/network_panel_test"));
-        try {
-            assertTrue(Console.getTerminal().getType().startsWith("dumb"),
-                    "a test JVM's streams are pipes, so its terminal is dumb: " + Console.getTerminal().getType());
-            final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
-            assertTrue(tool.modal(), "a bare panel is the inspector, which would take the keyboard");
-            tool.run();   // returns: a regression meets the timeout instead of hanging the fork
-            tool.close();
-        } finally {
-            closeConsole(console);
-        }
-    }
-
-    /**
-     * The style decides the MODE: no style is the inspector (it takes the keyboard), an anchored style is the
-     * panel (passive). A default anchor must not turn every invocation into a panel.
-     */
-    @Test
-    void shouldChooseItsModeFromTheStylesItWasGiven() {
-        final NetworkPanelTool bare = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
-        assertTrue(bare.modal(), "no style at all: the inspector");
-        // a real Style (as `style::[anchor=>...]` constructs), not a bare rec: the mode reads the style a tool was
-        // GIVEN, and a plain rec is not one
-        final studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style<NetworkPanelTool> style =
-                studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style.empty();
-        style.floatAt(studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface.Anchor.BOTTOM_RIGHT, 0, 0, 0);
-        final NetworkPanelTool anchored = new NetworkPanelTool(
-                mutableMap(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("style"), style),
-                UI_NETWORK_PANEL_TID, null);
-        assertFalse(anchored.modal(), "an anchor means the panel, which does not take the keyboard");
+    void shouldFoldAndUnfold() {
+        final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+        assertTrue(tool.isExpanded(), "the panel starts expanded");
+        assertTrue(tool.format().contains("[-]"), "the expanded header shows the fold marker: " + tool.format());
+        // the toggle sits right after the title: border cell + space + "net" + space, so its first cell is col 6
+        assertTrue(tool.onClick(0, 6), "clicking the toggle folds the panel");
+        assertFalse(tool.isExpanded(), "now folded");
+        final String folded = tool.format();
+        assertTrue(folded.contains("[+]"), "the folded header shows the unfold marker: " + folded);
+        assertFalse(folded.contains("▼"), "and draws none of the body: " + folded);
+        assertTrue(tool.onClick(0, 6), "clicking the toggle again unfolds it");
+        assertTrue(tool.isExpanded(), "expanded again");
     }
 
     /**
@@ -271,6 +248,54 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
                 studio.phaseshift.metatron.isa.mach.type.Machine.read(UI_NETWORK_PANEL_TID);
         assertFalse(type.isNoObj(), "the panel's type is registered");
         assertInstanceOf(studio.phaseshift.metatron.isa.m.type.Type.class, type, "and it is a type");
+    }
+
+    /**
+     * Every lane header carries a clear button — the pointer's per-peer clear — and the summary line does not.
+     */
+    @Test
+    void shouldDrawAClearButtonOnEachLaneHeader() {
+        exchange(PEER_A, "alpha", 1L);
+        exchange(PEER_B, "beta", 1L);
+        final List<String> lines = lines(false, 12, "", 120);
+        // body row 0 is the summary; each lane is then a header (with the button) followed by its rows
+        assertFalse(plain(lines.get(0)).contains("[x]"), "the summary line carries no button: " + plain(lines.get(0)));
+        assertTrue(plain(lines.get(1)).contains("[x]"), "the first lane header carries the button: " + plain(lines.get(1)));
+        assertTrue(plain(lines.get(3)).contains("[x]"), "and the second does too: " + plain(lines.get(3)));
+    }
+
+    /**
+     * The clear button drops only the peer whose header was clicked — the pointer's per-peer clear, not the
+     * inspector's whole-wire {@code c}.
+     */
+    @Test
+    void shouldClearOnlyTheClickedPeer() {
+        exchange(PEER_A, "alpha", 1L);
+        CommonUtilSleep.sleep(5);
+        exchange(PEER_B, "beta", 1L);
+        final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+        // the most recently active peer (PEER_B) leads: its header is box row 2 (row 0 = top border, row 1 = the
+        // summary), and the "[x]" button spans box columns [4, 7) — border side, leading space, then the "▼ " marker
+        assertFalse(tool.onClick(2, 1), "a click on the header's leading space clears nothing");
+        assertTrue(tool.onClick(2, 4), "a click on the clear button clears that lane");
+        final WireTrace.Snapshot snapshot = WireTrace.snapshot(12);
+        assertEquals(1, snapshot.lanes().size(), "only the clicked peer's lane went away");
+        assertTrue(snapshot.lanes().getFirst().peer().contains("alpha"), "the untouched peer remains");
+    }
+
+    /**
+     * A clipped line (ending in an ellipsis) must not push the right border out: every row of the box shares its
+     * width, so the right edge stays a straight line.
+     */
+    @Test
+    void shouldKeepTheRightBorderAlignedWhenALineIsClipped() {
+        exchange(PEER_A, "x".repeat(200), 1L);   // longer than the panel, so the row clips with an ellipsis
+        final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+        final String[] rows = Graphitty.strip(Graphitty.string(tool.format())).split("\n");
+        final int width = rows[0].length();
+        assertTrue(width > 2, "the box has a top border to measure");
+        for (final String row : rows)
+            assertEquals(width, row.length(), "every row shares the box's width (no ragged right edge): " + row);
     }
 
     /** a tiny sleep helper, so the two chats in the ordering test are unambiguously seconds apart */

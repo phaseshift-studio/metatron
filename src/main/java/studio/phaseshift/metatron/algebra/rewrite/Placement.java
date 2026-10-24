@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.math.cat.Law;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -34,9 +36,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Placement — a target plus the {@link Span spans} assembled onto it. Each placement contributes one chain to the
+ * Placement — a shape plus the {@link Span spans} assembled onto it. Each placement contributes one chain to the
  * emitted layout and a {@code to(...)} that routes its result: {@code [chain, chain...] == [to(), to(a), ...]}.
- * The target is where the interesting variation lives, not a {@code master}/{@code slave} flag:
+ * The shape is where the interesting variation lives, not a {@code master}/{@code slave} flag:
  *
  * <ul>
  *   <li>{@link #local()} — stay home; the master gathers the partials ({@code merge()}, the barrier near-ring
@@ -47,22 +49,67 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <li>{@link #tree(int)} — recursive tree-sharding with a hop budget.</li>
  * </ul>
  *
- * <p>A Placement is a {@code rec} — {@code [target => uri(target), span => lst(spanRecs)]}, with {@code url}
- * carrying the peer/space address and {@code hops} the tree budget when present. Every accessor reads
- * {@code this.at(key)}; there are no Java fields.
+ * <p>A Placement is a {@code rec} — {@code [shape => uri(shape), target => uri(address)?, hops => int?,
+ * span => lst(spanRecs)]}. {@code shape} is the topology token, {@code target} the concrete peer/space address, and
+ * {@code hops} the tree budget when present. The shape carries its own {@link #obligations()} (§3) — the laws a cut
+ * shipped to it and re-applied at home must declare. Every accessor reads {@code this.at(key)}; there are no Java
+ * fields.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class Placement extends MRec {
 
-    public enum Target {
+    /**
+     * The topology of a relocation decision — what {@code target} named before the shape coordinate landed. Each
+     * shape declares the laws it demands of a cut shipped to it (§3); a shape with none demands nothing.
+     */
+    public enum Shape {
+        /** stay home — no regrouping, no reordering, no duplication */
         LOCAL,
-        PEER,
-        PEERS,
+        /** ship to one peer — a one-slave shard whose cut is recombined */
+        PEER(Law.monoidic, Law.commutative),
+        /** fan out over the roster — order-free merge across a set */
+        PEERS(Law.monoidic, Law.commutative),
+        /** a durable result — write to a space, no combiner */
         SPACE,
-        TREE,
-        SHUFFLE,
-        NONE
+        /** recursive tree-sharding with a hop budget */
+        TREE(Law.monoidic, Law.commutative),
+        /** key-routed fan-out — monoidic only; the keyed law is the fold's derivation */
+        SHUFFLE(Law.monoidic),
+        /** nowhere — the isolated span is deleted */
+        NONE;
+
+        private final Set<Law> obligations;
+
+        Shape(final Law... obligations) {
+            this.obligations = Set.of(obligations);
+        }
+
+        /**
+         * The laws this shape demands — the forward traversal (§3): {@code obligations(shape)}. A cut shipped to this
+         * shape and re-applied at home must declare every law here.
+         */
+        public Set<Law> obligations() {
+            return this.obligations;
+        }
+
+        /**
+         * The shapes a law set admits — the reverse traversal (§3): {@code admissible(laws) = { shape :
+         * obligations(shape) ⊆ laws }}.
+         */
+        public static List<Shape> admissible(final Set<Law> laws) {
+            return Arrays.stream(values())
+                    .filter(shape -> laws.containsAll(shape.obligations))
+                    .toList();
+        }
+
+        /**
+         * Whether this shape ships code to a peer — the distributed shapes. {@code local}/{@code none}/{@code space}
+         * stay on the machine that holds them.
+         */
+        public boolean distributes() {
+            return PEER == this || PEERS == this || TREE == this || SHUFFLE == this;
+        }
     }
 
     public Placement(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -70,61 +117,71 @@ public class Placement extends MRec {
     }
 
     public static Placement local(final Span... spans) {
-        return of(Target.LOCAL, null, 0, spans);
+        return of(Shape.LOCAL, null, 0, spans);
     }
 
     public static Placement peer(final fURI address, final Span... spans) {
-        return of(Target.PEER, address, 0, spans);
+        return of(Shape.PEER, address, 0, spans);
     }
 
     public static Placement peers(final Span... spans) {
-        return of(Target.PEERS, null, 0, spans);
+        return of(Shape.PEERS, null, 0, spans);
     }
 
     public static Placement shuffle(final Span... spans) {
-        return of(Target.SHUFFLE, null, 0, spans);
+        return of(Shape.SHUFFLE, null, 0, spans);
     }
 
     public static Placement space(final fURI address, final Span... spans) {
-        return of(Target.SPACE, address, 0, spans);
+        return of(Shape.SPACE, address, 0, spans);
     }
 
     public static Placement tree(final int hops, final Span... spans) {
-        return of(Target.TREE, null, hops, spans);
+        return of(Shape.TREE, null, hops, spans);
     }
 
     /**
      * Nowhere — the isolated span is deleted (the unit law's transform: cut the identity, route to nothing).
      */
     public static Placement none(final Span... spans) {
-        return of(Target.NONE, null, 0, spans);
+        return of(Shape.NONE, null, 0, spans);
     }
 
-    private static Placement of(final Target target, final fURI address, final int hops, final Span... spans) {
+    private static Placement of(final Shape shape, final fURI address, final int hops, final Span... spans) {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
-        jvm.put(uri(TARGET), uri(target.name().toLowerCase()));
+        jvm.put(uri(SHAPE), uri(shape.name().toLowerCase()));
         if (null != address)
-            jvm.put(uri(URL), uri(address));
+            jvm.put(uri(TARGET), uri(address));
         if (0 != hops)
             jvm.put(uri(HOPS), jnt(hops));
         jvm.put(uri(SPAN), lst(Arrays.stream(spans).map(s -> (Obj) s).toList()));
         return new Placement(jvm, REC_TID, null);
     }
 
-    public Target target() {
-        return Target.valueOf(this.at(TARGET).uriValue().name().toUpperCase());
-    }
-
     /**
-     * The concrete peer/space address, or null for the addressless targets ({@code local/peers/tree}).
+     * The topology token — {@code local/peer/peers/space/tree/shuffle/none}.
      */
-    public fURI address() {
-        final Obj address = this.at(URL);
-        return address.isNoObj() ? null : address.uriValue();
+    public Shape shape() {
+        return Shape.valueOf(this.at(SHAPE).uriValue().name().toUpperCase());
     }
 
     /**
-     * The tree-sharding hop budget, or 0 for the non-tree targets.
+     * The concrete peer/space address, or null for the addressless shapes ({@code local/peers/tree}).
+     */
+    public fURI target() {
+        final Obj target = this.at(TARGET);
+        return target.isNoObj() ? null : target.uriValue();
+    }
+
+    /**
+     * The laws this placement's shape demands — the forward traversal (§3), read off the shape.
+     */
+    public Set<Law> obligations() {
+        return this.shape().obligations();
+    }
+
+    /**
+     * The tree-sharding hop budget, or 0 for the non-tree shapes.
      */
     public int hops() {
         final Obj hops = this.at(HOPS);
@@ -137,9 +194,16 @@ public class Placement extends MRec {
     }
 
     /**
-     * Reconstruct a Placement from a raw {@code rec} — the read-side of the same {@code target/url/hops/span} encoding.
+     * Reconstruct a Placement from a raw {@code rec} — the read-side of the same {@code shape/target/hops/span}
+     * encoding, migrating the old {@code target/url} keys for one cycle.
      */
     public static Placement of(final Rec rec) {
-        return new Placement(new LinkedHashMap<>(rec.jvm()), rec.tid(), rec.vid());
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>(rec.jvm());
+        // compat: the pre-shape encoding held the topology under "target" and the address under "url"
+        if (jvm.containsKey(uri(TARGET)) && !jvm.containsKey(uri(SHAPE)))
+            jvm.put(uri(SHAPE), jvm.remove(uri(TARGET)));
+        if (jvm.containsKey(uri(URL)) && !jvm.containsKey(uri(TARGET)))
+            jvm.put(uri(TARGET), jvm.remove(uri(URL)));
+        return new Placement(jvm, rec.tid(), rec.vid());
     }
 }

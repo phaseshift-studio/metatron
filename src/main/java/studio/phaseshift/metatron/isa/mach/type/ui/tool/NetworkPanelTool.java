@@ -18,17 +18,14 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.tool;
 
-import org.jline.keymap.KeyMap;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
-import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.WidgetCanvas;
 import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
 import studio.phaseshift.metatron.isa.web.space.ws.WireTrace;
 
@@ -40,15 +37,15 @@ import static studio.phaseshift.metatron.Tokens.MAX;
 import static studio.phaseshift.metatron.Tokens.PAUSE;
 import static studio.phaseshift.metatron.Tokens.PEER;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * THE NETWORK PANEL — what this machine and its peers are saying to each other, as a floating tool.
+ * THE NETWORK PANEL — what this machine and its peers are saying to each other, as a foldable accordion.
  * <p>
- * It is a TOOL, not a widget: its content is domain specific (peer lanes and the exchanges that crossed them) and
- * it aggregates what the wire's ledger recorded ({@link WireTrace}). It is created from mtron and displayed — there
- * is no command surface:
+ * It is an {@link AccordionWidget}: the foldable header (a {@code [-]} / {@code [+]} toggle) and the collapse
+ * come from the accordion, while the BODY is a live read of the wire's ledger ({@link WireTrace}) — never mirrored
+ * into the rec, because a trace is volatile by nature and mirroring it would spend a store write per tick. It is
+ * created from mtron and displayed:
  *
  * <pre>{@code
  * network_panel_tool::[
@@ -57,17 +54,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * }</pre>
  *
  * Its rec is the panel's POLICY, not its content: {@code max} (rows drawn), {@code paused} (freeze what is drawn),
- * {@code peer} (a lane filter). The rows are a live read of the trace, because a trace is volatile by nature —
- * mirroring it into the rec would spend a store write per tick to keep a copy of something already in memory. So
- * {@code @<net> >>= [paused=>true]} is how a human freezes it, and {@code *<net>} shows how it is configured.
+ * {@code peer} (a lane filter), plus the accordion's {@code expanded} (the fold, latched by the toggle). So
+ * {@code @<net> >>= [paused=>true]} freezes it, {@code @<net> >>= [expanded=>false]} folds it, and
+ * {@code *<net>} shows how it is configured.
  * <p>
- * As a floating widget it inherits the console's gestures (focus, wheel, chevrons, resize) rather than owning keys.
- * The interactive inspector (arrow-key browsing, enter for the full objs) is the next step, and follows
- * {@link ExplainTool}'s shape: raw mode, a {@code KeyMap}, {@code WidgetCanvas} lines, a {@code Deque} of levels.
+ * As a floating widget it inherits the console's gestures (focus, wheel, chevrons, resize), the accordion's header
+ * fold, and a per-peer {@code [x]} clear button on every lane header.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class NetworkPanelTool extends AbstractTool<NetworkPanelTool, NetworkPanelTool.Action> {
+public class NetworkPanelTool extends AccordionWidget {
 
     /**
      * rows drawn when the rec says nothing
@@ -81,31 +77,37 @@ public class NetworkPanelTool extends AbstractTool<NetworkPanelTool, NetworkPane
      * how often traffic may nudge a repaint: a panel is a view, not a strobe light
      */
     private static final long REPAINT_MS = 250L;
-
     /**
-     * what the inspector's keys mean
+     * the marker that leads every lane header — a cyan "▼ "
      */
-    enum Action {
-        SCROLL_UP,
-        SCROLL_DOWN,
-        PAGE_UP,
-        PAGE_DOWN,
-        PAUSE,
-        CLEAR,
-        TAIL,
-        QUIT
-    }
-
+    private static final String LANE_MARKER = "{{c}}▼{{w}} ";
     /**
-     * the first body line the inspector shows (the list is newest-first, so 0 is the tail)
+     * the clear button drawn on a lane header — a red "[x]" — followed by the space before the peer's name
      */
-    private int scroll = 0;
+    private static final String CLEAR_BUTTON = "{{r}}[x]{{w}} ";
+    /**
+     * the clear button's clickable columns: the "[x]" glyph, not its trailing space
+     */
+    private static final int CLEAR_BUTTON_WIDTH = 3;
+    /**
+     * box-local columns a body row's content starts after: the left border side and the leading space
+     */
+    private static final int CONTENT_OFFSET = 2;
 
     private static volatile long lastNudgeMs = 0L;
     private static volatile boolean listening = false;
 
     public NetworkPanelTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, tid, vid, false);
+        this.title("net");
+        // a panel is something you WATCH, so it defaults to a corner rather than to the transcript; the border and
+        // the green foreground are the accordion's defaults, and the width keeps the box readable out of the box
+        final Stylable.Style<AccordionWidget> defaults = Stylable.Style.empty();
+        defaults.border(Border.continuous);
+        defaults.foreground("{{g}}");
+        defaults.floatAt(FloatingSurface.Anchor.BOTTOM_RIGHT, 0, 0, 0);
+        defaults.width(DEFAULT_WIDTH);
+        this.style(defaults);
         listenForTraffic();
     }
 
@@ -136,153 +138,46 @@ public class NetworkPanelTool extends AbstractTool<NetworkPanelTool, NetworkPane
         return peer.isNoObj() ? "" : peer.toString();
     }
 
-    // ── lifecycle ──────────────────────────────────────────────────
+    // ── the live body (the accordion's content, not the rec's) ─────
 
     /**
-     * Display it: floating when the style names an anchor (the normal case), printed once when it does not (a
-     * console-less caller, a pipe).
-     */
-    /**
-     * A panel when its style names an anchor, a scrollable inspector when it does not — the same rec either way.
+     * The panel's body is a live read of the trace, clipped to the accordion's content width — it is never stored
+     * in the rec (see the class note), so this overrides the accordion's rec-backed body source.
      */
     @Override
-    protected boolean modal() {
-        // THE MODE IS THE CREATOR'S CHOICE, not the default's: getStyle() supplies a corner anchor so a bare
-        // `.display()` is a panel, but "no style at all" must mean the inspector — otherwise the default would
-        // silently decide the tool never takes the keyboard
-        return !this.explicitStyle().hasFloat();
+    protected List<String> bodySource(final Map<Obj, Obj> fields) {
+        final int interior = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
+        return panelLines(WireTrace.snapshot(this.max()), this.paused(), this.max(), this.peerFilter(),
+                Math.max(0, interior - 2));
     }
+
+    // ── the pointer: fold on the header, clear on a lane header ────
 
     /**
-     * the style the REC carries, with no defaults applied (see {@link #modal()})
-     */
-    private Stylable.Style<NetworkPanelTool> explicitStyle() {
-        final Obj style = this.at(uri(studio.phaseshift.metatron.Tokens.STYLE));
-        return Stylable.Style.isStyle(style) ? Stylable.Style.from(style) : Stylable.Style.empty();
-    }
-
-    /**
-     * The panel: pin it to the console's floating surface. The console owns its pixels, so nothing here takes the
-     * keyboard — the surface's own focus/scroll gestures and `:widgets` apply.
+     * The accordion's {@code [-]} / {@code [+]} fold on the header, then the per-peer {@code [x]} clear button on
+     * a lane header's own body row. The button sits at a fixed content column right after the lane marker
+     * ({@code ▼ }), so the hit test is column arithmetic; only the body row (which peer) needs the live layout,
+     * and that comes from the same {@link #layout} the renderer draws.
      */
     @Override
-    protected void present() {
-        final Console console = Console.LOCAL_INSTANCE;
-        if (null == console) {
-            super.present();   // a test, a script, a pipe: draw once if there is anywhere to draw
-            return;
-        }
-        final Stylable.Style<NetworkPanelTool> style = this.getStyle();
-        final FloatingSurface surface = console.getFloatingSurface();
-        this.floatAt(surface, style.anchor(), style.width() > 0 ? style.width() : DEFAULT_WIDTH,
-                style.top(), style.left());
-        surface.render();
-    }
-
-    @Override
-    protected KeyMap<Action> keyMap() {
-        final KeyMap<Action> keys = new KeyMap<>();
-        this.bindArrows(keys, Action.SCROLL_UP, Action.SCROLL_DOWN, null, null, null);
-        keys.bind(Action.SCROLL_UP, "k");
-        keys.bind(Action.SCROLL_DOWN, "j");
-        keys.bind(Action.PAGE_UP, "\033[5~");
-        keys.bind(Action.PAGE_DOWN, "\033[6~");
-        keys.bind(Action.PAUSE, "p");
-        keys.bind(Action.CLEAR, "c");
-        keys.bind(Action.TAIL, "t");
-        keys.bind(Action.QUIT, CTRL_D);
-        keys.bind(Action.QUIT, "q");
-        return keys;
-    }
-
-    @Override
-    protected boolean handle(final Action action) {
-        switch (action) {
-            case SCROLL_UP -> this.scroll = Math.max(0, this.scroll - 1);
-            case SCROLL_DOWN -> this.scroll = this.clampScroll(this.scroll + 1);
-            case PAGE_UP -> this.scroll = this.clampScroll(this.scroll - Math.max(1, this.viewportRows() - 1));
-            case PAGE_DOWN -> this.scroll = this.clampScroll(this.scroll + Math.max(1, this.viewportRows() - 1));
-            case PAUSE -> this.pause(!this.paused());
-            case CLEAR -> {
-                WireTrace.clear();
-                WireStats.reset();
-                this.scroll = 0;
-            }
-            case TAIL -> this.scroll = 0;   // newest first: the tail is the top
-            case QUIT -> {
-                return false;
-            }
-        }
+    public boolean onClick(final int row, final int col) {
+        if (super.onClick(row, col))
+            return true;
+        // row 0 is the box's header, so body row `i` sits at box row `i + 1`
+        final int bodyRow = row - 1;
+        if (bodyRow < 0)
+            return false;
+        final int interior = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
+        final PanelLayout layout = layout(WireTrace.snapshot(this.max()), this.paused(), this.max(),
+                this.peerFilter(), Math.max(0, interior - 2));
+        final String peer = layout.peer(bodyRow);
+        if (peer.isEmpty())
+            return false;
+        final int buttonStart = CONTENT_OFFSET + Highlighter.visualLength(LANE_MARKER);
+        if (col < buttonStart || col >= buttonStart + CLEAR_BUTTON_WIDTH)
+            return false;
+        WireTrace.clear(peer);
         return true;
-    }
-
-    /**
-     * One inspector frame: the same lines the panel draws, windowed to the terminal, with its keys underneath.
-     */
-    @Override
-    protected void redraw() {
-        final WidgetCanvas canvas = this.canvas();
-        final List<String> lines = this.bodyLines();
-        final int rows = this.viewportRows();
-        final int from = Math.min(this.clampScroll(this.scroll), Math.max(0, lines.size() - rows));
-        for (int i = from; i < Math.min(lines.size(), from + rows); i++)
-            canvas.line(lines.get(i));
-        this.hint(canvas, this.paused()
-                ? "{{r}}PAUSED {{w}}q/ctrl-d{{g}}:close {{w}}j/k{{g}}:scroll {{w}}p{{g}}:resume {{w}}c{{g}}:clear {{w}}t{{g}}:tail {{X}}"
-                : "{{w}}q/ctrl-d{{g}}:close {{w}}j/k{{g}}:scroll {{w}}p{{g}}:pause {{w}}c{{g}}:clear {{w}}t{{g}}:tail {{X}}");
-        this.settle(canvas);
-    }
-
-    /**
-     * the body lines at the panel's width, for both the panel's box and the inspector's viewport
-     */
-    private List<String> bodyLines() {
-        final int width = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
-        return panelLines(WireTrace.snapshot(this.max()), this.paused(), this.max(), this.peerFilter(), width);
-    }
-
-    private int viewportRows() {
-        final int height = null == this.terminal ? 10 : this.terminal.getHeight();
-        return Math.max(3, height - 3);
-    }
-
-    private int clampScroll(final int candidate) {
-        final int limit = Math.max(0, this.bodyLines().size() - this.viewportRows());
-        return Math.max(0, Math.min(limit, candidate));
-    }
-
-    /**
-     * A display tool must not unfloat: {@code .display()} closes the instance it just ran, and the default close
-     * would erase the panel the display was asked to pin.
-     */
-    @Override
-    public void close() {
-    }
-
-    // ── the style ──────────────────────────────────────────────────
-
-    /**
-     * The style, with this tool's defaults applied when the rec carries none.
-     * <p>
-     * The defaults are COMPUTED, not written: materializing a {@code Style} into the rec during construction makes
-     * the constructor put a typed value through the type checker, and under {@code code_resolve} that path is
-     * rejected platform-wide (the style type's predicate reaches runtime unresolved) — which is how a perfectly
-     * good rec becomes {@code rec::t} and {@code .display()} refuses it. A panel that stores nothing but what its
-     * creator wrote constructs anywhere, and a style the creator DID write is their write, not ours.
-     */
-    @Override
-    public Stylable.Style<NetworkPanelTool> getStyle() {
-        final Obj s = this.at(uri(studio.phaseshift.metatron.Tokens.STYLE));
-        if (Stylable.Style.isStyle(s))
-            return Stylable.Style.from(s);
-        final Stylable.Style<NetworkPanelTool> defaults = Stylable.Style.empty();
-        defaults.stylable = this;
-        defaults.border(Border.continuous);
-        defaults.foreground("{{g}}");
-        // A PANEL IS SOMETHING YOU WATCH, so it defaults to a corner rather than to the transcript: without an
-        // anchor the widget renders once and scrolls away, which is the behaviour this tool exists to replace.
-        defaults.floatAt(FloatingSurface.Anchor.BOTTOM_RIGHT, 0, 0, 0);
-        return defaults;
     }
 
     // ── traffic nudges a repaint ───────────────────────────────────
@@ -317,31 +212,18 @@ public class NetworkPanelTool extends AbstractTool<NetworkPanelTool, NetworkPane
 
     // ── rendering ──────────────────────────────────────────────────
 
-    @Override
-    public String format() {
-        final WireTrace.Snapshot snapshot = WireTrace.snapshot(this.max());
-        final List<String> lines = panelLines(snapshot, this.paused(), this.max(), this.peerFilter(),
-                this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2);
-        final int width = this.getStyle().width() > 0 ? this.getStyle().width() - 2
-                : Math.max(DEFAULT_WIDTH - 2, lines.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0));
-        final Border border = this.getStyle().border() == Border.none ? Border.continuous : this.getStyle().border();
-        final String title = " net ";
-        final StringBuilder sb = new StringBuilder();
-        sb.append(Widget.X).append(border.topLeftCorner()).append(title);
-        final int rest = width - Highlighter.visualLength(title);
-        if (rest > 0) sb.append(border.topSide().repeat(rest));
-        sb.append(border.topRightCorner()).append(Widget.X).append("\n");
-        for (final String line : lines) {
-            // the interior is `width` columns INCLUDING the leading space, or every row runs one column past the
-            // top border and the right edge comes out ragged — most visibly on a line that ends in an ellipsis
-            final int pad = Math.max(0, width - 1 - Highlighter.visualLength(line));
-            sb.append(Widget.X).append(border.leftSide()).append(Widget.X)
-                    .append(this.getStyle().foreground()).append(' ').append(line).append(" ".repeat(pad))
-                    .append(Widget.X).append(border.rightSide()).append(Widget.X).append("\n");
+    /**
+     * The panel's body: its lines and, parallel to them, the peer whose clear button each line carries (empty when
+     * the line has none — a summary, a row, a footer). The renderer and the pointer's hit test both read this, so
+     * they can never disagree about where a clear button sits.
+     */
+    private record PanelLayout(List<String> lines, List<String> clearPeers) {
+        /**
+         * The peer the clear button on body row {@code bodyRow} clears, or "" when that row carries none.
+         */
+        String peer(final int bodyRow) {
+            return bodyRow >= 0 && bodyRow < this.clearPeers.size() ? this.clearPeers.get(bodyRow) : "";
         }
-        sb.append(Widget.X).append(border.bottomLeftCorner()).append(border.bottomSide().repeat(width))
-                .append(border.bottomRightCorner()).append(Widget.X);
-        return sb.toString();
     }
 
     /**
@@ -358,7 +240,17 @@ public class NetworkPanelTool extends AbstractTool<NetworkPanelTool, NetworkPane
      */
     static List<String> panelLines(final WireTrace.Snapshot snapshot, final boolean paused, final int maxRows,
                                    final String peerFilter, final int width) {
+        return layout(snapshot, paused, maxRows, peerFilter, width).lines();
+    }
+
+    /**
+     * The full body: the lines {@link #panelLines} returns, plus the clear-button owner for each line. One pass
+     * builds both, so a lane header's {@code [x]} target cannot drift from the header the renderer draws.
+     */
+    private static PanelLayout layout(final WireTrace.Snapshot snapshot, final boolean paused, final int maxRows,
+                                      final String peerFilter, final int width) {
         final List<String> lines = new ArrayList<>();
+        final List<String> clearPeers = new ArrayList<>();
         // the color LETTER, so it can be dropped into a tag: a timeout tints the trip count and stays quiet otherwise
         final String trouble = snapshot.timeouts() > 0 ? "r" : "y";
         // A CROSS, NOT A TIMEPIECE. This is a count of deadlines that were missed, and an hourglass beside live
@@ -374,6 +266,7 @@ public class NetworkPanelTool extends AbstractTool<NetworkPanelTool, NetworkPane
                                 1 == snapshot.lanes().size() ? "" : "s",
                                 paused ? "  {{r}}PAUSED" : ""),
                 width));
+        clearPeers.add("");
         int remaining = maxRows - 1;
         for (final WireTrace.Lane lane : snapshot.lanes()) {
             if (remaining <= 1)
@@ -382,7 +275,10 @@ public class NetworkPanelTool extends AbstractTool<NetworkPanelTool, NetworkPane
                 continue;
             final String last = lane.lastLatencyMs() < 0 ? "" : "  " + lane.lastLatencyMs() + "ms";
             final String timeout = lane.timeouts() > 0 ? "  {{r}}\u2717 " + lane.timeouts() : "";
-            lines.add(clip("{{c}}▼{{w}} %s  {{y}}⇄%d%s%s".formatted(lane.peer(), lane.exchanges(), last, timeout), width));
+            // the lane header carries the clear button, right after the marker and before the peer's name
+            lines.add(clip(LANE_MARKER + CLEAR_BUTTON + "%s  {{y}}⇄%d%s%s"
+                    .formatted(lane.peer(), lane.exchanges(), last, timeout), width));
+            clearPeers.add(lane.peer());
             remaining--;
             for (final WireTrace.Row row : lane.rows()) {
                 if (remaining <= 0)
@@ -392,19 +288,23 @@ public class NetworkPanelTool extends AbstractTool<NetworkPanelTool, NetworkPane
                 final String body = row.request().isEmpty() ? row.reply() : row.request();
                 lines.add(clip("{{w}}  " + mark + " {{m}}" + row.kind() + "{{w}} " + elapsed + "  "
                         + (row.ok() ? "{{w}}" : "{{r}}") + body, width));
+                clearPeers.add("");
                 remaining--;
             }
             if (remaining > 0 && lane.rows().size() < lane.exchanges()) {
                 lines.add(clip("{{w}}  … %d older".formatted(lane.exchanges() - lane.rows().size()), width));
+                clearPeers.add("");
                 remaining--;
             }
         }
         if (snapshot.lanes().isEmpty()) {
             lines.add(clip("{{w}}  no peers have spoken yet", width));
+            clearPeers.add("");
         } else if (snapshot.dropped() > 0 && remaining > 0) {
             lines.add(clip("{{w}}  (dropped %d off the window)".formatted(snapshot.dropped()), width));
+            clearPeers.add("");
         }
-        return lines;
+        return new PanelLayout(lines, clearPeers);
     }
 
     /**

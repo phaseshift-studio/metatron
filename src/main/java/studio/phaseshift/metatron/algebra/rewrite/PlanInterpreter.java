@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 
 import java.util.ArrayList;
@@ -98,7 +97,37 @@ public final class PlanInterpreter {
      * known is the identity.
      */
     public static Code lower(final Plan plan, final Code code) {
-        return lowerCut(plan, code);
+        return apply(plan, code, Env.snapshot());
+    }
+
+    /**
+     * The one body (§12.1): {@code apply(plan, env) = locate → resolve → emit → retype → re-lift}, over one immutable
+     * {@link Env} snapshot — nothing inside reads the machine. {@link #lower} is the cut-plan convenience for the
+     * rewriter; {@link #bind} is the cut-less sibling (Phase 4).
+     */
+    public static Code apply(final Plan plan, final Code code, final Env env) {
+        if (null == plan.cut())
+            return relocate(plan, code, env);
+        return lowerCut(plan, code, env);
+    }
+
+    /**
+     * The cut-less operator (§12.1): a distribution rule applied to located code. Requires a plan with no cut; a
+     * cut plan is {@link #lower}'s, so it is declined. The site is the decision's span (there is exactly one),
+     * resolved and emitted over the environment snapshot.
+     */
+    public static Code bind(final Plan plan, final Code code) {
+        if (null != plan.cut())
+            return code;
+        return apply(plan, code, Env.snapshot());
+    }
+
+    /**
+     * The cut-less distribution rule: the site is the decision's span, not a cut. Phase 6 (move) ships the
+     * chain/star emission; until then a cut-less plan is the identity — the code stands where it stood.
+     */
+    private static Code relocate(final Plan plan, final Code code, final Env env) {
+        return code;
     }
 
     /**
@@ -107,15 +136,15 @@ public final class PlanInterpreter {
      * distributes through {@link #shard}; a role/law-classified cut selects the local fold — the ring's own
      * operation, read off the theory rather than a transform name.
      */
-    private static Code lowerCut(final Plan plan, final Code code) {
+    private static Code lowerCut(final Plan plan, final Code code, final Env env) {
         final Cut cut = plan.cut();
         // the unit law: a none target deletes the identity (and unwraps the single addend)
         for (final Placement placement : plan.where())
-            if (Placement.Target.NONE == placement.target())
+            if (Placement.Shape.NONE == placement.shape())
                 return ID.equals(cut.role()) ? unitRemoval(code) : code;
         // the distribution plan: a form-classified cut (reducer/join/gather)
         if (null != cut.formOrNull())
-            return shard(plan, code);
+            return shard(plan, code, env);
         // the role-classified folds: add (sum like terms), zero (unwrap the single addend), inverse (cancel),
         // map (unwrap the stream lift)
         final String role = cut.role();
@@ -149,8 +178,8 @@ public final class PlanInterpreter {
      * {@code order(s)} through {@code kmerge(s)}). The identity unless the chain matches the plan's one-cut shape and
      * the machine has live peers to fan out over.
      */
-    private static Code shard(final Plan plan, final Code code) {
-        if (Machine.current().network().peers().isEmpty())
+    private static Code shard(final Plan plan, final Code code, final Env env) {
+        if (env.peers().isEmpty())
             return code;
         // THE HOP BUDGET: how many more levels of the tree may be planned from here. hops=0 is a leaf -- the fold runs
         // where it stands; the root's budget comes from the chain or the plan's tree route (see hops)
@@ -193,7 +222,7 @@ public final class PlanInterpreter {
         if (2 > seed.size())
             return code;
 
-        final List<Obj> targets = shardTargets();
+        final List<Obj> targets = shardTargets(env);
         if (targets.isEmpty())
             return code;
         final int k = Math.min(targets.size(), seed.size());
@@ -235,7 +264,7 @@ public final class PlanInterpreter {
      * when it is written ({@code start?hops=3(…)}), the reducer under the {@code {…}} sugar ({@code sum?hops=3()}),
      * and on every slave this plan emits — else the plan's own tree route. A budget that is not a number plans nothing.
      */
-    private static int hops(final Plan plan, final Code code) {
+    public static int hops(final Plan plan, final Code code) {
         for (final Inst inst : code.insts())
             if (inst.tid().hasQ(HOPS)) {
                 try {
@@ -245,7 +274,7 @@ public final class PlanInterpreter {
                 }
             }
         return plan.where().stream()
-                .filter(placement -> Placement.Target.TREE == placement.target())
+                .filter(placement -> Placement.Shape.TREE == placement.shape())
                 .mapToInt(Placement::hops)
                 .findFirst().orElse(0);
     }
@@ -286,7 +315,7 @@ public final class PlanInterpreter {
      * {@code host} is the field {@code peer::T} reserves for a peer the current machine can ship to — where to
      * dial it from here — so a target is a peer that carries one.
      */
-    private static List<Obj> shardTargets() {
+    private static List<Obj> shardTargets(final Env env) {
         try {
             // AN OFFLINE PEER IS NO TARGET. A dialed peer whose link is down stays in the map (it is being
             // redialed), but a shard shipped down it answers `not connected` and that fail poisons the reduction --
@@ -294,7 +323,7 @@ public final class PlanInterpreter {
             // bulk is factored over whatever is left, so nothing is dropped and nothing is computed twice.
             // the route is the WIRE address the peer answers at -- its authority -- never its key, which is a local
             // path (where the member sits in the map) and would ship the shard nowhere
-            return Machine.current().network().peers().values()
+            return env.peers().values()
                     .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
                     .filter(Network.Helper::online)
                     .map(peer -> (Obj) peer.asRec().atDirect(uri(AUTHORITY)))

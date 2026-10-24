@@ -152,10 +152,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.ONE_INST_TID, lst()));
     }
 
-    public F thread_(final Obj obj) {
-        return this.addInst(instB(mInstSet.THREAD_INST_TID, lst(obj)));
-    }
-
     // ========================================
     // Logical Operators
     // ========================================
@@ -569,10 +565,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F barrier_() {
             return new mFluent<F>().barrier_();
-        }
-
-        public static <F extends mFluent<F>> F thread_(final Obj obj) {
-            return new mFluent<F>().thread_(obj);
         }
 
         public static <F extends mFluent<F>> F zero_() {

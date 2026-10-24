@@ -218,26 +218,16 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
             }
         };
 
-        // A FRAME OF REFERENCE IS PER-THREAD, so handing work to a worker loses it unless the boundary carries it
-        // -- in AND out. Captured HERE, on the caller's thread, because that is where "where I stand" lives.
-        final studio.phaseshift.metatron.isa.mach.type.Machine perspective =
-                studio.phaseshift.metatron.isa.mach.type.Machine.current();
         if (thread instanceof VirtualThread) {
             final Thread javaThread = Thread.ofVirtual()
                     .name(null != thread.vid() ? thread.vid().toString() : "metatron-virtual")
-                    .unstarted(() -> {
-                        studio.phaseshift.metatron.isa.mach.type.Machine.current(perspective);
-                        wrapped.run();
-                        thread.landedPerspective(studio.phaseshift.metatron.isa.mach.type.Machine.current());
-                    });
+                    .unstarted(wrapped::run);
             thread.setJavaThread(javaThread);
             javaThread.start();
         } else {
             this.service.execute(() -> {
                 thread.setJavaThread(Thread.currentThread());
-                studio.phaseshift.metatron.isa.mach.type.Machine.current(perspective);
                 wrapped.run();
-                thread.landedPerspective(studio.phaseshift.metatron.isa.mach.type.Machine.current());
             });
         }
     }

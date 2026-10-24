@@ -52,10 +52,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * A plan with a {@code cut} is a semantic rule; a plan with no {@code cut} is a distribution rule — the relocation
  * it authors is its {@code where}, and it has exactly one {@link Placement}. {@link #create()} derives the plan's law
- * obligations from its own shape — the rewriter does not trust the author. A cut shipped to a non-local target and
- * re-applied at home must declare {@link Law#monoidic} and {@link Law#commutative} (Thm 19's hypothesis), and it
- * refuses the plan when it does not. The atom-level obligations (a {@code floatable} PRE span, a {@code blocked} AT
- * span) are carried on the spans and enforced by the rewriter at match time, not here.
+ * obligations from its own shapes — the rewriter does not trust the author. A cut shipped to a shape and re-applied at
+ * home must declare every law that shape demands ({@code obligations(shape) ⊆ cut.laws}, Thm 19's hypothesis for the
+ * distributed shapes), and it refuses the plan when it does not. The atom-level obligations (a {@code floatable} PRE
+ * span, a {@code blocked} AT span) are carried on the spans and enforced by the rewriter at match time, not here.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -84,11 +84,11 @@ public final class PlanBuilder {
     }
 
     /**
-     * Assemble the {@link Plan} value, validating the law obligations the plan's shape demands. Thm 19's
+     * Assemble the {@link Plan} value, validating the law obligations the plan's shapes demand (§3). Thm 19's
      * hypothesis — the reducer is re-applied over regrouped partials behind an order-free barrier — is read
-     * straight off the placements: a cut that appears on a non-local target's {@code AT} span must declare both
-     * {@link Law#monoidic} and {@link Law#commutative}. A plan with no cut is a distribution rule and carries
-     * exactly one placement.
+     * straight off each placement's shape: a cut that appears on a shape's {@code AT} span must declare every law
+     * that shape demands ({@code obligations(shape) ⊆ cut.laws}). A plan with no cut is a distribution rule and
+     * carries exactly one placement.
      */
     public Plan create() {
         if (null == this.name || this.name.isBlank())
@@ -99,7 +99,7 @@ public final class PlanBuilder {
             if (1 != this.placements.size())
                 throw MTronException.of("a distribution plan (no cut) has exactly one placement, not %d", this.placements.size());
         } else {
-            this.validateDistributedObligations();
+            this.validateObligations();
         }
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(NAME), uri(this.name));
@@ -109,15 +109,19 @@ public final class PlanBuilder {
         return new Plan(jvm, PLAN_TID, null);
     }
 
-    private void validateDistributedObligations() {
-        final boolean distributed = this.placements.stream().anyMatch(placement ->
-                (Placement.Target.PEER == placement.target() || Placement.Target.PEERS == placement.target() || Placement.Target.TREE == placement.target())
-                        && placement.spans().stream().anyMatch(span -> Span.Kind.AT == span.kind()));
-        if (distributed) {
-            if (!this.cut.declares(Law.monoidic))
-                throw MTronException.of("cut %s is distributed but does not declare monoidic", this.cut.form());
-            if (!this.cut.declares(Law.commutative))
-                throw MTronException.of("cut %s is distributed but does not declare commutative", this.cut.form());
+    private void validateObligations() {
+        for (final Placement placement : this.placements) {
+            // the cut is re-applied at home only when the placement carries the AT span; a tail (POST) shipped
+            // elsewhere demands nothing of the cut's laws
+            if (placement.spans().stream().noneMatch(span -> Span.Kind.AT == span.kind()))
+                continue;
+            // obligations(shape) ⊆ cut.laws — the §3 shape rec, read as data, not hard-coded per target
+            final List<Law> missing = placement.obligations().stream()
+                    .filter(law -> !this.cut.declares(law))
+                    .toList();
+            if (!missing.isEmpty())
+                throw MTronException.of("cut ships to shape %s but does not declare %s",
+                        placement.shape().name().toLowerCase(), missing);
         }
     }
 }

@@ -23,25 +23,21 @@ import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.Tokens.CLIENT;
-import static studio.phaseshift.metatron.Tokens.STATUS;
-import static studio.phaseshift.metatron.Tokens.SUPERVISOR;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.NETWORK_SUPERVISOR_TID;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.NETWORK_SUPERVISOR_TID;
 
 /**
  * THE NETWORK SUPERVISOR — one per network level, keeping the level's index TRUE between the {@code index} that
@@ -109,15 +105,16 @@ public final class NetworkSupervisor extends MRec implements Closeable {
      * the redial schedule of each link seen down, by identity (a client's equality is its rec's)
      */
     private final Map<Network.Link, Retry> retries = Collections.synchronizedMap(new IdentityHashMap<>());
-    private final Thread thread;
+    private final mThread thread;
     private volatile boolean closed = false;
 
     private NetworkSupervisor(final Network network) {
         super(supervisorMap(), NETWORK_SUPERVISOR_TID, null);
         this.machine = network.machine();
-        this.thread = Thread.ofVirtual()
-                .name("metatron-network-supervisor-" + System.identityHashCode(network))
-                .start(this::run);
+        this.thread = VirtualThread.virtual(instLambda(_ -> {
+            this.run();
+            return noobj();
+        }), f("~/sys/thread/supervisor_thread"));
         // construction is connection: file ourselves in the level's supervisor slot
         network.at(uri(SUPERVISOR), this, MUTABLE);
     }
@@ -244,7 +241,7 @@ public final class NetworkSupervisor extends MRec implements Closeable {
             return;
         this.closed = true;
         this.at(STATUS, uri("closed"), MUTABLE);
-        this.thread.interrupt();
+        this.thread.stop();
     }
 
     private void run() {

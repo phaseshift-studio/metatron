@@ -43,14 +43,14 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
     @StatefulParametrizedTest
     @StatefulCSVSource({
             // at root: /thread and ~/thread name the same set — no machine pushed, current is the root
-            "*/thread/+.count() % *~/thread/+.count()        % true",
+            "*/sys/thread/+.count() % *~/sys/thread/+.count()        % true",
             // push a child: /thread is still the root's own set; ~/thread is now the child's own (empty)
             "[STATE] *~.push(xyz)",
-            "*/thread/+.count().gt(*~/thread/+.count())      % true",
-            "*/xyz/thread/+.count() % *~/thread/+.count()    % true",
+            "*/sys/thread/+.count().gt(*~/sys/thread/+.count())      % true",
+            "*/sys/xyz/thread/+.count() % *~/sys/thread/+.count()    % true",
             // pop back to root: the two agree again
             "[STATE] *~.pop(_)",
-            "*/thread/+.count() % *~/thread/+.count()        % true"
+            "*/sys/thread/+.count() % *~/sys/thread/+.count()        % true"
     })
     void testThreadCountAcrossPushPop() {
     }

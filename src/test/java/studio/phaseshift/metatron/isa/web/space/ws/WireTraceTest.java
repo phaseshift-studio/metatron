@@ -198,4 +198,20 @@ public class WireTraceTest extends AbstractMetatronTest {
         assertEquals(0L, WireTrace.snapshot(10).exchanged(), "and the window's count starts again");
     }
 
+    /**
+     * Clearing one peer forgets its lane but leaves every other lane — and the wire's totals — alone.
+     */
+    @Test
+    void shouldClearOnePeerLeavingTheRest() {
+        ok("ws://alpha:1/mtron", "a");
+        ok("ws://beta:1/mtron", "b");
+        WireTrace.clear("ws://alpha:1/mtron");
+        final WireTrace.Snapshot snapshot = WireTrace.snapshot(10);
+        assertEquals(1, snapshot.lanes().size(), "the cleared peer's lane is gone");
+        assertTrue(snapshot.lanes().getFirst().peer().contains("beta"), "the other lane survives");
+        assertEquals(2L, snapshot.exchanged(), "a per-peer clear does not reset the window's count");
+        WireTrace.clear("ws://alpha:1/mtron");   // idempotent: clearing a lane already gone is a no-op
+        assertEquals(1, WireTrace.snapshot(10).lanes().size(), "and clearing it again changes nothing");
+    }
+
 }

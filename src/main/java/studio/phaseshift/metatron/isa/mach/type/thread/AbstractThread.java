@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -34,7 +33,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -101,25 +99,9 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
         }
         return this.future;
     }
-
-    private Machine landedPerspective;
-
-    /**
-     * WHERE THIS THREAD ENDED. A frame of reference is per-thread, so work handed to a worker thread moves ITS
-     * perspective and the caller's is untouched -- correct in general, and invisible to a session (a console, a
-     * client) that persists between statements. The worker therefore PUBLISHES the machine it ended in, and a
-     * caller that represents a continuing session adopts it.
-     */
-    public Machine landedPerspective() {
-        return this.landedPerspective;
-    }
-
-    public void landedPerspective(final Machine machine) {
-        this.landedPerspective = machine;
-    }
-
+    
     public AbstractThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, null == vid ? CommonUtil.mintShortUUID(f("~/thread"), true) : vid);
+        super(jvm, tid, null == vid ? CommonUtil.mintShortUUID(f("~/sys/thread"), true) : vid);
         this.thread = null;
         if (!jvm.containsKey(uri(SOURCE))) {
             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();

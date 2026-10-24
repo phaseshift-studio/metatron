@@ -237,6 +237,7 @@ public final class Tokens {
     public static final String SUPER = "super";
     public static final String ROUTE = "route";
     public static final String WHERE = "where";
+    public static final String ORIGIN = "origin";
     public static final String PEER = "peer";
     public static final String ROSTER = "roster";
     public static final String NETWORK = "network";
@@ -263,6 +264,8 @@ public final class Tokens {
     public static final String POLY = "poly";
     public static final String PERSIST = "persist";
     public static final String SCHEME = "scheme";
+    public static final String DIALER = "dialer";
+    public static final String CAPABILITY = "capability";
     public static final String AUTHORITY = "authority";
     public static final String SUB = "sub";
     public static final String SUBQ = "subq";
@@ -384,6 +387,7 @@ public final class Tokens {
     public static final String CUT = "cut";
     public static final String SPAN = "span";
     public static final String FLAGS = "flags";
+    public static final String SHAPE = "shape";
     public static final String HOPS = "hops";
     public static final String POSITION = "position";
     public static final String CONTESTED = "contested";

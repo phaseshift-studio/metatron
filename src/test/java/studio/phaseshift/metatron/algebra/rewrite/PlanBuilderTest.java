@@ -54,7 +54,6 @@ public class PlanBuilderTest extends AbstractInstSetTest {
     @BeforeAll
     public static void importAllInstSets() {
         InstSet.importInstSet(f("#"));
-        InstSet.importInstSet(f("/m/math"));
     }
 
     @BeforeEach
@@ -111,8 +110,8 @@ public class PlanBuilderTest extends AbstractInstSetTest {
                 .create();
         final Plan readBack = Plan.of(plan);
         assertEquals(2, readBack.where().size());
-        assertEquals(Placement.Target.LOCAL, readBack.where().get(0).target());
-        assertEquals(Placement.Target.TREE, readBack.where().get(1).target());
+        assertEquals(Placement.Shape.LOCAL, readBack.where().get(0).shape());
+        assertEquals(Placement.Shape.TREE, readBack.where().get(1).shape());
         assertEquals(1, readBack.where().get(1).hops());
     }
 
@@ -159,5 +158,29 @@ public class PlanBuilderTest extends AbstractInstSetTest {
         final Code rewritten = PlanInterpreter.lower(plan, ObjmtronSerializer.parse(source).asCode());
         assertEquals(ObjmtronSerializer.parse(expected).asCode(), rewritten,
                 "the rename changed the emitted code of " + rule);
+    }
+
+    /**
+     * {@code bind} is the cut-less operator: a plan with a cut is {@code lower}'s, so {@code bind} declines it — the
+     * code passes through unchanged.
+     */
+    @Test
+    public void testBindDeclinesCutPlan() {
+        final Plan shard = catRewrite.planOf("law_shard");
+        assertNotNull(shard);
+        final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
+        assertEquals(code, PlanInterpreter.bind(shard, code), "bind declines a plan with a cut");
+    }
+
+    /**
+     * {@code bind} applies a cut-less plan: until Phase 6 (move) ships the chain/star emission, the distribution rule
+     * is the identity — the code stands where it stood.
+     */
+    @Test
+    public void testBindAppliesCutLessPlan() {
+        final Plan move = PlanBuilder.plan("move_star").where(Placement.local(Span.at())).create();
+        assertNull(move.cut());
+        final Code code = ObjmtronSerializer.parse("start(5).plus(1)").asCode();
+        assertEquals(code, PlanInterpreter.bind(move, code), "a cut-less plan is the identity until Phase 6");
     }
 }

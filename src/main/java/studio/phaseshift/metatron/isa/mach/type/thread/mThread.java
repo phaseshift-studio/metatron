@@ -18,12 +18,14 @@
 
 package studio.phaseshift.metatron.isa.mach.type.thread;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.CURRENT_SYS;
 
 /*
  * mThread — the unified thread lifecycle contract.
@@ -37,6 +39,8 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface mThread {
+
+    public static final fURI CURRENT_SYS_THREAD = CURRENT_SYS.extend("thread");
 
     // ======================== Lifecycle ========================
 

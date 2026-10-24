@@ -201,7 +201,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI GROUP_INST_TID = M_ISA_INST_TID.extend("group");
     public static final fURI ELSE_INST_TID = M_ISA_INST_TID.extend("else");
     public static final fURI END_INST_TID = M_ISA_INST_TID.extend("end");
-    public static final fURI THREAD_INST_TID = M_ISA_INST_TID.extend("thread");
+    //  public static final fURI THREAD_INST_TID = M_ISA_INST_TID.extend("thread");
     public static final fURI IMPORT_INST_TID = M_ISA_INST_TID.extend("import");
     public static final fURI SOURCE_INST_TID = M_ISA_INST_TID.extend("source");
     public static final fURI SWAP_INST_TID = M_ISA_INST_TID.extend("swap");

@@ -410,4 +410,20 @@ public final class WireTrace {
             SEQ.set(0);
         }
     }
+
+    /**
+     * Forget ONE PEER's exchanges — its lane and every exchange the global and detail windows still hold for it.
+     * The counters in {@link WireStats} are global and theirs to reset, so they are untouched: clearing a peer's
+     * MESSAGES leaves the machine's totals alone (a cleared lane simply stops contributing to them).
+     *
+     * @param peer the peer's name, or a socket name carrying an identity-hash suffix (folded to its lane key)
+     */
+    public static void clear(final String peer) {
+        final String key = laneKey(peer);
+        synchronized (LOCK) {
+            LANES.remove(key);
+            EXCHANGES.removeIf(exchange -> key.equals(laneKey(exchange.peer())));
+            DETAILS.removeIf(exchange -> key.equals(laneKey(exchange.peer())));
+        }
+    }
 }

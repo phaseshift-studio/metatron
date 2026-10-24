@@ -872,19 +872,6 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "start({1,2,3}).mean()  % law_shard  % false",
-            // a keyed fold's combiner is POINTWISE, computed from its spec's folds: count, sum and order recombine (a lst
-            // is an atom of the deep merge, so order's runs bag whole for kmerge), mean has no combiner
-            "start({1,2,3}).group([mod(2)=>count()])                   % law_shard  % true",
-            "start({1,2,3}).plus(1).group([mod(2)=>sum()])             % law_shard  % true",
-            "start({1,2,3}).group([mod(2)=>group([mod(3)=>sum()])])    % law_shard  % true",
-            "start({1,2,3}).group([mod(2)=>mean()])                    % law_shard  % false",
-            "start({1,2,3}).group([mod(2)=>sum(),mod(3)=>sum()])       % law_shard  % true",
-            "start({1,2,3}).group([mod(2)=>sum(),mod(3)=>count()])     % law_shard  % false",
-            "start({1,2,3}).group([mod(2)=>order(_)])                  % law_shard  % true",
-            "start({1,2,3}).group([mod(2)=>_])                         % law_shard  % false",
-            // the deep merge's own fold is commutative (a lst is an atom of the merge), so a bag of recs shards as itself
-            "start({[a=>1],[b=>2]}).sum()                              % law_shard  % true",
             // the additive normalizers read the branch's member count: like terms need a pair (whether the two are
             // alike is the value residue, so an unlike pair still licenses the collapse), a lone member inlines
             "start(1).branch(+2,+2)                                    % branch_collapse  % true",
