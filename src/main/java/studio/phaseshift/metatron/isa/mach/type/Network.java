@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -34,6 +35,9 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -264,13 +268,19 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // a client answers either the transport itself or a rec whose send_recv is the transport (the
             // client is kept on the peer so disconnect can hang up) -- adapted in ONE place, Helper.asTransport.
             final Obj transport = Helper.asTransport(client);
-            WIRE_LOG.debug("index %s key=%s transport=%s isObjInst=%s", dialURI, key, transport, transport.isObjInst());
-            if (!transport.isObjInst())
+            final Obj inst = client.isRec() ? client.asRec().at(uri(INST)) : noobj();
+            WIRE_LOG.debug("index %s key=%s transport=%s inst=%s", dialURI, key, transport.isNoObj() ? "NONE" : "inst", inst.isRec() ? "set" : "none");
+            // a peer is reachable by a transport OR by at least one instruction override — a read-only client has no
+            // eval, hence no transport, yet still answers reads through its `from` override
+            if (!transport.isObjInst() && !inst.isRec())
                 return noobj();
             peer = rec(
                     uri(AUTHORITY), uri(Helper.serviceOf(dialURI)),
-                    uri(HOST), uri(dialURI),
-                    uri(TRANSPORT), transport);
+                    uri(HOST), uri(dialURI));
+            if (transport.isObjInst())
+                peer.asRec().at(uri(TRANSPORT), transport, MUTABLE);
+            // the client IS the connection: its `inst` (the instructions you talk to it with) stays on the client —
+            // the peer holds the client, and overrideOf reads the capability through it. No copy, no divergence.
             if (client.isRec() && client != transport)
                 peer.asRec().at(uri(CLIENT), client, MUTABLE);
             peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
@@ -295,6 +305,29 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     default Obj peerOf(final fURI service) {
         return this.peers().values()
                 .filter(peer -> Helper.sameService(Helper.authorityOf(peer), service))
+                .findFirst().orElse(noobj());
+    }
+
+    /**
+     * THE DISPATCH PRIMITIVE — the peer's OVERRIDE for an instruction, by the authority that owns it. A peer
+     * overrides instructions with its own wire bodies (its mini-instset, {@code inst => { tid => typed body }});
+     * this answers "does the peer at {@code authority} implement {@code instrTid}, and with what body". The value
+     * is a typed inst — the peer's implementation — or noobj when the peer does not override that instruction
+     * (the caller then derives it, or falls through to the local definition).
+     */
+    default Obj overrideOf(final fURI authority, final fURI instrTid) {
+        final Obj peer = this.peerOf(authority);
+        if (!peer.isRec())
+            return noobj();
+        // the capability lives on the CLIENT — the connection — not on the peer: the client's `inst` is the set of
+        // instructions you use when talking to that connection.
+        final Obj client = peer.asRec().at(uri(CLIENT));
+        final Obj inst = client.isRec() ? client.asRec().at(uri(INST)) : noobj();
+        if (!inst.isRec())
+            return noobj();
+        return inst.asRec().elements()
+                .filter(kv -> kv.first().isUri() && kv.first().uriValue().equals(instrTid))
+                .map(Rel::second)
                 .findFirst().orElse(noobj());
     }
 
@@ -422,6 +455,20 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
+     * SUBMIT — the eval verb: evaluate {@code code} on the peer that owns {@code authority}, and answer its result.
+     * This is the general "ship mtron, get the result" that the distribution rewrite and any parallel fan-out use: a
+     * peer that declares an {@code eval} override runs it; one that does not falls back to its transport. {@code code}
+     * rides as the payload (arg(0), {@code ?block}) through the peer's override, exactly as read/write messages do.
+     */
+    default Obj submit(final fURI authority, final Obj code) {
+        final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
+        if (eval.isObjInst())
+            return Helper.wrapTransport(eval).apply(code);
+        final Obj transport = this.transportOf(authority);
+        return transport.isNoObj() ? noobj() : transport.apply(code);
+    }
+
+    /**
      * Authority dispatch — resolve a read against a <em>declared peer</em> rather than the local memory. An
      * address without an authority, or whose authority is not in the roster, answers {@code noobj} so the
      * caller falls through to {@code memory()}. A declared peer receives the destination-relative address
@@ -436,14 +483,32 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // own patterns on the fall-through exactly as before.
         if (null == vid.host())
             return noobj();
-        final Obj transport = this.transportOf(vid.path(List.of()));
-        WIRE_LOG.debug("read %s net=%s transport=%s", vid, System.identityHashCode(this), transport.isNoObj() ? "NONE" : "inst");
-        if (transport.isNoObj())
-            return noobj(); // authority not declared: not a peer this frame may reach
-        // A ws:// ADDRESS IS A WIRE ADDRESS, NOT A PLACE IN THIS MACHINE. Reading one asks the PEER for that path.
-        // Nothing here maps an authority to a frame: this is the data path, and only the data path -- code reaches
-        // the peer by being shipped there in a plan (law_shard), never by a frame that stands in it.
+        final fURI authority = vid.path(List.of());
+        // DISPATCH LADDER: the peer's native `from` override first (a read-only client), then `eval` (the lowering —
+        // the read message IS code), then the legacy transport. A read-only peer (from, no eval) has no transport and
+        // is reached only through its `from` override here.
+        final Obj from = this.overrideOf(authority, FROM_INST_TID);
+        if (from.isObjInst())
+            return Helper.wrapTransport(from).apply(vid.toUri());
         final Obj message = from_(vid.localize().toUri()).tryToInst();
+        final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
+        if (eval.isObjInst())
+            return Helper.wrapTransport(eval).apply(message);
+        final Obj transport = this.transportOf(authority);
+        if (transport.isNoObj()) {
+            // AUTO-CONNECT: a read of an http(s) address that is neither dialed nor declared constructs its client on
+            // demand — the read IS the dial — so a bare *<http://…> becomes a peer instead of falling through to a
+            // mounted http space. The client declares {from => GET} and is indexed by connect.
+            if ("http".equals(authority.scheme()) || "https".equals(authority.scheme())) {
+                final Obj peer = this.connect(authority);
+                if (peer.isRec()) {
+                    final Obj from2 = this.overrideOf(authority, FROM_INST_TID);
+                    if (from2.isObjInst())
+                        return Helper.wrapTransport(from2).apply(vid.toUri());
+                }
+            }
+            return noobj(); // authority not declared: not a peer this frame may reach
+        }
         final Obj answer = transport.apply(message);
         WIRE_LOG.debug("read %s message=%s answer=%s", vid, message, answer);
         return answer;
@@ -462,9 +527,15 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // raised it besides. Answering noobj sends the write down the local path, which is where a fail belongs.
         if (obj.isFail())
             return noobj();
-        final Obj transport = this.transportOf(vid.path(List.of()));
-        if (transport.isNoObj())
-            return noobj();
+        final fURI authority = vid.path(List.of());
+        // DISPATCH LADDER: the peer's native `to` override first (a write-only sink — arg(0)=obj, arg(1)=dest), then
+        // `eval` (the write message IS code), then the legacy transport. A write-only peer (to, no eval) has no
+        // transport and is reached only through its `to` override here.
+        final Obj to = this.overrideOf(authority, TO_INST_TID);
+        if (to.isObjInst()) {
+            final Inst call = to.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(obj, vid.toUri()));
+            return call.tid(call.tid().addQ(BLOCK)).apply(noobj());
+        }
         final Obj message;
         try {
             message = start_(obj).to_(vid.localize().toUri()).tryToInst();
@@ -472,6 +543,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // not mtron-parseable source: there is nothing to ship, so it is not a peer's to answer
             return noobj();
         }
+        final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
+        if (eval.isObjInst())
+            return Helper.wrapTransport(eval).apply(message);
+        final Obj transport = this.transportOf(authority);
+        if (transport.isNoObj())
+            return noobj();
         return transport.apply(message);
     }
 
@@ -742,21 +819,43 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         public static Obj asTransport(final Obj session) {
             if (session.isObjInst())
                 return session;
+            // NEW SHAPE — a client that declares its capabilities as a mini-instset (`inst => {tid => body}`):
+            // `eval` is the arrow that ships code and answers with the result, which is exactly the transport
+            // contract. Derived here so read/write keep working unchanged while clients migrate off send_recv.
+            if (session.isRec()) {
+                final Obj inst = session.asRec().at(uri(INST));
+                if (inst.isRec()) {
+                    final Obj eval = inst.asRec().at(uri(EVAL_INST_TID));
+                    if (eval.isObjInst())
+                        return wrapTransport(eval);
+                }
+            }
             final Obj reach = session.isRec() ? session.asRec().<Obj>at(uri(SEND_RECV)) : noobj();
             if (reach.isObjInst())
-                // THE MESSAGE IS A PAYLOAD, NOT A COMPUTATION. It rides as send_recv's ARG, and an inst's args
-                // are computed against the lhs before its function runs -- so unless the call BLOCKS, the
-                // message is evaluated HERE and only its result is shipped: a read answers this machine's value
-                // and a write lands in this machine's memory (measured across two hosts: on ginger,
-                // *<ws://booger.local:8555/x/y> answered the value planted at ginger's own /x/y). ?block keeps
-                // the args raw -- the processor's own switch, exactly as bindQ applies it -- so the far side is
-                // the one that evaluates what it is sent. Only this per-call copy blocks: a user's own
-                // send_recv still computes its arg, and `|` quotes what they mean to ship.
-                return instLambda(message -> {
-                    final Inst call = reach.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(message));
-                    return call.tid(call.tid().addQ(BLOCK)).apply(noobj());
-                });
+                return wrapTransport(reach);
             return session.isRec() ? session.asRec().<Obj>at(uri(TRANSPORT)) : noobj();
+        }
+
+        /**
+         * THE OVERRIDE CALLING CONVENTION — an instruction override is a {@code send_recv}-shaped body (it reads
+         * {@code inst.arg(0)}), and it is applied through here: the payload rides as arg(0) with {@code ?block}.
+         * The payload is the instruction's natural argument — code for {@code eval}, a uri for {@code from}, the
+         * obj for {@code to}.
+         * <p>
+         * THE MESSAGE IS A PAYLOAD, NOT A COMPUTATION. It rides as send_recv's ARG, and an inst's args
+         * are computed against the lhs before its function runs -- so unless the call BLOCKS, the
+         * message is evaluated HERE and only its result is shipped: a read answers this machine's value
+         * and a write lands in this machine's memory (measured across two hosts: on ginger,
+         * *<ws://booger.local:8555/x/y> answered the value planted at ginger's own /x/y). ?block keeps
+         * the args raw -- the processor's own switch, exactly as bindQ applies it -- so the far side is
+         * the one that evaluates what it is sent. Only this per-call copy blocks: a user's own
+         * send_recv still computes its arg, and `|` quotes what they mean to ship.
+         */
+        public static Obj wrapTransport(final Obj reach) {
+            return instLambda(message -> {
+                final Inst call = reach.asInst().args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(message));
+                return call.tid(call.tid().addQ(BLOCK)).apply(noobj());
+            });
         }
 
         /**
@@ -779,9 +878,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // scheme default the table carries is loop: -> id_client::T, the identity element of the
             // client family (its send_recv applies the shipped message against the local machine) --
             // discovery supplies dialers per description for everything else (step 5).
+            final String scheme = dialURI.scheme();
+            final String dialerTid = null == scheme ? null : Signatures.dialerOf(scheme);
             final fURI dialer = null != handler ? handler
-                    : "loop".equals(dialURI.scheme()) ? studio.phaseshift.metatron.isa.mach.machInstSet.ID_CLIENT_TID
-                    : null;
+                    : null == dialerTid ? null : f(dialerTid);
             if (null == dialer)
                 return noobj();
             final Obj resolved = Machine.read(dialer);

@@ -102,10 +102,12 @@ public class mcpClient extends MRec implements AutoCloseable {
                 return BOOL_FALSE;
             }
         })));
-        // indexing is a BACKGROUND behavior upon successful construction: the connected client
-        // writes itself into the network's index, as a space's constructor indexes into Memory
-        studio.phaseshift.metatron.isa.mach.type.Network.Helper.index(this);
         final Rec tools = rec();
+        // THE MINI-INSTRUCTION SET — one override per tool, keyed by the tool's instruction tid. This is the
+        // capability: this client overrides each tool's instruction with the tool-call body, so Network.overrideOf
+        // can dispatch a tool call to exactly this peer. The `tools` rec (below) is the legacy surface; `inst` is
+        // the capability the peer index reads.
+        final Rec overrides = rec();
         this.client.listTools().forEach(t -> {
             try {
                 final Rec evaluationArgs = Optional.ofNullable(t.parameters())
@@ -146,12 +148,35 @@ public class mcpClient extends MRec implements AutoCloseable {
                 toolJvm.put(uri(DESC), str(Optional.ofNullable(t.description()).orElse("<no description>")));
                 toolJvm.put(uri(ARG), evaluationArgs);
                 tools.at(f(t.name()), rec(toolJvm, LLM_TOOL_TID, null), MUTABLE);
+                // the tool's instruction tid is namespaced under the tool type: /m/llm/tool/<name>. Written flat via
+                // jvm().put — at() would resolve the absolute path key into nested segments (the malformed nested map).
+                overrides.jvm().put(uri(LLM_TOOL_TID.extend(t.name())), toolInst);
             } catch (final Exception e) {
                 throw MTronException.of(e, "error build server: " + t.name());
             }
         });
         if (!tools.isEmpty())
             this.jvm().put(uri(TOOL), tools);
+        // THE IMPLEMENTER'S DECLARATION: which of this server's tools ARE the primitive instructions. `inst_map` is
+        // { instruction_tid => tool_name }, filled by the specific client — never inferred from a name suffix. After
+        // tool discovery, each entry also registers the named tool's body under the primitive tid, so the server's
+        // eval tool becomes the peer's `eval`, its fetch tool the peer's `from`, etc.
+        final Obj instMap = this.at(uri("inst_map"));
+        if (instMap.isRec())
+            instMap.asRec().elements().forEach(kv -> {
+                final Obj tool = tools.at(f(kv.second().strValue()));
+                if (tool.isRec()) {
+                    final Obj body = tool.asRec().at(uri(INST));
+                    if (body.isObjInst())
+                        overrides.jvm().put(kv.first(), body);
+                }
+            });
+        if (!overrides.isEmpty())
+            this.jvm().put(uri(INST), overrides);
+        // indexing is a BACKGROUND behavior upon successful construction: the connected client writes itself into
+        // the network's index, as a space's constructor indexes into Memory. It runs AFTER the mini-instset is
+        // declared, so the peer indexes the client's instruction overrides rather than an empty capability set.
+        studio.phaseshift.metatron.isa.mach.type.Network.Helper.index(this);
     }
 
     @Override

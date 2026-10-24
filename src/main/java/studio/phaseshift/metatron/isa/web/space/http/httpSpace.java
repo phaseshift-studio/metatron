@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -66,9 +67,12 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -128,10 +132,39 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .create();
 
     public static final Type HTTP_CLIENT_TYPE = Type.Builder.build()
-            .tid(HTTP_SOCKET_TID)
+            .tid(REC_TID)
             .vid(HTTP_CLIENT_TID)
             .constructor(socket -> {
-                throw MTronException.of("http client not implemented");
+                // THE HTTP CLIENT — a connectionless reader. It overrides `from` with an HTTP GET and declares NO
+                // eval (hence no transport): it is reachable only through its `from` override in the read ladder. The
+                // override payload is the FULL address (with authority), which the GET sends verbatim; the response is
+                // reified by its content type.
+                final Obj fromBody = instLambda((lhs, inst) -> {
+                    final fURI uri = inst.arg(0).uriValue();
+                    try {
+                        final HttpRequest request = HttpRequest.newBuilder()
+                                .uri(java.net.URI.create(uri.toString()))
+                                .GET()
+                                .build();
+                        final HttpResponse<String> response;
+                        try (final HttpClient client = HttpClient.newHttpClient()) {
+                            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                        }
+                        // mirror httpSpace's read path: a typed string keyed by the content type's tid (html::"..."),
+                        // never a serialized rec — the body is TEXT, not data.
+                        final String contentTypeHeader = response.headers().firstValue(MIME.MIMEType.VALUE).orElse(null);
+                        final MIME.MIMEType contentType = null == contentTypeHeader ? null : MIME.MIMEType.of(contentTypeHeader);
+                        final fURI contentTid = null == contentType ? null : contentType.toTid();
+                        return null != contentTid ? str(response.body(), contentTid, null) : str(response.body());
+                    } catch (final Exception e) {
+                        return fail(e);
+                    }
+                });
+                final Obj client = rec(
+                        uri(HOST), socket.asRec().at(uri(HOST)),
+                        uri(INST), rec(uri(FROM_INST_TID), fromBody));
+                Network.Helper.index(client);
+                return client;
             }).create();
 
 

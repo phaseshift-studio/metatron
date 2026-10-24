@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.web.type.MIME;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -64,7 +65,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
                 }
             }));
         if (!map.containsKey(uri(SEND_RECV))) {
-            this.jvm().put(uri(SEND_RECV), instLambda((lhs1, inst1) -> {
+            final Obj sendRecv = instLambda((lhs1, inst1) -> {
                 try {
                     final Obj toSend = inst1.arg(0);
                     final Real timeoutMs = inst1.arg(1).orElse(real(-1.0));
@@ -75,7 +76,12 @@ public class WebSocketRec extends MRec implements WebSocketObj {
                     LOG.error("error in sendRecv: %s", e);
                     return fail(e);
                 }
-            }));
+            });
+            this.jvm().put(uri(SEND_RECV), sendRecv);
+            // THE MIGRATION — the client's eval override IS its send_recv (ship code -> result). Declared in the
+            // mini-instset so Network.overrideOf dispatches `eval` to this peer, and asTransport derives the transport
+            // from it. This is the resource+eval template: a ws client overrides eval; from/to derive via lowering.
+            this.jvm().put(uri(INST), rec(uri(EVAL_INST_TID), sendRecv));
         }
         if (!map.containsKey(uri(CLOSE)))
             this.jvm().put(uri(CLOSE), instLambda((lhs, inst) -> {

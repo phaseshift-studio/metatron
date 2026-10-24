@@ -10,7 +10,7 @@ inst, code, bytes, etc. Expressions chain left-to-right: `lhs.inst(rhs)`.
 
 ---
 
-## 1. Mono Types
+## 1. mono types
 
 ```mtron
 mtron> 1           [-- int (64-bit signed) --]
@@ -37,11 +37,12 @@ mtron> 0x0F        [-- bytes (hex literal) --]
 ==>0x0f
 mtron> noobj       [-- "no obj" (empty, none) --]
 ```
+
 ---
 
-## 2. Poly Types
+## 2. poly types
 
-### lst (`[ , ]` — ordered, indexable)
+### lst (`[,]` — ordered, indexable)
 
 ```mtron
 mtron> [1, 2, 3]         [-- List of 3 ints --]
@@ -52,7 +53,12 @@ mtron> [a=>1, b=>2]      [-- Record (key-value pairs) --]
 ==>[a=>1,b=>2]
 mtron> [,]               [-- Empty list --]
 ==>[,]
+mtron> [1,2,3]>>0
+==>1
+mtron> [1,]
+
 ```
+
 ### rec (`[key=>val, ...]` — unordered, keyed)
 
 ```mtron
@@ -60,8 +66,14 @@ mtron> [name=>'marko', age=>29]
 ==>[name=>'marko',age=>29]
 mtron> [1=>2, 2=>3, 3=>4]
 ==>[1=>2,2=>3,3=>4]
+mtron> [a=>1,b=>2]>>a
+==>1
+mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b
+mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d
+mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d/e
 ```
-### objs (`{ , }` — unordered, streamed and bulked)
+
+### objs (`{,}` — unordered, streamed and bulked)
 
 ```mtron
 mtron> {1,2,3}                                  [-- equivalent to {2,1,3} (unordered) --]
@@ -82,18 +94,8 @@ mtron> {3,1,2,3}.isa?int{*}<=int{*}({1,{2}3,2}) [-- coefficients accounted for -
 ==>1
 ==>2
 ```
-### Indexing / Access
 
-```mtron
-mtron> [1,2,3]>>0
-==>1
-mtron> [a=>1,b=>2]>>a
-==>1
-mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b
-mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d
-mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d/e
-```
-### Rel (relation) — key/value pair
+### rel (relation) — key/value pair
 
 ```mtron
 mtron> name=>'marko'
@@ -103,6 +105,7 @@ mtron> name=>'marko'=>age=>29
 mtron> name=>'marko'=>age=>29.>>.>>.>>
 ==>29
 ```
+
 Objs can carry a **vid** (address URI) via `@`:
 
 ```mtron
@@ -119,6 +122,7 @@ mtron> @b + [5,6]
 mtron> *b
 ==>[1,2,3,4,5,6]
 ```
+
 ---
 
 ## 3. Coefficients (count / multiplicity)
@@ -138,6 +142,7 @@ mtron> {1,2,3}.sum{2}()                         [-- two parallel sums yields {2}
 mtron> {1,2,3}.sum{2}().sum()                   [-- {2}6 merged by sum is 12 --]
 ==>12
 ```
+
 Coefficients propagate through arithmetic and affect count, sum, repeat:
 
 ```mtron
@@ -150,6 +155,7 @@ mtron> int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) 
 mtron> {int{2}::1,int{3}::2}.sum()   [-- int::8 (coefficients account for) --]
 ==>8
 ```
+
 ---
 
 ## 4. Arithmetic & Logic
@@ -178,6 +184,7 @@ mtron> {1,2,3}.sum()                  [-- 6 --]
 mtron> {1,2,3,4,5}.reduce(|plus(0))   [-- 15 (| necessary to block evaluation) --]
 ==>15
 ```
+
 **Short-circuit:** `_` (underscore) is the identity function — returns the unmodified lhs:
 
 ```mtron
@@ -188,6 +195,7 @@ mtron> {1,2,3}.map(_).plus(2)      [-- {3,4,5} --]
 ==>4
 ==>5
 ```
+
 **Compound ops:** `?inst<=type(body)` for inline insts (lambdas):
 
 ```mtron
@@ -196,6 +204,7 @@ mtron> {1,2,3}.inst?int<=int(a=>plus(2)){ plus(*a) }     [-- {4,8,18} --]
 ==>6
 ==>8
 ```
+
 ### Boolean logic
 
 ```mtron
@@ -222,6 +231,7 @@ mtron> {1,2,3,4,5}.?>2.?<5                [-- {3,4} (using sugar'd syntax)--]
 mtron> 1.and(gt(2),lt(5))                 [-- false --]
 ==>false
 ```
+
 ---
 
 ## 5. String Operations
@@ -246,6 +256,7 @@ mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']               [-- 'AXc' (update sugar syn
 mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']=='[A-Z]{2,3}' [-- ['AX'] (update and select sugar syntax) --]
 ==>['AX']
 ```
+
 ---
 
 ## 6. URI Dereferencing (`*` — `from()`)
@@ -282,6 +293,7 @@ mtron> http://abc:123/a/b/c.as(rec::T)>>authority     [-- abc:123 --]
 mtron> http://abc:123/a/b/c.as(rec::T)>>{schema,path} [-- {http,/a/b/c} --]
 ==>[<>,a,b,c]
 ```
+
 ---
 
 ## 7. Type Casting (`.as(type::T)`)
@@ -302,6 +314,7 @@ mtron> [a=>1,b=>2].as(lst::T)    [-- [(0=>(a=>1)),(1=>(b=>2))] --]
 mtron> [a,b].as(rec::T)          [-- [0=>a,1=>b] --]
 ==>[0=>a,1=>b]
 ```
+
 Custom types, created with `tid::T[predicate][constructor]@vid` (see the *type system* doc):
 
 ```mtron
@@ -312,6 +325,7 @@ mtron> posint::-1           [-- refused: a predicate-only type has no constructo
 ==>fail::[parse error at line 1, col 1: -1 is not a int::T[is(gt(0))]@posint
    	while parsing: posint::-1]@/sys/fail/37769
 ```
+
 ---
 
 ## 8. Mapping & Filtering
@@ -336,6 +350,7 @@ mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (filter: keep the members the
 ==>2
 ==>3
 ```
+
 ### Select (structural projection)
 
 ```mtron
@@ -353,6 +368,7 @@ mtron> {[a=>1],[a=>2],[a=>3]}==[a=>?>=2.+10]                      [-- {[a=>12],[
 mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
 ==>[1,7,3]
 ```
+
 ### Filtering (`?` and `is()`)
 
 `lhs ? predicate` is the filter: it keeps the lhs when the predicate admits it and yields `noobj` when it does
@@ -366,6 +382,7 @@ mtron> {[a=>1],[a=>2],[a=>3]}?[a=>is(lt(3))]   [-- {[a=>1],[a=>2]}  (the same sh
 ==>[a=>1]
 ==>[a=>2]
 ```
+
 **`isa()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
 fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
 original — a profile matcher, and `noobj` when the profile is contradicted:
@@ -374,6 +391,7 @@ original — a profile matcher, and `noobj` when the profile is contradicted:
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>?isa([host=>2024.12, port=>25])  [-- the uri (the profile matches) --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>?isa([host=>2024.12, port=>26])  [-- noobj  (the port contradicts the profile) --]
 ```
+
 ---
 
 ## 9. Grouping
@@ -384,6 +402,7 @@ mtron> {1,2,3}.group([_=>+10])                [-- [1=>11, 2=>12, 3=>13] --]
 mtron> [a=>1,b=>2,c=>3].group([_=>_])          [-- [[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]] --]
 ==>[[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]]
 ```
+
 ---
 
 ## 10. Merging & Splitting
@@ -410,6 +429,7 @@ mtron> {1,2,3}>-1                           [-- {1,1,2,3}  (1 is added to the st
 mtron> [a=>1,b=>2]>-.>-[b=>2]              [-- [a=>1, b=>{2}2]  (the incoming 2 stacks under the existing 2 as a coefficient) --]
 ==>[a=>1,b=>{2}2]
 ```
+
 ### Split (`-<`)
 
 Distributes elements:
@@ -422,6 +442,7 @@ mtron> {1,2,3}-<[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each member
 ==>[3,4]
 ==>[4,5]
 ```
+
 ### Conditional branch: `-<|[?pred=>a, _=>b]`
 
 ```mtron
@@ -431,6 +452,7 @@ mtron> {1,2}-<|[?>1 => +100, _=> +2]>>    [-- 1=>3, 2=>102  (each member takes i
 ==>3
 ==>102
 ```
+
 ---
 
 ## 11. Right-Shift / Left-Shift (`>>`, `<<`)
@@ -451,6 +473,7 @@ mtron> [1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4} (selectors are uris
 ==>[a=>3]
 ==>4
 ```
+
 ### On records
 
 ```mtron
@@ -467,6 +490,7 @@ mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c      [-- [d=>[e=>3]]       (access by key) 
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c/d/e  [-- 3                 (walk nested structure) --]
 ==>3
 ```
+
 ### On URIs
 
 ```mtron
@@ -479,6 +503,7 @@ mtron> a/b/c>>1                  [-- a/b --]
 mtron> a/b/c<<3                  [-- <.>    (empty) --]
 ==><>
 ```
+
 ---
 
 ## 12. Skip / Take
@@ -494,6 +519,7 @@ mtron> {1,2,3,4,5}.skip(2).take(2)   [-- {3,4} --]
 ==>3
 ==>4
 ```
+
 ---
 
 ## 13. Barrier (`|`)
@@ -506,6 +532,7 @@ mtron> |(plus(30)).map(20)      [-- 20   (the barrier is not evaluated by map) -
 mtron> |(plus(30)).swap(20)     [-- 50   (swap applies the barrier's lhs) --]
 ==>50
 ```
+
 ---
 
 ## 14. The `>>=` Update Instruction
@@ -521,12 +548,14 @@ mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
 ```
+
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 
 ```mtron
 mtron> @a/b/c>>= +10      [-- modifies *a/b/c and writes back --]
 mtron> *a/b/c>>= +10      [-- evaluates but discards the result --]
 ```
+
 ---
 
 ## 15. Auto-references (`!*`, `!@`)
@@ -539,6 +568,7 @@ mtron> [company=>!*db:companies/101]     [-- auto_from — resolved on access --
 mtron> [company=>!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
 ==>[company=>!@db:companies/101]
 ```
+
 `!*` is sugar for `auto_from(uri)`. When you `.at(company)` on the record, the Router resolves `db:companies/101` and
 returns the target Obj.
 
@@ -548,6 +578,7 @@ Chain through auto-refs:
 mtron> *a>>x>>x           [-- follows !* chain to the final target --]
 mtron> *a>>x/x            [-- reads a field after resolving the auto-ref --]
 ```
+
 ---
 
 ## 16. Math Instruction
@@ -562,6 +593,7 @@ mtron> 10.to(a).math('a^2')                  [-- 100.0 --]
 mtron> 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
 ==>30.0
 ```
+
 ---
 
 ## 17. URI Path Operations
@@ -576,6 +608,7 @@ mtron> a/b/c.split(/).merge(/)           [-- a/b/c --]
 mtron> a/b/c.split(/).merge(/).mult(<.>)  [-- a/b/c  (identity) --]
 ==>a/b/c
 ```
+
 ---
 
 ## 18. Failure & Error Handling
@@ -587,6 +620,7 @@ mtron> 1.plus('a').catch(cause().cause())       [-- noobj --]
 mtron> 1.plus(mult(throw('bad'))).catch(34).plus(2)  [-- 36 --]
 ==>36
 ```
+
 ---
 
 ## 19. Objs (coefficient collections `{ }`)
@@ -601,6 +635,7 @@ mtron> {1,2,3}                        [-- three ints --]
 mtron> >-.sum()                       [-- sum flattens the coefficient barrier --]
 ==>0
 ```
+
 Collections distribute operations:
 
 ```mtron
@@ -613,6 +648,7 @@ mtron> {1,2,3}>-                      [-- unmerge — flattens barriers --]
 ==>2
 ==>3
 ```
+
 ---
 
 ## 20. Type Annotations
@@ -627,6 +663,7 @@ mtron> ?int{5}::3                     [-- coefficient-aware check --]
 mtron> int{?}::10                     [-- optional coefficient {0,1} --]
 ==>{?}10
 ```
+
 `==`
 
 ```mtron
@@ -634,6 +671,7 @@ mtron> [a=>1,b=>2,c=>3]==[a=>_]     [-- select with pattern match --]
 ==>[a=>1]
 mtron> [a=>1,b=>2,c=>3]==[a=>is(gt(1))]  [-- select with filter --]
 ```
+
 ---
 
 ## 21. Pattern Matching (`?=` prefix)
@@ -644,6 +682,7 @@ mtron> ?>1        [-- check if greater than 1 --]
 mtron> ?<5        [-- check if less than 5 --]
 mtron> ?int::T    [-- check if type is int --]
 ```
+
 ---
 
 ## 22. Sugar & Syntax Summary

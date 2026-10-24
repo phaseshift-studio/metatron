@@ -398,12 +398,12 @@ public class machInstSet extends AbstractInstSet {
                                         .vid(ID_CLIENT_TID)
                                         .isaPredicate(rec(
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
-                                                uri(SEND_RECV).maybe().asUri(), INST_TYPE,
+                                                uri(INST).maybe().asUri(), REC_TYPE,
                                                 uri(CLOSE).maybe().asUri(), INST_TYPE))
                                         .constructor(arg -> {
                                             final Obj client = rec(
                                                     uri(HOST), arg.asRec().at(uri(HOST)),
-                                                    uri(SEND_RECV), instLambda((lhs, inst) -> inst.arg(0).apply(lhs)),
+                                                    uri(INST), rec(uri(EVAL_INST_TID), instLambda((lhs, inst) -> inst.arg(0).apply(lhs))),
                                                     uri(CLOSE), instLambda((lhs, inst) -> noobj()));
                                             // indexing is a BACKGROUND behavior upon successful construction:
                                             // the client exists as an obj either way, the index merely observes
@@ -412,7 +412,7 @@ public class machInstSet extends AbstractInstSet {
                                         })
                                         .create(), null, null,
                                 Map.of(uri(HOST), "the dialed uri (identity: the local machine answers)",
-                                        uri(SEND_RECV), "applies the shipped message against the local machine — the identity transport",
+                                        uri(INST), "the identity instruction override: { eval => evaluate the shipped code locally } — the one maximal capability a loop peer declares",
                                         uri(CLOSE), "nothing to hang up"),
                                 """
                                 the identity client — the identity element of the protocol-client family:
