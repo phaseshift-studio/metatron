@@ -506,7 +506,7 @@ the machine instruction set for nesting machines and their components instset, c
                  component::T[][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/typer,
                  component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
                  rec::T[?[{?}host=&gt;uri::T,
-   {?}send_recv=&gt;inst::T,
+   {?}inst=&gt;rec::T,
    {?}close=&gt;inst::T]][ctor?id_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/id_client,
                  rec::T[?[authority=&gt;uri::T,
    {?}host=&gt;uri::T,
@@ -561,7 +561,6 @@ the machine instruction set for nesting machines and their components instset, c
     {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
                  rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor,
                  rec::T[?[code=&gt;&lt;#&gt;::T,
-   {?}lhs=&gt;&lt;#&gt;::T,
    {?}source=&gt;uri::T,
    {?}runtime=&gt;real::T@/m/math/time,
    {?}yield=&gt;thread::T,
@@ -777,7 +776,6 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,
- {?}lhs=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
  {?}runtime=&gt;real::T@/m/math/time,
  {?}yield=&gt;thread::T,
@@ -896,7 +894,7 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
         <small class="text-muted code">/m/mach/id_client</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}host=&gt;uri::T,
- {?}send_recv=&gt;inst::T,
+ {?}inst=&gt;rec::T,
  {?}close=&gt;inst::T]][ctor?id_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/id_client</code></pre></div>
     
     <div class="card-body border-top py-2">
@@ -907,8 +905,8 @@ contract: a read through a loop peer equals the local read.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#send_recv" class="text-light">send_recv</a> <span class="text-light">=&gt;</span> <a href="#'applies the shipped message against the local machine — the identity transport'" class="text-info">&#39;applies the shipped message against the local machine — the identity transport&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'the identity instruction override: { eval => evaluate the shipped code locally } — the one maximal capability a loop peer declares'" class="text-info">&#39;the identity instruction override: { eval =&gt; evaluate the shipped code locally } — the one maximal capability a loop peer declares&#39;</a>
   <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -1292,7 +1290,6 @@ scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code
         <small class="text-muted code">/m/mach/thread</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[code=&gt;&lt;#&gt;::T,
- {?}lhs=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
  {?}runtime=&gt;real::T@/m/math/time,
  {?}yield=&gt;thread::T,
@@ -1346,7 +1343,6 @@ scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?virtual&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/virtual</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,
- {?}lhs=&gt;&lt;#&gt;::T,
  {?}source=&gt;uri::T,
  {?}runtime=&gt;real::T@/m/math/time,
  {?}yield=&gt;thread::T,

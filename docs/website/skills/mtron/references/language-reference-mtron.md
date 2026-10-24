@@ -1,9 +1,9 @@
 ---
 name: mtron-language-reference
-description: Complete mtron language reference — mono, poly, and call types, operators, expression chaining, and syntax.
+description: a practical mtron language reference — mono, poly, and call types, operators, expression chaining, and syntax.
 ---
 
-# mtron Language Reference
+# mtron language reference
 
 A data-flow language over the metatron object graph. Every value is an **Obj** — int, str, real, bool, uri, rec, lst,
 inst, code, bytes, etc. Expressions chain left-to-right: `lhs.inst(rhs)`.
@@ -37,29 +37,25 @@ mtron> 0x0F        [-- bytes (hex literal) --]
 ==>0x0f
 mtron> noobj       [-- "no obj" (empty, none) --]
 ```
-
 ---
 
 ## 2. poly types
 
-### lst (`[,]` — ordered, indexable)
+### lst::T (`[,]` — ordered, indexable)
 
 ```mtron
-mtron> [1, 2, 3]         [-- List of 3 ints --]
+mtron> [1, 2, 3]             [-- lst of 3 int::T --]
 ==>[1,2,3]
-mtron> [1, [2, 3]]       [-- Nested list --]
+mtron> [1, [2, 3]]           [-- nested lst --]
 ==>[1,[2,3]]
-mtron> [a=>1, b=>2]      [-- Record (key-value pairs) --]
-==>[a=>1,b=>2]
-mtron> [,]               [-- Empty list --]
+mtron> [,]                   [-- empty lst --]
 ==>[,]
 mtron> [1,2,3]>>0
 ==>1
-mtron> [1,]
-
+mtron> [1,2,3]==[?>1 => +2]  [-- select with rec::T for predicate keys --]
+==>[noobj,noobj,5]
 ```
-
-### rec (`[key=>val, ...]` — unordered, keyed)
+### rec::T (`[key=>val, ...]` — unordered, keyed)
 
 ```mtron
 mtron> [name=>'marko', age=>29]
@@ -72,7 +68,16 @@ mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b
 mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d
 mtron> [a=>1,b=>[c=>2,d=>[e=>4]]]>>a/b/d/e
 ```
+### rel::T (relation) — key/value pair
 
+```mtron
+mtron> name=>'marko'
+==>name=>'marko'
+mtron> name=>'marko'=>age=>29
+==>name=>('marko'=>(age=>29))
+mtron> name=>'marko'=>age=>29.>>.>>.>>
+==>29
+```
 ### objs (`{,}` — unordered, streamed and bulked)
 
 ```mtron
@@ -94,38 +99,9 @@ mtron> {3,1,2,3}.isa?int{*}<=int{*}({1,{2}3,2}) [-- coefficients accounted for -
 ==>1
 ==>2
 ```
-
-### rel (relation) — key/value pair
-
-```mtron
-mtron> name=>'marko'
-==>name=>'marko'
-mtron> name=>'marko'=>age=>29
-==>name=>('marko'=>(age=>29))
-mtron> name=>'marko'=>age=>29.>>.>>.>>
-==>29
-```
-
-Objs can carry a **vid** (address URI) via `@`:
-
-```mtron
-mtron> [a=>1]@a                 [-- rec anchored at uri myVid --]
-==>[a=>1]@a
-mtron> [1,2,3,4]@b              [-- lst anchored at *a --]
-==>[1,2,3,4]@b
-mtron> *a + [b=>2]
-==>[a=>1,b=>2]
-mtron> *a
-==>[a=>1]
-mtron> @b + [5,6]
-==>[1,2,3,4,5,6]@b
-mtron> *b
-==>[1,2,3,4,5,6]
-```
-
 ---
 
-## 3. Coefficients (count / multiplicity)
+## 3. coefficients (count/multiplicity)
 
 Every obj has a coefficient. Shorthand is `{n}obj` -- standing for `type{n}::obj`:
 
@@ -142,7 +118,6 @@ mtron> {1,2,3}.sum{2}()                         [-- two parallel sums yields {2}
 mtron> {1,2,3}.sum{2}().sum()                   [-- {2}6 merged by sum is 12 --]
 ==>12
 ```
-
 Coefficients propagate through arithmetic and affect count, sum, repeat:
 
 ```mtron
@@ -155,7 +130,6 @@ mtron> int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) 
 mtron> {int{2}::1,int{3}::2}.sum()   [-- int::8 (coefficients account for) --]
 ==>8
 ```
-
 ---
 
 ## 4. Arithmetic & Logic
@@ -165,7 +139,7 @@ mtron> 1.plus(2)                      [-- 3 --]
 ==>3
 mtron> 1.plus(_)                      [-- 2  (underscore is the identity function = lhs) --]
 ==>2
-mtron> 1 + 2                          [-- sugar stynax for previous --]
+mtron> 1 + 2                          [-- sugar sytnax for previous --]
 ==>3
 mtron> {1,2,3}.plus(2)                [-- {3,4,5} (applied to each obj in the stream) --]
 ==>3
@@ -175,7 +149,11 @@ mtron> {1,2,3}.mult(10)               [-- {10,20,30} --]
 ==>10
 ==>20
 ==>30
-mtron> 1.plus(1.plus(1))              [-- 3  (nested) --]
+mtron> {1,2,3} * 10                   [-- sugar syntax for previous --]
+==>10
+==>20
+==>30
+mtron> 1.plus(1.plus(1))              [-- 3 (nested) --]
 ==>3
 mtron> {1,2,3,4}.prod()               [-- 24 --]
 ==>24
@@ -184,8 +162,7 @@ mtron> {1,2,3}.sum()                  [-- 6 --]
 mtron> {1,2,3,4,5}.reduce(|plus(0))   [-- 15 (| necessary to block evaluation) --]
 ==>15
 ```
-
-**Short-circuit:** `_` (underscore) is the identity function — returns the unmodified lhs:
+**lhs arguments** `_` (underscore) is the identity function — returns the unmodified lhs:
 
 ```mtron
 mtron> 1.plus(_)                   [-- 2 --]
@@ -195,16 +172,19 @@ mtron> {1,2,3}.map(_).plus(2)      [-- {3,4,5} --]
 ==>4
 ==>5
 ```
-
-**Compound ops:** `?inst<=type(body)` for inline insts (lambdas):
+**compound ops:** `inst?rng<=dom(args){body}` for inline insts (lambdas):
 
 ```mtron
 mtron> {1,2,3}.inst?int<=int(a=>plus(2)){ plus(*a) }     [-- {4,8,18} --]
 ==>4
 ==>6
 ==>8
+mtron> {1,2,3}.(a=>+2{ +*a }                             [-- sugar syntax for the above --]
+==>fail::[parse error at line 1, col 15:
+     {1,2,3}.(a=>+2{ +*a }                             [-- ...
+                   ^
+     unexpected '{']@/sys/fail/181589
 ```
-
 ### Boolean logic
 
 ```mtron
@@ -231,7 +211,6 @@ mtron> {1,2,3,4,5}.?>2.?<5                [-- {3,4} (using sugar'd syntax)--]
 mtron> 1.and(gt(2),lt(5))                 [-- false --]
 ==>false
 ```
-
 ---
 
 ## 5. String Operations
@@ -245,8 +224,8 @@ mtron> 'a b c'.split(' ')                            [-- ["a", "b", "c"] --]
 ==>['a','b','c']
 mtron> 'a b c'-<' '                                  [-- sugar syntax for previous --]
 ==>['a','b','c']
-mtron> {"a","b","c"}>-' '                            [-- "a b c"  (merge with separator) --]
-==>'a b c'
+mtron> {'a','b','c'}>-'-'                            [-- 'a-b-c'  (merge with separator) --]
+==>'a-b-c'
 mtron> 'ab3cd'.select('\d+')                         [-- ['3'] --]
 ==>['3']
 mtron> 'ab3cd'.select('\d{2}')                       [-- [,]  (no match — empty pair) --]
@@ -256,10 +235,9 @@ mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']               [-- 'AXc' (update sugar syn
 mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']=='[A-Z]{2,3}' [-- ['AX'] (update and select sugar syntax) --]
 ==>['AX']
 ```
-
 ---
 
-## 6. URI Dereferencing (`*` — `from()`)
+## 6. uri dereferencing (`*` — `from()`)
 
 `*` dereferences a uri to its referent in space:
 `@` anchors a uri to its referent in space
@@ -271,7 +249,7 @@ mtron> 'abbc'>>=['a'=>'A','b{2}'=>'X']=='[A-Z]{2,3}' [-- ['AX'] (update and sele
 *</pa.th/to/o b .j>        [-- angle-bracket handles special chars --]
 ```
 
-Wildcards:
+uri wildcards:
 
 ```mtron
 */path/+/obj               [-- + matches one segment --]
@@ -293,13 +271,28 @@ mtron> http://abc:123/a/b/c.as(rec::T)>>authority     [-- abc:123 --]
 mtron> http://abc:123/a/b/c.as(rec::T)>>{schema,path} [-- {http,/a/b/c} --]
 ==>[<>,a,b,c]
 ```
-
----
-
-## 7. Type Casting (`.as(type::T)`)
+objs anchored to their address are specified with `@`.
 
 ```mtron
-mtron> 1.as(str::T)              [-- "1" --]
+mtron> [a=>1]@a                 [-- rec anchored at uri myVid --]
+==>[a=>1]@a
+mtron> [1,2,3,4]@b              [-- lst anchored at *a --]
+==>[1,2,3,4]@b
+mtron> *a + [b=>2]
+==>[a=>1,b=>2]
+mtron> *a
+==>[a=>1]
+mtron> @b + [5,6]
+==>[1,2,3,4,5,6]@b
+mtron> *b
+==>[1,2,3,4,5,6]
+```
+---
+
+## 7. type casting (`as(type::T)`)
+
+```mtron
+mtron> 1.as(str::T)              [-- '1' --]
 ==>'1'
 mtron> 1.0.as(int::T)            [-- 1 --]
 ==>1
@@ -314,7 +307,6 @@ mtron> [a=>1,b=>2].as(lst::T)    [-- [(0=>(a=>1)),(1=>(b=>2))] --]
 mtron> [a,b].as(rec::T)          [-- [0=>a,1=>b] --]
 ==>[0=>a,1=>b]
 ```
-
 Custom types, created with `tid::T[predicate][constructor]@vid` (see the *type system* doc):
 
 ```mtron
@@ -323,12 +315,11 @@ mtron> posint::2                    [-- posint::2  (admitted: the predicate lets
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[parse error at line 1, col 1: -1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/37769
+   	while parsing: posint::-1]@/sys/fail/216333
 ```
-
 ---
 
-## 8. Mapping & Filtering
+## 8. mapping & filtering
 
 ```mtron
 mtron> {1,2,3,4}.map(+2)                [-- {3,4,5,6} --]
@@ -350,8 +341,7 @@ mtron> {1,2,3}.is(gt(1))                [-- {2,3}  (filter: keep the members the
 ==>2
 ==>3
 ```
-
-### Select (structural projection)
+### select (structural projection)
 
 ```mtron
 mtron> [a=>1,b=>2,c=>3].select([_=>_])                            [-- [a=>1,b=>2,c=>3] --]
@@ -368,8 +358,7 @@ mtron> {[a=>1],[a=>2],[a=>3]}==[a=>?>=2.+10]                      [-- {[a=>12],[
 mtron> [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
 ==>[1,7,3]
 ```
-
-### Filtering (`?` and `is()`)
+### filtering (`?` and `is()`)
 
 `lhs ? predicate` is the filter: it keeps the lhs when the predicate admits it and yields `noobj` when it does
 not. A rec predicate matches structurally — the value's field is checked against the field's type:
@@ -382,7 +371,6 @@ mtron> {[a=>1],[a=>2],[a=>3]}?[a=>is(lt(3))]   [-- {[a=>1],[a=>2]}  (the same sh
 ==>[a=>1]
 ==>[a=>2]
 ```
-
 **`isa()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
 fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
 original — a profile matcher, and `noobj` when the profile is contradicted:
@@ -391,23 +379,21 @@ original — a profile matcher, and `noobj` when the profile is contradicted:
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>?isa([host=>2024.12, port=>25])  [-- the uri (the profile matches) --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>?isa([host=>2024.12, port=>26])  [-- noobj  (the port contradicts the profile) --]
 ```
-
 ---
 
-## 9. Grouping
+## 9. grouping
 
 ```mtron
-mtron> {1,2,3}.group([_=>+10])                [-- [1=>11, 2=>12, 3=>13] --]
+mtron> {1,2,3}.group([_=>+10])                 [-- [1=>11, 2=>12, 3=>13] --]
 ==>[1=>11,2=>12,3=>13]
 mtron> [a=>1,b=>2,c=>3].group([_=>_])          [-- [[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]] --]
 ==>[[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]]
 ```
-
 ---
 
 ## 10. Merging & Splitting
 
-### Merge (`>-`)
+### merge (`>-`)
 
 Unwraps collections: `{1,2,3}>-`   # {1,2,3} (flattens coefficient barriers)
 
@@ -429,8 +415,7 @@ mtron> {1,2,3}>-1                           [-- {1,1,2,3}  (1 is added to the st
 mtron> [a=>1,b=>2]>-.>-[b=>2]              [-- [a=>1, b=>{2}2]  (the incoming 2 stacks under the existing 2 as a coefficient) --]
 ==>[a=>1,b=>{2}2]
 ```
-
-### Split (`-<`)
+### split (`-<`)
 
 Distributes elements:
 
@@ -442,8 +427,7 @@ mtron> {1,2,3}-<[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each member
 ==>[3,4]
 ==>[4,5]
 ```
-
-### Conditional branch: `-<|[?pred=>a, _=>b]`
+### conditional branch: `-<|[?pred=>a, _=>b]`
 
 ```mtron
 mtron> 1-<|[?>1 => +100, _=> +2]          [-- 1=>3  (1 fails ?>1, so the default branch +2 takes it) --]
@@ -452,14 +436,13 @@ mtron> {1,2}-<|[?>1 => +100, _=> +2]>>    [-- 1=>3, 2=>102  (each member takes i
 ==>3
 ==>102
 ```
-
 ---
 
-## 11. Right-Shift / Left-Shift (`>>`, `<<`)
+## 11. right-shift / left-shift (`>>`, `<<`)
 
 Traverse into structures:
 
-### On lst
+### lsts
 
 ```mtron
 mtron> [1,2,[a=>3],4]<<2                  [-- [[a=>3],4] --]
@@ -473,8 +456,7 @@ mtron> [1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4} (selectors are uris
 ==>[a=>3]
 ==>4
 ```
-
-### On records
+### recs
 
 ```mtron
 mtron> [a=>1,b=>2,c=>[d=>3]].dom()        [-- {a,b,c}           (extract keys) --]
@@ -490,8 +472,7 @@ mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c      [-- [d=>[e=>3]]       (access by key) 
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c/d/e  [-- 3                 (walk nested structure) --]
 ==>3
 ```
-
-### On URIs
+### uris
 
 ```mtron
 mtron> a/b/c<<                   [-- b/c    (drop leftmost segment) --]
@@ -503,10 +484,9 @@ mtron> a/b/c>>1                  [-- a/b --]
 mtron> a/b/c<<3                  [-- <.>    (empty) --]
 ==><>
 ```
-
 ---
 
-## 12. Skip / Take
+## 12. skip / take
 
 ```mtron
 mtron> {1,2,3,4}.take(2)        [-- {1,2} --]
@@ -519,10 +499,9 @@ mtron> {1,2,3,4,5}.skip(2).take(2)   [-- {3,4} --]
 ==>3
 ==>4
 ```
-
 ---
 
-## 13. Barrier (`|`)
+## 13. block (`|`)
 
 Delays evaluation — wraps in a monadic barrier:
 
@@ -532,12 +511,11 @@ mtron> |(plus(30)).map(20)      [-- 20   (the barrier is not evaluated by map) -
 mtron> |(plus(30)).swap(20)     [-- 50   (swap applies the barrier's lhs) --]
 ==>50
 ```
-
 ---
 
-## 14. The `>>=` Update Instruction
+## 14. update (`>>=`)
 
-Modifies a value at a URI address and writes back:
+Modifies a value at a uri address (or on stack if not addressed):
 
 ```mtron
 mtron> @xyz >>= [a=>+2]                        [-- merge: add 2 to field 'a' at xyz --]
@@ -548,82 +526,75 @@ mtron> [a=>1,b=>2] >>= [b=>none]               [-- [a=>1]  (remove field b) --]
 ==>[a=>1]
 mtron> @<people/+>.>>= [name=>"Micky Mouse"]   [-- wildcard update --]
 ```
-
 `@` means "anchor the write-back to the VID" (persist).  `*` means "anonymous copy" (no write-back):
 
 ```mtron
-mtron> @a/b/c>>= +10      [-- modifies *a/b/c and writes back --]
+mtron> @a/b/c>>= +10      [-- modifies *a/b/c and writes back   --]
 mtron> *a/b/c>>= +10      [-- evaluates but discards the result --]
 ```
-
 ---
 
-## 15. Auto-references (`!*`, `!@`)
+## 15. auto-references (`!*`, `!@`)
 
 Lazy cross-reference via the Router:
 
 ```mtron
-mtron> [company=>!*db:companies/101]     [-- auto_from — resolved on access --]
+mtron> [company=>!*db:companies/101]     [-- auto_from — resolved on access            --]
 ==>[company=>!*db:companies/101]
 mtron> [company=>!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
 ==>[company=>!@db:companies/101]
 ```
-
 `!*` is sugar for `auto_from(uri)`. When you `.at(company)` on the record, the Router resolves `db:companies/101` and
 returns the target Obj.
 
 Chain through auto-refs:
 
 ```mtron
-mtron> *a>>x>>x           [-- follows !* chain to the final target --]
+mtron> *a>>x>>x           [-- follows !* chain to the final target       --]
 mtron> *a>>x/x            [-- reads a field after resolving the auto-ref --]
 ```
-
 ---
 
-## 16. Math Instruction
+## 16. math instruction
 
 Embedded mathematical expressions:
 
 ```mtron
-mtron> math('1+2')                           [-- 3.0 --]
+mtron> math('1+2')                           [-- 3.0   --]
 ==>3.0
 mtron> 10.to(a).math('a^2')                  [-- 100.0 --]
 ==>100.0
-mtron> 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
+mtron> 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0  --]
 ==>30.0
 ```
-
 ---
 
-## 17. URI Path Operations
+## 17. uri path operations
 
 ```mtron
-mtron> a/b/c.split(/)                   [-- [a,b,c] --]
+mtron> a/b/c.split(/)                     [-- [a,b,c] --]
 ==>[a,b,c]
-mtron> {a,b,c}>-/                       [-- a/b/c --]
+mtron> {a,b,c}>-/                         [-- a/b/c --]
 ==>a/b/c
-mtron> a/b/c.split(/).merge(/)           [-- a/b/c --]
+mtron> a/b/c.split(/).merge(/)            [-- a/b/c --]
 ==>a/b/c
 mtron> a/b/c.split(/).merge(/).mult(<.>)  [-- a/b/c  (identity) --]
 ==>a/b/c
 ```
-
 ---
 
-## 18. Failure & Error Handling
+## 18. failure & error handling
 
 ```mtron
-mtron> 1.plus('a').catch(34)                    [-- 34 --]
+mtron> 1.plus('a').catch(34)                         [-- 34 --]
 ==>34
-mtron> 1.plus('a').catch(cause().cause())       [-- noobj --]
+mtron> 1.plus('a').catch(cause().cause())            [-- noobj --]
 mtron> 1.plus(mult(throw('bad'))).catch(34).plus(2)  [-- 36 --]
 ==>36
 ```
-
 ---
 
-## 19. Objs (coefficient collections `{ }`)
+## 19. objs (coefficient collections `{ }`)
 
 Braces create a multi-value Objs collection (coefficient barrier):
 
@@ -635,7 +606,6 @@ mtron> {1,2,3}                        [-- three ints --]
 mtron> >-.sum()                       [-- sum flattens the coefficient barrier --]
 ==>0
 ```
-
 Collections distribute operations:
 
 ```mtron
@@ -648,10 +618,9 @@ mtron> {1,2,3}>-                      [-- unmerge — flattens barriers --]
 ==>2
 ==>3
 ```
-
 ---
 
-## 20. Type Annotations
+## 20. type annotations
 
 Inline type predicates:
 
@@ -663,18 +632,16 @@ mtron> ?int{5}::3                     [-- coefficient-aware check --]
 mtron> int{?}::10                     [-- optional coefficient {0,1} --]
 ==>{?}10
 ```
-
 `==`
 
 ```mtron
-mtron> [a=>1,b=>2,c=>3]==[a=>_]     [-- select with pattern match --]
+mtron> [a=>1,b=>2,c=>3]==[a=>_]          [-- select with pattern match --]
 ==>[a=>1]
 mtron> [a=>1,b=>2,c=>3]==[a=>is(gt(1))]  [-- select with filter --]
 ```
-
 ---
 
-## 21. Pattern Matching (`?=` prefix)
+## 21. pattern matching (`?=` prefix)
 
 ```mtron
 mtron> ?=1        [-- check if equal to 1 --]
@@ -682,49 +649,47 @@ mtron> ?>1        [-- check if greater than 1 --]
 mtron> ?<5        [-- check if less than 5 --]
 mtron> ?int::T    [-- check if type is int --]
 ```
+---
+
+## 22. sugar & syntax summary
+
+| Sugar     | Expansion        | Use                      |
+|-----------|------------------|--------------------------|
+| `*uri`    | `from(uri)`      | dereference uri          |
+| `!*uri`   | `auto_from(uri)` | lazy cross-ref           |
+| `@uri`    | `at(uri)`        | anchor to uri location   |
+| `_`       | `id()`           | identity function        |
+| `>>=`     | `update()`       | update-and-write-back    |
+| `>>`      | `rshift()`       | right-shift (drop last)  |
+| `<<`      | `lshift()`       | left-shift (drop first)  |
+| `>-`      | `merge()`        | flatten / merge barrier  |
+| `-<`      | `split()`        | distribute into branches |
+| `\|`      | `block()`        | block/prevent evaluation |
+| `_/...\_` | `within()`       | structural within-block  |
+| `.`       | `.plus(1)`       | dot-instruction call     |
+| `=>`      | `rel()`          | key → value relation     |
+| `->`      | `ref()`          | write to URI reference   |
+| `;`       | `end()`          | sequence separator       |
+| `?type`   | `isa(type)`      | type/condition check     |
+| `==`      | `select()`       | structural select        |
 
 ---
 
-## 22. Sugar & Syntax Summary
+## 23. expression evaluation model
 
-| Sugar      | Expansion        | Use                        |
-|------------|------------------|----------------------------|
-| `*uri`     | `from(uri)`      | Dereference URI            |
-| `!*uri`    | `auto_from(uri)` | Lazy cross-ref             |
-| `@uri`     | `at(uri)`        | Anchor to URI location     |
-| `_`        | `id()`           | Identity function          |
-| `>>=`      | `update()`       | Update-and-write-back      |
-| `>>`       | `rshift()`       | Right-shift (drop last)    |
-| `<<`       | `lshift()`       | Left-shift (drop first)    |
-| `>-`       | `merge()`        | Flatten / merge barrier    |
-| `-<`       | `split()`        | Distribute into branches   |
-| `\|`       | `barrier()`      | Monadic barrier            |
-| `_/...\\_` | `within()`       | Structural within-block    |
-| `.`        | `.plus(1)`       | Dot-instruction call       |
-| `=>`       | `rel()`          | Key → value relation       |
-| `->`       | `ref()`          | Write to URI reference     |
-| `;`        | `end()`          | Sequence separator         |
-| `?pred`    | `is(pred)`       | Type/condition check       |
-| `lhs ? p`  | `lhs.isa(p)`     | Filter: keep if `p` admits |
-| `==`       | `select()`       | Structural select          |
-
----
-
-## 23. Expression Evaluation Model
-
-1. **Left-to-right chaining:** `lhs.inst(rhs)` — `inst` receives `lhs` and `rhs`
-2. **Coefficient propagation:** ops distribute over collections; result coefficients combine
-3. **Space reads:** `*uri` fetches from the graph; `!*uri` fetches lazily on `.at()`
-4. **Write-back:** `@`-prefixed writes persist through `>>=` back to space
-5. **No mutation of existing objects** — operations create new Objs (immutable)
+1. **left-to-right chaining:** `lhs.inst(rhs)` — `inst` receives `lhs` and `rhs`
+2. **coefficient propagation:** ops distribute over collections; result coefficients combine
+3. **space reads:** `*uri` fetches from the graph; `!*uri` fetches lazily on `.at()`
+4. **write-back:** `@`-prefixed writes persist through `>>=` back to space
+5. **no mutation of existing objects** — operations create new Objs (immutable)
 
 ```mtron
 chains: every inst's output is the next inst's input
-mtron> {1,2,3,4}.sum()                [-- 10 --]
+mtron> {1,2,3,4}.sum()                     [-- 10 --]
 ==>10
-mtron> {1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
+mtron> {1,2,3,4}.sum{2}()                  [-- {2}10  (the same job, run twice in parallel) --]
 ==>{2}10
-mtron> {1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
+mtron> {1,2,3,4}.sum{2}().sum()            [-- 20  (the outer sum folds the coefficient in) --]
 ==>20
 mtron> {1,2,3,4}-<[plus(1), plus(10)]>-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
 ==>2
@@ -735,7 +700,7 @@ mtron> {1,2,3,4}-<[plus(1), plus(10)]>-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (dist
 ==>13
 ==>5
 ==>14
-mtron> {1,2,3,4}.skip(1).take(2)      [-- {2,3}  (window: drop the first, keep two) --]
+mtron> {1,2,3,4}.skip(1).take(2)           [-- {2,3}  (window: drop the first, keep two) --]
 ==>2
 ==>3
 ```

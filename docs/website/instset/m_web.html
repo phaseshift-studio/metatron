@@ -546,7 +546,7 @@ the world of the web widens metatron</p>
    {?}on_error=&gt;&lt;#&gt;::T,
    {?}on_close=&gt;&lt;#&gt;::T]]@/m/web/http/http_socket,
                  http_socket::T[][ctor?http_handler&lt;=(#{*}::T){&lt;j&gt;}]@/m/web/http/http_handler,
-                 http_socket::T[][ctor?http_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/web/http/http_client,
+                 rec::T[][ctor?http_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/web/http/http_client,
                  mcp_http::T[?[{?}tool=&gt;[uri::T=&gt;inst::T],
    {?}resource=&gt;&lt;#&gt;::T,
    {?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_emulator_http&lt;=(rec::T){&lt;j&gt;}]@/m/web/mcp/mcp_emulator_http,
@@ -996,23 +996,12 @@ the world of the web widens metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">http_client::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__web__http__http_socket" class="instset-doc-small-code text-info code">/m/web/http/http_socket::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/web/http/http_client</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">http_socket::T[][ctor?http_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/web/http/http_client</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__http__http_socket" class="code inherited-link">http_socket::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}in=&gt;isa(mime::T),
- {?}out=&gt;isa(mime::T),
- {?}send=&gt;inst::T,
- {?}on_get=&gt;&lt;#&gt;::T,
- {?}on_post=&gt;&lt;#&gt;::T,
- {?}on_put=&gt;&lt;#&gt;::T,
- {?}on_delete=&gt;&lt;#&gt;::T,
- {?}on_patch=&gt;&lt;#&gt;::T,
- {?}on_head=&gt;&lt;#&gt;::T,
- {?}on_options=&gt;&lt;#&gt;::T,
- {?}on_error=&gt;&lt;#&gt;::T,
- {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[][ctor?http_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/web/http/http_client</code></pre></div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an http client which should be refined to implement protocol specs</p>
 </div>
@@ -1742,14 +1731,18 @@ webHelper.routeProblems(rec) reports entries that cannot be mounted</code></pre>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a space for reading and writing web-related resources.
 for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side.
+an http://# httpspace also mounts a server-less https://# companion at &lt;vid&gt;/https, so https addresses resolve the same way, over tls.
 for local routes, uri resolution will fetch from local web server backing httpspace.
 httpspace webserver is furi aware and will perform server-side extraction of nested addresses.
+an https:// host serves tls with the certificate in its keystore (a pkcs12 path or bytes), opened with its pass.
 </p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://phaseshift.studio&gt;                 [-- yields a html::T &lt; rec::T              --]
+*&lt;https://phaseshift.studio&gt;                [-- fetched over tls by the companion      --]
 *&lt;http://phaseshift.studio/head/html/title&gt; [-- client-side extraction of str::T title --]
-*&lt;http://localhost:8777/head/html/title&gt;    [-- server-side extraction of str::T title --]</code></pre>
+*&lt;http://localhost:8777/head/html/title&gt;    [-- server-side extraction of str::T title --]
+httpspace::[host=&gt;&lt;https://0.0.0.0:8443&gt;,pattern=&gt;&lt;https://#&gt;,keystore=&gt;&lt;conf/server.p12&gt;,pass=&gt;&#39;changeit&#39;,route=&gt;[/=&gt;&lt;metatronfs:docs/website&gt;]]@/sys/space/web/https</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__web__space__wsspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

@@ -1154,7 +1154,7 @@ the core instruction set of metatron containing the base types and useful instru
 </a><a href="#__m__inst__mean?rng=__m__real&dom=__m__int{*}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mean</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__merge?rng=__m__str&dom=__m__str{*}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__merge?rng=A{*}&dom=__m__lst" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">merge</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__minus?rng=__m__int&dom=__m__int" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -1202,7 +1202,7 @@ the core instruction set of metatron containing the base types and useful instru
 </a><a href="#__m__inst__path?rng=__m__uri&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">path</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__inst__plus?rng=__m__math__time&dom=__m__math__time" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__inst__plus?rng=__m__bytes&dom=__m__bytes" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">plus</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__inst__port?rng=__m__int{?}&dom=__m__uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
@@ -2238,82 +2238,82 @@ maps an obj to objs (rng_c = {0,})</p>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes<=bool(bytes::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?real<=bool(real::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes<=str(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int<=datetime(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri<=uri(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?xsv<=str(xsv::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=html(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri<=uri(uri::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri<=lst(lst[uri]::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?html<=markdown(html::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes<=uri(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-4-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?xml<=rec(xml::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-5-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?mcp_client{+}<=json(mcp_client::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-6-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill<=markdown(str::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bool<=bytes(bool::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?real<=str(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-3-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=java(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-4-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=inst(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-5-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=widget(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-6-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill<=agent(skill::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?path<=<span class="code text-info">#</span>(path::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-7-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-7').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric<=imperial(metric::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?place<=<span class="code text-info">#</span>(place::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-7-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-7').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=inst(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-8-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-8').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric<=imperial(metric::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json<=rec(json::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-9-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-9').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?html<=markdown(html::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-10-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-10').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java<=rec(java::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-11-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-11').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=datetime(str::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?lst<=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime<=uri(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-8-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-8').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?html<=rec(html::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-9-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-9').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=json(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-10-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-10').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=yaml(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-12-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-12').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json<=mcp_client(json::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?object<=<span class="code text-info">#</span>(object::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri<=rec(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-11-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-11').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?markdown<=html(markdown::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-12-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-12').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial<=imperial(imperial::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-13-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-13').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?mcp_server<=skill(mcp_server::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=lst(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-14-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-14').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int<=real(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-15-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-15').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric<=metric(metric::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-13-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-13').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int<=real(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-14-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-14').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool<=docs(tool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-15-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-15').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill<=uri(skill::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=<span class="code text-info">A</span>(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-16-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-16').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?xml<=rec(xml::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?morphism<=<span class="code text-info">#</span>(morphism::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-16-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-16').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?markdown<=html(markdown::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=bytes(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-17-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-17').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes<=uri(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-18-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-18').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json<=mcp_client(json::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-19-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-19').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?image<=bytes(image::T,else(1.0)){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-17-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-17').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial<=metric(imperial::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?inst<=code(inst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-20-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-20').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime<=str(datetime::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-21-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-21').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?csv<=str(csv::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-22-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-22').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=uri(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?path<=<span class="code text-info">#</span>(path::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime<=uri(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-15-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-15').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=uri(rec::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?code<=inst(code::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-23-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-23').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?time<=time(time::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-24-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-24').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=html(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?morphism<=<span class="code text-info">#</span>(morphism::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-18-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-18').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=java(rec::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?lst<=rel(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-25-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-25').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=datetime(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-4-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool<=inst(tool::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?<span class="code text-success">B</span><=<span class="code text-info">A</span>(<span class="code text-success">B</span>::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri<=int(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-26-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-26').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=real(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?place<=<span class="code text-info">#</span>(place::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?object<=<span class="code text-info">#</span>(object::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-27-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-27').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=xml(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-28-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-28').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?markdown<=rec(markdown::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-19-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-19').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=real(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-20-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-20').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int<=datetime(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=markdown(rec::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int<=str(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int<=uri(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-20-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-20').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int<=uri(int::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?<span class="code text-success">B</span><=<span class="code text-info">A</span>(#::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bool<=int(bool::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=rel(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-29-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-29').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?<span class="code text-success">noobj{0}</span><=<span class="code text-info">A</span>(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-30-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-30').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?model<=rec(model::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-20-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-20').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri<=str(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-31-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-31').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill<=markdown(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-32-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-32').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?xsv<=str(xsv::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-21-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-21').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric<=metric(metric::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-22-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-22').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?markdown<=rec(markdown::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?abstraction<=<span class="code text-info">#</span>(abstraction::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-23-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-23').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?csv<=str(csv::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-24-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-24').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial<=imperial(imperial::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-25-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-25').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=yaml(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-26-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-26').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?<span class="code text-success">noobj{0}</span><=<span class="code text-info">A</span>(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-27-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-27').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?uri<=str(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-7-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-7').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool<=inst(tool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-28-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-28').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?html<=rec(html::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?lst<=rec(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-33-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-33').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool<=docs(tool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-22-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-22').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill<=uri(skill::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-29-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-29').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=json(rec::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes<=int(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-25-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-25').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=uri(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-11-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-11').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=uri(str::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?real<=int(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-34-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-34').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java<=rec(java::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?lst<=code(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-30-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-30').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?mcp_server<=skill(mcp_server::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bool<=str(bool::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?code<=lst(code::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-35-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-35').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial<=metric(imperial::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-31-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-31').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill<=agent(skill::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-32-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-32').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=xml(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-33-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-33').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?model<=rec(model::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=int(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=markdown(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-36-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-36').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?mcp_client{+}<=json(mcp_client::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?abstraction<=<span class="code text-info">#</span>(abstraction::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-34-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-34').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?image<=bytes(image::T,else(1.0)){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-35-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-35').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?time<=time(time::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec<=str(rec::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=int(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json<=rec(json::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-27-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-27').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime<=str(datetime::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-36-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-36').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str<=widget(str::T){<j>}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-37-tab').click();document.getElementById('__m__inst__as?rng=__m__int&dom=__m__bool-doc-37').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java<=str(java::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top p-0">
@@ -2592,313 +2592,18 @@ maps an obj to objs (rng_c = {0,})</p>
     <div class="tab-content" id="__m__inst__as?rng=__m__int&dom=__m__bool-content">
         <div class="tab-pane fade show active" id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-0" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-0-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> a datetime to epoch millis
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> normalize a plain str as an xsv document
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="#__m__int" class="text-success">int</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__int'" class="text-info">int&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__str" class="text-info">str</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__xsv" class="text-success">xsv</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.09/14/30/52/123?tz=+0000&gt;.as(int::T)   [-- the epoch millis of that moment --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;city,population; santa fe,45000&#39;.as(xsv::T)   [-- the text as a canonical xsv::T --]</code></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-1" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> cast a uri to a datetime — the datetime predicate validates the uri structure first
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__uri" class="text-info">uri</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.09/14/30/52/123?tz=+0000&gt;.as(datetime::T)   [-- //2026.08.09/14/30/52/123?tz=+0000 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-2" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert a markdown document to html — the same engine the docs site-html pass uses
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__markdown" class="text-info">markdown</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__html" class="text-success">html</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:docs/website/skills/mtron/README.md&gt;.as(html::T)   [-- the document as an html::T --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-3" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-3-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse a java source file into a rec
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__java" class="text-info">java</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:.&gt;/Tokens.java.as(rec::T)   [-- the java source parsed into a rec --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-4" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-4-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps an instruction to a tool specification for llm use
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an instruction" class="text-info">an instruction</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the tool type'" class="text-info">&#39;the tool type&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-5" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-5-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> map a widget to a str::T representation not anchored to a canvas. useful for embedding widget text into other objs.
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_mach_ui.html#__m__mach__ui__widget" class="text-info">widget</a> <span class="text-light">=&gt;</span> <a href="#__m__str" class="text-success">str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-6" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-6-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps an agent to a skill by aggregating its features&#39; tools and resources
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an agent" class="text-info">an agent</a> <span class="text-light">=&gt;</span> <a href="#a skill aggregating the agent's capabilities" class="text-success">a skill aggregating the agent&#39;s capabilities</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the skill type'" class="text-info">&#39;the skill type&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)]].as(skill::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-7" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-7-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert an imperial distance to a metric one — bridged through the exact 25.4 millimeters per inch
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__imperial" class="text-info">imperial</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__metric" class="text-success">metric</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">foot::1.0.as(cm::T)   [-- cm::30.48 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-8" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-8-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> serialize a rec as an html document
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__html" class="text-success">html</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[head=&gt;[title=&gt;&#39;metatron&#39;]].as(html::T)   [-- the rec as an html document --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-9" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-9-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse a json document into a rec
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__json" class="text-info">json</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://localhost:8555/api/status&gt;.as(rec::T)   [-- a json response parsed into rec::T --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-10" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-10-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse a yaml document into a rec
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__yaml" class="text-info">yaml</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/settings.yaml&gt;.as(rec::T)   [-- a yaml document parsed into rec::T --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-11" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-11-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert an html document back to markdown
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__html" class="text-info">html</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__markdown" class="text-success">markdown</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://metatron.phaseshift.studio&gt;.as(markdown::T)   [-- the page&#39;s html as markdown --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-12" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-12-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert an imperial distance to another imperial unit
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__imperial" class="text-info">imperial</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__imperial" class="text-success">imperial</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">inch::144.0.as(yard::T)   [-- yard::4.0 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-13" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-13-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps a skill to an mcp server exposing its tools and resources
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a skill" class="text-info">a skill</a> <span class="text-light">=&gt;</span> <a href="#an mcp server" class="text-success">an mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the server type'" class="text-info">&#39;the server type&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">skill.as(mcp_server::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-14" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-14-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> an int function: the lhs real truncated to an int
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a real" class="text-info">a real</a> <span class="text-light">=&gt;</span> <a href="#the lhs real truncated to an int" class="text-success">the lhs real truncated to an int</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the target type (int::T)'" class="text-info">&#39;the target type (int::T)&#39;</a>
-</pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-15" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-15-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert a metric distance to another metric unit
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__metric" class="text-info">metric</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__metric" class="text-success">metric</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">meter::1500.0.as(km::T)   [-- km::1.5 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-16" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-16-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> serialize a rec as an xml document
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__xml" class="text-success">xml</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[config=&gt;[port=&gt;8555]].as(xml::T)   [-- the rec as an xml document --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-17" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-17-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> read a file uri to its raw bytes — the file must resolve to an fsspace
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__uri" class="text-info">uri</a> <span class="text-light">=&gt;</span> <a href="#__m__bytes" class="text-success">bytes</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__bytes'" class="text-info">bytes&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/README.md.as(bytes::T)   [-- the file&#39;s raw bytes --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-18" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-18-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> export an mcp client&#39;s connection settings (type, url, headers) as a json document
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mcp__mcp_client" class="text-info">mcp_client</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__json" class="text-success">json</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*/usr/ai/mcp/mtron.as(web_json::T)   [-- the client&#39;s settings as a json document --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-19" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-19-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> render an image&#39;s bytes as ascii art — the second arg scales the rendering (default 1.0)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__bytes" class="text-info">bytes</a> <span class="text-light">=&gt;</span> <a href="m_sys.html#__m__sys__file__image" class="text-success">image</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'__m__code'" class="text-info">code&#39;</a>
-  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__sys__file__image'" class="text-info">image&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/photo.png.as(image::T, 0.5)   [-- the image as a multi-line ascii str --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-20" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-20-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse an ISO-8601 or docker-style timestamp str into a datetime
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__str" class="text-info">str</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;2026-08-07T19:48:02Z&#39;.as(datetime::T)   [-- &lt;//2026.08.07/19/48/02/000?tz=+0000&gt; --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-21" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-21-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> normalize a plain str as a csv document
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__str" class="text-info">str</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__csv" class="text-success">csv</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__web__mime__xsv'" class="text-info">xsv&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;city,population; santa fe,45000&#39;.as(csv::T)   [-- the text as a canonical csv::T --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-22" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-22-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps a directory to an llm skill where the dir follows the standard SKILL.md structure
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a dir uri containing the llm SKILL.md file" class="text-info">a dir uri containing the llm SKILL.md file</a> <span class="text-light">=&gt;</span> <a href="#a mtron encoding of the specified skill" class="text-success">a mtron encoding of the specified skill</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the skill type'" class="text-info">&#39;the skill type&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-23" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-23-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert a duration to another time unit — the total is preserved, only the unit label changes
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__time" class="text-info">time</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__time" class="text-success">time</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">millis::1500.0.as(second::T)   [-- second::1.5 --]
-second::90.0.as(minute::T)   [-- minute::1.5 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-24" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-24-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> html::[html=&gt;
        [head=&gt;
@@ -2914,73 +2619,59 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
 </pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-25" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-25-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-2" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-2-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> a datetime to a human readable str
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> cast a uri to a datetime — the datetime predicate validates the uri structure first
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="#__m__str" class="text-success">str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__uri" class="text-info">uri</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.09/14/30/52/123?tz=+0000&gt;.as(datetime::T)   [-- //2026.08.09/14/30/52/123?tz=+0000 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-3" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-3-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> read a file uri to its raw bytes — the file must resolve to an fsspace
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__uri" class="text-info">uri</a> <span class="text-light">=&gt;</span> <a href="#__m__bytes" class="text-success">bytes</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__bytes'" class="text-info">bytes&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/README.md.as(bytes::T)   [-- the file&#39;s raw bytes --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-4" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-4-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> serialize a rec as an xml document
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__xml" class="text-success">xml</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.07/19/48/02/251?tz=+0000&gt;.as(str::T)   [-- Friday, August 7, 2026 07:48:02 PM +00:00 --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[config=&gt;[port=&gt;8555]].as(xml::T)   [-- the rec as an xml document --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-26" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-26-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-5" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-5-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> a str function: the lhs real rendered as a str
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> import a json document as mcp client(s), merging command/args and env/headers
+maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a real" class="text-info">a real</a> <span class="text-light">=&gt;</span> <a href="#the lhs real as a str" class="text-success">the lhs real as a str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the target type (str::T)'" class="text-info">&#39;the target type (str::T)&#39;</a>
-</pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-27" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-27-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse an xml document into a rec
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__xml" class="text-info">xml</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__json" class="text-info">json</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mcp__mcp_client{+}" class="text-success">mcp_client{+}</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/settings.xml&gt;.as(rec::T)   [-- an xml document parsed into rec::T --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/mcp.json&gt;.as(mcp_client::T)   [-- an mcp client imported from the json document --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-28" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-28-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> serialize a rec as a markdown document
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__markdown" class="text-success">markdown</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[title=&gt;&#39;metatron&#39;,body=&gt;&#39;greeting&#39;].as(markdown::T)   [-- the rec as a markdown::T document --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-29" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-29-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-terminal">terminal</span> a casting function \(f(x) \nearrow \emptyset\): casts the lhs obj to noobj
-maps objs to nothing (rng_c = 0)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="spec-chip spec-generic">generic</span><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#noobj" class="text-success">noobj</a></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-30" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-30-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps a rec to a model
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec" class="text-info">a rec</a> <span class="text-light">=&gt;</span> <a href="#a model" class="text-success">a model</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a rec shaped like a model'" class="text-info">&#39;a rec shaped like a model&#39;</a>
-</pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-31" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-31-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-6" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-6-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse a markdown skill document into an llm_skill::T
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -2993,33 +2684,46 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:.&gt;/.metatron/skills/mtron/SKILL.md.as(llm_skill::T)   [-- an llm_skill::T with the skill&#39;s tools and resources --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-32" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-32-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-7" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-7-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> normalize a plain str as an xsv document
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps an instruction to a tool specification for llm use
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__str" class="text-info">str</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__xsv" class="text-success">xsv</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;city,population; santa fe,45000&#39;.as(xsv::T)   [-- the text as a canonical xsv::T --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-33" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-33-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps an instruction doc to a tool specification for llm use
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#instruction documentation" class="text-info">instruction documentation</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an instruction" class="text-info">an instruction</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the tool type'" class="text-info">&#39;the tool type&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-34" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-34-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-8" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-8-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert an imperial distance to a metric one — bridged through the exact 25.4 millimeters per inch
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__imperial" class="text-info">imperial</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__metric" class="text-success">metric</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">foot::1.0.as(cm::T)   [-- cm::30.48 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-9" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-9-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert a markdown document to html — the same engine the docs site-html pass uses
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__markdown" class="text-info">markdown</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__html" class="text-success">html</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:docs/website/skills/mtron/README.md&gt;.as(html::T)   [-- the document as an html::T --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-10" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-10-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> serialize a rec as java source
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -3032,7 +2736,82 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[name=&gt;&#39;port&#39;,value=&gt;8555].as(java::T)   [-- the rec as java source text --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-35" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-35-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-11" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-11-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> a datetime to a human readable str
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="#__m__str" class="text-success">str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.07/19/48/02/251?tz=+0000&gt;.as(str::T)   [-- Friday, August 7, 2026 07:48:02 PM +00:00 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-12" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-12-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> export an mcp client&#39;s connection settings (type, url, headers) as a json document
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mcp__mcp_client" class="text-info">mcp_client</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__json" class="text-success">json</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*/usr/ai/mcp/mtron.as(web_json::T)   [-- the client&#39;s settings as a json document --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-13" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-13-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> an int function: the lhs real truncated to an int
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a real" class="text-info">a real</a> <span class="text-light">=&gt;</span> <a href="#the lhs real truncated to an int" class="text-success">the lhs real truncated to an int</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the target type (int::T)'" class="text-info">&#39;the target type (int::T)&#39;</a>
+</pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-14" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-14-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps an instruction doc to a tool specification for llm use
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#instruction documentation" class="text-info">instruction documentation</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the tool type'" class="text-info">&#39;the tool type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-15" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-15-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps a directory to an llm skill where the dir follows the standard SKILL.md structure
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a dir uri containing the llm SKILL.md file" class="text-info">a dir uri containing the llm SKILL.md file</a> <span class="text-light">=&gt;</span> <a href="#a mtron encoding of the specified skill" class="text-success">a mtron encoding of the specified skill</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the skill type'" class="text-info">&#39;the skill type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-16" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-16-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert an html document back to markdown
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__html" class="text-info">html</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__markdown" class="text-success">markdown</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://metatron.phaseshift.studio&gt;.as(markdown::T)   [-- the page&#39;s html as markdown --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-17" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-17-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert a metric distance to an imperial one — bridged through the exact 25.4 millimeters per inch
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -3045,18 +2824,239 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">meter::1.0.as(inch::T)   [-- inch::39.37007874015748 --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-36" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-36-tab">
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-18" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-18-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> import a json document as mcp client(s), merging command/args and env/headers
-maps an obj to objs (rng_c = {0,})</p>
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse a java source file into a rec
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__json" class="text-info">json</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mcp__mcp_client{+}" class="text-success">mcp_client{+}</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__java" class="text-info">java</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/mcp.json&gt;.as(mcp_client::T)   [-- an mcp client imported from the json document --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:.&gt;/Tokens.java.as(rec::T)   [-- the java source parsed into a rec --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-19" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-19-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> a str function: the lhs real rendered as a str
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a real" class="text-info">a real</a> <span class="text-light">=&gt;</span> <a href="#the lhs real as a str" class="text-success">the lhs real as a str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the target type (str::T)'" class="text-info">&#39;the target type (str::T)&#39;</a>
+</pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-20" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-20-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> a datetime to epoch millis
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="#__m__int" class="text-success">int</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__int'" class="text-info">int&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.09/14/30/52/123?tz=+0000&gt;.as(int::T)   [-- the epoch millis of that moment --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-21" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-21-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert a metric distance to another metric unit
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__metric" class="text-info">metric</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__metric" class="text-success">metric</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">meter::1500.0.as(km::T)   [-- km::1.5 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-22" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-22-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> serialize a rec as a markdown document
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__markdown" class="text-success">markdown</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[title=&gt;&#39;metatron&#39;,body=&gt;&#39;greeting&#39;].as(markdown::T)   [-- the rec as a markdown::T document --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-23" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-23-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> normalize a plain str as a csv document
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__str" class="text-info">str</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__csv" class="text-success">csv</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__web__mime__xsv'" class="text-info">xsv&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;city,population; santa fe,45000&#39;.as(csv::T)   [-- the text as a canonical csv::T --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-24" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-24-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert an imperial distance to another imperial unit
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__imperial" class="text-info">imperial</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__imperial" class="text-success">imperial</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">inch::144.0.as(yard::T)   [-- yard::4.0 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-25" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-25-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse a yaml document into a rec
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__yaml" class="text-info">yaml</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/settings.yaml&gt;.as(rec::T)   [-- a yaml document parsed into rec::T --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-26" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-26-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-terminal">terminal</span> a casting function \(f(x) \nearrow \emptyset\): casts the lhs obj to noobj
+maps objs to nothing (rng_c = 0)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="spec-chip spec-generic">generic</span><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#noobj" class="text-success">noobj</a></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-27" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-27-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse an ISO-8601 or docker-style timestamp str into a datetime
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__str" class="text-info">str</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;2026-08-07T19:48:02Z&#39;.as(datetime::T)   [-- &lt;//2026.08.07/19/48/02/000?tz=+0000&gt; --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-28" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-28-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> serialize a rec as an html document
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="m_web.html#__m__web__mime__html" class="text-success">html</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[head=&gt;[title=&gt;&#39;metatron&#39;]].as(html::T)   [-- the rec as an html document --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-29" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-29-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse a json document into a rec
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__json" class="text-info">json</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://localhost:8555/api/status&gt;.as(rec::T)   [-- a json response parsed into rec::T --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-30" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-30-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps a skill to an mcp server exposing its tools and resources
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a skill" class="text-info">a skill</a> <span class="text-light">=&gt;</span> <a href="#an mcp server" class="text-success">an mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the server type'" class="text-info">&#39;the server type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">skill.as(mcp_server::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-31" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-31-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps an agent to a skill by aggregating its features&#39; tools and resources
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an agent" class="text-info">an agent</a> <span class="text-light">=&gt;</span> <a href="#a skill aggregating the agent's capabilities" class="text-success">a skill aggregating the agent&#39;s capabilities</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the skill type'" class="text-info">&#39;the skill type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)]].as(skill::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-32" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-32-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> parse an xml document into a rec
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_web.html#__m__web__mime__xml" class="text-info">xml</a> <span class="text-light">=&gt;</span> <a href="#__m__rec" class="text-success">rec</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__rec'" class="text-info">rec&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;mfs:conf/settings.xml&gt;.as(rec::T)   [-- an xml document parsed into rec::T --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-33" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-33-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> maps a rec to a model
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec" class="text-info">a rec</a> <span class="text-light">=&gt;</span> <a href="#a model" class="text-success">a model</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a rec shaped like a model'" class="text-info">&#39;a rec shaped like a model&#39;</a>
+</pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-34" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-34-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> render an image&#39;s bytes as ascii art — the second arg scales the rendering (default 1.0)
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__bytes" class="text-info">bytes</a> <span class="text-light">=&gt;</span> <a href="m_sys.html#__m__sys__file__image" class="text-success">image</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'__m__code'" class="text-info">code&#39;</a>
+  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__sys__file__image'" class="text-info">image&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/photo.png.as(image::T, 0.5)   [-- the image as a multi-line ascii str --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-35" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-35-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> convert a duration to another time unit — the total is preserved, only the unit label changes
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__time" class="text-info">time</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__time" class="text-success">time</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">millis::1500.0.as(second::T)   [-- second::1.5 --]
+second::90.0.as(minute::T)   [-- minute::1.5 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-36" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-36-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> map a widget to a str::T representation not anchored to a canvas. useful for embedding widget text into other objs.
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_mach_ui.html#__m__mach__ui__widget" class="text-info">widget</a> <span class="text-light">=&gt;</span> <a href="#__m__str" class="text-success">str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
+</pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__as?rng=__m__int&dom=__m__bool-doc-37" role="tabpanel" aria-labelledby="__m__inst__as?rng=__m__int&dom=__m__bool-doc-37-tab">
     <div class="card-body border-top py-2">
@@ -4234,48 +4234,48 @@ gathers objs and produces a single output (rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__merge?rng=__m__str&dom=__m__str{*}">
+</div><div class="card mb-3" id="__m__inst__merge?rng=A{*}&dom=__m__lst">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">merge</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__str{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">str{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span><span class="law-chip law-monoidic" title="monoidic">monoidic</span><span class="law-chip law-pure" title="pure">pure</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__lst" data-bs-toggle="tooltip" title="domain" class="code text-info">lst</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{*}</span></span></span>
         </span>
-        <small class="text-muted code">/m/inst/merge?rng=/m/str&amp;dom=/m/str{*}</small>
+        <small class="text-muted code">/m/inst/merge?rng=A{*}&amp;dom=/m/lst</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?str<=str{*}(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?uri<=uri{*}(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rec<=rel{*}(rec::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?<span class="code text-success">A{*}</span><=lst(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?<span class="code text-success">A{*}</span><=lst(uri::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?<=<span class="code text-info">A{*}</span>(<span class="code text-success">#{*}</span>::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?str<=lst(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?<span class="code text-info"><span class="code text-success">A{*}</span></span><=<span class="code text-info"><span class="code text-success">A{*}</span></span>(<span class="code text-info"><span class="code text-success">A{*}</span></span>::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rel{*}<=rec(){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-1-tab').click();document.getElementById('__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?lst<=<span class="code text-info">A{*}</span>(lst::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?<span class="code text-success">A{*}</span><=lst(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?str<=str{*}(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?uri<=uri{*}(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rec<=rel{*}(rec::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?<span class="code text-success">A{*}</span><=lst(uri::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?str<=lst(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?<span class="code text-info"><span class="code text-success">A{*}</span></span><=<span class="code text-info"><span class="code text-success">A{*}</span></span>(<span class="code text-info"><span class="code text-success">A{*}</span></span>::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?rel{*}<=rec(){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-1-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?lst<=<span class="code text-info">A{*}</span>(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab').click();document.getElementById('__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">merge?<=<span class="code text-info">A{*}</span>(<span class="code text-success">#{*}</span>::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="__m__inst__merge?rng=__m__str&dom=__m__str{*}-pills" role="tablist">
+    <ul class="nav nav-pills p-2 bg-dark" id="__m__inst__merge?rng=A{*}&dom=__m__lst-pills" role="tablist">
         <li class="nav-item disabled me-2">
             <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
         </li>
         <li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2 active text-start h-100"
-        id="__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0"
+        id="__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-1"
+        id="__m__inst__merge?rng=A{*}&dom=__m__lst-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge?rng=A{*}&dom=__m__lst-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
-    <div class="tab-content" id="__m__inst__merge?rng=__m__str&dom=__m__str{*}-content">
-        <div class="tab-pane fade show active" id="__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0" role="tabpanel" aria-labelledby="__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-0-tab">
+    <div class="tab-content" id="__m__inst__merge?rng=A{*}&dom=__m__lst-content">
+        <div class="tab-pane fade show active" id="__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0" role="tabpanel" aria-labelledby="__m__inst__merge?rng=A{*}&dom=__m__lst-doc-0-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-join">join</span> join the barrier given the str arg
 merges parallel streams of objs into a single stream</p>
@@ -4285,7 +4285,7 @@ merges parallel streams of objs into a single stream</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the join token'" class="text-info">&#39;the join token&#39;</a>
 </pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-1" role="tabpanel" aria-labelledby="__m__inst__merge?rng=__m__str&dom=__m__str{*}-doc-1-tab">
+</div><div class="tab-pane fade " id="__m__inst__merge?rng=A{*}&dom=__m__lst-doc-1" role="tabpanel" aria-labelledby="__m__inst__merge?rng=A{*}&dom=__m__lst-doc-1-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-join">join</span> a merging function: prepends the lhs objs to the arg lst (sugar&#39;d &gt;-)
 merges parallel streams of objs into a single stream</p>
@@ -4828,67 +4828,67 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="spec-chip spec-generic">generic</span><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the unchanged lhs obj" class="text-success">the unchanged lhs obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time">
+</div><div class="card mb-3" id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">plus</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="domain" class="code text-info">time</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_math.html#__m__math__time" data-bs-toggle="tooltip" title="range" class="code text-success">time</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__bytes" data-bs-toggle="tooltip" title="domain" class="code text-info">bytes</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__bytes" data-bs-toggle="tooltip" title="range" class="code text-success">bytes</a></span></span><span class="law-chip law-monoidic" title="monoidic">monoidic</span><span class="law-chip law-pure" title="pure">pure</span>
         </span>
-        <small class="text-muted code">/m/inst/plus?rng=/m/math/time&amp;dom=/m/math/time</small>
+        <small class="text-muted code">/m/inst/plus?rng=/m/bytes&amp;dom=/m/bytes</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?time<=time(time::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?bool<=bool(bool::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?bytes<=bytes(bytes::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?int<=int(int::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?imperial<=imperial(imperial::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?real<=real(real::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-1-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?datetime<=datetime(time::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-2-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?str<=str(str::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?code<=code(code::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-3-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?cmplx<=cmplx(cmplx::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?uri{?}<=uri(uri{?}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rel{*}<=rel(rel{*}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-3-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?lst<=lst(lst::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rec<=rec(rec{??}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?metric<=metric(metric::T){<j>}</code></pre>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?bytes<=bytes(bytes::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?bool<=bool(bool::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?int<=int(int::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?real<=real(real::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-1-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?str<=str(str::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?uri{?}<=uri(uri{?}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rel{*}<=rel(rel{*}::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?time<=time(time::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?metric<=metric(metric::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-2-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?lst<=lst(lst::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-3-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?datetime<=datetime(time::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?imperial<=imperial(imperial::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-2-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?cmplx<=cmplx(cmplx::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?code<=code(code::T){<j>}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab').click();document.getElementById('__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?rec<=rec(rec{??}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-pills" role="tablist">
+    <ul class="nav nav-pills p-2 bg-dark" id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-pills" role="tablist">
         <li class="nav-item disabled me-2">
             <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
         </li>
         <li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2 active text-start h-100"
-        id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0"
+        id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-1"
+        id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-2"
+        id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
-        id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-3"
+        id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 4
     </button>
 </li>
     </ul>
-    <div class="tab-content" id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-content">
-        <div class="tab-pane fade show active" id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0" role="tabpanel" aria-labelledby="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-0-tab">
+    <div class="tab-content" id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-content">
+        <div class="tab-pane fade show active" id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0" role="tabpanel" aria-labelledby="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-0-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> add the argument int to the lhs int
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -4904,20 +4904,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 1.plus(plus(1))    [-- 3 nested application --]
 1+(+1)             [-- 3 sugar nested form  --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-1" role="tabpanel" aria-labelledby="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> shift a datetime forward by a duration
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08:09/14/30/00/000?tz=+0000&gt; + second::30.0   [-- &lt;//2026.08:09/14/30/30/000?tz=+0000&gt; --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-2" role="tabpanel" aria-labelledby="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-2-tab">
+</div><div class="tab-pane fade " id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-1" role="tabpanel" aria-labelledby="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-1-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> concatenate two str::T values together
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -4930,7 +4917,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;a&quot; + &quot;b&quot; [-- &quot;ab&quot; --]</code></pre>
 </div>
-</div><div class="tab-pane fade " id="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-3" role="tabpanel" aria-labelledby="__m__inst__plus?rng=__m__math__time&dom=__m__math__time-doc-3-tab">
+</div><div class="tab-pane fade " id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-2" role="tabpanel" aria-labelledby="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-2-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex addition: \((a+bi)+(c+di)=(a+c)+(b+d)i\)
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -4942,6 +4929,19 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0] + cmplx::[3.0,4.0]   [-- cmplx::[4.0,6.0] --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-3" role="tabpanel" aria-labelledby="__m__inst__plus?rng=__m__bytes&dom=__m__bytes-doc-3-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> shift a datetime forward by a duration
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m_math.html#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="m_math.html#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08:09/14/30/00/000?tz=+0000&gt; + second::30.0   [-- &lt;//2026.08:09/14/30/30/000?tz=+0000&gt; --]</code></pre>
 </div>
 </div>
     </div>
