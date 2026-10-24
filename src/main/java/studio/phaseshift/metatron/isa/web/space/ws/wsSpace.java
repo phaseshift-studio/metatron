@@ -217,7 +217,10 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
 
     protected wsSpace(final WebSocketServer server, final Map<Obj, Obj> config, final fURI vid) {
         super(server, config, WS_SPACE_TID, vid);
-        this.cache = memSpace.of(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
+        // the session cache is this space's own, read and written through this field (directReader/directWriter
+        // delegate to it, behind this space's q-procs) and never by address: registered, it claimed this space's
+        // pattern in memory beside the space, and outlived it there once the space was closed
+        this.cache = memSpace.unregistered(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
         // report route-table problems at boot rather than meeting them per connection
         final Obj routes = this.at(ROUTE);
         if (routes.isRec()) {
@@ -271,6 +274,9 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             LOG.info("%s interrupted successfully", this);
         } finally {
             // this.running.set(false);
+            // the space's own close — its on_close farewell, then its claim withdrawn from memory. Without it a closed
+            // wsspace stayed mounted at its vid, claiming its pattern around a stopped server.
+            super.close();
         }
     }
 
