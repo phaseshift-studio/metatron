@@ -18,16 +18,19 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -57,6 +60,21 @@ public class mtron_wsHandlerTest extends AbstractWebSocketServerTest {
                     uri(PATTERN), uri("ws://#"),
                     uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
             ).jvm(), f("/sys/space/ws/mtron-test"));
+        }
+
+        /**
+         * an open session is addressable under the space's authority: the space claims the address and serves it from
+         * its session cache, which is reached through the space and never registered by address itself
+         */
+        @Test
+        public void testSessionIsAddressableThroughTheSpace() throws Exception {
+            this.connectToServer(this.primaryRoutePath());
+            // an answer proves the server has opened the session: the client's open can lead the server's
+            assertNotNull(this.sendAndReceive("1+2"), "the session should answer");
+            final fURI authority = f(WS + "://" + this.wsHost + ":" + this.wsPort + "/#");
+            assertSame(this.space, Machine.current().memory().getSpaceFor(authority), "the space claims its sessions' addresses");
+            assertTrue(this.space.read(authority).stream().anyMatch(WebSocketRec.class::isInstance),
+                    "the open session should be readable through the space");
         }
     }
 }

@@ -26,6 +26,8 @@ import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -37,6 +39,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
@@ -105,5 +108,55 @@ public class ListenerBindTest extends AbstractMetatronTest {
         checkEquality(LOG, mounted(vid), noobj(), false);
         // no settle: a dial right away must find the socket bound
         new Socket(InetAddress.getLoopbackAddress(), port).close();
+    }
+
+    /**
+     * a listener's session cache is its own — read and written through the listener, behind its q-procs — and never
+     * claims an address: while the listener listens, it alone claims its pattern
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "wsspace::[pattern=><ws://127.0.0.1:{{port}}/#>,host=><ws://127.0.0.1:{{port}}>]@/sys/space/test/listener_ws         % /sys/space/test/listener_ws   % ws://127.0.0.1:{{port}}/#",
+            "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http % http://127.0.0.1:{{port}}/#",
+    }, delimiter = '%')
+    public void testSessionCacheClaimsNoAddress(final String construction, final String vid, final String pattern) {
+        final String port = String.valueOf(generatePort());
+        final Obj listener = this.listen(construction.replace("{{port}}", port), vid);
+        assertEquals(List.of(listener), claimants(f(pattern.replace("{{port}}", port))), "the listener alone should claim its pattern");
+    }
+
+    /**
+     * a closed listener is unmounted: memory no longer holds it at its vid, and nothing of it — the listener itself or
+     * its session cache — is left claiming its pattern around a stopped server
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "wsspace::[pattern=><ws://127.0.0.1:{{port}}/#>,host=><ws://127.0.0.1:{{port}}>]@/sys/space/test/listener_ws         % /sys/space/test/listener_ws   % ws://127.0.0.1:{{port}}/#",
+            "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http % http://127.0.0.1:{{port}}/#",
+    }, delimiter = '%')
+    public void testClosedListenerClaimsNothing(final String construction, final String vid, final String pattern) {
+        final String port = String.valueOf(generatePort());
+        CommonUtil.close(this.listen(construction.replace("{{port}}", port), vid));
+        checkEquality(LOG, mounted(vid), noobj(), true);
+        assertEquals(List.of(), claimants(f(pattern.replace("{{port}}", port))), "nothing of a closed listener should claim its pattern");
+    }
+
+    /**
+     * construct a listener from its mtron and answer the space mounted at its vid
+     */
+    private Obj listen(final String construction, final String vid) {
+        checkCodeEvaluate(LOG, construction, "noobj", "noobj");
+        final Obj listener = mounted(vid);
+        checkEquality(LOG, listener, noobj(), false);
+        return listener;
+    }
+
+    /**
+     * the mounted spaces whose pattern is exactly this one
+     */
+    private static List<Obj> claimants(final fURI pattern) {
+        return Machine.current().memory().spaces().jvm().values().stream()
+                .filter(space -> space instanceof Space claimant && pattern.equals(claimant.pattern()))
+                .toList();
     }
 }
