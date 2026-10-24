@@ -646,7 +646,7 @@ public class mdnsDiscovery extends MRec implements Closeable {
         // THE ROOT ROUTE EXTENDS NOTHING. extend("/") is a path of ONE EMPTY SEGMENT, which prints the same as no
         // path but does not equal it -- so a peer announcing route=/ is appended to its own entry on every
         // re-announcement and accumulates a coefficient instead of deduplicating ({12}, measured).
-        return "/".equals(path) ? authority : authority.extend(path);
+        return "/".equals(path) ? authority : authority.extend(f(path));
     }
 
     /**

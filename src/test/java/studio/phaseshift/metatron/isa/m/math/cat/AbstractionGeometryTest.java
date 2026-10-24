@@ -23,22 +23,28 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.algebra.rewrite.Placement;
+import studio.phaseshift.metatron.algebra.rewrite.PlanBuilder;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
+import studio.phaseshift.metatron.algebra.rewrite.Span;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.network.TransportRewriteHarness;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -198,5 +204,53 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
         final Code code = ObjmtronSerializer.parse("start?hops=0({1,2,3,4}).plus(1).sum()").asCode();
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(code);
         assertTrue(path.asRec().at(uri("law_shard")).isNoObj(), "?hops=0 opts the fold out: " + path);
+    }
+
+    /**
+     * The parser memo must not leak a q from one parse into the next: a {@code ?hops=0} on one source must not make
+     * the next source's seed carry it (the position-keyed memo was cleared by buffer identity, which two consecutive
+     * parses can defeat).
+     */
+    @Test
+    public void testHopsQDoesNotLeakAcrossParses() {
+        final Code first = ObjmtronSerializer.parse("start?hops=0({1,2,3,4}).plus(1).sum()").asCode();
+        assertTrue(first.insts().getFirst().tid().hasQ(HOPS), "the first parse declares ?hops=0: " + first);
+        final Code second = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
+        assertFalse(second.insts().getFirst().tid().hasQ(HOPS), "?hops=0 must not leak into the next parse: " + second);
+    }
+
+    /**
+     * The declared-liveness test (§4): a scheme is dialable only when its dialer resolves in the ISA; an unknown
+     * scheme never is.
+     */
+    @Test
+    public void testSchemeSignatureResolves() {
+        assertTrue(Signatures.resolves("ws"), "the ws dialer resolves: /m/web/ws/ws_client");
+        assertFalse(Signatures.resolves("nope"), "an unknown scheme has no dialer");
+    }
+
+    /**
+     * A place is an admissible candidate when some authority's scheme has a dialer in the ISA.
+     */
+    @Test
+    public void testPlaceAdmissibility() {
+        Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
+                uri("ginger.local"), uri("ws://ginger.local:8555"))))));
+        final Obj place = Places.place(uri("//ginger.local"));
+        assertTrue(Places.admissible(place), "a ws place is admissible: " + place);
+    }
+
+    /**
+     * {@code move}: a cut-less plan with a {@code chain} decision ships the whole code to the target place — the
+     * receiver re-plans it. Over a loop peer the shipped program evaluates locally, so the value is the local fold's.
+     */
+    @Test
+    public void testMoveShipsWholeCodeToTarget() {
+        Machine.current().network().connect(f("loop://localhost:8555"));
+        final Code code = ObjmtronSerializer.parse("start(5).plus(1)").asCode();
+        final Code emitted = PlanInterpreter.bind(
+                PlanBuilder.plan("move").where(Placement.chain(f("loop://localhost:8555"), Span.at())).create(), code);
+        checkEquality(LOG, jnt(6),
+                TransportRewriteHarness.single(TransportRewriteHarness.evaluate(emitted)).clone().selfVID(null), true);
     }
 }

@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -36,7 +37,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -66,6 +66,33 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
     protected Thread thread;
     protected final FutureObj<Obj> future = new FutureObj<>();
 
+    private Machine landedPerspective;
+
+    /**
+     * WHERE THIS THREAD ENDED. A frame of reference is per-thread, so work handed to a worker thread moves ITS
+     * perspective and the caller's is untouched -- correct in general, and invisible to a session (a console, a
+     * client) that persists between statements. The worker therefore PUBLISHES the machine it ended in, and a
+     * caller that represents a continuing session adopts it.
+     */
+    public Machine landedPerspective() {
+        return this.landedPerspective;
+    }
+
+    public void landedPerspective(final Machine machine) {
+        this.landedPerspective = machine;
+    }
+
+    /**
+     * Complete this thread's future with {@code result}, recording where the worker landed FIRST. The landing is
+     * captured on the worker thread before the future is done, so a caller blocked in {@link FutureObj#get()} that
+     * then reads {@link #landedPerspective()} observes the landing and never null — there is no race window. This
+     * is the single completion point: a future this thread hands back is only ever done through here.
+     */
+    protected final void complete(final Obj result) {
+        this.landedPerspective = Machine.current();
+        this.future.setObj(result);
+    }
+
     // ======================== Execution ========================
 
     /**
@@ -94,20 +121,22 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                 this.logger().warn("thread currently running, ignoring %s", other);
                 return this.future;
             }
-            this.jvm().put(uri(START), other);
+            this.jvm().put(uri(LHS), other);
             ThreadExecutor.instance().execute(this);
         }
         return this.future;
     }
-    
+
     public AbstractThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, null == vid ? CommonUtil.mintShortUUID(f("~/sys/thread"), true) : vid);
+        super(jvm, tid, null == vid ? CommonUtil.mintShortUUID(CURRENT_SYS_THREAD, true) : vid);
         this.thread = null;
         if (!jvm.containsKey(uri(SOURCE))) {
             final AbstractThread parent = BootLoader.CURRENT_THREAD.get();
             if (null != parent && null != parent.vid())
                 jvm.put(uri(SOURCE), auto_from_(parent.vid()).tryToInst());
         }
+        if (jvm.containsKey(uri(LHS)))
+            this.applyAsync(this.at(uri(LHS)));
     }
 
     protected AbstractThread() {
@@ -167,7 +196,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
 
     /**
      * The Runnable executed by ThreadExecutor.  Evaluates {@code CODE} against
-     * {@code START}, respecting the optional {@code LOOP} interval.  Subclasses
+     * {@code LHS}, respecting the optional {@code LOOP} interval.  Subclasses
      * do not need to override this — the loop semantics are identical for
      * virtual and core threads.
      */
@@ -177,10 +206,9 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                 if (this.jvm().containsKey(uri(LOOP)) && this.at(LOOP).realValue() < 0.0d)
                     this.jvm().remove(uri(LOOP));
                 do {
-                    final Obj result = this.jvm().getOrDefault(uri(CODE), noobj()).apply(this.at(START));
+                    final Obj result = this.jvm().getOrDefault(uri(CODE), noobj()).apply(this.at(LHS));
                     this.jvm().put(uri(RESULT), result);
-                    if (null != this.future)
-                        this.future.setObj(result);
+                    this.complete(result);
                     if (this.thread.isInterrupted() || this.at(STATE).equals(uri(STOP))) {
                         if (!this.thread.isInterrupted())
                             this.thread.interrupt();
@@ -221,8 +249,10 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                     // THE FUTURE IS COMPLETED WITH THE FAIL: a waiter must not outlive the thread it waits on.
                     // An uncompleted future turns a raised error into silence -- get() waits out its timeout and
                     // the fail::T never reaches the caller's catch.
-                    if (null != this.future && !this.future.isDone())
+                    if (null != this.future && !this.future.isDone()) {
+                        this.landedPerspective = Machine.current();
                         this.future.setObj(fail(e));
+                    }
                 }
             } finally {
                 this.stop();
@@ -325,7 +355,7 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
      */
     private static AbstractThread resolveYield(final Obj yieldObj) {
         if (yieldObj.isUri()) {
-            final Obj resolved = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().read(yieldObj.uriValue().qLess());
+            final Obj resolved = Machine.read(yieldObj.uriValue().qLess());
             if (resolved instanceof AbstractThread t)
                 return t;
         } else if (yieldObj.isInst()) {

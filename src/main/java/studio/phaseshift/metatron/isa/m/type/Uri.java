@@ -122,9 +122,7 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
 
     @Override
     default Uri mult(final Uri rhs) {
-        final List<String> path = new ArrayList<>(this.uriValue().path());
-        path.addAll(rhs.uriValue().path());
-        return this.jvm(this.uriValue().path(path)).c(c -> c.mult(rhs.c())).asUri();
+        return this.isOne() ? rhs : rhs.isOne() ? this : this.jvm(this.uriValue().extend(rhs.uriValue())).c(c -> c.mult(rhs.c())).asUri();
     }
 
     default Uri plus(final Uri rhs) {

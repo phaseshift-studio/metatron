@@ -521,7 +521,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     public void testDiffRecRecursion(final String a, final String b, final boolean matches) {
         final Obj aobj = mParser.m_obj().parse(a).get();
         final Obj bobj = mParser.m_obj().parse(b).get();
-        LOG.debug("testing match difference:\n%s", Poly.Helper.diffObjRecursion(aobj, bobj));
+        LOG.warn("testing match difference:\n%s", Poly.Helper.diffObjRecursion(aobj, bobj));
         if (matches)
             assertFalse(Poly.Helper.diffObjRecursion(aobj, bobj).toString().contains("X=>"));
         else

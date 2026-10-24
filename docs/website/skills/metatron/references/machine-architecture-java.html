@@ -460,16 +460,19 @@ answers addresses, while <code>Machine</code> the interface stays a <code>Rec</c
 <h3>Package overview</h3>
 <pre><code>isa/mach/type/Machine.java            ← Machine interface + Component + Machine0 (the contract)
 isa/mach/type/Memory.java             ← Memory interface (relative bindings + absolute space index)
-isa/mach/type/Network.java            ← Network interface (peer roster + authority arithmetic)
+isa/mach/type/Network.java            ← Network interface (peers + roster + authority arithmetic) + Network.Link
 isa/mach/type/Compiler.java           ← Compiler interface (rewrite → resolve → type) + resolve memo
 isa/mach/type/Processor.java          ← Processor interface + Processor.Helper (the runtime core)
 isa/mach/type/ComponentUnion.java     ← frame wrapper: previous()/current(), read-through, close-current
-isa/mach/type/memory/MemoryUnion.java ← the ONE implementation today: frame memory (pattern-aware at())
-                                        (there is no NetworkUnion or InstSetUnion — see &quot;The five components&quot;)
+isa/mach/type/memory/MemoryUnion.java ← the ONE read-through union today: frame memory (pattern-aware at())
+                                        (no InstSetUnion; NetworkUnion is a level of its own — see &quot;The five components&quot;)
 isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
-isa/mach/type/machine/BasicNetwork.java     ← one level of network (roster is the rec)
+isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec)
+isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
+isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
+isa/mach/type/network/PeerSpace.java        ← &lt;vid&gt;/network/peer/# as an address space: members read and deleted by path
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
                                         enclosing machine's (via `previous`)
 isa/mach/type/compiler/…                     ← Compiler impls + parser/rewriter/resolver/typer stages
@@ -485,7 +488,7 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 </thead>
 <tbody>
 <tr><td>Memory</td><td><code>Space, Machine.Component, Closeable</code></td><td>relative bindings (names) + absolute index of spaces</td><td>accumulates (<code>MemoryUnion</code>)</td></tr>
-<tr><td>Network</td><td><code>Machine.Component, Closeable</code></td><td>peer roster <code>authority → transport</code>, <code>own</code>/<code>isPeer</code></td><td><strong>shared</strong> today: the roster lives at <code>/sys/peer</code>, so a child's declaration is the parent's. The union is intended, and needs the roster moved onto the component plus a deny arm</td></tr>
+<tr><td>Network</td><td><code>Addressable, Machine.Component, Closeable</code></td><td>this frame's peers <code>service → peer::T</code> + the root-shared roster, <code>own</code>/<code>isPeer</code>, supervision of links</td><td>a level of its own (<code>NetworkUnion</code>): knowledge (the roster at <code>/network/roster</code>) is shared, reach (<code>peer</code>) is never inherited, and a pop hangs up the frame's dials</td></tr>
 <tr><td>InstSet</td><td><code>Space</code> (via <code>AbstractInstSet</code>)</td><td>the vocabulary: types/insts/rewrites/sugars; <code>import</code> lands here</td><td>accumulates — <code>BasicInstSet</code> is own structure over its imports over the enclosing machine's ISA; membership in the rec under <code>reference</code></td></tr>
 <tr><td>Compiler</td><td><code>Machine.Component, Rec</code></td><td><code>code::T → code::T</code> in three stages</td><td>constructive (inherited/replaced)</td></tr>
 <tr><td>Processor</td><td><code>mThread, Machine.Component</code></td><td><code>code::T → obj</code>; the monadic execution engine</td><td>constructive</td></tr>
@@ -527,7 +530,7 @@ lifetime.</p>
 <tbody>
 <tr><td>memory</td><td><code>MemoryUnion(this.memory())</code> — the child's own spaces over the enclosing memory's</td></tr>
 <tr><td>instset</td><td><code>BasicInstSet(this.instset())</code> — the child's own declarations over the enclosing vocabulary</td></tr>
-<tr><td>network</td><td><strong>shared</strong> today: the roster lives at <code>/sys/peer</code>, so a child's declaration is the parent's — the union is intended, and needs the roster moved onto the component plus a deny arm</td></tr>
+<tr><td>network</td><td><code>NetworkUnion()</code> — a fresh level, NOT a read-through: reach starts empty, knowledge is the one root roster, and the level's supervision is its own</td></tr>
 </tbody>
 </table>
 <p>Reads go <strong>through</strong> (own first, then <code>previous</code>), writes reach only the own level, and a popped frame takes its own
@@ -546,6 +549,46 @@ family rather than a slot. Import order breaks ties.</li>
 read of the vocabulary is a <strong>schema query</strong> — dom/rng admission down the refinement lattice, ranked
 closest-to-the-token — reached through <code>Machine.read</code>: a caller reaching for <code>instset()</code> directly is an optimization of
 that read, never the door.</p>
+<h3>Peer supervision — the network's index kept true</h3>
+<p><code>index</code> and <code>drop</code> are the network's adjoint pair; supervision keeps the map honest between them. The ruling
+(2026-10-21): <strong>only the owner's hang-up removes a peer</strong> — whatever the far side does is a failure, redialed in place.
+The close code cannot carry that distinction anyway: a metatron server shutting down closes its session cache before
+it stops, so its clients see <code>1000</code> whether it is restarting or gone.</p>
+<table>
+<thead>
+<tr><th>piece</th><th>what it does</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Network.Link</code></td><td>the protocol-neutral contract a client holding a live connection implements: <code>connected()</code> (local, no trip), <code>hungUp()</code> (its owner closed it — final), <code>redial()</code> (in place, bounded)</td></tr>
+<tr><td><code>PeerSupervisor</code></td><td>one per network level, in a static identity registry. <code>watch</code> comes from <code>Network.index</code> of a link; <code>release</code> from <code>Network.close()</code>, BEFORE the members are disconnected. Every 500 ms, AS the level's machine: hung up → drop; connected → clear the schedule; down → redial on a virtual thread, 0.5 s doubling to 10 s, one attempt in flight</td></tr>
+<tr><td><code>Network.Helper.retract</code></td><td>the dual of <code>Helper.index</code>: the owner's <code>close()</code> drops the member whose client IS that object (identity, under the level's lock) from every supervised level, at once</td></tr>
+<tr><td><code>WebSocketRecClient</code></td><td>the first <code>Link</code>: <code>reconnect()</code> + a bounded wait (<code>CONNECT_TIMEOUT_MS</code>, which also bounds the TCP connect). <code>reset()</code>'s own <code>closeBlocking()</code> lands in <code>close()</code> — recognized by the redialer thread, so it is not a hang-up. A redial that never opens does not replay <code>on_close</code>/<code>on_error</code></td></tr>
+<tr><td><code>WebSocketRec.onClose</code> / <code>WebSocketObj</code></td><td>a failed link <code>abandon</code>s its in-flight round trips (each answered with a fail at once) and keeps <code>ROUTED</code>, so the redialed connection does not wrap a second router; <code>awaitOpen</code> redials on demand</td></tr>
+</tbody>
+</table>
+<p><strong>Members are addresses (2026-10-21).</strong> A member's key is the dial's own address as a path, one per surface
+(<code>Network.Helper.keyOf</code>: <code>ws://peer.local:8555/mtron?name=me</code> → <code>ws/peer/local/8555/mtron</code> — a legal path, every
+host label its own segment and no dot in any, no <code>?q</code>, loopback aliases spelled <code>localhost</code>; it is <code>fURI.toPath()</code>
+of the dial, the loopback alias spelled first), and the service it reaches is the <code>authority</code> field — wire dispatch (<code>transportOf</code>, <code>isPeer</code>,
+<code>peerOf</code>) and <code>law_shard</code>'s routes match on that, never on the key. <code>Machine.bootstrap()</code> mounts a <code>PeerSpace</code> at
+<code>&lt;vid&gt;/network/peer/#</code> (indexed at <code>&lt;vid&gt;/sys/space/network</code>): it stores nothing and answers from the network on every
+read, so <code>*&lt;/network/peer/ws/localhost/8555/mtron/authority&gt;</code> walks a member by the space's base-poly read, and a noobj
+write there is <code>Network.disconnect</code> — destruction on deletion from mtron. Every other write is refused (a peer is
+constructed, not written). <code>index</code> keeps <strong>no two equivalent connections</strong>: a fresh client at a held key closes the
+member there and takes its place, while indexing the same client again is idempotent; <code>connect</code> still skips the dial
+when the surface is held. <code>disconnect(address)</code> reads what the address names — a key that member, a wire uri with a
+route that surface, a bare authority every surface of the service.</p>
+<p>Three consumers read the link: <code>PlanInterpreter.shardTargets</code> plans only over <code>Network.Helper.online</code> peers (an outage
+shrinks the fan-out), <code>Network.status</code> probes a <code>peer::T</code>'s transport (it reported every dialed peer <code>known</code>) and
+answers <code>down</code> for an offline link without a trip, and <code>index</code>/<code>connect</code> treat a hung-up member as absent so a fresh
+dial is never handed a dead peer.</p>
+<p>Two Java-side facts the design depends on. <code>index</code>, <code>accept</code> and <code>disconnect</code> serialize the peer map's
+read-modify-write on the level, and <code>disconnect</code> clears under the lock but closes outside it — closing a link is a
+hang-up, and a hang-up comes back through <code>retract</code>. And <code>AbstractMachine.close()</code> now closes the network level the
+machine OWNS (<code>network.machine() == this</code>): before, a pop discarded the child's listing and left its sockets open,
+because <code>AbstractMachine.close()</code> overrides the <code>Machine.close()</code> that closed it. And <code>BootLoader.close()</code> runs
+<code>PeerSupervisor.closeAll()</code> after the root's close, so a frame that dialed and was never popped cannot keep a supervisor
+ticking into whatever boots next in the JVM.</p>
 <h3>How one evaluation flows</h3>
 <pre><code>machine.apply(code, start)
   → Machine.current(this)                 // move this thread's perspective
@@ -643,7 +686,7 @@ that is slated to go: an instruction set is vocabulary, not a place.</li>
 <li><strong><code>ComponentUnion.previous()</code> is a rec entry (<code>&gt;&gt;previous</code>), never a Java field, and never <code>Obj.orElse</code>.</strong> The parent
 fallback must be lazy — <code>orElse</code> evaluates the parent unconditionally on every hit.</li>
 <li><strong>Never write a roster under <code>/sys/mach</code>.</strong> The machine claims that address and <code>AbstractSpace</code>'s default writer is a
-no-op, so writes there are silently dropped. The peer roster lives at <code>/sys/peer</code>.</li>
+no-op, so writes there are silently dropped. The roster lives at <code>/network/roster</code>.</li>
 <li><strong><code>push()</code> must mint a child, not the parent.</strong> Use the 3-arg <code>clone</code> — <code>selfVID</code> <em>pins</em> an already-set vid, so a
 2-arg clone would silently keep the parent's address.</li>
 <li><strong>A machine is a space, so its own read is a space read</strong> (<code>AbstractSpace.read</code> → <code>Space.Helper.resolveRead</code>, q-procs
@@ -658,11 +701,8 @@ argument stack.</li>
 <li><code>Memory.ARG_STACK</code> (<code>argFrames</code>) is marked <strong>temporary</strong> — the old per-instruction arg stack, moved into <code>Memory</code>
 so <code>Router</code> could be deleted; it is meant to fold into the frame chain.</li>
 <li><code>ExecutionStack</code> still wraps reads/writes and instruction apply.</li>
-<li><code>BasicNetwork.transportOf</code> still falls back to <code>/sys/peer</code> (a TODO notes the roster should become a frame-level
-projection).</li>
 </ul>
-<p>Any cleanup that lands these three (drop <code>stackSpace</code>, fold <code>argFrames</code> into the frame chain, retire the <code>/sys/peer</code>
-fallback) removes the &quot;two scoping mechanisms at once&quot; ambiguity that is the main source of the current complexity.</p>
+<p>Any cleanup that lands these two (drop <code>stackSpace</code>, fold <code>argFrames</code> into the frame chain) removes the &quot;two scoping mechanisms at once&quot; ambiguity that is the main source of the current complexity.</p>
 <hr />
 <h3>Post-refactor note — <code>Frame</code> class gutted (2026-10-08)</h3>
 <p>The <code>Frame</code> class (and the <code>FRAMES</code> address index) was removed in favor of <code>ThreadLocal&lt;Machine&gt;</code> (<code>CURRENT</code>) as the

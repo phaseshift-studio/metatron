@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
+import studio.phaseshift.metatron.algebra.rewrite.Placement;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
@@ -188,12 +189,16 @@ public class catInstSet extends AbstractInstSet {
                         }),
                         instC(CAT_BIND_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(PLAN_TYPE), (lhs, inst) -> {
                             // bind(plan::T): path → path — the cut-less operator: re-route located code. Requires a
-                            // cut-less plan and a path with an origin; declined (noobj) otherwise.
+                            // cut-less plan, a path with an origin, and an admissible target; declined (noobj) otherwise.
                             final Plan plan = Plan.of(inst.arg(0).asRec());
                             if (null != plan.cut())
                                 return noobj();
                             final Rec path = lhs.asRec();
                             if (path.at(ORIGIN).isNoObj())
+                                return noobj();
+                            // resolve (§4): the decision's target scheme must have a dialer in the ISA — no dial to decide
+                            final Placement decision = plan.where().stream().findFirst().orElse(null);
+                            if (null == decision || null == decision.target() || !Signatures.resolves(decision.target().scheme()))
                                 return noobj();
                             final Code code = path.atDirect(OBJ).asCode();
                             return PATH_TYPE.constructor().apply(realized(PlanInterpreter.bind(plan, code)));

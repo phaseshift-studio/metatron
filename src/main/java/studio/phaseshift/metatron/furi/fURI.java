@@ -212,6 +212,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return hasCapitalGeneric;
     }
 
+    default fURI authoritySchemaLess() {
+        return fURI.of(null, null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+    }
+
     default boolean hasAnchor() {
         if (this.hasScheme())
             return this.scheme().startsWith("@");
@@ -627,6 +631,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     fURI q(final Map<String, String> query);
 
     default fURI addQ(final Map<String, String> query) {
+        if (query.isEmpty())
+            return this;
         final Map<String, String> map = new LinkedHashMap<>(this.qMap());
         map.putAll(query);
         return this.q(map);

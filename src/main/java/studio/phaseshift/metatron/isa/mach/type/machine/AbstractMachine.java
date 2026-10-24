@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static studio.phaseshift.metatron.BootLoader.CLOSING;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -221,6 +222,10 @@ public abstract class AbstractMachine extends MRec implements Machine {
         // pop(). Only the machine the memory was parented to — the root — tears the index down.
         if (this.memory().machine() != this)
             return;
+        // Suppress the logger's "no space embedded logger" fallback while this frame's own log sink is torn down:
+        // the sink lives in the sys space that removeSpace is about to close, so every close-log below would
+        // otherwise read ~/sys/log back as empty and print the notice once per closed space.
+        CLOSING = true;
         try {
             // Snapshot the keys first: removeSpace mutates the index, and removing while iterating the live
             // entry set is a ConcurrentModificationException — which surfaced as a shutdown that reported the
@@ -237,6 +242,8 @@ public abstract class AbstractMachine extends MRec implements Machine {
                     });
         } catch (final Exception e) {
             throw MTronException.of(e);
+        } finally {
+            CLOSING = false;
         }
     }
 

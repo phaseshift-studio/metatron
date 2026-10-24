@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 
 import java.util.ArrayList;
@@ -579,7 +580,9 @@ public interface Stylable<T extends Stylable<T>> {
             if (maxWidth <= 0 || lines == null) return List.of();
             final List<String> out = new ArrayList<>();
             for (final String line : lines) {
-                if (line.length() <= maxWidth) {
+                // measure VISUAL COLUMNS — markup and ANSI stripped — not characters: a markup line whose tags
+                // push its char count past the width would otherwise wrap too early
+                if (Graphitty.viewLength(line) <= maxWidth) {
                     out.add(line);
                 } else {
                     wrapLine(line, maxWidth, out);

@@ -49,6 +49,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -525,6 +526,7 @@ public class mParser {
      * {@link #stripComments(String)} produced before, now carrying the index map.
      */
     private static Prepared prepare(final String code) {
+        PARSE_GENERATION.incrementAndGet();   // a new source → a new memo epoch
         final List<int[]> regions = commentRegions(code);
         int start = 0;
         int end = code.length();
@@ -1553,9 +1555,11 @@ public class mParser {
     // rules (the SettableParsers above) by (position) within a single parse run.
     // This turns the otherwise-exponential backtracking on nested rec/lst literals
     // into guaranteed-linear time (packrat parsing), without changing the grammar.
-    // The cache is keyed by input-buffer reference (each top-level parse owns its
-    // buffer), so a new parse run clears the cache automatically — no manual reset.
+    // The cache is keyed by position and cleared by PARSE_GENERATION — bumped once per
+    // top-level parse (prepare) — so a new parse run never sees a previous run's result,
+    // even when two runs happen to share the same source string.
     public static boolean MEMOIZE = true;
+    private static final AtomicInteger PARSE_GENERATION = new AtomicInteger();
 
     private static final class MemoizedSettableParser extends SettableParser {
         private final ThreadLocal<State> state = ThreadLocal.withInitial(State::new);
@@ -1569,8 +1573,12 @@ public class mParser {
             if (!MEMOIZE)
                 return super.parseOn(context);
             final State s = this.state.get();
-            if (s.buffer != context.getBuffer()) {   // new parse run → clear cache
+            final int generation = PARSE_GENERATION.get();
+            // clear on a new top-level parse (the generation, bumped in prepare) OR a different buffer (a direct
+            // m_obj().parse(...) call that never went through prepare) — either is a fresh parse run.
+            if (s.generation != generation || s.buffer != context.getBuffer()) {
                 s.cache.clear();
+                s.generation = generation;
                 s.buffer = context.getBuffer();
             }
             final int position = context.getPosition();
@@ -1583,6 +1591,7 @@ public class mParser {
         }
 
         private static final class State {
+            private int generation = -1;
             private String buffer;
             private final Map<Integer, Result> cache = new HashMap<>();
         }

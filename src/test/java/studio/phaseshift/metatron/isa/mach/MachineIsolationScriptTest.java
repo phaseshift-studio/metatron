@@ -100,6 +100,24 @@ public class MachineIsolationScriptTest extends AbstractMetatronTest {
     void testMoveLeavesTheFrameStandingWherePopDiscardsIt() {
     }
 
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[STATE] push(a1)",
+            "*~.vid().eq(/a1) % true",
+            "[STATE] push(a2)",
+            "*~.vid().eq(/a1/a2) % true",
+            "[STATE] push(a3)",
+            "*~.vid().eq(/a1/a2/a3) % true",
+            "[STATE] pop()",
+            "*~.vid().eq(/a1/a2) % true",
+            "[STATE] pop()",
+            "*~.vid().eq(/a1) % true",
+            "[STATE] pop()",
+            "*~.vid().eq(</.>) % true",
+    })
+    void testPushPopBasics() {
+    }
+
     /**
      * SIBLINGS, the shape the motif was asked for: one parent, three children, all live at once. Each child is
      * minted from the parent (never from its sibling) and then crossed to BY NAME, which is the only lateral

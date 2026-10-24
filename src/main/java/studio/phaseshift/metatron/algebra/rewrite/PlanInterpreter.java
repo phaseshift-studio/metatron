@@ -123,11 +123,21 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The cut-less distribution rule: the site is the decision's span, not a cut. Phase 6 (move) ships the
-     * chain/star emission; until then a cut-less plan is the identity — the code stands where it stood.
+     * The cut-less distribution rule (§12.1): the site is the decision's span, not a cut. A {@code move} decision
+     * (a {@code chain}/{@code star} shape with a {@code target}) ships the whole code to that place — a hop is a
+     * re-compilation in a new environment (§6.3), so the receiver re-plans the program on compile. Other cut-less
+     * shapes are the identity: the code stands where it stood.
      */
     private static Code relocate(final Plan plan, final Code code, final Env env) {
-        return code;
+        final Placement decision = plan.where().stream().findFirst().orElse(null);
+        if (null == decision || null == decision.target())
+            return code;
+        // a move hop: append the to(<target>) terminal instruction, which ships the WHOLE code as a program — the
+        // transport wraps start(code).to(<>) and the receiver re-plans it (§6.3) — never the code's value (the quine
+        // rule: the payload is a program, not a callable result).
+        final List<Inst> insts = new ArrayList<>(code.insts());
+        insts.add(to_(decision.target()).tryToInst().asInst());
+        return code(insts);
     }
 
     /**

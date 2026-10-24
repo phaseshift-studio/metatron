@@ -895,6 +895,9 @@ every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value c
 </thead>
 <tbody>
 <tr><td><code>obj</code></td><td>the chain itself (the value code)</td></tr>
+<tr><td><code>origin</code></td><td>(optional) where the code starts — the machine's own <code>place::T</code>, attached on lift when the machine answers; absent means not placeable (<code>bind</code> requires it)</td></tr>
+<tr><td><code>where</code></td><td>(optional) the realized placement — span → place, written by the pass that applied a distribution rule: <code>{[span=&gt;at] =&gt; [place…]}</code> lists the places the shard actually shipped to</td></tr>
+<tr><td><code>peer</code></td><td>(optional) the <code>peer::T</code> recs the deployment used</td></tr>
 <tr><td><code>&lt;rule name&gt;</code></td><td>one edge per <strong>live</strong> rewrite — the edge holds the <code>plan::T</code> (see below); <code>lower(plan)</code> applies it and re-lifts</td></tr>
 </tbody>
 </table>
@@ -908,21 +911,21 @@ three steps below are the same vertex after each application — the path shrink
 ==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
-                                       route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
+                                       where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            theory_involution=&gt;plan::[name=&gt;theory_involution,
                                      cut=&gt;[law=&gt;[involution]],
-                                     route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+                                     where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
            derivation_contraction=&gt;plan::[name=&gt;derivation_contraction,
                                           cut=&gt;[role=&gt;derivation],
-                                          route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+                                          where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]
 ==&gt;[path::[obj=&gt;start(5).plus(0),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
-                                       route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
+                                       where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            derivation_contraction=&gt;plan::[name=&gt;derivation_contraction,
                                           cut=&gt;[role=&gt;derivation],
-                                          route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+                                          where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]==[lower(&gt;&gt;theory_unit_removal)]
 ==&gt;[path::[obj=&gt;start(5)]]
 </code></pre>
@@ -938,6 +941,7 @@ real match. A rule the pruner does not know is never pruned.</p>
 </thead>
 <tbody>
 <tr><td><code>obj</code></td><td>the abstract word \(\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)\) — each instruction as its <code>morphism::T</code>: the surface a <code>plan::T</code>'s guard reads (its law/form/theory), the code and its descent staying anchored at <code>path::T.obj</code></td></tr>
+<tr><td><code>where</code></td><td>(optional) the α <strong>place-class word</strong> — the places the code can be distributed TO (its declared roster machines and dialed peers) as a list of <code>place::T</code>; the surface a placement guard reads, the location twin of <code>obj</code>'s instruction word. Absent with no reach, and <code>law_shard</code> is then not a live morphism</td></tr>
 </tbody>
 </table>
 <p>The lift to <code>abstraction::T</code> is <strong>lossy by design</strong>: it carries the pointwise α-image — one <code>morphism::T</code> per
@@ -945,12 +949,11 @@ instruction,
 each already carrying <code>form</code>, <code>class</code>, <code>law</code>, and <code>analysis</code> — not a second concrete chain. Nor is it a vertex one
 descends through: no traversal runs over the abstraction, because it is only the lookup surface from which a <code>plan::T</code>
 derives its rewrite. The guard reads the laws/forms/theories off the word (<code>*…/obj/1/law</code>, <code>*…/obj/2/analysis/inverse</code>)
-and computes its cut/span/route without consulting the code below; the descent (\(\gamma\)) runs only through
+and computes its cut/span/where without consulting the code below; the descent (\(\gamma\)) runs only through
 <code>path::T.obj</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
 ==&gt;[abstraction::[obj=&gt;[morphism[start]::[name=&gt;start,
-                                          form=&gt;mapper,
-                                          class=&gt;[endo],
+                                          form=&gt;initial,
                                           src=&gt;!inst(#{*}::T){&lt;j&gt;},
                                           trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
                                           analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
@@ -988,6 +991,7 @@ and computes its cut/span/route without consulting the code below; the descent (
                                  section,
                                  retraction,
                                  mono,
+                                 epi],
    ...
 </code></pre>
 <h4><code>plan::T</code> — a rewrite rule as a value</h4>
@@ -996,11 +1000,11 @@ value. <code>plan::T</code> is the morphism of the rewrite category (<code>path 
 is introspectable and applicable wherever it is supplied.</p>
 <!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
 <img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
-<p>A plan is always the rec <code>[name, cut, route]</code>; what distinguishes a local plan from a distribution is what its <code>cut</code>
-names and where its <code>route</code> sends it:</p>
+<p>A plan is always the rec <code>[name, cut, where]</code>; what distinguishes a local plan from a distribution is what its <code>cut</code>
+names and where its <code>where</code> sends it:</p>
 <table>
 <thead>
-<tr><th>shape</th><th>the <code>cut</code> reads</th><th>the <code>route</code></th><th>example</th></tr>
+<tr><th>shape</th><th>the <code>cut</code> reads</th><th>the <code>where</code></th><th>example</th></tr>
 </thead>
 <tbody>
 <tr><td><strong>local</strong></td><td>a declared process law — <code>[law =&gt; [...]]</code> — or a theory role — <code>[role =&gt; ...]</code></td><td>stays local (<code>target =&gt; none</code> / <code>local</code>)</td><td><code>law_idempotent</code> → <code>cut =&gt; [law =&gt; [idempotent]]</code>; <code>theory_unit_removal</code> → <code>cut =&gt; [role =&gt; id]</code></td></tr>
@@ -1010,6 +1014,25 @@ names and where its <code>route</code> sends it:</p>
 <p>The application is a <strong>type method</strong>, not a field: <code>lower(plan::T)</code> is one instruction registered in
 <code>catInstSet.insts()</code>, shared by every plan. It matches the plan's <code>cut</code> against the path's code, applies the rewrite,
 and re-lifts the result to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
+<p>A relocation decision in <code>plan.where</code> is <code>[shape, target?, hops?, span]</code> — <code>shape</code> is the topology token
+(<code>local</code> / <code>none</code> / <code>peer</code> / <code>peers</code> / <code>space</code> / <code>tree</code> / <code>shuffle</code>), <code>target</code> the concrete address. Each shape
+declares the laws it demands of a cut shipped to it (§3, two directions):</p>
+<table>
+<thead>
+<tr><th>shape</th><th>obligations</th></tr>
+</thead>
+<tbody>
+<tr><td><code>local</code>, <code>space</code>, <code>none</code></td><td>—</td></tr>
+<tr><td><code>peer</code>, <code>peers</code>, <code>tree</code></td><td><code>monoidic</code>, <code>commutative</code></td></tr>
+<tr><td><code>shuffle</code></td><td><code>monoidic</code></td></tr>
+</tbody>
+</table>
+<p><code>PlanBuilder.create()</code> validates a cut plan against this table (<code>obligations(shape) ⊆ cut.laws</code>); the reverse
+traversal <code>admissible(laws)</code> reads it the other way.</p>
+<p><code>bind(plan::T)</code> is the cut-less operator — the distribution rule. It requires a plan with <strong>no cut</strong> and a path with
+an <code>origin</code>; <code>lower</code> is the cut-plan sibling, and both share one body (<code>apply(plan, env)</code> over an environment
+snapshot). Until the <code>move</code> rule ships (a later phase), a cut-less plan is the identity — the code stands where it
+stood.</p>
 <p><strong>A distribution plan requires peers.</strong> <code>law_shard</code> is live only over a non-empty peer roster: its guard reads the
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
@@ -1027,7 +1050,7 @@ mtron&gt; */network
                         pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                         qless_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                         obj=&gt;[,]]],
-             peer=&gt;[ws://localhost:8555=&gt;peer::[
+             peer=&gt;[ws/localhost/8555/mtron=&gt;peer::[
               authority=&gt;ws://localhost:8555,
               host=&gt;ws://localhost:8555/mtron,
               transport=&gt;inst(#{*}::T){&lt;j&gt;},
@@ -1035,7 +1058,8 @@ mtron&gt; */network
                        send=&gt;inst(){&lt;j&gt;},
                        send_recv=&gt;inst(){&lt;j&gt;},
                        close=&gt;inst(){&lt;j&gt;},
-                       on_message=&gt;print('received ${_}')]]]]
+                       on_message=&gt;print('received ${_}')]]],
+             supervisor=&gt;network_supervisor::[status=&gt;supervising]]
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>
@@ -1044,16 +1068,16 @@ now holding that <code>peer::T</code>, the <code>path::T</code> lists the distri
 ==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
-                                       route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
+                                       where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            derivation_contraction=&gt;plan::[name=&gt;derivation_contraction,
                                           cut=&gt;[role=&gt;derivation],
-                                          route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]],
+                                          where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
            law_shard=&gt;plan::[name=&gt;law_shard,
                              cut=&gt;[form=&gt;reducer,
                                    law=&gt;[monoidic,commutative]],
-                             route=&gt;[[target=&gt;local,
+                             where=&gt;[[shape=&gt;local,
                                       span=&gt;[[span=&gt;at],[span=&gt;post]]],
-                                     [target=&gt;tree,
+                                     [shape=&gt;tree,
                                       hops=&gt;1,
                                       span=&gt;[
                                        [span=&gt;seed,flags=&gt;[partition]],
@@ -1068,24 +1092,40 @@ peer handed a shard with budget left plans it again over its own peers, so the s
 application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start([start?hops=0({1,2,3,4,5}).plus(10).sum()]).select([to(ws://localhost:8555)]).merge().sum(),
+==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
            theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
                                        cut=&gt;[role=&gt;id],
-                                       route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
+                                       where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            derivation_contraction=&gt;plan::[name=&gt;derivation_contraction,
                                           cut=&gt;[role=&gt;derivation],
-                                          route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+                                          where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           law_shard=&gt;plan::[name=&gt;law_shard,
+                             cut=&gt;[form=&gt;reducer,
+                                   law=&gt;[monoidic,commutative]],
+                             where=&gt;[[shape=&gt;local,
+                                      span=&gt;[[span=&gt;at],[span=&gt;post]]],
+                                     [shape=&gt;tree,
+                                      hops=&gt;1,
+                                      span=&gt;[
+                                       [span=&gt;seed,flags=&gt;[partition]],
+                                       [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+                                       [span=&gt;at]]]]]]]
 </code></pre>
 <p>A keyed fold lowers the same way, its master recombining pointwise: <code>merge().sum()</code> deep-merges the partial recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start([start?hops=0({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]).select([to(ws://localhost:8555)]).merge().sum().select([id()=&gt;sum()]),
-           theory_unit_removal=&gt;plan::[name=&gt;theory_unit_removal,
-                                       cut=&gt;[role=&gt;id],
-                                       route=&gt;[[target=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           derivation_contraction=&gt;plan::[name=&gt;derivation_contraction,
-                                          cut=&gt;[role=&gt;derivation],
-                                          route=&gt;[[target=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+==&gt;[path::[obj=&gt;start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()]),
+           law_shard=&gt;plan::[name=&gt;law_shard,
+                             cut=&gt;[form=&gt;reducer,
+                                   law=&gt;[monoidic,commutative]],
+                             where=&gt;[[shape=&gt;local,
+                                      span=&gt;[[span=&gt;at],[span=&gt;post]]],
+                                     [shape=&gt;tree,
+                                      hops=&gt;1,
+                                      span=&gt;[
+                                       [span=&gt;seed,flags=&gt;[partition]],
+                                       [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+                                       [span=&gt;at]]]]]]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1113,6 +1153,35 @@ abstraction, where the graph is small, then <strong>replayed on the path's code<
 values and sites exist (the path-lifting property of a fibration). Must-edges lift unconditionally; may-edges are the
 backtrack points, known in advance — a plan's remaining ◇-count is readable as the degree gap between the path and its
 abstraction. The replayed route <em>is</em> the derivation witness.</p>
+<h3>the fourth lift — places (<code>place::T</code>)</h3>
+<p><code>place::T</code> is the <strong>location coordinate</strong>: the machine a chunk runs on, lifted into the same graph as a vertex beside
+<code>path::T</code>. It is read-through from the machine's two network tables — the <strong>roster</strong> (who is known) and the <strong>peer
+map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
+<pre><code class="language-mtron">mtron&gt; &lt;//ginger.local&gt;.as(place::T)
+==&gt;place::[obj=&gt;//ginger.local,
+           authority=&gt;[&lt;ws://ginger.local:8555&gt;],
+           linked_to=&gt;!inst(#{*}::T){&lt;j&gt;},
+           linked_from=&gt;!inst(#{*}::T){&lt;j&gt;},
+           status=&gt;!inst(#{*}::T){&lt;j&gt;}]
+</code></pre>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>obj</code></td><td>the machine address <code>//host[/path]</code> — <code>host()</code> is the roster key, <code>path()</code> the frame vid (empty = the host's root machine). Who evaluates.</td></tr>
+<tr><td><code>authority</code></td><td>the transports that reach it (<code>scheme://host:port</code>); two aliases of one machine are values, never two places</td></tr>
+<tr><td><code>instset</code></td><td>(optional) the ISAs resolvable here — the vocabulary coordinate</td></tr>
+<tr><td><code>source</code></td><td>(optional) who declared it (<code>mdns</code>, boot profile, a dial)</td></tr>
+<tr><td><code>linked_to</code></td><td><strong>derived</strong> — the peers this machine dialed to this place (outbound edges)</td></tr>
+<tr><td><code>linked_from</code></td><td><strong>derived</strong> — the peers this machine accepted from this place (inbound edges)</td></tr>
+<tr><td><code>status</code></td><td><strong>derived</strong> — <code>known</code> (roster only) / <code>up</code> / <code>down</code> (dialed, probed)</td></tr>
+</tbody>
+</table>
+<p><code>obj</code> and <code>authority</code> are read from the roster once at lift; <code>linked_to</code>/<code>linked_from</code>/<code>status</code> are <code>auto</code> insts that
+re-read the live peer map each dereference (the <code>object::T.morphed_to</code> pattern). The alias quotient is
+<code>sameService</code>: a peer dialed at <code>127.0.0.1</code> links the place whose roster row says <code>0.0.0.0</code> — loopback aliases are one
+place.</p>
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>

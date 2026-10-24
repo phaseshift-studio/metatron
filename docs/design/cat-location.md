@@ -1,13 +1,13 @@
 # cat-location — the fourth lift: places, lanes, resources, located code
 
-**Date:** 2026-10-23
-**Context:** The cat graph has three lifts — types as vertices (`object::T`), insts as edges (`morphism::T`), code
+**Date:** 2026-10-23 **Context:** The cat graph has three lifts — types as vertices (`object::T`), insts as edges
+(`morphism::T`), code
 as a vertex (`path::T` below, `abstraction::T` above) — and `plan::T` lifts a rewrite rule into the same graph as
 data. Nothing here is implemented; it is a proposal for the **location** coordinate of the same graph, so that
-"where to execute" is navigable, prunable and plannable with the machinery the rewrite side already has.
-**Status:** proposal. The six types below do not exist; the examples are `mtron_pre` (not executed by the docs
-pipeline) because they describe shapes that are not yet registered.
-**Authority:** this is a design note under `docs/design/` — a record of a proposal, not a specification. Nothing in
+"where to execute" is navigable, prunable and plannable with the machinery the rewrite side already has. **Status:**
+proposal. The six types below do not exist; the examples are `mtron_pre` (not executed by the docs
+pipeline) because they describe shapes that are not yet registered. **Authority:** this is a design note under
+`docs/design/` — a record of a proposal, not a specification. Nothing in
 `docs/design/` states what the codebase currently does; the authoritative state is `docs/skills/*` (the agent
 references) and the Java sources.
 
@@ -17,15 +17,16 @@ references) and the Java sources.
 
 Two rules, one obligation.
 
-| rule        | projection  | the rule is                         | input → output              | the move         | the obligation |
-|-------------|-------------|-------------------------------------|-----------------------------|------------------|----------------|
-| **semantic**     | execution | a `plan::T` **with a cut**    | `path::T` → `path::T` | `lift` / `lower` | the result is equivalent |
-| **distribution** | location  | a `plan::T` **without a cut** | `path::T` → `path::T` | `lift` / `bind`  | the result is equivalent |
+| rule             | projection | the rule is                   | input → output        | the move         | the obligation           |
+|------------------|------------|-------------------------------|-----------------------|------------------|--------------------------|
+| **semantic**     | execution  | a `plan::T` **with a cut**    | `path::T` → `path::T` | `lift` / `lower` | the result is equivalent |
+| **distribution** | location   | a `plan::T` **without a cut** | `path::T` → `path::T` | `lift` / `bind`  | the result is equivalent |
 
 Both are **equivalence-preserving `code::T` → `code::T` transforms**, and they are one type with one operator (§12):
 a cut selects the semantic rule, its absence selects the distribution rule. The semantic rule changes the *shape* of
 a computation (`plus(0)` disappears, `sum` becomes a shard tree); the distribution rule changes *where* it runs (a
-chain is cut, a tail is shipped, a satellite answers). Neither may change the result set — that is the whole contract, and it is the
+chain is cut, a tail is shipped, a satellite answers). Neither may change the result set — that is the whole contract,
+and it is the
 contract the existing shard tests already assert (`checkEquality` against the local evaluation).
 
 The graph already half-implements the second rule's coupling: `PlanBuilder.validateDistributedObligations()`
@@ -40,16 +41,16 @@ document gives it a vocabulary and both directions.
 The first pass proposed seven new types. Re-read as "this is just a that", six of them turn out to be the graph's
 existing types wearing a location coordinate, and only one is genuinely new.
 
-| proposed | folds into | why it is the same thing | the cost |
-|---|---|---|---|
-| `placement::T`, `rule::T` | **`plan::T` with no cut** | a rule is (site, where); `plan.cut` was already optional, so a cut-less plan *is* the distribution rule — and `rule::T` existed only to unite the two | the word "plan" now covers both; two preconditions, one type |
-| `itinerary::T` | **`path::T` + `origin?`** | a deployment is code plus where it starts; a path with no origin is simply not placeable yet | `path`'s predicate gains `origin?`, `where?`, `peer?` |
-| `geometry::T` | **`abstraction::T` + `where?`** | the α-word of locations is the same lift as the α-word of instructions — one word per code | an abstraction gains one optional place-class word |
-| `link::T` | **`peer::T`** | a dial *is* a peer — `authority`, `host`, `transport`, `client` — already addressable at `~/network/peer/#`; `src`, `scheme` and `state` are derivable | the edge is validated in `/m/mach`, not in the cat graph |
-| `scheme::T`, `shape::T` | **role recs at `/m/math/cat/signature/<token>`** | both are "a name maps to its roles" — the `theory::T` idea as data; the graph cites them, the resolver never needs them as types | no predicate validation (the `Span`/`Route` precedent); promote to a type later if wanted |
-| `thread::T`, `virtual`, `core` | **the `thread`/`workers` fields of a decision** | a thread shares the machine (the executor carries the frame in and publishes it out), so it is the *lane* of a place, not another place | no new type; the constructors' blocking/await gap must be closed (§13.5) |
-| a capacity type | **`place.capacity` + `plan` demand + `env` budget** | capacity is the place's, demand is derived, availability is the env's — no vertex describes them (§14) | the rewrite filters, the executor admits (§14.5) |
-| `env::T` | — | a snapshot value, never a vertex | none |
+| proposed                       | folds into                                          | why it is the same thing                                                                                                                               | the cost                                                                                  |
+|--------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| `placement::T`, `rule::T`      | **`plan::T` with no cut**                           | a rule is (site, where); `plan.cut` was already optional, so a cut-less plan *is* the distribution rule — and `rule::T` existed only to unite the two  | the word "plan" now covers both; two preconditions, one type                              |
+| `itinerary::T`                 | **`path::T` + `origin?`**                           | a deployment is code plus where it starts; a path with no origin is simply not placeable yet                                                           | `path`'s predicate gains `origin?`, `where?`, `peer?`                                     |
+| `geometry::T`                  | **`abstraction::T` + `where?`**                     | the α-word of locations is the same lift as the α-word of instructions — one word per code                                                             | an abstraction gains one optional place-class word                                        |
+| `link::T`                      | **`peer::T`**                                       | a dial *is* a peer — `authority`, `host`, `transport`, `client` — already addressable at `~/network/peer/#`; `src`, `scheme` and `state` are derivable | the edge is validated in `/m/mach`, not in the cat graph                                  |
+| `scheme::T`, `shape::T`        | **role recs at `/m/math/cat/signature/<token>`**    | both are "a name maps to its roles" — the `theory::T` idea as data; the graph cites them, the resolver never needs them as types                       | no predicate validation (the `Span`/`Route` precedent); promote to a type later if wanted |
+| `thread::T`, `virtual`, `core` | **the `thread`/`workers` fields of a decision**     | a thread shares the machine (the executor carries the frame in and publishes it out), so it is the *lane* of a place, not another place                | no new type; the constructors' blocking/await gap must be closed (§13.5)                  |
+| a capacity type                | **`place.capacity` + `plan` demand + `env` budget** | capacity is the place's, demand is derived, availability is the env's — no vertex describes them (§14)                                                 | the rewrite filters, the executor admits (§14.5)                                          |
+| `env::T`                       | —                                                   | a snapshot value, never a vertex                                                                                                                       | none                                                                                      |
 
 Three refusals, and they are deliberate:
 
@@ -63,14 +64,14 @@ Three refusals, and they are deliberate:
 
 The six-sibling table becomes a fold table:
 
-| execution | location | the fold |
-|---|---|---|
-| code vertex `path::T` | `path::T` + `origin`/`where` | one vertex; location optional |
-| α-word `abstraction::T` | `abstraction::T` + `where` (place classes) | one lift, two words |
-| rule `plan::T` | `plan::T` with **no cut** | one rule, two cuts (`lower` / `bind`) |
-| edge `morphism::T` | `peer::T` | the edge set is the peer map |
-| vertex `object::T` | `place::T` (`category::T`) | structural, not nominal |
-| laws `theory::T` | signature recs | role bundles as data |
+| execution               | location                                   | the fold                              |
+|-------------------------|--------------------------------------------|---------------------------------------|
+| code vertex `path::T`   | `path::T` + `origin`/`where`               | one vertex; location optional         |
+| α-word `abstraction::T` | `abstraction::T` + `where` (place classes) | one lift, two words                   |
+| rule `plan::T`          | `plan::T` with **no cut**                  | one rule, two cuts (`lower` / `bind`) |
+| edge `morphism::T`      | `peer::T`                                  | the edge set is the peer map          |
+| vertex `object::T`      | `place::T` (`category::T`)                 | structural, not nominal               |
+| laws `theory::T`        | signature recs                             | role bundles as data                  |
 
 `Route.Target` (LOCAL, PEER, PEERS, TREE, SHUFFLE, NONE) becomes the `shape` token of a `plan.where` decision;
 `Route.url`/`hops` become that decision's target and hop budget; `Route.spans` stay the span description, unchanged —
@@ -113,23 +114,23 @@ shapes — the relation is the object, the projections are its fibers.
 
 Proposed rows (the whole theory is these, and nothing else):
 
-| shape    | obligations                                            | why |
-|----------|--------------------------------------------------------|-----|
-| `local`  | none                                                   | no regrouping, no reordering, no duplication |
-| `none`   | `involution` ∨ `idempotent` ∨ `absorbing` ∨ `poset`    | the isolated span is *deleted* — the unit law's transform |
-| `peer`   | `monoidic`, `commutative` (for a recombined cut)       | one route is a one-slave shard |
-| `peers`  | `monoidic`, `commutative`                              | order-free merge across a set |
-| `tree`   | `monoidic`, `commutative` + a hop budget               | recursive re-association of the same fold |
-| `chain`  | `monoidic` only                                        | **order-preserving**: a non-commutative monoid is admissible here and nowhere else |
-| `shuffle`| `monoidic` + a keyed law (the fold's `derivation`)     | keys route, the value is the per-key fold |
+| shape     | obligations                                         | why                                                                                |
+|-----------|-----------------------------------------------------|------------------------------------------------------------------------------------|
+| `local`   | none                                                | no regrouping, no reordering, no duplication                                       |
+| `none`    | `involution` ∨ `idempotent` ∨ `absorbing` ∨ `poset` | the isolated span is *deleted* — the unit law's transform                          |
+| `peer`    | `monoidic`, `commutative` (for a recombined cut)    | one route is a one-slave shard                                                     |
+| `peers`   | `monoidic`, `commutative`                           | order-free merge across a set                                                      |
+| `tree`    | `monoidic`, `commutative` + a hop budget            | recursive re-association of the same fold                                          |
+| `chain`   | `monoidic` only                                     | **order-preserving**: a non-commutative monoid is admissible here and nowhere else |
+| `shuffle` | `monoidic` + a keyed law (the fold's `derivation`)  | keys route, the value is the per-key fold                                          |
 
 And the second edge family, from the *value* side to the *place* side:
 
-| morphism property | distribution obligation |
-|---|---|
-| `pure` | may be moved, dropped or replicated — any shape |
+| morphism property     | distribution obligation                                              |
+|-----------------------|----------------------------------------------------------------------|
+| `pure`                | may be moved, dropped or replicated — any shape                      |
 | effectful (no `pure`) | may not be replicated or re-run — `local` for any span it appears in |
-| `floatable` | must be co-located with its input's owner |
+| `floatable`           | must be co-located with its input's owner                            |
 
 A third family, for realizability, joins `morphism::T` to a **scheme signature** (this inst may travel only over a
 persistent interface, say) and `place.instset` (this chunk resolves only where its instruction sets are mounted).
@@ -137,8 +138,8 @@ persistent interface, say) and `place.instset` (this chunk resolves only where i
 **Consequence today.** `law_shard`'s lowering checks `Machine.current().network().peers().isEmpty()`, i.e. it gates
 distribution on *dialed* peers — a liveness test that dials. Planned over the roster instead (see §4), `shard`
 becomes prunable and declines only for want of an *admissible shape*, not for want of an eager dial. And a
-non-commutative `monoidic` fold (`str` concatenation) stops being "correctly not sharded" and becomes
-*admissible on `chain`* — decline becomes re-route, which is the missing direction of the Galois pair.
+non-commutative `monoidic` fold (`str` concatenation) stops being "correctly not sharded" and becomes *admissible on
+`chain`* — decline becomes re-route, which is the missing direction of the Galois pair.
 
 ---
 
@@ -146,16 +147,17 @@ non-commutative `monoidic` fold (`str` concatenation) stops being "correctly not
 
 The network has two tables with two meanings, and the location algebra needs both:
 
-- `/network/roster` — **potential** edges: a place, one or more interface addresses, and the *scheme* of each
-  (e.g. `<ginger.local> => {<http://192.168.1.250:8777>, <http://192.168.1.72:8777>}`). Knowledge, root-scoped.
+- `/network/roster` — **potential** edges: a place, one or more interface addresses, and the *scheme* of each (e.g.
+  `<ginger.local> => {<http://192.168.1.250:8777>, <http://192.168.1.72:8777>}`). Knowledge, root-scoped.
 - `~/network/peer` — **realized** edges: `peer::T` with `authority`, `host`, `transport` (an inst) and `client`
   (`ws_client::[host, send, send_recv, close, on_message]`). Reach, machine-scoped.
 
-A **candidate dial** is live under a **declared** test, mirroring the rewrite side's type-part/value-residue split. The test
+A **candidate dial** is live under a **declared** test, mirroring the rewrite side's type-part/value-residue split. The
+test
 is a type check, not an address comparison — the required interface class against the place's schemes (which is why
 no `where` instruction is needed, §8):
 
-> **live(dial) ⟺ the required interface class is among the place's `authority` schemes, that scheme signature's
+> **live (dial) ⟺ the required interface class is among the place's `authority` schemes, that scheme signature's
 > `dialer` resolves in `place.instset`, and the place is in the roster with a state that is not `down`.** No dial is
 > attempted to decide liveness.
 
@@ -232,11 +234,11 @@ move(</path>).map(<gathered value>).<tail>          [-- map is the mid-expressio
 inside the transport's `start(P).to(<> )` wrapper. The two topologies from the earlier discussion are then two
 *bracketings of the same link composite*:
 
-| | star | nest |
-|---|---|---|
-| binding | `o→A`, `A→o`, `o→B` — each hop bound by the origin | `o→A`, `A→B` — each hop bound where the computation stands |
-| requires | origin reaches every hop | each node reaches the next |
-| value path | one round trip per hop through the origin | values bubble back up the nesting |
+|            | star                                               | nest                                                       |
+|------------|----------------------------------------------------|------------------------------------------------------------|
+| binding    | `o→A`, `A→o`, `o→B` — each hop bound by the origin | `o→A`, `A→B` — each hop bound where the computation stands |
+| requires   | origin reaches every hop                           | each node reaches the next                                 |
+| value path | one round trip per hop through the origin          | values bubble back up the nesting                          |
 
 **Equivalence obligation.** Re-association is result-preserving iff every intermediate `link` exists, the laws hold
 at each cut, and intermediate values are serialization-idempotent (strip vids, deterministic re-typing). Where those
@@ -249,7 +251,8 @@ fail — local moves after a hop, failure handling location, deadlines, the extr
 
 `where` is free, and precisely because **location is not an instruction**: the machine's location is realized as a
 type check — `isa(type::T)` — and the URI-filter `where` inst is a leftover of the pre-`isa` world. It is already
-disabled (its implementation sits inside a `/* … */` block in [Uri.java](../../src/main/java/studio/phaseshift/metatron/isa/m/type/Uri.java#L449-L468),
+disabled (its implementation sits inside a `/* … */` block
+in [Uri.java](../../src/main/java/studio/phaseshift/metatron/isa/m/type/Uri.java#L449-L468),
 with only the `WHERE_INST_TID` constant and a stale blocking-list entry remaining), and it is being deleted outright.
 That leaves the key unambiguous, and it makes the placement guard a type test rather than an address comparison: "is
 this place an endpoint of the required interface class?" is an `isa` over the place's type, answered without dialing.
@@ -259,8 +262,8 @@ several of them, as instructions — so the name never needed to be free; it is 
 - `plan::T` becomes `[name, cut, where]`, and **`where` holds relocation recs** — a list, one per span group,
   mirroring today's `route` list (each decision is the `Placement` builder's rec: `span`, `shape`, `target`,
   `interface?`, `hops?`, `law?`);
-- a decision's `target` is a place (or a place class), so "where to execute" is navigable
-  (`plan>>where>>target`) rather than buried;
+- a decision's `target` is a place (or a place class), so "where to execute" is navigable (`plan>>where>>target`) rather
+  than buried;
 - a decision's *guard* is `isa` over the place/interface type (§4's declaration-only test), the same distinction the
   rewrite side draws between the type-part and the value-residue of a guard;
 - the word *route* is left to the rewrite side, where the cat doc already uses it for the sequence of rule names
@@ -335,13 +338,14 @@ Field by field, so it can be transcribed into `catInstSet` / `catTypes` without 
    `this.atDirect(key)`, as `morphism::T`, `object::T` and `path::T` do.
 2. **Keys are uris drawn from `Tokens`.** Reuse first: `obj`, `authority`, `instset`, `source`, `cost`, `scheme`,
    `state`, `transport`, `status`, `cut`, `law`, `span`, `flags`, `target`, `hops`, `interface`, `name`, `result`.
-   Thirteen are new: `where`, `origin`, `shape`, `dialer`, `capability`, `linked_to`, `linked_from`, `thread`, `workers`,
+   Thirteen are new: `where`, `origin`, `shape`, `dialer`, `capability`, `linked_to`, `linked_from`, `thread`,
+   `workers`,
    `capacity`, `cores`, `memory`, `budget` (§11.9).
 3. **A reference is an embedded rec, a token uri (resolved through the graph), or a vid.**
 4. **Derived sets are `auto` insts, never stored** — the `object::T.morphed_to/from` precedent. `place.linked_to`,
    `place.linked_from`, `place.status`, `place.cost` are computed; no index to maintain, no staleness.
-5. **The network component is the truth.** A place is a **read-through projection** of the roster and the peer map
-   (the `PeerSpace` precedent), and the **edges are the peer map itself** — no edge type is introduced.
+5. **The network component is the truth.** A place is a **read-through projection** of the roster and the peer map (the
+   `PeerSpace` precedent), and the **edges are the peer map itself** — no edge type is introduced.
 6. **No new families.** `place::T` is `tid(CATEGORY_TID)`; `path::T`, `abstraction::T` and `plan::T` keep their tids
    and vids. `plan.cut` was already optional, which is what lets the distribution rule be a plan.
 7. **Nothing that is a query becomes a type; nothing that is a peer becomes an edge type; nothing that is a role map
@@ -366,23 +370,23 @@ plan::T ──cut?──▶ (form | law | role)     plan::T ──where{+}──
                                                     └── target ──▶ place::T (or a place pattern)
 ```
 
-| from.field | to | kind | meaning |
-|---|---|---|---|
-| `place.obj` | host | embed | the vertex: a machine name, not an alias |
-| `place.authority` | interface uris | value | every address the place answers at |
-| `place.instset` | instset vids | token | the ISAs resolvable there |
-| `place.linked_to` / `linked_from` | peer recs | **derived** | the dialed edges, out and in |
-| `path.obj` | `code::T` | embed | the chain |
-| `path.origin` | `place::T` | embed | where the code starts (absent ⇒ not placeable) |
-| `path.where` | span → `place::T` | embed | the realized placement |
-| `path.peer` | peer recs | embed | the edges the deployment used |
-| `abstraction.obj` | `morphism::T{*}` | embed | the α instruction word |
-| `abstraction.where` | place patterns | embed | the α place-class word |
-| `plan.cut` | a cut selector | embed | form/law/role; **absent ⇒ a distribution rule** |
-| `plan.where` | relocation recs | embed | span + shape + target (+ interface, hops, law) |
-| `plan.where.shape` | a signature rec | token | the topology and its obligations |
-| `plan.where.interface` | a signature rec | token | the required interface class |
-| `plan.where.target` | `place::T` | embed / pattern | an authority, or a place class |
+| from.field                        | to                | kind            | meaning                                         |
+|-----------------------------------|-------------------|-----------------|-------------------------------------------------|
+| `place.obj`                       | host              | embed           | the vertex: a machine name, not an alias        |
+| `place.authority`                 | interface uris    | value           | every address the place answers at              |
+| `place.instset`                   | instset vids      | token           | the ISAs resolvable there                       |
+| `place.linked_to` / `linked_from` | peer recs         | **derived**     | the dialed edges, out and in                    |
+| `path.obj`                        | `code::T`         | embed           | the chain                                       |
+| `path.origin`                     | `place::T`        | embed           | where the code starts (absent ⇒ not placeable)  |
+| `path.where`                      | span → `place::T` | embed           | the realized placement                          |
+| `path.peer`                       | peer recs         | embed           | the edges the deployment used                   |
+| `abstraction.obj`                 | `morphism::T{*}`  | embed           | the α instruction word                          |
+| `abstraction.where`               | place patterns    | embed           | the α place-class word                          |
+| `plan.cut`                        | a cut selector    | embed           | form/law/role; **absent ⇒ a distribution rule** |
+| `plan.where`                      | relocation recs   | embed           | span + shape + target (+ interface, hops, law)  |
+| `plan.where.shape`                | a signature rec   | token           | the topology and its obligations                |
+| `plan.where.interface`            | a signature rec   | token           | the required interface class                    |
+| `plan.where.target`               | `place::T`        | embed / pattern | an authority, or a place class                  |
 
 ### 11.2 `place::T` — the only new type
 
@@ -405,18 +409,18 @@ vid; empty = the host's root machine `/.`). It is the machine that evaluates —
 not the transport. `authority` is the set of **transports** that reach that machine (the scheme-carrying, plural
 side); `obj` is scheme-less identity, `authority` is scheme-carrying reach.
 
-| field | type | presence | meaning |
-|---|---|---|---|
-| `obj` | `uri` | required | the machine address `//host[/path]` — who evaluates (`host()` = roster key, `path()` = frame vid) |
-| `authority` | `uri{+}` | required | the transports that reach it; two aliases of one machine are **values**, never two places |
-| `instset` | `uri{*}` | optional | ISAs resolvable here (the vocabulary coordinate) |
-| `source` | `uri` | optional | who declared it (`mdns`, boot profile, a dial) |
-| `mounts` | `uri{*}` | optional | the spaces **owned** here (the data coordinate, §14.7) |
-| `linked_to` | `rec{*}` | **derived** | outbound peers to this place |
-| `linked_from` | `rec{*}` | **derived** | inbound peers from this place |
-| `status` | `uri` | **derived** | `up` / `down` / `known` |
-| `cost` | `rec` | **derived** | `[rtt, bytes]`, the price, the minimum over the dials |
-| `capacity` | `rec` | optional | `[cores, memory]` — the **effective** bound (cgroup/`ActiveProcessorCount` aware), §14 |
+| field         | type     | presence    | meaning                                                                                           |
+|---------------|----------|-------------|---------------------------------------------------------------------------------------------------|
+| `obj`         | `uri`    | required    | the machine address `//host[/path]` — who evaluates (`host()` = roster key, `path()` = frame vid) |
+| `authority`   | `uri{+}` | required    | the transports that reach it; two aliases of one machine are **values**, never two places         |
+| `instset`     | `uri{*}` | optional    | ISAs resolvable here (the vocabulary coordinate)                                                  |
+| `source`      | `uri`    | optional    | who declared it (`mdns`, boot profile, a dial)                                                    |
+| `mounts`      | `uri{*}` | optional    | the spaces **owned** here (the data coordinate, §14.7)                                            |
+| `linked_to`   | `rec{*}` | **derived** | outbound peers to this place                                                                      |
+| `linked_from` | `rec{*}` | **derived** | inbound peers from this place                                                                     |
+| `status`      | `uri`    | **derived** | `up` / `down` / `known`                                                                           |
+| `cost`        | `rec`    | **derived** | `[rtt, bytes]`, the price, the minimum over the dials                                             |
+| `capacity`    | `rec`    | optional    | `[cores, memory]` — the **effective** bound (cgroup/`ActiveProcessorCount` aware), §14            |
 
 The edge values are the network's own `peer::T` recs — typed and validated in `/m/mach`, reachable at
 `~/network/peer/<key>` — so the cat graph never declares an edge type and never depends on mach.
@@ -435,22 +439,22 @@ path::[obj    => start([start?hops=0({1,2,3}).plus(10).sum()]).select([to(ws://g
       ]
 ```
 
-| field | type | presence | meaning |
-|---|---|---|---|
-| `obj` | `code::T` | required | the chain (unchanged) |
-| `origin` | `place::T` | optional | where the code starts; **`bind` requires it** |
-| `where` | `rec` | optional | span → place; the realized placement |
-| `peer` | `rec{*}` | optional | the peers the deployment used |
-| `‹rule name›` | `plan::T` | out-edge | one per live rule — semantic or distribution |
+| field         | type       | presence | meaning                                       |
+|---------------|------------|----------|-----------------------------------------------|
+| `obj`         | `code::T`  | required | the chain (unchanged)                         |
+| `origin`      | `place::T` | optional | where the code starts; **`bind` requires it** |
+| `where`       | `rec`      | optional | span → place; the realized placement          |
+| `peer`        | `rec{*}`   | optional | the peers the deployment used                 |
+| `‹rule name›` | `plan::T`  | out-edge | one per live rule — semantic or distribution  |
 
 ### 11.4 `abstraction::T` — extended (the α-word, located)
 
 `obj` is unchanged (the pointwise `morphism::T` word). Add one optional word:
 
-| field | type | presence | meaning |
-|---|---|---|---|
-| `obj` | `morphism::T{*}` | required | the α instruction word (unchanged) |
-| `where` | `category{*}` | optional | the α **place-class** word: `place::T` patterns — `any ws peer`, `any place with /m/tble` |
+| field   | type             | presence | meaning                                                                                   |
+|---------|------------------|----------|-------------------------------------------------------------------------------------------|
+| `obj`   | `morphism::T{*}` | required | the α instruction word (unchanged)                                                        |
+| `where` | `category{*}`    | optional | the α **place-class** word: `place::T` patterns — `any ws peer`, `any place with /m/tble` |
 
 ```mtron_pre
 abstraction::[obj   => [morphism[start]::…, morphism[plus]::…, morphism[sum]::…],
@@ -490,22 +494,59 @@ plan::[name  => <shard_lanes>,
 The `isaPredicate` gains one row, next to `uri(CUT)`:
 
 ```java
-uri(WHERE).maybe().asUri(), lst(rec(
-        uri(SPAN),  lst(rec(uri(SPAN), URI_TYPE, uri(FLAGS).maybe(), lst(URI_TYPE))),
-        uri(SHAPE), URI_TYPE,
-        uri(TARGET), ALL_TYPE,
-        uri(INTERFACE).maybe().asUri(), URI_TYPE,
-        uri(HOPS).maybe().asUri(), JNT_TYPE,
-        uri(THREAD).maybe().asUri(), URI_TYPE,
-        uri(WORKERS).maybe().asUri(), JNT_TYPE,
-        uri(LAW).maybe().asUri(), lst(LAW_TYPE)))
+uri(WHERE).
+
+maybe().
+
+asUri(),lst(
+
+rec(
+        uri(SPAN),lst(
+
+rec(uri(SPAN),URI_TYPE,uri(FLAGS).
+
+maybe(),lst(URI_TYPE))),
+
+uri(SHAPE),URI_TYPE,
+
+uri(TARGET),ALL_TYPE,
+
+uri(INTERFACE).
+
+maybe().
+
+asUri(),URI_TYPE,
+
+uri(HOPS).
+
+maybe().
+
+asUri(),JNT_TYPE,
+
+uri(THREAD).
+
+maybe().
+
+asUri(),URI_TYPE,
+
+uri(WORKERS).
+
+maybe().
+
+asUri(),JNT_TYPE,
+
+uri(LAW).
+
+maybe().
+
+asUri(),lst(LAW_TYPE)))
 ```
 
 ### 11.6 signatures — schemes and shapes as role recs
 
 Both are "a name maps to its roles", which is what `theory::T` already means; they are **data the plan cites**, not
-types the resolver needs. Store them at `/m/math/cat/signature/<token>` and register the short-name aliases
-(`star`, `ws`, …) the plans use.
+types the resolver needs. Store them at `/m/math/cat/signature/<token>` and register the short-name aliases (`star`,
+`ws`, …) the plans use.
 
 ```mtron_pre
 [-- at /m/math/cat/signature/star --]   signature::[law => [monoidic, commutative]]
@@ -536,34 +577,34 @@ differs" is then a q comparison.
 
 ### 11.8 The lifts and the operators
 
-| registration | meaning |
-|---|---|
-| `as(…)` → `cat:place::T` | a roster row / host → a place |
-| `as(…)` → `cat:path::T` | code → a path (unchanged); an origin is attached when the machine has one |
-| `as(…)` → `cat:abstraction::T` | a path → its α-word (instruction word + place-class word) |
-| `lower?path<=path(plan)` | apply a rule **with a cut**: locate, place, emit, re-lift |
-| `bind?path<=path(plan)` | apply a **cut-less** rule to a path with an origin: re-route, emit, re-lift |
+| registration                   | meaning                                                                     |
+|--------------------------------|-----------------------------------------------------------------------------|
+| `as(…)` → `cat:place::T`       | a roster row / host → a place                                               |
+| `as(…)` → `cat:path::T`        | code → a path (unchanged); an origin is attached when the machine has one   |
+| `as(…)` → `cat:abstraction::T` | a path → its α-word (instruction word + place-class word)                   |
+| `lower?path<=path(plan)`       | apply a rule **with a cut**: locate, place, emit, re-lift                   |
+| `bind?path<=path(plan)`        | apply a **cut-less** rule to a path with an origin: re-route, emit, re-lift |
 
 `lower` and `bind` are the *same body* (§12.1) with different preconditions; they stay two names because they are two
 kinds of equivalence (semantic and distribution).
 
 ### 11.9 New tokens (thirteen)
 
-| token | for | analogue |
-|---|---|---|
-| `where` | `plan.where`, `path.where`, `abstraction.where` | `cut` |
-| `origin` | `path.origin` | `src` |
-| `shape` | a relocation decision's topology | `target` |
-| `dialer` | a scheme signature's client type | `op` |
-| `capability` | a scheme signature's features | `law` |
-| `linked_to` | `place.linked_to` | `morphed_to` |
-| `linked_from` | `place.linked_from` | `morphed_from` |
-| `thread` | a decision's lane kind (`virtual`, `core`) | `shape` |
-| `workers` | a decision's fan-out width | `hops` |
-| `capacity` | `place.capacity` | `cost` |
-| `cores` | capacity / quota / budget | `hops` |
-| `memory` | capacity / budget | `hops` |
-| `budget` | `env.capacity` | — |
+| token         | for                                             | analogue       |
+|---------------|-------------------------------------------------|----------------|
+| `where`       | `plan.where`, `path.where`, `abstraction.where` | `cut`          |
+| `origin`      | `path.origin`                                   | `src`          |
+| `shape`       | a relocation decision's topology                | `target`       |
+| `dialer`      | a scheme signature's client type                | `op`           |
+| `capability`  | a scheme signature's features                   | `law`          |
+| `linked_to`   | `place.linked_to`                               | `morphed_to`   |
+| `linked_from` | `place.linked_from`                             | `morphed_from` |
+| `thread`      | a decision's lane kind (`virtual`, `core`)      | `shape`        |
+| `workers`     | a decision's fan-out width                      | `hops`         |
+| `capacity`    | `place.capacity`                                | `cost`         |
+| `cores`       | capacity / quota / budget                       | `hops`         |
+| `memory`      | capacity / budget                               | `hops`         |
+| `budget`      | `env.capacity`                                  | —              |
 
 Everything else is an existing key. `instset` on a place is the existing `category::T.instset` with its original
 meaning — the ISAs from which morphisms are generated *here* — which is exactly the vocabulary coordinate.
@@ -589,20 +630,53 @@ public static final fURI PLACE_TID = CATEGORY_TID.extend("place");
 public static Type PLACE_TYPE;
 
 // catTypes — place (the one new block), plus three predicate deltas on existing types
-PLACE_TYPE = Type.Builder.build()
-        .tid(CATEGORY_TID)
-        .vid(PLACE_TID)
-        .isaPredicate(rec(
-                uri(OBJ), union_(STR_TYPE, URI_TYPE),
-                uri(AUTHORITY), lst(URI_TYPE),
-                uri(INSTSET).maybe(), lst(URI_TYPE),
-                uri(SOURCE).maybe(), URI_TYPE,
-                uri(COST).maybe(), REC_TYPE,           // derived
-                uri(LINKED_TO).maybe(), lst(REC_TYPE), // derived
-                uri(LINKED_FROM).maybe(), lst(REC_TYPE),// derived
-                uri(STATUS).maybe(), URI_TYPE))        // derived
-        .constructor(arg -> place(arg))
-        .create();
+PLACE_TYPE =Type.Builder.
+
+build()
+        .
+
+tid(CATEGORY_TID)
+        .
+
+vid(PLACE_TID)
+        .
+
+isaPredicate(rec(
+        uri(OBJ),union_(STR_TYPE,URI_TYPE),
+
+uri(AUTHORITY),lst(URI_TYPE),
+
+uri(INSTSET).
+
+maybe(),lst(URI_TYPE),
+
+uri(SOURCE).
+
+maybe(),URI_TYPE,
+
+uri(COST).
+
+maybe(),REC_TYPE,           // derived
+
+uri(LINKED_TO).
+
+maybe(),lst(REC_TYPE), // derived
+
+uri(LINKED_FROM).
+
+maybe(),lst(REC_TYPE),// derived
+
+uri(STATUS).
+
+maybe(),URI_TYPE))        // derived
+        .
+
+constructor(arg ->
+
+place(arg))
+        .
+
+create();
 
 // PATH_TYPE      += uri(ORIGIN).maybe().asUri(), T(PLACE_TID),
 //                    uri(WHERE).maybe().asUri(), rec(...),
@@ -637,13 +711,13 @@ record.
 
 ### 12.2 One code vertex, one α-word, one rule
 
-| | semantic (execution) | distribution (location) |
-|---|---|---|
-| rule | `plan::T` with a `cut` | `plan::T` with no `cut` |
-| code vertex | `path::T` (`obj` only) | `path::T` with `origin`/`where`/`link` |
-| α-word | `abstraction::T.obj` (morphisms) | `abstraction::T.where` (place classes) |
-| operator | `lower` | `bind` |
-| lift | `as(cat:path::T)` | `as(cat:path::T)` + the machine's place as `origin` |
+|             | semantic (execution)             | distribution (location)                             |
+|-------------|----------------------------------|-----------------------------------------------------|
+| rule        | `plan::T` with a `cut`           | `plan::T` with no `cut`                             |
+| code vertex | `path::T` (`obj` only)           | `path::T` with `origin`/`where`/`link`              |
+| α-word      | `abstraction::T.obj` (morphisms) | `abstraction::T.where` (place classes)              |
+| operator    | `lower`                          | `bind`                                              |
+| lift        | `as(cat:path::T)`                | `as(cat:path::T)` + the machine's place as `origin` |
 
 Three observations that make the commingling precise:
 
@@ -694,28 +768,49 @@ hard-codes "distributed ⇒ monoidic + commutative". After:
 ```java
 final Plan shard = PlanBuilder.plan("law_shard")
         .cut(Cut.reducer(Law.monoidic, Law.commutative))
-        .where(Placement.of(SHAPE_TREE).interface(SCHEME_WS).hops(1)
-                        .spans(Span.seed().partition(), Span.before().floatable(), Span.at()),
-               Placement.of(SHAPE_LOCAL).spans(Span.at(), Span.after()))
-        .create();
+        .where(Placement.of(SHAPE_TREE).
+interface(SCHEME_WS).
+
+hops(1)
+                        .
+
+spans(Span.seed().
+
+partition(),Span.
+
+before().
+
+floatable(),Span.
+
+at()),
+        Placement.
+
+of(SHAPE_LOCAL).
+
+spans(Span.at(),Span.
+
+after()))
+        .
+
+create();
 
 // the intra-machine sibling: the same fold, no peers required
 final Plan lanes = PlanBuilder.plan("law_shard_lanes")
         .cut(Cut.reducer(Law.monoidic, Law.commutative))
         .where(Placement.of(SHAPE_LANES).thread(THREAD_VIRTUAL).workers(4)
-                        .spans(Span.seed().partition(), Span.before().floatable(), Span.at()))
+                .spans(Span.seed().partition(), Span.before().floatable(), Span.at()))
         .create();
 ```
 
 ### 12.5 `PlanInterpreter` — what changes
 
-| today | after |
-|---|---|
-| `lowerCut(plan, code)` switches on `cut.role()` / `cut.form()` | `locate(plan, code)` keeps that switch (Thm 17 unchanged); a cut-less plan's site is its decision's span |
+| today                                                                                                                                             | after                                                                                                                                                                    |
+|---------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `lowerCut(plan, code)` switches on `cut.role()` / `cut.form()`                                                                                    | `locate(plan, code)` keeps that switch (Thm 17 unchanged); a cut-less plan's site is its decision's span                                                                 |
 | `shard(plan, code)` reads `Machine.current().network().peers()`, `hops(plan, code)`, and builds `start([…]).select([to(…)]).merge()` + the retype | `resolve(where, env)` prunes over the declared topology and picks a shape; `emit(shape, regions, targets)` builds the layout — the *same* builder, callable by any shape |
-| a `Route` per plan | the decision recs: `span`, `shape`, `target`, `interface`, `hops`, `thread`, `workers`, `law` |
-| the peer gate inside `shard` | `env.candidates(decision)` — declared liveness (§4), no dial |
-| the interpreter reads `Machine.current()` | `apply(plan, env)` takes the snapshot; nothing inside reads the machine |
+| a `Route` per plan                                                                                                                                | the decision recs: `span`, `shape`, `target`, `interface`, `hops`, `thread`, `workers`, `law`                                                                            |
+| the peer gate inside `shard`                                                                                                                      | `env.candidates(decision)` — declared liveness (§4), no dial                                                                                                             |
+| the interpreter reads `Machine.current()`                                                                                                         | `apply(plan, env)` takes the snapshot; nothing inside reads the machine                                                                                                  |
 
 - **One emitter.** `shard`'s assembly generalizes: `tree`/`peers` → `select` + `merge`; `chain`/`peer` →
   sequential forwards; `lanes` → spawn one `thread(|part)` per worker and fold at the latch; `local`/`none` →
@@ -763,8 +858,8 @@ folded). Increment 5 (`bind`) no longer adds `itinerary`/`geometry` — it exten
 
 `thread::T` is `[code, source?, time?, runtime?, yield?, loop?, state?, result?]`, refined by `virtual::T` and `core::T`
 (`machInstSet` lines 134-147). The executor is the point: `ThreadExecutor.execute(AbstractThread)` captures the
-caller's `Machine.current()` and sets it on the worker, then publishes the worker's landing back
-(`ThreadExecutor` lines 221-242). So a thread **inherits the frame** — memory, instset, network, origin — and differs
+caller's `Machine.current()` and sets it on the worker, then publishes the worker's landing back (`ThreadExecutor` lines
+221-242). So a thread **inherits the frame** — memory, instset, network, origin — and differs
 only in the executing processor.
 
 That makes a thread the **place at distance zero**: the same site, another lane. It is *not* a `place::T` — no
@@ -776,11 +871,11 @@ of a place.
 A relocation decision now reads: *which region* (`span`), *combined how* (`shape`), *at which place* (`target`,
 absent = the origin), *on which lane* (`thread`), *how many* (`workers`), *repeating* (`loop`).
 
-| field | type | meaning |
-|---|---|---|
-| `thread` | `uri` | a lane kind: `<virtual>` (IO-bound), `<core>` (CPU-bound); absent = stay on the master's thread |
-| `workers` | `int` | the fan-out width at one place; clamped by parts and by `place.cost.cores` for core lanes |
-| `loop` | `time` | the **daemon** variant: a persistent stage, not a fan-out (§13.7) |
+| field     | type   | meaning                                                                                         |
+|-----------|--------|-------------------------------------------------------------------------------------------------|
+| `thread`  | `uri`  | a lane kind: `<virtual>` (IO-bound), `<core>` (CPU-bound); absent = stay on the master's thread |
+| `workers` | `int`  | the fan-out width at one place; clamped by parts and by `place.cost.cores` for core lanes       |
+| `loop`    | `time` | the **daemon** variant: a persistent stage, not a fan-out (§13.7)                               |
 
 A new shape rec, `lanes`, is the intra-place fan-out: fan out over the origin's lanes (or over `target`'s lanes),
 combine through a latch. Its laws are exactly `peers`' — `{monoidic, commutative}` — because the parts are
@@ -865,11 +960,11 @@ price over the dials; it does not bound anything. Capacity is a separate field, 
 
 ### 14.2 Where each lives
 
-| quantity | home | why |
-|---|---|---|
-| **capacity** | `place::T.capacity => [cores, memory]` | it is the *host's* number, not a frame's; a host runs many machine frames, and putting the host's cores on every one of them is wrong |
-| **quota** | the frame's **processor** (`processor.resource => [lanes, cores]`), or the thread executor | the machine type's own doc already promises that "a parent defines the scope of a child machine's access to resources"; the promise is a *quota*, and the processor is the axis that spends it |
-| **availability / budget** | the `env` snapshot (`env.capacity => [cores=>{total,free}, memory=>{total,free}, lanes=>{leased,cap}]`) | it changes at runtime; a declared field would go stale |
+| quantity                  | home                                                                                                    | why                                                                                                                                                                                            |
+|---------------------------|---------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **capacity**              | `place::T.capacity => [cores, memory]`                                                                  | it is the *host's* number, not a frame's; a host runs many machine frames, and putting the host's cores on every one of them is wrong                                                          |
+| **quota**                 | the frame's **processor** (`processor.resource => [lanes, cores]`), or the thread executor              | the machine type's own doc already promises that "a parent defines the scope of a child machine's access to resources"; the promise is a *quota*, and the processor is the axis that spends it |
+| **availability / budget** | the `env` snapshot (`env.capacity => [cores=>{total,free}, memory=>{total,free}, lanes=>{leased,cap}]`) | it changes at runtime; a declared field would go stale                                                                                                                                         |
 
 **Do not add cores/RAM to `machine::T`.** A machine is a *frame*; capacity is the *place*. What the frame needs is a
 quota, and even that only for what the planner allocates: **lanes and core slots**. RAM cannot be quotad — there is
@@ -884,12 +979,12 @@ and a boot check compares the two (declare 8, cgroup says 2 → warn and clamp).
 
 A decision contributes a demand **vector**:
 
-| decision | demand |
-|---|---|
-| `lanes`, `core`, `workers = k` | k core slots |
-| `lanes`, `virtual`, `workers = k` | k carrier/memory terms, no core slots |
-| a peer hop (`peer`/`peers`/`tree`) | RTTs + bytes + serializations |
-| `chain`, `local` | nothing beyond the caller's lane |
+| decision                           | demand                                |
+|------------------------------------|---------------------------------------|
+| `lanes`, `core`, `workers = k`     | k core slots                          |
+| `lanes`, `virtual`, `workers = k`  | k carrier/memory terms, no core slots |
+| a peer hop (`peer`/`peers`/`tree`) | RTTs + bytes + serializations         |
+| `chain`, `local`                   | nothing beyond the caller's lane      |
 
 Composition is the shape's business: **parallel placement adds** (the fan-out holds k lanes at once), **sequential
 placement maxes** (a chain holds one at a time). So demand lives in a commutative monoid — pointwise `⊕` for
@@ -943,7 +1038,8 @@ type. Two facts about a space answer the whole question:
   *location*.
 
 A resource has **two addresses, one path**: locally it is its `pattern` (`/usr/dr/…`, read by `*/usr/dr/…` from
-memory); globally it is the owning machine's `authority` prefixed onto that same path (`ws://booger.local:8555/usr/dr/…`,
+memory); globally it is the owning machine's `authority` prefixed onto that same path
+(`ws://booger.local:8555/usr/dr/…`,
 read by `*<…>` from the network first). The `authority` *is* the machine's network projection of its memory. The
 observable that tells the planner it chose the non-local form is the **remote vid** (`…@<6989dc99>`) the result comes
 back tagged with — the serialization-idempotency cost (§7) of not co-locating.
@@ -955,18 +1051,20 @@ locality constraints:
 
 1. **local resource** → the reading chunk **must stay at `origin`** — a *negative* constraint (don't ship away from the
    data).
-2. **remote resource** → the reading chunk **should ship to the owner** — a *positive* constraint (ship toward the data).
+2. **remote resource** → the reading chunk **should ship to the owner** — a *positive* constraint (ship toward the
+   data).
 
 Co-location is therefore an address-match, the same Galois-pair shape as §3's `obligations`/`admissible` but over
 addresses:
 
-> **admissible(place, chunk) ⟺ the chunk's read-set ⊆ place.mounts** — run where every `/usr/dr/…` is a local
+> **admissible (place, chunk) ⟺ the chunk's read-set ⊆ place.mounts** — run where every `/usr/dr/…` is a local
 > address, not an authority-prefixed one.
 
 `place.mounts` is the data analog of `place.instset`: `instset` is the *instruction* vocabulary (which ops resolve
 here), `mounts` the *data* vocabulary (which spaces resolve here). For `origin` the mounts are read straight off
 `memory().spaces()`; for a **peer** they must be **advertised** (roster/discovery), because a peer can *read* your
-`/usr/dr/…` through the wire but cannot *know* you own it unless you say so — the roster today advertises `host => reach`,
+`/usr/dr/…` through the wire but cannot *know* you own it unless you say so — the roster today advertises
+`host => reach`,
 and the resource coordinate needs `host => [reach, mounts]`.
 
 This is the *qualitative* resource; §14's capacity/demand/cost is the *quantitative* one. They are orthogonal — "does
@@ -981,16 +1079,29 @@ one (the emitter) sits behind tests that already exist.
 
 These must not move, and they are the acceptance test for every phase that touches the rewrite:
 
-| test | what it pins |
-|---|---|
-| `DistributedRewriteTransportTest` | `law_shard` fires for **real** over a forked peers: the sharded fold equals the expected value, and the rewrite genuinely emitted `select` |
-| `TreeShardTransportTest` | the `tree`/`?hops` path |
-| `catInstSetTest`, `m_math_cat_Test` | the `path::T` / `abstraction::T` lifts and the `lower` chain |
-| `NetworkWsDialTest` | the dial/peer path a placement targets |
-| **new**: an emitted-`Code` snapshot per plan | a phase-1 guard: the rename must be **inert**, so the emitted code is compared before/after |
-| **new**: `PlacementEquivalenceTest` | star / nest / local over one chain, equal modulo vids (phase 4) |
+| test                                         | what it pins                                                                                                                               |
+|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `DistributedRewriteTransportTest`            | `law_shard` fires for **real** over a forked peers: the sharded fold equals the expected value, and the rewrite genuinely emitted `select` |
+| `TreeShardTransportTest`                     | the `tree`/`?hops` path                                                                                                                    |
+| `catInstSetTest`, `m_math_cat_Test`          | the `path::T` / `abstraction::T` lifts and the `lower` chain                                                                               |
+| `NetworkWsDialTest`                          | the dial/peer path a placement targets                                                                                                     |
+| **new**: an emitted-`Code` snapshot per plan | a phase-1 guard: the rename must be **inert**, so the emitted code is compared before/after                                                |
+| **new**: `PlacementEquivalenceTest`          | star / nest / local over one chain, equal modulo vids (phase 4)                                                                            |
 
 ### 15.2 Phases
+
+**Status (2026-10-24): Phases 0–5 implemented and green.** Phase 3 landed shape signatures + `obligations`/`admissible`
+(`Target`→`Shape`, `url`→`target` / `target`→`shape`, `validateDistributedObligations()` deleted). Phase 4 landed `Env`
+
++ the emitter reading `env` (not `Machine.current()`), `path::T` `origin`/`where`/`peer`, and `bind` (cut-less, identity
+  until `move`). Phase 5 landed `abstraction::T.where` (the α place-class word, computed from the machine's declared
+  roster machines ∪ dialed peers — not the origin) plus the `law_shard` liveness prune (no reach ⇒ the distribution rule
+  is not a live morphism). The realized-`where` write is done (`path.where` = `{[span=>at] => [place…]}`, written by the
+  `lower`/`bind` pass), and `reachable()` now reads the roster too (a discovered-but-undialed machine is a candidate).
+  The shape vocabulary stayed the 7 pre-existing shapes (`chain`/`star`/`lanes` deferred to 6/7);
+  obligations live on the `Shape` enum; the `/m/math/cat/signature` space recs and the scheme-signature ×
+  `place.instset`
+  prune (§4's declared-liveness) remain deferred to `bind`/`move`. See the cat-location Phase 3/4/5 notes in Hindsight.
 
 **Phase 0 — record the decisions (no code).** Signatures are **recs**; the rule type keeps the name/vid `plan` with
 `cut?`; the key is `where`; the edge is `peer`; resources are deferred. Write these into §10 and Hindsight, and name the

@@ -78,6 +78,8 @@ public class ObligationsTest extends AbstractInstSetTest {
             "peers   % commutative,monoidic",
             "tree    % commutative,monoidic",
             "shuffle % monoidic",
+            "chain   % monoidic",
+            "star    % commutative,monoidic",
     }, delimiter = '%')
     public void testShapeObligations(final String shape, final String expectedLaws) {
         final Set<Law> obligations = Placement.Shape.valueOf(shape.toUpperCase()).obligations();
@@ -93,7 +95,7 @@ public class ObligationsTest extends AbstractInstSetTest {
     public void testAdmissibleReverseTraversal() {
         assertEquals(Set.of(Placement.Shape.LOCAL, Placement.Shape.SPACE, Placement.Shape.NONE),
                 Set.copyOf(Placement.Shape.admissible(Set.of())), "no laws admit only the free shapes");
-        assertEquals(Set.of(Placement.Shape.LOCAL, Placement.Shape.SPACE, Placement.Shape.SHUFFLE, Placement.Shape.NONE),
+        assertEquals(Set.of(Placement.Shape.LOCAL, Placement.Shape.SPACE, Placement.Shape.SHUFFLE, Placement.Shape.CHAIN, Placement.Shape.NONE),
                 Set.copyOf(Placement.Shape.admissible(Set.of(Law.monoidic))), "monoidic admits the monoidic-only shapes");
         assertEquals(Set.of(Placement.Shape.values()),
                 Set.copyOf(Placement.Shape.admissible(Set.of(Law.monoidic, Law.commutative))),

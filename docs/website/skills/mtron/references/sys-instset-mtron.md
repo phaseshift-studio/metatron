@@ -54,8 +54,8 @@ mtron> *bash?docq
 ==>docs::[obj=>bash?lst[str]<=(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
-          args=>[{?}timeout=>'a real number denoting timeout of ...',
-                 cmd=>'the terminal command to evaluate (...'],
+          args=>[cmd=>'the terminal command to evaluate (...',
+                 {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -66,17 +66,17 @@ mtron> bash('ls')
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'Desktop',
     'dist',
+    'docs',
     ...(16 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.6M ...',
+    'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  548G ...',
-    'tmpfs                   31G  129M ...',
+    '/dev/nvme1n1p2         916G  550G ...',
+    'tmpfs                   31G  156M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -85,15 +85,15 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/507
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/115563
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 3ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 16ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 3ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 16ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/508
+    [ProcBuilder<228>]]@/sys/fail/115637
 ```
 ### batch
 
@@ -107,8 +107,8 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'boot',
            'conf',
            'CONTRIBUTING.md',
-           'Desktop',
            'dist',
+           'docs',
            ...(16 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
@@ -117,8 +117,8 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'Desktop',
     'dist',
+    'docs',
     ...(17 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
@@ -158,15 +158,15 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: boot',
     '  File: conf',
     '  File: CONTRIBUTING.md',
-    '  File: Desktop',
     '  File: dist',
+    '  File: docs',
     ...(16 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
     '  Size: 17636     	Blocks: 40     ...',
     'Device: 259,3	Inode: 22906902    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-21 23:08:56.678826...',
+    'Access: 2026-10-23 23:29:01.926405...',
    ...
 ```
 ### a shape of its own
@@ -218,9 +218,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/513
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/150061
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/514
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/150138
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -251,16 +251,17 @@ One read each: the environment, the thread count, and the executor's own summary
 
 ```mtron
 mtron> */sys/env/HOME
+==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>1
+==>57
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::640.0,
-    free_mem_jvm=>mB::468.1020,
+==>[total_mem_jvm=>gB::3.1015,
+    free_mem_jvm=>mB::1008.1684,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::171.8979,
+    used_mem_jvm=>gB::2.1170,
     free_jvm=>percent::0,
     free_mach=>percent::0,
-    thread=>[run=>0,stop=>0]]
+    thread=>[run=>223,stop=>52840]]
 ```
 # file system space (`fsspace::T`)
 
@@ -328,7 +329,7 @@ mtron> [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-
 ==>fail::[parse error at line 1, col 13:
      [MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown> ...
                  ^
-     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/515
+     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/155184
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ```
 ## walking the tree

@@ -513,7 +513,7 @@ public class Console extends MRec implements Closeable, Runnable {
             if (this == Console.LOCAL_INSTANCE) {
                 Console.LOCAL_INSTANCE = null;
                 Console.terminal = null;
-                Graphitty.init(null);
+                //Graphitty.init(null);
             }
         }
     }

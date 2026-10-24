@@ -102,6 +102,10 @@ public class MInst extends MObj implements Inst {
         return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), lst(), f);
     }
 
+    public static Inst instLambda(final fURI dom, final fURI rng, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
+        return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), args, f);
+    }
+
     /**
      * A lambda whose domain is the lhs alone — the {@code inst} argument is simply ignored, so an
      * arm that does not need the instruction itself is written {@code in -> ...} instead of
