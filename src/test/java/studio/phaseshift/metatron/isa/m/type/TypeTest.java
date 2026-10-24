@@ -720,6 +720,30 @@ public class TypeTest extends AbstractMetatronTest {
         AbstractMetatronTest.checkEquality(LOG, jnt(defined), jnt(Machine.read(f("/m/inst/as")).stream().count()), true);
     }
 
+    /**
+     * A NAME-ONLY TYPE REFERENCE IS NOT THE DEFINITION, for types as for instructions. Resolving one used to register
+     * what it derived at the stored type's address. {@code posint::T[is(gt(100))]} replaced posint's definition with
+     * the call site's predicate, and {@code bigpos::T}, whose value is that posint variant, re-registered the variant
+     * over posint whenever it resolved. testTypeInheritance's {@code nat::T | bignat::T} row read true whenever
+     * testTypeType (seeds {@code bignat -> nat::T[is(gt(100))]}, then resolves bignat::T) ran first in the class.
+     */
+    @ParameterizedTest
+    @TestData(value = {"int::T[is(gt(0))]@/m/type_test/posint", "/m/type_test/bigpos -> /m/type_test/posint::T[is(gt(100))]"})
+    @CsvSource(value = {
+            "/m/type_test/posint::T[is(gt(100))] % 5   % /m/type_test/posint::T              % true",
+            "/m/type_test/posint::T[is(gt(100))] % 150 % /m/type_test/posint::T[is(gt(100))] % true",
+            "/m/type_test/posint::T[is(gt(100))] % 5   % /m/type_test/posint::T[is(gt(100))] % false",
+            "/m/type_test/posint::T[is(lt(0))]   % -3  % /m/type_test/posint::T              % false",
+            "/m/type_test/posint::T[is(eq(2))]   % 3   % /m/type_test/posint::T              % true",
+            "/m/type_test/bigpos::T              % 5   % /m/type_test/posint::T              % true",
+            "/m/type_test/bigpos::T              % 150 % /m/type_test/bigpos::T              % true",
+            "/m/type_test/bigpos::T              % 5   % /m/type_test/bigpos::T              % false",
+    }, delimiter = '%')
+    public void testTypeReferenceKeepsTheDefinition(final String reference, final String obj, final String type, final boolean matches) {
+        ObjmtronSerializer.parse(reference); // the reference: resolving it must leave every definition as it was
+        AbstractMetatronTest.checkMatches(LOG, obj, type, matches);
+    }
+
 
     @ParameterizedTest
     @TestData(value = {
