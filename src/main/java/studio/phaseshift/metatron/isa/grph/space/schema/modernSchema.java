@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -75,6 +76,12 @@ public class modernSchema extends AbstractInstSet {
             .vid(CREATED_TID)
             .isaPredicate(rec(
                     uri("weight"), REAL_TYPE)).create();
+
+    /**
+     * The schema's member types. {@code grphInstSet.setup()} registers them in every machine that sets up grph:
+     * building them registers them only in the machine current when this class initializes, once per JVM.
+     */
+    public static final List<Type> TYPES = List.of(PERSON_TYPE, SOFTWARE_TYPE, KNOWS_TYPE, CREATED_TYPE);
 
     public modernSchema() {
         super(mutableMap(uri(PATTERN), uri(MODERN_SCHEMA_TID.extend(ALL))), INSTSET_TID, MODERN_SCHEMA_TID);
