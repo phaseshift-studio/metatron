@@ -40,6 +40,7 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.HTTP;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.isa.web.webHelper.isTemplated;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
@@ -52,7 +53,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * <pre>
  *   protected httpSpace createHTTPSpace();
  * </pre>
- * Everything — host, port, routes, vid — is derived from the returned space.
+ * Everything — scheme, host, port, routes, vid — is derived from the returned space, so a space with an
+ * {@code https://} host runs the same suite over tls (with {@link #createHttpClient()} trusting its certificate).
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Isolated
@@ -60,6 +62,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatronTest {
 
     protected httpSpace space;
+    protected String httpScheme;
     protected String httpHost;
     protected int httpPort;
     protected HttpClient httpClient;
@@ -74,6 +77,14 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
      * Use {@link #generatePort()} inside this method to pick a free port.
      */
     protected abstract httpSpace createHTTPSpace();
+
+    /**
+     * The client the helpers send with. Override to dial a space that serves tls with a certificate the JDK does not
+     * already trust.
+     */
+    protected HttpClient createHttpClient() {
+        return HttpClient.newHttpClient();
+    }
 
     // ========================================
     // Derived helpers
@@ -93,7 +104,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
     }
 
     protected String baseUrl() {
-        return "http://" + httpHost + ":" + httpPort;
+        return httpScheme + "://" + httpHost + ":" + httpPort;
     }
 
     // ========================================
@@ -105,12 +116,13 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
         this.space = createHTTPSpace();
         assertNotNull(this.space, "httpSpace should be created");
 
+        this.httpScheme = null == this.space.at(HOST).uriValue().scheme() ? HTTP : this.space.at(HOST).uriValue().scheme();
         this.httpHost = this.space.at(HOST).uriValue().host();
         this.httpPort = this.space.at(HOST).uriValue().port();
 
         CommonUtil.sleepThread(500);
 
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = this.createHttpClient();
     }
 
     @AfterAll
