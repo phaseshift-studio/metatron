@@ -42,6 +42,7 @@ import studio.phaseshift.metatron.isa.grph.space.ElementRec;
 import studio.phaseshift.metatron.isa.grph.space.VertexRec;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.space.schema.GremlinRewriteUtils;
+import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -471,6 +472,15 @@ public class grphInstSet extends AbstractInstSet {
                                         .rewrite(map -> List.of(instB(IN_INST_TID, map.entrySet().iterator().next().getValue().args())))).asCode()))));
         docWrap(this, "from vertex to vertex, the edge of the metatron is traversed");
         super.setup();
+        // THE MODERN SCHEMA'S TYPES ARE REGISTERED IN EVERY MACHINE THAT SETS UP GRPH, not by a class initializer. They
+        // used to arrive only as a side effect of modernSchema's static fields: building a canonical type registers it in
+        // Machine.current() (see MType), and a class initializes once per JVM. The first machine to set up grph got
+        // person/software/knows/created and every later one got none -- a surefire fork reuses its JVM across test
+        // classes, so whichever class touched modernSchema first (an `import #`, another grph test) took the types into a
+        // machine it then closed, and person::T in the next one was an ephemeral label with no rec parent. This is the
+        // same write that side effect makes (through memory, so the type graph is invalidated), so the first machine is
+        // left as it was.
+        modernSchema.TYPES.forEach(type -> Machine.current().memory().write(type.vid(), type));
     }
 
     /**
