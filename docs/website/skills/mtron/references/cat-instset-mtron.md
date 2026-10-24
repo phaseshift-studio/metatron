@@ -632,6 +632,7 @@ mtron> ws_client::[host=>ws://localhost:8555/mtron]
 ==>[host=>ws://localhost:8555/mtron,
     send=>inst(){<j>},
     send_recv=>inst(){<j>},
+    inst=>[/m/inst/eval=>inst(){<j>}],
     close=>inst(){<j>},
     on_message=>print('received ${_}')]
 mtron> */network
@@ -642,15 +643,30 @@ mtron> */network
                         pre_write=>inst(uri::T,#::T){<j>},
                         qless_write=>inst(uri::T,#::T){<j>},
                         obj=>[,]]],
-             peer=>[ws/localhost/8555/mtron=>peer::[
-              authority=>ws://localhost:8555,
-              host=>ws://localhost:8555/mtron,
-              transport=>inst(#{*}::T){<j>},
-              client=>[host=>ws://localhost:8555/mtron,
-                       send=>inst(){<j>},
-                       send_recv=>inst(){<j>},
-                       close=>inst(){<j>},
-                       on_message=>print('received ${_}')]]],
+             peer=>[http/localhost/64342/stream=>peer::[
+              authority=><http://127.0.0.1:64342>,
+              host=><http://127.0.0.1:64342/stream>,
+              client=>mcp_client::[type=>streamable-http,
+                                   url=><http://127.0.0.1:64342/stream>,
+                                   headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron],
+                                   host=><http://127.0.0.1:64342/stream>,
+                                   status=>!inst?bool<=(){<j>},
+                                   tool=>[execute_tool=>tool::[
+                                    inst=>inst(command=>'Command-line string with tool name and arguments'){<j>},
+                                    name=>execute_tool,
+                                    desc=>'Universal tool executor that can i...',
+                                    arg=>[command=>'Command-line string with tool name...']]],
+                                   inst=>[/m/llm/tool/execute_tool=>inst(command=>'Command-line string with tool name and arguments'){<j>}]]],
+                    ws/localhost/8555/mtron=>peer::[
+                     authority=>ws://localhost:8555,
+                     host=>ws://localhost:8555/mtron,
+                     transport=>inst(#{*}::T){<j>},
+                     client=>[host=>ws://localhost:8555/mtron,
+                              send=>inst(){<j>},
+                              send_recv=>inst(){<j>},
+                              inst=>[/m/inst/eval=>inst(){<j>}],
+                              close=>inst(){<j>},
+                              on_message=>print('received ${_}')]]],
              supervisor=>network_supervisor::[status=>supervising]]
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the

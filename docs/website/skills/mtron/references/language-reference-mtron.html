@@ -439,15 +439,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">mtron-language-reference</h1>
-        <small>Complete mtron language reference — mono, poly, and call types, operators, expression chaining, and syntax.</small><br/>
+        <small>a practical mtron language reference — mono, poly, and call types, operators, expression chaining, and syntax.</small><br/>
         <a href="language-reference-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>language-reference-mtron.md</a>
     </div>
     <div class="markdown-body">
-<h2>mtron Language Reference</h2>
+<h2>mtron language reference</h2>
 <p>A data-flow language over the metatron object graph. Every value is an <strong>Obj</strong> — int, str, real, bool, uri, rec, lst,
 inst, code, bytes, etc. Expressions chain left-to-right: <code>lhs.inst(rhs)</code>.</p>
 <hr />
-<h3>1. Mono Types</h3>
+<h3>1. mono types</h3>
 <pre><code class="language-mtron">mtron&gt; 1           [-- int (64-bit signed) --]
 ==&gt;1
 mtron&gt; 1.0         [-- real (double) --]
@@ -473,24 +473,39 @@ mtron&gt; 0x0F        [-- bytes (hex literal) --]
 mtron&gt; noobj       [-- &quot;no obj&quot; (empty, none) --]
 </code></pre>
 <hr />
-<h3>2. Poly Types</h3>
-<h4>lst (<code>[ , ]</code> — ordered, indexable)</h4>
-<pre><code class="language-mtron">mtron&gt; [1, 2, 3]         [-- List of 3 ints --]
+<h3>2. poly types</h3>
+<h4>lst::T (<code>[,]</code> — ordered, indexable)</h4>
+<pre><code class="language-mtron">mtron&gt; [1, 2, 3]             [-- lst of 3 int::T --]
 ==&gt;[1,2,3]
-mtron&gt; [1, [2, 3]]       [-- Nested list --]
+mtron&gt; [1, [2, 3]]           [-- nested lst --]
 ==&gt;[1,[2,3]]
-mtron&gt; [a=&gt;1, b=&gt;2]      [-- Record (key-value pairs) --]
-==&gt;[a=&gt;1,b=&gt;2]
-mtron&gt; [,]               [-- Empty list --]
+mtron&gt; [,]                   [-- empty lst --]
 ==&gt;[,]
+mtron&gt; [1,2,3]&gt;&gt;0
+==&gt;1
+mtron&gt; [1,2,3]==[?&gt;1 =&gt; +2]  [-- select with rec::T for predicate keys --]
+==&gt;[noobj,noobj,5]
 </code></pre>
-<h4>rec (<code>[key=&gt;val, ...]</code> — unordered, keyed)</h4>
+<h4>rec::T (<code>[key=&gt;val, ...]</code> — unordered, keyed)</h4>
 <pre><code class="language-mtron">mtron&gt; [name=&gt;'marko', age=&gt;29]
 ==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; [1=&gt;2, 2=&gt;3, 3=&gt;4]
 ==&gt;[1=&gt;2,2=&gt;3,3=&gt;4]
+mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a
+==&gt;1
+mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b
+mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d
+mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d/e
 </code></pre>
-<h4>objs (<code>{ , }</code> — unordered, streamed and bulked)</h4>
+<h4>rel::T (relation) — key/value pair</h4>
+<pre><code class="language-mtron">mtron&gt; name=&gt;'marko'
+==&gt;name=&gt;'marko'
+mtron&gt; name=&gt;'marko'=&gt;age=&gt;29
+==&gt;name=&gt;('marko'=&gt;(age=&gt;29))
+mtron&gt; name=&gt;'marko'=&gt;age=&gt;29.&gt;&gt;.&gt;&gt;.&gt;&gt;
+==&gt;29
+</code></pre>
+<h4>objs (<code>{,}</code> — unordered, streamed and bulked)</h4>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}                                  [-- equivalent to {2,1,3} (unordered) --]
 ==&gt;1
 ==&gt;2
@@ -509,39 +524,8 @@ mtron&gt; {3,1,2,3}.isa?int{*}&lt;=int{*}({1,{2}3,2}) [-- coefficients accounted
 ==&gt;1
 ==&gt;2
 </code></pre>
-<h4>Indexing / Access</h4>
-<pre><code class="language-mtron">mtron&gt; [1,2,3]&gt;&gt;0
-==&gt;1
-mtron&gt; [a=&gt;1,b=&gt;2]&gt;&gt;a
-==&gt;1
-mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b
-mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d
-mtron&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[e=&gt;4]]]&gt;&gt;a/b/d/e
-</code></pre>
-<h4>Rel (relation) — key/value pair</h4>
-<pre><code class="language-mtron">mtron&gt; name=&gt;'marko'
-==&gt;name=&gt;'marko'
-mtron&gt; name=&gt;'marko'=&gt;age=&gt;29
-==&gt;name=&gt;('marko'=&gt;(age=&gt;29))
-mtron&gt; name=&gt;'marko'=&gt;age=&gt;29.&gt;&gt;.&gt;&gt;.&gt;&gt;
-==&gt;29
-</code></pre>
-<p>Objs can carry a <strong>vid</strong> (address URI) via <code>@</code>:</p>
-<pre><code class="language-mtron">mtron&gt; [a=&gt;1]@a                 [-- rec anchored at uri myVid --]
-==&gt;[a=&gt;1]@a
-mtron&gt; [1,2,3,4]@b              [-- lst anchored at *a --]
-==&gt;[1,2,3,4]@b
-mtron&gt; *a + [b=&gt;2]
-==&gt;[a=&gt;1,b=&gt;2]
-mtron&gt; *a
-==&gt;[a=&gt;1]
-mtron&gt; @b + [5,6]
-==&gt;[1,2,3,4,5,6]@b
-mtron&gt; *b
-==&gt;[1,2,3,4,5,6]
-</code></pre>
 <hr />
-<h3>3. Coefficients (count / multiplicity)</h3>
+<h3>3. coefficients (count/multiplicity)</h3>
 <p>Every obj has a coefficient. Shorthand is <code>{n}obj</code> -- standing for <code>type{n}::obj</code>:</p>
 <pre><code class="language-mtron">mtron&gt; 3                                        [-- coefficient {1} (default) --]
 ==&gt;3
@@ -571,7 +555,7 @@ mtron&gt; {int{2}::1,int{3}::2}.sum()   [-- int::8 (coefficients account for) --
 ==&gt;3
 mtron&gt; 1.plus(_)                      [-- 2  (underscore is the identity function = lhs) --]
 ==&gt;2
-mtron&gt; 1 + 2                          [-- sugar stynax for previous --]
+mtron&gt; 1 + 2                          [-- sugar sytnax for previous --]
 ==&gt;3
 mtron&gt; {1,2,3}.plus(2)                [-- {3,4,5} (applied to each obj in the stream) --]
 ==&gt;3
@@ -581,7 +565,11 @@ mtron&gt; {1,2,3}.mult(10)               [-- {10,20,30} --]
 ==&gt;10
 ==&gt;20
 ==&gt;30
-mtron&gt; 1.plus(1.plus(1))              [-- 3  (nested) --]
+mtron&gt; {1,2,3} * 10                   [-- sugar syntax for previous --]
+==&gt;10
+==&gt;20
+==&gt;30
+mtron&gt; 1.plus(1.plus(1))              [-- 3 (nested) --]
 ==&gt;3
 mtron&gt; {1,2,3,4}.prod()               [-- 24 --]
 ==&gt;24
@@ -590,7 +578,7 @@ mtron&gt; {1,2,3}.sum()                  [-- 6 --]
 mtron&gt; {1,2,3,4,5}.reduce(|plus(0))   [-- 15 (| necessary to block evaluation) --]
 ==&gt;15
 </code></pre>
-<p><strong>Short-circuit:</strong> <code>_</code> (underscore) is the identity function — returns the unmodified lhs:</p>
+<p><strong>lhs arguments</strong> <code>_</code> (underscore) is the identity function — returns the unmodified lhs:</p>
 <pre><code class="language-mtron">mtron&gt; 1.plus(_)                   [-- 2 --]
 ==&gt;2
 mtron&gt; {1,2,3}.map(_).plus(2)      [-- {3,4,5} --]
@@ -598,11 +586,16 @@ mtron&gt; {1,2,3}.map(_).plus(2)      [-- {3,4,5} --]
 ==&gt;4
 ==&gt;5
 </code></pre>
-<p><strong>Compound ops:</strong> <code>?inst&lt;=type(body)</code> for inline insts (lambdas):</p>
+<p><strong>compound ops:</strong> <code>inst?rng&lt;=dom(args){body}</code> for inline insts (lambdas):</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}.inst?int&lt;=int(a=&gt;plus(2)){ plus(*a) }     [-- {4,8,18} --]
 ==&gt;4
 ==&gt;6
 ==&gt;8
+mtron&gt; {1,2,3}.(a=&gt;+2{ +*a }                             [-- sugar syntax for the above --]
+==&gt;fail::[parse error at line 1, col 15:
+     {1,2,3}.(a=&gt;+2{ +*a }                             [-- ...
+                   ^
+     unexpected '{']@/sys/fail/181589
 </code></pre>
 <h4>Boolean logic</h4>
 <pre><code class="language-mtron">mtron&gt; 3.is(gt(2))                        [-- 3  (filters: passes lhs through if true, noobj if false) --]
@@ -638,8 +631,8 @@ mtron&gt; 'a b c'.split(' ')                            [-- [&quot;a&quot;, &quo
 ==&gt;['a','b','c']
 mtron&gt; 'a b c'-&lt;' '                                  [-- sugar syntax for previous --]
 ==&gt;['a','b','c']
-mtron&gt; {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}&gt;-' '                            [-- &quot;a b c&quot;  (merge with separator) --]
-==&gt;'a b c'
+mtron&gt; {'a','b','c'}&gt;-'-'                            [-- 'a-b-c'  (merge with separator) --]
+==&gt;'a-b-c'
 mtron&gt; 'ab3cd'.select('\d+')                         [-- ['3'] --]
 ==&gt;['3']
 mtron&gt; 'ab3cd'.select('\d{2}')                       [-- [,]  (no match — empty pair) --]
@@ -650,7 +643,7 @@ mtron&gt; 'abbc'&gt;&gt;=['a'=&gt;'A','b{2}'=&gt;'X']=='[A-Z]{2,3}' [-- ['AX'] (
 ==&gt;['AX']
 </code></pre>
 <hr />
-<h3>6. URI Dereferencing (<code>*</code> — <code>from()</code>)</h3>
+<h3>6. uri dereferencing (<code>*</code> — <code>from()</code>)</h3>
 <p><code>*</code> dereferences a uri to its referent in space:
 <code>@</code> anchors a uri to its referent in space</p>
 <pre><code class="language-mtron">*/path/to/obj              [-- read obj at uri (detached) --]
@@ -658,7 +651,7 @@ mtron&gt; 'abbc'&gt;&gt;=['a'=&gt;'A','b{2}'=&gt;'X']=='[A-Z]{2,3}' [-- ['AX'] (
 *local:software/           [-- read with trailing --]
 *&lt;/pa.th/to/o b .j&gt;        [-- angle-bracket handles special chars --]
 </code></pre>
-<p>Wildcards:</p>
+<p>uri wildcards:</p>
 <pre><code class="language-mtron">*/path/+/obj               [-- + matches one segment --]
 */path/+/+                 [-- ++, children at depth 2 --]
 */path/#                   [-- matches all remaining segments (recursive) --]
@@ -675,9 +668,23 @@ mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;authority     [-- abc:123 --]
 mtron&gt; http://abc:123/a/b/c.as(rec::T)&gt;&gt;{schema,path} [-- {http,/a/b/c} --]
 ==&gt;[&lt;&gt;,a,b,c]
 </code></pre>
+<p>objs anchored to their address are specified with <code>@</code>.</p>
+<pre><code class="language-mtron">mtron&gt; [a=&gt;1]@a                 [-- rec anchored at uri myVid --]
+==&gt;[a=&gt;1]@a
+mtron&gt; [1,2,3,4]@b              [-- lst anchored at *a --]
+==&gt;[1,2,3,4]@b
+mtron&gt; *a + [b=&gt;2]
+==&gt;[a=&gt;1,b=&gt;2]
+mtron&gt; *a
+==&gt;[a=&gt;1]
+mtron&gt; @b + [5,6]
+==&gt;[1,2,3,4,5,6]@b
+mtron&gt; *b
+==&gt;[1,2,3,4,5,6]
+</code></pre>
 <hr />
-<h3>7. Type Casting (<code>.as(type::T)</code>)</h3>
-<pre><code class="language-mtron">mtron&gt; 1.as(str::T)              [-- &quot;1&quot; --]
+<h3>7. type casting (<code>as(type::T)</code>)</h3>
+<pre><code class="language-mtron">mtron&gt; 1.as(str::T)              [-- '1' --]
 ==&gt;'1'
 mtron&gt; 1.0.as(int::T)            [-- 1 --]
 ==&gt;1
@@ -698,10 +705,10 @@ mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate l
 ==&gt;posint::2
 mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==&gt;fail::[parse error at line 1, col 1: -1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/37769
+   	while parsing: posint::-1]@/sys/fail/216333
 </code></pre>
 <hr />
-<h3>8. Mapping &amp; Filtering</h3>
+<h3>8. mapping &amp; filtering</h3>
 <pre><code class="language-mtron">mtron&gt; {1,2,3,4}.map(+2)                [-- {3,4,5,6} --]
 ==&gt;3
 ==&gt;4
@@ -721,7 +728,7 @@ mtron&gt; {1,2,3}.is(gt(1))                [-- {2,3}  (filter: keep the members 
 ==&gt;2
 ==&gt;3
 </code></pre>
-<h4>Select (structural projection)</h4>
+<h4>select (structural projection)</h4>
 <pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([_=&gt;_])                            [-- [a=&gt;1,b=&gt;2,c=&gt;3] --]
 ==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[_=&gt;_]                                   [-- syntax sugar for above --]
@@ -736,7 +743,7 @@ mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}==[a=&gt;?&gt;=2.+10]                  
 mtron&gt; [1,2,3]==[_,plus(5),_]                                     [-- [1,7,3] --]
 ==&gt;[1,7,3]
 </code></pre>
-<h4>Filtering (<code>?</code> and <code>is()</code>)</h4>
+<h4>filtering (<code>?</code> and <code>is()</code>)</h4>
 <p><code>lhs ? predicate</code> is the filter: it keeps the lhs when the predicate admits it and yields <code>noobj</code> when it does
 not. A rec predicate matches structurally — the value's field is checked against the field's type:</p>
 <pre><code class="language-mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}?[a=&gt;is(gt(1))]   [-- {[a=&gt;2],[a=&gt;3]}  (the rec predicate matches each rec's a-field) --]
@@ -753,15 +760,15 @@ original — a profile matcher, and <code>noobj</code> when the profile is contr
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?isa([host=&gt;2024.12, port=&gt;26])  [-- noobj  (the port contradicts the profile) --]
 </code></pre>
 <hr />
-<h3>9. Grouping</h3>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}.group([_=&gt;+10])                [-- [1=&gt;11, 2=&gt;12, 3=&gt;13] --]
+<h3>9. grouping</h3>
+<pre><code class="language-mtron">mtron&gt; {1,2,3}.group([_=&gt;+10])                 [-- [1=&gt;11, 2=&gt;12, 3=&gt;13] --]
 ==&gt;[1=&gt;11,2=&gt;12,3=&gt;13]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].group([_=&gt;_])          [-- [[a=&gt;1,b=&gt;2,c=&gt;3]=&gt;[a=&gt;1,b=&gt;2,c=&gt;3]] --]
 ==&gt;[[a=&gt;1,b=&gt;2,c=&gt;3]=&gt;[a=&gt;1,b=&gt;2,c=&gt;3]]
 </code></pre>
 <hr />
 <h3>10. Merging &amp; Splitting</h3>
-<h4>Merge (<code>&gt;-</code>)</h4>
+<h4>merge (<code>&gt;-</code>)</h4>
 <p>Unwraps collections: <code>{1,2,3}&gt;-</code>   # {1,2,3} (flattens coefficient barriers)</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}&gt;-                            [-- {1,2,3}  (the bare members, unbarriered) --]
 ==&gt;1
@@ -780,7 +787,7 @@ mtron&gt; {1,2,3}&gt;-1                           [-- {1,1,2,3}  (1 is added to 
 mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.&gt;-[b=&gt;2]              [-- [a=&gt;1, b=&gt;{2}2]  (the incoming 2 stacks under the existing 2 as a coefficient) --]
 ==&gt;[a=&gt;1,b=&gt;{2}2]
 </code></pre>
-<h4>Split (<code>-&lt;</code>)</h4>
+<h4>split (<code>-&lt;</code>)</h4>
 <p>Distributes elements:</p>
 <pre><code class="language-mtron">mtron&gt; 1-&lt;[_,_]                            [-- [1,1]  (duplicated along the branches) --]
 ==&gt;[1,1]
@@ -789,7 +796,7 @@ mtron&gt; {1,2,3}-&lt;[plus(1),plus(2)]          [-- {[2,3],[3,4],[4,5]}  (each 
 ==&gt;[3,4]
 ==&gt;[4,5]
 </code></pre>
-<h4>Conditional branch: <code>-&lt;|[?pred=&gt;a, _=&gt;b]</code></h4>
+<h4>conditional branch: <code>-&lt;|[?pred=&gt;a, _=&gt;b]</code></h4>
 <pre><code class="language-mtron">mtron&gt; 1-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]          [-- 1=&gt;3  (1 fails ?&gt;1, so the default branch +2 takes it) --]
 ==&gt;1=&gt;3
 mtron&gt; {1,2}-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]&gt;&gt;    [-- 1=&gt;3, 2=&gt;102  (each member takes its own branch) --]
@@ -797,9 +804,9 @@ mtron&gt; {1,2}-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]&gt;&gt;    [-- 1=&gt;3, 2=&g
 ==&gt;102
 </code></pre>
 <hr />
-<h3>11. Right-Shift / Left-Shift (<code>&gt;&gt;</code>, <code>&lt;&lt;</code>)</h3>
+<h3>11. right-shift / left-shift (<code>&gt;&gt;</code>, <code>&lt;&lt;</code>)</h3>
 <p>Traverse into structures:</p>
-<h4>On lst</h4>
+<h4>lsts</h4>
 <pre><code class="language-mtron">mtron&gt; [1,2,[a=&gt;3],4]&lt;&lt;2                  [-- [[a=&gt;3],4] --]
 mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;2                  [-- [1,2] --]
 ==&gt;[a=&gt;3]
@@ -811,7 +818,7 @@ mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;+                  [-- {1,2,[a=&gt;3],4} (sel
 ==&gt;[a=&gt;3]
 ==&gt;4
 </code></pre>
-<h4>On records</h4>
+<h4>recs</h4>
 <pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;3]].dom()        [-- {a,b,c}           (extract keys) --]
 ==&gt;a
 ==&gt;b
@@ -825,7 +832,7 @@ mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c      [-- [d=&gt;[e=
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c/d/e  [-- 3                 (walk nested structure) --]
 ==&gt;3
 </code></pre>
-<h4>On URIs</h4>
+<h4>uris</h4>
 <pre><code class="language-mtron">mtron&gt; a/b/c&lt;&lt;                   [-- b/c    (drop leftmost segment) --]
 ==&gt;a/b
 mtron&gt; a/b/c&gt;&gt;                   [-- a/b    (drop rightmost segment) --]
@@ -836,7 +843,7 @@ mtron&gt; a/b/c&lt;&lt;3                  [-- &lt;.&gt;    (empty) --]
 ==&gt;&lt;&gt;
 </code></pre>
 <hr />
-<h3>12. Skip / Take</h3>
+<h3>12. skip / take</h3>
 <pre><code class="language-mtron">mtron&gt; {1,2,3,4}.take(2)        [-- {1,2} --]
 ==&gt;1
 ==&gt;2
@@ -848,7 +855,7 @@ mtron&gt; {1,2,3,4,5}.skip(2).take(2)   [-- {3,4} --]
 ==&gt;4
 </code></pre>
 <hr />
-<h3>13. Barrier (<code>|</code>)</h3>
+<h3>13. block (<code>|</code>)</h3>
 <p>Delays evaluation — wraps in a monadic barrier:</p>
 <pre><code class="language-mtron">mtron&gt; |(plus(30)).map(20)      [-- 20   (the barrier is not evaluated by map) --]
 ==&gt;20
@@ -856,8 +863,8 @@ mtron&gt; |(plus(30)).swap(20)     [-- 50   (swap applies the barrier's lhs) --]
 ==&gt;50
 </code></pre>
 <hr />
-<h3>14. The <code>&gt;&gt;=</code> Update Instruction</h3>
-<p>Modifies a value at a URI address and writes back:</p>
+<h3>14. update (<code>&gt;&gt;=</code>)</h3>
+<p>Modifies a value at a uri address (or on stack if not addressed):</p>
 <pre><code class="language-mtron">mtron&gt; @xyz &gt;&gt;= [a=&gt;+2]                        [-- merge: add 2 to field 'a' at xyz --]
 mtron&gt; @xyz/c/d&gt;&gt;=10                           [-- write 10 to path --]
 mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second element +4) --]
@@ -867,13 +874,13 @@ mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
-<pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back --]
+<pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back   --]
 mtron&gt; *a/b/c&gt;&gt;= +10      [-- evaluates but discards the result --]
 </code></pre>
 <hr />
-<h3>15. Auto-references (<code>!*</code>, <code>!@</code>)</h3>
+<h3>15. auto-references (<code>!*</code>, <code>!@</code>)</h3>
 <p>Lazy cross-reference via the Router:</p>
-<pre><code class="language-mtron">mtron&gt; [company=&gt;!*db:companies/101]     [-- auto_from — resolved on access --]
+<pre><code class="language-mtron">mtron&gt; [company=&gt;!*db:companies/101]     [-- auto_from — resolved on access            --]
 ==&gt;[company=&gt;!*db:companies/101]
 mtron&gt; [company=&gt;!@db:companies/101]     [-- auto_at — resolved on access, with anchor --]
 ==&gt;[company=&gt;!@db:companies/101]
@@ -881,40 +888,40 @@ mtron&gt; [company=&gt;!@db:companies/101]     [-- auto_at — resolved on acces
 <p><code>!*</code> is sugar for <code>auto_from(uri)</code>. When you <code>.at(company)</code> on the record, the Router resolves <code>db:companies/101</code> and
 returns the target Obj.</p>
 <p>Chain through auto-refs:</p>
-<pre><code class="language-mtron">mtron&gt; *a&gt;&gt;x&gt;&gt;x           [-- follows !* chain to the final target --]
+<pre><code class="language-mtron">mtron&gt; *a&gt;&gt;x&gt;&gt;x           [-- follows !* chain to the final target       --]
 mtron&gt; *a&gt;&gt;x/x            [-- reads a field after resolving the auto-ref --]
 </code></pre>
 <hr />
-<h3>16. Math Instruction</h3>
+<h3>16. math instruction</h3>
 <p>Embedded mathematical expressions:</p>
-<pre><code class="language-mtron">mtron&gt; math('1+2')                           [-- 3.0 --]
+<pre><code class="language-mtron">mtron&gt; math('1+2')                           [-- 3.0   --]
 ==&gt;3.0
 mtron&gt; 10.to(a).math('a^2')                  [-- 100.0 --]
 ==&gt;100.0
-mtron&gt; 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0 --]
+mtron&gt; 10.to(a).plus(10).to(b).math('a+b')   [-- 30.0  --]
 ==&gt;30.0
 </code></pre>
 <hr />
-<h3>17. URI Path Operations</h3>
-<pre><code class="language-mtron">mtron&gt; a/b/c.split(/)                   [-- [a,b,c] --]
+<h3>17. uri path operations</h3>
+<pre><code class="language-mtron">mtron&gt; a/b/c.split(/)                     [-- [a,b,c] --]
 ==&gt;[a,b,c]
-mtron&gt; {a,b,c}&gt;-/                       [-- a/b/c --]
+mtron&gt; {a,b,c}&gt;-/                         [-- a/b/c --]
 ==&gt;a/b/c
-mtron&gt; a/b/c.split(/).merge(/)           [-- a/b/c --]
+mtron&gt; a/b/c.split(/).merge(/)            [-- a/b/c --]
 ==&gt;a/b/c
 mtron&gt; a/b/c.split(/).merge(/).mult(&lt;.&gt;)  [-- a/b/c  (identity) --]
 ==&gt;a/b/c
 </code></pre>
 <hr />
-<h3>18. Failure &amp; Error Handling</h3>
-<pre><code class="language-mtron">mtron&gt; 1.plus('a').catch(34)                    [-- 34 --]
+<h3>18. failure &amp; error handling</h3>
+<pre><code class="language-mtron">mtron&gt; 1.plus('a').catch(34)                         [-- 34 --]
 ==&gt;34
-mtron&gt; 1.plus('a').catch(cause().cause())       [-- noobj --]
+mtron&gt; 1.plus('a').catch(cause().cause())            [-- noobj --]
 mtron&gt; 1.plus(mult(throw('bad'))).catch(34).plus(2)  [-- 36 --]
 ==&gt;36
 </code></pre>
 <hr />
-<h3>19. Objs (coefficient collections <code>{ }</code>)</h3>
+<h3>19. objs (coefficient collections <code>{ }</code>)</h3>
 <p>Braces create a multi-value Objs collection (coefficient barrier):</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3}                        [-- three ints --]
 ==&gt;1
@@ -934,7 +941,7 @@ mtron&gt; {1,2,3}&gt;-                      [-- unmerge — flattens barriers --
 ==&gt;3
 </code></pre>
 <hr />
-<h3>20. Type Annotations</h3>
+<h3>20. type annotations</h3>
 <p>Inline type predicates:</p>
 <pre><code class="language-mtron">mtron&gt; ?int::T                        [-- test: is this an int? --]
 mtron&gt; ?uri::T                        [-- is this a uri? --]
@@ -944,59 +951,58 @@ mtron&gt; int{?}::10                     [-- optional coefficient {0,1} --]
 ==&gt;{?}10
 </code></pre>
 <p><code>==</code></p>
-<pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;_]     [-- select with pattern match --]
+<pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;_]          [-- select with pattern match --]
 ==&gt;[a=&gt;1]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]==[a=&gt;is(gt(1))]  [-- select with filter --]
 </code></pre>
 <hr />
-<h3>21. Pattern Matching (<code>?=</code> prefix)</h3>
+<h3>21. pattern matching (<code>?=</code> prefix)</h3>
 <pre><code class="language-mtron">mtron&gt; ?=1        [-- check if equal to 1 --]
 mtron&gt; ?&gt;1        [-- check if greater than 1 --]
 mtron&gt; ?&lt;5        [-- check if less than 5 --]
 mtron&gt; ?int::T    [-- check if type is int --]
 </code></pre>
 <hr />
-<h3>22. Sugar &amp; Syntax Summary</h3>
+<h3>22. sugar &amp; syntax summary</h3>
 <table>
 <thead>
 <tr><th>Sugar</th><th>Expansion</th><th>Use</th></tr>
 </thead>
 <tbody>
-<tr><td><code>*uri</code></td><td><code>from(uri)</code></td><td>Dereference URI</td></tr>
-<tr><td><code>!*uri</code></td><td><code>auto_from(uri)</code></td><td>Lazy cross-ref</td></tr>
-<tr><td><code>@uri</code></td><td><code>at(uri)</code></td><td>Anchor to URI location</td></tr>
-<tr><td><code>_</code></td><td><code>id()</code></td><td>Identity function</td></tr>
-<tr><td><code>&gt;&gt;=</code></td><td><code>update()</code></td><td>Update-and-write-back</td></tr>
-<tr><td><code>&gt;&gt;</code></td><td><code>rshift()</code></td><td>Right-shift (drop last)</td></tr>
-<tr><td><code>&lt;&lt;</code></td><td><code>lshift()</code></td><td>Left-shift (drop first)</td></tr>
-<tr><td><code>&gt;-</code></td><td><code>merge()</code></td><td>Flatten / merge barrier</td></tr>
-<tr><td><code>-&lt;</code></td><td><code>split()</code></td><td>Distribute into branches</td></tr>
-<tr><td><code>\|</code></td><td><code>barrier()</code></td><td>Monadic barrier</td></tr>
-<tr><td><code>_/...\\_</code></td><td><code>within()</code></td><td>Structural within-block</td></tr>
-<tr><td><code>.</code></td><td><code>.plus(1)</code></td><td>Dot-instruction call</td></tr>
-<tr><td><code>=&gt;</code></td><td><code>rel()</code></td><td>Key → value relation</td></tr>
-<tr><td><code>-&gt;</code></td><td><code>ref()</code></td><td>Write to URI reference</td></tr>
-<tr><td><code>;</code></td><td><code>end()</code></td><td>Sequence separator</td></tr>
-<tr><td><code>?pred</code></td><td><code>is(pred)</code></td><td>Type/condition check</td></tr>
-<tr><td><code>lhs ? p</code></td><td><code>lhs.isa(p)</code></td><td>Filter: keep if <code>p</code> admits</td></tr>
-<tr><td><code>==</code></td><td><code>select()</code></td><td>Structural select</td></tr>
+<tr><td><code>*uri</code></td><td><code>from(uri)</code></td><td>dereference uri</td></tr>
+<tr><td><code>!*uri</code></td><td><code>auto_from(uri)</code></td><td>lazy cross-ref</td></tr>
+<tr><td><code>@uri</code></td><td><code>at(uri)</code></td><td>anchor to uri location</td></tr>
+<tr><td><code>_</code></td><td><code>id()</code></td><td>identity function</td></tr>
+<tr><td><code>&gt;&gt;=</code></td><td><code>update()</code></td><td>update-and-write-back</td></tr>
+<tr><td><code>&gt;&gt;</code></td><td><code>rshift()</code></td><td>right-shift (drop last)</td></tr>
+<tr><td><code>&lt;&lt;</code></td><td><code>lshift()</code></td><td>left-shift (drop first)</td></tr>
+<tr><td><code>&gt;-</code></td><td><code>merge()</code></td><td>flatten / merge barrier</td></tr>
+<tr><td><code>-&lt;</code></td><td><code>split()</code></td><td>distribute into branches</td></tr>
+<tr><td><code>\|</code></td><td><code>block()</code></td><td>block/prevent evaluation</td></tr>
+<tr><td><code>_/...\_</code></td><td><code>within()</code></td><td>structural within-block</td></tr>
+<tr><td><code>.</code></td><td><code>.plus(1)</code></td><td>dot-instruction call</td></tr>
+<tr><td><code>=&gt;</code></td><td><code>rel()</code></td><td>key → value relation</td></tr>
+<tr><td><code>-&gt;</code></td><td><code>ref()</code></td><td>write to URI reference</td></tr>
+<tr><td><code>;</code></td><td><code>end()</code></td><td>sequence separator</td></tr>
+<tr><td><code>?type</code></td><td><code>isa(type)</code></td><td>type/condition check</td></tr>
+<tr><td><code>==</code></td><td><code>select()</code></td><td>structural select</td></tr>
 </tbody>
 </table>
 <hr />
-<h3>23. Expression Evaluation Model</h3>
+<h3>23. expression evaluation model</h3>
 <ol>
-<li><strong>Left-to-right chaining:</strong> <code>lhs.inst(rhs)</code> — <code>inst</code> receives <code>lhs</code> and <code>rhs</code></li>
-<li><strong>Coefficient propagation:</strong> ops distribute over collections; result coefficients combine</li>
-<li><strong>Space reads:</strong> <code>*uri</code> fetches from the graph; <code>!*uri</code> fetches lazily on <code>.at()</code></li>
-<li><strong>Write-back:</strong> <code>@</code>-prefixed writes persist through <code>&gt;&gt;=</code> back to space</li>
-<li><strong>No mutation of existing objects</strong> — operations create new Objs (immutable)</li>
+<li><strong>left-to-right chaining:</strong> <code>lhs.inst(rhs)</code> — <code>inst</code> receives <code>lhs</code> and <code>rhs</code></li>
+<li><strong>coefficient propagation:</strong> ops distribute over collections; result coefficients combine</li>
+<li><strong>space reads:</strong> <code>*uri</code> fetches from the graph; <code>!*uri</code> fetches lazily on <code>.at()</code></li>
+<li><strong>write-back:</strong> <code>@</code>-prefixed writes persist through <code>&gt;&gt;=</code> back to space</li>
+<li><strong>no mutation of existing objects</strong> — operations create new Objs (immutable)</li>
 </ol>
 <pre><code class="language-mtron">chains: every inst's output is the next inst's input
-mtron&gt; {1,2,3,4}.sum()                [-- 10 --]
+mtron&gt; {1,2,3,4}.sum()                     [-- 10 --]
 ==&gt;10
-mtron&gt; {1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
+mtron&gt; {1,2,3,4}.sum{2}()                  [-- {2}10  (the same job, run twice in parallel) --]
 ==&gt;{2}10
-mtron&gt; {1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
+mtron&gt; {1,2,3,4}.sum{2}().sum()            [-- 20  (the outer sum folds the coefficient in) --]
 ==&gt;20
 mtron&gt; {1,2,3,4}-&lt;[plus(1), plus(10)]&gt;-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
 ==&gt;2
@@ -1007,7 +1013,7 @@ mtron&gt; {1,2,3,4}-&lt;[plus(1), plus(10)]&gt;-    [-- 2, 11, 3, 12, 4, 13, 5, 
 ==&gt;13
 ==&gt;5
 ==&gt;14
-mtron&gt; {1,2,3,4}.skip(1).take(2)      [-- {2,3}  (window: drop the first, keep two) --]
+mtron&gt; {1,2,3,4}.skip(1).take(2)           [-- {2,3}  (window: drop the first, keep two) --]
 ==&gt;2
 ==&gt;3
 </code></pre>
