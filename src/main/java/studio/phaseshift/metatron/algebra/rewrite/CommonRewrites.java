@@ -751,7 +751,7 @@ public final class CommonRewrites {
 
     /**
      * Specialized RewriteBuilder for where operations that extracts and translates
-     * the predicate from the where() instruction to a native filter clause.
+     * the predicate from the isa() instruction to a native filter clause.
      */
     private static class WhereRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
         private final WhereOperation<S> whereOperation;

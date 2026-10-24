@@ -108,10 +108,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.BLOCK_INST_TID, lst(obj)));
     }
 
-    //  public F where_(final Obj obj) {
-    //      return this.addInst(instB(mInstSet.WHERE_INST_TID, lst(obj)));
-    //  }
-
     public F range_(final Obj start, final Obj end) {
         return this.addInst(instB(mInstSet.RANGE_INST_TID, lst(start, end)));
     }

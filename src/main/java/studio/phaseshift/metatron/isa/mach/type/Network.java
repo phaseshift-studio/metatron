@@ -284,7 +284,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // A LINK IS SUPERVISED FROM THE MOMENT IT IS INDEXED: what the index granted, the index keeps true -- a
         // failed connection is redialed, an owner's hang-up is retracted. Idempotent per level.
         if (client instanceof Link)
-            studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor.watch(this);
+            studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor.watch(this);
         return peer;
     }
 
@@ -481,14 +481,14 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * a client: a peer::T is a rec, and closing the rec would close nothing it holds.
      */
     default void close() {
-        studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor.release(this);
+        studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor.release(this);
         this.peers().keys().filter(Obj::isUri).map(Obj::uriValue).toList().forEach(this::disconnect);
     }
 
     /**
      * A LINK — what a protocol client that HOLDS a live connection tells the network about it. The network never
      * learns a protocol: it asks these three questions of any member whose client answers them, and supervises
-     * by the answers ({@link studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor}).
+     * by the answers ({@link studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor}).
      * <ul>
      *     <li>{@link #connected()} — is the connection up right now? Local and cheap: no round trip.</li>
      *     <li>{@link #hungUp()} — did the client's OWNER close it? That is the one explicit shutdown, and it is
@@ -596,7 +596,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          */
         public static void retract(final Obj client) {
             try {
-                studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor.retract(client);
+                studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor.retract(client);
             } catch (final Exception e) {
                 // the client is closed either way; the index just didn't observe it
             }

@@ -274,7 +274,7 @@ public class catTypes {
                                                 uri(FORM).maybe().asUri(), URI_TYPE,
                                                 uri(LAW).maybe().asUri(), lst(LAW_TYPE),
                                                 uri(ROLE).maybe().asUri(), URI_TYPE),
-                                        uri(ROUTE).maybe(), lst(rec(
+                                        uri(WHERE).maybe(), lst(rec(
                                                 uri(TARGET), URI_TYPE,
                                                 uri(SPAN), lst(rec(
                                                         uri(SPAN), URI_TYPE,
@@ -286,9 +286,30 @@ public class catTypes {
                                 .create(), Map.of(
                                 uri(NAME), "the plan's name — the rewrite rule it embodies",
                                 uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws + theory) the plan anchors on",
-                                uri(ROUTE).maybe(), "the distribution: target + span regions the plan ships",
+                                uri(WHERE).maybe(), "the distribution: target + span regions the plan ships",
                                 uri(RESULT).maybe(), "only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T"),
                         "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)"),
+                docWrap(PLACE_TYPE = Type.Builder.build()
+                                .tid(CATEGORY_TID)
+                                .vid(PLACE_TID)
+                                .isaPredicate(rec(
+                                        uri(OBJ), URI_TYPE,
+                                        uri(AUTHORITY), lst(URI_TYPE),
+                                        uri(INSTSET).maybe(), lst(URI_TYPE),
+                                        uri(SOURCE).maybe(), URI_TYPE,
+                                        uri(LINKED_TO).maybe().asUri(), lst(REC_TYPE),
+                                        uri(LINKED_FROM).maybe().asUri(), lst(REC_TYPE),
+                                        uri(STATUS).maybe().asUri(), URI_TYPE))
+                                .constructor(Places::place)
+                                .create(), mutableMap(
+                                uri(OBJ), "the machine address \\(//host[/path]\\) — who evaluates: \\(host()\\) is the roster key, \\(path()\\) the frame vid (empty = the root machine)",
+                                uri(AUTHORITY), "the transports that reach the machine \\(scheme://host:port\\); two aliases of one machine are values, never two places",
+                                uri(INSTSET).maybe(), "ISAs resolvable here (the vocabulary coordinate)",
+                                uri(SOURCE).maybe(), "who declared it (mdns, boot profile, a dial)",
+                                uri(LINKED_TO).maybe(), "outbound peers whose service is this place",
+                                uri(LINKED_FROM).maybe(), "inbound peers from this place",
+                                uri(STATUS).maybe(), "up / down / known, derived over the dials"),
+                        "a machine as the location coordinate — where code runs, the vertex beside path::T"),
                 docWrap(THEORY_TYPE = Type.Builder.build()
                         .tid(REC_TID)
                         .vid(THEORY_TID)

@@ -236,9 +236,11 @@ public final class Tokens {
     public static final String REASON = "reason";
     public static final String SUPER = "super";
     public static final String ROUTE = "route";
+    public static final String WHERE = "where";
     public static final String PEER = "peer";
     public static final String ROSTER = "roster";
     public static final String NETWORK = "network";
+    public static final String SUPERVISOR = "supervisor";
     public static final String CACHE = "cache";
     public static final String CONST = "const";
     public static final String CONSTQ = "constq";
@@ -376,6 +378,8 @@ public final class Tokens {
     public static final String MORPH = "morph";
     public static final String MORPHED_FROM = "morphed_from";
     public static final String MORPHED_TO = "morphed_to";
+    public static final String LINKED_FROM = "linked_from";
+    public static final String LINKED_TO = "linked_to";
     public static final String FORM = "form";
     public static final String CUT = "cut";
     public static final String SPAN = "span";

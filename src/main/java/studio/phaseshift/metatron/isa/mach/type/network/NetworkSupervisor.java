@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.network;
 
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -29,16 +30,21 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.CLIENT;
+import static studio.phaseshift.metatron.Tokens.STATUS;
+import static studio.phaseshift.metatron.Tokens.SUPERVISOR;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.NETWORK_SUPERVISOR_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * THE PEER SUPERVISOR — one per network level, keeping the level's index TRUE between the {@code index} that
+ * THE NETWORK SUPERVISOR — one per network level, keeping the level's index TRUE between the {@code index} that
  * granted a member and the {@code drop} that retracts it. It knows no protocol: it asks each member whose client is
  * a {@link Network.Link} the link's three questions, and acts on the answers.
  * <ul>
@@ -53,6 +59,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * A request does not wait for this schedule: a link that is down when a request needs it redials on demand (the
  * protocol's own open-wait), and the next tick simply finds it connected.
  * <p>
+ * It is the Java facade over the {@code network_supervisor::T} rec: {@code status} lives in the backing map,
+ * read by {@link #status()}. The supervised {@code network}, the ticking thread and the redial schedule are the
+ * engine, not mtron data — kept as Java fields so the rec's value stays acyclic (a {@code network → supervisor →
+ * network} value cycle would never terminate {@code equals}).
+ * <p>
+ * CONSTRUCTION IS CONNECTION, DESTRUCTION IS DISCONNECT. The constructor starts the thread and files itself in the
+ * level's {@code supervisor} field; a {@code noobj} write over that field (close-before-clear) stops it.
+ * <p>
  * LIFETIME IS THE LEVEL'S. A level is supervised from the first link it indexes ({@link #watch}) until it closes
  * ({@link #release}, from {@code Network.close()} — the frame's pop, or the VM's shutdown). Each tick runs AS the
  * level's machine: this thread stands nowhere of its own, and a {@code ~}-relative read or a log line made from it
@@ -60,7 +74,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public final class PeerSupervisor implements Closeable {
+public final class NetworkSupervisor extends MRec implements Closeable {
 
     /**
      * how often a level's links are looked at — a look is local (no round trip), so a short tick costs nothing
@@ -75,17 +89,22 @@ public final class PeerSupervisor implements Closeable {
      */
     public static final long BACKOFF_MAX_MS = 10_000L;
 
-    private static final GraphittyLogger LOG = Graphitty.log(PeerSupervisor.class);
+    private static final GraphittyLogger LOG = Graphitty.log(NetworkSupervisor.class);
 
     /**
-     * THE SUPERVISED LEVELS. A supervisor is a running thread, not data, so it is kept beside the object graph
-     * rather than in the network's rec — the reason {@code PeerSpawn}'s process table gives. Keyed by IDENTITY,
-     * because a network rec's equality is its contents: two levels holding the same peers are equal, and must not
-     * share a supervisor.
+     * THE SUPERVISED LEVELS. A supervisor is a running thread, not data, so it is also kept beside the object graph
+     * — keyed by IDENTITY, because a network rec's equality is its contents: two levels holding the same peers are
+     * equal, and must not share a supervisor. (The {@code supervisor} field is the addressable half; this map is the
+     * enumeration half that {@link #retract}/{@link #closeAll} walk.)
      */
-    private static final Map<Network, PeerSupervisor> SUPERVISORS = Collections.synchronizedMap(new IdentityHashMap<>());
+    private static final Map<Network, NetworkSupervisor> SUPERVISORS = Collections.synchronizedMap(new IdentityHashMap<>());
 
-    private final Network network;
+    /**
+     * the machine the supervised level belongs to — the thread's frame of reference. The network itself is read
+     * per tick as {@code Machine.current().network()}, never stored: the thread is spawned at this machine, and a
+     * stored reference could only drift from it.
+     */
+    private final Machine machine;
     /**
      * the redial schedule of each link seen down, by identity (a client's equality is its rec's)
      */
@@ -93,18 +112,55 @@ public final class PeerSupervisor implements Closeable {
     private final Thread thread;
     private volatile boolean closed = false;
 
-    private PeerSupervisor(final Network network) {
-        this.network = network;
+    private NetworkSupervisor(final Network network) {
+        super(supervisorMap(), NETWORK_SUPERVISOR_TID, null);
+        this.machine = network.machine();
         this.thread = Thread.ofVirtual()
-                .name("metatron-peer-supervisor-" + System.identityHashCode(network))
+                .name("metatron-network-supervisor-" + System.identityHashCode(network))
                 .start(this::run);
+        // construction is connection: file ourselves in the level's supervisor slot
+        network.at(uri(SUPERVISOR), this, MUTABLE);
+    }
+
+    private static Map<Obj, Obj> supervisorMap() {
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        jvm.put(uri(STATUS), uri("supervising"));
+        return jvm;
+    }
+
+    /**
+     * The supervised level — the machine's own network.
+     */
+    public Network network() {
+        return Machine.current().network();
+    }
+
+    /**
+     * True while this supervisor is ticking (not yet released).
+     */
+    public boolean supervising() {
+        return !this.closed;
+    }
+
+    /**
+     * The liveness marker — {@code supervising} / {@code closed}, the rec's observable state.
+     */
+    public String status() {
+        return this.closed ? "closed" : "supervising";
+    }
+
+    /**
+     * How many links are currently in a redial backoff.
+     */
+    public int retryCount() {
+        return this.retries.size();
     }
 
     /**
      * Supervise this level — idempotent, so every index of a link may ask.
      */
     public static void watch(final Network network) {
-        SUPERVISORS.computeIfAbsent(network, PeerSupervisor::new);
+        SUPERVISORS.computeIfAbsent(network, NetworkSupervisor::new);
     }
 
     /**
@@ -112,7 +168,7 @@ public final class PeerSupervisor implements Closeable {
      * a retraction, not a failure to repair.
      */
     public static void release(final Network network) {
-        final PeerSupervisor supervisor = SUPERVISORS.remove(network);
+        final NetworkSupervisor supervisor = SUPERVISORS.remove(network);
         if (null != supervisor)
             supervisor.close();
     }
@@ -184,7 +240,10 @@ public final class PeerSupervisor implements Closeable {
 
     @Override
     public void close() {
+        if (this.closed)
+            return;
         this.closed = true;
+        this.at(STATUS, uri("closed"), MUTABLE);
         this.thread.interrupt();
     }
 
@@ -194,7 +253,7 @@ public final class PeerSupervisor implements Closeable {
                 this.tick();
             } catch (final Throwable e) {
                 // a tick must never end the supervision: the next one looks again
-                LOG.debug("peer supervision tick failed: %s", e);
+                LOG.debug("network supervision tick failed: %s", e);
             }
             try {
                 Thread.sleep(TICK_MS);
@@ -205,16 +264,17 @@ public final class PeerSupervisor implements Closeable {
     }
 
     private void tick() {
-        Machine.current(this.network.machine());
+        Machine.current(this.machine);
+        final Network network = Machine.current().network();
         final Set<Network.Link> seen = Collections.newSetFromMap(new IdentityHashMap<>());
-        for (final Rel member : this.network.peers().elements().toList()) {
+        for (final Rel member : network.peers().elements().toList()) {
             final Obj peer = member.second();
             if (!peer.isRec() || !(peer.asRec().<Obj>atDirect(uri(CLIENT)) instanceof Network.Link link))
                 continue;
             seen.add(link);
             if (link.hungUp()) {
                 this.retries.remove(link);
-                drop(this.network, link);
+                drop(network, link);
             } else if (link.connected()) {
                 if (null != this.retries.remove(link))
                     LOG.info("peer %s is back online", member.first());
@@ -234,7 +294,7 @@ public final class PeerSupervisor implements Closeable {
         });
         if (!retry.due() || !retry.claim())
             return;
-        final Machine owner = this.network.machine();
+        final Machine owner = this.machine;
         Thread.ofVirtual().name("metatron-peer-redial-" + System.identityHashCode(link)).start(() -> {
             Machine.current(owner);
             try {

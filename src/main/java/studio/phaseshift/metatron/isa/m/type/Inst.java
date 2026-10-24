@@ -259,13 +259,12 @@ public interface Inst extends Call {
                 // function — they must be blocking so applyArgs does NOT eagerly apply them:
                 //   auto/auto_from/auto_at:  inst.arg(0).apply(lhs)  (lazy payload)
                 //   map:                     inst.arg(0).apply(lhs)  (x.map(f) = f(x))
-                //   select/where:            rec arg whose VALUES are per-element projections
+                //   select:                  rec arg whose VALUES are per-element projections
                 base.equals(AUTO_INST_TID) ||
                 base.equals(AUTO_FROM_INST_TID) ||
                 base.equals(AUTO_AT_INST_TID) ||
                 base.equals(MAP_INST_TID) ||
                 base.equals(SELECT_INST_TID) ||
-                base.equals(WHERE_INST_TID) ||
                 base.equals(FILTER_INST_TID) ||
                 base.equals(FORK_INST_TID) ||
                 base.equals(THREAD_INST_TID) ||
@@ -274,6 +273,7 @@ public interface Inst extends Call {
                 base.equals(AS_INST_TID) ||
                 base.equals(WITHIN_INST_TID) ||
                 base.equals(ISA_INST_TID) ||
+                base.equals(SORTA_INST_TID) ||
                 base.equals(UPDATE_INST_TID) ||
                 base.equals(GROUP_INST_TID) ||
                 base.equals(REPEAT_INST_TID) ||

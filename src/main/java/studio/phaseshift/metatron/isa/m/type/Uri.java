@@ -445,8 +445,8 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
                                 projected.query(),
                                 List.of()
                         ), lhs.tid(), lhs.vid());
-                    }),
-                    instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
+                    })
+                    /*instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
                         try {
                             Uri.Helper.UriProjected projected = Uri.Helper.project(lhs.uriValue(), inst.arg(0).orElse(rec0()));
                             final fURI original = lhs.uriValue();
@@ -464,7 +464,7 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
                         } catch (ProjectionFailureException e) {
                             return noobj();
                         }
-                    })
+                    })*/
             ));
         }
 

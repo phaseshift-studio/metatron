@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * PlanBuilder — the fluent entry point of the algebraically-driven rewrite DSL. Declare the {@link Cut cut}
- * (the anchor), let the {@link Span spans} be induced around it, bind them to {@link Route routes}, and
+ * (the anchor), let the {@link Span spans} be induced around it, bind them to {@link Placement placements}, and
  * {@link #create()} the {@link Plan} — a value {@link PlanInterpreter} lowers to code.
  *
  * <pre>{@code
@@ -45,16 +45,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * final Plan shard = PlanBuilder.plan("law_shard")
  *         .cut(cut)
- *         .route(Route.local(at, post))                                          // home: merge().<combiner>.<tail>
- *         .route(Route.tree(1, Span.seed().partition(), pre.withoutSeed(), at))  // [to(a), to(b), ...]
+ *         .where(Placement.local(at, post))                                  // home: merge().<combiner>.<tail>
+ *         .where(Placement.tree(1, Span.seed().partition(), pre.withoutSeed(), at))  // [to(a), to(b), ...]
  *         .create();
  * }</pre>
  * <p>
- * {@link #create()} derives the plan's law obligations from its own shape — the rewriter does not trust the
- * author. A cut shipped to a non-local target and re-applied at home must declare {@link Law#monoidic} and
- * {@link Law#commutative} (Thm 19's hypothesis), and it refuses the plan when it does not. The atom-level
- * obligations (a {@code floatable} PRE span, a {@code blocked} AT span) are carried on the spans and enforced
- * by the rewriter at match time, not here.
+ * A plan with a {@code cut} is a semantic rule; a plan with no {@code cut} is a distribution rule — the relocation
+ * it authors is its {@code where}, and it has exactly one {@link Placement}. {@link #create()} derives the plan's law
+ * obligations from its own shape — the rewriter does not trust the author. A cut shipped to a non-local target and
+ * re-applied at home must declare {@link Law#monoidic} and {@link Law#commutative} (Thm 19's hypothesis), and it
+ * refuses the plan when it does not. The atom-level obligations (a {@code floatable} PRE span, a {@code blocked} AT
+ * span) are carried on the spans and enforced by the rewriter at match time, not here.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -62,7 +63,7 @@ public final class PlanBuilder {
 
     private final String name;
     private Cut cut = null;
-    private final List<Route> routes = new ArrayList<>();
+    private final List<Placement> placements = new ArrayList<>();
 
     private PlanBuilder(final String name) {
         this.name = name;
@@ -77,36 +78,41 @@ public final class PlanBuilder {
         return this;
     }
 
-    public PlanBuilder route(final Route route) {
-        this.routes.add(route);
+    public PlanBuilder where(final Placement placement) {
+        this.placements.add(placement);
         return this;
     }
 
     /**
      * Assemble the {@link Plan} value, validating the law obligations the plan's shape demands. Thm 19's
      * hypothesis — the reducer is re-applied over regrouped partials behind an order-free barrier — is read
-     * straight off the routes: a cut that appears on a non-local target's {@code AT} span must declare both
-     * {@link Law#monoidic} and {@link Law#commutative}.
+     * straight off the placements: a cut that appears on a non-local target's {@code AT} span must declare both
+     * {@link Law#monoidic} and {@link Law#commutative}. A plan with no cut is a distribution rule and carries
+     * exactly one placement.
      */
     public Plan create() {
         if (null == this.name || this.name.isBlank())
             throw MTronException.of("plan name is required");
-        if (null == this.cut)
-            throw MTronException.of("a cut is required");
-        if (this.routes.isEmpty())
-            throw MTronException.of("at least one route is required");
-        this.validateDistributedObligations();
+        if (this.placements.isEmpty())
+            throw MTronException.of("at least one placement is required");
+        if (null == this.cut) {
+            if (1 != this.placements.size())
+                throw MTronException.of("a distribution plan (no cut) has exactly one placement, not %d", this.placements.size());
+        } else {
+            this.validateDistributedObligations();
+        }
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(NAME), uri(this.name));
-        jvm.put(uri(CUT), this.cut);
-        jvm.put(uri(ROUTE), lst(this.routes.stream().map(r -> (Obj) r).toList()));
+        if (null != this.cut)
+            jvm.put(uri(CUT), this.cut);
+        jvm.put(uri(WHERE), lst(this.placements.stream().map(p -> (Obj) p).toList()));
         return new Plan(jvm, PLAN_TID, null);
     }
 
     private void validateDistributedObligations() {
-        final boolean distributed = this.routes.stream().anyMatch(route ->
-                (Route.Target.PEER == route.target() || Route.Target.PEERS == route.target() || Route.Target.TREE == route.target())
-                        && route.spans().stream().anyMatch(span -> Span.Kind.AT == span.kind()));
+        final boolean distributed = this.placements.stream().anyMatch(placement ->
+                (Placement.Target.PEER == placement.target() || Placement.Target.PEERS == placement.target() || Placement.Target.TREE == placement.target())
+                        && placement.spans().stream().anyMatch(span -> Span.Kind.AT == span.kind()));
         if (distributed) {
             if (!this.cut.declares(Law.monoidic))
                 throw MTronException.of("cut %s is distributed but does not declare monoidic", this.cut.form());

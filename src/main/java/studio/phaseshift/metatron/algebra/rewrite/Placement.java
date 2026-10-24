@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Route — a target plus the {@link Span spans} assembled onto it. Each route contributes one chain to the
+ * Placement — a target plus the {@link Span spans} assembled onto it. Each placement contributes one chain to the
  * emitted layout and a {@code to(...)} that routes its result: {@code [chain, chain...] == [to(), to(a), ...]}.
  * The target is where the interesting variation lives, not a {@code master}/{@code slave} flag:
  *
@@ -47,13 +47,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <li>{@link #tree(int)} — recursive tree-sharding with a hop budget.</li>
  * </ul>
  *
- * <p>A Route is a {@code rec} — {@code [target => uri(target), span => lst(spanRecs)]}, with {@code url}
+ * <p>A Placement is a {@code rec} — {@code [target => uri(target), span => lst(spanRecs)]}, with {@code url}
  * carrying the peer/space address and {@code hops} the tree budget when present. Every accessor reads
  * {@code this.at(key)}; there are no Java fields.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Route extends MRec {
+public class Placement extends MRec {
 
     public enum Target {
         LOCAL,
@@ -65,42 +65,42 @@ public class Route extends MRec {
         NONE
     }
 
-    public Route(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public Placement(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
-    public static Route local(final Span... spans) {
+    public static Placement local(final Span... spans) {
         return of(Target.LOCAL, null, 0, spans);
     }
 
-    public static Route peer(final fURI address, final Span... spans) {
+    public static Placement peer(final fURI address, final Span... spans) {
         return of(Target.PEER, address, 0, spans);
     }
 
-    public static Route peers(final Span... spans) {
+    public static Placement peers(final Span... spans) {
         return of(Target.PEERS, null, 0, spans);
     }
 
-    public static Route shuffle(final Span... spans) {
+    public static Placement shuffle(final Span... spans) {
         return of(Target.SHUFFLE, null, 0, spans);
     }
 
-    public static Route space(final fURI address, final Span... spans) {
+    public static Placement space(final fURI address, final Span... spans) {
         return of(Target.SPACE, address, 0, spans);
     }
 
-    public static Route tree(final int hops, final Span... spans) {
+    public static Placement tree(final int hops, final Span... spans) {
         return of(Target.TREE, null, hops, spans);
     }
 
     /**
      * Nowhere — the isolated span is deleted (the unit law's transform: cut the identity, route to nothing).
      */
-    public static Route none(final Span... spans) {
+    public static Placement none(final Span... spans) {
         return of(Target.NONE, null, 0, spans);
     }
 
-    private static Route of(final Target target, final fURI address, final int hops, final Span... spans) {
+    private static Placement of(final Target target, final fURI address, final int hops, final Span... spans) {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(TARGET), uri(target.name().toLowerCase()));
         if (null != address)
@@ -108,7 +108,7 @@ public class Route extends MRec {
         if (0 != hops)
             jvm.put(uri(HOPS), jnt(hops));
         jvm.put(uri(SPAN), lst(Arrays.stream(spans).map(s -> (Obj) s).toList()));
-        return new Route(jvm, REC_TID, null);
+        return new Placement(jvm, REC_TID, null);
     }
 
     public Target target() {
@@ -137,9 +137,9 @@ public class Route extends MRec {
     }
 
     /**
-     * Reconstruct a Route from a raw {@code rec} — the read-side of the same {@code target/url/hops/span} encoding.
+     * Reconstruct a Placement from a raw {@code rec} — the read-side of the same {@code target/url/hops/span} encoding.
      */
-    public static Route of(final Rec rec) {
-        return new Route(new LinkedHashMap<>(rec.jvm()), rec.tid(), rec.vid());
+    public static Placement of(final Rec rec) {
+        return new Placement(new LinkedHashMap<>(rec.jvm()), rec.tid(), rec.vid());
     }
 }

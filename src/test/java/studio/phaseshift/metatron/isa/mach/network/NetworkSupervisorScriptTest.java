@@ -33,7 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
-import studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor;
+import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -81,13 +81,13 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  */
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
-public class PeerSupervisionScriptTest extends AbstractMetatronTest {
+public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
 
     private static final fURI PROBE = f("/m/networkProbe");
     /**
      * longer than the backoff cap, so an awaited redial is always given its next attempt
      */
-    private static final long AWAIT_LINK_MS = PeerSupervisor.BACKOFF_MAX_MS + 5_000L;
+    private static final long AWAIT_LINK_MS = NetworkSupervisor.BACKOFF_MAX_MS + 5_000L;
 
     private final Map<String, Integer> ports = new LinkedHashMap<>();
     private final Map<String, wsSpace> servers = new LinkedHashMap<>();
@@ -153,7 +153,8 @@ public class PeerSupervisionScriptTest extends AbstractMetatronTest {
             final Network.Link link = (Network.Link) this.held.get(args[0]);
             this.probe("connected", bool(link.connected()));
             this.probe("hungup", bool(link.hungUp()));
-            this.probe("supervised", bool(PeerSupervisor.watching(this.heldLevels.get(args[0]))));
+            // supervised = the level's filed supervisor rec is live (~/network/supervisor), not the static registry
+            this.probe("supervised", bool(this.heldLevels.get(args[0]).at(uri(SUPERVISOR)) instanceof NetworkSupervisor supervisor && supervisor.supervising()));
         });
         // the status METHOD, applied to this level the way `*/network/status` applies it
         all.put("PROBE_STATUS", args -> {
@@ -464,5 +465,34 @@ public class PeerSupervisionScriptTest extends AbstractMetatronTest {
             "[STATE] *~.pop(_)"
     })
     public void testAFramesPeersSitAtItsOwnPath() {
+    }
+
+    /**
+     * CONSTRUCTION IS CONNECTION. {@code network_supervisor::[=>]} mints the level's supervisor, files it at
+     * {@code ~/network/supervisor}, and its {@code status} reads {@code supervising} — a first-class rec, not a
+     * sidecar.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[NETWORK_CLEAR]",
+            "[STATE] network_supervisor::[=>]",
+            "*<~/network/supervisor/status> % <supervising>   [-- construction filed it, supervising --]"
+    })
+    public void testAConstructionFilesTheSupervisor() {
+    }
+
+    /**
+     * A DIAL FILES THE SUPERVISOR. Indexing a link starts the supervision, which mints and files the supervisor —
+     * the address is live from the first connection, not only from an explicit construction.
+     */
+    @StatefulParametrizedTest
+    @StatefulCSVSource({
+            "[NETWORK_CLEAR]",
+            "[WS_SERVER a]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=supervised>]",
+            "[AWAIT_PEERS 1]",
+            "*<~/network/supervisor/status> % <supervising>   [-- the dial's supervision filed it --]"
+    })
+    public void testADialFilesTheSupervisor() {
     }
 }
