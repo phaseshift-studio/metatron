@@ -20,6 +20,9 @@ package studio.phaseshift.metatron.isa.web.space.http;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpsConfigurator;
+import com.sun.net.httpserver.HttpsExchange;
+import com.sun.net.httpserver.HttpsServer;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import studio.phaseshift.metatron.furi.fURI;
@@ -39,11 +42,20 @@ import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -86,6 +98,10 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .create();
 
     private final memSpace cache;
+    /**
+     * the https:// half of this space's client, when its pattern is http:// — see {@link #companion()}
+     */
+    private final httpSpace companion;
 
     public static final Type HTTP_HANDLER_TYPE = Type.Builder.build()
             .tid(HTTP_SOCKET_TID)
@@ -121,7 +137,14 @@ public class httpSpace extends AbstractSpace<HttpServer> {
 
     protected httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI vid) {
         super(server, config, HTTP_SPACE_TID, vid);
-        this.cache = memSpace.of(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
+        // the session cache is this space's own, reached through this field and never by address: registered, it
+        // claimed this space's pattern in memory beside the space, and outlived it there once the space was closed
+        this.cache = memSpace.unregistered(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
+        if (null == server) {
+            // a client half — the https:// companion of an http:// space: no socket, so no routes to mount on one
+            this.companion = null;
+            return;
+        }
         // no catch-all around the table: one that cannot be processed fails the construction. Swallowed, it left the
         // space mounted around a bound socket that was never started, which accepts connections and answers none.
         this.validateRoutes();
@@ -152,7 +175,9 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 LOG.error("unable to mount %s => %s: %s", left, routeValue.toShortString(), e.getMessage());
             }
         });
-        LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(HTTP).toUri());
+        // mounted before the server starts and inside this construction, so a companion that cannot mount fails it
+        this.companion = this.companion();
+        LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(server instanceof HttpsServer ? HTTPS : HTTP).toUri());
         server.setExecutor(ThreadExecutor.instance());
         LOG.debug("available routes: %s", this.at(ROUTE));
         server.start();
@@ -179,8 +204,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                final RouteLane fixed) throws IOException {
         // the FULL connection uri — scheme + the server's own authority + the dialed path and its
         // ?q processors (?name=<name> is the dialer's identity) — defined once at the request
-        // boundary so the co-mount and the handlers see what the client actually dialed.
-        final fURI connection = f(exchange.getRequestURI().toString()).scheme("http")
+        // boundary so the co-mount and the handlers see what the client actually dialed — https when it came over tls.
+        final fURI connection = f(exchange.getRequestURI().toString()).scheme(exchange instanceof HttpsExchange ? HTTPS : HTTP)
                 .host(fURI.hostOf(exchange.getLocalAddress())).port(exchange.getLocalAddress().getPort());
         final RouteLane lane = null != fixed ? fixed
                 : this.resolveRoute(routeValue, connection.localize());
@@ -390,11 +415,21 @@ public class httpSpace extends AbstractSpace<HttpServer> {
 
     public static httpSpace of(final Rec config, final fURI vid) {
         try {
+            final fURI host = config.at(HOST).uriValue();
+            // an https host's certificate is loaded before anything binds, so a keystore that cannot serve never holds
+            // the port it would have served on
+            final SSLContext tls = HTTPS.equals(host.scheme()) ? httpSpace.tls(config) : null;
             // HttpServer.create binds here, synchronously, so a lost bind throws before the space (which registers
             // itself in memory as it is constructed) exists
-            final HttpServer server = HttpServer.create(
-                    new InetSocketAddress(config.at(HOST).uriValue().host(),
-                            config.at(HOST).uriValue().port()), 0);
+            final InetSocketAddress address = new InetSocketAddress(host.host(), host.port());
+            final HttpServer server;
+            if (null == tls)
+                server = HttpServer.create(address, 0);
+            else {
+                final HttpsServer https = HttpsServer.create(address, 0);
+                https.setHttpsConfigurator(new HttpsConfigurator(tls));
+                server = https;
+            }
             try {
                 server.setExecutor(ThreadExecutor.instance());
                 return Space.Helper.construct(() -> new httpSpace(server, config.jvm(), vid));
@@ -416,16 +451,87 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     }
 
     /**
-     * the server IS this space: its host is the socket it bound, so it is an address this machine answers on
+     * The certificate an https host serves. {@code keystore} is a PKCS12 (or JKS) key store — a path to one, or its
+     * bytes ({@code keystore => *<mfs:conf/server.p12>}) — and {@code pass} opens both the store and the key in it.
+     * Both are applied first, as a space's pattern is, so either may be an expression. Every way that can be wrong
+     * fails the construction here, at boot, rather than each handshake later.
+     */
+    static SSLContext tls(final Rec config) {
+        final Obj keystore = config.at(uri(KEYSTORE)).apply();
+        final Obj pass = config.at(uri(PASS)).apply();
+        if (keystore.isNoObj())
+            throw MTronException.of("an %s host requires a %s", HTTPS, KEYSTORE);
+        if (!pass.isStr())
+            throw MTronException.of("an %s host requires the %s that opens its %s", HTTPS, PASS, KEYSTORE);
+        final char[] secret = pass.strValue().toCharArray();
+        try (final InputStream in = httpSpace.open(keystore)) {
+            final KeyStore store = KeyStore.getInstance(KeyStore.getDefaultType());
+            store.load(in, secret);
+            if (!httpSpace.holdsKey(store))
+                throw MTronException.of("%s holds no private key to serve", keystore);
+            final KeyManagerFactory keys = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keys.init(store, secret);
+            final SSLContext context = SSLContext.getInstance("TLS");
+            context.init(keys.getKeyManagers(), null, null);
+            return context;
+        } catch (final MTronException e) {
+            throw e;
+        } catch (final Exception e) {
+            throw MTronException.of(e, "unable to load %s %s: %s", KEYSTORE, keystore, MTronException.translateMessage(e));
+        }
+    }
+
+    private static InputStream open(final Obj keystore) throws IOException {
+        if (keystore.isBytes())
+            return new ByteArrayInputStream(keystore.bytesValue().array());
+        if (!keystore.isUri() && !keystore.isStr())
+            throw MTronException.of("a %s is a path or bytes: %s", KEYSTORE, keystore);
+        final String path = keystore.isUri() ? keystore.uriValue().toString() : keystore.strValue();
+        return Files.newInputStream(Path.of(path.startsWith("~") ? System.getProperty(USER_HOME) + path.substring(1) : path));
+    }
+
+    private static boolean holdsKey(final KeyStore store) throws KeyStoreException {
+        for (final String alias : Collections.list(store.aliases()))
+            if (store.isKeyEntry(alias))
+                return true;
+        return false;
+    }
+
+    /**
+     * The https:// half of an http:// space's client. A space claims exactly one pattern, so an {@code http://#}
+     * space leaves every {@code https://} address unrouted, though Jsoup and HttpClient both speak tls. This mounts
+     * the twin pattern as a second httpspace with no server: the same client (local routes, then the web) and the
+     * same q-procs, nothing bound and nothing announced, under this space's vid and closed with it. A pattern of any
+     * other scheme has no twin, and gets none.
+     */
+    private httpSpace companion() {
+        if (null == this.pattern() || !HTTP.equals(this.pattern().scheme()))
+            return null;
+        final Map<Obj, Obj> config = mutableMap(uri(PATTERN), uri(this.pattern().scheme(HTTPS)));
+        final Obj qprocs = this.at(uri(QPROC));
+        if (!qprocs.isNoObj())
+            config.put(uri(QPROC), qprocs);
+        final httpSpace companion = new httpSpace(null, config, null == this.vid() ? null : this.vid().extend(HTTPS));
+        LOG.info("mounting %s client at %s [pattern: %s]", HTTPS, companion.vid(), companion.pattern());
+        return companion;
+    }
+
+    /**
+     * the server IS this space: its host is the socket it bound, so it is an address this machine answers on. A
+     * companion binds nothing, so it answers on nothing.
      */
     @Override
     public boolean listens() {
-        return true;
+        return null != this.sjvm();
     }
 
     @Override
     public void close() {
-        this.sjvm().stop(0);
+        // the companion is this space's client for the other scheme: it goes when this space goes
+        if (null != this.companion)
+            this.companion.close();
+        if (null != this.sjvm())
+            this.sjvm().stop(0);
         super.close();
     }
 
@@ -439,7 +545,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     // ──────────────────────────────────────────────
 
     /**
-     * Read from the http:// address space.
+     * Read from the web address space this space claims: http:// or https://.
      * First tries the local route table; if no match, fetches from the remote web via Jsoup.
      * Supports nested path resolution: a 404 walks up the path to find a containing resource,
      * then navigates into it (e.g. {@code http://host/page/section} → fetch {@code /page}
@@ -523,7 +629,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     }
 
     /**
-     * Write to the http:// address space.
+     * Write to the web address space this space claims: http:// or https://.
      * POSTs to the remote server via HttpClient.
      */
     @Override

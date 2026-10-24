@@ -332,6 +332,10 @@ public final class Tokens {
     public static final String USER = "user";
     public static final String SYSTEM = "system";
     public static final String PASS = "pass";
+    /**
+     * the certificate a tls listener serves — a PKCS12 (or JKS) key store, opened with {@link #PASS}
+     */
+    public static final String KEYSTORE = "keystore";
     public static final String NAME = "name";
     public static final String ORDINAL = "ordinal";
     public static final String BUILD = "build";

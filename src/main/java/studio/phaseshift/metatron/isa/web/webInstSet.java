@@ -393,14 +393,18 @@ public class webInstSet extends AbstractInstSet {
                                         uri("header").maybe().asUri(), "whether the first row is a header row parsed into rec::T keys"),
                                 "obj_xsv::[delimiter => ',', header => true]"),
                         docWrap(HTTP_SPACE_TYPE, """
-                                                 a space for reading and writing web-related resources. 
-                                                 for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side. 
-                                                 for local routes, uri resolution will fetch from local web server backing httpspace. 
+                                                 a space for reading and writing web-related resources.
+                                                 for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side.
+                                                 an http://# httpspace also mounts a server-less https://# companion at <vid>/https, so https addresses resolve the same way, over tls.
+                                                 for local routes, uri resolution will fetch from local web server backing httpspace.
                                                  httpspace webserver is furi aware and will perform server-side extraction of nested addresses.
+                                                 an https:// host serves tls with the certificate in its keystore (a pkcs12 path or bytes), opened with its pass.
                                                  """,
                                 "*<http://phaseshift.studio>                 [-- yields a html::T < rec::T              --]",
+                                "*<https://phaseshift.studio>                [-- fetched over tls by the companion      --]",
                                 "*<http://phaseshift.studio/head/html/title> [-- client-side extraction of str::T title --]",
-                                "*<http://localhost:8777/head/html/title>    [-- server-side extraction of str::T title --]"),
+                                "*<http://localhost:8777/head/html/title>    [-- server-side extraction of str::T title --]",
+                                "httpspace::[host=><https://0.0.0.0:8443>,pattern=><https://#>,keystore=><conf/server.p12>,pass=>'changeit',route=>[/=><metatronfs:docs/website>]]@/sys/space/web/https"),
                         docWrap(WS_SPACE_TYPE, "a space for exposing and managing web socket servers.",
                                 "*<ws://localhost:8999/mtron>               [-- creates a wsmtron server session    --]",
                                 "<ws://localhost:8999/mtron/0/send>('ping') [-- sends str to wsmtron server session --]"),
