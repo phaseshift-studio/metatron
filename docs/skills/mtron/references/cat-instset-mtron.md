@@ -403,6 +403,9 @@ every instruction replaced by its `morphism::T`, i.e. **value code below, type c
 | field         | what it is                                                                                                      |
 |---------------|-----------------------------------------------------------------------------------------------------------------|
 | `obj`         | the chain itself (the value code)                                                                               |
+| `origin`      | (optional) where the code starts — the machine's own `place::T`, attached on lift when the machine answers; absent means not placeable (`bind` requires it) |
+| `where`       | (optional) the realized placement — span → place, written by the pass that applied a distribution rule: `{[span=>at] => [place…]}` lists the places the shard actually shipped to |
+| `peer`        | (optional) the `peer::T` recs the deployment used                                                               |
 | `<rule name>` | one edge per **live** rewrite — the edge holds the `plan::T` (see below); `lower(plan)` applies it and re-lifts |
 
 Only live edges are materialized (see *a-priori pruning*): a vertex lists exactly the rules that can move it, and a
@@ -429,6 +432,7 @@ real match. A rule the pruner does not know is never pruned.
 | field | description                                                                                                                                                                                                                                  |
 |-------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `obj` | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`: the surface a `plan::T`'s guard reads (its law/form/theory), the code and its descent staying anchored at `path::T.obj` |
+| `where` | (optional) the α **place-class word** — the places the code can be distributed TO (its declared roster machines and dialed peers) as a list of `place::T`; the surface a placement guard reads, the location twin of `obj`'s instruction word. Absent with no reach, and `law_shard` is then not a live morphism |
 
 The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per
 instruction,
@@ -462,6 +466,24 @@ names and where its `where` sends it:
 The application is a **type method**, not a field: `lower(plan::T)` is one instruction registered in
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
 and re-lifts the result to `path::T`. The plan carries no `result` λ; `lower` *is* the operator.
+
+A relocation decision in `plan.where` is `[shape, target?, hops?, span]` — `shape` is the topology token
+(`local` / `none` / `peer` / `peers` / `space` / `tree` / `shuffle`), `target` the concrete address. Each shape
+declares the laws it demands of a cut shipped to it (§3, two directions):
+
+| shape    | obligations                              |
+|----------|------------------------------------------|
+| `local`, `space`, `none` | —                          |
+| `peer`, `peers`, `tree`  | `monoidic`, `commutative`  |
+| `shuffle`               | `monoidic`                 |
+
+`PlanBuilder.create()` validates a cut plan against this table (`obligations(shape) ⊆ cut.laws`); the reverse
+traversal `admissible(laws)` reads it the other way.
+
+`bind(plan::T)` is the cut-less operator — the distribution rule. It requires a plan with **no cut** and a path with
+an `origin`; `lower` is the cut-plan sibling, and both share one body (`apply(plan, env)` over an environment
+snapshot). Until the `move` rule ships (a later phase), a cut-less plan is the identity — the code stands where it
+stood.
 
 **A distribution plan requires peers.** `law_shard` is live only over a non-empty peer roster: its guard reads the
 machine's dialed peers, and with no peer it matches nothing, so `lower` is the identity. A `ws_client` dials and

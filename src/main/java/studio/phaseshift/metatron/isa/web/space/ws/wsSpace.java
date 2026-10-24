@@ -101,22 +101,22 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             .tid(WS_WEBSOCKET_TID)
             .vid(WS_HANDLER_TID)
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
-                    lst(T(REC_TID)), (lhs, inst) ->
+                    lst(T(REC_TID)), (_, inst) ->
                             new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
 
     public static final Type WS_CLIENT_TYPE = Type.Builder.build()
             .tid(WS_WEBSOCKET_TID)
             .vid(WS_CLIENT_TID)
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
-                    lst(T(REC_TID)), (lhs, inst) -> {
+                    lst(T(REC_TID)), (_, inst) -> {
                         try {
                             // THE IDIOMATIC DIAL: ws_client::[pattern=><ws://host:port/mtron?name=me>] —
                             // the claim derives the host (pattern retracted), the constructor connects, and
                             // on success the client indexes itself into the network as a space's constructor
                             // indexes into Memory. Indexing is a BACKGROUND behavior: it never fails the
                             // construction, and connect() remains sugar that converges on the same peer.
-                            final java.util.Map<studio.phaseshift.metatron.isa.m.type.Obj, studio.phaseshift.metatron.isa.m.type.Obj> config =
-                                    new java.util.LinkedHashMap<>(inst.arg(0).asRec().jvm());
+                            final Map<Obj, Obj> config =
+                                    new LinkedHashMap<>(inst.arg(0).asRec().jvm());
                             final studio.phaseshift.metatron.isa.m.type.Obj pattern = config.get(uri(PATTERN));
                             if (null != pattern && pattern.isUri() && !config.containsKey(uri(HOST)))
                                 config.put(uri(HOST), uri(pattern.uriValue().retractPattern()));
@@ -128,6 +128,10 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                             if (null != protocol && !protocol.isNoObj() && isMtronFacade(protocol))
                                 mtron_wsHandler.install(wsRec);
                             final WebSocketRecClient client = new WebSocketRecClient(wsRec);
+                            // INDEXING IS UNCONDITIONAL. A dial whose far side is not up yet still declares a peer:
+                            // the client is demoted to a bare rec inside its constructor and must be indexed so the
+                            // supervisor redials it in place until the far side answers. Indexing is a background
+                            // behavior that never fails the construction, and Network.index re-checks the transport.
                             Network.Helper.index(client);
                             return client;
                         } catch (final Exception e) {

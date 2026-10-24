@@ -171,6 +171,16 @@ public final class Places {
     }
 
     /**
+     * The declared-liveness test (§4): a place is an admissible candidate when some authority's scheme has a dialer
+     * that resolves in this machine's ISA. No dial is attempted — it reads the place's authority schemes and the ISA,
+     * nothing live.
+     */
+    public static boolean admissible(final Obj place) {
+        final Place p = Place.of(place.asRec());
+        return p.authorities().stream().anyMatch(a -> Signatures.resolves(a.scheme()));
+    }
+
+    /**
      * The outbound edges — the peers this machine dialed to this place. A dialed peer carries a {@code host} (where
      * to dial back), which an inbound accept does not, so the {@code host} field is the out/in marker.
      */

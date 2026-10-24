@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
@@ -218,15 +219,24 @@ public class ThreadExecutor extends AbstractExecutorService implements Rec {
             }
         };
 
+        // A FRAME OF REFERENCE IS PER-THREAD, so handing work to a worker loses it unless the boundary carries it
+        // IN. Captured HERE, on the caller's thread, because that is where "where I stand" lives. The OUT half is
+        // the worker's own job: createTask() records its landing via AbstractThread.complete() before it completes
+        // the future, so the session that adopts the landing never races its publication.
+        final Machine perspective = Machine.current();
         if (thread instanceof VirtualThread) {
             final Thread javaThread = Thread.ofVirtual()
                     .name(null != thread.vid() ? thread.vid().toString() : "metatron-virtual")
-                    .unstarted(wrapped::run);
+                    .unstarted(() -> {
+                        Machine.current(perspective);
+                        wrapped.run();
+                    });
             thread.setJavaThread(javaThread);
             javaThread.start();
         } else {
             this.service.execute(() -> {
                 thread.setJavaThread(Thread.currentThread());
+                Machine.current(perspective);
                 wrapped.run();
             });
         }

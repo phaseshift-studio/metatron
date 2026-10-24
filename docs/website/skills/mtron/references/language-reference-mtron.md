@@ -134,21 +134,21 @@ mtron> int{5}::3                                [-- coefficient {5} represents 5
 mtron> {5}3                                     [-- shorthand for the previous example (5 3s) --]
 ==>{5}3
 mtron> {1,2,3}.sum{2}()                         [-- two parallel sums yields {2}6 --]
-==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/275
+==>{2}6
 mtron> {1,2,3}.sum{2}().sum()                   [-- {2}6 merged by sum is 12 --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<4>]@/sys/fail/280
+==>12
 ```
 Coefficients propagate through arithmetic and affect count, sum, repeat:
 
 ```mtron
 mtron> {1,2,3}.count()               [-- 3  (sum of coefficients) --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/287
+==>3
 mtron> {1,2,{10}3}.count()           [-- 12  (sum of coefficients) --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/294
+==>12
 mtron> int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 ==>{50}100
 mtron> {int{2}::1,int{3}::2}.sum()   [-- int::8 (coefficients account for) --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/302
+==>8
 ```
 ---
 
@@ -172,9 +172,9 @@ mtron> {1,2,3}.mult(10)               [-- {10,20,30} --]
 mtron> 1.plus(1.plus(1))              [-- 3  (nested) --]
 ==>3
 mtron> {1,2,3,4}.prod()               [-- 24 --]
-==>fail::[unable to locate inst-f fail::T => prod?dom=#{*}()@<3>]@/sys/fail/314
+==>24
 mtron> {1,2,3}.sum()                  [-- 6 --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/318
+==>6
 mtron> {1,2,3,4,5}.reduce(|plus(0))   [-- 15 (| necessary to block evaluation) --]
 ==>15
 ```
@@ -310,7 +310,7 @@ mtron> posint::2                    [-- posint::2  (admitted: the predicate lets
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[parse error at line 1, col 1: -1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/355
+   	while parsing: posint::-1]@/sys/fail/37769
 ```
 ---
 
@@ -366,14 +366,13 @@ mtron> {[a=>1],[a=>2],[a=>3]}?[a=>is(lt(3))]   [-- {[a=>1],[a=>2]}  (the same sh
 ==>[a=>1]
 ==>[a=>2]
 ```
-**`where()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
+**`isa()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
 fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
 original — a profile matcher, and `noobj` when the profile is contradicted:
 
 ```mtron
-mtron> <//2024.12:25/09/00/00/000?tz=-0500>?where([host=>2024.12, port=>25])  [-- the uri (the profile matches) --]
-==><//2024.12:25/09/00/00/000?tz=-0500>
-mtron> <//2024.12:25/09/00/00/000?tz=-0500>?where([host=>2024.12, port=>26])  [-- noobj  (the port contradicts the profile) --]
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>?isa([host=>2024.12, port=>25])  [-- the uri (the profile matches) --]
+mtron> <//2024.12:25/09/00/00/000?tz=-0500>?isa([host=>2024.12, port=>26])  [-- noobj  (the port contradicts the profile) --]
 ```
 ---
 
@@ -683,11 +682,11 @@ mtron> ?int::T    [-- check if type is int --]
 ```mtron
 chains: every inst's output is the next inst's input
 mtron> {1,2,3,4}.sum()                [-- 10 --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<3>]@/sys/fail/457
+==>10
 mtron> {1,2,3,4}.sum{2}()             [-- {2}10  (the same job, run twice in parallel) --]
-==>fail::[unable to locate inst-f fail::T => sum{2}?dom=#{*}()@<3>]@/sys/fail/461
+==>{2}10
 mtron> {1,2,3,4}.sum{2}().sum()       [-- 20  (the outer sum folds the coefficient in) --]
-==>fail::[unable to locate inst-f fail::T => sum?dom=#{*}()@<4>]@/sys/fail/466
+==>20
 mtron> {1,2,3,4}-<[plus(1), plus(10)]>-    [-- 2, 11, 3, 12, 4, 13, 5, 14  (distribute to each function, then merge) --]
 ==>2
 ==>11

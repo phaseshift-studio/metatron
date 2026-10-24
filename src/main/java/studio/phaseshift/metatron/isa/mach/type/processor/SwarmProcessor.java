@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
 import static studio.phaseshift.metatron.isa.mach.type.processor.monad.BasicStatefulMonad.statefulMonad;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.CURRENT_SYS;
 
 /*
  * SwarmProcessor — a monadic execution engine that IS a VirtualThread.
@@ -92,9 +93,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
 
     protected SwarmProcessor(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         // ~/processor: machine-agnostic — resolved to the current machine's vid on write (and selfVID-stamped).
-        super(jvm, tid, null == vid ?
-                (Machine.current().hasVID() ? Machine.current().vid() :
-                        f("~")).extend("processor").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
+        super(jvm, tid, null == vid ? CURRENT_SYS.extend("processor").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
         PROCESSORS.incrementAndGet();
         // Ensure machine state fields exist with defaults
         this.jvm().putIfAbsent(uri(RUN), RUNNING_SUPPLIER.get());
@@ -250,7 +249,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
         // boolean-switch: if any inst reads the walked path (?monad_in=state/path), tag the code
         // with ?path so the monads it mints accrue the path (looked up via the shared code, not
         // copied into each monad's state).
-        final Code code = this.computesPath(resolvedCode) ? resolvedCode.tid(resolvedCode.tid().addQ(PATH)) : resolvedCode;
+        final Code code = computesPath(resolvedCode) ? resolvedCode.tid(resolvedCode.tid().addQ(PATH)) : resolvedCode;
         final SwarmProcessor mach = this.code(code);
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
@@ -269,7 +268,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
      * true when any instruction in {@code code} reads the walked path ({@code monad_in=state/path}).
      */
     private static boolean computesPath(final Code code) {
-        return code.insts().stream().anyMatch(i -> i.tid().hasQ(MONAD_IN) && "path".equals(f(i.tid().q(MONAD_IN)).name()));
+        return code.insts().stream().anyMatch(i -> i.tid().hasQ(MONAD_IN) && PATH.equals(f(i.tid().q(MONAD_IN)).name()));
     }
 
     // ======================== Execution ========================
@@ -286,7 +285,7 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                 this.logger().warn("machine currently running, ignoring %s", other);
                 return this;
             }
-            this.jvm().put(uri(START), other);
+            this.jvm().put(uri(LHS), other);
         }
         return runMonadicLoop();
     }
@@ -309,9 +308,9 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
                 LOG.debug("processor %s evaluating a %d-instruction code sequence: %s", this.vid(), submittedInsts.size(), submitted);
         }
         Machine.current().memory().stats().monadicStats().resetMonads();
-        final Code code = this.resolve(this.at(START)).code();
+        final Code code = this.resolve(this.at(LHS)).code();
         if (this.running().c().isZero()) {
-            final Obj start = this.at(START);
+            final Obj start = this.at(LHS);
             this.running().append(statefulMonad(start.isMonad() ? start.asMonad().obj() : start, code.insts().getFirst(), start.isMonad() ? start.asMonad().state() : rec0(), code));
         }
 
@@ -439,13 +438,10 @@ public class SwarmProcessor extends VirtualThread implements MonadProcessor {
     public Runnable createTask() {
         return () -> {
             try {
-                final Obj result = runMonadicLoop();
-                if (null != this.future)
-                    this.future.setObj(result);
+                this.complete(runMonadicLoop());
             } catch (final Exception e) {
-                if (null != this.thread && !e.getMessage().contains("nterrupt")) {
-                    if (null != this.future)
-                        this.future.setObj(fail(e));
+                if (null != this.thread && null != e.getMessage() && !e.getMessage().contains("nterrupt")) {
+                    this.complete(fail(e));
                     //this.logger().error("machine execution failed: %s", e.getMessage());
                 }
             } finally {

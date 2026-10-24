@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -146,6 +147,13 @@ public final class Executor {
                         backgrounded = true;
                     } else {
                         computeResult.set(future.get());
+                        // THE SESSION ADOPTS WHERE THE WORK ENDED. The worker started where this thread stood and
+                        // published where it finished (ThreadExecutor carries the frame of reference both ways); a
+                        // prompt persists between statements, so it is the thing that must adopt it. Without this
+                        // the move is real but invisible here -- and with it, no console special-casing of results,
+                        // no auto_xxx hook: the boundary is the thread, and the session is this thread.
+                        if (mach instanceof AbstractThread worker && null != worker.landedPerspective())
+                            Machine.current(worker.landedPerspective());
                     }
                 } else {
                     computeResult.set(this.console.input.apply(resolvedResult));

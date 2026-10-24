@@ -93,15 +93,36 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
     base_vid=>'/m/rec',
     obj_tid=>'/m/rec']
 ==>[table_name=>'person',
-    column_name=>'name',
+    column_name=>'skill',
     base_vid=>'/m/str',
     obj_tid=>'/m/str']
+==>[table_name=>'award',
+    column_name=>'$table',
+    base_vid=>'/m/rec',
+    obj_tid=>'/m/rec']
+==>[table_name=>'award',
+    column_name=>'trophy',
+    base_vid=>'/m/str',
+    obj_tid=>'/m/str']
+==>[table_name=>'award',
+    column_name=>'recipient',
+    base_vid=>'/m/inst',
+    obj_tid=>'/m/inst/auto_from',
+    ref_table=>'person']
 ==>[table_name=>'person',
     column_name=>'age',
     base_vid=>'/m/int',
     obj_tid=>'/m/int']
 ==>[table_name=>'person',
-    column_name=>'skill',
+    column_name=>'name',
+    base_vid=>'/m/str',
+    obj_tid=>'/m/str']
+==>[table_name=>'note',
+    column_name=>'$table',
+    base_vid=>'/m/rec',
+    obj_tid=>'/m/rec']
+==>[table_name=>'note',
+    column_name=>'body',
     base_vid=>'/m/str',
     obj_tid=>'/m/str']
 ```
@@ -116,6 +137,7 @@ mtron> *tbledoc:person/+              [-- every row as a rec --]
 ==>[name=>'marko',age=>29]
 ==>[name=>'metis',age=>41]
 ==>[name=>'grant',age=>25]
+==>[name=>'vela',age=>53]
 mtron> *tbledoc:person/1              [-- one row --]
 ==>[name=>'marko',age=>29]
 mtron> *tbledoc:person/+/             [-- vid => row --]
@@ -123,15 +145,18 @@ mtron> *tbledoc:person/+/             [-- vid => row --]
 ==>tbledoc:person/1=>[name=>'marko',age=>29]
 ==>tbledoc:person/3=>[name=>'metis',age=>41]
 ==>tbledoc:person/2=>[name=>'grant',age=>25]
+==>tbledoc:person/5=>[name=>'vela',age=>53]
 mtron> *tbledoc:person/+/name         [-- one column, across rows --]
 ==>'metis'
 ==>'grant'
+==>'vela'
 ==>'marko'
 ==>'xilo'
 mtron> *tbledoc:person/1/name         [-- one field: the row is unrolled --]
 ==>'marko'
 mtron> *tbledoc:person/+/id           [-- the keys: they live in the vid, not in the body --]
 ==>1
+==>5
 ==>2
 ==>4
 ==>3
@@ -150,6 +175,8 @@ mtron> *tbledoc:person/+/+      [-- clone: fields detached from their rows --]
 ==>41
 ==>'grant'
 ==>25
+==>53
+==>'vela'
 ==>33
 ==>29
 ==>'graph'
@@ -160,6 +187,8 @@ mtron> @tbledoc:person/+/+      [-- anchor: the same fields, each still addresse
 ==>41@tbledoc:person/3/age
 ==>'grant'@tbledoc:person/2/name
 ==>25@tbledoc:person/2/age
+==>53@tbledoc:person/5/age
+==>'vela'@tbledoc:person/5/name
 ==>33@tbledoc:person/4/age
 ==>29@tbledoc:person/1/age
 ==>'graph'@tbledoc:person/4/skill
@@ -171,19 +200,15 @@ the anchored form is the one to keep when the rows might be written back:
 
 ```mtron
 mtron> *tbledoc:person/+.take(2)     [-- clone path --]
-==>/sys/space/tbledoc/instset/person::[
-    name=>'marko',
-    age=>29]@tbledoc:person/1
-==>/sys/space/tbledoc/instset/person::[
-    name=>'grant',
-    age=>25]@tbledoc:person/2
+==>person::[name=>'marko',
+            age=>29]@tbledoc:person/1
+==>person::[name=>'grant',
+            age=>25]@tbledoc:person/2
 mtron> @tbledoc:person/+.take(2)     [-- anchor path --]
-==>/sys/space/tbledoc/instset/person::[
-    name=>'marko',
-    age=>29]@tbledoc:person/1
-==>/sys/space/tbledoc/instset/person::[
-    name=>'grant',
-    age=>25]@tbledoc:person/2
+==>person::[name=>'marko',
+            age=>29]@tbledoc:person/1
+==>person::[name=>'grant',
+            age=>25]@tbledoc:person/2
 ```
 ## the rewrites — reads that become SQL
 
@@ -198,16 +223,17 @@ mtron> *tbledoc:person/+.?[age=>?<30]        [-- SELECT * FROM person WHERE age 
 ==>[name=>'grant',
     age=>25]@tbledoc:person/noobj
 mtron> *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
-==>4
+==>5
 mtron> *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
-==>128
+==>181
 mtron> *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==>32.0
+==>36.2
 mtron> *tbledoc:person/+.==[name=>_]           [-- SELECT name FROM person --]
 ==>[name=>'xilo']
 ==>[name=>'marko']
 ==>[name=>'metis']
 ==>[name=>'grant']
+==>[name=>'vela']
 mtron> *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
 ==>[[name=>'grant',
      age=>25]@tbledoc:person/noobj,
@@ -217,30 +243,30 @@ mtron> *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
      age=>33,
      skill=>'graph']@tbledoc:person/noobj,
     [name=>'metis',
-     age=>41]@tbledoc:person/noobj]
+     age=>41]@tbledoc:person/noobj,
+    [name=>'vela',
+     age=>53]@tbledoc:person/noobj]
 mtron> *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
 ==>'marko'
 ==>'grant'
 ==>'metis'
 ==>'xilo'
+==>'vela'
 mtron> *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
-==>/sys/space/tbledoc/instset/person::[
-    name=>'marko',
-    age=>29]@tbledoc:person/1
-==>/sys/space/tbledoc/instset/person::[
-    name=>'grant',
-    age=>25]@tbledoc:person/2
+==>person::[name=>'marko',
+            age=>29]@tbledoc:person/1
+==>person::[name=>'grant',
+            age=>25]@tbledoc:person/2
 mtron> *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
-==>/sys/space/tbledoc/instset/person::[
-    name=>'grant',
-    age=>25]@tbledoc:person/2
-==>/sys/space/tbledoc/instset/person::[
-    name=>'metis',
-    age=>41]@tbledoc:person/3
-==>/sys/space/tbledoc/instset/person::[
-    name=>'xilo',
-    age=>33,
-    skill=>'graph']@tbledoc:person/4
+==>person::[name=>'grant',
+            age=>25]@tbledoc:person/2
+==>person::[name=>'metis',
+            age=>41]@tbledoc:person/3
+==>person::[name=>'xilo',
+            age=>33,
+            skill=>'graph']@tbledoc:person/4
+==>person::[name=>'vela',
+            age=>53]@tbledoc:person/5
 ```
 | rewrite                  | mtron                                   | sql                                                 |
 |--------------------------|-----------------------------------------|-----------------------------------------------------|
@@ -336,13 +362,14 @@ kinds may sit in one row.
 mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
 ==>/sys/space/tbledoc/instset/#
 mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
+==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
+    recipient=>isa(person/+/id).!*id(),
+    uri::T=><#>::T]]@/sys/space/tbledoc/instset/award
+==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T,uri::T=><#>::T]]@/sys/space/tbledoc/instset/note
 ==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
     {?}age=>int::T,
     {?}skill=>str::T,
     uri::T=><#>::T]]@/sys/space/tbledoc/instset/person
-==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-    recipient=>isa(person/+/id).!*id(),
-    uri::T=><#>::T]]@/sys/space/tbledoc/instset/award
 ```
 Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
 of `rec::T`, and a foreign-key column appears as `recipient=>isa(person/+/id).!*id()` — the column *is* the pointer.
@@ -399,12 +426,14 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/1
+==>[body=>'a note with a database-assigned key']@tbledoc:note/3
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/2
+==>[body=>'another one']@tbledoc:note/4
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>1
+==>3
 ==>2
+==>4
 ```
 ## taking the space down
 

@@ -36,9 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.mach.ui.uiInstSet.UI_NETWORK_PANEL_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -240,6 +238,23 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     /**
+     * The creator's style is their write: the panel's defaults must not overwrite it.
+     */
+    @Test
+    void shouldKeepTheCreatorsStyle() {
+        final studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style<studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget> style =
+                studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style.empty();
+        style.floatAt(studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface.Anchor.TOP_LEFT, 0, 0, 0);
+        style.width(50);
+        final NetworkPanelTool tool = new NetworkPanelTool(
+                mutableMap(studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("style"), style),
+                UI_NETWORK_PANEL_TID, null);
+        assertEquals(50, tool.getStyle().width(), "the creator's width survives the panel's defaults");
+        assertEquals(studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface.Anchor.TOP_LEFT,
+                tool.getStyle().anchor(), "and so does the creator's anchor");
+    }
+
+    /**
      * The type is registered, so a user can create the tool the way every other tool is created.
      */
     @Test
@@ -294,8 +309,30 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         final String[] rows = Graphitty.strip(Graphitty.string(tool.format())).split("\n");
         final int width = rows[0].length();
         assertTrue(width > 2, "the box has a top border to measure");
-        for (final String row : rows)
+        boolean clipped = false;
+        for (final String row : rows) {
             assertEquals(width, row.length(), "every row shares the box's width (no ragged right edge): " + row);
+            if (row.contains("…")) {
+                clipped = true;
+                assertTrue(row.contains("… │"), "the ellipsis keeps a column from the right border: " + row);
+            }
+        }
+        assertTrue(clipped, "the fixture actually clipped a line");
+    }
+
+    /**
+     * Word-wrap must measure visual columns (markup stripped), not characters: a markup-heavy lane header — whose
+     * tags inflate its char count — must not be split onto two lines when it fits on one.
+     */
+    @Test
+    void wrapLinesShouldMeasureVisualColumnsNotMarkupCharacters() {
+        final String header = "{{c}}▼{{w}} {{r}}[x]{{w}} ws://peer:1/mtron {{y}}⇄4 60ms";
+        final int visual = Graphitty.viewLength(header);
+        assertTrue(visual < header.length(),
+                "the markup is longer than what it draws: " + header.length() + " chars vs " + visual + " columns");
+        final List<String> wrapped =
+                studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style.wrapLines(List.of(header), visual);
+        assertEquals(1, wrapped.size(), "a line that fits visually is not split by its markup: " + wrapped);
     }
 
     /** a tiny sleep helper, so the two chats in the ordering test are unambiguously seconds apart */

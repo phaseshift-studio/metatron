@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.sys.LogObj;
 
 import static org.slf4j.event.Level.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
+import static studio.phaseshift.metatron.BootLoader.CLOSING;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 
 
@@ -49,7 +50,7 @@ public class GraphittyObjLogger extends GraphittyLogger {
             if (!LOG_VID.isZero()) {
                 final Obj o = Machine.current().memory().read(LOG_VID);
                 if (o.isNoObj()) {
-                    if (!BOOTING)
+                    if (!BOOTING && !CLOSING)
                         this.none("no space embedded logger found at %s\n", LOG_VID.toUri());
                     return true;
                 } else

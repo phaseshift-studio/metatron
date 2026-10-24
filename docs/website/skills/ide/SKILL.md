@@ -79,7 +79,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/206
+==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/2873
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -101,9 +101,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
               mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>millis::745.0,
+            runtime=>second::2.797,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/c910a450]
+            output=>!*/sys/tmp/d3ed5172]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.

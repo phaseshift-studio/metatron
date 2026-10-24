@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AccordionWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.web.space.ws.WireStats;
@@ -100,14 +101,18 @@ public class NetworkPanelTool extends AccordionWidget {
     public NetworkPanelTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid, false);
         this.title("net");
-        // a panel is something you WATCH, so it defaults to a corner rather than to the transcript; the border and
-        // the green foreground are the accordion's defaults, and the width keeps the box readable out of the box
-        final Stylable.Style<AccordionWidget> defaults = Stylable.Style.empty();
-        defaults.border(Border.continuous);
-        defaults.foreground("{{g}}");
-        defaults.floatAt(FloatingSurface.Anchor.BOTTOM_RIGHT, 0, 0, 0);
-        defaults.width(DEFAULT_WIDTH);
-        this.style(defaults);
+        // the defaults apply only when the creator wrote no style of their own — a creator's style is their write
+        // and must survive the re-hydration every .display() performs, not be overwritten by the panel's defaults
+        if (!Stylable.Style.isStyle(this.at(uri(studio.phaseshift.metatron.Tokens.STYLE)))) {
+            // a panel is something you WATCH, so it defaults to a corner rather than to the transcript; the border
+            // and the green foreground are the accordion's defaults, and the width keeps the box readable out of the box
+            final Stylable.Style<AccordionWidget> defaults = Stylable.Style.empty();
+            defaults.border(Border.continuous);
+            defaults.foreground("{{g}}");
+            defaults.floatAt(FloatingSurface.Anchor.BOTTOM_RIGHT, 0, 0, 0);
+            defaults.width(DEFAULT_WIDTH);
+            this.style(defaults);
+        }
         listenForTraffic();
     }
 
@@ -313,13 +318,13 @@ public class NetworkPanelTool extends AccordionWidget {
     private static String clip(final String markup, final int width) {
         if (width <= 0)
             return markup;
-        // measure what a terminal will show, not the markup: the same strip WidgetCanvas uses to size a line
-        final String plain = studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.strip(
-                studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.string(markup));
-        if (plain.length() <= width)
+        // measure VISUAL COLUMNS — the true terminal width, markup and ANSI stripped, a wide glyph counted for
+        // its real width — never markup characters, which is exactly the measure the accordion's word-wrap uses
+        if (Graphitty.viewLength(markup) <= width)
             return markup;
-        // a clipped markup line would end inside a tag, so a line that must be cut is handed back as plain text
-        return plain.substring(0, Math.max(0, width - 1)) + "…";
+        // a clipped markup line would end inside a tag, so a line that must be cut is handed back as plain text,
+        // sliced at a column boundary so a wide glyph is never split in half
+        return Graphitty.viewPrefix(Graphitty.strip(Graphitty.string(markup)), Math.max(1, width - 1)) + "…";
     }
 
     @Override

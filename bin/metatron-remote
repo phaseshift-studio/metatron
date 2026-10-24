@@ -203,7 +203,7 @@ if [ "$VERB" = status ]; then
         [ "$_where" = local ] && _lbl="$LOCAL_LABEL" || _lbl="${_where#*@}"
         while IFS= read -r _proc; do
             [ -z "${_proc:-}" ] && continue
-            printf '  %-11s %-14s %s\n' "${C_YEL}[mvn]${C_OFF}" "$_lbl" "$_proc"
+            printf '  %s%-11s%s %-14s %s\n' "$C_YEL" "[mvn]" "$C_OFF" "$_lbl" "$_proc"
             _saw_mvn=1
         done <<< "$(mvn_of "$_where")"
     done
@@ -215,12 +215,12 @@ if [ "$VERB" = status ]; then
     if [ -s "$LOG_FILE" ]; then
         echo
         echo "recent"
-        tail -8 "$LOG_FILE" | while IFS=$'\t' read -r ts mach args rc dur; do
+        tail -8 "$LOG_FILE" | tac | while IFS=$'\t' read -r ts mach args rc dur; do
             [ -z "${ts:-}" ] && continue
-            if [ "$rc" = "0" ]; then tag="${C_GRN}[complete]${C_OFF}"; out="ok"
-            else tag="${C_RED}[failed]${C_OFF}"; out="exit $rc"; fi
-            printf '  %s %-13s %s%-32.32s%s %-9s %8s ago\n' \
-                "$tag" "$mach" "$C_MAG" "$args" "$C_OFF" "$out" "$(human_age "$ts")"
+            if [ "$rc" = "0" ]; then tc="$C_GRN"; tag="[complete]"; out="ok"
+            else tc="$C_RED"; tag="[failed]"; out="exit $rc"; fi
+            printf '  %s%-10s%s %-13s %s%-32.32s%s %-9s %8s ago\n' \
+                "$tc" "$tag" "$C_OFF" "$mach" "$C_MAG" "$args" "$C_OFF" "$out" "$(human_age "$ts")"
         done
         echo
         awk -F'\t' '{n++; if ($4=="0") ok++; else bad++} END {printf "  %d finished: %d ok, %d failed\n", n, ok, bad}' "$LOG_FILE"

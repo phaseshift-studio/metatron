@@ -18,7 +18,7 @@ mtron> ... [-- larger agent definition --]
 ==>fail::[parse error at line 1, col 2:
      ... [-- larger agent definition --]
       ^
-     expected an obj]@/sys/fail/210
+     expected an obj]@/sys/fail/4871
 mtron> feature=>[
         tool_feature::[tool=>[!*eval]]
         ... [-- other features attached to agent --]
@@ -26,12 +26,12 @@ mtron> feature=>[
      feature=>[
            tool_feature::[tool=>[!*eval...
             ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/211
+     unclosed triple-quote — missing closing '"""']@/sys/fail/4941
 mtron> ]
 ==>fail::[parse error at line 1, col 1:
      ]
      ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/212
+     unclosed triple-quote — missing closing '"""']@/sys/fail/4960
 ```
 ## References
 

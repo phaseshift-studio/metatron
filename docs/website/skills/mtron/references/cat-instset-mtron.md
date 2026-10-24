@@ -484,6 +484,9 @@ every instruction replaced by its `morphism::T`, i.e. **value code below, type c
 | field         | what it is                                                                                                      |
 |---------------|-----------------------------------------------------------------------------------------------------------------|
 | `obj`         | the chain itself (the value code)                                                                               |
+| `origin`      | (optional) where the code starts — the machine's own `place::T`, attached on lift when the machine answers; absent means not placeable (`bind` requires it) |
+| `where`       | (optional) the realized placement — span → place, written by the pass that applied a distribution rule: `{[span=>at] => [place…]}` lists the places the shard actually shipped to |
+| `peer`        | (optional) the `peer::T` recs the deployment used                                                               |
 | `<rule name>` | one edge per **live** rewrite — the edge holds the `plan::T` (see below); `lower(plan)` applies it and re-lifts |
 
 Only live edges are materialized (see *a-priori pruning*): a vertex lists exactly the rules that can move it, and a
@@ -498,21 +501,21 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==>[path::[obj=>start(5).plus(0).neg().neg(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
-                                       route=>[[target=>none,span=>[[span=>at]]]]],
+                                       where=>[[shape=>none,span=>[[span=>at]]]]],
            theory_involution=>plan::[name=>theory_involution,
                                      cut=>[law=>[involution]],
-                                     route=>[[target=>local,span=>[[span=>at]]]]],
+                                     where=>[[shape=>local,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
-                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
+                                          where=>[[shape=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]
 ==>[path::[obj=>start(5).plus(0),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
-                                       route=>[[target=>none,span=>[[span=>at]]]]],
+                                       where=>[[shape=>none,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
-                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
+                                          where=>[[shape=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
 ==>[path::[obj=>start(5)]]
 ```
@@ -527,20 +530,20 @@ real match. A rule the pruner does not know is never pruned.
 | field | description                                                                                                                                                                                                                                  |
 |-------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `obj` | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`: the surface a `plan::T`'s guard reads (its law/form/theory), the code and its descent staying anchored at `path::T.obj` |
+| `where` | (optional) the α **place-class word** — the places the code can be distributed TO (its declared roster machines and dialed peers) as a list of `place::T`; the surface a placement guard reads, the location twin of `obj`'s instruction word. Absent with no reach, and `law_shard` is then not a live morphism |
 
 The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per
 instruction,
 each already carrying `form`, `class`, `law`, and `analysis` — not a second concrete chain. Nor is it a vertex one
 descends through: no traversal runs over the abstraction, because it is only the lookup surface from which a `plan::T`
 derives its rewrite. The guard reads the laws/forms/theories off the word (`*…/obj/1/law`, `*…/obj/2/analysis/inverse`)
-and computes its cut/span/route without consulting the code below; the descent ($\gamma$) runs only through
+and computes its cut/span/where without consulting the code below; the descent ($\gamma$) runs only through
 `path::T.obj`.
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
 ==>[abstraction::[obj=>[morphism[start]::[name=>start,
-                                          form=>mapper,
-                                          class=>[endo],
+                                          form=>initial,
                                           src=>!inst(#{*}::T){<j>},
                                           trgt=>!inst(#{*}::T){<j>},
                                           analysis=>!inst?#<=#(#{*}::T){<j>},
@@ -578,6 +581,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
                                  section,
                                  retraction,
                                  mono,
+                                 epi],
    ...
 ```
 ### `plan::T` — a rewrite rule as a value
@@ -589,10 +593,10 @@ is introspectable and applicable wherever it is supplied.
 <!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
 <img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
 
-A plan is always the rec `[name, cut, route]`; what distinguishes a local plan from a distribution is what its `cut`
-names and where its `route` sends it:
+A plan is always the rec `[name, cut, where]`; what distinguishes a local plan from a distribution is what its `cut`
+names and where its `where` sends it:
 
-| shape            | the `cut` reads                                                                | the `route`                                            | example                                                                                          |
+| shape            | the `cut` reads                                                                | the `where`                                            | example                                                                                          |
 |------------------|--------------------------------------------------------------------------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | **local**        | a declared process law — `[law => [...]]` — or a theory role — `[role => ...]` | stays local (`target => none` / `local`)               | `law_idempotent` → `cut => [law => [idempotent]]`; `theory_unit_removal` → `cut => [role => id]` |
 | **distribution** | a `form` + `law` anchor — the laws its `combiner` must declare                 | ships to `peers`, with the combiner re-applied locally | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`                         |
@@ -600,6 +604,24 @@ names and where its `route` sends it:
 The application is a **type method**, not a field: `lower(plan::T)` is one instruction registered in
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
 and re-lifts the result to `path::T`. The plan carries no `result` λ; `lower` *is* the operator.
+
+A relocation decision in `plan.where` is `[shape, target?, hops?, span]` — `shape` is the topology token
+(`local` / `none` / `peer` / `peers` / `space` / `tree` / `shuffle`), `target` the concrete address. Each shape
+declares the laws it demands of a cut shipped to it (§3, two directions):
+
+| shape    | obligations                              |
+|----------|------------------------------------------|
+| `local`, `space`, `none` | —                          |
+| `peer`, `peers`, `tree`  | `monoidic`, `commutative`  |
+| `shuffle`               | `monoidic`                 |
+
+`PlanBuilder.create()` validates a cut plan against this table (`obligations(shape) ⊆ cut.laws`); the reverse
+traversal `admissible(laws)` reads it the other way.
+
+`bind(plan::T)` is the cut-less operator — the distribution rule. It requires a plan with **no cut** and a path with
+an `origin`; `lower` is the cut-plan sibling, and both share one body (`apply(plan, env)` over an environment
+snapshot). Until the `move` rule ships (a later phase), a cut-less plan is the identity — the code stands where it
+stood.
 
 **A distribution plan requires peers.** `law_shard` is live only over a non-empty peer roster: its guard reads the
 machine's dialed peers, and with no peer it matches nothing, so `lower` is the identity. A `ws_client` dials and
@@ -620,7 +642,7 @@ mtron> */network
                         pre_write=>inst(uri::T,#::T){<j>},
                         qless_write=>inst(uri::T,#::T){<j>},
                         obj=>[,]]],
-             peer=>[ws://localhost:8555=>peer::[
+             peer=>[ws/localhost/8555/mtron=>peer::[
               authority=>ws://localhost:8555,
               host=>ws://localhost:8555/mtron,
               transport=>inst(#{*}::T){<j>},
@@ -628,7 +650,8 @@ mtron> */network
                        send=>inst(){<j>},
                        send_recv=>inst(){<j>},
                        close=>inst(){<j>},
-                       on_message=>print('received ${_}')]]]]
+                       on_message=>print('received ${_}')]]],
+             supervisor=>network_supervisor::[status=>supervising]]
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
 `machine::T`
@@ -639,16 +662,16 @@ mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
 ==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
-                                       route=>[[target=>none,span=>[[span=>at]]]]],
+                                       where=>[[shape=>none,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
-                                          route=>[[target=>local,span=>[[span=>at]]]]],
+                                          where=>[[shape=>local,span=>[[span=>at]]]]],
            law_shard=>plan::[name=>law_shard,
                              cut=>[form=>reducer,
                                    law=>[monoidic,commutative]],
-                             route=>[[target=>local,
+                             where=>[[shape=>local,
                                       span=>[[span=>at],[span=>post]]],
-                                     [target=>tree,
+                                     [shape=>tree,
                                       hops=>1,
                                       span=>[
                                        [span=>seed,flags=>[partition]],
@@ -665,26 +688,42 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start([start?hops=0({1,2,3,4,5}).plus(10).sum()]).select([to(ws://localhost:8555)]).merge().sum(),
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
-                                       route=>[[target=>none,span=>[[span=>at]]]]],
+                                       where=>[[shape=>none,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
-                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
+                                          where=>[[shape=>local,span=>[[span=>at]]]]],
+           law_shard=>plan::[name=>law_shard,
+                             cut=>[form=>reducer,
+                                   law=>[monoidic,commutative]],
+                             where=>[[shape=>local,
+                                      span=>[[span=>at],[span=>post]]],
+                                     [shape=>tree,
+                                      hops=>1,
+                                      span=>[
+                                       [span=>seed,flags=>[partition]],
+                                       [span=>pre,flags=>[floatable,no_seed]],
+                                       [span=>at]]]]]]]
 ```
 A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
 `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start([start?hops=0({1,2,3,4,5,6}).group([mod(3)=>sum()])]).select([to(ws://localhost:8555)]).merge().sum().select([id()=>sum()]),
-           theory_unit_removal=>plan::[name=>theory_unit_removal,
-                                       cut=>[role=>id],
-                                       route=>[[target=>none,span=>[[span=>at]]]]],
-           derivation_contraction=>plan::[name=>derivation_contraction,
-                                          cut=>[role=>derivation],
-                                          route=>[[target=>local,span=>[[span=>at]]]]]]]
+==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()]),
+           law_shard=>plan::[name=>law_shard,
+                             cut=>[form=>reducer,
+                                   law=>[monoidic,commutative]],
+                             where=>[[shape=>local,
+                                      span=>[[span=>at],[span=>post]]],
+                                     [shape=>tree,
+                                      hops=>1,
+                                      span=>[
+                                       [span=>seed,flags=>[partition]],
+                                       [span=>pre,flags=>[floatable,no_seed]],
+                                       [span=>at]]]]]]]
 ```
 ### may / must — the fiber modality
 
@@ -711,6 +750,36 @@ abstraction, where the graph is small, then **replayed on the path's code** (`pa
 values and sites exist (the path-lifting property of a fibration). Must-edges lift unconditionally; may-edges are the
 backtrack points, known in advance — a plan's remaining ◇-count is readable as the degree gap between the path and its
 abstraction. The replayed route *is* the derivation witness.
+
+## the fourth lift — places (`place::T`)
+
+`place::T` is the **location coordinate**: the machine a chunk runs on, lifted into the same graph as a vertex beside
+`path::T`. It is read-through from the machine's two network tables — the **roster** (who is known) and the **peer
+map** (who is dialed) — and is not a rewrite projection at all: a place is a machine, a `path::T` is code.
+
+```mtron
+mtron> <//ginger.local>.as(place::T)
+==>place::[obj=>//ginger.local,
+           authority=>[<ws://ginger.local:8555>],
+           linked_to=>!inst(#{*}::T){<j>},
+           linked_from=>!inst(#{*}::T){<j>},
+           status=>!inst(#{*}::T){<j>}]
+```
+
+| field | what it is |
+|---|---|
+| `obj` | the machine address `//host[/path]` — `host()` is the roster key, `path()` the frame vid (empty = the host's root machine). Who evaluates. |
+| `authority` | the transports that reach it (`scheme://host:port`); two aliases of one machine are values, never two places |
+| `instset` | (optional) the ISAs resolvable here — the vocabulary coordinate |
+| `source` | (optional) who declared it (`mdns`, boot profile, a dial) |
+| `linked_to` | **derived** — the peers this machine dialed to this place (outbound edges) |
+| `linked_from` | **derived** — the peers this machine accepted from this place (inbound edges) |
+| `status` | **derived** — `known` (roster only) / `up` / `down` (dialed, probed) |
+
+`obj` and `authority` are read from the roster once at lift; `linked_to`/`linked_from`/`status` are `auto` insts that
+re-read the live peer map each dereference (the `object::T.morphed_to` pattern). The alias quotient is
+`sameService`: a peer dialed at `127.0.0.1` links the place whose roster row says `0.0.0.0` — loopback aliases are one
+place.
 
 ## see also
 

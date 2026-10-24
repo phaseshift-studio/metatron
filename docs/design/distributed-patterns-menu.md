@@ -1,7 +1,7 @@
 # Distributed Patterns — the Menu
 
-**Date:** 2026-10-21
-**Context:** The working list of distributed-computing patterns for metatron. Each entry states the algebraic law it
+**Date:** 2026-10-21 **Context:** The working list of distributed-computing patterns for metatron. Each entry states the
+algebraic law it
 rests on, the code a slave and the master run, the plumbing it still needs, and its status. The premise is
 `distributed-patterns-through-algebra.md` ("distribution is a theorem, not a feature"); the first realization is
 `law_shard` (`cat-rewriter-distribution.md`); the machine/network substrate and its gaps are
@@ -28,41 +28,42 @@ architecture, and every entry here lowers to it. `PeerSpawn` (forking a peer JVM
 
 **Facts every entry has to respect.**
 
-| fact | consequence |
-|---|---|
-| a stream is a **bag**, bulked by coefficient: `{1,2,1}` is `{2}1, 2` | a fold over a stream must be commutative to exist at all; order lives in `lst`, so ship a `lst` when order matters |
-| a `lst` is **slot-oriented, never a bag**: a coefficient on a `lst` goes into its slots (`{2}[1,2]` is `[{2}1,{2}2]`); only the expression bags a `lst`'s slots (`[1,2,3]>-`); inside a rec merge a `lst` is an **atom** — colliding `lst`s make a bag of `lst`s, each whole (`[a=>[1,2,3]]+[a=>[2,3]]` is `[a=>{[1,2,3],[2,3]}]`), and concatenating them is a select's `+` (`[a=>[1,2,3]]==[a=>+[2,3]]`) | the rec merge is commutative, so rec `sum` is a defined fold over a bag; `lst` partials (G's `group([k⇒order(s)])`) reach their combiner as a bag of runs |
-| a fold reads a coefficient through its monoid: `c·x = x ⊕ … ⊕ x` | `merge()` bulks equal partials (`{2}6`), so a fold that misreads `c` makes the sharded answer differ from the local one |
-| the fan-out is **sequential** today | `applyFunction` resolves each `to(peer)`'s future before `select` sends the next shard: latency is Σ RTT (see D) |
-| targets are **dialed** peers only | accepted twins (keyed by the dialer's ephemeral port, no `host`) never receive shards |
-| `Route.peer`, `Route.space`, `Route.tree` have no lowering | each entry that needs one adds its emitter; a generic interpreter is entry I |
-| the a-priori pruner fails open on bulk seeds | `path::T` lists every rule for `start({…})…` chains (fixed: a bulk seed's carrier is its member type); compilation is unaffected |
-| a deref in a shipped slave's ARGUMENT reads nothing on the peer | on a peer, `start(5).plus(*/n/a)` reads the peer's store, but the nested `start(start({1,2}).plus(*/n/a).sum()).to(<>)` does not — data reads in shipped code belong in chain steps (`from(...)` seeds, B), not in arguments, until this is understood |
+| fact                                                                                                                                                                                                                                                                                                                                                                                                       | consequence                                                                                                                                                                                                                                            |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| a stream is a **bag**, bulked by coefficient: `{1,2,1}` is `{2}1, 2`                                                                                                                                                                                                                                                                                                                                       | a fold over a stream must be commutative to exist at all; order lives in `lst`, so ship a `lst` when order matters                                                                                                                                     |
+| a `lst` is **slot-oriented, never a bag**: a coefficient on a `lst` goes into its slots (`{2}[1,2]` is `[{2}1,{2}2]`); only the expression bags a `lst`'s slots (`[1,2,3]>-`); inside a rec merge a `lst` is an **atom** — colliding `lst`s make a bag of `lst`s, each whole (`[a=>[1,2,3]]+[a=>[2,3]]` is `[a=>{[1,2,3],[2,3]}]`), and concatenating them is a select's `+` (`[a=>[1,2,3]]==[a=>+[2,3]]`) | the rec merge is commutative, so rec `sum` is a defined fold over a bag; `lst` partials (G's `group([k⇒order(s)])`) reach their combiner as a bag of runs                                                                                              |
+| a fold reads a coefficient through its monoid: `c·x = x ⊕ … ⊕ x`                                                                                                                                                                                                                                                                                                                                           | `merge()` bulks equal partials (`{2}6`), so a fold that misreads `c` makes the sharded answer differ from the local one                                                                                                                                |
+| the fan-out is **sequential** today                                                                                                                                                                                                                                                                                                                                                                        | `applyFunction` resolves each `to(peer)`'s future before `select` sends the next shard: latency is Σ RTT (see D)                                                                                                                                       |
+| targets are **dialed** peers only                                                                                                                                                                                                                                                                                                                                                                          | accepted twins (keyed by the dialer's ephemeral port, no `host`) never receive shards                                                                                                                                                                  |
+| `Route.peer`, `Route.space`, `Route.tree` have no lowering                                                                                                                                                                                                                                                                                                                                                 | each entry that needs one adds its emitter; a generic interpreter is entry I                                                                                                                                                                           |
+| the a-priori pruner fails open on bulk seeds                                                                                                                                                                                                                                                                                                                                                               | `path::T` lists every rule for `start({…})…` chains (fixed: a bulk seed's carrier is its member type); compilation is unaffected                                                                                                                       |
+| a deref in a shipped slave's ARGUMENT reads nothing on the peer                                                                                                                                                                                                                                                                                                                                            | on a peer, `start(5).plus(*/n/a)` reads the peer's store, but the nested `start(start({1,2}).plus(*/n/a).sum()).to(<>)` does not — data reads in shipped code belong in chain steps (`from(...)` seeds, B), not in arguments, until this is understood |
 
 ---
 
 ## 1. The menu at a glance
 
-|     | pattern                     | law                                                    | status                       |
-|-----|-----------------------------|--------------------------------------------------------|------------------------------|
-| A   | homomorphism shard          | `h(a ⊎ b) = h(a) ⊕ h(b)`                               | **done**: `sum`, `prod`, `count`, `order`, rec `sum` |
-| B   | data-local shard            | the store is the sum of its owners' stores             | needs a denotation decision  |
-| C   | authority push-down         | delegation (Thm 5 + a pure chain)                      | open                         |
-| D   | parallel fan-out            | Thm 5                                                  | open (plumbing)              |
-| E   | tree reduction              | associativity + commutativity: any bracketing, any shape | **v1 done**: `?hops=n`     |
-| F   | ordered fold                | associativity alone                                    | struck for streams; `lst` only |
-| G   | keyed reduce                | Thm 19 per key                                         | **v1 done**: pointwise, `lst` values too |
-| H   | redundant / hedged shards   | idempotence                                            | open                         |
-| I   | span/route interpreter      | —                                                      | infrastructure               |
-| J   | algebraic aggregates        | a product monoid followed by a finalizer               | open                         |
-| K   | limit / top-k push-down     | `take(k)·⊕ = take(k)·⊕·take(k)`                        | open                         |
-| L   | mergeable sketches          | approximate holistic aggregates as commutative monoids | open                         |
-| M   | matrix multiplication       | `·` distributes over a commutative `+`                 | note only                    |
-| N   | iterative / BSP             | `kleene`: iterate a sharded superstep                  | open; composes G, J, O       |
-| O   | broadcast constants         | a constant floats with the code                        | free today                   |
-| P   | computed seeds              | partition an index space, not data                     | open                         |
-| Q   | monad migration             | ship the monad to the address's authority              | open                         |
-| R   | durable results             | result identity in addressed mailboxes                 | open                         |
+|   | pattern                   | law                                                      | status                                               |
+|---|---------------------------|----------------------------------------------------------|------------------------------------------------------|
+| A | homomorphism shard        | `h(a ⊎ b) = h(a) ⊕ h(b)`                                 | **done**: `sum`, `prod`, `count`, `order`, rec `sum` |
+| B | data-local shard          | the store is the sum of its owners' stores               | needs a denotation decision                          |
+| C | authority push-down       | delegation (Thm 5 + a pure chain)                        | open                                                 |
+| D | parallel fan-out          | Thm 5                                                    | open (plumbing)                                      |
+| E | tree reduction            | associativity + commutativity: any bracketing, any shape | **v1 done**: `?hops=n`                               |
+| F | ordered fold              | associativity alone                                      | struck for streams; `lst` only                       |
+| G | keyed reduce              | Thm 19 per key                                           | **v1 done**: pointwise, `lst` values too             |
+| H | redundant / hedged shards | idempotence                                              | open                                                 |
+| I | span/route interpreter    | —                                                        | infrastructure                                       |
+| J | algebraic aggregates      | a product monoid followed by a finalizer                 | open                                                 |
+| K | limit / top-k push-down   | `take(k)·⊕ = take(k)·⊕·take(k)`                          | open                                                 |
+| L | mergeable sketches        | approximate holistic aggregates as commutative monoids   | open                                                 |
+| M | matrix multiplication     | `·` distributes over a commutative `+`                   | note only                                            |
+| N | iterative / BSP           | `kleene`: iterate a sharded superstep                    | open; composes G, J, O                               |
+| O | broadcast constants       | a constant floats with the code                          | free today                                           |
+| P | computed seeds            | partition an index space, not data                       | open                                                 |
+| Q | monad migration           | ship the monad to the address's authority                | open                                                 |
+| R | durable results           | result identity in addressed mailboxes                   | open                                                 |
+| S | master-participates       | §7 re-association over `{master} ∪ peers`                | **ruled 2026-10-24**; Phase 7                        |
 
 ---
 
@@ -79,12 +80,12 @@ case where `r` is its own combiner.
 declares `monoidic` + `commutative` is its own combiner. A fold defined by its cat-graph `derivation` as a pointwise
 map into such a fold recombines through that fold, looked up on its target object.
 
-| fold       | combiner    | why                                                                              |
-|------------|-------------|----------------------------------------------------------------------------------|
-| `sum`, `prod` | itself   | declares `monoidic` + `commutative`                                              |
-| `count`    | `sum`       | `count ≡ map(1)·sum`                                                             |
-| `order(s)` | `kmerge(s)` | `order(B) ≡ split([_])·kmerge(B)`, and `kmerge` declares `monoidic` + `commutative` |
-| rec `sum`  | itself      | the deep merge's fold declares `monoidic` + `commutative`: a `lst` is an atom of the merge, so colliding values (lsts included) bag in any order — distributed rec merging |
+| fold          | combiner    | why                                                                                                                                                                        |
+|---------------|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `sum`, `prod` | itself      | declares `monoidic` + `commutative`                                                                                                                                        |
+| `count`       | `sum`       | `count ≡ map(1)·sum`                                                                                                                                                       |
+| `order(s)`    | `kmerge(s)` | `order(B) ≡ split([_])·kmerge(B)`, and `kmerge` declares `monoidic` + `commutative`                                                                                        |
+| rec `sum`     | itself      | the deep merge's fold declares `monoidic` + `commutative`: a `lst` is an atom of the merge, so colliding values (lsts included) bag in any order — distributed rec merging |
 
 ```
 slave_i:  start?hops=0(<part_i>).plus(1).count()
@@ -111,6 +112,7 @@ master:  start([s, s]).select([to(p_1), to(p_2)]).merge().sum()
 ```
 
 **Needs.**
+
 - **Denotation.** `Network`'s javadoc says scoping never changes what an absolute URI means. On one machine,
   `*/usr/data/+/current` means that machine's matches, so a silent fan-out would change its meaning. Something must
   declare the pattern to be the cluster's: for example a cluster space mounted at `/usr/data/#`, whose read is the
@@ -142,10 +144,11 @@ emitter, two seed shapes.
 result (`FutureObj.resolveFuture`, a blocking `get`) before `select` sends the next shard.
 
 **Needs.** The gather (`merge`) as the await boundary, with `select`'s zip leaving transport futures in flight; the
-master taking a share of its own (k+1 parts); a timing test with forked peers (Σ vs max). D multiplies every other
+master taking a share of its own (k+1 parts — S); a timing test with forked peers (Σ vs max). D multiplies every other
 entry.
 
-**Spelling (Marko, 2026-10-21):** a virtual thread per route — `[virtual::[code=>to(ws://s1)],virtual::[code=>to(ws://s2)]]` —
+**Spelling (Marko, 2026-10-21):** a virtual thread per route —
+`[virtual::[code=>to(ws://s1)],virtual::[code=>to(ws://s2)]]` —
 so each round trip waits on its own thread and the gather awaits them all.
 
 ### E. Tree reduction — `Route.tree(hops)` — v1 done (2026-10-21)
@@ -177,14 +180,15 @@ their budget on an explicit `start?hops=n-1`, and `?hops` is stripped from every
 `TreeShardTransportTest`: this machine dials p_1, p_1 dials p_2 and p_3, and p_1's own compiler plans the leaves.
 
 **Still open.**
+
 - **A machine-level default.** The plan carries the default today. A machine-wide one could sit on the compiler's
   rewriter rec (it already takes parameters, `fixpoint_rewriter::[max=>N]`), or plans could live at an address so a
   machine reconfigures one by writing it.
 - **Visited-authority exclusion.** In the live two-host setup each console dials the other, so at `hops ≥ 2` a part
   re-planned on booger bounces back to ginger. That is correct (every level partitions its part exactly) and bounded
   by the budget, but wasteful. The fix is for the slave to carry the authorities already in the tree.
-- **An interior node's own share.** v1 forwards everything and only recombines; keeping a part is D's "the master
-  works too".
+- **An interior node's own share.** v1 forwards everything and only recombines; keeping a part is S ("the master
+  works too").
 - The dial graph is the reduction tree, so a machine reachable only through an intermediate host is reached.
   `MachineSwarmMigrationTest` hand-writes the same interior node with barriers (`barrier(uri).sum().to(uri)`).
 
@@ -291,19 +295,19 @@ Not designed further yet.
 assign each point to its nearest centroid (a floatable map with the centroids broadcast, O), take (sum, count) per
 centroid (G + J), broadcast the new centroids, and repeat. PageRank and label propagation (min) have the same shape.
 
-**Needs.** G and J; a loop whose body is a sharded plan (`repeat`/`loop` around the layout); and per-round identity
-(R), so a late partial cannot fold into the wrong round.
+**Needs.** G and J; a loop whose body is a sharded plan (`repeat`/`loop` around the layout); and per-round identity (R),
+so a late partial cannot fold into the wrong round.
 
 ### O. Broadcast constants
 
 **Law.** A constant floats with the code (Thm 6). Code shipping carries its literals, so a broadcast value is just an
-argument of the floatable run, such as a small rec joined against, or `·B` in M(1). Free today. A large broadcast
+argument of the floatable run, such as a small rec joined against, or `·B` in M (1). Free today. A large broadcast
 value is better read from a replicated address on each peer.
 
 ### P. Computed seeds
 
 **Law.** Partition an index space instead of data. Monte Carlo is the example: each peer gets a sample count and its
-own RNG seed, and the master sums the hits. One O(1) message per peer, and no data shipped.
+own RNG seed, and the master sums the hits. One O (1) message per peer, and no data shipped.
 
 **Needs.** A seed matcher for a generator form (the shard plan reads a literal `start` bulk today), and a partition
 of the index space (a count or a range).
@@ -327,14 +331,38 @@ Stage 3).
 
 **Needs.** A `Route.space` lowering and a `shard_result::[authority, round, status, value]`.
 
+### S. Master-participates — the local lane (ruled 2026-10-24)
+
+**Law.** The master is a place at distance zero, so the fan-out is over `{master} ∪ peers`: `k = peers + 1` slices,
+the master folding one locally (its own lane) and shipping the other `k-1`. Re-association is result-preserving (§7),
+so the fold over master-local + peer partials is the fold over the bag.
+
+**Why.** Today `shard` sets `k = min(peers, seed)` and ships **all `k` slices to peers**; the master only runs
+`merge().<combiner>` and folds nothing. With one peer the whole seed leaves the master, and in a 2-cycle the entire
+fold bounces to the leaf and back. Keeping a slice earns the master its share and shrinks every hop's payload.
+
+```
+master:  start([ start(own_slice).<run>.<C>,       [-- folded in place: a local lane --]
+                 start(slice_1).<run>.<C>,          [-- shipped --]
+                 … ])
+           .select([ <identity>, to(p_1), … ])
+           .merge().<C>
+```
+
+**Needs.** The emitter's local/keep arm (§12.5) with a non-blocking local fold plus the latch (§13.5 — the lane gap);
+`k = peers + 1` in `shard`'s partition arithmetic. This is the first slice of Phase 7 (lanes): the master's own lane
+is a fan-out target **always**, not just the peerless fallback §13.3 frames it as.
+
 ---
 
 ## 3. How the entries compose
 
 - **E applies to every A-fold**, and to G, J and L: any combiner recombines at any interior node.
 - **D multiplies everything.** It is the one entry whose absence makes distribution slower, not wrong.
+- **S applies to every fan-out** — A, E, G, and any shipped partial: the master (and every interior node) folds its own
+  slice instead of only recombining.
 - **N is G + J + O under `kleene`**, with R for rounds.
-- **M(1)** is O plus an addressed union, **M(2)** is A with matrix `sum`, and **M(3)** is G over block keys.
+- **M (1)** is O plus an addressed union, **M (2)** is A with matrix `sum`, and **M (3)** is G over block keys.
 - **L plugs into A, E and H** by declaring theories, with no new lowering.
 - **C is B with one owner, and Q is C per step.**
 
@@ -365,8 +393,8 @@ Surfaced by `AbstractMultiServerSingleSpaceTest`: a master, three forked satelli
   lst's head when there is none, and the members apply left to right. Merge wedges a seed in without firing anything
   — `1>-[+2,+3]` is the inert lst `[1,plus(2),plus(3)]` — and `1>-[+2,+3]>|` is `6`: the infix form is
   wedge-then-fold, `x.>|L` is `x>-L>|`, and the lst between the two is a program held as data, open to ordinary lst
-  operations. A lst of instructions is inert until it is folded, so a workload's code can be a lst
-  (`>|*workload/code`) instead of a quoted code in a closure.
+  operations. A lst of instructions is inert until it is folded, so a workload's code can be a lst (`>|*workload/code`)
+  instead of a quoted code in a closure.
 - **`<|`, the backwards cascade** — Marko wanted it (2026-10-21), and it is expressible today with `swap`, his
   "backwards apply": it "makes the lhs the arg and the arg the lhs", so `P.swap(x)` runs `P` on `x`.
   `[plus(2).plus(2)]==[as(inst::T)]>-.swap(8)` is `12`, `[plus(2)]>-.swap(8)` is `10`, and the expression that wanted

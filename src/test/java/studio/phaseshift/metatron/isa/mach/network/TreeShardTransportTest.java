@@ -40,15 +40,10 @@ import studio.phaseshift.metatron.isa.web.type.MIME;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.Tokens.HOPS;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.IN;
-import static studio.phaseshift.metatron.Tokens.OUT;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MERGE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
@@ -69,8 +64,8 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     static void startTree() throws Exception {
         // typing is not solved across distributed executions yet — run type-check-free, as the peers do
         TypeCheck.disable(TypeCheck.values());
-        InstSet.importInstSet(f("/m/math"));
-        InstSet.importInstSet(f("/m/math/cat"));
+        InstSet.importInstSet(MATH_ISA_TID);
+        InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
         // every peer mounts the category, so law_shard can fire wherever a part lands
         cluster = PeerCluster.of(3).seed(PeerCluster.DEFAULT_SEED_MATRIX, "import(/m/math)", "import(/m/math/cat)").start();

@@ -174,15 +174,15 @@ public class MemoryIsolationTest extends AbstractMetatronTest {
     @Test
     public void testThreadCountRootVsPushedChild() {
         // at root: /thread and ~/thread name the same set — no machine pushed, current is the root.
-        final long root = evalCount("*/thread/+.count()");
-        final long rootViaTilde = evalCount("*~/thread/+.count()");
-        assertEquals(root, rootViaTilde, "/thread and ~/thread are the same set at the root");
+        final long root = evalCount("*/sys/thread/+.count()");
+        final long rootViaTilde = evalCount("*~/sys/thread/+.count()");
+        assertEquals(root, rootViaTilde, "/sys/thread and ~/sys/thread are the same set at the root");
 
         final Machine child = Machine.current().push();
         try {
             // after push, ~/thread is the child's own (fresh) set; /thread is still the root's.
-            final long rootAfterPush = evalCount("*/thread/+.count()");
-            final long childThreads = evalCount("*~/thread/+.count()");
+            final long rootAfterPush = evalCount("*/sys/thread/+.count()");
+            final long childThreads = evalCount("*~/sys/thread/+.count()");
             assertTrue(rootAfterPush > childThreads,
                     "root threads (%d) should exceed the pushed child's (%d)".formatted(rootAfterPush, childThreads));
         } finally {

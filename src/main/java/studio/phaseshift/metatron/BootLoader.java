@@ -89,6 +89,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
     /// the global variables that must be gc()'d on close
     /// ////////////////////////////////////////////////////////////////////////
     public static boolean BOOTING = true;
+    /**
+     * A single machine (a non-root frame) is being closed via pop/shutdown, rather than the whole boot. Set around
+     * {@code AbstractMachine.close()}'s teardown so {@code GraphittyObjLogger} does not print its "no space embedded
+     * logger" fallback while the frame's own log sink is being torn down with the rest of its spaces.
+     */
+    public static boolean CLOSING = false;
     public static boolean TESTING = false;
     public static boolean ONE_SHOT = false;
     /**

@@ -76,6 +76,10 @@ public class Placement extends MRec {
         TREE(Law.monoidic, Law.commutative),
         /** key-routed fan-out — monoidic only; the keyed law is the fold's derivation */
         SHUFFLE(Law.monoidic),
+        /** sequential forwards — ship the whole code to one place (a {@code move} hop) */
+        CHAIN(Law.monoidic),
+        /** fan-out over the roster's places — each hop bound by the origin */
+        STAR(Law.monoidic, Law.commutative),
         /** nowhere — the isolated span is deleted */
         NONE;
 
@@ -108,7 +112,7 @@ public class Placement extends MRec {
          * stay on the machine that holds them.
          */
         public boolean distributes() {
-            return PEER == this || PEERS == this || TREE == this || SHUFFLE == this;
+            return PEER == this || PEERS == this || TREE == this || SHUFFLE == this || CHAIN == this || STAR == this;
         }
     }
 
@@ -130,6 +134,20 @@ public class Placement extends MRec {
 
     public static Placement shuffle(final Span... spans) {
         return of(Shape.SHUFFLE, null, 0, spans);
+    }
+
+    /**
+     * A {@code move} hop — ship the whole code to one place, sequentially.
+     */
+    public static Placement chain(final fURI address, final Span... spans) {
+        return of(Shape.CHAIN, address, 0, spans);
+    }
+
+    /**
+     * A {@code move} fan-out — ship the whole code to every place the origin reaches.
+     */
+    public static Placement star(final fURI address, final Span... spans) {
+        return of(Shape.STAR, address, 0, spans);
     }
 
     public static Placement space(final fURI address, final Span... spans) {
