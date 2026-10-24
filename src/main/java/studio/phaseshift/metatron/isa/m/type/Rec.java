@@ -463,21 +463,6 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REL_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), rec(inst.arg(0).asRel().jvm().get0(), inst.arg(1).asRel().jvm().get1()), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asRec().at(s)))),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.selectPolyRecursion(lhs.asRec(), inst.arg(0).asRec(), false)),
-                    //   morphWrap(instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0).isNothing() ? noobj() : lhs),
-                    //          Map.of(uri(LAW), laws(Morphism.Law.boolean_))),
-                    //   morphWrap(instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Poly.Helper.selectRecRecursion(lhs.asRec(), inst.arg(0).asRec(), true))),
-                    //           Map.of(uri(LAW), laws(Morphism.Law.boolean_))),
-                 
-                    /*instC(WHERE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
-                       ProjectionFailureException.predicateThrow(lhs, a -> (Obj) Lst.Helper.project(lhs.asLst(), inst.arg(0).orElse(rec0()), true))),
-                        try {
-                            // MUST pass 'true' for the verify flag here!
-                            Rec.Helper.project(lhs.asRec(), inst.arg(0).orElse(rec0()), true);
-                            return lhs;
-                        } catch (Str.Helper.ProjectionFailureException e) {
-                            return noobj();
-                        }
-                    }),*/
                     instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()))),
                     instC(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), lst(), (lhs, inst) -> lhs.stream().map(Obj::asRec).reduce(rec(), Rec::plus))
                     //         Map.of(uri(LAW), laws(Category.Law.monoidic)))

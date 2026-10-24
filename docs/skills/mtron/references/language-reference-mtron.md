@@ -255,13 +255,13 @@ not. A rec predicate matches structurally — the value's field is checked again
 {[a=>1],[a=>2],[a=>3]}?[a=>is(lt(3))]   [-- {[a=>1],[a=>2]}  (the same shape admits the low fields) --]
 ```
 
-**`where()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
+**`isa()` is for uris, not values.** Its live row is `where?uri<=uri(rec)`: the arg is a profile over the uri's
 fields, the uri is projected against it, and the uri passes through only when the projection agrees with the
 original — a profile matcher, and `noobj` when the profile is contradicted:
 
 ```mtron_pre
-<//2024.12:25/09/00/00/000?tz=-0500>?where([host=>2024.12, port=>25])  [-- the uri (the profile matches) --]
-<//2024.12:25/09/00/00/000?tz=-0500>?where([host=>2024.12, port=>26])  [-- noobj  (the port contradicts the profile) --]
+<//2024.12:25/09/00/00/000?tz=-0500>?isa([host=>2024.12, port=>25])  [-- the uri (the profile matches) --]
+<//2024.12:25/09/00/00/000?tz=-0500>?isa([host=>2024.12, port=>26])  [-- noobj  (the port contradicts the profile) --]
 ```
 
 ---

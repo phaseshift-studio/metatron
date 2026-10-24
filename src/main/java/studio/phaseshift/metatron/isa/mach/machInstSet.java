@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.IdentityRewrit
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
+import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -119,6 +120,8 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI PEER_TID = MACH_ISA_TID.extend("peer");
 
     public static Type PEER_TYPE;
+    public static final fURI NETWORK_SUPERVISOR_TID = MACH_ISA_TID.extend("network_supervisor");
+    public static Type NETWORK_SUPERVISOR_TYPE;
     public static final fURI ID_CLIENT_TID = MACH_ISA_TID.extend("id_client");
     public static Type ID_CLIENT_TYPE;
 
@@ -470,6 +473,30 @@ public class machInstSet extends AbstractInstSet {
                                 """,
                                 "peer::[authority=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>,handler=></m/web/ws/mtron_ws>,name=>'builder-2'] [-- a peer the current machine can ship to --]",
                                 "peer::[authority=><ws://192.168.1.42:8555>,name=>'builder-2'] [-- known, and not reachable from here --]"),
+                        NETWORK_SUPERVISOR_TYPE = docWrap(Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(NETWORK_SUPERVISOR_TID)
+                                        // one observable field: the liveness marker, updated on close. the
+                                        // supervised network and the ticking thread are the engine, not rec state.
+                                        .isaPredicate(rec(
+                                                uri(STATUS), union_(uri("supervising"), uri("closed")).tryToInst()))
+                                        // construction is connection, destruction is disconnect: minting starts the
+                                        // supervisor (and files it in ~/network/supervisor); writing noobj there
+                                        // closes it.
+                                        .constructor(arg -> {
+                                            final Network network = Machine.current().network();
+                                            NetworkSupervisor.watch(network);
+                                            return network.at(uri(SUPERVISOR));
+                                        })
+                                        .create(), null, null,
+                                Map.of(uri(STATUS), "supervising / closed — the liveness marker, updated on close"),
+                                """
+                                the per-level reconciler that keeps a network's index true: it supervises the
+                                machine's dialed peers (redials a down link on capped backoff, drops a hung-up one,
+                                reports a recovered one online). One per level, minted on the first link it indexes
+                                and closed with the level — construction is connection, destruction is disconnect.
+                                """,
+                                "network_supervisor::[=>] [-- start supervising the current machine's network --]"),
                         MACH_DISCOVERY_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MACH_DISCOVERY_TID)
@@ -540,6 +567,7 @@ public class machInstSet extends AbstractInstSet {
                                                         // this one table -- an inst to apply, or an address to match.
                                                         uri(MACHINE).maybe(), rec(URI_TYPE, T(ALL.some()))),
                                                 uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID)),
+                                                uri(SUPERVISOR).maybe().asUri(), T(NETWORK_SUPERVISOR_TID),
                                                 uri(SOURCE).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
                                                 // the AUTO STATUS INST BasicNetwork installs at construction --
                                                 // a method-shaped field, not a map: the component rec is

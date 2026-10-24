@@ -435,7 +435,7 @@ instruction,
 each already carrying `form`, `class`, `law`, and `analysis` — not a second concrete chain. Nor is it a vertex one
 descends through: no traversal runs over the abstraction, because it is only the lookup surface from which a `plan::T`
 derives its rewrite. The guard reads the laws/forms/theories off the word (`*…/obj/1/law`, `*…/obj/2/analysis/inverse`)
-and computes its cut/span/route without consulting the code below; the descent ($\gamma$) runs only through
+and computes its cut/span/where without consulting the code below; the descent ($\gamma$) runs only through
 `path::T.obj`.
 
 ```mtron_pre
@@ -451,10 +451,10 @@ is introspectable and applicable wherever it is supplied.
 <!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
 <img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
 
-A plan is always the rec `[name, cut, route]`; what distinguishes a local plan from a distribution is what its `cut`
-names and where its `route` sends it:
+A plan is always the rec `[name, cut, where]`; what distinguishes a local plan from a distribution is what its `cut`
+names and where its `where` sends it:
 
-| shape            | the `cut` reads                                                                | the `route`                                            | example                                                                                          |
+| shape            | the `cut` reads                                                                | the `where`                                            | example                                                                                          |
 |------------------|--------------------------------------------------------------------------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | **local**        | a declared process law — `[law => [...]]` — or a theory role — `[role => ...]` | stays local (`target => none` / `local`)               | `law_idempotent` → `cut => [law => [idempotent]]`; `theory_unit_removal` → `cut => [role => id]` |
 | **distribution** | a `form` + `law` anchor — the laws its `combiner` must declare                 | ships to `peers`, with the combiner re-applied locally | `law_shard` → `cut => [form => reducer, law => [monoidic, commutative]]`                         |
@@ -524,6 +524,36 @@ abstraction, where the graph is small, then **replayed on the path's code** (`pa
 values and sites exist (the path-lifting property of a fibration). Must-edges lift unconditionally; may-edges are the
 backtrack points, known in advance — a plan's remaining ◇-count is readable as the degree gap between the path and its
 abstraction. The replayed route *is* the derivation witness.
+
+## the fourth lift — places (`place::T`)
+
+`place::T` is the **location coordinate**: the machine a chunk runs on, lifted into the same graph as a vertex beside
+`path::T`. It is read-through from the machine's two network tables — the **roster** (who is known) and the **peer
+map** (who is dialed) — and is not a rewrite projection at all: a place is a machine, a `path::T` is code.
+
+```mtron
+mtron> <//ginger.local>.as(place::T)
+==>place::[obj=>//ginger.local,
+           authority=>[<ws://ginger.local:8555>],
+           linked_to=>!inst(#{*}::T){<j>},
+           linked_from=>!inst(#{*}::T){<j>},
+           status=>!inst(#{*}::T){<j>}]
+```
+
+| field | what it is |
+|---|---|
+| `obj` | the machine address `//host[/path]` — `host()` is the roster key, `path()` the frame vid (empty = the host's root machine). Who evaluates. |
+| `authority` | the transports that reach it (`scheme://host:port`); two aliases of one machine are values, never two places |
+| `instset` | (optional) the ISAs resolvable here — the vocabulary coordinate |
+| `source` | (optional) who declared it (`mdns`, boot profile, a dial) |
+| `linked_to` | **derived** — the peers this machine dialed to this place (outbound edges) |
+| `linked_from` | **derived** — the peers this machine accepted from this place (inbound edges) |
+| `status` | **derived** — `known` (roster only) / `up` / `down` (dialed, probed) |
+
+`obj` and `authority` are read from the roster once at lift; `linked_to`/`linked_from`/`status` are `auto` insts that
+re-read the live peer map each dereference (the `object::T.morphed_to` pattern). The alias quotient is
+`sameService`: a peer dialed at `127.0.0.1` links the place whose roster row says `0.0.0.0` — loopback aliases are one
+place.
 
 ## see also
 

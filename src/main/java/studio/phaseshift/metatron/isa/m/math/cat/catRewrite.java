@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 import studio.phaseshift.metatron.algebra.rewrite.Cut;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.Placement;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
-import studio.phaseshift.metatron.algebra.rewrite.Route;
 import studio.phaseshift.metatron.algebra.rewrite.Span;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -59,7 +59,7 @@ public class catRewrite {
      * tail at home; each peer takes one factor of the seed bulk with the floatable run replicated and a local partial
      * reduce. {@link PlanInterpreter#lower} consumes the cut.
      * <p>
-     * The route is a TREE: a peer re-plans the part it is handed over its own dialed peers while budget remains, and
+     * The placement is a TREE: a peer re-plans the part it is handed over its own dialed peers while budget remains, and
      * recombines its children's partials through the same combiner. The budget is the plan's {@code hops} unless the
      * chain states one ({@code ?hops=n}); the default of one level is the star — the master's peers fold their parts
      * where they stand.
@@ -70,8 +70,8 @@ public class catRewrite {
     private static final Span SHARD_POST = Span.after();
     private static final Plan SHARD_PLAN = PlanBuilder.plan("law_shard")
             .cut(SHARD_CUT)
-            .route(Route.local(SHARD_AT, SHARD_POST))
-            .route(Route.tree(1, Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
+            .where(Placement.local(SHARD_AT, SHARD_POST))
+            .where(Placement.tree(1, Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
             .create();
 
     /**
@@ -81,7 +81,7 @@ public class catRewrite {
     private static final Cut UNIT_CUT = Cut.role(ID);
     private static final Plan UNIT_PLAN = PlanBuilder.plan("theory_unit_removal")
             .cut(UNIT_CUT)
-            .route(Route.none(Span.at()))
+            .where(Placement.none(Span.at()))
             .create();
 
     /**
@@ -90,7 +90,7 @@ public class catRewrite {
     private static final Cut INVOLUTION_CUT = Cut.law(Law.involution);
     private static final Plan INVOLUTION_PLAN = PlanBuilder.plan("theory_involution")
             .cut(INVOLUTION_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -99,7 +99,7 @@ public class catRewrite {
     private static final Cut IDEMPOTENT_CUT = Cut.law(Law.idempotent);
     private static final Plan IDEMPOTENT_PLAN = PlanBuilder.plan("law_idempotent")
             .cut(IDEMPOTENT_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -108,7 +108,7 @@ public class catRewrite {
     private static final Cut MONOIDIC_CUT = Cut.law(Law.monoidic);
     private static final Plan MONOIDIC_PLAN = PlanBuilder.plan("law_monoidic")
             .cut(MONOIDIC_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -118,7 +118,7 @@ public class catRewrite {
     private static final Cut INVERSE_CUT = Cut.role(INVERSE);
     private static final Plan INVERSE_PLAN = PlanBuilder.plan("inverse_cancellation")
             .cut(INVERSE_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -128,7 +128,7 @@ public class catRewrite {
     private static final Cut BRANCH_CUT = Cut.role(ADD);
     private static final Plan BRANCH_COLLAPSE_PLAN = PlanBuilder.plan("branch_collapse")
             .cut(BRANCH_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -138,7 +138,7 @@ public class catRewrite {
     private static final Cut BRANCH_INLINE_CUT = Cut.role(ZERO);
     private static final Plan BRANCH_INLINE_PLAN = PlanBuilder.plan("branch_inline")
             .cut(BRANCH_INLINE_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -148,7 +148,7 @@ public class catRewrite {
     private static final Cut POSET_CUT = Cut.law(Law.poset);
     private static final Plan POSET_PLAN = PlanBuilder.plan("law_poset")
             .cut(POSET_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -157,7 +157,7 @@ public class catRewrite {
     private static final Cut MAP_CUT = Cut.role(MAP_INST_TID.name());
     private static final Plan MAP_UNWRAP_PLAN = PlanBuilder.plan("form_map_unwrap")
             .cut(MAP_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -166,7 +166,7 @@ public class catRewrite {
     private static final Cut ABSORBING_CUT = Cut.law(Law.absorbing);
     private static final Plan ABSORBING_PLAN = PlanBuilder.plan("law_absorbing")
             .cut(ABSORBING_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
@@ -176,12 +176,12 @@ public class catRewrite {
     private static final Cut DERIVATION_CUT = Cut.role(DERIVATION);
     private static final Plan DERIVATION_PLAN = PlanBuilder.plan("derivation_contraction")
             .cut(DERIVATION_CUT)
-            .route(Route.local(Span.at()))
+            .where(Placement.local(Span.at()))
             .create();
 
     /**
      * The rewrite-name → plan registry — the bridge the path's out-edges look up when a rewrite rule has a
-     * declarative plan ({@code cut}/{@code route}) rather than a bare lambda. A Plan is the {@code plan::T} rec
+     * declarative plan ({@code cut}/{@code where}) rather than a bare lambda. A Plan is the {@code plan::T} rec
      * itself, so there is no serialization step: the value is handed out as-is.
      */
     private static final Map<String, Plan> PLANS = new LinkedHashMap<>();
@@ -405,7 +405,7 @@ public class catRewrite {
                         // evaluation answers its partial, and merge() gathers the partials for the combiner. A peer
                         // with hop budget left re-plans its part over its own peers (the tree).
                         //
-                        // POLICY: the guard requires dialed peers and a hop budget (the plan's tree route, or ?hops=n
+                        // POLICY: the guard requires dialed peers and a hop budget (the plan's tree placement, or ?hops=n
                         // on the chain; ?hops=0 opts a fold out), so on a lone machine the rule is the identity and the
                         // default schedule is unchanged. Whether a NETWORKED machine should auto-distribute every
                         // eligible chain at compile time, or only via an explicit >>law_shard edge, is policy (cf.

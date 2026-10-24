@@ -61,6 +61,7 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI PATH_TID = CATEGORY_TID.extend("path");
     public static final fURI ABSTRACTION_TID = CATEGORY_TID.extend("abstraction");
     public static final fURI PLAN_TID = CATEGORY_TID.extend("plan");
+    public static final fURI PLACE_TID = CATEGORY_TID.extend("place");
     public static final fURI THEORY_TID = CAT_ISA_TID.extend("theory");
     public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
     public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
@@ -101,6 +102,13 @@ public class catInstSet extends AbstractInstSet {
      * the one {@code lower(plan::T)} instruction applies it
      */
     public static Type PLAN_TYPE;
+
+    /**
+     * {@code place::T} — the location coordinate: the machine a chunk runs on, as a vertex beside {@code path::T}.
+     * {@code obj} is the machine address ({@code //host[/path]}), {@code authority} the transports that reach it,
+     * and the edge/status fields are derived from the roster and peer map.
+     */
+    public static Type PLACE_TYPE;
 
     /// //////////////////////////////////////////////////////////////
     // the algebraic theories — a theory is a named tuple of op-edges (role => op-tid); algebraic_theory::T
@@ -180,6 +188,7 @@ public class catInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(PATH_TID), lst(PATH_TYPE), (lhs, inst) -> PATH_TYPE.constructor().apply(lhs)),
                         instC(AS_INST_TID.dom(ALL).rng(ABSTRACTION_TID), lst(ABSTRACTION_TYPE), (lhs, inst) -> ABSTRACTION_TYPE.constructor().apply(lhs)),
+                        instC(AS_INST_TID.dom(ALL).rng(PLACE_TID), lst(PLACE_TYPE), (lhs, inst) -> PLACE_TYPE.constructor().apply(lhs)),
                         instC(CAT_C_INST_TID.dom(ALL.maybe()).rng(CODE_TID.maybe()), lst(URI_TYPE), (lhs, inst) -> {
                             final List<Inst> newCode = lhs.isNoObj() ?
                                     new ArrayList<>() :
@@ -204,7 +213,6 @@ public class catInstSet extends AbstractInstSet {
     @Override
     public Set<Sugar> sugars() {
         return new LinkedHashSet<>(List.of(
-                //   Sugar.prefix("=?=", List.of(WHERE_INST_TID), 1),
                 Sugar.prefix("^", List.of(CAT_C_INST_TID), 1)));
     }
 

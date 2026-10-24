@@ -648,7 +648,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Machine.Helper.closeSources();
             Machine.root().close();
             // the root closed its own level; a frame that dialed and was never popped still holds a supervised one
-            studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor.closeAll();
+            studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor.closeAll();
             ROOT_MACHINE = null;
             ARGS = null;
             ThreadExecutor.instance().shutdown();

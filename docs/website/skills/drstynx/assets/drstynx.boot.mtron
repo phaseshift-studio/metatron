@@ -53,7 +53,6 @@ import(/m/ide,ide);
         [=====================]
         [======== HOME =======]
         [=====================]
-mdns_discovery::[=>];
 memspace::[
   pattern => </usr/marko/#>,                                 
         q => [mintq::[=>],
@@ -160,6 +159,9 @@ wsspace::[host     => !*<boot/args/external/web/ws>,
                        /mcp     => mcp_mtron,
                        /message => mcp_message,
                        /mtron   => mtron_ws]]@/sys/space/web/ws;       
+[== discovery is LAST of the listeners: it announces every surface mounted above, so it must
+    come after the web spaces or it publishes an incomplete set (http but not ws) ==]
+mdns_discovery::[=>];
 mqttspace::[host    => <mqtt://ginger.local:1883>,
             pattern => z2m:#,
             q       => [subq::[=>]],

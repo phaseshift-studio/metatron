@@ -36,9 +36,10 @@ import static studio.phaseshift.metatron.Tokens.*;
  * introspectable and writable in mtron rather than Java.
  *
  * <p>A Plan is itself the {@code rec}, and every plan has the one shape
- * {@code [name => uri(name), cut => cutRec, route => lst(routeRecs)]}. What distinguishes a local plan from a
- * distribution is what its cut names — a form and laws, a theory role, or process laws — and where its routes
- * send it. Its tid is {@code plan::T}. Every accessor reads {@code this.at(key)}; there are no Java fields.
+ * {@code [name => uri(name), cut => cutRec, where => lst(placementRecs)]}. A plan with a cut is a semantic rule
+ * (its cut names a form and laws, a theory role, or process laws); a plan with no cut is a distribution rule
+ * (its {@code where} is the relocation it authors). Its tid is {@code plan::T}. Every accessor reads
+ * {@code this.at(key)}; there are no Java fields.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -57,13 +58,17 @@ public class Plan extends MRec {
         return cut.isNoObj() ? null : Cut.of(cut.asRec());
     }
 
-    public List<Route> routes() {
-        final Obj routes = this.at(ROUTE);
-        return routes.isNoObj() ? List.of() : routes.asLst().elements().map(o -> Route.of(o.asRec())).toList();
+    /**
+     * The relocation decisions — the {@code where} list, one {@link Placement} per span group. A cut-less plan
+     * (a distribution rule) has exactly one.
+     */
+    public List<Placement> where() {
+        final Obj where = this.at(WHERE);
+        return where.isNoObj() ? List.of() : where.asLst().elements().map(o -> Placement.of(o.asRec())).toList();
     }
 
     /**
-     * Reconstruct a Plan from a raw {@code rec} — the read-side of the same {@code name/cut/route} encoding.
+     * Reconstruct a Plan from a raw {@code rec} — the read-side of the same {@code name/cut/where} encoding.
      */
     public static Plan of(final Rec rec) {
         return new Plan(new LinkedHashMap<>(rec.jvm()), rec.tid(), rec.vid());

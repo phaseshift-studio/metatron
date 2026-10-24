@@ -129,6 +129,15 @@ public class mdnsDiscovery extends MRec implements Closeable {
     private final String hostName;
     private boolean started = false;
     private boolean closed = false;
+    /**
+     * how often the announced set is re-read against the live surfaces — surfaces come and go for the VM's whole
+     * life, and a look is local (no round trip), so a short tick costs nothing
+     */
+    private static final long TICK_MS = 1_000L;
+    /**
+     * the surfaces already announced — reconciliation announces what is new and retires what is gone
+     */
+    private final Set<String> announced = Collections.synchronizedSet(new HashSet<>());
 
     public mdnsDiscovery(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, MDNS_DISCOVERY_TID, vid);
@@ -327,8 +336,59 @@ public class mdnsDiscovery extends MRec implements Closeable {
                 this.LOG.warn("mdns: cannot listen on %s (%s)", address.getHostAddress(), e.getMessage());
             }
         }
-        if (this.responders.isEmpty())
+        if (this.responders.isEmpty()) {
             this.LOG.warn("mdns: no multicast-capable interface — discovery is inert here");
+            return;
+        }
+        // what the initial sweep just announced is the baseline; the reconciliation loop below keeps it true as
+        // spaces and services come and go for the VM's whole life
+        this.surfaces().forEach(surface -> this.announced.add(surface.toString()));
+        while (!this.closed) {
+            try {
+                this.reconcile(service);
+            } catch (final Throwable e) {
+                // a tick must never end the discovery: the next one looks again
+                this.LOG.debug("mdns: reconciliation tick failed: %s", e);
+            }
+            try {
+                Thread.sleep(TICK_MS);
+            } catch (final InterruptedException e) {
+                return; // closed
+            }
+        }
+    }
+
+    /**
+     * Re-read the live surfaces and reconcile the announced set against them: announce what is new, retire what is
+     * gone. Runs AS the owning machine — the mDNS callbacks stand in no machine of their own.
+     */
+    private void reconcile(final fURI service) {
+        final Machine current = Machine.current();
+        Machine.current(this.owner);
+        try {
+            final List<fURI> surfaces = this.surfaces();
+            final Set<String> now = new HashSet<>();
+            for (final fURI surface : surfaces) {
+                now.add(surface.toString());
+                if (this.announced.add(surface.toString()))
+                    this.responders.forEach(mdns -> this.announce(mdns, service, surface));
+            }
+            final List<String> gone = this.announced.stream().filter(s -> !now.contains(s)).toList();
+            for (final String surface : gone) {
+                this.announced.remove(surface);
+                this.responders.forEach(mdns -> this.retire(mdns, service, f(surface)));
+            }
+        } finally {
+            Machine.current(current);
+        }
+    }
+
+    /**
+     * Stop announcing a surface that is gone — mDNS is soft state, so un-registering lets the remote rosters age it
+     * out rather than shipping a dead address to a peer.
+     */
+    private void retire(final JmDNS mdns, final fURI service, final fURI surface) {
+        mdns.unregisterService(ServiceInfo.create(service.toString(), this.instanceName(surface), surface.port(), 0, 0, txt(surface)));
     }
 
     private fURI service() {

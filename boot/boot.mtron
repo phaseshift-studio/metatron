@@ -45,6 +45,7 @@ import(/m/tble);
              q        => [docq::[=>],subq::[=>]],
              route    => [/mtron    => mtron_ws,
                           /mcp      => mcp_mtron]]@/sys/space/web/ws;
+mdns_discovery::[=>];
 console::[=>]@/usr/ui/console;
 *boot/args.print(_,'\n');
 print('\n{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');

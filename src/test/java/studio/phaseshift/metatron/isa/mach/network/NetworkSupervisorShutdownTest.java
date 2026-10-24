@@ -25,7 +25,7 @@ import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.network.PeerSupervisor;
+import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  */
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
-public class PeerSupervisorShutdownTest extends AbstractMetatronTest {
+public class NetworkSupervisorShutdownTest extends AbstractMetatronTest {
 
     @Test
     void testNoSupervisorOutlivesTheVM() {
@@ -66,10 +66,10 @@ public class PeerSupervisorShutdownTest extends AbstractMetatronTest {
             Machine.current().network().connect(f("ws://localhost:" + port + "/mtron"), WS_CLIENT_TID);
             Machine.current().push(f("never-popped"));
             Machine.current().network().connect(f("ws://localhost:" + port + "/mtron"), WS_CLIENT_TID);
-            assertTrue(PeerSupervisor.supervised() >= 2,
-                    "both levels that dialed a link are supervised: " + PeerSupervisor.supervised());
+            assertTrue(NetworkSupervisor.supervised() >= 2,
+                    "both levels that dialed a link are supervised: " + NetworkSupervisor.supervised());
             AbstractMetatronTest.end();
-            assertEquals(0, PeerSupervisor.supervised(),
+            assertEquals(0, NetworkSupervisor.supervised(),
                     "the VM's shutdown releases every supervised level, popped or not");
         } finally {
             CommonUtil.close(server);

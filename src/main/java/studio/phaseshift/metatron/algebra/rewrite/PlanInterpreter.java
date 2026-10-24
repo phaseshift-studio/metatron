@@ -110,8 +110,8 @@ public final class PlanInterpreter {
     private static Code lowerCut(final Plan plan, final Code code) {
         final Cut cut = plan.cut();
         // the unit law: a none target deletes the identity (and unwraps the single addend)
-        for (final Route route : plan.routes())
-            if (Route.Target.NONE == route.target())
+        for (final Placement placement : plan.where())
+            if (Placement.Target.NONE == placement.target())
                 return ID.equals(cut.role()) ? unitRemoval(code) : code;
         // the distribution plan: a form-classified cut (reducer/join/gather)
         if (null != cut.formOrNull())
@@ -244,9 +244,9 @@ public final class PlanInterpreter {
                     return 0;
                 }
             }
-        return plan.routes().stream()
-                .filter(route -> Route.Target.TREE == route.target())
-                .mapToInt(Route::hops)
+        return plan.where().stream()
+                .filter(placement -> Placement.Target.TREE == placement.target())
+                .mapToInt(Placement::hops)
                 .findFirst().orElse(0);
     }
 
