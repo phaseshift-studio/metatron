@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -58,7 +59,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * It carries two maps, deliberately not one: {@code roster} is what the system <b>knows</b> — connectionless
  * endpoints, read at {@link #ROOT_ROSTER} so every machine reads the one listing — and {@code peer} is what
- * <b>this</b> machine has dialed. Knowledge is inherited, reach is not.
+ * <b>this</b> machine has dialed. Knowledge is inherited, reach is not. A third field, {@code listener}, is the
+ * machine's <b>presence</b>: the sockets it serves through. A port binds once per physical machine, so presence is
+ * inherited down to every child — but each machine keeps its own routes on a socket, and they leave with it.
  * <p>
  * Like Memory and the ISA it is <em>meant</em> to accumulate, so that a frame wraps it with a
  * {@link ComponentUnion} rather than replacing it and a frame that dials a peer adds to its own level while
@@ -143,6 +146,73 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 .map(Rel::second)
                 .filter(Obj::isRec)
                 .findFirst().orElse(noobj());
+    }
+
+    /**
+     * This level's PRESENCE: {@code <key> => listener::T}, one per socket this machine serves through — one it opened,
+     * or one inherited from above that it keeps its own routes on — keyed like a peer ({@link Helper#keyOf}:
+     * {@code ws://0.0.0.0:8555} is {@code ws/localhost/8555}, a wildcard bind being a loopback alias) and so addressable at {@code ~/network/listener/<key>}.
+     * The entries are this level's alone; a machine reaches the sockets above it through {@link Helper#listenerFor}.
+     */
+    default Rec listeners() {
+        return this.at(LISTENER).orElse(rec());
+    }
+
+    /**
+     * The listener::T entry at a KEY, or noobj.
+     */
+    default Obj listenerAt(final fURI key) {
+        return this.listeners().elements()
+                .filter(kv -> kv.first().isUri() && kv.first().uriValue().equals(key))
+                .map(Rel::second)
+                .filter(Obj::isRec)
+                .findFirst().orElse(noobj());
+    }
+
+    /**
+     * LISTEN — serve through a socket from this level, with this level's own routes: a socket this machine opened
+     * (its level is the {@link Listener#owner()}), or one it inherited ({@link Helper#listenerFor}). The routes are this
+     * level's: a key another level already serves on the socket is refused, and the routes leave with the level
+     * ({@link #close()}). Listening again replaces this level's routes on the socket.
+     */
+    default Obj listen(final Listener server, final Rec routes) {
+        final fURI key = Helper.keyOf(server.authority());
+        final Obj entry = rec(uri(AUTHORITY), uri(server.authority()), uri(SERVER), server);
+        // absent rather than empty: the map idiom of the predicate rejects an empty rec
+        if (!routes.isEmpty())
+            entry.asRec().at(uri(ROUTE), routes, MUTABLE);
+        entry.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.LISTENER_TID);
+        // the claim check and the share are one step per socket, or two levels mounting the same key at once would
+        // both pass the check; the level's own lock serializes its map, as index does
+        synchronized (server) {
+            server.refuseClaimed(this, routes);
+            synchronized (this) {
+                final Rec kept = Helper.without(this.listeners(), kv -> kv.first().uriValue().equals(key));
+                this.at(uri(LISTENER), kept.isEmpty() ? rec(uri(key), entry) : kept.plus(rec(uri(key), entry)), MUTABLE);
+            }
+            server.share(this);
+        }
+        return entry;
+    }
+
+    /**
+     * The inverse of {@link #listen}: this level stops serving through the socket at {@code authority}. Its routes
+     * leave the socket, and a socket this level OPENED is released with them. Answers the entry, or noobj when this
+     * level served nothing there.
+     */
+    default Obj unlisten(final fURI authority) {
+        final fURI key = Helper.keyOf(authority);
+        final Obj entry;
+        synchronized (this) {
+            entry = this.listenerAt(key);
+            if (entry.isNoObj())
+                return noobj();
+            final Rec kept = Helper.without(this.listeners(), kv -> kv.first().uriValue().equals(key));
+            this.at(uri(LISTENER), kept.isEmpty() ? noobj() : kept, MUTABLE);
+        }
+        // CLEAR, THEN CLOSE, as disconnect does: the entry is gone from the map before the socket is touched
+        Helper.stopListening(this, entry);
+        return entry;
     }
 
     /**
@@ -561,6 +631,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     default void close() {
         studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor.release(this);
         this.peers().keys().filter(Obj::isUri).map(Obj::uriValue).toList().forEach(this::disconnect);
+        // PRESENCE ENDS WITH THE LEVEL: its routes leave every socket it served through, and a socket it opened is
+        // released -- a child's pop never closes the port its parent serves on
+        this.listeners().values().filter(Obj::isRec).toList().forEach(entry -> Helper.stopListening(this, entry));
     }
 
     /**
@@ -658,6 +731,14 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          */
         public static Set<fURI> authorities() {
             final Set<fURI> mine = new LinkedHashSet<>();
+            // PRESENCE IS INHERITED: a machine answers on the sockets it opened and on every ancestor's, up to the
+            // root -- a port binds once per physical machine, so a child serves through the sockets above it
+            for (Obj at = Machine.current(); at instanceof Machine machine; at = machine.parent())
+                machine.network().listeners().values()
+                        .map(Helper::authorityOf)
+                        .filter(Objects::nonNull)
+                        .forEach(mine::add);
+            // the listening spaces (httpspace, wsspace), until they are retired
             for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous())
                 memory.spaces().jvm().values().stream()
                         .filter(space -> space instanceof Space listener && listener.listens())
@@ -788,6 +869,36 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             if (peer.isRec())
                 peer.asRec().values().forEach(value -> Helper.writeComplete(noobj(), value));
             Helper.writeComplete(noobj(), peer);
+        }
+
+        /**
+         * The socket serving {@code authority} as the current machine sees it: one its own level holds, or one
+         * inherited from the machines above it, up to the root. A port binds once per physical machine, so a machine
+         * that wants to serve at an authority an ancestor already listens on serves through that socket. null when no
+         * machine in the chain holds one.
+         */
+        public static Listener listenerFor(final fURI authority) {
+            final fURI key = keyOf(authority);
+            for (Obj at = Machine.current(); at instanceof Machine machine; at = machine.parent()) {
+                final Obj entry = machine.network().listenerAt(key);
+                if (entry.isRec() && entry.asRec().atDirect(uri(SERVER)) instanceof Listener listener && !listener.closed())
+                    return listener;
+            }
+            return null;
+        }
+
+        /**
+         * A level stops serving through a socket: its routing table leaves the socket, and the socket itself is
+         * released when the level is its owner. A sharer's close never touches the port — not {@link #release}, which
+         * would close every value the entry holds, the shared server included.
+         */
+        static void stopListening(final Network level, final Obj entry) {
+            final Obj server = entry.isRec() ? entry.asRec().atDirect(uri(SERVER)) : noobj();
+            if (!(server instanceof Listener listener))
+                return;
+            listener.unshare(level);
+            if (listener.owner() == level)
+                CommonUtil.close(listener);
         }
 
         /**
