@@ -630,12 +630,11 @@ public class machInstSet extends AbstractInstSet {
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"),
                                 """
                                 a machine's network: the endpoints the system knows about, the peers the
-                                current machine has dialed, and the handlers that discover them. Membership is
+                                current machine has dialed, and the handlers that discover them. membership is
                                 declared, never emergent — a uri must not be able to make itself a peer merely
                                 by being addressed — and it is accumulating, so a child machine unions its own
-                                level over its parent's. The authorities this machine answers to are derived
-                                from its listeners — the sockets it opened and those it inherits, up to the root —
-                                and, until httpspace and wsspace are retired, from the host every listening space
+                                level over its parent's. the authorities this machine answers to are derived
+                                from its listeners — the sockets it opened and those it inherits, up to the root\from the host every listening space
                                 declares.
                                 """,
                                 "network::[name=>'local',roster=>[b=><ws://192.168.1.42:8555>],source=>[mdns=></m/web/mdns>]] [-- a network that knows a peer before dialing it --]",
