@@ -1,4 +1,4 @@
-[-- ws_server — this machine's ws presence: mcp + mtron routes, plus user-supplied mcp servers. --]
+[-- ws_server — the ws presence of this machine: mcp + mtron routes, plus user-supplied mcp servers. --]
 |inst?ws_server<=uri() {
   -<([host    => _,
       route   => [/mcp   => mcp_mtron,

@@ -1,4 +1,4 @@
-[-- http_server — this machine's http presence: the mcp route and this directory.  Binds 0.0.0.0 for the container. --]
+[-- http_server — the http presence of this machine: the mcp route and this directory.  Binds 0.0.0.0 for the container. --]
 |inst?http_server<=uri() {
   -<([host    => _,
       route   => [/mcp   => mcp_mtron,

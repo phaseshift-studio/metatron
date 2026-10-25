@@ -8,5 +8,5 @@ fsspace::[pattern => mfs:#, q => [mimeq::[=>],lineq::[=>]], route => [mfs: => <.
 memspace::[pattern => </usr/#>, q => [docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;
 [-- the server: a selection over instructions; the host below names it --]
 mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server;
-[-- the host: that server served on the process's stdin/stdout, which is the whole session --]
+[-- the host: that server served on the stdin/stdout of the process, which is the whole session --]
 mcp_stdio::[host => !*</sys/space/mcp/basic_server>]@/sys/io/mcp/stdio;
