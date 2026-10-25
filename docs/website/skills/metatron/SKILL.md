@@ -18,7 +18,7 @@ mtron> ... [-- larger agent definition --]
 ==>fail::[parse error at line 1, col 2:
      ... [-- larger agent definition --]
       ^
-     expected an obj]@/sys/fail/43059
+     expected an obj]@/sys/fail/60220
 mtron> feature=>[
         tool_feature::[tool=>[!*eval]]
         ... [-- other features attached to agent --]
@@ -26,12 +26,12 @@ mtron> feature=>[
      feature=>[
            tool_feature::[tool=>[!*eval...
             ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/43527
+     unclosed triple-quote — missing closing '"""']@/sys/fail/61215
 mtron> ]
 ==>fail::[parse error at line 1, col 1:
      ]
      ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/43794
+     unclosed triple-quote — missing closing '"""']@/sys/fail/62258
 ```
 ## References
 
@@ -54,6 +54,6 @@ mtron> ]
   compile→run pipeline, threads/monads, and the read-path invariants + migration state.
 * **Distributed primitives (Java)**: `references/distributed-metatron.md` — Index of every place metatron crosses a
   process boundary: the Router dispatch seam (`own`/`isPeer`/`dispatchForeign`, `/sys/peer` roster), the wire
-  transports (`wsspace`/`wsclient`, `httpspace`, `mqttspace`, `serialspace`, `dckrspace`, `grphspace`, `vecspace`,
+  transports (`ws_server`/`ws_client`, `http_server`/`http_client`, `mqttspace`, `serialspace`, `dckrspace`, `grphspace`, `vecspace`,
   `tblespace`), the remote endpoints (`mtron_ws`, `mtron_http`, MCP, REST verbs), the in-VM concurrency motifs
   (threads, `ThreadExecutor`, `SwarmProcessor`), and the wire format.

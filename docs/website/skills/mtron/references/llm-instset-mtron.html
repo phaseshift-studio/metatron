@@ -467,19 +467,11 @@ mtron&gt; model::[provider=&gt; ollama,
 </code></pre>
 <p>Create a workspace for the agent. Create a model for the agent to use for chatting. Create the agent by composing
 the workspace and a chat feature. Then:</p>
-<pre><code class="language-mtron">mtron&gt; [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
-==&gt;fail::[parse error at line 1, col 13:
-     [MAX_OUTPUT 10] @chatter.chat('what is the meaning o...
-                 ^
-     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/296011
+<pre><code class="language-mtron">mtron&gt; @chatter.chat('what is the meaning of nothing?')
 </code></pre>
 <p>The <code>/usr/chatter/#</code> space serves a the default location for features to store their various constructions.</p>
 <pre><code class="language-mtron">mtron&gt; */usr/chatter/chat_result/+
-mtron&gt; [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
-==&gt;fail::[parse error at line 1, col 13:
-     [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
-                 ^
-     a poly entry (a lst or a rec) — a value, key=&gt;value, ',' or ']']@/sys/fail/297966
+mtron&gt; */usr/chatter/chat_result/1/chat
 </code></pre>
 <p><strong>A tool is an instruction.</strong> There is no tool registry to populate: anything callable <em>is</em> a tool, and <code>mTool</code>
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a <code>tool_feature</code> can
@@ -498,14 +490,15 @@ live carrier the way a boot file does, at <code>http://localhost:8777</code> and
 mtron&gt; import(/m/web,web)
 mtron&gt; [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/basic_server
-==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval(#::T){&lt;j&gt;}]]@/sys/space/mcp/basic_server
+==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
+                status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/basic_server
 </code></pre>
 <p>What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
 per server, <code>mcp_mtron</code> for the metatron-native tools, <code>mcp_message</code> for the ledger, and <code>/basic</code> for the server
 just defined:</p>
-<pre><code class="language-mtron">[-- a carrier is a space; a route binds a server to it. `else` makes a mount idempotent --]
-*/sys/space/web/http.else(httpspace::[pattern=&gt; http://#, host =&gt; http://localhost:8777, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message, /basic =&gt; !*&lt;/sys/space/mcp/basic_server&gt;, / =&gt; /usr]]@/sys/space/web/http)
-*/sys/space/web/ws.else(wsspace::[pattern=&gt; ws:#, host =&gt; ws://localhost:8555, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message]]@/sys/space/web/ws)
+<pre><code class="language-mtron">[-- a carrier is a server (http_server, ws_server); a route binds an mcp server to it. `else` makes a mount idempotent --]
+*&lt;/network/listener/http/localhost/8777&gt;.else(http_server::[host =&gt; http://localhost:8777, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message, /basic =&gt; !*&lt;/sys/space/mcp/basic_server&gt;, / =&gt; /usr]])
+*&lt;/network/listener/ws/localhost/8555&gt;.else(ws_server::[host =&gt; ws://localhost:8555, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message]])
 </code></pre>
 <h3>types</h3>
 <table>
@@ -635,9 +628,10 @@ one. <code>close()</code> releases it; <code>clone()</code> returns the same cli
 transport-agnostic: mount it, and the carrier supplies the bytes.</p>
 <p>Because a tool is an instruction, a server is a <strong>selection over instructions</strong>, and that selection is boot data:</p>
 <pre><code class="language-mtron">mtron&gt; mcp_server::[tool =&gt; [!*eval, !*eval]]@/sys/space/mcp/two_say
-==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval(#::T){&lt;j&gt;}]]@/sys/space/mcp/two_say
+==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
+                status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/two_say
 mtron&gt; */sys/space/mcp/two_say&gt;&gt;tool     [-- one entry: a collection is keyed by the instruction --]
-==&gt;[m_inst_eval=&gt;eval(#::T){&lt;j&gt;}]
+==&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}]
 </code></pre>
 <p>Three rules follow, and the third is the one that surprises people:</p>
 <ul>

@@ -183,4 +183,16 @@ public class PlanBuilderTest extends AbstractInstSetTest {
         final Code code = ObjmtronSerializer.parse("start(5).plus(1)").asCode();
         assertEquals(code, PlanInterpreter.bind(move, code), "a cut-less plan is the identity until Phase 6");
     }
+
+    /**
+     * {@code bind} declines a cut-less plan whose target's scheme resolves no dialer — the identity, symmetric with
+     * {@code lower}'s no-match.
+     */
+    @Test
+    public void testBindDeclinesUnresolvableScheme() {
+        final Plan move = PlanBuilder.plan("move").where(Placement.chain(f("foo://nowhere"), Span.at())).create();
+        assertNull(move.cut());
+        final Code code = ObjmtronSerializer.parse("start(5).plus(1)").asCode();
+        assertEquals(code, PlanInterpreter.bind(move, code), "bind declines a target whose scheme no dialer resolves");
+    }
 }

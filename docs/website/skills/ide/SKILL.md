@@ -79,7 +79,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/4741
+==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/4887
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -94,16 +94,18 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
           EchoTest=>inst(){<j>}],
     code=>[,],
     idx=>[=>],
-    command=>[read_file=>/dev/scratch/command/read_file(file=>uri::T,min=>isa(int::T).else(0),max=>isa(int::T).else(9223372036854775807)){*file.split("""
+    command=>[read_file=>/dev/scratch/command/read_file(file=>uri::T,
+                                                        min=>isa(int::T).else(0),
+                                                        max=>isa(int::T).else(9223372036854775807)){*file.split("""
    """).as(rec::T).select([is(gte(*min))=>id()]).select([is(lt(*max))=>id()])},
               mvn_build=>!ide:command('mvn -f src/test/resources/scratch ...'),
               mvn_clean=>!ide:command('mvn -f src/test/resources/scratch ...'),
               mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>second::3.315,
+            runtime=>second::4.018,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/c3db970a]
+            output=>!*/sys/tmp/78c48046]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.

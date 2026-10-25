@@ -539,10 +539,6 @@ keeps what SQL cannot say:</p>
     base_vid=&gt;'/m/inst',
     obj_tid=&gt;'/m/inst/auto_from',
     ref_table=&gt;'person']
-==&gt;[table_name=&gt;'note',
-    column_name=&gt;'$table',
-    base_vid=&gt;'/m/rec',
-    obj_tid=&gt;'/m/rec']
 ==&gt;[table_name=&gt;'person',
     column_name=&gt;'age',
     base_vid=&gt;'/m/int',
@@ -551,6 +547,10 @@ keeps what SQL cannot say:</p>
     column_name=&gt;'name',
     base_vid=&gt;'/m/str',
     obj_tid=&gt;'/m/str']
+==&gt;[table_name=&gt;'note',
+    column_name=&gt;'$table',
+    base_vid=&gt;'/m/rec',
+    obj_tid=&gt;'/m/rec']
 ==&gt;[table_name=&gt;'note',
     column_name=&gt;'body',
     base_vid=&gt;'/m/str',
@@ -773,13 +773,13 @@ kinds may sit in one row.</p>
 ==&gt;/sys/space/tbledoc/instset/#
 mtron&gt; */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id(),
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/award
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/award
 ==&gt;/sys/space/tbledoc/instset/note=&gt;rec::T[?[{?}body=&gt;str::T,uri::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/note
 ==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,
-    {?}age=&gt;int::T,
-    {?}skill=&gt;str::T,
-    uri::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/person
+            {?}age=&gt;int::T,
+            {?}skill=&gt;str::T,
+            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/person
 </code></pre>
 <p>Reading the schema is how you meet a table you have never seen: each entry is an <code>isa([{?}name=&gt;str::T,…])</code> refinement
 of <code>rec::T</code>, and a foreign-key column appears as <code>recipient=&gt;isa(person/+/id).!*id()</code> — the column <em>is</em> the pointer.
@@ -823,16 +823,14 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/5
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/3
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/6
+==&gt;[body=&gt;'another one']@tbledoc:note/4
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;1
 ==&gt;3
 ==&gt;2
 ==&gt;4
-==&gt;5
-==&gt;6
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC
@@ -849,11 +847,11 @@ mtron&gt; *tbledoc:person/+.count()                   [-- 0: a fresh mount has n
 ==&gt;5
 mtron&gt; */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
 ==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,
-    recipient=&gt;isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
+            recipient=&gt;isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
 ==&gt;/sys/space/tbledoc/instset/note=&gt;rec::T[?[{?}body=&gt;str::T]]@/sys/space/tbledoc/instset/note
 ==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,
-    {?}age=&gt;int::T,
-    {?}skill=&gt;str::T]]@/sys/space/tbledoc/instset/person
+            {?}age=&gt;int::T,
+            {?}skill=&gt;str::T]]@/sys/space/tbledoc/instset/person
 mtron&gt; *tbledoc:person/+.count()                   [-- the rows were in the file all along --]
 ==&gt;5
 mtron&gt; /sys/space/tbledoc -&gt; noobj                 [-- leave the graph as we found it --]

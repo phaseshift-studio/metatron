@@ -745,13 +745,26 @@ message, no anonymous-then-upgrade: the listener co-mounts a <strong>named</stro
 (server : peer :: constructor : instance). It is a plain session parameter, like <code>?in=</code> and <code>?out=</code>, rather than a
 q-processor; the key carries none of them, while <code>host</code> keeps the dial as it was written.</p>
 <p><strong>The identity element.</strong> <code>id_client::T</code> (<code>/m/mach/id_client</code>) is the identity of the protocol-client family, bound
-to the scheme <code>loop:</code>: its constructor is the dial, its <code>send_recv</code> applies the shipped message against the local
-machine. A read through a loop peer therefore <em>equals</em> the local read — the self-similarity contract in executable
-form, with no socket.</p>
-<p><strong>Transport convention.</strong> The message rides as <code>send_recv</code>'s argument, and a user's <code>|</code> (block) defers evaluation so
-code ships as written: <code>1.plus(2).send_recv(|plus(45))</code> evaluates <code>plus(45)</code> at the far side against the shipped
-monad. Insts are total, \(P (\mathrm{Obj}) \to P (\mathrm{Obj})\): a transport never errors — it answers a smaller set,
-and \(\emptyset\) (noobj) is a legal answer, not an exception.</p>
+to the scheme <code>loop:</code>: its constructor is the dial, and its mini-instset (<code>eval</code>, <code>from</code>, <code>to</code>) evaluates what it is
+sent against the local machine. A read through a loop peer therefore <em>equals</em> the local read — the self-similarity
+contract in executable form, with no socket.</p>
+<p><strong>The mini-instset.</strong> A client reaches the network through its <code>inst</code> — <code>{instruction tid =&gt; override}</code> — and
+nothing else. Each override is the native instruction with the client's own body (the same signature, so a call
+reaches it by swapping its function): <code>from(&lt;uri&gt;)</code> reads, <code>obj.to(&lt;uri&gt;)</code> writes (the obj is the lhs), and
+<code>eval(code)</code> ships a program for the far side to run. A <code>ws_client</code> declares all three; an <code>http_client</code> declares
+<code>from</code> (GET) and <code>to</code> (POST) — a write that stores what it is sent and evaluates nothing, so it serves no <code>eval</code>. A
+shard target must serve both <code>to</code> (the route) and <code>eval</code> (the routed program must be applied there). <code>send_recv</code>
+remains a <code>ws_client</code>'s raw wire instruction, not a reach: a user's <code>|</code> (block) defers evaluation so code ships as
+written, <code>1.plus(2).send_recv(|plus(45))</code> evaluating <code>plus(45)</code> at the far side against the shipped monad. Insts are
+total, \(P (\mathrm{Obj}) \to P (\mathrm{Obj})\): a reach never errors — it answers a smaller set, and \(\emptyset\)
+(noobj) is a legal answer, not an exception.</p>
+<p><strong>Status.</strong> Every client and every server answers <code>status</code> — a bool, true while it is live, derived each time it is
+read and never stored. A <code>ws_client</code> is live while its socket is open, an <code>http_client</code> while its host answers a HEAD,
+a loop client always, an <code>mcp_client</code> by its health check, an <code>mcp_server</code> while its own dispatch answers a ping, and
+a server while its socket is bound. <code>*~/network/status</code> reports each dialed peer by its client's <code>status</code> — <code>up</code> or
+<code>down</code> — and a roster address that was never dialed as <code>known</code>. A peer carries no transport of its own: it is talked
+to with its client's <code>inst</code>. And a read never dials: construction connects (<code>http_client::[host=&gt;&lt;http://h:p&gt;]</code>),
+destruction disconnects, and an address no client was constructed for falls through to memory.</p>
 <p><strong>Supervision keeps the index true.</strong> Between the index that granted a peer and the drop that retracts it, the
 network watches every peer whose client holds a live connection — a <em>link</em>, <code>ws_client</code> today — and keeps the listing
 honest. Connection on creation, destruction on deletion, and only the owner deletes:</p>
@@ -785,8 +798,8 @@ to exactly the machine that dialed it, a pop retracts precisely its dials — it
 ended — and a sibling never sees them.</li>
 </ol>
 <p><strong>Who a machine is: what it listens on.</strong> A machine's own authorities — what mDNS announces for it and what the roster
-files under its name — are exactly its <strong>listening</strong> surfaces: a space that binds a server socket (<code>wsspace</code>,
-<code>httpspace</code>) says so, and nothing else counts. A backend the machine <em>dials</em> — a <code>tblespace</code>, <code>mqttspace</code>, <code>grphspace</code>
+files under its name — are exactly its <strong>listening</strong> surfaces: a server that binds a socket — a <code>ws_server</code> or an
+<code>http_server</code> — is its network <code>listener</code> entry, and nothing else counts. A backend the machine <em>dials</em> — a <code>tblespace</code>, <code>mqttspace</code>, <code>grphspace</code>
 or <code>vecspace</code> host — is reach, never identity, so its host, a <code>?user=…&amp;password=…</code> login included, never leaves the
 machine in an announcement, a roster key or a TXT route; an address that carries userinfo is refused outright rather
 than stripped. There is no &quot;is this mine&quot; predicate either: the owner of a connection is always the machine it is

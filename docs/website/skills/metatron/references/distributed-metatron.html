@@ -451,10 +451,11 @@ column is where to look when a byte moves.</p>
 isa/mach/type/router/BasicRouter.java         ← authority guard, peer roster, foreign dispatch
 furi/fURI.java                                ← authority(), localize(), hasAuthority()
 isa/m/mInstSet.java                           ← from / to / ref — the language's own deref+ref primitives
-isa/web/space/ws/wsSpace.java                 ← wsspace::T  (WebSocket server)
+isa/web/space/ws/wsServer.java                ← ws_server::T (a machine's ws presence: a Listener on a socket)
 isa/web/space/ws/WebSocketRec.java            ← wsclient::T (WebSocket client, sendRecv)
 isa/web/space/ws/handler/mtron_wsHandler.java ← mtron_ws   (remote eval endpoint)
-isa/web/space/http/httpSpace.java             ← httpspace::T
+isa/web/space/http/httpServer.java            ← http_server::T (a machine's http(s) presence: a Listener on a socket)
+isa/web/space/http/httpClient.java            ← http_client::T (from = GET, to = POST; http://# is the web gateway)
 isa/web/space/http/handler/*_httpHandler.java ← mtron_http, mcp_*, web_ (REST verbs)
 isa/web/space/stdio/handler/mcp_stdioHandler.java ← MCP over stdio
 isa/mach/type/thread/                         ← virtual / core threads, FutureObj
@@ -491,10 +492,10 @@ emergent membership.</p>
 <tr><th>type</th><th>direction</th><th>pattern</th><th>witness</th></tr>
 </thead>
 <tbody>
-<tr><td><code>wsspace::T</code></td><td>server</td><td><code>ws://#</code></td><td><code>wsSpace.java:74</code></td></tr>
-<tr><td><code>wsclient::T</code></td><td>client</td><td><code>ws://host:port/path</code></td><td><code>wsSpace.java:77</code>, <code>WebSocketRecClient.java:121</code></td></tr>
-<tr><td><code>httpspace::T</code></td><td>server</td><td><code>http://#</code></td><td><code>httpSpace.java:76</code></td></tr>
-<tr><td><code>HttpRec</code></td><td>client</td><td><code>http(s)://…</code></td><td><code>HttpRec.java</code></td></tr>
+<tr><td><code>ws_server::T</code></td><td>server</td><td><code>ws://host:port</code>, routes per machine</td><td><code>wsServer.java</code></td></tr>
+<tr><td><code>ws_client::T</code></td><td>client</td><td><code>ws://host:port/path</code></td><td><code>wsServer.java</code> (<code>WS_CLIENT_TYPE</code>), <code>WebSocketRecClient.java</code></td></tr>
+<tr><td><code>http_server::T</code></td><td>server</td><td><code>http(s)://host:port</code>, routes per machine</td><td><code>httpServer.java</code></td></tr>
+<tr><td><code>http_client::T</code></td><td>client</td><td><code>http(s)://host:port</code>, or <code>http(s)://#</code> (the gateway)</td><td><code>httpClient.java</code></td></tr>
 <tr><td><code>mqttspace::T</code></td><td>both</td><td>broker URI</td><td><code>mqttSpace.java</code></td></tr>
 <tr><td><code>serialspace::T</code></td><td>both</td><td>device path</td><td><code>serialSpace.java</code></td></tr>
 <tr><td><code>dckrspace::T</code></td><td>client</td><td>Docker daemon TCP</td><td><code>dckrSpace.java</code></td></tr>
@@ -504,7 +505,7 @@ emergent membership.</p>
 <tr><td><code>fsspace::T</code></td><td>local</td><td><code>local:#</code></td><td><code>fsSpace.java</code></td></tr>
 </tbody>
 </table>
-<p>Only <code>wsspace</code> + <code>wsclient</code> carry <strong>metatron-to-metatron</strong> traffic today. The rest are remote <em>service</em> access.</p>
+<p>Only <code>ws_server</code> + <code>ws_client</code> carry <strong>metatron-to-metatron</strong> traffic today. The rest are remote <em>service</em> access.</p>
 <h3>3. Remote endpoints (what the far side runs)</h3>
 <table>
 <thead>
@@ -552,8 +553,8 @@ emergent membership.</p>
 <h3>Rules that hold across all of them</h3>
 <ul>
 <li><strong>An authority you own is decoration unless a space serves that address.</strong> <code>ws://localhost:8555/usr/x</code> localizes
-to <code>/usr/x</code>; but <code>ws://localhost:8555/&lt;route&gt;/&lt;n&gt;</code> is a live session of the <code>wsspace</code>/<code>httpspace</code> whose pattern
-(<code>ws://#</code>, <code>http://#</code>) claims that authority, so it is handed to the space instead. The literal rule in
+to <code>/usr/x</code>. A server's sessions and handlers are no addresses: a ws session is held by its socket and reached
+through the peer it mints, and an http handler is held by its server. The literal rule in
 <code>BasicRouter.dispatchForeign</code>: localize only when the authority-free path still resolves to a space.</li>
 <li><strong>A space is not a wire payload.</strong> Asking a peer for a space itself yields no response at all — ask for <code>.vid()</code>.</li>
 <li><strong>A remote dereference returns a value whose tid carries coefficient <code>*</code></strong> (renders <code>{*}1</code>), because the reply is

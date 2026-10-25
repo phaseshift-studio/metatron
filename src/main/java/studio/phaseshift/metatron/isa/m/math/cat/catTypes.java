@@ -471,14 +471,16 @@ public class catTypes {
     }
 
     /**
-     * The place-class word (§11.4): a located path's realized placement (span → place) abstracted into a list of
-     * places, or its origin when nothing has been realized — the α word of locations, the same lift as the
-     * instruction word. {@code noobj} for an unlocated path.
+     * The place-class word (§11.4): a located path's realized placement (span → place) abstracted into a flat list of
+     * places, or the reachable places (roster ∪ dialed peers) when nothing has been realized — the α word of
+     * locations, the same lift as the instruction word. {@code noobj} for an unlocated path.
      */
     private static Obj placeWord(final Rec path) {
         final Obj where = path.at(WHERE);
         if (where.isRec() && !where.asRec().jvm().isEmpty())
-            return lst(where.asRec().values().toList());
+            // the realized placement is span => [place…] (one entry per shipped span); the word is that flat list of
+            // places — the same shape Places.reachable() returns, never the span-keyed rec it was written as
+            return lst(where.asRec().values().flatMap(v -> v.stream()).toList());
         // the place-class word is where the code can GO — its dialed peers — not where it starts (the origin)
         return Places.reachable();
     }

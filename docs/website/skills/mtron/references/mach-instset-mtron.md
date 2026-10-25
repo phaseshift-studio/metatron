@@ -329,14 +329,28 @@ message, no anonymous-then-upgrade: the listener co-mounts a **named** inbound p
 q-processor; the key carries none of them, while `host` keeps the dial as it was written.
 
 **The identity element.** `id_client::T` (`/m/mach/id_client`) is the identity of the protocol-client family, bound
-to the scheme `loop:`: its constructor is the dial, its `send_recv` applies the shipped message against the local
-machine. A read through a loop peer therefore *equals* the local read — the self-similarity contract in executable
-form, with no socket.
+to the scheme `loop:`: its constructor is the dial, and its mini-instset (`eval`, `from`, `to`) evaluates what it is
+sent against the local machine. A read through a loop peer therefore *equals* the local read — the self-similarity
+contract in executable form, with no socket.
 
-**Transport convention.** The message rides as `send_recv`'s argument, and a user's `|` (block) defers evaluation so
-code ships as written: `1.plus(2).send_recv(|plus(45))` evaluates `plus(45)` at the far side against the shipped
-monad. Insts are total, $P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a transport never errors — it answers a smaller set,
-and $\emptyset$ (noobj) is a legal answer, not an exception.
+**The mini-instset.** A client reaches the network through its `inst` — `{instruction tid => override}` — and
+nothing else. Each override is the native instruction with the client's own body (the same signature, so a call
+reaches it by swapping its function): `from(<uri>)` reads, `obj.to(<uri>)` writes (the obj is the lhs), and
+`eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client` declares
+`from` (GET) and `to` (POST) — a write that stores what it is sent and evaluates nothing, so it serves no `eval`. A
+shard target must serve both `to` (the route) and `eval` (the routed program must be applied there). `send_recv`
+remains a `ws_client`'s raw wire instruction, not a reach: a user's `|` (block) defers evaluation so code ships as
+written, `1.plus(2).send_recv(|plus(45))` evaluating `plus(45)` at the far side against the shipped monad. Insts are
+total, $P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a reach never errors — it answers a smaller set, and $\emptyset$
+(noobj) is a legal answer, not an exception.
+
+**Status.** Every client and every server answers `status` — a bool, true while it is live, derived each time it is
+read and never stored. A `ws_client` is live while its socket is open, an `http_client` while its host answers a HEAD,
+a loop client always, an `mcp_client` by its health check, an `mcp_server` while its own dispatch answers a ping, and
+a server while its socket is bound. `*~/network/status` reports each dialed peer by its client's `status` — `up` or
+`down` — and a roster address that was never dialed as `known`. A peer carries no transport of its own: it is talked
+to with its client's `inst`. And a read never dials: construction connects (`http_client::[host=><http://h:p>]`),
+destruction disconnects, and an address no client was constructed for falls through to memory.
 
 **Supervision keeps the index true.** Between the index that granted a peer and the drop that retracts it, the
 network watches every peer whose client holds a live connection — a *link*, `ws_client` today — and keeps the listing
@@ -372,8 +386,8 @@ its instset:
    ended — and a sibling never sees them.
 
 **Who a machine is: what it listens on.** A machine's own authorities — what mDNS announces for it and what the roster
-files under its name — are exactly its **listening** surfaces: a space that binds a server socket (`wsspace`,
-`httpspace`) says so, and nothing else counts. A backend the machine *dials* — a `tblespace`, `mqttspace`, `grphspace`
+files under its name — are exactly its **listening** surfaces: a server that binds a socket — a `ws_server` or an
+`http_server` — is its network `listener` entry, and nothing else counts. A backend the machine *dials* — a `tblespace`, `mqttspace`, `grphspace`
 or `vecspace` host — is reach, never identity, so its host, a `?user=…&password=…` login included, never leaves the
 machine in an announcement, a roster key or a TXT route; an address that carries userinfo is refused outright rather
 than stripped. There is no "is this mine" predicate either: the owner of a connection is always the machine it is

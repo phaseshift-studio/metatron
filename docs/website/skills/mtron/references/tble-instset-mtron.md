@@ -109,10 +109,6 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
     base_vid=>'/m/inst',
     obj_tid=>'/m/inst/auto_from',
     ref_table=>'person']
-==>[table_name=>'note',
-    column_name=>'$table',
-    base_vid=>'/m/rec',
-    obj_tid=>'/m/rec']
 ==>[table_name=>'person',
     column_name=>'age',
     base_vid=>'/m/int',
@@ -121,6 +117,10 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
     column_name=>'name',
     base_vid=>'/m/str',
     obj_tid=>'/m/str']
+==>[table_name=>'note',
+    column_name=>'$table',
+    base_vid=>'/m/rec',
+    obj_tid=>'/m/rec']
 ==>[table_name=>'note',
     column_name=>'body',
     base_vid=>'/m/str',
@@ -363,13 +363,13 @@ mtron> */sys/space/tbledoc/schema/pattern      [-- where the discovered types ar
 ==>/sys/space/tbledoc/instset/#
 mtron> */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
 ==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-    recipient=>isa(person/+/id).!*id(),
-    uri::T=><#>::T]]@/sys/space/tbledoc/instset/award
+            recipient=>isa(person/+/id).!*id(),
+            uri::T=><#>::T]]@/sys/space/tbledoc/instset/award
 ==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T,uri::T=><#>::T]]@/sys/space/tbledoc/instset/note
 ==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
-    {?}age=>int::T,
-    {?}skill=>str::T,
-    uri::T=><#>::T]]@/sys/space/tbledoc/instset/person
+            {?}age=>int::T,
+            {?}skill=>str::T,
+            uri::T=><#>::T]]@/sys/space/tbledoc/instset/person
 ```
 Reading the schema is how you meet a table you have never seen: each entry is an `isa([{?}name=>str::T,…])` refinement
 of `rec::T`, and a foreign-key column appears as `recipient=>isa(person/+/id).!*id()` — the column *is* the pointer.
@@ -426,16 +426,14 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/5
+==>[body=>'a note with a database-assigned key']@tbledoc:note/3
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/6
+==>[body=>'another one']@tbledoc:note/4
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>1
 ==>3
 ==>2
 ==>4
-==>5
-==>6
 ```
 ## taking the space down
 
@@ -455,11 +453,11 @@ mtron> *tbledoc:person/+.count()                   [-- 0: a fresh mount has not 
 ==>5
 mtron> */sys/space/tbledoc/instset/+/              [-- reading the instset is what walks the catalog --]
 ==>/sys/space/tbledoc/instset/award=>rec::T[?[{?}trophy=>str::T,
-    recipient=>isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
+            recipient=>isa(person/+/id).!*id()]]@/sys/space/tbledoc/instset/award
 ==>/sys/space/tbledoc/instset/note=>rec::T[?[{?}body=>str::T]]@/sys/space/tbledoc/instset/note
 ==>/sys/space/tbledoc/instset/person=>rec::T[?[{?}name=>str::T,
-    {?}age=>int::T,
-    {?}skill=>str::T]]@/sys/space/tbledoc/instset/person
+            {?}age=>int::T,
+            {?}skill=>str::T]]@/sys/space/tbledoc/instset/person
 mtron> *tbledoc:person/+.count()                   [-- the rows were in the file all along --]
 ==>5
 mtron> /sys/space/tbledoc -> noobj                 [-- leave the graph as we found it --]

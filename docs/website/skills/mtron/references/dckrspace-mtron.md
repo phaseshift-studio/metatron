@@ -88,7 +88,7 @@ The label then travels with the objects (it outlives the VM), and every containe
 *docker:container/+.?[owner=></usr/avatar>]      [-- everything this owner created --]
 ```
 
-`on_close` is the other half: an instruction applied when the space closes. The web/ws/http spaces already take
+`on_close` is the other half: an instruction applied when the space closes. The web handlers already take
 lifecycle hooks this way (`on_open`, `on_message`, `on_error`); `on_close` gives *any* space an mtron-controllable
 shutdown hook, which is what makes reaping declarative rather than hard-coded in Java.
 
