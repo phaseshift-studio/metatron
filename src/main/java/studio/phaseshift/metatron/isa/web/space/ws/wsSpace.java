@@ -60,6 +60,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -91,6 +92,9 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
                     uri(SEND).maybe().asUri(), INST_TYPE,
                     uri(SEND_RECV).maybe().asUri(), INST_TYPE,
+                    // the mini-instset — {instruction tid => override}: what the network reaches this socket with; a
+                    // spec that carries its own (a custom to(), say) keeps it, otherwise the socket declares eval/from/to
+                    uri(INST).maybe().asUri(), REC_TYPE,
                     uri(ON_OPEN).maybe(), T(ALL),
                     uri(ON_ERROR).maybe(), T(ALL),
                     uri(ON_MESSAGE).maybe(), T(ALL),

@@ -339,9 +339,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             displaced = this.peerAt(key);
             if (displaced.isRec() && client == displaced.asRec().<Obj>atDirect(uri(CLIENT)))
                 return displaced;
-            // a client answers either the transport itself or a rec whose eval override (or legacy send_recv) is the
-            // transport (the client is kept on the peer so disconnect can hang up) -- adapted in ONE place,
-            // Helper.asTransport.
+            // a client answers either the transport itself or a rec whose eval override derives the transport (the
+            // client is kept on the peer so disconnect can hang up) -- adapted in ONE place, Helper.asTransport.
             final Obj transport = Helper.asTransport(client);
             final Obj inst = client.isRec() ? client.asRec().at(uri(INST)) : noobj();
             WIRE_LOG.debug("index %s key=%s transport=%s inst=%s", dialURI, key, transport.isNoObj() ? "NONE" : "inst", inst.isRec() ? "set" : "none");
@@ -932,13 +931,6 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
 
         /**
-         * A SESSION'S REACH, adapted to the transport convention: a transport is applied with the message
-         * as the LHS — the MONAD seat, code riding quoted in the arg seat (x.send_recv(|f)) — while a
-         * protocol session's send_recv takes its payload as arg(0). One adapter serves both directions of
-         * the dial: connect's client and accept's inbound session. Unadapted, send_recv shipped an empty
-         * arg and answered noobj — measured.
-         */
-        /**
          * THE CLOSE-BEFORE-CLEAR CONTRACT, the network's copy of {@code Space.Helper.writeComplete}:
          * writing {@code noobj} over a live value closes what it displaces, so "write to noobj" IS the
          * universal hang-up and no separate disconnect machinery exists. Today the Java-side retraction
@@ -951,34 +943,22 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             return currentObj;
         }
 
+        /**
+         * A SESSION'S TRANSPORT — the one inst that ships a message and answers the peer's result, which is what
+         * {@code peer::T.transport}, the probe and a roster entry still speak (the message as the transport's LHS).
+         * It is DERIVED, never declared: a session's {@code eval} override is exactly that arrow, so the transport
+         * evaluates the message on it ({@link #evaluate}). A session that is itself an inst, or a rec that carries a
+         * {@code transport}, answers as it stands. A client reaches the network through its mini-instset alone —
+         * {@code send_recv} is no reach (2026-10-24: every client provides its own {@code to}, {@code from} and
+         * {@code eval}); it survives only as a ws client's raw wire instruction.
+         */
         public static Obj asTransport(final Obj session) {
             if (session.isObjInst())
                 return session;
-            // NEW SHAPE — a client that declares its capabilities as a mini-instset (`inst => {tid => override}`):
-            // `eval` is the arrow that ships code and answers with the result, which is exactly the transport
-            // contract, so the transport (the message as its lhs) evaluates the message on the eval override.
-            // Derived here so read/write keep working unchanged while clients migrate off send_recv.
             final Obj eval = Helper.overrideIn(session, EVAL_INST_TID);
             if (eval.isObjInst())
                 return instLambda(message -> Helper.evaluate(eval.asInst(), message));
-            final Obj reach = session.isRec() ? session.asRec().<Obj>at(uri(SEND_RECV)) : noobj();
-            if (reach.isObjInst())
-                return wrapTransport(reach);
             return session.isRec() ? session.asRec().<Obj>at(uri(TRANSPORT)) : noobj();
-        }
-
-        /**
-         * THE LEGACY {@code send_recv} ADAPTER — a protocol session's raw reach is not an override: it takes its
-         * payload as arg(0) ({@code send_recv(message[, timeout])}), so the transport contract (the message as the
-         * lhs) is adapted by placing the message in that seat, BLOCKED for the reason {@link #evaluate} gives. Only this
-         * per-call copy blocks: a user's own send_recv still computes its arg, and `|` quotes what they mean to ship.
-         * An override never comes through here — it is called as the instruction it replaces ({@link #dispatch}).
-         */
-        public static Obj wrapTransport(final Obj reach) {
-            return instLambda(message -> {
-                final Inst call = reach.asInst().args(lst(message));
-                return call.tid(call.tid().addQ(BLOCK)).apply(noobj());
-            });
         }
 
         /**

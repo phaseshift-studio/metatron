@@ -94,6 +94,21 @@ transport carrying everything.
 > an `inst`-only client (no `eval`/transport), so a read-only or write-only peer is reachable through its single
 > override. Proven by `NetworkConnectTest.testReadDispatchesToANativeFromOverride` (loop reader) and
 > `testWriteDispatchesToANativeToOverride` (loop sink).
+>
+> **`send_recv` migration: DONE (2026-10-24, Marko: "migrate all the send_recv clients over to providing their own
+> custom to() implementation").** `Network.Helper.asTransport` no longer reaches a peer through `send_recv` (and the
+> legacy `wrapTransport` adapter is gone): a client reaches the network through its mini-instset alone, and the
+> transport is derived from its `eval`. `WebSocketRec` declares `eval`/`from`/`to` unless its spec brings its own
+> `inst` (a custom `to()`; `ws_client::T`'s predicate names the field); `send_recv` survives only as the ws client's
+> raw wire instruction. The loop `id_client` declares the same three. `AcceptedPeerShardTest`'s fixtures now mint the
+> twin and the dialed peer with mini-instsets.
+>
+> **The http client: `{ from => GET, to => POST }`** — the theory's test. `obj.to(<http://…>)` POSTs the obj as
+> httpSpace's directWriter sends it (json unless `?mimeq`) and answers the native `to`'s answer, the obj written: the
+> type system holds the override to `to`'s range, so the server's reply is not the answer (a non-2xx is a fail). A
+> POST writes and evaluates nothing, so the client serves no `eval` and is never a shard target — the reason
+> distributing shapes require `{to, eval}` (Phase D ruling 3). Proven by
+> `NetworkConnectTest.testHttpClientPostsTheObjItWrites`.
 
 **Goal:** every client declares its capabilities as an `inst` map; `send_recv` is removed. Until a client is
 migrated, it still works through the legacy `send_recv` path (the foundation kept both).
@@ -166,15 +181,17 @@ tid instead of re-deriving it.
 >
 > 3. **Shard targets are online AND serve the route** (Marko: "pick by both — online and can to()"). The requirement
 >    is `plan::T` data, so every present and future distribution rule inherits it: each `where` placement carries
->    `inst` — the key mirrors the client's `inst` — whose default is its shape's (`Placement.Shape.inst()`: every
->    distributing shape ships its chain through `to(<target>)`, so it requires `/m/inst/to`), and a placement may add
->    what its shipped chunk needs (`Placement.inst(tid…)`). law_shard's printed plan now says
->    `inst=>[</m/inst/to>]` on its tree placement. One check, `Places.serves(peer, placement)` — online ∧ the peer's
->    own client overrides every required tid — replaces the liveness-only filter in `PlanInterpreter.shardTargets`.
->    The loop `id_client` now declares `eval`, `from` and `to` (each the identity of the wire body), so the loop
->    equivalence obligation (`PlacementEquivalenceTest`) still holds. Proven by `ShardTargetSelectionTest`.
->    Consequence: a client that predates the mini-instset (`send_recv` only, no `inst`) is still reachable through the
->    ladder's transport rung, but it is no longer a shard target — it declares no `to`.
+>    `inst` — the key mirrors the client's `inst` — whose default is its shape's (`Placement.Shape.inst()`), and a
+>    placement may add what its shipped chunk needs (`Placement.inst(tid…)`). **The default is `{to, eval}`**: every
+>    distributing shape ships its chain through `to(<target>)` (the route), and what the route carries is a program
+>    the target must apply (`eval`). Marko's caution: `to` means "write this obj to this address" — law_shard
+>    overloads it by shipping code that an mtron far side applies on arrival, while an http POST `to` only writes; so
+>    `to` alone would hand a program to a peer that stores it and runs nothing. law_shard's printed plan says
+>    `inst=>[</m/inst/to>,</m/inst/eval>]` on its tree placement. One check, `Places.serves(peer, placement)` —
+>    online ∧ the peer's own client overrides every required tid — replaces the liveness-only filter in
+>    `PlanInterpreter.shardTargets`. The loop `id_client` declares `eval`, `from` and `to` (each the identity of the
+>    wire body), so the loop equivalence obligation (`PlacementEquivalenceTest`) still holds. Proven by
+>    `ShardTargetSelectionTest` (incl. an online POST writer — `to` without `eval` — refused).
 >    The *potential* listing (`catTypes`' reach gate over `Places.reachable()`, roster included) stays optimistic:
 >    pruning an undialed candidate needs §4's declared half — scheme signatures stating what a scheme's client
 >    serves — which waits on the signature records.
@@ -200,7 +217,8 @@ the general dispatch.
 1. Confirm `handler` is no longer *read* for capability decisions anywhere; where a consumer still branches on it,
    switch to "which tids are in `inst`".
 2. Migrate the remaining `transport`-shaped assertions in the network tests to `inst`-shaped ones.
-3. Delete the legacy `send_recv` path in `asTransport` once Phase B has migrated every client.
+3. ~~Delete the legacy `send_recv` path in `asTransport` once Phase B has migrated every client.~~ Done 2026-10-24
+   (Phase B's `send_recv` migration).
 
 ---
 

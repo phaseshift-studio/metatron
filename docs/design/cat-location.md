@@ -472,8 +472,9 @@ The plan guard reads `obj`; the placement guard reads `where`; there is one lift
 - **`where{+}`** — the relocation decisions, each an inline rec (the `Route` shape, not a type):
   `{span: [{span, flags?}], shape, target, interface?, hops?, thread?, workers?, law?, inst?}`. A distribution rule
   has exactly one. **`inst?`** (2026-10-24) — the instructions the target must serve, keyed as a client's `inst`
-  names them: the shape supplies the default (every distributing shape ships through `to(<target>)`, so it requires
-  `/m/inst/to`) and a placement may add what its shipped chunk needs. A dialed peer takes the placement when it is
+  names them: the shape supplies the default (every distributing shape ships a program through `to(<target>)`, so it
+  requires `/m/inst/to` for the route and `/m/inst/eval` to apply what the route carries — an http POST `to` writes
+  and evaluates nothing) and a placement may add what its shipped chunk needs. A dialed peer takes the placement when it is
   online and its client overrides each one (`Places.serves`) — the realized half of §4's liveness test.
 
 ```mtron_pre

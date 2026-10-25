@@ -32,9 +32,9 @@ import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
@@ -44,9 +44,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -86,8 +86,9 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
-        // the twin exactly as the listener mints it: the inbound session's send_recv is its reach
-        Machine.current().network().accept(TWIN, rec(uri(SEND_RECV), silent(TWIN)));
+        // the twin exactly as the listener mints it: the inbound session's mini-instset is its reach — and it serves
+        // all a shard needs (eval, to), so only its being ACCEPTED (no host to dial back) keeps it from being a target
+        Machine.current().network().accept(TWIN, rec(uri(INST), silent(TWIN)));
     }
 
     @AfterEach
@@ -97,10 +98,13 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
     }
 
     /**
-     * a reach that never answers — what a print-only client is to the server it dialed
+     * a reach that never answers — what a print-only client is to the server it dialed: a mini-instset whose eval and
+     * to, each on its native signature, answer a fail
      */
-    private static Inst silent(final fURI peer) {
-        return instLambda((lhs, inst) -> fail("no reply from %s", peer));
+    private static Rec silent(final fURI peer) {
+        return rec(
+                uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> fail("no reply from %s", peer)),
+                uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> fail("no reply from %s", peer)));
     }
 
     /**
@@ -128,12 +132,11 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
      */
     @Test
     void testTheTwinIsNotAShardTarget() {
-        // indexed as a ws_client constructor indexes itself: the host is the claim, and the client serves to — a shard
-        // target must be online AND serve the route its slave ships through (Places.serves)
+        // indexed as a ws_client constructor indexes itself: the host is the claim, and the client serves eval and to —
+        // a shard target must be online AND serve what its slave ships through and needs applied (Places.serves)
         Machine.current().network().index(rec(
                 uri(HOST), uri(DIALED),
-                uri(SEND_RECV), silent(DIALED),
-                uri(INST), rec(uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> fail("no reply from %s", DIALED)))));
+                uri(INST), silent(DIALED)));
         // routing is decided at compile time, so neither reach is ever asked
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,32,4,5,999,6}.plus(1).sum()")).asCode();
