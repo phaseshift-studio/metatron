@@ -84,9 +84,10 @@ public class mcp_httpHandler extends HttpRec {
      */
     private static final long HEARTBEAT_MS = 15_000L;
 
-    // Session registry: sessionId → session metadata
+    // Session registry: sessionId → session metadata. A request's own session id is a local of the method serving it,
+    // never a field: one handler serves every request on its mount concurrently, so a field would hand one client
+    // another's session.
     private final Map<String, fURI> sessions = new ConcurrentHashMap<>();
-    private String sessionId;
 
     public mcp_httpHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
@@ -121,17 +122,17 @@ public class mcp_httpHandler extends HttpRec {
             return;
         }
 
-        // Check for existing session
-        this.sessionId = exchange.getRequestHeaders().getFirst("Mcp-Session-Id");
-
-        // Detect initialize to create a new session
+        // initialize opens a new session; any other request continues the one its header names
         final Rec json = request.asRec();
         final String method = json.at(uri("method")).isNoObj() ? "" : json.at(uri("method")).toCleanString();
-        if ("initialize".equals(method)) {
-            this.sessionId = java.util.UUID.randomUUID().toString();
+        final boolean initialize = "initialize".equals(method);
+        final String sessionId = initialize
+                ? java.util.UUID.randomUUID().toString()
+                : exchange.getRequestHeaders().getFirst("Mcp-Session-Id");
+        if (initialize) {
             // a session's notifications are its server's outbox: the handler is no address of its own
-            sessions.put(this.sessionId, this.mcp.outbox());
-            LOG.status(DEBUG, "created mcp session: %s", this.sessionId);
+            sessions.put(sessionId, this.mcp.outbox());
+            LOG.status(DEBUG, "created mcp session: %s", sessionId);
         }
 
         // Dispatch to protocol handler — reuse the already-parsed `request` for the
@@ -249,10 +250,10 @@ public class mcp_httpHandler extends HttpRec {
 
     @Override
     protected void doDelete(final HttpExchange exchange) throws IOException {
-        this.sessionId = exchange.getRequestHeaders().getFirst("Mcp-Session-Id");
-        if (this.sessionId != null) {
-            sessions.remove(this.sessionId);
-            LOG.info("removed mcp session: %s", this.sessionId);
+        final String sessionId = exchange.getRequestHeaders().getFirst("Mcp-Session-Id");
+        if (sessionId != null) {
+            sessions.remove(sessionId);
+            LOG.info("removed mcp session: %s", sessionId);
         }
         exchange.sendResponseHeaders(204, -1);
     }

@@ -44,12 +44,17 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.WebSocket;
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -256,6 +261,34 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         assertEquals(200, resp.statusCode(), "initialize should return 200");
         assertTrue(resp.body().contains("\"result\""), "should have a result");
         assertTrue(resp.body().contains("\"capabilities\""), "should have capabilities");
+    }
+
+    /**
+     * every client that initializes gets its own session — sixteen at once, through the one handler their mount
+     * shares: a session id belongs to the request that opened it, never to the handler
+     */
+    @Test
+    public void testConcurrentInitializesGetTheirOwnSessions() throws Exception {
+        final String initialize = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"," +
+                "\"params\":{\"protocolVersion\":\"2025-03-26\",\"clientInfo\":{\"name\":\"test\",\"version\":\"0\"}}}";
+        final int clients = 16;
+        final List<CompletableFuture<HttpResponse<String>>> responses = IntStream.range(0, clients)
+                .mapToObj(i -> this.httpClient.sendAsync(HttpRequest.newBuilder()
+                                .uri(java.net.URI.create(baseUrl() + "/mcp"))
+                                .header("Content-Type", "application/json")
+                                .POST(HttpRequest.BodyPublishers.ofString(initialize))
+                                .timeout(Duration.ofSeconds(10))
+                                .build(),
+                        HttpResponse.BodyHandlers.ofString()))
+                .toList();
+        final Set<String> sessions = new HashSet<>();
+        for (final CompletableFuture<HttpResponse<String>> response : responses) {
+            final HttpResponse<String> resp = response.get(10, TimeUnit.SECONDS);
+            assertEquals(200, resp.statusCode(), resp.body());
+            sessions.add(resp.headers().firstValue("Mcp-Session-Id").orElse("<absent>"));
+        }
+        assertFalse(sessions.contains("<absent>"), "every initialize should answer a session id");
+        assertEquals(clients, sessions.size(), "every client should get its own session: " + sessions);
     }
 
     @Test

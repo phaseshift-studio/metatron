@@ -279,7 +279,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
     // Integration tests
     // =========================================================
 
-    public static class Integration extends AbstractWebSocketServerIntegrationTest {
+    public static class mcp_wsHandlerIntegrationTest extends AbstractWebSocketServerIntegrationTest {
 
         @Override
         protected Listener createWSServer() {

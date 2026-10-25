@@ -191,7 +191,7 @@ tests and the docs pipeline still belong in docker. Surefire writes a test's std
 |------------------------------------------------------:|-----------------------------------------------:|
 |                                     Push/PR to `main` | Push to `main`, `v*` tags, `workflow_dispatch` |
 |                                         Oracle JDK 25 |                      Temurin JDK 25 (uber-jar) |
-| `./mvnw install -Dtest='!httpServerTest,!fsSpaceTest'` |     `mvn package` → build & push image to GHCR |
+|                `./mvnw install -Dtest='!fsSpaceTest'` |     `mvn package` → build & push image to GHCR |
 
 Docker images are built and published to GHCR (`ghcr.io/phaseshift-studio/metatron`) by the
 `docker.yml` workflow — the Maven build itself does not touch Docker.
