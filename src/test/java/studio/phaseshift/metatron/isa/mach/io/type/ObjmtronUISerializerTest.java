@@ -398,9 +398,8 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     @Test
     public void testNestedTypePredicateMaintainsDepth() {
         // the *mach shape: a rec whose value is a type whose own predicate is a multi-entry rec
-        // wide enough to break.  before the type path threaded depth, the inner predicate's
-        // entries came out at the same one-space indent as the outer rec's entries instead of
-        // one level deeper
+        // wide enough to break.  the predicate's entries line up under their first entry — which
+        // sits deeper than the outer rec's own entries — instead of resetting to the outer's indent
         final Type inner = Type.Builder.build()
                 .tid(REC_TID)
                 .isaPredicate(rec(
@@ -414,9 +413,12 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         final String written = ObjmtronUISerializer.prettyPrint().write(outer);
         LOG.debug("nested type rec => %s", written);
         assertTrue(written.startsWith("[child=>"), String.format("the outer entry rides the opening bracket: %s", written));
-        // the outer rec's own entry sits at depth 1, the nested type's predicate at depth 2
+        // the outer rec's own entry sits at depth 1; the nested predicate's entries line up under
+        // their first entry, deeper than the outer's
         assertTrue(written.contains("\n other=>"), String.format("the outer's later entry sits at depth 1: %s", written));
-        assertTrue(written.contains("\n  p1=>"), String.format("the nested type's predicate entries must be at depth 2: %s", written));
+        assertEquals(written.indexOf("p0=>"),
+                written.indexOf("p1=>") - written.lastIndexOf("\n", written.indexOf("p1=>")) - 1,
+                String.format("the nested type's predicate entries line up under their first: %s", written));
         assertFalse(written.contains("\n p1=>"), String.format("the nested predicate must not reset to depth 1: %s", written));
     }
 
@@ -440,7 +442,9 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         LOG.debug("diagnostic nested type rec => %s", written);
         assertTrue(written.startsWith("[child=>"), String.format("the outer entry rides the opening bracket: %s", written));
         assertTrue(written.contains("\n other=>"), String.format("a diagnostic nests like any nested poly: %s", written));
-        assertTrue(written.contains("\n  p1=>"), String.format("its nested predicate sits one level deeper: %s", written));
+        assertEquals(written.indexOf("p0=>"),
+                written.indexOf("p1=>") - written.lastIndexOf("\n", written.indexOf("p1=>")) - 1,
+                String.format("its nested predicate entries line up under their first: %s", written));
         assertFalse(written.contains("{{"), String.format("a diagnostic carries no renderer markup: %s", written));
     }
 

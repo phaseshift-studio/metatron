@@ -407,7 +407,7 @@ public class Console extends MRec implements Closeable, Runnable {
                             .ifPresent(p -> p.appendOutput(message, false)));
 
             final DefaultParser parser = ReaderSetup.parser();
-            Console.terminal = ReaderSetup.buildTerminal(this.jobs::interruptActive);
+            Console.terminal = ReaderSetup.buildTerminal(this.jobs::interruptActive, this::onResize);
             // Register terminal with Graphitty so widgets can write without
             // depending on Console/Terminal directly.
             Graphitty.init(terminal.output());
@@ -688,6 +688,17 @@ public class Console extends MRec implements Closeable, Runnable {
 
     public void setTraceEnabled(final boolean traceEnabled) {
         this.traceEnabled = traceEnabled;
+    }
+
+    /**
+     * The terminal was resized: re-render the floating widgets at the new dimensions (anchored
+     * boxes re-place from their corner) and repaint the screen so the transcript re-wraps to the
+     * new width.  Runs on the signal thread; both callees are thread-safe and coalesce, and the
+     * screen paint defers while an interactive tool owns the terminal.
+     */
+    public void onResize() {
+        this.requestRedraw();
+        this.screenView.requestScreenPaint();
     }
 
     /**
