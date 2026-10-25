@@ -51,13 +51,13 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * <p>
  * A space mounts itself as the first step of its construction, before its constructor body runs, because the body may
  * reach the space it is building through the machine (a memspace loads its persisted data so). A construction that
- * failed after that point used to leave the half-built space claiming its vid: an mqttspace whose broker was down, an
- * httpspace whose route table could not be processed (its bound socket accepting connections and answering none), a
+ * failed after that point used to leave the half-built space claiming its vid: an mqttspace whose broker was down, a
  * memspace whose data would not load. A failure now retracts every mount the construction made, puts back a
- * predecessor it displaced, and the factory releases what it acquired.
+ * predecessor it displaced, and the factory releases what it acquired. (A server is no space: a listener whose
+ * construction fails leaves no presence and holds no port — {@code ListenerBindTest}.)
  * <p>
- * {@code {{port}}} is a free port: the http row binds it and must give it back, the mqtt row dials it and finds no
- * broker. {@code {{corrupt}}} is a memspace data file whose first line loads and whose second does not parse.
+ * {@code {{port}}} is a free port: the mqtt row dials it and finds no broker. {@code {{corrupt}}} is a memspace data
+ * file whose first line loads and whose second does not parse.
  */
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
@@ -93,7 +93,6 @@ public class SpaceConstructionTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>,route=>[13=>/usr]]@/sys/space/test/construction % <ERROR>",
             "mqttspace::[pattern=></t/construction/#>,host=><mqtt://127.0.0.1:{{port}}>]@/sys/space/test/construction                       % <ERROR>",
             "memspace::[pattern=></t/construction/#>,data=><{{corrupt}}>]@/sys/space/test/construction                                       % <ERROR>",
     }, delimiter = '%')

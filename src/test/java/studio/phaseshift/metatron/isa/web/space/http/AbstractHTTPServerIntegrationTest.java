@@ -29,7 +29,8 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 
 import java.io.IOException;
 import java.net.URI;
@@ -39,21 +40,22 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.HTTP;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webHelper.isTemplated;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
  * Abstract base for integration-testing HttpRec implementations against a
- * real httpSpace and live HTTP connection.
+ * real http_server and live HTTP connection.
  * <p>
  * Subclasses implement exactly one method:
  * <pre>
- *   protected httpSpace createHTTPSpace();
+ *   protected Listener createHTTPServer();
  * </pre>
- * Everything — scheme, host, port, routes, vid — is derived from the returned space, so a space with an
+ * Everything — scheme, host, port, routes — is derived from the returned server, so a server with an
  * {@code https://} host runs the same suite over tls (with {@link #createHttpClient()} trusting its certificate).
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -61,7 +63,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 @Execution(ExecutionMode.SAME_THREAD)
 public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatronTest {
 
-    protected httpSpace space;
+    protected Listener server;
     protected String httpScheme;
     protected String httpHost;
     protected int httpPort;
@@ -72,14 +74,14 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
     // ========================================
 
     /**
-     * Create and return the fully configured, started httpSpace under test.
-     * The space must already be bound to its host/port when returned.
+     * Create and return the fully configured, serving http_server under test ({@code httpServer.of(...)}).
+     * A constructed http_server is already listening on its host/port.
      * Use {@link #generatePort()} inside this method to pick a free port.
      */
-    protected abstract httpSpace createHTTPSpace();
+    protected abstract Listener createHTTPServer();
 
     /**
-     * The client the helpers send with. Override to dial a space that serves tls with a certificate the JDK does not
+     * The client the helpers send with. Override to dial a server that serves tls with a certificate the JDK does not
      * already trust.
      */
     protected HttpClient createHttpClient() {
@@ -91,11 +93,19 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
     // ========================================
 
     /**
+     * This machine's routes on the server's socket, as its listener entry keeps them.
+     */
+    protected Obj routes() {
+        final Obj entry = Machine.current().network().listenerAt(Network.Helper.keyOf(this.server.authority()));
+        return entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
+    }
+
+    /**
      * The primary HTTP route path for this test, derived from the
-     * first entry in {@code space.at(ROUTE)}.
+     * first entry in {@link #routes()}.
      */
     protected String primaryRoutePath() {
-        final Obj routes = space.at(ROUTE);
+        final Obj routes = this.routes();
         if (routes.isNoObj()) return "/";
         return routes.asRec().elements()
                 .map(r -> r.first().uriValue().toString())
@@ -111,31 +121,30 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
     // Lifecycle
     // ========================================
     @BeforeAll
-    public void setupHTTPSpace() {
+    public void setupHTTPServer() {
         InstSet.importInstSet(WEB_ISA_TID);
-        this.space = createHTTPSpace();
-        assertNotNull(this.space, "httpSpace should be created");
+        this.server = createHTTPServer();
+        assertNotNull(this.server, "the http_server should be created");
 
-        this.httpScheme = null == this.space.at(HOST).uriValue().scheme() ? HTTP : this.space.at(HOST).uriValue().scheme();
-        this.httpHost = this.space.at(HOST).uriValue().host();
-        this.httpPort = this.space.at(HOST).uriValue().port();
-
-        CommonUtil.sleepThread(500);
+        // derived from the server's socket; a constructed http_server is already listening
+        this.httpScheme = null == this.server.authority().scheme() ? HTTP : this.server.authority().scheme();
+        this.httpHost = this.server.authority().host();
+        this.httpPort = this.server.authority().port();
 
         this.httpClient = this.createHttpClient();
     }
 
     @AfterAll
-    public void teardownHTTPSpace() {
+    public void teardownHTTPServer() {
         if (this.httpClient != null) {
             this.httpClient.close();
             this.httpClient = null;
         }
-        if (this.space != null) {
-            Machine.current().memory().removeSpace(this.space.vid());
+        if (this.server != null) {
+            // the inverse of the construction: this machine stops serving, and the socket it opened is released
+            Machine.current().network().unlisten(this.server.authority());
             Machine.current().memory().removeSpace(WEB_ISA_TID);
-            this.space.close();
-            this.space = null;
+            this.server = null;
         }
     }
 
@@ -205,13 +214,14 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
 
     @Test
     public void testHandlerTypeIsRegisteredInRouter() {
-        final Obj routes = space.at(ROUTE);
-        assertFalse(routes.isNoObj(), "httpSpace should have a route table");
+        final Obj routes = this.routes();
+        assertFalse(routes.isNoObj(), "the http_server should keep a route table");
         routes.asRec().elements().forEach(r -> {
             // A templated route value names no address until a request exists — there is nothing for the Router
             // to resolve here, which is exactly what makes it a per-request mount (docs/design/webspace.md
-            // §8.1.2). Every non-templated value is still held to the invariant.
-            if (isTemplated(r.second()))
+            // §8.1.2) — and an instruction or a code value none until it is applied. Every other value is held to the
+            // invariant.
+            if (isTemplated(r.second()) || r.second().isObjInst() || r.second().isCode())
                 return;
             final Obj type = Machine.current().memory().read(r.second().uriValue());
             assertFalse(type.isNoObj(),

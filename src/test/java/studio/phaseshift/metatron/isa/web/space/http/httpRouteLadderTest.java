@@ -25,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 
 import java.io.IOException;
 
@@ -38,7 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Characterization of {@code httpSpace}'s route dispatch — the three-lane ladder — pinned *before* it is
+ * Characterization of {@code http_server}'s route dispatch — the three-lane ladder — pinned *before* it is
  * replaced by protocol projections (P1). One route per lane, asserted by the lane's observable consequence:
  * <ul>
  *   <li>{@code /mcp} — a {@code Type} target resolves (as an {@code mcp_server} type it is materialized) and is
@@ -56,9 +57,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * fails the construction, which mounts nothing and releases the port.) An instance-valued route is therefore only
  * expressible by writing the
  * instance into a space and naming that uri. (2) Bind and client on the same address family: the integration
- * base derives its client host from {@code HOST}, so {@code 127.0.0.1} keeps both on IPv4. Boots on an
- * ephemeral port, so it never collides with a running server — which is why {@code httpSpaceTest} is excluded
- * from CI and this one need not be.
+ * base derives its client host from the server's socket, so {@code 127.0.0.1} keeps both on IPv4. Boots on an
+ * ephemeral port, so it never collides with a running server.
  * <p>
  * The lanes are: (a) a {@code Type} target — which, when it is an {@code mcp_server}, is materialized into an
  * instance and then wrapped by the same {@code instanceof mcpServer} branch a literal instance would take, so
@@ -83,7 +83,7 @@ class httpRouteLadderTest extends AbstractHTTPServerIntegrationTest {
             "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}";
 
     @Override
-    protected httpSpace createHTTPSpace() {
+    protected Listener createHTTPServer() {
         // The space the templated mounts below actually address: a memspace over /data/#, holding people. Without
         // it the route expands to an address nothing owns and every request is a 404 — a mount is only as real as
         // the space behind it.
@@ -92,8 +92,7 @@ class httpRouteLadderTest extends AbstractHTTPServerIntegrationTest {
                 rec(uri("name"), str("Ada"), uri("born"), jnt(1815)));
         studio.phaseshift.metatron.isa.mach.type.Machine.write(f("/data/person/35"),
                 rec(uri("name"), str("Grace"), uri("born"), jnt(1906)));
-        return httpSpace.of(rec(
-                        uri(PATTERN), uri(f("/test/httpRouteLadder/#")),
+        return httpServer.of(rec(
                         uri(HOST), uri(f("http://127.0.0.1:" + generatePort())),
                         uri(ROUTE), rec(
                                 uri(f("/mcp")), uri(f("mcp_mtron")),
@@ -102,8 +101,9 @@ class httpRouteLadderTest extends AbstractHTTPServerIntegrationTest {
                                 uri(f("/name")), ObjmtronSerializer.parse("</m/web/${name()}>"),
                                 uri(f("/pos")), ObjmtronSerializer.parse("</m/web/${as(rec::T).>>path/2}>"),
                                 // a templated mount over real data: /person/34 => /data/person/34
-                                uri(f("/person")), ObjmtronSerializer.parse("</data/person/${name()}>"))),
-                f("/sys/space/test/httpRouteLadder"));
+                                uri(f("/person")), ObjmtronSerializer.parse("</data/person/${name()}>"),
+                                // a code mount whose target is written after the server is up
+                                uri(f("/late")), ObjmtronSerializer.parse("*</data/late>"))));
     }
 
     /**
@@ -113,9 +113,8 @@ class httpRouteLadderTest extends AbstractHTTPServerIntegrationTest {
      * the same mount, a different address, a different outcome. A value resolved once at boot could only ever
      * answer one of these three, so nothing short of per-request resolution passes all three.
      * <p>
-     * The mount keys are literal prefixes because {@code HttpServer.createContext} matches literally — a wildcard
-     * key ({@code /name/#}) would create a context that matches no path at all. Nothing is lost: the value's
-     * expressions see the whole request uri, so the pattern never has to carry the capture.
+     * The mount keys are literal prefixes, and need nothing more: the value's expressions see the whole request uri,
+     * so the pattern never has to carry the capture.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -189,6 +188,19 @@ class httpRouteLadderTest extends AbstractHTTPServerIntegrationTest {
         assertEquals(status, response.statusCode(), desc);
         if (!"-".equals(body))
             assertTrue(response.body().contains(body), desc + ": expected " + body + " in " + response.body());
+    }
+
+    /**
+     * A route is resolved on the first request that needs it, not when the server is built, so it may name a target
+     * built after the server (the drstynx boot mounts {@code *dr.as(skill::T).as(mcp_server::T)} before it defines
+     * {@code dr}). A value that resolves to no lane is not kept: the request is refused, and the next one resolves
+     * again — once the target exists, the route serves it.
+     */
+    @Test
+    void testARouteNamesATargetBuiltAfterTheServer() throws Exception {
+        assertEquals(500, httpGet("/late").statusCode(), "nothing is at /data/late yet, so the route has no lane");
+        studio.phaseshift.metatron.isa.mach.type.Machine.write(f("/data/late"), uri(f("/m/web/helper")));
+        assertEquals(200, httpGet("/late").statusCode(), "the route resolves anew, and now names a web root");
     }
 
     /**

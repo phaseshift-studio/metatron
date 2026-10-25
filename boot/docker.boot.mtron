@@ -45,6 +45,9 @@ fsspace::[pattern => fs:#,
 *boot/args/user.<fs:boot/space/mem/home.mtron>();
 *boot/args/web/http.<fs:boot/space/web/http.mtron>();
 *boot/args/web/ws.<fs:boot/space/web/ws.mtron>();
+[== the web gateway: a peer for every http(s) authority, so *<http://...> reads the web ==]
+http_client::[host => <http://#>];
+http_client::[host => <https://#>];
 <fs:boot/space/tble/sqlite.mtron>(user=>!*boot/args/user,storage=>!(*boot/args/data.else(/tmp)));
 
 *boot/args/console.?=true.

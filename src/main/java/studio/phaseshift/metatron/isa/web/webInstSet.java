@@ -72,7 +72,8 @@ import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_emulator
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.HTTP_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
+import static studio.phaseshift.metatron.isa.web.space.http.httpClient.HTTP_CLIENT_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.http.httpServer.*;
 import static studio.phaseshift.metatron.isa.web.space.mdns.handler.mdnsDiscovery.MDNS_DISCOVERY_TID;
 import static studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler.STDIO_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_emulator_wsHandler.WS_MCP_EMULTATOR_TYPE;
@@ -392,18 +393,15 @@ public class webInstSet extends AbstractInstSet {
                                         uri("delimiter").maybe().asUri(), "the column delimiter token (e.g. ',' or '\\t')",
                                         uri("header").maybe().asUri(), "whether the first row is a header row parsed into rec::T keys"),
                                 "obj_xsv::[delimiter => ',', header => true]"),
-                        docWrap(HTTP_SPACE_TYPE, """
-                                                 a web server space: it serves its route table over http, or over tls when its host is https://.
-                                                 remote reads are the network's: *<http(s)://...> dials an http client peer, which answers with a typed document (html::T, json::T, ... < str::T).
-                                                 a document is a str until it is parsed: .as(rec::T) (or ?mimeq=application/x-mtron) gives it a structure to walk.
-                                                 writes to remote http(s) addresses post through this space; an http://# httpspace mounts an https://# companion at <vid>/https for https posts.
-                                                 the webserver is furi aware: a route onto a space serves the nested addresses of its navigable objs (recs, lsts).
-                                                 an https:// host serves tls with the certificate in its keystore (a pkcs12 path or bytes), opened with its pass.
-                                                 """,
-                                "*<http://phaseshift.studio>                             [-- a html::T < str::T, read by the network's http client peer --]",
-                                "*<https://phaseshift.studio>                            [-- the same, over tls                                      --]",
-                                "*<http://phaseshift.studio>.as(rec::T)>>html/head/title [-- parse the document, then walk it to the str::T title     --]",
-                                "httpspace::[host=><https://0.0.0.0:8443>,pattern=><https://#>,keystore=><conf/server.p12>,pass=>'changeit',route=>[/=><metatronfs:docs/website>]]@/sys/space/web/https"),
+                        docWrap(HTTP_SERVER_TYPE, """
+                                                  an http server as this machine's presence: it serves this machine's routes through an http(s)://host:port socket.
+                                                  a socket a machine above already holds is joined (this machine adds its own routes); otherwise it is bound here, and this machine's pop releases it.
+                                                  a request takes the most specific route of every machine sharing the socket (a wildcard key matches the paths it describes): that machine serves it.
+                                                  the server is furi aware: a route onto a space serves the nested addresses of its navigable objs (recs, lsts).
+                                                  an https:// host serves tls with the certificate in its keystore (a pkcs12 path or bytes), opened with its pass; neither is kept in the listener entry.
+                                                  """,
+                                "http_server::[host=><http://0.0.0.0:8777>,route=>[/=><metatronfs:docs/website>,/mcp=>mcp_mtron]]           [-- serve the site and mcp on 8777 --]",
+                                "http_server::[host=><https://0.0.0.0:8443>,keystore=><conf/server.p12>,pass=>'changeit',route=>[/=><metatronfs:docs/website>]] [-- the site over tls --]"),
                         /////////////////////////////////////////////////////////////////////////////////////////////////////
                         /*docWrap(CLIENT_TYPE = Type.Builder.build().tid(REC_TID).vid(CLIENT_TID).create(),
                                 "a generic web client which can be refined with useful behaviors"),
@@ -424,7 +422,15 @@ public class webInstSet extends AbstractInstSet {
                         /// //////////////////////////////
                         docWrap(HTTP_SOCKET_TYPE, "a generic http obj which can be refined with useful behaviors"),
                         docWrap(HTTP_HANDLER_TYPE, "a http server which should be refined to implement protocol specs"),
-                        docWrap(HTTP_CLIENT_TYPE, "an http client which should be refined to implement protocol specs"),
+                        docWrap(HTTP_CLIENT_TYPE, """
+                                                  an http client: a peer the network reads through with an http GET (from) and writes through with an http POST (to); it serves no eval.
+                                                  a read never dials: an http(s) address answers only through a client someone constructed, and a wildcard host is the web gateway.
+                                                  a document is reified by its content type (html::T, json::T, ... < str::T), and is a str until it is parsed: .as(rec::T) gives it a structure to walk.
+                                                  """,
+                                "http_client::[host=><http://#>]                         [-- the whole web, as one peer: the gateway   --]",
+                                "http_client::[host=><https://#>]                        [-- the whole web over tls                    --]",
+                                "*<http://phaseshift.studio>                             [-- a html::T < str::T, read through the gateway --]",
+                                "*<http://phaseshift.studio>.as(rec::T)>>html/head/title [-- parse the document, then walk it to the title --]"),
                         docWrap(HTTP_MCP_EMULTATOR_TYPE, "an http mcp emulator server that provides an agent a stateful environment of mcp server access"),
                         docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results", "mtron_http::[=>]"),
                         docWrap(HTTP_MCP_HANDLER_TYPE, "an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage"),

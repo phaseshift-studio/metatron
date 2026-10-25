@@ -205,6 +205,23 @@ public abstract class Listener extends MRec implements Closeable {
         }
     }
 
+    /**
+     * Run a callback as the machine whose route the connection took, then stand back where the thread stood: a socket
+     * thread is in no machine, and {@code Machine.current()} there answers the root.
+     */
+    protected static void as(final Machine machine, final Runnable body) {
+        final Machine previous = Machine.CURRENT.get();
+        Machine.current(machine);
+        try {
+            body.run();
+        } finally {
+            if (null == previous)
+                Machine.CURRENT.remove();
+            else
+                Machine.CURRENT.set(previous);
+        }
+    }
+
     private static boolean literal(final String segment) {
         return !segment.isEmpty() && !wildcard(segment) && !segment.contains("${");
     }

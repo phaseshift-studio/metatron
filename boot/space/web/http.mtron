@@ -1,7 +1,5 @@
-[-- httpspace — http server with the mcp route.  Binds 0.0.0.0 for the container. --]
-|inst?httspace<=uri() { 
+[-- http_server — this machine's http presence: the mcp route and this directory.  Binds 0.0.0.0 for the container. --]
+|inst?http_server<=uri() {
   -<([host    => _,
-      q       => [mimeq::[=>]],
-      pattern => http://#,
       route   => [/mcp   => mcp_mtron,
-                  /      => fs:boot/space/web]]@/sys/space/web/http).as(httpspace::T) }
+                  /      => fs:boot/space/web]]).as(http_server::T) }

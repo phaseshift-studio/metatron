@@ -37,9 +37,10 @@ import(/m/tble);
                   q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;       
  fsspace::[pattern    => local:#,
             route     => [local:=><~/>]]@/sys/space/fs/home;
- httpspace::[host     => !*boot/args/web/http/host,
-             pattern  => <http://#>,
-             route    => [/ => <metatronfs:docs/website>]]@/sys/space/web/http;
+ http_server::[host   => !*boot/args/web/http/host,
+               route  => [/ => <metatronfs:docs/website>]];
+ http_client::[host   => <http://#>];
+ http_client::[host   => <https://#>];
  ws_server::[host     => !*boot/args/web/ws/host,
              route    => [/mtron    => mtron_ws,
                           /mcp      => mcp_mtron]];

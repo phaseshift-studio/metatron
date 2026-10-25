@@ -82,7 +82,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
         // handler subtype. The protocol is the type's semantic identity because that is what a transport
         // asks of it ("is this target a protocol surface?"); the carrier is expressed elsewhere — by the
         // vid (/m/web/mcp/mcp_ws, in the mcp namespace) and by the code path (the ws_server builds
-        // mcp_wsHandler, httpSpace builds mcp_httpHandler). The carrier relation is a *binding*
+        // mcp_wsHandler, http_server builds mcp_httpHandler). The carrier relation is a *binding*
         // (as?ws<=mcp), not a subtyping relation.
         // isRefinementOf() traverses parentType() which resolves via Router;
         // after a Router reset the routing can pick mInstSet (shortest prefix)

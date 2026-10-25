@@ -45,10 +45,10 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.REST_TID;
  * The route-table contract ({@code route::T} at {@code /m/web/route}) as a checkable function:
  * {@link webHelper#routeProblems(Rec)} reports an lst of problems, or {@code noobj} when the table is clean.
  * <p>
- * Both rules it checks come from boot defects found while characterizing the ladder: a value that cannot be
- * rendered as a uri throws <em>inside</em> the space constructor and leaves the space with no server at all
- * (every request then times out rather than failing); and an instruction-valued route must actually be a
- * {@code protocol<=uri} function. Resolvability is deliberately not checked — a web root may name a prefix
+ * Both rules it checks come from boot defects found while characterizing the ladder: a value that is no uri, type or
+ * instruction has no lane to serve it (the httpspace carrier once threw on it inside its constructor and was left with
+ * no server at all); and an instruction-valued route must actually be a {@code protocol<=uri} function. A key must be
+ * the path it serves. Resolvability is deliberately not checked — a web root may name a prefix
  * rather than a leaf. A {@code code} value (a fluent chain such as {@code 5.as(uri::T)}, or the production {@code *dr.as(skill::T).as(mcp_server::T)}) is accepted unchecked, because its effective rng is resolved when it is applied — there is no declared signature to test; only a single instruction's signature is checkable.
  */
 class webRouteTableTest extends AbstractMetatronTest {
@@ -68,8 +68,9 @@ class webRouteTableTest extends AbstractMetatronTest {
             "[/good => mcp_mtron, /bad => 5] % 1 % one problem per offending entry",
             "[/root => docker:]              % 0 % a web root may name a prefix that does not read back",
             "[/conv => 5.as(uri::T)]         % 0 % a code value is accepted unchecked: its rng is resolved at application",
-            "[/people/# => mcp_mtron]        % 1 % a pattern key is reported: the carrier matches its context literally, so /people/34 cannot reach it",
-            "[/a+b => mcp_mtron]             % 0 % a literal plus inside a segment is not a pattern — only a whole # or + segment is",
+            "[/people/# => mcp_mtron]        % 0 % a pattern key is mountable: a server routes the paths it describes",
+            "[/a+b => mcp_mtron]             % 0 % a literal plus inside a segment is a literal key",
+            "[13 => mcp_mtron]               % 1 % a key that is no path routes nothing",
     }, delimiter = '%')
     void testRouteTableShape(final String table, final int expected, final String desc) {
         final Obj problems = webHelper.routeProblems(ObjmtronSerializer.parse(table).asRec());

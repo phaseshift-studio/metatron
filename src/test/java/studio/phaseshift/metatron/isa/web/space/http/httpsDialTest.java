@@ -51,8 +51,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * dialer table's https row), and a read through it answers by its {@code from} GET, over tls. Construction is
  * connection — a read alone dials nothing: addressing an authority no client was constructed for makes no peer.
  * <p>
- * No httpspace is mounted here, so no space can answer in the network's place: an https:// read that the network
- * declined used to fall through to an http space's https companion, which hid that the dialer table had no https row.
+ * No gateway client ({@code http_client::[host=><https://#>]}) is constructed here, so only the dialed peer can answer:
+ * a read the network declines is answered by nothing at all.
  * The far side is a plain JDK {@link HttpsServer} with the self-signed test certificate ({@link TlsTestKeys}), trusted
  * through the JDK's default context for the class.
  */
@@ -70,7 +70,7 @@ public class httpsDialTest extends AbstractMetatronTest {
         jdkDefault = SSLContext.getDefault();
         SSLContext.setDefault(TlsTestKeys.trusting());
         far = HttpsServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        far.setHttpsConfigurator(new HttpsConfigurator(httpSpace.tls(rec(
+        far.setHttpsConfigurator(new HttpsConfigurator(httpServer.tls(rec(
                 uri(KEYSTORE), uri(TlsTestKeys.keystore().toAbsolutePath().toString()),
                 uri(PASS), str(TlsTestKeys.PASS)))));
         far.createContext("/motto", exchange -> {

@@ -63,6 +63,9 @@ print("{{y}}web : ${*boot/args/web/http}  ${*boot/args/web/ws}
 {{X}}");
 *boot/args/web/http.<fs:boot/space/web/http.mtron>();
 *boot/args/web/ws.<fs:boot/space/web/ws.mtron>();
+[== the web gateway: a peer for every http(s) authority, so *<http://...> reads the web ==]
+http_client::[host => <http://#>];
+http_client::[host => <https://#>];
 
 [====== THE AGENT IDE WORKSPACE ======]
 print("{{y}}ide : /usr/${*boot/args/user}/scratch

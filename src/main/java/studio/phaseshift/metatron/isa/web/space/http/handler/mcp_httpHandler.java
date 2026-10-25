@@ -129,7 +129,8 @@ public class mcp_httpHandler extends HttpRec {
         final String method = json.at(uri("method")).isNoObj() ? "" : json.at(uri("method")).toCleanString();
         if ("initialize".equals(method)) {
             this.sessionId = java.util.UUID.randomUUID().toString();
-            sessions.put(this.sessionId, this.vid());
+            // a session's notifications are its server's outbox: the handler is no address of its own
+            sessions.put(this.sessionId, this.mcp.outbox());
             LOG.status(DEBUG, "created mcp session: %s", this.sessionId);
         }
 
@@ -170,7 +171,8 @@ public class mcp_httpHandler extends HttpRec {
             return;
         }
         final SseStream sse = this.openSse();
-        final fURI outbox = this.vid().extend("subscriptions");
+        // drain the outbox the server writes its notifications to
+        final fURI outbox = this.mcp.outbox();
         try {
             // 1 — drain notifications already fired (between subscriptions/listen and this GET)
             this.drainOutbox(sse, outbox);

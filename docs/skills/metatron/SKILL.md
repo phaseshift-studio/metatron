@@ -42,6 +42,6 @@ feature=>[/
   compile→run pipeline, threads/monads, and the read-path invariants + migration state.
 * **Distributed primitives (Java)**: `references/distributed-metatron.md` — Index of every place metatron crosses a
   process boundary: the Router dispatch seam (`own`/`isPeer`/`dispatchForeign`, `/sys/peer` roster), the wire
-  transports (`ws_server`/`ws_client`, `httpspace`, `mqttspace`, `serialspace`, `dckrspace`, `grphspace`, `vecspace`,
+  transports (`ws_server`/`ws_client`, `http_server`/`http_client`, `mqttspace`, `serialspace`, `dckrspace`, `grphspace`, `vecspace`,
   `tblespace`), the remote endpoints (`mtron_ws`, `mtron_http`, MCP, REST verbs), the in-VM concurrency motifs
   (threads, `ThreadExecutor`, `SwarmProcessor`), and the wire format.

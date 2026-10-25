@@ -91,7 +91,7 @@ public class mcpMessageServerTest extends AbstractMcpHandlerTest {
     @Test
     public void serverIsAnMcpServerType() {
         // the spaces wrap a route target that is an mcp_server — verify mcp_message
-        // registers as one so both httpSpace and a ws_server pick it up automatically
+        // registers as one so both an http_server and a ws_server pick it up automatically
         assertTrue(Obj.Helper.specificType(mcpMessageServer.server()).test(MCP_SERVER_TYPE),
                 "mcp_message must be an mcp_server type so the spaces wrap it");
     }

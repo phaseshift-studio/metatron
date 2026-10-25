@@ -74,19 +74,6 @@ public interface Space extends Addressable, Rec, Closeable {
 
     Stats stats();
 
-    /**
-     * Does this space LISTEN — bind its {@code host} as a socket that other machines dial? A listener's host is
-     * an address this machine answers on; any other space's host is a BACKEND it dials out to (a database, a
-     * broker, a graph server), and that connection string can carry what must never leave the box.
-     * <p>
-     * It cannot be read off the uri: a gremlin backend is {@code ws://} exactly as a listener is, and a database
-     * container on this box is {@code 127.0.0.1} exactly as a listener's bind is. So the spaces that bind say so,
-     * and {@link studio.phaseshift.metatron.isa.mach.type.Network.Helper#authorities()} reads nothing else.
-     */
-    default boolean listens() {
-        return false;
-    }
-
     // read(fURI)/write(fURI, Obj) and their String overloads are the Addressable contract: a Space is the
     // storage-shaped Addressable (pattern, q-procs, routes) among the machine's uniform read/write sources.
     @Override

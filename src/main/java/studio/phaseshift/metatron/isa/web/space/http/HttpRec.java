@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
  * Base class for HTTP-based metatron objects — the HTTP analog of {@code WebSocketRec}.
@@ -64,13 +64,13 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
  */
 public class HttpRec extends MRec {
 
-    public static final fURI HTTP_REC_TID = HTTP_SPACE_TID.extend("httprec");
+    public static final fURI HTTP_REC_TID = WEB_ISA_TID.extend("http").extend("httprec");
     protected final GraphittyLogger LOG = Graphitty.log(this);
     protected final ObjJSONSerializer JSON = ObjJSONSerializer.simple();
 
     // The current request's exchange — thread-local, not a shared instance field:
     // HttpRec instances are cached and SHARED across requests (see
-    // httpSpace.createHandlerRoute's session cache) while dispatch happens on a
+    // httpServer's handler cache) while dispatch happens on a
     // thread pool. A plain field gets clobbered when two requests land on the
     // same handler, cross-wiring responses: "headers already sent",
     // "stream closed", "insufficient bytes written", and orphaned sockets.
@@ -108,6 +108,18 @@ public class HttpRec extends MRec {
     // not close the exchange out from under it — the stream closes itself.
     private final ThreadLocal<SseStream> STREAM = new ThreadLocal<>();
 
+    // The request path this request's route key matched — thread-local for the same reason as EXCHANGE. A server routes
+    // every request through one root context, so the exchange's context path is "/" whatever the mount: the handler
+    // strips this instead to find the path beneath its mount. Null when the handler was mounted on its own context.
+    private final ThreadLocal<fURI> MOUNT = new ThreadLocal<>();
+
+    /**
+     * The request path the route's key matched, or null when the exchange's context path is the mount.
+     */
+    protected fURI mount() {
+        return MOUNT.get();
+    }
+
     /**
      * Handle a request whose mount already resolved its address — see {@link #address()}.
      */
@@ -117,6 +129,19 @@ public class HttpRec extends MRec {
             this.handle(exchange);
         } finally {
             ADDRESS.remove();
+        }
+    }
+
+    /**
+     * Handle a request routed under {@code mount} — see {@link #mount()} — whose mount may already have resolved its
+     * address ({@link #address()}).
+     */
+    public void handle(final HttpExchange exchange, final fURI mount, final fURI address) throws IOException {
+        MOUNT.set(mount);
+        try {
+            this.handle(exchange, address);
+        } finally {
+            MOUNT.remove();
         }
     }
 

@@ -398,7 +398,8 @@ public class web_httpHandler extends HttpRec {
         if (null != routed)
             return routed;
         final fURI webRoot = this.at(uri(WEB_ROOT)).uriValue();
-        final String mountPath = exchange.getHttpContext().getPath();
+        // the path the route's key matched; a handler mounted on its own context strips that context's path instead
+        final String mountPath = null != this.mount() ? this.mount().toString() : exchange.getHttpContext().getPath();
         final String fullPath = exchange.getRequestURI().getPath();
         final String relativePath = fullPath.startsWith(mountPath)
                 ? fullPath.substring(mountPath.length())

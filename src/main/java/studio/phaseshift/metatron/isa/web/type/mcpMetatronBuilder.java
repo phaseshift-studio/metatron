@@ -75,7 +75,7 @@ public final class mcpMetatronBuilder {
     /**
      * The single transport-agnostic MCP server type exposing the metatron-native
      * tools ({@code eval_mtron}, {@code list_space}, {@code router_info}, …).
-     * Both {@code httpSpace} and {@code ws_server} wrap this {@link mcpServer} in
+     * Both {@code http_server} and {@code ws_server} wrap this {@link mcpServer} in
      * their respective transport handler ({@code mcp_httpHandler} /
      * {@code mcp_wsHandler}).
      */
