@@ -432,41 +432,54 @@ public class mParser {
                         pick(t, 0), pick(t, 3)));
     }
 
-    private static final Pattern MTRON_COMMENT = Pattern.compile(
-            "\\[--.*?(--]|$)|\\[==[\\s\\S]*?==]", Pattern.MULTILINE);
-
+    /**
+     * The comment regions of {@code input}: a {@code [--} comment to its {@code --]} or the end of its line, whichever
+     * comes first, and a {@code [==} comment to its first {@code ==]}.
+     * <p>
+     * A COMMENT IS OPAQUE, and so is a string. One left-to-right pass knows both: a comment marker counts only outside a
+     * string literal, and a quote counts only outside a comment. Finding the strings first and the comments second once
+     * let the apostrophe in {@code [== the web tool's *<url> ==]} open a string that ran to the next quote in the file —
+     * hiding every comment marker in between, so the comment closed at a far later {@code ==]} and the statements in
+     * between were deleted as comment text, with no error.
+     * <p>
+     * Quote spans keep the splitter's rules: an odd run opens a span ({@code '...'}, {@code "..."},
+     * {@code """..."""}), an even run is empty-string literals ({@code ""}) and opens nothing, and a span closes on a
+     * run of its own quote at least as long as the one that opened it. A backslash escapes the character after it.
+     */
     private static List<int[]> commentRegions(final String input) {
-        // Blank the interiors of quoted spans in a same-length copy so the
-        // comment regex cannot see comment markers that live inside string
-        // literals; the matched regions then delete from the original.
-        // Quote spans follow the same rules as the splitter this replaced:
-        // an odd run opens a span ('...', "...", """..."""), an even run is
-        // empty-string literals ("") and opens nothing.
-        final char[] masked = input.toCharArray();
-        int quoteCount = 0;
+        final List<int[]> regions = new ArrayList<>();
+        final int length = input.length();
+        int quoteCount = 0;     // the run that opened the current string literal; 0 outside one
         char quoteChar = 0;
         boolean escaped = false;
-        final int length = masked.length;
-        for (int i = 0; i < length; i++) {
-            final char c = masked[i];
+        int i = 0;
+        while (i < length) {
+            final char c = input.charAt(i);
+            if (0 == quoteCount && '[' == c) {
+                final int end = commentEnd(input, i);
+                if (-1 != end) {
+                    regions.add(new int[]{i, end});
+                    escaped = false;
+                    i = end;
+                    continue;
+                }
+            }
             if (escaped) {
-                if (quoteCount != 0)
-                    masked[i] = ' ';
                 escaped = false;
+                i++;
                 continue;
             }
-            if (c == '\\') {
-                if (quoteCount != 0)
-                    masked[i] = ' ';
+            if ('\\' == c) {
                 escaped = true;
+                i++;
                 continue;
             }
-            if (c == '\'' || c == '"') {
+            if ('\'' == c || '"' == c) {
                 int run = 0;
-                while (i + run < length && masked[i + run] == c)
+                while (i + run < length && input.charAt(i + run) == c)
                     run++;
-                if (quoteCount == 0) {
-                    if (run % 2 != 0) {
+                if (0 == quoteCount) {
+                    if (0 != run % 2) {
                         quoteCount = run;
                         quoteChar = c;
                     }
@@ -474,18 +487,31 @@ public class mParser {
                     quoteCount = 0;
                     quoteChar = 0;
                 }
-                i += run - 1;
+                i += run;
                 continue;
             }
-            if (quoteCount != 0)
-                masked[i] = ' ';
+            i++;
         }
-        // Find comment regions on the masked text (identical indices).
-        final List<int[]> regions = new ArrayList<>();
-        final Matcher matcher = MTRON_COMMENT.matcher(new String(masked));
-        while (matcher.find())
-            regions.add(new int[]{matcher.start(), matcher.end()});
         return regions;
+    }
+
+    /**
+     * Where the comment opening at {@code start} ends (exclusive), or -1 when no comment opens there: a {@code [--}
+     * comment ends after its {@code --]} or at the end of its line, and a {@code [==} comment after its first
+     * {@code ==]} — one with none is no comment.
+     */
+    private static int commentEnd(final String input, final int start) {
+        if (input.startsWith("[--", start)) {
+            final int close = input.indexOf("--]", start + 3);
+            final int newline = input.indexOf('\n', start + 3);
+            final int lineEnd = -1 == newline ? input.length() : newline;
+            return -1 != close && close < lineEnd ? close + 3 : lineEnd;
+        }
+        if (input.startsWith("[==", start)) {
+            final int close = input.indexOf("==]", start + 3);
+            return -1 == close ? -1 : close + 3;
+        }
+        return -1;
     }
 
     /**
