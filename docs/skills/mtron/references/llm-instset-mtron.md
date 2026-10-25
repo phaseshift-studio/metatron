@@ -37,14 +37,14 @@ Create a workspace for the agent. Create a model for the agent to use for chatti
 the workspace and a chat feature. Then:
 
 ```mtron_pre
-[MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
+[MAXOUTPUT 10] @chatter.chat('what is the meaning of nothing?')
 ```
 
 The `/usr/chatter/#` space serves a the default location for features to store their various constructions.
 
 ```mtron_pre
 */usr/chatter/chat_result/+
-[MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
+[MAXOUTPUT 10] */usr/chatter/chat_result/1/chat
 ```
 
 **A tool is an instruction.** There is no tool registry to populate: anything callable *is* a tool, and `mTool`
