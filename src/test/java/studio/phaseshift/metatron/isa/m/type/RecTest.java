@@ -78,6 +78,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @CsvSource(value = {
             // rec                                 % key                  % value
             "[a=>b]                                % c                    % noobj",
+            "[a=>b]                                % </>                  % noobj",
             "[a=>b]                                % a                    % b",
             "[a=>b]                                % a                    % /m/uri::b",
             "[a=>b]                                % a/                   % a=>b",
@@ -177,6 +178,9 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3]>>d                                                        % noobj",
+            "[a=>1,b=>2,c=>3]>></>                                                      % noobj",
+            // The root has no segments, so a # key no longer catches it (it used to answer #=>b)
+            "[#=>b]>></>                                                                % noobj",
             "[a=>1,b=>2,c=>3]>>{15}a                                                    % {15}1",
             "{2}[a=>{3}1,b=>2,c=>3]>>{5}a                                               % {30}1",
             "{1,2}[a=>{2,3}1,b=>2,c=>3]>>{4,5}a                                         % {8,30}1",

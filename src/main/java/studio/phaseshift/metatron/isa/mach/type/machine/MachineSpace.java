@@ -89,8 +89,7 @@ public final class MachineSpace extends memSpace {
     private final fURI sys;
     /**
      * how many segments the machine's vid has: an address's next segment, at this index, names the sphere's part.
-     * Counted from {@code segments()}, never {@code segmentLength()}: for {@code /} (the root's resolved vid) the
-     * latter answers -1 while {@code segments()} is empty, and the depth must agree with the segments it indexes.
+     * The root's resolved vid {@code /} has none, so its depth is 0.
      */
     private final int depth;
 

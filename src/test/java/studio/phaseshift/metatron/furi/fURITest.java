@@ -1605,17 +1605,35 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "test:/a/b/c     | 3       | 4",
-            "test:/a/b       | 2       | 3",
-            "test:/a         | 1       | 2",
-            "test:           | 0       | 0",
-            "mem:/x/y        | 2       | 3",
-            "mem:            | 0       | 0",
-            "/a/b/c          | 3       | 4",
-    }, delimiter = '|')
+            "test:/a/b/c              % 3 % 4",
+            "test:/a/b                % 2 % 3",
+            "test:/a                  % 1 % 2",
+            "test:                    % 0 % 0",
+            "mem:/x/y                 % 2 % 3",
+            "mem:                     % 0 % 0",
+            "/a/b/c                   % 3 % 4",
+            "/                        % 0 % 1",
+            "<>                       % 0 % 0",
+            "a                        % 1 % 1",
+            "a/b                      % 2 % 2",
+            "a/                       % 1 % 2",
+            "a/b/                     % 2 % 3",
+            "/a                       % 1 % 2",
+            "/a/                      % 1 % 3",
+            "/a/b/c/                  % 3 % 5",
+            "/g/+/+/                  % 3 % 5",
+            "//metatron               % 0 % 0",
+            "//metatron/              % 0 % 0",
+            "//metatron/mtron         % 1 % 2",
+            "//metatron:8555/sys/net/ % 2 % 4",
+            "ws://metatron:8555/mtron % 1 % 2",
+            "/a/b{2}                  % 2 % 3",
+            "/a/b?x=1                 % 2 % 3",
+    }, delimiter = '%')
     public void testSegmentLength(final String furiStr, final int expectedSegLen, final int expectedPathLen) {
         final fURI furi = f(furiStr);
         assertEquals(expectedSegLen, furi.segmentLength(), "segmentLength of " + furiStr);
+        assertEquals(furi.segments().size(), furi.segmentLength(), "segmentLength vs segments() of " + furiStr);
         assertEquals(expectedPathLen, furi.pathLength(), "pathLength of " + furiStr);
     }
 

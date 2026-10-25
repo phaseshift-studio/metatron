@@ -60,6 +60,11 @@ public abstract class AbstractfURI implements fURI {
         throw MTronException.of("invalid path: %s", path);
     }
 
+    /**
+     * {@link #segments()}'s size without building the sublist: the branches mirror segments() one for one, guard
+     * included. The root {@code /} is the one-element path {@code [""]}, whose single blank is both the absolute and
+     * the branch marker; without {@code size() > 1} it is dropped twice and the root answers -1.
+     */
     @Override
     public int segmentLength() {
         if (this.isEmpty())
@@ -67,7 +72,7 @@ public abstract class AbstractfURI implements fURI {
         final List<String> path = this.path();
         if (path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
             return path.size();
-        if (path.getFirst().isEmpty() && path.getLast().isEmpty())
+        if (path.getFirst().isEmpty() && path.getLast().isEmpty() && path.size() > 1)
             return path.size() - 2;
         if (path.getFirst().isEmpty())
             return path.size() - 1;
