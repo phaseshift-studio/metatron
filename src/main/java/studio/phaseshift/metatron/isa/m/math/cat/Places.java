@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.rewrite.Placement;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -36,6 +37,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.AUTHORITY;
+import static studio.phaseshift.metatron.Tokens.CLIENT;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.LINKED_FROM;
 import static studio.phaseshift.metatron.Tokens.LINKED_TO;
@@ -178,6 +180,20 @@ public final class Places {
     public static boolean admissible(final Obj place) {
         final Place p = Place.of(place.asRec());
         return p.authorities().stream().anyMatch(a -> Signatures.resolves(a.scheme()));
+    }
+
+    /**
+     * The realized half of the liveness test (§4) — {@link #admissible} is the declared half: a dialed {@code peer}
+     * can take {@code placement} when it is ONLINE and its client SERVES every instruction the placement requires
+     * ({@link Placement#inst()}: a distributing shape ships through {@code to(<target>)}, so its target must serve
+     * {@code to}). Serving is the client's mini-instset declaring an override the type system accepts
+     * ({@link Network.Helper#overrideIn}). Read off this peer's own client — not the first peer of its service.
+     */
+    public static boolean serves(final Obj peer, final Placement placement) {
+        if (!peer.isRec() || !Network.Helper.online(peer))
+            return false;
+        final Obj client = peer.asRec().at(uri(CLIENT));
+        return placement.inst().stream().allMatch(instTID -> Network.Helper.overrideIn(client, instTID).isObjInst());
     }
 
     /**

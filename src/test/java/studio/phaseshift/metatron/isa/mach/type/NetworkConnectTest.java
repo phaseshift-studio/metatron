@@ -90,11 +90,11 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     void testOverrideOfDispatchesToThePeersOwnBodies() {
         final Network network = Machine.current().network();
         network.connect(SELF);
-        // the loop peer declares exactly one maximal override — eval (identity). from/to derive from it, not declared.
-        assertTrue(network.overrideOf(SELF, EVAL_INST_TID).isObjInst(),
-                "the loop peer declares its eval override in its mini-instset");
-        assertEquals(noobj(), network.overrideOf(SELF, FROM_INST_TID),
-                "from is not declared on the loop peer — it derives from eval");
+        // the loop peer declares what a wire client serves — eval, from and to — each the identity of the wire body
+        for (final fURI instTID : List.of(EVAL_INST_TID, FROM_INST_TID, TO_INST_TID))
+            assertTrue(network.overrideOf(SELF, instTID).isObjInst(), "the loop peer declares " + instTID + " in its mini-instset");
+        assertEquals(noobj(), network.overrideOf(SELF, f("/m/inst/plus")),
+                "an instruction the loop peer does not serve has no override");
     }
 
     @Test

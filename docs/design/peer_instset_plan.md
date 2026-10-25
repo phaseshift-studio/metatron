@@ -163,8 +163,21 @@ tid instead of re-deriving it.
 >   (resolve `to(<target>)` against its slave, so `atPeer` runs at plan time and the emitted `select` holds the
 >   peer's `to`), or the compiler resolves — binds without applying — the code inside blocking instructions'
 >   arguments, which reaches every nested call but changes a deliberate compiler rule. Not ruled.
-> - Shard placement is still liveness-shaped — `PlanInterpreter.shardTargets` filters by `Helper.online`; choosing
->   targets by capability (`overrideOf(peer, to)`) is proposed, not ruled.
+>
+> 3. **Shard targets are online AND serve the route** (Marko: "pick by both — online and can to()"). The requirement
+>    is `plan::T` data, so every present and future distribution rule inherits it: each `where` placement carries
+>    `inst` — the key mirrors the client's `inst` — whose default is its shape's (`Placement.Shape.inst()`: every
+>    distributing shape ships its chain through `to(<target>)`, so it requires `/m/inst/to`), and a placement may add
+>    what its shipped chunk needs (`Placement.inst(tid…)`). law_shard's printed plan now says
+>    `inst=>[</m/inst/to>]` on its tree placement. One check, `Places.serves(peer, placement)` — online ∧ the peer's
+>    own client overrides every required tid — replaces the liveness-only filter in `PlanInterpreter.shardTargets`.
+>    The loop `id_client` now declares `eval`, `from` and `to` (each the identity of the wire body), so the loop
+>    equivalence obligation (`PlacementEquivalenceTest`) still holds. Proven by `ShardTargetSelectionTest`.
+>    Consequence: a client that predates the mini-instset (`send_recv` only, no `inst`) is still reachable through the
+>    ladder's transport rung, but it is no longer a shard target — it declares no `to`.
+>    The *potential* listing (`catTypes`' reach gate over `Places.reachable()`, roster included) stays optimistic:
+>    pruning an undialed candidate needs §4's declared half — scheme signatures stating what a scheme's client
+>    serves — which waits on the signature records.
 
 **Goal:** the distribution rewrite's `to(<peer>)` becomes "resolve `to` from the peer", the first real consumer of
 the general dispatch.
