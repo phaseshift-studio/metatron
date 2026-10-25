@@ -756,6 +756,27 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * An uncaught fail passes an inst it cannot resolve against as it passes one that it can: out comes the upstream
+     * fail, cause chain intact, not "unable to locate inst-f fail::T" in its place. The {@code ?dom=#{*}} hint, which a
+     * sharded plan puts on its recombining {@code sum}, makes the sum a gather, applied once to the stream it collected,
+     * and nothing resolves against a stream of fails. A bare {@code sum}, or a {@code plus}, finds an inst for each fail,
+     * and the fail propagates in {@code applyFunction}. Either way the inst's coefficient lands on the fail. A caught
+     * fail is a value, so a miss on it still fails.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "fail::['shard offline'].sum?dom=#{*}().catch(_)                        % fail::['shard offline'].catch(_)",
+            "fail::['shard offline']['no route'].sum?dom=#{*}().catch(cause())      % fail::['no route'].catch(_)",
+            "fail::['shard offline'].sum{2}?dom=#{*}().catch(34)                    % {2}34",
+            "fail::['shard offline'].sum().catch(_)                                 % fail::['shard offline'].catch(_)",
+            "fail::['shard offline'].plus{2}('x').catch(34)                         % {2}34",
+            "fail::['shard offline'].catch(_).sum?dom=#{*}()                        % <ERROR>",
+    }, delimiter = '%')
+    public void testFailurePassesAnUnresolvableInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "a -> [b=>[c=>d]]              % a/b/c -> 34                     % a            % [b=>[c=>34]]",

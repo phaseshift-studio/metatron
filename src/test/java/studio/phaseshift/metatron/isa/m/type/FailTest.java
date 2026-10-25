@@ -35,11 +35,15 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.ALL_STAR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /*
@@ -225,6 +229,26 @@ public class FailTest extends AbstractObjTest {
         assertFalse(ran.get(), "an uncaught fail lhs is propagated, skipping the inst lambda");
         probe.apply(fail("bad").caught());
         assertTrue(ran.get(), "a caught fail lhs runs the inst lambda");
+    }
+
+    /**
+     * The fail that passes an unresolvable inst is the upstream fail itself, at its own fail stack address: a
+     * replacement would be a second entry, and a catch downstream would clear that one and strand the first. A gather
+     * is handed the stream it collected rather than the fail, so the fail is read out of that stream. The mtron rows
+     * are {@code mInstSetTest.testFailurePassesAnUnresolvableInst}: a parsed fail literal leaves its stack entry behind
+     * even when caught, and those leftovers, run ahead of {@link #testFailStackAndCatch}, broke its count.
+     */
+    @Test
+    public void testUncaughtFailPassesAnUnresolvableInstAsItself() {
+        final Inst gather = instB(SUM_INST_TID.dom(ALL_STAR), lst());
+        final Fail upstream = fail("peer unreachable");
+        final Obj passed = gather.apply(upstream);
+        assertEquals(upstream.vid(), passed.vid(), "the fail passes the inst at its own fail stack address: " + passed);
+        final Fail collected = fail("peer timed out");
+        final Objs stream = objs0();
+        stream.append(collected);
+        final Obj gathered = gather.apply(stream);
+        assertEquals(collected.vid(), gathered.vid(), "the gathered fail passes the inst at its own fail stack address: " + gathered);
     }
 
     /**
