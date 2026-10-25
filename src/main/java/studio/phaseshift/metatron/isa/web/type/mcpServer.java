@@ -503,10 +503,18 @@ public class mcpServer extends MRec {
      * Falls back to a fixed region when the server has no vid (bare test servers).
      */
     private fURI subscriptionOutbox(final Obj id) {
-        final fURI base = null == this.vid()
+        return this.outbox().extend(id.toCleanString()).addQ(INCRQ);
+    }
+
+    /**
+     * Where this server's fired subscription notifications are captured — the region a transport drains to push them:
+     * {@code <vid>/subscriptions}, or a fixed region when the server has no vid (bare test servers, and the servers a
+     * transport handler builds for itself).
+     */
+    public fURI outbox() {
+        return null == this.vid()
                 ? f("/m/web/mcp/subscriptions")
                 : this.vid().extend("subscriptions");
-        return base.extend(id.toCleanString()).addQ(INCRQ);
     }
 
     /**

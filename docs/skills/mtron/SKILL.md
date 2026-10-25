@@ -158,13 +158,15 @@ according to their intended use and have different time and space considerations
 |     type     | description                                                    |
 |:------------:|----------------------------------------------------------------|
 |  `memspace`  | in-memory trie data structure                                  |
-| `httpspace`  | the web as a metatron space                                    |
 |  `fsspace`   | file system with nested directories and symlinks as a space    |
 | `mqttspace`  | mqtt broker with nested topics and topic references as a space |
 | `tblespace`  | relational database with foreign key edges as a space          |
 | `grphspace`  | graph database with native edges as a space                    |
 | `dcmntspace` | document `$DBRef`/JSON nested edges as a space                 |
 | `dckrspace`  | docker images, containers, volumes, networks, etc. as a space  |
+
+The web is no space: an `http_server` (or `ws_server`) is a machine's presence at `~/network/listener/<key>`, and the
+web is read through a constructed client, `http_client::[host => <http://#>]` — the gateway peer.
 
 ## processing: the fluent chain
 

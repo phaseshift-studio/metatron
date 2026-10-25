@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.web.space.http;
 
 import com.sun.net.httpserver.HttpServer;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,10 +28,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.SkipRegexTest;
-import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -57,44 +55,39 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 
-/*
- * @author Marko A. Rodriguez (http://markorodriguez.com)
+/**
+ * An http_server serving a directory, read back through the web gateway — {@code http_client::[host=><http://#>]}, the
+ * peer every http address a program reads goes through — and written to through that client's POST.
  */
-@SkipRegexTest(tags = {
-        "write",       // Skip write tests
-        "read",        // Skip read tests
-        "update",      // Skip update tests
-        "drop",        // Skip delete tests
-        "boundary",    // Skip all boundary value tests
-        "type",        // Skip all type preservation tests
-        "nested",      // Skip all nested structure tests
-        "list",        // Skip all list handling tests
-        "special"      // Skip all special value tests
-})
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
-public class httpSpaceTest extends AbstractSpaceTest {
+public class httpServerTest extends AbstractMetatronTest {
     private static final String BASE_URL = "http://localhost:" + generatePort();
+    private static final String GATEWAY = "http://#";
 
     /**
      * Isolated copy of test resources — writes land here, not in src/test/resources/.
      */
     private static final Path WEB_DATA_DIR = Path.of("target", "test-web-data");
 
-    private static httpSpace staticHttpSpace;
-
     @BeforeAll
-    public static void setupSpaces() {
+    public static void setupServer() {
         InstSet.importInstSet(WEB_ISA_TID);
         fsSpace.of(FileSystems.getDefault(), rec(
                 uri(QPROC), lst(QCollection.mimeQ()),
                 uri(PATTERN), uri("local:#"),
                 uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR + "/"))), f("/sys/space/fs"));
-        staticHttpSpace = httpSpace.of(rec(
-                uri(QPROC), lst(QCollection.mimeQ()),
+        httpServer.of(rec(
                 uri(HOST), uri(BASE_URL),
-                uri(PATTERN), uri("http://#"),
-                uri(ROUTE), rec(uri("/"), uri("local:web"))), f("/sys/space/web"));
+                uri(ROUTE), rec(uri("/"), uri("local:web"))));
+        // the web gateway: a read never dials, so the http addresses below answer through the client constructed here
+        Machine.current().network().connect(f(GATEWAY));
+    }
+
+    @AfterAll
+    public static void teardownServer() {
+        Machine.current().network().disconnect(f(GATEWAY));
+        Machine.current().network().unlisten(f(BASE_URL));
     }
 
     @BeforeEach
@@ -106,27 +99,6 @@ public class httpSpaceTest extends AbstractSpaceTest {
         dest.mkdirs();
         CommonUtil.copyDirectory(src.toPath(), dest.toPath());
     }
-
-    public httpSpaceTest() {
-        super(f(BASE_URL), () -> staticHttpSpace);
-    }
-
-    @Override
-    @AfterEach
-    protected void stop() {
-        // Don't close the static httpSpace between tests — it's shared
-    }
-
-    @Override
-    public void testPolyReadWrite(final String writeExpression, final String mutationExpression, final String readExpression, final String expectedExpression) {
-        LOG.warn("testPolyReadWrite (skipped): %s => %s => %s => %s", writeExpression, mutationExpression, readExpression, expectedExpression);
-    }
-
-    @Override
-    public fURI getTestDataUriPrefix() {
-        return f(BASE_URL + "/test/");
-    }
-
 
     @Test
     public void testResourceAccess() {
@@ -166,19 +138,6 @@ public class httpSpaceTest extends AbstractSpaceTest {
     }
 
     @Test
-    @Override
-    public void testMonoRootlessReadWrites() {
-        // do nothing
-    }
-
-
-    @Test
-    @Override
-    public void testMonoUpdate() {
-        // do nothing
-    }
-
-    @Test
     public void testIndexHTMLRedirect() {
         // Default read returns typed html::"..."
         final Obj idx = Machine.read(BASE_URL + "/index.html");
@@ -196,7 +155,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
 
     @Test
     public void testServerSideRecursion() {
-        // Default httpSpace read returns typed html::"..."
+        // a read through the gateway returns typed html::"..."
         assertNotEquals(noobj(), Machine.read(BASE_URL + "/#/"));
         assertNotEquals(noobj(), Machine.read(BASE_URL + "/index.html"));
         assertTrue(Machine.read(BASE_URL + "/index.html").test(HTML_TYPE));

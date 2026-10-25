@@ -51,13 +51,14 @@ fsspace::[
         [=====================]  
         [======== WEB ========]
         [=====================]   
-httpspace::[host     => !*boot/args/web/http/host,
-            pattern  => <http://#>,
-            route    => [/          => <>,
-                         /emulator  => mcp_emulator_http,
-                         /mcp       => mcp_mtron,
-                         /docs      => <metatronfs:docs/website>,
-                         /console   => <metatronfs:src/main/resources/web/console>]]@/sys/space/web/http;
+http_server::[host     => !*boot/args/web/http/host,
+              route    => [/          => <>,
+                           /emulator  => mcp_emulator_http,
+                           /mcp       => mcp_mtron,
+                           /docs      => <metatronfs:docs/website>,
+                           /console   => <metatronfs:src/main/resources/web/console>]];
+http_client::[host     => <http://#>];
+http_client::[host     => <https://#>];
 ws_server::[host    => !*boot/args/web/ws/host,
             route   => [/emulator => mcp_emulator_ws,
                         /mtron    => mtron_ws,

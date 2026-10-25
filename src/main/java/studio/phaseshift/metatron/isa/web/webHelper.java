@@ -90,29 +90,26 @@ public class webHelper {
      * <p>
      * Two rules, both learned from boot defects (see {@code docs/design/webspace.md}):
      * <ol>
-     *   <li><b>shape</b> — the value must be a uri, a type or an instruction. The space constructor renders
-     *   each value as a uri, so a value that cannot be rendered throws inside the constructor, is caught, and
-     *   leaves the space with <em>no server</em>: every request then times out rather than failing.</li>
+     *   <li><b>shape</b> — the value must be a uri, a type or an instruction: anything else has no lane, and a
+     *   request for it is answered with an error rather than served.</li>
      *   <li><b>signature</b> — an instruction value must take a uri and yield a protocol surface
      *   ({@code dom=uri}, {@code rng isa protocol}).</li>
      * </ol>
-     * A third is reported for the <em>key</em>: a pattern key ({@code /people/#}) is matched literally by the
-     * carrier, so it mounts a context its own subtree cannot reach — silently, since the carrier accepts the key
-     * happily. Resolvability is deliberately <em>not</em> checked: a web-root mount legitimately names a prefix to
-     * be extended (e.g. {@code docker:} or {@code mfs:docs/website/}) rather than a leaf that reads back.
+     * A wildcard key is no problem: a server routes each request to the most specific key that describes its path.
+     * Resolvability is deliberately <em>not</em> checked: a web-root mount legitimately names a prefix to be extended
+     * (e.g. {@code docker:} or {@code mfs:docs/website/}) rather than a leaf that reads back.
      */
     public static Obj routeProblems(final Rec routes) {
         final List<Obj> problems = new ArrayList<>();
         if (null == routes || routes.isNoObj())
             return noobj();
         routes.elements().forEach(r -> {
+            if (!r.first().isUri()) {
+                problems.add(str("%s: a route is keyed by the path it serves".formatted(r.first().toShortString())));
+                return;
+            }
             final fURI path = r.first().uriValue();
             final Obj value = r.second();
-            // A pattern key is the one problem whose symptom is pure silence: the carrier matches its context by
-            // literal prefix, so `/people/#` mounts a context that `/people/34` cannot reach, and neither the
-            // carrier nor the mount loop complains. See docs/design/webspace.md §8.1.5.
-            if (path.hasPattern())
-                problems.add(str("%s: a pattern key is matched literally by the carrier, so it will not match the paths it describes (%s)".formatted(path, value.isNoObj() ? "" : value.toShortString()).trim()));
             if (value.isUri() || value.isType())
                 return;
             if (value.isObjInst()) {

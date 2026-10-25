@@ -23,6 +23,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
@@ -86,13 +87,10 @@ public class mtron_httpHandlerTest extends AbstractHTTPServerTest {
     public static class mtron_httpHandlerIntegrationTest extends AbstractHTTPServerIntegrationTest {
 
         @Override
-        protected httpSpace createHTTPSpace() {
-            return httpSpace.of(rec(
-                    uri(NAME), uri("mtron-test"),
+        protected Listener createHTTPServer() {
+            return httpServer.of(rec(
                     uri(HOST), uri("http://localhost:" + generatePort()),
-                    uri(PATTERN), uri("http://#"),
-                    uri(ROUTE), rec(uri("/mtron"), uri(MTRON_HTTP_TID.toString()))
-            ), f("/sys/space/http/mtron-test"));
+                    uri(ROUTE), rec(uri("/mtron"), uri(MTRON_HTTP_TID.toString()))));
         }
 
         @Test

@@ -12,20 +12,24 @@ description: |
 
 `/m/web` is the instruction set that carries the web *transport protocol* types, *MIME*
 types, and *endpoint* types that provide the server logic. The two servers of `/m/web` are
-`httpspace` (a space) and `ws_server` (a listener: constructed, it is the machine's presence at
-`~/network/listener/<key>`) — each carrying a `route` rec for routing connections to mounted services.
+`http_server` and `ws_server` — each a listener: constructed, it is the machine's presence at
+`~/network/listener/<key>` — each carrying a `route` rec for routing connections to mounted services.
+Reading the web is a client's: `http_client::[host => <http://#>]` (and `<https://#>`) is the gateway, a peer every
+http(s) read goes through. A read never dials, so a machine with no gateway reads no web.
 
 ```mtron_pre
-[HIDDEN] /sys/space/web/http -> noobj
+[HIDDEN] </network/listener/http/localhost/8777> -> noobj
 [HIDDEN] </network/listener/ws/localhost/8555> -> noobj
 dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
 [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
-httpspace::[pattern=> http://#,                    /
-            host   => http://localhost:8777,       /
-            route  => [/mcp    => mcp_mtron,       /
-                       /docker => docker:,         /
-                       /usr    => /usr]]@/sys/space/web/http
+http_server::[host  => http://localhost:8777,      /
+              route => [/mcp    => mcp_mtron,      /
+                        /docker => docker:,        /
+                        /usr    => /usr]]
+[-- the web gateway: the http(s) reads below go through these two clients --]
+http_client::[host => <http://#>]
+http_client::[host => <https://#>]
 [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 ws_server::[host   => ws://localhost:8555,         /
@@ -115,9 +119,11 @@ http://localhost:8777/docker/image                             [-- the native mt
 `application/x-mtron` is the **structural parse gate**: it asks for the content parsed into mtron objs rather than
 handed back as text. Read any mount's own documentation with `?docq`.
 
-The mechanism is a q-proc: the live carrier declares
+The mechanism is the server's: a web mount reads the address without its q-procs and serializes the result as the
+`?mimeq` media type asks — `?mimeq=` is a server-side as-transform, and a client's read sends it along in the url.
+A space declares the same rendering for its own reads with a q-proc,
 `q => [mimeq::[pattern=>mimeq, post_read=>inst?#{*}<=#{?}(uri::T,#::T)]]` — a `post_read` inst that runs *after*
-the read and *before* serialization. `?mimeq=` is a server-side as-transform.
+the read and *before* serialization.
 
 A JSON reader decides how much a JSON string is trusted. `ObjJSONSerializer.literal()` keeps every string as
 written, which is what a document whose fields are all strings needs: docker reports `"Tag":"11.2"`, and reading
@@ -128,10 +134,9 @@ number and a string render alike. `simple()` and `web()` keep the content-sniffi
 
 A `route` rec maps a request path to a target. Four rules:
 
-* **keys are literal prefixes.** The carrier matches a context by literal longest prefix, so `/people/#` mounts a
-  context whose subtree cannot reach it — `/people/34` is unmounted, silently, and the context is reachable only by
-  a path containing a literal `#` (percent-encoded `%23`). A literal key mounts its whole subtree; that is the idiom
-  every live mount uses (`/mcp`, `/docker`, `/`).
+* **a key is the path it serves.** A server routes each request to the most specific key that describes the
+  request's path: a literal key mounts its whole subtree — the idiom every live mount uses (`/mcp`, `/docker`, `/`)
+  — and a pattern key the paths it describes (`/people/#` serves `/people/34`).
 * **a prefix value is a root**, extended by the request's remaining path: `/docs => mfs:docs/website/` serves
   `/docs/x/y` from `mfs:docs/website/x/y`.
 * **a templated value is the address.** It is evaluated with the request uri as its lhs, so the mount has already
@@ -163,14 +168,14 @@ binding step, and a route is debuggable by looking at the request uri.
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.
 
-Only a templated value is resolved per request. Anything else — a plain uri, a code — is resolved once at mount
-time, so a route value that *builds* its target (a `code` such as `*dr.as(skill::T).as(mcp_server::T)`) is not
-rebuilt on every request.
+Only a templated value is resolved per request. Anything else — a plain uri, a code — is resolved once, on the first
+request its route serves, so a route value that *builds* its target (a `code` such as
+`*dr.as(skill::T).as(mcp_server::T)`) is not rebuilt on every request — and may name a target built after the server.
 
 ### route values: five flavors
 
 Whatever a key mounts, the value is an *obj applied to the request uri* — and per the rule above, only templated
-values re-resolve per request; the rest resolve once at mount time. The live carriers use five shapes:
+values re-resolve per request; the rest resolve once, on first use. The live carriers use five shapes:
 
 | value                | example                                          | what it mounts                                                             |
 |----------------------|--------------------------------------------------|----------------------------------------------------------------------------|
@@ -180,8 +185,8 @@ values re-resolve per request; the rest resolve once at mount time. The live car
 | evaluated expression | `/drstynx => *dr.as(skill::T).as(mcp_server::T)` | the result, mounted as an obj                                              |
 | fallback             | `/ => mfs:docs/website/`                         | every request no more-specific key caught                                  |
 
-A scheme-keyed entry (`http: => http:`) is the sixth shape: an identity on the scheme itself, which is how
-`httpSpace` serves *and* fetches — outbound `http://` derefs stay in the carrier.
+Reading the web is no route's: an outbound `*<http://…>` goes through a constructed `http_client` — the gateway,
+`host => <http://#>` — and a client built for one site answers for that site before the gateway does.
 
 The mount table is also the **exposure boundary**. What is not mounted is not reachable: the live carrier mounts
 `/usr`, `/mfs`, `/mcp`, `/message`, `/docker` and `/`, while `/sys`, `/m` and everything else are simply absent
@@ -207,8 +212,8 @@ mount is a factory: dereferencing the name returns the type, and the carrier con
 
 Past the mount, the remaining path is a traversal with the space's own read semantics, unchanged:
 
-* **wildcards are honored.** `GET /docker/image/+` is a pattern read — every image, as a lst. The literal-prefix
-  rule constrains mount *keys*, not the request path once a key has matched.
+* **wildcards are honored.** `GET /docker/image/+` is a pattern read — every image, as a lst. A key decides which
+  mount takes a request; past the mount, the request path is read as it stands.
 * **the path may continue through a result.** `/docker/image/+/container/0` matches the images, descends
   `container`, and indexes `0` — one traversal, expressed as path segments.
 * **results may hold `!*` auto-refs.** A listing returns pointers, not copies —
@@ -316,11 +321,8 @@ says "re-read what you already know":
 * the **surface vocabulary** — `*dr.as(mcp::T)`, `person::T.as(rest::T)` — needs `as` rows projecting an obj to a
   protocol surface; today `*dr.as(mcp::T)` fails with *"agent … is not a protocol::T@/m/web/mcp"*, which is why the
   projection chain above is spelled `.as(skill::T).as(mcp_server::T)`.
-* **pattern route keys** — the shape already exists in the type (`route::T`'s own doc example is
-  `[/dr/+ => *dr.as(mcp::T), /docs/# => <mfs:docs/website/#>]`, and `webHelper.routeProblems(rec)` validates a
-  table), but the carrier resolver still matches literal prefixes only. One route table shared by both carriers
-  waits on the same missing piece: a resolver that checks a surface against the carrier, so http cannot mount a
-  ws handler.
+* **one route table for both servers** — waits on a resolver that checks a surface against the server it is
+  mounted on, so http cannot mount a ws handler.
 
 ## see also
 

@@ -18,9 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
@@ -28,163 +26,101 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
- * A listener (a server that binds a socket) either holds its port or fails its construction.
+ * A listener (a server that binds a socket) either holds its port or fails its construction, and its presence is the
+ * network's {@code listener} entry, so a construction that fails leaves none.
  * <p>
  * Java-WebSocket binds on its own selector thread and reports a lost bind only to {@code onError(null, ex)}, so a
  * websocket server on a port already in use once constructed "successfully" while nothing listened, and the failure
- * surfaced later, as a dial's unrelated {@code socket ... is not connected}. A {@code ws_server} awaits its bind; its
- * presence is the network's {@code listener} entry, so a failed construction leaves none. {@code httpspace}, still a
- * listening space, binds synchronously in {@code HttpServer.create}; its rows pin that it stays loud.
- * <p>
- * {@code {{port}}} is the row's port: held by a plain socket in the occupied rows, a {@link #generatePort()} pick in
- * the free ones. Whether a space is mounted is asked of the memory, not of a read: {@code [..]@vid} anchors the config
- * rec at the vid whether or not the cast to a space succeeds, so the vid reads back the rec either way.
+ * surfaced later, as a dial's unrelated {@code socket ... is not connected}: a {@code ws_server} awaits its bind. An
+ * {@code http_server} binds synchronously in {@code HttpServer.create}. One row per server.
  */
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 public class ListenerBindTest extends AbstractMetatronTest {
-
-    /**
-     * where the rows mount their listeners, unmounted after every row so no socket outlives it
-     */
-    private static final List<String> VIDS = List.of("/sys/space/test/listener_http");
 
     @BeforeAll
     public static void importWeb() {
         InstSet.importInstSet(WEB_ISA_TID);
     }
 
-    @AfterEach
-    public void unmount() {
-        VIDS.forEach(vid -> {
-            final Obj space = mounted(vid);
-            Machine.current().memory().removeSpace(f(vid));
-            CommonUtil.close(space);
-        });
+    private static fURI socket(final String scheme, final int port) {
+        return f(scheme + "://127.0.0.1:" + port);
+    }
+
+    private static Obj entry(final String scheme, final int port) {
+        return Machine.current().network().listenerAt(Network.Helper.keyOf(socket(scheme, port)));
     }
 
     /**
-     * a lost bind fails the construction, and nothing is mounted at the vid
+     * a lost bind fails the construction, and leaves no presence behind
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http",
+            "ws   % ws_server",
+            "http % http_server",
     }, delimiter = '%')
-    public void testOccupiedPortFailsConstruction(final String construction, final String vid) throws IOException {
-        try (final ServerSocket occupant = new ServerSocket(0, 50, InetAddress.getLoopbackAddress())) {
-            checkCodeEvaluate(LOG, construction.replace("{{port}}", String.valueOf(occupant.getLocalPort())), "noobj", "<ERROR>");
-            checkEquality(LOG, mounted(vid), noobj(), true);
-        }
-    }
-
-    /**
-     * a free port mounts the space, and it is listening the moment the construction returns
-     */
-    @ParameterizedTest
-    @CsvSource(value = {
-            "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http % */sys/space/test/listener_http>>host % <http://127.0.0.1:{{port}}>",
-    }, delimiter = '%')
-    public void testFreePortListens(final String construction, final String vid, final String fetch, final String expected) throws IOException {
-        final int port = generatePort();
-        checkCodeEvaluate(LOG, construction.replace("{{port}}", String.valueOf(port)), fetch, expected.replace("{{port}}", String.valueOf(port)));
-        checkEquality(LOG, mounted(vid), noobj(), false);
-        // no settle: a dial right away must find the socket bound
-        new Socket(InetAddress.getLoopbackAddress(), port).close();
-    }
-
-    /**
-     * a ws_server on a port already in use fails its construction, and leaves no presence behind
-     */
-    @Test
-    public void testOccupiedPortFailsTheWsServer() throws IOException {
+    public void testOccupiedPortFailsConstruction(final String scheme, final String server) throws IOException {
         try (final ServerSocket occupant = new ServerSocket(0, 50, InetAddress.getLoopbackAddress())) {
             final int port = occupant.getLocalPort();
-            checkCodeEvaluate(LOG, "ws_server::[host=><ws://127.0.0.1:" + port + ">]", "noobj", "<ERROR>");
-            checkEquality(LOG, Machine.current().network().listenerAt(Network.Helper.keyOf(f("ws://127.0.0.1:" + port))), noobj(), true);
+            checkCodeEvaluate(LOG, server + "::[host=><" + socket(scheme, port) + ">]", "noobj", "<ERROR>");
+            checkEquality(LOG, entry(scheme, port), noobj(), true);
         }
     }
 
     /**
-     * a free port is listened on the moment the ws_server's construction returns, and the socket is this machine's
-     * presence: its listener entry
+     * a free port is listened on the moment the construction returns, and the socket is this machine's presence: its
+     * listener entry — whether the server is constructed by its type's name or, as the boot helpers
+     * ({@code boot/space/web/*.mtron}) build theirs, by splitting the host they are applied to into a config and casting
+     * it
      */
-    @Test
-    public void testFreePortListensTheWsServer() throws IOException {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws   % ws_server::[host=><{{socket}}>]",
+            "http % http_server::[host=><{{socket}}>]",
+            "ws   % <{{socket}}>.-<([host => _]).as(ws_server::T)",
+            "http % <{{socket}}>.-<([host => _]).as(http_server::T)",
+    }, delimiter = '%')
+    public void testFreePortListens(final String scheme, final String construction) throws IOException {
         final int port = generatePort();
         try {
-            checkCodeEvaluate(LOG, "ws_server::[host=><ws://127.0.0.1:" + port + ">]",
-                    "*<~/network/listener/ws/localhost/" + port + "/authority>", "<ws://127.0.0.1:" + port + ">");
+            checkCodeEvaluate(LOG, construction.replace("{{socket}}", socket(scheme, port).toString()),
+                    "*<~/network/listener/" + scheme + "/localhost/" + port + "/authority>", "<" + socket(scheme, port) + ">");
             // no settle: a dial right away must find the socket bound
             new Socket(InetAddress.getLoopbackAddress(), port).close();
         } finally {
-            Machine.current().network().unlisten(f("ws://127.0.0.1:" + port));
+            Machine.current().network().unlisten(socket(scheme, port));
         }
     }
 
     /**
-     * a listener's session cache is its own — read and written through the listener, behind its q-procs — and never
-     * claims an address: while the listener listens, it alone claims its pattern
+     * a route is keyed by the path it serves: a table that cannot route fails the construction, and the port the
+     * server bound for it is released with it
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http % http://127.0.0.1:{{port}}/#",
+            "ws   % ws_server",
+            "http % http_server",
     }, delimiter = '%')
-    public void testSessionCacheClaimsNoAddress(final String construction, final String vid, final String pattern) {
-        final String port = String.valueOf(generatePort());
-        final Obj listener = this.listen(construction.replace("{{port}}", port), vid);
-        assertEquals(List.of(listener), claimants(f(pattern.replace("{{port}}", port))), "the listener alone should claim its pattern");
-    }
-
-    /**
-     * a closed listener is unmounted: memory no longer holds it at its vid, and nothing of it — the listener itself or
-     * its session cache — is left claiming its pattern around a stopped server
-     */
-    @ParameterizedTest
-    @CsvSource(value = {
-            "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http % http://127.0.0.1:{{port}}/#",
-    }, delimiter = '%')
-    public void testClosedListenerClaimsNothing(final String construction, final String vid, final String pattern) {
-        final String port = String.valueOf(generatePort());
-        CommonUtil.close(this.listen(construction.replace("{{port}}", port), vid));
-        checkEquality(LOG, mounted(vid), noobj(), true);
-        assertEquals(List.of(), claimants(f(pattern.replace("{{port}}", port))), "nothing of a closed listener should claim its pattern");
-    }
-
-    /**
-     * construct a listener from its mtron and answer the space mounted at its vid
-     */
-    private Obj listen(final String construction, final String vid) {
-        checkCodeEvaluate(LOG, construction, "noobj", "noobj");
-        final Obj listener = mounted(vid);
-        checkEquality(LOG, listener, noobj(), false);
-        return listener;
-    }
-
-    /**
-     * the mounted spaces whose pattern is exactly this one
-     */
-    private static List<Obj> claimants(final fURI pattern) {
-        return Machine.current().memory().spaces().jvm().values().stream()
-                .filter(space -> space instanceof Space claimant && pattern.equals(claimant.pattern()))
-                .toList();
+    public void testUnroutableTableFailsConstruction(final String scheme, final String server) throws IOException {
+        final int port = generatePort();
+        checkCodeEvaluate(LOG, server + "::[host=><" + socket(scheme, port) + ">,route=>[13=>/usr]]", "noobj", "<ERROR>");
+        checkEquality(LOG, entry(scheme, port), noobj(), true);
+        // a port the failed construction still held would refuse this bind
+        new ServerSocket(port, 50, InetAddress.getLoopbackAddress()).close();
     }
 }

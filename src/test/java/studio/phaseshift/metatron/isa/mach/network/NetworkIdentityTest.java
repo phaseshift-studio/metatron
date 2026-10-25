@@ -24,11 +24,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.*;
-import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
+import studio.phaseshift.metatron.isa.web.space.http.httpServer;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -84,29 +83,10 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
 
     /**
      * Mount a real LISTENER: its server binds the host, which is the only place an authority of this machine comes
-     * from. A websocket server is the network's own listener (ws_server::T), withdrawn when it closes. An http server
-     * is still a listening space, patterned as the boot's are ({@code http://#}): a web space indexes a cache beside
-     * itself under its RETRACTED pattern, so a {@code <vid>/#} pattern would retract onto the vid and evict the
-     * listener it serves.
+     * from. Every server is the network's own listener (ws_server::T, http_server::T), withdrawn when it closes.
      */
     private static Closeable mountListener(final String scheme, final fURI host, final fURI vid) {
-        if (!"http".equals(scheme))
-            return wsServer.serve(host, rec());
-        final Space space = httpSpace.of(rec(mutableMap(uri(PATTERN), uri(scheme + "://#"), uri(HOST), uri(host.toString()))), vid);
-        assertTrue(space.listens(), "an http space listens");
-        return () -> {
-            unmount(space);
-            space.close();
-        };
-    }
-
-    /**
-     * Unmount by vid AND by pattern, which is where that cache is indexed. Removing a space closes nothing — the
-     * caller closes what it built.
-     */
-    private static void unmount(final Space space) {
-        Machine.current().memory().removeSpace(space.vid());
-        Machine.current().memory().removeSpace(space.pattern());
+        return "http".equals(scheme) ? httpServer.serve(host, rec()) : wsServer.serve(host, rec());
     }
 
     /**

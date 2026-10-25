@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
+import studio.phaseshift.metatron.isa.web.space.http.httpServer;
 import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -68,12 +68,12 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 
 /**
  * Integration tests for the transport-agnostic {@code mcp_mtron} server,
- * exercised over both transports — Streamable HTTP (via {@link httpSpace}) and
+ * exercised over both transports — Streamable HTTP (via an {@link httpServer}) and
  * WebSocket (via a {@link wsServer}).
  * <p>
  * The direct-invocation (protocol-level) tests are inherited from
  * {@link AbstractMcpMtronHandlerTest}.  This class adds the type-level checks
- * and the live round-trips proving that both spaces wrap the same {@code
+ * and the live round-trips proving that both servers wrap the same {@code
  * mcp_server} in their respective transport handler.
  */
 @Isolated
@@ -81,7 +81,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
 
-    private httpSpace httpSpace;
+    private Listener httpListener;
     private String httpHost;
     private int httpPort;
 
@@ -96,13 +96,11 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     // Transport infrastructure
     // ========================================
 
-    private httpSpace createHTTPSpace() {
+    private Listener createHTTPServer() {
         final fURI hostUri = f("http://localhost:" + generatePort());
-        return httpSpace.of(rec(
+        return httpServer.of(rec(
                 uri(HOST), uri(hostUri.toString()),
-                uri(PATTERN), uri("http://#"),
-                uri(ROUTE), rec(uri("/mcp"), uri(MCP_MTRON_SERVER_TID.toString()))
-        ), f("/sys/space/http/mcp-mtron/test"));
+                uri(ROUTE), rec(uri("/mcp"), uri(MCP_MTRON_SERVER_TID.toString()))));
     }
 
     private Listener createWSServer() {
@@ -115,10 +113,10 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     @BeforeAll
     public void setupSpaces() {
         InstSet.importInstSet(WEB_ISA_TID);
-        this.httpSpace = createHTTPSpace();
-        assertNotNull(this.httpSpace, "httpSpace should be created");
-        this.httpHost = this.httpSpace.at(HOST).uriValue().host();
-        this.httpPort = this.httpSpace.at(HOST).uriValue().port();
+        this.httpListener = createHTTPServer();
+        assertNotNull(this.httpListener, "the http_server should be created");
+        this.httpHost = this.httpListener.authority().host();
+        this.httpPort = this.httpListener.authority().port();
 
         this.wsListener = createWSServer();
         assertNotNull(this.wsListener, "the ws_server should be created");
@@ -131,10 +129,9 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
 
     @AfterAll
     public void teardownSpaces() {
-        if (this.httpSpace != null) {
-            Machine.current().memory().removeSpace(this.httpSpace.vid());
-            this.httpSpace.close();
-            this.httpSpace = null;
+        if (this.httpListener != null) {
+            this.httpListener.close();
+            this.httpListener = null;
         }
         if (this.wsListener != null) {
             this.wsListener.close();
@@ -443,12 +440,12 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     }
 
     // ========================================
-    // eval_mtron — full-stack corner cases (mcpClient → httpSpace + ws_server)
+    // eval_mtron — full-stack corner cases (mcpClient → http_server + ws_server)
     // ========================================
 
     /**
      * Drive {@code eval_mtron} through a live {@link mcpClient} connected to the
-     * {@link httpSpace} route, exercising the full transport + JSON parse +
+     * {@link httpServer} route, exercising the full transport + JSON parse +
      * handler + protocol stack — not just {@code mcpServer.handleMessage}, which
      * hides the string⇄type serialization issues that only surface on the wire.
      */

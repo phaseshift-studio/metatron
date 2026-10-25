@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
@@ -172,7 +173,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
 
         @Override
         @BeforeAll
-        public void setupHTTPSpace() {
+        public void setupHTTPServer() {
             this.contentSpace = memSpace.of(rec(
                     uri(PATTERN), uri("mem:test-pages/#"),
                     uri(ROUTE), rec()
@@ -183,19 +184,16 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
                     str("<html><body><h1>About</h1></body></html>", HTML_TID, null));
             Machine.write(f("mem:test-pages/data.json"),
                     str("{\"key\":\"value\"}", WEB_JSON_TID, null));
-            super.setupHTTPSpace();
+            super.setupHTTPServer();
         }
 
         @Override
-        protected httpSpace createHTTPSpace() {
+        protected Listener createHTTPServer() {
             // Web route: the route value is a URI (not a Type) → auto-creates web_httpHandler
-            return httpSpace.of(rec(
-                    uri(NAME), uri("web-test"),
+            return httpServer.of(rec(
                     uri(HOST), uri("http://localhost:" + generatePort()),
-                    uri(PATTERN), uri("http://#"),
                     uri(ROUTE), rec(
-                            uri("/"), uri("mem:test-pages"))
-            ), f("/sys/space/http/web-test"));
+                            uri("/"), uri("mem:test-pages"))));
         }
 
         @Override
@@ -338,7 +336,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
 
         // ========================================
         // CONCURRENCY — every request on / hits the SAME cached handler
-        // instance (httpSpace session cache) on the shared thread pool.
+        // instance (the http_server's handler cache) on the shared thread pool.
         // HttpRec must keep the HttpExchange per-thread, not per-instance,
         // or concurrent requests cross-wire each other's sockets:
         // "headers already sent", "stream closed", orphaned requests.

@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.web.type.mcpEmulatorBuilder;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
 
@@ -57,7 +56,6 @@ public class mcpEmulatorTest extends AbstractMcpHandlerTest {
     @BeforeAll
     public static void setup() {
         InstSet.importInstSet(f("/m/web"));
-        httpSpace.of(rec(uri(PATTERN), uri("http://#"), uri(HOST), uri("http://localhost:8654"), uri(ROUTE), rec(uri("/metatron"), uri("mcp_mtron"))), f("/sys/space/web/http"));
     }
 
     @Override

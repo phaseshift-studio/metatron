@@ -50,7 +50,7 @@ Treat Hindsight as the source of truth, and write to it.
 ./mvnw install -DskipTests                        # fast dev loop
 ./mvnw test                                       # run all tests
 ./mvnw test -Dtest=memSpaceTest                   # single test class
-./mvnw test -Dtest='!httpSpaceTest,!fsSpaceTest'  # exclude tests (CI pattern)
+./mvnw test -Dtest='!httpServerTest,!fsSpaceTest'  # exclude tests (CI pattern)
 ./mvnw clean package                              # uber-jar: target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 

@@ -70,7 +70,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *     tags = {"crud", "boundary"},
  *     include = {"testMonoReadWrite"}
  * )
- * public class httpSpaceTest extends AbstractSpaceTest { ... }
+ * public class fsSpaceTest extends AbstractSpaceTest { ... }
  * }</pre>
  */
 @Target(ElementType.TYPE)

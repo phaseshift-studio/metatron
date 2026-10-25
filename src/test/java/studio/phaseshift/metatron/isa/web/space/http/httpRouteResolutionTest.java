@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -30,40 +29,24 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Unit characterization of {@code httpSpace#resolveRoute} — all four lanes, called directly.
+ * Unit characterization of {@code httpServer.RouteLane#resolve} — all four lanes, called directly.
  * <p>
  * This is what naming the ladder bought: the {@code NONE} lane cannot be reached through a route table at all
- * (a route value that would reach it is not uri-convertible, and the constructor's log is what refuses those
- * values today), so before the extraction it was untestable dead code. Called as a function it is covered like
- * any other branch.
+ * (a route value that would reach it is no uri, type or instruction, and the table check reports it), so before the
+ * extraction it was untestable dead code. Called as a function it is covered like any other branch.
  * <p>
- * The routes are deliberately empty — this test exercises resolution only, and never issues a request.
+ * No server is needed: this test exercises resolution only, and never issues a request.
  */
 class httpRouteResolutionTest extends AbstractMetatronTest {
 
     private static final GraphittyLogger LOG = Graphitty.log(httpRouteResolutionTest.class);
-    private static httpSpace space;
 
     @BeforeAll
-    public static void bootEmptySpace() {
+    public static void importEverything() {
         InstSet.importInstSet(f("#"));
-        space = httpSpace.of(rec(
-                uri(PATTERN), uri(f("/test/httpRouteResolution/#")),
-                uri(HOST), uri(f("http://127.0.0.1:" + generatePort())),
-                uri(ROUTE), rec()),
-                f("/sys/space/test/httpRouteResolution"));
-    }
-
-    @AfterAll
-    public static void closeEmptySpace() {
-        if (null != space)
-            space.close();
     }
 
     @ParameterizedTest
@@ -75,7 +58,7 @@ class httpRouteResolutionTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testResolveRoute(final String value, final String expectedKind, final String desc) {
         final Obj input = ObjmtronSerializer.parse(value);
-        final httpSpace.RouteLane lane = space.resolveRoute(input);
+        final httpServer.RouteLane lane = httpServer.RouteLane.resolve(input, null);
         LOG.info("resolveRoute(%s) => %s", value, lane.kind());
         assertEquals(expectedKind, lane.kind().name(), desc);
     }
@@ -98,7 +81,7 @@ class httpRouteResolutionTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testResolveRouteAgainstRequest(final String value, final String requestUri, final String expectedKind,
                                         final String expectedAddress, final String expectedWebRoot, final String desc) {
-        final httpSpace.RouteLane lane = space.resolveRoute(ObjmtronSerializer.parse(value), f(requestUri));
+        final httpServer.RouteLane lane = httpServer.RouteLane.resolve(ObjmtronSerializer.parse(value), f(requestUri));
         LOG.info("resolveRoute(%s, %s) => %s [address=%s webRoot=%s]", value, requestUri, lane.kind(),
                 lane.address(), lane.webRoot());
         assertEquals(expectedKind, lane.kind().name(), desc);

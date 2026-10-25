@@ -113,7 +113,7 @@ public class mcpMessageServer {
 
     /**
      * The single transport-agnostic MCP server for the message ledger. Both
-     * {@code httpSpace} and {@code ws_server} wrap this {@link mcpServer} in their
+     * {@code http_server} and {@code ws_server} wrap this {@link mcpServer} in their
      * respective transport handler ({@code mcp_httpHandler} / {@code
      * mcp_wsHandler}).
      */

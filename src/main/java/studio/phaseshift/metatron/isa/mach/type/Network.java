@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.mach.type;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -31,6 +30,7 @@ import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
 import java.util.*;
@@ -180,6 +180,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * ({@link #close()}). Listening again replaces this level's routes on the socket.
      */
     default Obj listen(final Listener server, final Rec routes) {
+        // a route is keyed by the path it serves: a key that is no path routes nothing, so it fails the listen
+        routes.keys().filter(route -> !route.isUri()).findFirst().ifPresent(route -> {
+            throw MTronException.of("a route is keyed by the path it serves, got %s on %s", route, server.authority());
+        });
         final fURI key = Helper.keyOf(server.authority());
         final Obj entry = rec(uri(AUTHORITY), uri(server.authority()), uri(SERVER), server);
         // absent rather than empty: the map idiom of the predicate rejects an empty rec
@@ -344,9 +348,16 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * or noobj. {@link #peerAt} is the exact lookup, by key.
      */
     default Obj peerOf(final fURI service) {
-        return this.peers().values()
+        final List<Obj> members = this.peers().values().toList();
+        return members.stream()
                 .filter(peer -> Helper.sameService(Helper.authorityOf(peer), service))
-                .findFirst().orElse(noobj());
+                .findFirst()
+                // A WILDCARD AUTHORITY COVERS WHAT IT MATCHES, after every exact one: http_client::[host=><http://#>] is
+                // the web's gateway, and a client built for one site answers for that site before it
+                .or(() -> members.stream()
+                        .filter(peer -> Helper.covers(Helper.authorityOf(peer), service))
+                        .max(Comparator.comparingInt(peer -> Helper.specificity(Helper.authorityOf(peer)))))
+                .orElse(noobj());
     }
 
     /**
@@ -508,8 +519,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * <p>
      * A READ NEVER DIALS. Connection is construction and disconnection is destruction — {@code http_client::[…]},
      * {@code ws_client::[…]} or {@link #connect} make a peer, and addressing an authority makes none: membership is
-     * declared, never emergent. An http(s) address no client was constructed for falls through to memory, where a
-     * mounted http space answers it.
+     * declared, never emergent. The web's gateway is such a client too: {@code http_client::[host=><http://#>]}, a
+     * wildcard authority {@link #peerOf} matches after every exact one. An http(s) address no client covers falls
+     * through to memory, which holds no web.
      */
     default Obj read(final fURI vid) {
         // THE GATE IS THE HOST, NOT THE PORT. hasAuthority() demands host AND port, but an address is
@@ -671,14 +683,13 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * The authorities this machine <b>answers on</b>: the {@code host} of every mounted space that
-         * {@link Space#listens() listens}. What discovery announces — deliberately NOT
-         * {@link #peerAuthorities()}: that is who we have dialed, this is who we are.
+         * The authorities this machine <b>answers on</b>: the socket of every {@link Listener} in its network and its
+         * ancestors'. What discovery announces — deliberately NOT {@link #peerAuthorities()}: that is who we have
+         * dialed, this is who we are.
          * <p>
-         * A LISTENER'S HOST, NEVER A BACKEND'S. Every space may declare a {@code host}, but only a listener's is
-         * an address this machine answers on: a tblespace's is the database it dials OUT to, and it carries the
-         * database login ({@code boot/space/tble/mariadb.mtron} puts {@code ?user=…&password=…} on it). Reading
-         * every space's host made that login part of who this machine is, and mDNS multicast it.
+         * A LISTENER'S SOCKET, NEVER A BACKEND'S HOST. A space's {@code host} is what it dials OUT to — a tblespace's
+         * is its database, and carries the database login ({@code boot/space/tble/mariadb.mtron} puts
+         * {@code ?user=…&password=…} on it) — so no space's host is part of who this machine is.
          */
         public static Set<fURI> authorities() {
             final Set<fURI> mine = new LinkedHashSet<>();
@@ -688,15 +699,6 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 machine.network().listeners().values()
                         .map(Helper::authorityOf)
                         .filter(Objects::nonNull)
-                        .forEach(mine::add);
-            // the listening spaces (httpspace), until it is retired
-            for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous())
-                memory.spaces().jvm().values().stream()
-                        .filter(space -> space instanceof Space listener && listener.listens())
-                        .map(space -> space.asRec().<Obj>at(uri(HOST)))
-                        .map(host -> host.isUri() ? host : (host.isInst() ? host.apply() : noobj()))
-                        .filter(Obj::isUri)
-                        .map(Obj::uriValue)
                         .forEach(mine::add);
             return mine;
         }
@@ -908,6 +910,24 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 return false;
             return Objects.equals(a.authority(), b.authority())
                     || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
+        }
+
+        /**
+         * Does a WILDCARD authority cover a service — {@code http://#} every http authority, {@code http://+:8777} any
+         * host's 8777? A literal authority covers nothing: it is {@link #sameService}'s to match.
+         */
+        public static boolean covers(final fURI authority, final fURI service) {
+            return null != authority && null != service && authority.hasPattern() && service.test(authority);
+        }
+
+        /**
+         * How narrowly an authority names its services, for choosing among the wildcards that cover one: a literal
+         * host over {@code +} over {@code #}, then a port over none.
+         */
+        static int specificity(final fURI authority) {
+            final String host = authority.host();
+            final int named = "#".equals(host) ? 0 : "+".equals(host) ? 1 : 2;
+            return 2 * named + (-1 == authority.port() ? 0 : 1);
         }
 
 
