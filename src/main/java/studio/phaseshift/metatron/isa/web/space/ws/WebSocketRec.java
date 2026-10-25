@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -34,9 +35,14 @@ import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -80,14 +86,29 @@ public class WebSocketRec extends MRec implements WebSocketObj {
                 }
             };
             this.jvm().put(uri(SEND_RECV), instLambda(shipAndAwait));
-            // THE MIGRATION — the client's eval override IS its send_recv body (ship code -> result), declared on eval's
-            // own signature: the network calls eval?block(code) with this f(), so arg(0) is the code, raw. Declared in
-            // the mini-instset so Network.overrideOf dispatches `eval` to this peer, and asTransport derives the
-            // transport from it. This is the resource+eval template: a ws client overrides eval; from/to derive via
-            // lowering. With no instruction memory to read eval's signature from, the client declares no override.
+            // THE MINI-INSTSET — the instructions you talk to this connection with, each on its native signature with
+            // this client's own body (Network.Helper.override), so the network reaches each by swapping f() alone:
+            //   eval(code)    the send_recv body: the network calls eval?block(code), so arg(0) is the code, raw;
+            //   from(<uri>)   ships the localized read, from(</path>);
+            //   obj.to(<uri>) ships the localized write, start(obj).to(</path>) — the obj is the lhs, as the native's.
+            // The far side evaluates what it is sent (the wire protocol), so a read answers its value and a shipped
+            // unquoted program runs there. A compiled from/to whose address names this peer binds to these bodies
+            // (Network.Helper.atPeer); asTransport derives the legacy transport from eval. With no instruction memory to
+            // read the natives' signatures from, the client declares nothing and stays on send_recv.
+            final Rec overrides = rec();
             final Obj eval = Network.Helper.override(EVAL_INST_TID, shipAndAwait);
+            final Obj from = Network.Helper.override(FROM_INST_TID, (lhs, inst) ->
+                    this.ship(() -> from_(inst.arg(0).uriValue().localize().toUri()).tryToInst()));
+            final Obj to = Network.Helper.override(TO_INST_TID, (lhs, inst) ->
+                    this.ship(() -> start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst()));
             if (eval.isObjInst())
-                this.jvm().put(uri(INST), rec(uri(EVAL_INST_TID), eval));
+                overrides.jvm().put(uri(EVAL_INST_TID), eval);
+            if (from.isObjInst())
+                overrides.jvm().put(uri(FROM_INST_TID), from);
+            if (to.isObjInst())
+                overrides.jvm().put(uri(TO_INST_TID), to);
+            if (!overrides.isEmpty())
+                this.jvm().put(uri(INST), overrides);
         }
         if (!map.containsKey(uri(CLOSE)))
             this.jvm().put(uri(CLOSE), instLambda((lhs, inst) -> {
@@ -95,6 +116,19 @@ public class WebSocketRec extends MRec implements WebSocketObj {
                 this.close();
                 return noobj();
             }));
+    }
+
+    /**
+     * Ship the message a call builds and await the far side's answer — a fail when the message cannot be built or the
+     * round trip throws: an override answers with an obj, never an exception out of the processor.
+     */
+    private Obj ship(final Supplier<Obj> message) {
+        try {
+            return this.sendRecv(message.get());
+        } catch (final Exception e) {
+            LOG.error("error in sendRecv: %s", e);
+            return fail(e);
+        }
     }
 
     @Override

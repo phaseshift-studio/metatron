@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.Space;
@@ -601,6 +602,29 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         boolean redial();
     }
 
+    /**
+     * A PEER'S BODY, BOUND INTO A CALL — the f() of a from/to resolved against a dialed peer
+     * ({@link Helper#atPeer}). It runs the peer's override inside the network's q-proc layer, because that layer is
+     * the one place a vid is handed to a source ({@link Machine#read}, {@link Machine#write}): a local
+     * {@code ws://peer/x/#?subq} subscription must still see a write that compiled straight to the peer's {@code to}.
+     * Named rather than a lambda so the compiled code says what it bound — explain reports this class, and the
+     * string is the authority whose body runs.
+     */
+    record AtPeer(Network network, fURI authority, Inst.f body, boolean read) implements BiFunction<Obj, Inst, Obj> {
+        @Override
+        public Obj apply(final Obj lhs, final Inst inst) {
+            final fURI vid = inst.arg(0).uriValue();
+            return this.read
+                    ? QProc.Layer.read(this.network, vid, () -> this.body.apply(lhs, inst))
+                    : QProc.Layer.write(this.network, vid, lhs, () -> this.body.apply(lhs, inst));
+        }
+
+        @Override
+        public String toString() {
+            return this.authority.toString();
+        }
+    }
+
     class Helper {
 
         /**
@@ -937,6 +961,35 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         public static Obj evaluate(final Inst eval, final Obj code) {
             final Inst user = instB(EVAL_INST_TID, lst(code));
             return Helper.dispatch(eval, user.tid(user.tid().addQ(BLOCK)), noobj());
+        }
+
+        /**
+         * COMPILE-TIME BINDING (Marko, 2026-10-24) — {@code resolved}, a call the resolver has just bound to its native
+         * definition, with the PEER'S body when its address names a dialed peer that overrides it: the address
+         * instructions, {@code from(<uri>)} and {@code to(<uri>)}, whose literal uri argument carries an authority. The
+         * signature, the binding and the typing are the native resolution's, untouched; f() is the one thing swapped,
+         * so the compiled code shows which peer's body runs, and nothing is decided later inside {@link Network#read}
+         * or {@link Network#write}. The body runs inside the network's q-proc layer ({@link AtPeer}). Every other call — another
+         * instruction, an address computed at run time, an authority no peer here overrides — answers as resolved,
+         * and a computed address still reaches the peer through the run-time dispatch.
+         */
+        public static Inst atPeer(final Inst resolved) {
+            final fURI base = resolved.tid().basePath();
+            final boolean read = FROM_INST_TID.equals(base);
+            if (!read && !TO_INST_TID.equals(base))
+                return resolved;
+            final Obj address = resolved.arg(0);
+            if (!address.isUri() || null == address.uriValue().host())
+                return resolved;
+            final Machine machine = Machine.current();
+            if (null == machine || null == machine.network())
+                return resolved;
+            final fURI authority = address.uriValue().path(List.of());
+            final Obj override = machine.network().overrideOf(authority, base);
+            if (!override.isObjInst())
+                return resolved;
+            WIRE_LOG.debug("bound %s to the override %s declares", resolved, authority);
+            return resolved.f(Inst.f.of(new AtPeer(machine.network(), authority, override.asInst().f(), read)));
         }
 
         /**
