@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -55,15 +56,18 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *     is written in place, and a member (a peer, a listener) is constructed, never written — {@code -> noobj} retracts
  *     it ({@link studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork});</li>
  *     <li>{@code <vid>/<component>/…} — any other component, read live;</li>
- *     <li>{@code <vid>/sys/#} — threads, processors, fails and the log sink.</li>
+ *     <li>{@code <vid>/sys/#} — threads, processors, fails and the log sink, held in this space's OWN store (it is a
+ *     {@link memSpace} for that), with the q-processors {@code ~/sys} speaks: Marko, 2026-10-25, "I would have sys/#
+ *     simply go into MachineSpace". {@code ~/sys} is a holding area: its parts are expected to move, over time, into
+ *     the components they belong to.</li>
  * </ul>
  * A covered address this space has no answer for is declined too ({@code noobj} is the decline, by
- * {@link studio.phaseshift.metatron.isa.Addressable}'s convention), so the dispatch goes on to the network and memory.
+ * {@link studio.phaseshift.metatron.isa.Addressable}'s convention), so the dispatch goes on to the network and memory —
+ * and so is a QUERY on the machine or on a component other than the network ({@code ~/processor?docq}): the
+ * q-processors that answer it are memory's, and the component itself is not the answer.
  * <p>
- * <b>THE FIRST SLICE.</b> What moves now is the dispatch and the components. {@code sys}, the machine rec's own writes
- * and the writes of the non-network components still go through memory — declined here — because the logger, the
- * reflected recs and the thread registry read and write {@code ~/sys} through memory directly: taking {@code sys} into
- * this space's own store (it is a {@link memSpace} for that) means moving those callers to the machine first.
+ * The machine's own writes are the network branch's and {@code ~/sys}'s; the machine rec's own writes and the other
+ * components' still go through memory, declined here.
  */
 public final class MachineSpace extends memSpace {
 
@@ -92,6 +96,13 @@ public final class MachineSpace extends memSpace {
         this.owner = machine;
         this.root = machine.vid().resolve();
         this.depth = this.root.segments().size();
+        // the q-processors ~/sys speaks — the ones the sys space in memory carried before the sphere took it over:
+        // a fail is minted at ~/sys/fail/_?incrq, and a ?docq, ?subq, ?lockq or ?mimeq on ~/sys/… lands here too
+        this.addQ(QCollection.docQ());
+        this.addQ(QCollection.subQ());
+        this.addQ(QCollection.incrQ());
+        this.addQ(QCollection.mimeQ());
+        this.addQ(QCollection.lockQ());
     }
 
     /**
@@ -102,49 +113,66 @@ public final class MachineSpace extends memSpace {
         if (null == this.root)
             return false;
         final fURI at = vid.qLess().resolve();
-        if (!at.hasPrefix(this.root))
+        // A SCHEME OR A HOST NAMES ANOTHER RESOURCE OR ANOTHER PROCESS, whatever its path: ws://peer:8555/network is
+        // the peer's network, not this machine's. The check is here because hasPrefix leaves both unchecked when the
+        // prefix has neither — and no machine vid does, so every ws://…/sys/… would otherwise be the root's.
+        if (at.hasScheme() || at.hasHost() || !at.hasPrefix(this.root))
             return false;
         final List<String> segments = at.segments();
         return segments.size() == this.depth || (segments.size() > this.depth && SPHERE.contains(segments.get(this.depth)));
+    }
+
+    /**
+     * the sphere's part an address it covers names — the segment below the machine's vid — or {@code null} for the
+     * machine itself
+     */
+    private String part(final fURI vid) {
+        final List<String> segments = vid.qLess().resolve().segments();
+        return segments.size() > this.depth ? segments.get(this.depth) : null;
     }
 
     @Override
     public Obj read(final fURI vid) {
         if (null == this.owner || !this.covers(vid))
             return noobj();
-        final List<String> segments = vid.qLess().resolve().segments();
-        if (segments.size() == this.depth)
-            return this.owner;
-        final String head = segments.get(this.depth);
-        // THE FIRST SLICE: ~/sys is still memory's (see the class doc), so it is declined to the memory path
-        if (SYS.equals(head))
-            return noobj();
-        // the network answers its own branch: fields, and members at their keys' paths
-        if (NETWORK.equals(head))
+        final String part = this.part(vid);
+        // ~/sys is this space's own store: its q-processors run there, as a space's always do
+        if (SYS.equals(part))
+            return super.read(vid);
+        // the network answers its own branch: fields, and members at their keys' paths (and the q-procs it speaks)
+        if (NETWORK.equals(part))
             return this.owner.network().read(vid);
+        // a query on the machine or a component is memory's to answer (see the class doc): the component is no doc
+        if (vid.hasQ())
+            return noobj();
+        if (null == part)
+            return this.owner;
         // any other component, read live: the path below the machine walked into the component as it stands (the
         // whole remaining path, so <vid>/memory/previous walks into the memory rather than collapsing to its name)
+        final List<String> segments = vid.qLess().resolve().segments();
         return this.owner.at(uri(String.join("/", segments.subList(this.depth, segments.size()))));
     }
 
     /**
      * Is a write at {@code vid} this sphere's to make — and therefore final, whatever it answers? A write the sphere
      * owns is never handed on: a member's deletion answers {@code noobj} (the obj written), and passing that on as a
-     * decline would land a second, stray deletion in memory. THE FIRST SLICE owns the network branch alone.
+     * decline would land a second, stray deletion in memory. The sphere owns the network branch and {@code ~/sys}.
      */
     public boolean ownsWrite(final fURI vid) {
         if (null == this.owner || !this.covers(vid))
             return false;
-        final List<String> segments = vid.qLess().resolve().segments();
-        return segments.size() > this.depth && NETWORK.equals(segments.get(this.depth));
+        final String part = this.part(vid);
+        return NETWORK.equals(part) || SYS.equals(part);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
+        if (!this.ownsWrite(vid))
+            return noobj();
+        // ~/sys into this space's own store, through its q-processors (a fail's ?incrq mints its key here)
+        if (SYS.equals(this.part(vid)))
+            return super.write(vid, obj);
         // the network writes its own branch: a field in place, a member's deletion its retraction, a value refused
-        if (this.ownsWrite(vid))
-            return this.owner.network().write(vid, obj);
-        // THE FIRST SLICE: the machine rec, ~/sys and the other components keep memory's write path
-        return noobj();
+        return this.owner.network().write(vid, obj);
     }
 }

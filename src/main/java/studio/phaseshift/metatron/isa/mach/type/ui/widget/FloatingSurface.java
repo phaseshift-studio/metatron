@@ -1404,7 +1404,8 @@ public class FloatingSurface {
         final fURI vid = obj.vid();
         if (null == vid) return false;
         try {
-            return Machine.current().memory().read(vid).isNoObj();
+            // LOCAL, as Obj.delete deletes: the record may live in the machine's sphere (~/sys) or in its memory
+            return Machine.Helper.readLocal(Machine.current(), vid).isNoObj();
         } catch (final Exception e) {
             return false;
         }

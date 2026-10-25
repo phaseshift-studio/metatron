@@ -48,7 +48,8 @@ public class GraphittyObjLogger extends GraphittyLogger {
             return true;
         else {
             if (!LOG_VID.isZero()) {
-                final Obj o = Machine.current().memory().read(LOG_VID);
+                // a LOCAL read: the sink is in the machine's sphere (~/sys), and a miss must not scan instruction memory
+                final Obj o = Machine.Helper.readLocal(Machine.current(), LOG_VID);
                 if (o.isNoObj()) {
                     if (!BOOTING && !CLOSING)
                         this.none("no space embedded logger found at %s\n", LOG_VID.toUri());

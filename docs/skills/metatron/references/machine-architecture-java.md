@@ -16,8 +16,8 @@ A **Machine** is a *space of spaces* — the container in which address resoluti
 (`instset`, `memory`, `network`, `compiler`, `processor`) are rec entries shaped as `machine::T`. Its own address
 surface is its **sphere** — `MachineSpace`, a `memSpace` the machine holds and memory never indexes (2026-10-25):
 `Machine.read`/`write` ask the innermost machine whose sphere covers an address FIRST (the machine itself at its vid,
-its components, its `sys`), then the network, then memory, then instruction memory. The sphere declines everything
-else under the vid, so the machine's data stays memory's. Of the five:
+its components, its `sys`), then the network, then memory, then instruction memory. `~/sys` lives in the sphere's own
+store; the sphere declines everything else under the vid, so the machine's data stays memory's. Of the five:
 
 - **Memory** is the facade over the world of spaces — the single read/write surface.
 - **Compiler** lowers code; **Processor** runs it; neither is an address space.
@@ -300,10 +300,17 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
   memory): the machine at its vid, a component below it, `~/sys`. A covered address the sphere has no answer for is
   declined, as is everything else under the vid. Address *resolution* of all the rest belongs to memory:
   `BasicMemory.read`/`write` route an address to the space that covers it (`readAbsolute`/`writeAbsolute`) — which is
-  why a bulk wildcard write reaches the space it names rather than the argument stack. **First slice (2026-10-25):** the
-  sphere answers the machine and its components and writes only the network branch; `~/sys` and the other components'
-  writes are declined to memory until the logger, the reflected recs and the thread registry stop reaching `~/sys`
-  through memory directly.
+  why a bulk wildcard write reaches the space it names rather than the argument stack.
+- **`~/sys` is the sphere's own store, not memory's** (Marko, 2026-10-25: "sys/# simply go into MachineSpace"). It
+  carries the q-procs `~/sys` speaks (docq, subq, incrq, mimeq, lockq), so a fail still mints at `~/sys/fail/_?incrq`.
+  A closing machine DROPS its sphere after memory's spaces and never closes its values: the system thread's executor
+  lives in `~/sys`, and closing it from one of its own threads waits on itself forever (memory's `removeSpace` only
+  logs "closed space" — it never closed the old sys space either). Code that re-reads an obj at its own vid goes through
+  `Machine.Helper.readLocal`/`writeLocal` (sphere, then memory), **never `memory()` directly**: memory holds no
+  `~/sys`, and `Machine.read` would scan instruction memory on a miss. The sphere owns writes to the network branch
+  and `~/sys`; the machine rec's and the other components' writes still go to memory. An address with a scheme or a
+  host is no sphere's (`ws://peer/sys/…` is the peer's), and a query on the machine or a component (`~/processor?docq`)
+  is declined to memory's q-procs. `~/sys` is a holding area: its parts are expected to move into the components.
 
 ## Migration state (why it reads as two systems at once)
 

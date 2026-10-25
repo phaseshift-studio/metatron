@@ -241,8 +241,8 @@ public abstract class AbstractMachine extends MRec implements Machine {
         if (this.memory().machine() != this)
             return;
         // Suppress the logger's "no space embedded logger" fallback while this frame's own log sink is torn down:
-        // the sink lives in the sys space that removeSpace is about to close, so every close-log below would
-        // otherwise read ~/sys/log back as empty and print the notice once per closed space.
+        // the sink lives in the sphere's ~/sys, which closes after the spaces below, so any close-log made once it is
+        // gone would read ~/sys/log back as empty and print the notice once per closed space.
         CLOSING = true;
         try {
             // Snapshot the keys first: removeSpace mutates the index, and removing while iterating the live
@@ -258,6 +258,11 @@ public abstract class AbstractMachine extends MRec implements Machine {
                             LOG.warn(e);
                         }
                     });
+            // THE SPHERE GOES LAST, still inside CLOSING — DROPPED, NEVER CLOSED: ~/sys leaves the address surface the
+            // way the sys space used to leave memory's index (removeSpace only logs; it closes nothing). Its values are
+            // not the frame's to close: the system thread's executor lives in ~/sys, and closing it from one of its own
+            // threads waits on itself forever (measured: every test JVM spun in ExecutorService.close at teardown).
+            this.space = null;
         } catch (final Exception e) {
             throw MTronException.of(e);
         } finally {
@@ -282,11 +287,12 @@ public abstract class AbstractMachine extends MRec implements Machine {
         // A COPIED CACHE WOULD ANSWER FOR THE WRONG MACHINE: the field is copied too, so a clone would report
         // whatever its source had resolved with. push() rebinds memory and instset explicitly; clearing here means a
         // clone can never be answered by a stale component.
-        if (copy instanceof AbstractMachine abstractCopy) {
+        if (copy instanceof AbstractMachine abstractCopy)
             abstractCopy.resolvedInstSet = null;
-            // a sphere answers for ONE machine: the copy's is bound by its own bootstrap (push), never inherited
-            abstractCopy.space = null;
-        }
+        // THE SPHERE IS KEPT: a copy of a machine is that machine — the one read back at its address by move, or carried
+        // through an instruction and popped back to — so it answers the same ~/sys. A pushed CHILD is a copy too, and
+        // its bootstrap binds a sphere of its own over this one. (Clearing it here lost a frame's ~/sys whenever a move
+        // or a pop landed on a copy: measured in SysIsolationScriptTest and MemoryIsolationScriptTest.)
         return copy;
     }
 

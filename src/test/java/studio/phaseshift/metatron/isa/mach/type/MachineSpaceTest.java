@@ -23,10 +23,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
+import studio.phaseshift.metatron.isa.mach.type.machine.AbstractMachine;
 import studio.phaseshift.metatron.isa.mach.type.machine.MachineSpace;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -34,13 +40,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /**
  * THE MACHINE'S OWN SPHERE (Marko, 2026-10-25). Each machine holds a {@link MachineSpace} that {@code Machine.read} and
- * {@code Machine.write} ask FIRST: the machine itself, its components and its system information. It is not in memory,
- * and it declines everything else under the machine's vid — the machine's data — so memory's spaces answer that exactly
- * as before. A child's sphere is its own vid; an address outside every enclosing sphere is no sphere's.
+ * {@code Machine.write} ask FIRST: the machine itself, its components and its system information, which it keeps in its
+ * own store ({@code ~/sys}). It is not in memory, and it declines everything else under the machine's vid — the
+ * machine's data — so memory's spaces answer that exactly as before. A child's sphere is its own vid; an address outside
+ * every enclosing sphere, or carrying a scheme or a host, is no sphere's.
  */
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
@@ -113,14 +121,95 @@ public class MachineSpaceTest extends AbstractMetatronTest {
         }
     }
 
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "/                                  % true",
+            "/network/roster                    % true",
+            "/sys/fail/_?incrq                  % true",
+            "/memory?docq                       % true",
+            "/scratch/x                         % false",
+            "ws://10.0.0.9:8555/                % false",
+            "ws://10.0.0.9:8555/network/roster  % false",
+            "ws://10.0.0.9:8555/sys/log         % false",
+            "ide:command                        % false"})
+    public void testTheRootsSphereCoversOnlyItsOwnPaths(final String address, final boolean covered) {
+        // the root's vid, /, prefixes every path, so a scheme or a host must be refused on its own: a peer's /network or
+        // /sys is the peer's, never answered by this machine's sphere
+        assertEquals(covered, Machine.root().space().covers(f(address)), address);
+    }
+
     @Test
-    public void testSysIsStillMemorysInTheFirstSlice() {
+    public void testSysIsTheSpheresOwnStore() {
         final Machine machine = Machine.current();
-        // the logger, the reflected recs and the thread registry still reach ~/sys through memory directly, so the sphere
-        // covers ~/sys but declines it, and memory answers — the log sink is there
+        // "I would have sys/# simply go into MachineSpace" (Marko, 2026-10-25): the log sink is in the sphere's store, and
+        // memory — whose catch-all still covers the address — holds no ~/sys at all
         final fURI log = machine.vid().resolve().extend("sys").extend("log");
-        assertTrue(machine.space().covers(log));
-        assertTrue(machine.space().read(log).isNoObj(), "the first slice declines ~/sys");
-        assertFalse(Machine.read(f("~/sys/log")).isNoObj(), "and memory answers it, as before");
+        assertTrue(machine.space().ownsWrite(log), "~/sys is the sphere's to write");
+        assertFalse(machine.space().read(log).isNoObj(), "the log sink is in the sphere's own store");
+        assertTrue(machine.memory().read(log).isNoObj(), "memory holds no ~/sys");
+        final fURI tally = machine.vid().resolve().extend("sys").extend("tally");
+        try {
+            Machine.write(f("~/sys/tally"), jnt(3));
+            checkEquality(LOG, jnt(3), machine.space().read(tally), true);
+            checkEquality(LOG, jnt(3), Machine.read(f("~/sys/tally")), true);
+            assertTrue(machine.memory().read(tally).isNoObj(), "a ~/sys write lands in the sphere, never in memory");
+        } finally {
+            Machine.write(f("~/sys/tally"), noobj());
+        }
+        assertTrue(machine.space().read(tally).isNoObj(), "and a noobj write is its deletion");
+    }
+
+    @Test
+    public void testAFailIsMintedInTheSphere() {
+        final Machine machine = Machine.current();
+        // a fail mints its own key under ~/sys/fail through the sphere's ?incrq
+        final Fail minted = MFail.fail("a fail the sphere keeps for its machine");
+        assertNotNull(minted.vid(), "the fail was written, and carries the key it was minted at");
+        try {
+            assertTrue(machine.space().covers(minted.vid()), "its key is in the machine's ~/sys");
+            assertFalse(machine.space().read(minted.vid()).isNoObj(), "it lives in the sphere's store");
+            assertTrue(machine.memory().read(minted.vid()).isNoObj(), "not in memory");
+        } finally {
+            Machine.write(minted.vid(), noobj());
+        }
+    }
+
+    @Test
+    public void testAQueryOnAComponentIsMemorys() {
+        final MachineSpace sphere = Machine.root().space();
+        // the q-processors that answer a ?docq are memory's: the component is not its own documentation
+        assertSame(Machine.root().memory(), sphere.read(f("/memory")), "the component reads live");
+        assertTrue(sphere.read(f("/memory?docq")).isNoObj(), "a query on it is declined to memory");
+        assertTrue(sphere.read(f("/.?docq")).isNoObj(), "and so is a query on the machine itself");
+    }
+
+    @Test
+    public void testACopyOfAMachineKeepsItsSphere() {
+        final Machine child = Machine.current().push(f("sphere_copy"));
+        try {
+            Machine.write(f("~/sys/tally"), jnt(9));
+            // a copy is the same machine — what move reads back at its address, or a pop lands on — so it answers the
+            // same ~/sys; only a pushed child binds a sphere of its own
+            final Machine copy = ((AbstractMachine) child).clone(null, child.tid(), child.vid());
+            assertSame(child.space(), copy.space(), "a copy keeps the machine's sphere");
+            checkEquality(LOG, jnt(9), copy.space().read(child.vid().resolve().extend("sys").extend("tally")), true);
+        } finally {
+            child.pop();
+        }
+    }
+
+    @Test
+    public void testAChildsSysIsItsOwnAndLeavesWithIt() {
+        final Machine child = Machine.current().push(f("sphere_sys"));
+        final fURI tally = child.vid().resolve().extend("sys").extend("tally");
+        try {
+            Machine.write(f("~/sys/tally"), jnt(5));
+            checkEquality(LOG, jnt(5), child.space().read(tally), true);
+            assertTrue(Machine.root().space().read(f("/sys/tally")).isNoObj(), "the root's ~/sys is untouched");
+        } finally {
+            child.pop();
+        }
+        // from the root, the popped frame's ~/sys is in no sphere, and memory never held it
+        assertTrue(Machine.read(tally).isNoObj(), "a frame's ~/sys leaves with the frame");
     }
 }
