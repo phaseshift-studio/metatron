@@ -278,7 +278,8 @@ several of them, as instructions — so the name never needed to be free; it is 
    make the cut optional in the constructor's validation, and have `plan.where` hold a list of relocation recs. No
    new type.
 2. **`place::T`, read-through.** Materialize places from `Network.Helper.authorities()`, the roster and the peer map —
-   the peer map *is* the edge set, and `linked_to`/`linked_from` are derived over it. A view, like `PeerSpace`.
+   the peer map *is* the edge set, and `linked_to`/`linked_from` are derived over it. A read-through, like the network
+   branch (`BasicNetwork` answers `<vid>/network/#` from its live rec).
 3. **Shape signatures + `obligations`/`admissible`.** Store the seven shape recs at
    `/m/math/cat/signature/<token>`; move `validateDistributedObligations()` into the traversal
    `cut.law ⊇ shape.law`, and add the reverse traversal.
@@ -346,7 +347,8 @@ Field by field, so it can be transcribed into `catInstSet` / `catTypes` without 
 4. **Derived sets are `auto` insts, never stored** — the `object::T.morphed_to/from` precedent. `place.linked_to`,
    `place.linked_from`, `place.status`, `place.cost` are computed; no index to maintain, no staleness.
 5. **The network component is the truth.** A place is a **read-through projection** of the roster and the peer map (the
-   `PeerSpace` precedent), and the **edges are the peer map itself** — no edge type is introduced.
+   network branch's precedent: `BasicNetwork` answers `<vid>/network/#` from its live rec and stores nothing), and the
+   **edges are the peer map itself** — no edge type is introduced.
 6. **No new families.** `place::T` is `tid(CATEGORY_TID)`; `path::T`, `abstraction::T` and `plan::T` keep their tids
    and vids. `plan.cut` was already optional, which is what lets the distribution rule be a plan.
 7. **Nothing that is a query becomes a type; nothing that is a peer becomes an edge type; nothing that is a role map

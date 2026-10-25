@@ -94,15 +94,56 @@ public class NetworkListenerTest extends AbstractMetatronTest {
         checkEquality(LOG, entry.asRec().at(uri(AUTHORITY)), uri(SOCKET), true);
         assertSame(server, Network.Helper.listenerFor(SOCKET), "the entry holds the server itself");
         assertTrue(Network.Helper.authorities().contains(SOCKET), "a listener is an authority this machine answers on");
-        // the entry is addressable at its key, and its fields are walked from there (a field address needs a space over
-        // the listener branch, as PeerSpace is over the peer branch)
-        this.script("*<~/network/listener/ws/localhost/28555>>>authority % <ws://0.0.0.0:28555>");
+        // the entry sits at its key's path, and each of its fields at its own address beneath it
+        this.script("*<~/network/listener/ws/localhost/28555/authority> % <ws://0.0.0.0:28555>");
+        checkEquality(LOG, Machine.read(f("~/network/listener/ws/localhost/28555/route")), rec(uri("/mtron"), uri("mtron_ws")), true);
         // the owner's unlisten releases the port, and the entry goes
         root.network().unlisten(SOCKET);
         assertEquals(1, server.unbinds.get());
         assertTrue(server.closed());
         checkEquality(LOG, root.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
         assertFalse(Network.Helper.authorities().contains(SOCKET));
+    }
+
+    /**
+     * a listener is constructed by a server, never written: a value at its address is refused, and the deletion is
+     * the network's own retraction — the routes leave, and the socket its owner opened is released
+     */
+    @Test
+    public void testDeletingAListenersAddressStopsServing() {
+        final Machine root = Machine.current();
+        final Recorder server = new Recorder(SOCKET, root.network());
+        root.network().listen(server, rec(uri("/mtron"), uri("mtron_ws")));
+        this.script("[STATE] <~/network/listener/ws/localhost/28555/authority> -> <ws://0.0.0.0:9999>");
+        this.script("*<~/network/listener/ws/localhost/28555/authority> % <ws://0.0.0.0:28555>");
+        assertFalse(server.closed(), "a refused write touches nothing");
+        this.script("[STATE] <~/network/listener/ws/localhost/28555> -> noobj");
+        checkEquality(LOG, root.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+        assertEquals(1, server.unbinds.get(), "the owner's deletion releases the port");
+        assertTrue(server.closed());
+        assertNull(Network.Helper.listenerFor(SOCKET));
+    }
+
+    /**
+     * a child that deletes its own entry on an inherited socket withdraws its routes, and only them
+     */
+    @Test
+    public void testAChildsDeletionWithdrawsItsRoutesNotTheSocket() {
+        final Machine root = Machine.current();
+        final Recorder server = new Recorder(SOCKET, root.network());
+        root.network().listen(server, rec(uri("/"), uri("site:")));
+        final Machine child = root.push(f("listener_child"));
+        try {
+            child.network().listen(server, rec(uri("/drstynx"), uri("drstynx:")));
+            assertSame(child, server.route(f("/drstynx")).orElseThrow().machine());
+            this.script("[STATE] <~/network/listener> -> noobj");
+            checkEquality(LOG, child.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+            assertSame(root, server.route(f("/drstynx")).orElseThrow().machine(), "the child's route left with its entry");
+            assertEquals(0, server.unbinds.get(), "a sharer's deletion never releases the owner's socket");
+            assertFalse(root.network().listenerAt(Network.Helper.keyOf(SOCKET)).isNoObj(), "the parent's entry is its own");
+        } finally {
+            child.pop();
+        }
     }
 
     @Test

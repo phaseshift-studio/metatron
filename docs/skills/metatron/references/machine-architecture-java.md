@@ -39,10 +39,9 @@ isa/mach/type/memory/MemoryUnion.java ← the ONE read-through union today: fram
 isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
-isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec)
+isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec), and its own space at <vid>/network/#
 isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
 isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
-isa/mach/type/network/PeerSpace.java        ← <vid>/network/peer/# as an address space: members read and deleted by path
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
                                         enclosing machine's (via `previous`)
 isa/mach/type/compiler/…                     ← Compiler impls + parser/rewriter/resolver/typer stages
@@ -138,17 +137,20 @@ it stops, so its clients see `1000` whether it is restarting or gone.
 | `WebSocketRec.onClose` / `WebSocketObj` | a failed link `abandon`s its in-flight round trips (each answered with a fail at once) and keeps `ROUTED`, so the redialed connection does not wrap a second router; `awaitOpen` redials on demand |
 
 **Members are addresses (2026-10-21).** A member's key is the dial's own address as a path, one per surface
-(`Network.Helper.keyOf`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every
-host label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()`
-of the dial, the loopback alias spelled first), and the service it reaches is the `authority` field — wire dispatch (`transportOf`, `isPeer`,
-`peerOf`) and `law_shard`'s routes match on that, never on the key. `Machine.bootstrap()` mounts a `PeerSpace` at
-`<vid>/network/peer/#` (indexed at `<vid>/sys/space/network`): it stores nothing and answers from the network on every
-read, so `*</network/peer/ws/localhost/8555/mtron/authority>` walks a member by the space's base-poly read, and a noobj
-write there is `Network.disconnect` — destruction on deletion from mtron. Every other write is refused (a peer is
-constructed, not written). `index` keeps **no two equivalent connections**: a fresh client at a held key closes the
-member there and takes its place, while indexing the same client again is idempotent; `connect` still skips the dial
-when the surface is held. `disconnect(address)` reads what the address names — a key that member, a wire uri with a
-route that surface, a bare authority every surface of the service.
+(`Network.Helper.keyOf`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every host
+label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()` of the
+dial, the loopback alias spelled first), and the service it reaches is the `authority` field — wire dispatch
+(`isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component is its own space:
+`BasicNetwork` extends `AbstractSpace` and `Machine.bootstrap()` mounts it at `<vid>/network/#`. It stores nothing
+beside its rec and answers every read from it, so `*</network/peer/ws/localhost/8555/mtron/authority>` walks a member
+by the space's base-poly read, and a noobj write there is `Network.disconnect` (at `listener/<key>`,
+`Network.unlisten`) — destruction on deletion from mtron. A value written at a member is refused (a peer is
+constructed, not written); every other field is written onto the live rec in place, so `/network/roster` is the root
+network's own field. An address off the branch is the authority dispatch (`Network.read`/`write`). `index` keeps **no
+two equivalent connections**: a fresh client at a held key closes the member there and takes its place, while indexing
+the same client again is idempotent; `connect` still skips the dial when the surface is held. `disconnect(address)`
+reads what the address names — a key that member, a wire uri with a route that surface, a bare authority every surface
+of the service.
 
 Three consumers read the link: `PlanInterpreter.shardTargets` plans only over `Network.Helper.online` peers (an outage
 shrinks the fan-out), `Network.status` reports each dialed peer by its client's own `status` (a roster address is
