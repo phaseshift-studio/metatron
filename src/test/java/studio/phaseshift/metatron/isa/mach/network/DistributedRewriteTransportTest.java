@@ -62,7 +62,7 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * THE TRANSPORT-ROSTER PATH — {@code law_shard}/{@code PlanInterpreter}, fired for real. The space-roster
+ * THE DIALED-PEER PATH — {@code law_shard}/{@code PlanInterpreter}, fired for real. The space-roster
  * suite ({@code DistributedRewritePhasesTest}) never makes {@code network().peers()} non-empty, so it only
  * exercises {@code sum_gather}; this suite constructs a {@code ws_client} per peer, which dials and
  * self-registers into {@code /network/peers} — the exact trigger {@code law_shard}'s guard reads. Peers are

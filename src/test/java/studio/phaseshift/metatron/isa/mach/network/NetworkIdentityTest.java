@@ -154,7 +154,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
      * ALIASES COLLAPSE. The boot binds the wildcard while a peer addresses loopback; if those are not one service,
      * the boundary forwards a request to itself — so this is a loop guard, not a nicety. Pinned on
      * {@link Network.Helper#sameService} itself: it is the comparison every reach decision goes through
-     * ({@code transportOf}, {@code isPeer}, the ensure-peered scan).
+     * ({@code peerOf}, {@code isPeer}, the ensure-peered scan).
      */
     @ParameterizedTest
     @CsvSource(value = {

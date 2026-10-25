@@ -46,7 +46,7 @@ existing types wearing a location coordinate, and only one is genuinely new.
 | `placement::T`, `rule::T`      | **`plan::T` with no cut**                           | a rule is (site, where); `plan.cut` was already optional, so a cut-less plan *is* the distribution rule — and `rule::T` existed only to unite the two  | the word "plan" now covers both; two preconditions, one type                              |
 | `itinerary::T`                 | **`path::T` + `origin?`**                           | a deployment is code plus where it starts; a path with no origin is simply not placeable yet                                                           | `path`'s predicate gains `origin?`, `where?`, `peer?`                                     |
 | `geometry::T`                  | **`abstraction::T` + `where?`**                     | the α-word of locations is the same lift as the α-word of instructions — one word per code                                                             | an abstraction gains one optional place-class word                                        |
-| `link::T`                      | **`peer::T`**                                       | a dial *is* a peer — `authority`, `host`, `transport`, `client` — already addressable at `~/network/peer/#`; `src`, `scheme` and `state` are derivable | the edge is validated in `/m/mach`, not in the cat graph                                  |
+| `link::T`                      | **`peer::T`**                                       | a dial *is* a peer — `authority`, `host`, `client` (its `inst` and `status`) — already addressable at `~/network/peer/#`; `src`, `scheme` and `state` are derivable | the edge is validated in `/m/mach`, not in the cat graph                                  |
 | `scheme::T`, `shape::T`        | **role recs at `/m/math/cat/signature/<token>`**    | both are "a name maps to its roles" — the `theory::T` idea as data; the graph cites them, the resolver never needs them as types                       | no predicate validation (the `Span`/`Route` precedent); promote to a type later if wanted |
 | `thread::T`, `virtual`, `core` | **the `thread`/`workers` fields of a decision**     | a thread shares the machine (the executor carries the frame in and publishes it out), so it is the *lane* of a place, not another place                | no new type; the constructors' blocking/await gap must be closed (§13.5)                  |
 | a capacity type                | **`place.capacity` + `plan` demand + `env` budget** | capacity is the place's, demand is derived, availability is the env's — no vertex describes them (§14)                                                 | the rewrite filters, the executor admits (§14.5)                                          |
@@ -149,8 +149,9 @@ The network has two tables with two meanings, and the location algebra needs bot
 
 - `/network/roster` — **potential** edges: a place, one or more interface addresses, and the *scheme* of each (e.g.
   `<ginger.local> => {<http://192.168.1.250:8777>, <http://192.168.1.72:8777>}`). Knowledge, root-scoped.
-- `~/network/peer` — **realized** edges: `peer::T` with `authority`, `host`, `transport` (an inst) and `client`
-  (`ws_client::[host, send, send_recv, close, on_message]`). Reach, machine-scoped.
+- `~/network/peer` — **realized** edges: `peer::T` with `authority`, `host` and `client`
+  (`ws_client::[host, inst, status, send, send_recv, close, on_message]` — it is talked to with its `inst`). Reach,
+  machine-scoped.
 
 A **candidate dial** is live under a **declared** test, mirroring the rewrite side's type-part/value-residue split. The
 test

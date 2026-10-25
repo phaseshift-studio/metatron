@@ -46,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -82,8 +83,26 @@ public class NetworkConnectTest extends AbstractMetatronTest {
         final Obj peer = network.connect(SELF);
         assertEquals(PEER_TID, peer.tid().basePath(), "connect must answer a peer::T");
         assertEquals(SELF, peer.asRec().<Obj>at(uri(AUTHORITY)).uriValue(), "the peer keys on the dialed authority");
-        assertEquals(true, peer.asRec().<Obj>at(uri(TRANSPORT)).isObjInst(), "the transport is the reach — an inst");
+        // THE CLIENT IS THE REACH: what the peer is talked to with is its client's inst, never a field of the peer's own
+        assertTrue(peer.asRec().<Obj>at(uri(CLIENT)).asRec().at(uri(INST)).isRec(), "the peer holds the client the dial constructed");
+        assertTrue(peer.asRec().atDirect(uri("transport")).isNoObj(), "a peer::T carries no transport: " + peer);
         assertEquals(1L, network.peers().elements().filter(kv -> kv.first().isUri()).count(), "the dial is a member of this level");
+    }
+
+    @Test
+    void testAClientThatDeclaresNothingIsNoPeer() {
+        // a client is reached by the instructions it declares and by nothing else — none, and it is no peer
+        final Network network = Machine.current().network();
+        assertEquals(noobj(), network.index(rec(uri(HOST), uri("loop://mute"))), "a client without inst is not indexed");
+        assertTrue(network.peerOf(f("loop://mute")).isNoObj(), "and the level holds no member for it");
+    }
+
+    @Test
+    void testTheLoopClientIsLive() {
+        final Obj peer = Machine.current().network().connect(SELF);
+        // the far side of a loop client is this machine: its status is true while it exists, and the peer is online
+        checkEquality(LOG, bool(true), bool(Network.Helper.status(peer.asRec().at(uri(CLIENT)))), true);
+        checkEquality(LOG, bool(true), bool(Network.Helper.online(peer)), true);
     }
 
     @Test
@@ -319,15 +338,47 @@ public class NetworkConnectTest extends AbstractMetatronTest {
         final int port = server.getAddress().getPort();
         final String authority = "http://localhost:" + port;
         try {
-            // a bare read auto-connects: it dials the http_client (inst => {from => GET}), indexes it as a peer, and
-            // dispatches the GET through its `from` override
+            // A READ NEVER DIALS: no client was constructed for the authority, so the network answers nothing and the
+            // peer map is left as it was — membership is declared, never emergent
+            final Network network = Machine.current().network();
+            assertEquals(noobj(), network.read(f(authority + "/hello")), "an undialed http authority is no peer's to answer");
+            assertTrue(network.peerOf(f(authority)).isNoObj(), "and addressing it made no peer");
+            // CONSTRUCTION IS CONNECTION: the dial constructs the http_client (inst => {from => GET, to => POST}),
+            // which indexes itself, and a read now GETs the resource through its `from` override
+            network.connect(f(authority));
             assertEquals(str("world"), Machine.read(f(authority + "/hello")),
                     "a read through an http peer GETs the resource via its `from` override");
-            assertTrue(Machine.current().network().overrideOf(f(authority), FROM_INST_TID).isObjInst(),
-                    "the bare http read dialed and indexed the http_client as a peer");
+            assertTrue(network.overrideOf(f(authority), FROM_INST_TID).isObjInst(), "the dial indexed the http_client as a peer");
         } finally {
             server.stop(0);
             Machine.current().network().disconnect(f(authority));
+        }
+    }
+
+    @Test
+    void testHttpClientStatusAsksTheServer() throws Exception {
+        // the only context is /hello, so the status HEAD to the root is answered 404 — a server answering, so live
+        final HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/hello", exchange -> {
+            exchange.sendResponseHeaders(204, -1);
+            exchange.close();
+        });
+        server.start();
+        final fURI authority = f("http://localhost:" + server.getAddress().getPort());
+        final Network network = Machine.current().network();
+        boolean stopped = false;
+        try {
+            final Obj peer = network.connect(authority);
+            checkEquality(LOG, bool(true), bool(Network.Helper.online(peer)), true);
+            // a connectionless client holds no socket that could say it is down: its status asks the server, so once
+            // the server is gone, the same client reads not live — derived on read, never a stored, stale true
+            server.stop(0);
+            stopped = true;
+            checkEquality(LOG, bool(false), bool(Network.Helper.online(peer)), true);
+        } finally {
+            if (!stopped)
+                server.stop(0);
+            network.disconnect(authority);
         }
     }
 

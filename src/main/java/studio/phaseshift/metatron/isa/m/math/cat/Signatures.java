@@ -43,8 +43,8 @@ public final class Signatures {
     private static final Map<String, String> DIALERS = Map.of(
             "ws", "/m/web/ws/ws_client",
             "http", "/m/web/http/http_client",
-            // the http client's GET speaks tls as it is: without this row Network.read's auto-connect declined every
-            // https:// read, which then fell through to whatever http space happened to claim the scheme
+            // the http client's GET speaks tls as it is, so a dial of an https:// authority (connect, or the place
+            // lattice's reach) constructs the same client
             "https", "/m/web/http/http_client",
             "loop", "/m/mach/id_client");
 

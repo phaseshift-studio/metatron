@@ -52,7 +52,7 @@ public final class MachNode {
     /** printed once the node is serving, so {@link PeerSpawn} can stop polling */
     public static final String READY = "MACH_READY";
 
-    /** the mtron_ws endpoint every node serves, and the route the roster transports dial */
+    /** the mtron_ws endpoint every node serves, and the route its roster address carries for the dial */
     public static final String MTRON_ROUTE = "/mtron";
 
     private MachNode() {

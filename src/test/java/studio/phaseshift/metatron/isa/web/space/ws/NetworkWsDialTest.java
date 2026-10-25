@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -96,8 +97,19 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
                 "the peer keys on the service authority — the route stays on host");
         assertEquals(this.dialURI(), peer.asRec().<Obj>at(uri(HOST)).uriValue(),
                 "host remembers where it was dialed, route included — peer::T\u0027s own words");
-        assertEquals(true, peer.asRec().<Obj>at(uri(TRANSPORT)).isObjInst(), "the transport is derived from the client\u0027s eval");
+        assertTrue(peer.asRec().atDirect(uri("transport")).isNoObj(), "a peer::T carries no transport: it is talked to with its client's inst");
+        assertTrue(Network.Helper.status(peer.asRec().at(uri(CLIENT))), "the ws client is live while its socket is open");
         assertEquals(true, peer.asRec().<Obj>at(uri(CLIENT)).isRec(), "the client is retained for the hang-up");
+    }
+
+    @Test
+    void testAHungUpWsClientReadsNotLive() {
+        final Obj client = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID).asRec().at(uri(CLIENT));
+        assertTrue(Network.Helper.status(client), "live while its socket is open");
+        // the status is derived on read — the socket's own state — so the very client reads false once it is hung up,
+        // with no field to update
+        Machine.current().network().disconnect(this.service());
+        assertFalse(Network.Helper.status(client), "the same client reads not live once its socket is closed");
     }
 
     @Test

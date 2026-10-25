@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style;
@@ -53,9 +54,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * A cluster of peer VMs — one OS process each — plus the declarations that make them addressable from the test
- * VM. The transport half of the {@code Network} authority dispatch: {@link #connect} writes the {@code /sys/peer}
- * roster, and {@link #transport} is the inst a {@code Network.read/write} hands its {@code from}/{@code to}
- * message to.
+ * VM: {@link #connect} writes their addresses into the roster (knowledge), and {@link #dial} also dials each one, so
+ * the {@code Network}'s authority dispatch reaches it through the {@code ws_client} the dial constructs.
+ * {@link #transport} is the harness's own line to a peer — one socket per message, beside the network — for a test
+ * that must talk to a peer directly.
  */
 public final class PeerCluster implements AutoCloseable {
 
@@ -182,6 +184,10 @@ public final class PeerCluster implements AutoCloseable {
     private final List<Process> processes = new ArrayList<>();
     private final List<Path> logs = new ArrayList<>();
     private final List<Peer> peers = new ArrayList<>();
+    /**
+     * whether {@link #dial()} connected this VM to the peers, so {@link #close()} hangs them up
+     */
+    private boolean dialed = false;
 
     private PeerCluster(final List<Integer> ports, final String root, final boolean withTraces) throws IOException {
         this.ports = ports;
@@ -275,18 +281,18 @@ public final class PeerCluster implements AutoCloseable {
     }
 
     // ========================================================================
-    // declaration — the roster that makes peers reachable
+    // declaration — the roster that makes peers known, and the dials that make them reachable
     // ========================================================================
 
     /**
-     * Install the declared peer roster ({@code /sys/peer}): one entry per peer, keyed by its authority, whose
-     * value is the transport that reaches it. This is the step that turns a running process into a peer this VM
-     * may talk to.
+     * Install the declared peer roster: one entry per peer, keyed by its authority, whose value is the ADDRESS it
+     * answers at — its mtron endpoint, route included. Knowledge only: the roster says the machines exist, and
+     * {@link #dial()} is what makes them peers this VM talks to.
      */
     public PeerCluster connect() {
         final Map<Obj, Obj> roster = new LinkedHashMap<>();
         for (int i = 1; i <= this.size(); i++)
-            roster.put(uri("ws://localhost:" + this.port(i)), this.transport(i));
+            roster.put(uri("ws://localhost:" + this.port(i)), uri(this.dialURI(i)));
         // INTO roster/machine: the roster is a container, and a flat write at its root lands where no reader
         // looks and takes the discovery registrations with it
         Machine.write(f("~/network/roster"), rec(mutableMap(uri(MACHINE), rec(roster))));
@@ -296,8 +302,36 @@ public final class PeerCluster implements AutoCloseable {
     }
 
     /**
-     * The transport that reaches the i-th peer: open one {@code wsclient} to its {@code mtron_ws} endpoint, send
-     * the message ({@code from(localized)} for a read, {@code obj.to(localized)} for a write), return the response.
+     * where the i-th peer is dialed: its mtron endpoint, {@code ws://localhost:<port>/mtron}
+     */
+    public fURI dialURI(final int oneBased) {
+        return f("ws://localhost:" + this.port(oneBased) + MTRON_ROUTE);
+    }
+
+    /**
+     * Declare the roster ({@link #connect()}) and DIAL every peer: each dial constructs a {@code ws_client}, which
+     * indexes itself as this VM's peer, so a read or write at a peer's authority goes out through that client's own
+     * instructions. {@link #close()} hangs them up. A detached cluster has no processes to dial — it stops at
+     * {@link #connect()}.
+     */
+    public PeerCluster dial() {
+        this.connect();
+        for (int i = 1; i <= this.size(); i++) {
+            // the idiomatic construction, as ws_client::[host=>…] — built here so that no instruction memory needs the
+            // web types imported: the constructor dials, and indexing mints the peer
+            final WebSocketRec wsRec = new WebSocketRec(mutableMap(
+                    uri(HOST), uri(this.dialURI(i)),
+                    uri(IN), uri(MTRON.value),
+                    uri(OUT), uri(MTRON.value)), WS_CLIENT_TID, null);
+            Network.Helper.index(new WebSocketRecClient(wsRec));
+        }
+        this.dialed = true;
+        return this;
+    }
+
+    /**
+     * The harness's own line to the i-th peer, beside the network: open one {@code wsclient} to its {@code mtron_ws}
+     * endpoint, send the message (an expression the peer evaluates), return the response, hang up.
      */
     public Inst transport(final int oneBased) {
         final int port = this.port(oneBased);
@@ -368,6 +402,11 @@ public final class PeerCluster implements AutoCloseable {
     public void close() {
         if (active == this)
             active = null;
+        // hang up what dial() connected before the far sides go away, so no supervisor redials a peer that is gone
+        if (this.dialed)
+            for (int i = 1; i <= this.size(); i++)
+                Machine.current().network().disconnect(f("ws://localhost:" + this.port(i)));
+        this.dialed = false;
         for (final Process process : this.processes) {
             process.destroy();
             try {

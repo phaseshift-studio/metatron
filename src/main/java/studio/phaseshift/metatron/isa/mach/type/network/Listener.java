@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.AUTHORITY;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.Tokens.STATUS;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -91,6 +92,8 @@ public abstract class Listener extends MRec implements Closeable {
         super(mutableMap(uri(AUTHORITY), uri(authority)), tid, null);
         this.authority = authority;
         this.owner = owner;
+        // THE STATUS every server answers — live until the socket is released, derived on read (Network.Helper.status)
+        this.jvm().put(uri(STATUS), Network.Helper.statusOf(() -> !this.closed()));
     }
 
     /**

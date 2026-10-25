@@ -28,20 +28,24 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.Closeable;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -216,8 +220,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * THE MACHINES the roster knows: {@code <host> => reach{+}}, one row per machine and its reaches — an
-     * endpoint uri to dial or the transport that reaches it.
+     * THE MACHINES the roster knows: {@code <host> => uri{+}}, one row per machine and the addresses it answers at
+     * (scheme://host:port, a route where the dial needs one). KNOWLEDGE, NEVER REACH: a row is not a way to talk to the
+     * machine — reaching it is dialing it ({@link #connect}), and the client that dial constructs brings the
+     * instructions it is talked to with ({@code inst}).
      * <p>
      * The roster is a CONTAINER, not the listing: it carries {@code discover} beside {@code machine}, so a
      * consumer that wants machines has to say so. Reading {@code roster()} as the listing walks
@@ -238,39 +244,6 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 .flatMap(kv -> Stream.concat(Stream.of(kv.first()), kv.second().stream()))
                 .filter(Obj::isUri).map(Obj::uriValue).anyMatch(known -> Helper.sameService(known, vid)));
     }
-
-    /**
-     * The <b>reach</b> for an authority: this machine's own connection first, the known-server roster second. A
-     * connection's value is a {@code peer::T} rec carrying its transport; a roster entry's value <em>is</em> the
-     * transport. {@code noobj} means the authority is neither dialed nor declared, and the caller falls through to
-     * local memory.
-     */
-    default Obj transportOf(final fURI authority) {
-        // A DIALED PEER ANSWERS BY THE AUTHORITY IT CARRIES -- its key is a local path, and two surfaces of one
-        // service may both be members: the first that carries a transport answers the wire
-        final Obj dialed = this.peers().values()
-                .filter(peer -> Helper.sameService(Helper.authorityOf(peer), authority))
-                .map(peer -> peer.asRec().<Obj>at(TRANSPORT))
-                .filter(reach -> !reach.isNoObj())
-                .findFirst().orElse(noobj());
-        if (!dialed.isNoObj())
-            return dialed;
-        final Obj declared = this.machines().elements()
-                .filter(kv -> kv.first().isUri() && Helper.sameService(kv.first().uriValue(), authority))
-                .map(Rel::second)
-                .map(reach -> reach.isRec() ? reach.asRec().at(TRANSPORT) : reach)
-                .filter(reach -> !reach.isNoObj())
-                .findFirst().orElse(noobj());
-        if (!declared.isNoObj())
-            return declared;
-        // a DISCOVERED machine is keyed by the machine, so its addresses are the VALUES — one or more of them
-        return this.machines().elements().flatMap(kv -> kv.second().stream())
-                .filter(Obj::isUri)
-                .filter(address -> Helper.sameService(address.uriValue(), authority)
-                        && java.util.Objects.equals(address.uriValue().scheme(), authority.scheme()))
-                .findFirst().orElse(noobj());
-    }
-
 
     /**
      * CONNECT — the network's MOUNT op, the third copy of memory's {@code addSpace} and the ISA's
@@ -339,24 +312,18 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             displaced = this.peerAt(key);
             if (displaced.isRec() && client == displaced.asRec().<Obj>atDirect(uri(CLIENT)))
                 return displaced;
-            // a client answers either the transport itself or a rec whose eval override derives the transport (the
-            // client is kept on the peer so disconnect can hang up) -- adapted in ONE place, Helper.asTransport.
-            final Obj transport = Helper.asTransport(client);
+            // A CLIENT IS REACHED BY THE INSTRUCTIONS IT DECLARES — its `inst`, {tid => override} — and by nothing
+            // else: a client that declares none has no way to be talked to, so it is no peer
             final Obj inst = client.isRec() ? client.asRec().at(uri(INST)) : noobj();
-            WIRE_LOG.debug("index %s key=%s transport=%s inst=%s", dialURI, key, transport.isNoObj() ? "NONE" : "inst", inst.isRec() ? "set" : "none");
-            // a peer is reachable by a transport OR by at least one instruction override — a read-only client has no
-            // eval, hence no transport, yet still answers reads through its `from` override
-            if (!transport.isObjInst() && !inst.isRec())
+            WIRE_LOG.debug("index %s key=%s inst=%s", dialURI, key, inst.isRec() ? "set" : "none");
+            if (!inst.isRec())
                 return noobj();
+            // the client IS the connection: its `inst` (the instructions you talk to it with) and its `status` stay on
+            // the client — the peer holds the client, and overrideOf and online read through it. No copy, no divergence.
             peer = rec(
                     uri(AUTHORITY), uri(Helper.serviceOf(dialURI)),
                     uri(HOST), uri(dialURI));
-            if (transport.isObjInst())
-                peer.asRec().at(uri(TRANSPORT), transport, MUTABLE);
-            // the client IS the connection: its `inst` (the instructions you talk to it with) stays on the client —
-            // the peer holds the client, and overrideOf reads the capability through it. No copy, no divergence.
-            if (client.isRec() && client != transport)
-                peer.asRec().at(uri(CLIENT), client, MUTABLE);
+            peer.asRec().at(uri(CLIENT), client, MUTABLE);
             peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
             final Rec kept = Helper.without(this.peers(), kv -> kv.first().uriValue().equals(key));
             this.at(uri(PEER), kept.isEmpty() ? rec(uri(key), peer) : kept.plus(rec(uri(key), peer)), MUTABLE);
@@ -404,7 +371,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     /**
      * ACCEPT — the CO-MOUNT: the listener's half of {@link #connect(fURI)}. An INBOUND connection mints a
      * peer exactly as an outbound dial does (server : peer :: constructor : instance), keyed by the
-     * remote's socket authority, with the session's reply channel as the transport. The inbound peer is
+     * remote's socket authority, with the server session as its client: the session's {@code inst} is what the
+     * peer is talked to with, over the session's reply channel. The inbound peer is
      * ANONYMOUS until an identity exchange upgrades it — no {@code host} field, because an ephemeral
      * client port is not a place to dial back to: reach lives exactly as long as the socket, and the
      * listener retracts it with {@link #disconnect(fURI)} when the socket closes.
@@ -412,7 +380,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     default Obj accept(final fURI remote, final Obj session) {
         // SELF-LOOP: a loopback dialer is THIS machine. The outbound half of the dial — the ws_client
         // constructor's index — already records the peer (keyed by OUR authority, with a dial-back host
-        // and an initiate transport). Minting a second peer keyed by the dialer's ephemeral source port
+        // and the dialer's own client). Minting a second peer keyed by the dialer's ephemeral source port
         // would leave one socket as two peers: the twin is anonymous, undialable, and a fan-out target
         // that no one answers. Decline the co-mount; the dialer records the peer.
         if (Helper.isLoopbackHost(remote.host()))
@@ -429,16 +397,13 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             final Obj existing = this.peerAt(key);
             if (!existing.isNoObj())
                 return existing;
-            final Obj transport = Helper.asTransport(session);
-            if (!transport.isObjInst())
+            // a session is reached, as a dialed client is, by the instructions it declares — none, no peer
+            if (!session.isRec() || !session.asRec().at(uri(INST)).isRec())
                 return noobj();
-            final Obj peer = rec(
-                    uri(AUTHORITY), uri(service),
-                    uri(TRANSPORT), transport);
+            final Obj peer = rec(uri(AUTHORITY), uri(service));
             if (null != name && !name.isEmpty())
                 peer.asRec().at(uri(NAME), str(name), MUTABLE);
-            if (session.isRec() && session != transport)
-                peer.asRec().at(uri(CLIENT), session, MUTABLE);
+            peer.asRec().at(uri(CLIENT), session, MUTABLE);
             peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
             this.at(uri(PEER), this.peers().plus(rec(uri(key), peer)), MUTABLE);
             return peer;
@@ -509,8 +474,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * what was configured, and a report that hid the failures would be worse than no report.
      * <p>
      * Reads its own {@code peer} field first and falls back to the roster path, so the method works both when it
-     * is invoked on the stored singleton and when it is applied as a bare inst. A dialed peer is probed through the
-     * transport its {@code peer::T} carries (see {@link Helper#probe}).
+     * is invoked on the stored singleton and when it is applied as a bare inst. A dialed peer answers through its
+     * client's own {@code status}; a roster row is an address, known and never tried (see {@link Helper#probe}).
      */
     default Obj status(final Obj lhs) {
         final Obj field = lhs.isRec() ? lhs.asRec().at(uri(PEER)) : noobj();
@@ -528,21 +493,23 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * SUBMIT — the eval verb: evaluate {@code code} on the peer that owns {@code authority}, and answer its result.
      * This is the general "ship mtron, get the result" that the distribution rewrite and any parallel fan-out use: a
      * peer that declares an {@code eval} override answers {@code eval(code)} with its own f() — the code BLOCKED, so it
-     * rides raw as the payload ({@link Helper#evaluate}); one that does not falls back to its transport.
+     * rides raw as the payload ({@link Helper#evaluate}); one that declares none evaluates nothing: noobj.
      */
     default Obj submit(final fURI authority, final Obj code) {
         final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
-        if (eval.isObjInst())
-            return Helper.evaluate(eval.asInst(), code);
-        final Obj transport = this.transportOf(authority);
-        return transport.isNoObj() ? noobj() : transport.apply(code);
+        return eval.isObjInst() ? Helper.evaluate(eval.asInst(), code) : noobj();
     }
 
     /**
-     * Authority dispatch — resolve a read against a <em>declared peer</em> rather than the local memory. An
-     * address without an authority, or whose authority is not in the roster, answers {@code noobj} so the
-     * caller falls through to {@code memory()}. A declared peer receives the destination-relative address
-     * ({@code localize()}) and answers through its transport.
+     * Authority dispatch — resolve a read against a <em>dialed peer</em> rather than the local memory. An
+     * address without an authority, or whose authority no dialed peer serves, answers {@code noobj} so the
+     * caller falls through to {@code memory()}. A dialed peer answers through the instructions its client
+     * declares: its {@code from}, else its {@code eval} of the destination-relative read ({@code localize()}).
+     * <p>
+     * A READ NEVER DIALS. Connection is construction and disconnection is destruction — {@code http_client::[…]},
+     * {@code ws_client::[…]} or {@link #connect} make a peer, and addressing an authority makes none: membership is
+     * declared, never emergent. An http(s) address no client was constructed for falls through to memory, where a
+     * mounted http space answers it.
      */
     default Obj read(final fURI vid) {
         // THE GATE IS THE HOST, NOT THE PORT. hasAuthority() demands host AND port, but an address is
@@ -555,39 +522,24 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             return noobj();
         final fURI authority = vid.path(List.of());
         // DISPATCH LADDER: the peer's native `from` override first (a read-only client), then `eval` (the lowering —
-        // the read message IS code), then the legacy transport. Each rung is the instruction's own call with the peer's
-        // f(): from(<vid>) — the address exactly as read — on its from, eval(from(<localized>)) on its eval. A
-        // read-only peer (from, no eval) has no transport and is reached only through its `from` override here.
+        // the read message IS code). Each rung is the instruction's own call with the peer's f(): from(<vid>) — the
+        // address exactly as read — on its from, eval(from(<localized>)) on its eval. A client that declares neither
+        // is not read through: noobj, and the read stays local.
         final Obj from = this.overrideOf(authority, FROM_INST_TID);
         if (from.isObjInst())
             return Helper.dispatch(from.asInst(), instB(FROM_INST_TID, lst(vid.toUri())), noobj());
-        final Obj message = from_(vid.localize().toUri()).tryToInst();
         final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
-        if (eval.isObjInst())
-            return Helper.evaluate(eval.asInst(), message);
-        final Obj transport = this.transportOf(authority);
-        if (transport.isNoObj()) {
-            // AUTO-CONNECT: a read of an http(s) address that is neither dialed nor declared constructs its client on
-            // demand — the read IS the dial — so a bare *<http://…> becomes a peer instead of falling through to a
-            // mounted http space. The client declares {from => GET} and is indexed by connect.
-            if ("http".equals(authority.scheme()) || "https".equals(authority.scheme())) {
-                final Obj peer = this.connect(authority);
-                if (peer.isRec()) {
-                    final Obj from2 = this.overrideOf(authority, FROM_INST_TID);
-                    if (from2.isObjInst())
-                        return Helper.dispatch(from2.asInst(), instB(FROM_INST_TID, lst(vid.toUri())), noobj());
-                }
-            }
-            return noobj(); // authority not declared: not a peer this frame may reach
-        }
-        final Obj answer = transport.apply(message);
+        if (!eval.isObjInst())
+            return noobj(); // no dialed peer serves this authority: not a peer this frame may reach
+        final Obj message = from_(vid.localize().toUri()).tryToInst();
+        final Obj answer = Helper.evaluate(eval.asInst(), message);
         WIRE_LOG.debug("read %s message=%s answer=%s", vid, message, answer);
         return answer;
     }
 
     /**
-     * Authority dispatch — write {@code obj} to a declared peer's destination-relative address via its
-     * transport. Same local/undeclared fall-through as {@link #read(fURI)}.
+     * Authority dispatch — write {@code obj} through a dialed peer's client: its {@code to}, else its {@code eval} of
+     * the destination-relative write. Same local fall-through as {@link #read(fURI)}, and a write never dials either.
      */
     default Obj write(final fURI vid, final Obj obj) {
         // host-gated, exactly as read -- see the note there
@@ -600,12 +552,15 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             return noobj();
         final fURI authority = vid.path(List.of());
         // DISPATCH LADDER: the peer's native `to` override first (a write-only sink), then `eval` (the write message IS
-        // code), then the legacy transport. Each rung is the instruction's own call with the peer's f(): obj.to(<vid>)
-        // — the obj the lhs, the address the arg, exactly as the native to — on its to, eval(start(obj).to(<localized>))
-        // on its eval. A write-only peer (to, no eval) has no transport and is reached only through its `to` override.
+        // code). Each rung is the instruction's own call with the peer's f(): obj.to(<vid>) — the obj the lhs, the
+        // address the arg, exactly as the native to — on its to, eval(start(obj).to(<localized>)) on its eval. A client
+        // that declares neither is not written through: noobj, and the write stays local.
         final Obj to = this.overrideOf(authority, TO_INST_TID);
         if (to.isObjInst())
             return Helper.dispatch(to.asInst(), instB(TO_INST_TID, lst(vid.toUri())), obj);
+        final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
+        if (!eval.isObjInst())
+            return noobj();
         final Obj message;
         try {
             message = start_(obj).to_(vid.localize().toUri()).tryToInst();
@@ -613,13 +568,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // not mtron-parseable source: there is nothing to ship, so it is not a peer's to answer
             return noobj();
         }
-        final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
-        if (eval.isObjInst())
-            return Helper.evaluate(eval.asInst(), message);
-        final Obj transport = this.transportOf(authority);
-        if (transport.isNoObj())
-            return noobj();
-        return transport.apply(message);
+        return Helper.evaluate(eval.asInst(), message);
     }
 
     /**
@@ -651,8 +600,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * the object rather than by constructing a new one beside it — which would leave the stored handle dead and the
      * deletion closing nothing.
      * <p>
-     * A member whose client is not a link — a loop client, a connectionless transport, a listener's co-mount — is
-     * not supervised: it has no connection of its own to lose, or (the co-mount) its dialer owns it.
+     * A member whose client is not a link — a loop client, a connectionless client (http), a listener's co-mount — is
+     * not supervised: it has no connection of its own to lose, or (the co-mount) its dialer owns it. Its liveness is
+     * its client's own {@code status} ({@link Helper#status}).
      */
     interface Link {
 
@@ -784,16 +734,45 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * Is this member REACHABLE right now? A {@link Link} answers for itself, locally — no round trip. A member
-         * without one (a loop client, a connectionless transport, a listener's co-mount) is reachable exactly when
-         * it carries a transport: it holds no connection of its own to lose.
+         * Is this member REACHABLE right now? Its client says so: {@link #status} of the client it holds.
          */
         public static boolean online(final Obj peer) {
-            if (!peer.isRec())
+            return peer.isRec() && Helper.status(peer.asRec().<Obj>atDirect(uri(CLIENT)));
+        }
+
+        /**
+         * A CLIENT'S OR A SERVER'S OWN WORD on whether it is live. Every protocol client and server answers
+         * {@code status}: a bool, true while it is live, DERIVED ON READ and never stored — the convention discovery::T
+         * set and mcp_client keeps — so a connection that went away reads false rather than a stale true. The field is
+         * an auto inst its constructor installs, applied here to the obj that carries it. A {@link Link} that carries
+         * none answers {@link Link#connected()}; anything else has not vouched for itself, and is not live.
+         */
+        public static boolean status(final Obj clientOrServer) {
+            if (!clientOrServer.isRec())
                 return false;
-            return peer.asRec().<Obj>atDirect(uri(CLIENT)) instanceof Link link
-                    ? link.connected()
-                    : peer.asRec().<Obj>atDirect(uri(TRANSPORT)).isObjInst();
+            final Obj status = clientOrServer.asRec().atDirect(uri(STATUS));
+            if (status.isNoObj())
+                return clientOrServer instanceof Link link && link.connected();
+            try {
+                // the auto wrapper is what makes a READ of the field evaluate it; here the body is applied directly
+                final Obj body = Obj.Helper.getAuto(status).orElse(status);
+                final Obj live = body.isObjInst() || body.isObjCall()
+                        ? FutureObj.resolveFuture(body.apply(clientOrServer))
+                        : body;
+                return live.isBool() && live.boolValue();
+            } catch (final Exception e) {
+                return false;
+            }
+        }
+
+        /**
+         * THE STATUS FIELD a client or server installs: an auto inst answering {@code bool}, computed from
+         * {@code live} each time it is read and never stored. The auto wrapper is what makes a read of the field a
+         * value — {@code client.at(<status>)} answers the bool, as mdns_discovery's does — and {@link #status}
+         * applies it.
+         */
+        public static Obj statusOf(final BooleanSupplier live) {
+            return auto_(instLambda(ALL.maybe(), BOOL_TID, (lhs, inst) -> bool(live.getAsBoolean()))).tryToInst();
         }
 
         /**
@@ -834,7 +813,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
         /**
          * The authority a member reaches — the service it carries, never its key — or null for a value that is not
-         * a member (a roster's bare transport, a discovered address).
+         * a member (a roster row's address).
          */
         public static fURI authorityOf(final Obj peer) {
             if (!peer.isRec())
@@ -941,24 +920,6 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             if (newObj.isNoObj())
                 currentObj.stream().forEach(CommonUtil::close);
             return currentObj;
-        }
-
-        /**
-         * A SESSION'S TRANSPORT — the one inst that ships a message and answers the peer's result, which is what
-         * {@code peer::T.transport}, the probe and a roster entry still speak (the message as the transport's LHS).
-         * It is DERIVED, never declared: a session's {@code eval} override is exactly that arrow, so the transport
-         * evaluates the message on it ({@link #evaluate}). A session that is itself an inst, or a rec that carries a
-         * {@code transport}, answers as it stands. A client reaches the network through its mini-instset alone —
-         * {@code send_recv} is no reach (2026-10-24: every client provides its own {@code to}, {@code from} and
-         * {@code eval}); it survives only as a ws client's raw wire instruction.
-         */
-        public static Obj asTransport(final Obj session) {
-            if (session.isObjInst())
-                return session;
-            final Obj eval = Helper.overrideIn(session, EVAL_INST_TID);
-            if (eval.isObjInst())
-                return instLambda(message -> Helper.evaluate(eval.asInst(), message));
-            return session.isRec() ? session.asRec().<Obj>at(uri(TRANSPORT)) : noobj();
         }
 
         /**
@@ -1086,10 +1047,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         /**
          * THE DIAL TABLE, scheme- then handler-routed — the step a description takes to become a peer.
          * {@code loop:} is built here rather than resolved: the machine's own loopback needs no web
-         * dependency and no socket — its transport applies the shipped message against the LOCAL machine,
-         * so a {@code from_(path)} message reads the path here and a {@code start_(obj).to_(path)} message
-         * writes it here. That makes "a read through a loop peer equals the local read" an executable
-         * contract, which is the property every real transport must then preserve one authority over.
+         * dependency and no socket — its instructions apply what they are handed against the LOCAL machine,
+         * so its {@code from(<path>)} reads the path here and its {@code obj.to(<path>)} writes it here. That makes
+         * "a read through a loop peer equals the local read" an executable contract, which is the property every
+         * real client must then preserve one authority over.
          * <p>
          * Any other scheme needs a HANDLER — a vocabulary vid resolved through instruction memory at dial
          * time. A protocol CLIENT TYPE is a dialer whose constructor takes {@code [host=>...]} (the
@@ -1129,43 +1090,23 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * the liveness payload — cheap, total, and free of side effects.
-         */
-        private static final Obj PROBE = start_(jnt(1)).plus_(jnt(2));
-
-        /**
-         * one declared peer, asked once: {@code [authority, transport, status=>[kind=>up|down, time=>ms]]}
+         * one reach the network reports, asked once: {@code [authority, status=>[kind=>up|down|known, time=>ms]]}.
+         * The time is how long the answer took — a ws client's is its socket state, an http client's is a round trip.
          */
         static Rec probe(final Obj authority, final Obj reach) {
             final long start = System.currentTimeMillis();
-            // A DIALED PEER IS NOT ITS TRANSPORT. The peer map's value is a peer::T that CARRIES one, and handing the
-            // rec over as though it were the transport reported every dialed peer `known` (measured): the probe asks
-            // what the peer::T holds. A peer whose link says it is down is down -- no round trip to learn it.
+            // A DIALED PEER ANSWERS FOR ITSELF: the peer map's value is a peer::T holding its client, and the client's
+            // own status (derived on read) says whether it is live. A ROSTER ROW IS AN ADDRESS — knowledge, not reach —
+            // and so is a peer::T with no client (a reference that crossed a wire): "known", never tried. "down" stays
+            // reserved for a client that was asked and is not live.
             final boolean dialed = reach.isRec()
                     && studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID.equals(reach.tid().basePath());
-            final Obj transport = dialed ? reach.asRec().<Obj>atDirect(uri(TRANSPORT)) : reach;
-            // AN ADDRESS IS NOT A TRANSPORT. A discovered machine is written as a uri (or a uri{+}), so applying
-            // the PROBE inst to it answers noobj and reports a LIVE machine down. It has simply not been dialed:
-            // that is "known", and "down" stays reserved for a transport that was tried and did not answer. A
-            // peer::T with no transport is the same fact in the other spelling: an authority alone, known here and
-            // not reachable from here.
-            final boolean address = dialed ? !transport.isObjInst() : !transport.isNoObj() && !transport.isObjInst();
-            boolean up = false;
-            if (!address && (!dialed || Helper.online(reach))) {
-                try {
-                    // a silent peer does NOT answer noobj — the declared transports report it as a fail, so both
-                    // spellings of "nothing came back" have to count as down or a dead peer reads as healthy
-                    final Obj answer = transport.isObjInst() ? transport.apply(PROBE) : noobj();
-                    up = !answer.isNoObj() && !answer.isFail();
-                } catch (final Exception ex) {
-                    up = false;
-                }
-            }
+            final Obj client = dialed ? reach.asRec().<Obj>atDirect(uri(CLIENT)) : noobj();
+            final String kind = client.isNoObj() ? "known" : Helper.status(client) ? "up" : "down";
             final long time = System.currentTimeMillis() - start;
             return rec(
                     uri(AUTHORITY), authority,
-                    uri(TRANSPORT), transport,
-                    uri(STATUS), rec(uri(KIND), str(address ? "known" : up ? "up" : "down"), uri(TIME), jnt(time)));
+                    uri(STATUS), rec(uri(KIND), str(kind), uri(TIME), jnt(time)));
         }
     }
 }

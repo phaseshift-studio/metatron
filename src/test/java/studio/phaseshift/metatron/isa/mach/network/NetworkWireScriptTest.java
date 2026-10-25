@@ -122,7 +122,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
                         .map(Obj::uriValue).anyMatch(key -> !key.qMap().isEmpty()) ? 1 : 0)),
                 // THE SHAPE AUDIT: walk every entry of the peer map and verify the peer::T contract —
                 // uri key, q-clean key, rec value tid\u0027d peer::T, authority present, the key the dial\u0027s
-                // own path, transport an inst. Writes \u0027ok\u0027 or the FIRST violation\u0027s own words, so the
+                // own path, a client that declares an inst. Writes \u0027ok\u0027 or the FIRST violation\u0027s own words, so the
                 // script\u0027s failure message names the broken field rather than a count.
                 "PROBE_SHAPE", args -> this.probe("shape", str(this.auditPeerShape())),
                 // retraction is a DIRECTIVE, deliberately not an inst: the language's retraction is the
@@ -164,9 +164,9 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             final fURI dialed = host.isUri() ? host.uriValue() : authority.uriValue();
             if (!Network.Helper.keyOf(dialed).equals(key.uriValue()))
                 return "key is not the dial\u0027s path: " + key + " vs " + Network.Helper.keyOf(dialed);
-            final studio.phaseshift.metatron.isa.m.type.Obj transport = peer.asRec().at(uri(TRANSPORT));
-            if (!transport.isObjInst())
-                return "peer has no transport inst: " + key;
+            final studio.phaseshift.metatron.isa.m.type.Obj client = peer.asRec().at(uri(CLIENT));
+            if (!client.isRec() || !client.asRec().at(uri(INST)).isRec())
+                return "peer's client declares no inst: " + key;
             final studio.phaseshift.metatron.isa.m.type.Obj name = peer.asRec().at(uri(NAME));
             if (!name.isNoObj() && !name.isStr())
                 return "a named peer\u0027s name must be a str: " + key + " => " + name;
@@ -283,7 +283,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE IDENTITY TRANSPORT: dialing loop: constructs an id_client, and a read or write through the loop peer
+     * THE IDENTITY CLIENT: dialing loop: constructs an id_client, and a read or write through the loop peer
      * IS the local operation — the executable form of the self-similarity contract, with no socket.
      */
     @StatefulParametrizedTest

@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * THE AUTHORITY DISPATCH ON {@code Network}, end to end: an address written against a peer's authority
- * ({@code ws://localhost:PORT/...}) is handed to that peer's transport and answered over the wire, instead of
+ * ({@code ws://localhost:PORT/...}) is handed to the client this VM dialed for that peer and answered over the wire, instead of
  * resolving against the local memory. Peers are real OS processes ({@link PeerCluster}), so the only thing
  * between this VM and a peer's store is the socket.
  * <p>
@@ -64,8 +64,9 @@ public class NetworkTest extends AbstractMetatronTest {
     static void startPeers() throws Exception {
         // one peer, forked in its own JVM, holding $index/$index*10/$index*100 at /n/{a,b,c}
         cluster = PeerCluster.of(1).seed(PeerCluster.DEFAULT_SEED_MATRIX).start();
-        // declare the roster: ws://localhost:PORT => transport, which is what Network.read/write dispatch through
-        cluster.connect();
+        // declare the roster (ws://localhost:PORT => its address) and dial the peer: Network.read/write dispatch
+        // through the ws_client the dial constructs
+        cluster.dial();
     }
 
     @AfterAll
@@ -93,9 +94,9 @@ public class NetworkTest extends AbstractMetatronTest {
     }
 
     /**
-     * A DISCOVERED machine is an ADDRESS in the roster, not a dialed transport, so probing it must not report a
-     * live machine as down. "known" is that third state; "down" stays reserved for a transport that was tried and
-     * did not answer.
+     * A DISCOVERED machine is an ADDRESS in the roster, not a dialed client, so probing it must not report a
+     * live machine as down. "known" is that third state; "down" stays reserved for a client that was asked and
+     * is not live.
      */
     @Test
     void testAnAddressInTheRosterIsKnownNotDown() {

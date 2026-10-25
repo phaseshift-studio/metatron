@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * NETWORK isolation as a stateful script — the network half of the machine-isolation pair
  * ({@code MemoryIsolationScriptTest} is the memory half), in the same script form so the two read side by side.
  * <p>
- * The script vocabulary itself — the directives ({@code [CLUSTER]}, {@code [DECLARE_SILENT]}, the
+ * The script vocabulary itself — the directives ({@code [CLUSTER]}, {@code [DECLARE]}, {@code [DIAL_SILENT]}, the
  * {@code [PROBE_*]} family), the probe address and the per-script teardown — lives in {@link NetworkScriptTest}.
  * What remains here is what isolation CLAIMS.
  * <p>
@@ -59,8 +59,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *         {@code cluster().status()} predates that — the roster address itself is what is live.)</li>
  *     <li><b>reach is frame-local</b> — a child's dials are its own (not inherited, not shadowed), a pop drops
  *         exactly the popped machine's, and a sibling never sees another machine's.</li>
- *     <li><b>a silent peer is reported, not omitted</b> — {@code status} yields one entry per DECLARED peer, and
- *         reports it {@code down}; silence and absence are different facts.</li>
+ *     <li><b>a silent peer is reported, not omitted</b> — {@code status} yields one entry per DIALED peer, and
+ *         reports one whose client is not live {@code down}; silence and absence are different facts, and an
+ *         undialed roster address is the third: {@code known}.</li>
  * </ol>
  */
 public class NetworkIsolationScriptTest extends NetworkScriptTest {
@@ -129,17 +130,23 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
     }
 
     /**
-     * {@code status} asks every DECLARED peer and reports one entry each — a peer that is declared but silent is
+     * {@code status} asks every DIALED peer's client and reports one entry each — a peer whose client is not live is
      * reported {@code down}, never dropped from the report. Silence and absence are different facts, and the report
-     * is worth nothing if it hides the failures.
+     * is worth nothing if it hides the failures. A roster row is the third fact: an address, known and never asked.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
-            "[DECLARE_SILENT ws://silent-host:21005]       [-- declared, and it can never answer --]",
+            "[DIAL_SILENT ws://silent-host:21005]          [-- dialed, and its client is never live --]",
+            "[PROBE_PEERCOUNT]",
+            "*/m/networkProbe/peercount % 1              [-- dialed, so it is a peer --]",
+            "[PROBE_STATUS]",
+            "*/m/networkProbe/status % \"down\"           [-- DOWN, not absent --]",
+            "[DISCONNECT ws://silent-host:21005]",
+            "[DECLARE ws://known-host:21006]              [-- an address: knowledge, nothing dialed --]",
             "[PROBE_MACHINES]",
             "*/m/networkProbe/machines % 1               [-- declared, so it is known --]",
             "[PROBE_STATUS]",
-            "*/m/networkProbe/status % \"down\"           [-- DOWN, not absent --]"
+            "*/m/networkProbe/status % \"known\"          [-- KNOWN, never asked: not down --]"
     })
     void testStatusReportsASilentPeer() {
     }
@@ -216,7 +223,7 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
             "[CONNECT loop://machine_b]",
             "[PROBE_PEERCOUNT]",
             "*/m/networkProbe/peercount % 1                  [-- the child\u0027s dial lands on the child\u0027s level --]",
-            "[DECLARE_SILENT ws://declared-inside-b:1111]",
+            "[DECLARE ws://declared-inside-b:1111]",
             "[PROBE_MACHINES]",
             "*/m/networkProbe/machines % 1                     [-- knowledge declared while standing in machine_b --]",
             "[STATE] *~.pop(_)",

@@ -13,7 +13,7 @@ The model's *shape* and *dispatch primitive* are in place, additively, without b
 |---|---|---|
 | client `inst` | `machInstSet.java` | the mini-instset `{ inst_tid => override }` lives on the **client** — the connection — and is read through `peer.client.inst`; `peer::T` carries no `inst` field (an earlier draft copied it onto the peer) |
 | `id_client` | `machInstSet.java` | migrated off `send_recv`: now declares `inst => { eval => identity }` (+ `close`). The canonical example |
-| `Helper.asTransport` | `Network.java` | derives the legacy transport from `inst.eval` (before falling back to `send_recv`), so read/write keep working unchanged |
+| `Helper.asTransport` | `Network.java` | derives the legacy transport from `inst.eval` (before falling back to `send_recv`), so read/write keep working unchanged — **removed 2026-10-24 with transport itself (§5)** |
 | `Network.index` | `Network.java` | holds the client on the minted peer — no copy of `inst` — and accepts an `inst`-only client (no eval, no transport) |
 | `Network.overrideOf` | `Network.java` | **the dispatch primitive**: `overrideOf(authority, instrTid) -> peer.inst[tid] \| noobj` |
 | test | `NetworkConnectTest.java` | `testOverrideOfDispatchesToThePeersOwnBodies` — loop peer declares `eval`, not `from` |
@@ -217,9 +217,48 @@ the general dispatch.
 **Steps:**
 1. Confirm `handler` is no longer *read* for capability decisions anywhere; where a consumer still branches on it,
    switch to "which tids are in `inst`".
-2. Migrate the remaining `transport`-shaped assertions in the network tests to `inst`-shaped ones.
+2. ~~Migrate the remaining `transport`-shaped assertions in the network tests to `inst`-shaped ones.~~ Done 2026-10-24
+   (below).
 3. ~~Delete the legacy `send_recv` path in `asTransport` once Phase B has migrated every client.~~ Done 2026-10-24
    (Phase B's `send_recv` migration).
+
+> **Rulings, 2026-10-24 (Marko), and status — TRANSPORT IS GONE.**
+> 1. **Transport is pointless.** Marko: "transport was the means by which obj messages were sent to the server — the
+>    field that all clients had to have. now, we have inst => which allows finer grained capability specification."
+>    Removed: `peer::T.transport` (predicate and docs), its writes in `Network.index`/`accept` (a peer is minted when
+>    its client — an inbound session, for accept — declares an `inst`), `Network.transportOf`, `Helper.asTransport`,
+>    and the read/write/submit ladders' last rung (the client's own `from`/`to`, then its `eval`, else `noobj` and the
+>    access stays local). `mcp_client.transport` is a different word — MCP's wire kind — and stays.
+> 2. **The roster is knowledge, never reach.** A row is `<key> => uri{+}` — scheme+authority (a route where the dial
+>    needs one) — for a declared machine as for a discovered one; reaching a machine is dialing it. `network::T`'s
+>    `machine` value is `uri{+}`. `PeerSpawn` declares its node's dial address; `PeerCluster.connect()` writes
+>    addresses, and `PeerCluster.dial()` also dials each peer with a `ws_client`.
+> 3. **Every client and server answers `status`** (Marko: "client.status() and server.status() should exist";
+>    "ws_client::T and ws_server::T and http_server::T and http_client::T and mcp_server::T and mcp_client::T should
+>    all have status instructions"; the shape was left to the implementation). A **bool**, true while live, DERIVED ON
+>    READ and never stored — the convention `discovery::T` set and `mcp_client` kept — installed by the constructor as
+>    an auto inst (`Network.Helper.statusOf(live)`) and read by `Network.Helper.status(obj)` (a `Link` with no field
+>    answers `connected()`; anything else that has not vouched for itself is not live):
+>    - `ws_client` (and a server-side session): the socket is open;
+>    - `http_client`: a bounded HEAD to its host answers (any response — a 404 is a live server);
+>    - loop `id_client`: always;
+>    - `mcp_client`: its health check (unchanged, now through `statusOf`);
+>    - `mcp_server`: its own dispatch answers a json-rpc ping — the field is installed but NOT declared in
+>      `mcp_server::T`'s predicate, because its refinements are matched by predicate equality;
+>    - `Listener` — the protocol-agnostic server half `ws_server`/`http_server` extend: not closed.
+>    `Network.Helper.online(peer)` is its client's status; `Places.serves` checks `inst` before liveness (a status may
+>    be a round trip); the status report is `[authority, status=>[kind=>up|down|known, time]]`, and the `1+2` probe
+>    round trip is gone with the transport it needed.
+> 4. **A read never dials.** The http(s) "auto-connect" (a read of an undialed address constructed an `http_client`
+>    peer) is removed. Marko's rule stands: *connect on construction, disconnect on destruction* — and addressing an
+>    authority is neither (`network::T`: "membership is declared, never emergent"). An undialed http address falls
+>    through to memory, where a mounted http space answers.
+>
+> Proven by `ClientServerStatusTest` (a listener's status flips on close, an mcp server's ping, the field read as its
+> bool, the reader's rules), `NetworkConnectTest` (no transport on a peer, a client without `inst` is no peer, the loop
+> client live, a read that does not dial, the http client's status through a stopped server), `NetworkWsDialTest`
+> (a hung-up ws client reads not live), `httpsDialTest`, `NetworkIsolationScriptTest` (`[DIAL_SILENT]` → `down`,
+> `[DECLARE]` → `known`), `ShardTargetSelectionTest` and the forked-peer suites.
 
 ---
 

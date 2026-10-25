@@ -54,7 +54,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * THE CROSS-HOST TWIN. When one machine dials another, the dialed machine's listener co-mounts the inbound socket as
  * a {@code peer::T} ({@code Network.accept}) — keyed by the dialer's ephemeral source port, with no {@code host}, and
- * with the server session's reply channel as its transport. The far end of that socket is a CLIENT, and a plain
+ * with the server session as its client (its inst, over the session's reply channel). The far end of that socket is
+ * a CLIENT, and a plain
  * {@code ws_client} only prints what a server sends it, so a shard shipped down the twin never comes back: the round
  * trip waits out its deadline and the fail poisons the reduction ({@code unable to convert mfail to int::T}). This is
  * the cross-host sibling of {@link SelfLoopPeerTest} — a loopback twin is declined at accept, a cross-host one cannot
@@ -132,11 +133,13 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
      */
     @Test
     void testTheTwinIsNotAShardTarget() {
-        // indexed as a ws_client constructor indexes itself: the host is the claim, and the client serves eval and to —
-        // a shard target must be online AND serve what its slave ships through and needs applied (Places.serves)
+        // indexed as a ws_client constructor indexes itself: the host is the claim, the client serves eval and to, and
+        // its status says it is live — a shard target must be online AND serve what its slave ships through and needs
+        // applied (Places.serves)
         Machine.current().network().index(rec(
                 uri(HOST), uri(DIALED),
-                uri(INST), silent(DIALED)));
+                uri(INST), silent(DIALED),
+                uri(STATUS), Network.Helper.statusOf(() -> true)));
         // routing is decided at compile time, so neither reach is ever asked
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,32,4,5,999,6}.plus(1).sum()")).asCode();

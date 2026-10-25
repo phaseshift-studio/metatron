@@ -262,6 +262,10 @@ The keys are instruction tids, the values are typed insts, and the set is whatev
 > **Resolve `instr(<authority>)` into that peer's `inst` map and apply it; fall back to the local/imported definition
 > when the peer does not override it.**
 
+> **Done 2026-10-24.** `transportOf` and `asTransport` are deleted and `peer::T` carries no `transport`: read, write
+> and submit dispatch through the client's own `from`/`to`/`eval`, else stay local; every client and server answers a
+> derived `status`; a read never dials ([`peer_instset_plan.md`](peer_instset_plan.md) §5).
+
 Two peers can both override `from`, and they must not collide — so resolution is `(instruction name, authority in the
 argument)`, the natural generalization of "the peer map is keyed by authority." The lowering rules supply everything the
 peer did not override directly:

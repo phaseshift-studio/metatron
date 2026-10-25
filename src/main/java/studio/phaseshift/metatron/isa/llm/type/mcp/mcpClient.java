@@ -52,9 +52,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -94,14 +91,15 @@ public class mcpClient extends MRec implements AutoCloseable {
                 .autoHealthCheck(false)
                 .cacheToolList(true)
                 .build();
-        this.jvm().put(uri(STATUS), auto_(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(), (lhs, inst) -> {
+        // THE STATUS — the mcp server's own health check, asked each time the field is read
+        this.jvm().put(uri(STATUS), studio.phaseshift.metatron.isa.mach.type.Network.Helper.statusOf(() -> {
             try {
                 this.client.checkHealth();
-                return BOOL_TRUE;
+                return true;
             } catch (final Exception e) {
-                return BOOL_FALSE;
+                return false;
             }
-        })));
+        }));
         final Rec tools = rec();
         // THE MINI-INSTRUCTION SET — one override per tool, keyed by the tool's instruction tid. This is the
         // capability: this client overrides each tool's instruction with the tool-call body, so Network.overrideOf
