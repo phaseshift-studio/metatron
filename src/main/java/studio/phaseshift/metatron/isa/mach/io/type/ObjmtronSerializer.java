@@ -520,12 +520,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (type.hasPredicate()) {
             if (type.isIsaPredicate()) {
                 sb.append("[?");
-                final StringBuilder temp = new StringBuilder();
                 // renderInstArg, not renderValue: it carries the depth so a nested type's predicate
                 // rec indents one level deeper than its parent (the same hook generateInst already
-                // uses for inst arguments)
-                this.renderInstArg(temp, depth, type.isPredicateObj());
-                sb.append(temp);
+                // uses for inst arguments).  Rendered into THIS buffer, not a fresh one, so the
+                // predicate's entries measure the column they actually sit at and line up under
+                // their first entry instead of breaking against column zero.
+                this.renderInstArg(sb, depth, type.isPredicateObj());
                 sb.append("]");
             } else {
                 sb.append("[").append(type.predicate()).append("]");

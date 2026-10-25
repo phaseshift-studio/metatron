@@ -69,12 +69,16 @@ public final class ReaderSetup {
 
     /**
      * The console's terminal.  What ctrl-c does is a console concern (which
-     * machine to interrupt), so the interrupt action is handed in.
+     * machine to interrupt), so the interrupt action is handed in — and so is
+     * the resize action, because which screen and widgets to redraw after a
+     * terminal resize is a console concern too.
      */
-    public static Terminal buildTerminal(final Runnable interrupt) throws IOException {
+    public static Terminal buildTerminal(final Runnable interrupt, final Runnable resize) throws IOException {
         return TerminalBuilder.builder().signalHandler(signal -> {
             if (signal == Terminal.Signal.INT) {
                 interrupt.run();
+            } else if (signal == Terminal.Signal.WINCH) {
+                resize.run();
             }
         }).encoding(StandardCharsets.UTF_8).system(true).build();
     }
