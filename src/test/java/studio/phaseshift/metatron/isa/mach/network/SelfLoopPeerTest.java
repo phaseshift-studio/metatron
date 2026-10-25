@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -29,7 +30,7 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -42,7 +43,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -59,13 +60,11 @@ public class SelfLoopPeerTest extends AbstractMetatronTest {
     void testSelfLoopDialMintsOnePeer() {
         InstSet.importInstSet(WEB_ISA_TID);
         final int port = generatePort();
-        wsSpace space = null;
+        Listener space = null;
         try {
-            space = wsSpace.of(mutableMap(
-                            uri(PATTERN), uri("ws://#"),
+            space = wsServer.of(rec(mutableMap(
                             uri(HOST), uri("ws://localhost:" + port),
-                            uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))),
-                    f("/sys/space/ws/selfloop"));
+                            uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString())))));
             CommonUtil.sleepThread(500);
 
             // the idiomatic self-loop dial (ws_client::[host=><ws://localhost:<port>/mtron>]): the constructor
@@ -86,7 +85,6 @@ public class SelfLoopPeerTest extends AbstractMetatronTest {
         } finally {
             if (null != space) {
                 Machine.current().network().disconnect(f("ws://localhost:" + port));
-                Machine.current().memory().removeSpace(space.vid());
                 space.close();
             }
         }

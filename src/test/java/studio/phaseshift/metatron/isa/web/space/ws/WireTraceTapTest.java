@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -45,7 +46,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -65,13 +66,11 @@ public class WireTraceTapTest extends AbstractMetatronTest {
     void shouldRecordARealRoundTripInItsPeerLane() {
         InstSet.importInstSet(WEB_ISA_TID);
         final int port = generatePort();
-        wsSpace space = null;
+        Listener space = null;
         try {
-            space = wsSpace.of(mutableMap(
-                            uri(PATTERN), uri("ws://#"),
+            space = wsServer.of(rec(mutableMap(
                             uri(HOST), uri("ws://localhost:" + port),
-                            uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))),
-                    f("/sys/space/ws/tracetap"));
+                            uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString())))));
             CommonUtil.sleepThread(500);
             final WebSocketRec wsRec = new WebSocketRec(mutableMap(
                     uri(HOST), uri("ws://localhost:" + port + "/mtron"),
@@ -112,7 +111,6 @@ public class WireTraceTapTest extends AbstractMetatronTest {
         } finally {
             Machine.current().network().disconnect(f("ws://localhost:" + port));
             if (null != space) {
-                Machine.current().memory().removeSpace(space.vid());
                 space.close();
             }
         }

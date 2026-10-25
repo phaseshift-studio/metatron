@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.print_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 
 /**
  * The ws protocol client — and a {@link Network.Link}: the network supervises it for as long as it is indexed, so a

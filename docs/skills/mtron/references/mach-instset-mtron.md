@@ -391,8 +391,8 @@ its instset:
    ended — and a sibling never sees them.
 
 **Who a machine is: what it listens on.** A machine's own authorities — what mDNS announces for it and what the roster
-files under its name — are exactly its **listening** surfaces: a space that binds a server socket (`wsspace`,
-`httpspace`) says so, and nothing else counts. A backend the machine *dials* — a `tblespace`, `mqttspace`, `grphspace`
+files under its name — are exactly its **listening** surfaces: a server that binds a socket says so — a `ws_server`
+(its network `listener` entry) or a listening space (`httpspace`) — and nothing else counts. A backend the machine *dials* — a `tblespace`, `mqttspace`, `grphspace`
 or `vecspace` host — is reach, never identity, so its host, a `?user=…&password=…` login included, never leaves the
 machine in an announcement, a roster key or a TXT route; an address that carries userinfo is refused outright rather
 than stripped. There is no "is this mine" predicate either: the owner of a connection is always the machine it is

@@ -57,7 +57,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public WebSocketRec(final Map<Obj, Obj> map, final fURI vid) {
-        this(map, wsSpace.WS_WEBSOCKET_TID, vid);
+        this(map, wsServer.WS_WEBSOCKET_TID, vid);
     }
 
     public WebSocketRec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {

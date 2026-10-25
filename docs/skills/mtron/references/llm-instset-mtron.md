@@ -76,9 +76,9 @@ per server, `mcp_mtron` for the metatron-native tools, `mcp_message` for the led
 just defined:
 
 ```mtron
-[-- a carrier is a space; a route binds a server to it. `else` makes a mount idempotent --]
+[-- a carrier is a server (httpspace, ws_server); a route binds an mcp server to it. `else` makes a mount idempotent --]
 */sys/space/web/http.else(httpspace::[pattern=> http://#, host => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*</sys/space/mcp/basic_server>, / => /usr]]@/sys/space/web/http)
-*/sys/space/web/ws.else(wsspace::[pattern=> ws:#, host => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]]@/sys/space/web/ws)
+*</network/listener/ws/localhost/8555>.else(ws_server::[host => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]])
 ```
 
 ## types

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -35,6 +36,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 
 /*
@@ -53,28 +55,23 @@ public class mtron_wsHandlerTest extends AbstractWebSocketServerTest {
     public static class mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerIntegrationTest {
 
         @Override
-        protected wsSpace createWSSpace() {
-            return wsSpace.of(rec(
+        protected Listener createWSServer() {
+            return wsServer.of(rec(
                     uri(NAME), uri("mtron-test"),
                     uri(HOST), uri("ws://localhost:" + generatePort()),
-                    uri(PATTERN), uri("ws://#"),
-                    uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
-            ).jvm(), f("/sys/space/ws/mtron-test"));
+                    uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
         }
 
         /**
-         * an open session is addressable under the space's authority: the space claims the address and serves it from
-         * its session cache, which is reached through the space and never registered by address itself
+         * a session is held by its socket, not an address: it answers over the wire, and nothing under the server's
+         * authority reads it back (a wsspace cached its sessions at ws://host:port/...)
          */
         @Test
-        public void testSessionIsAddressableThroughTheSpace() throws Exception {
+        public void testASessionIsNoAddress() throws Exception {
             this.connectToServer(this.primaryRoutePath());
             // an answer proves the server has opened the session: the client's open can lead the server's
             assertNotNull(this.sendAndReceive("1+2"), "the session should answer");
-            final fURI authority = f(WS + "://" + this.wsHost + ":" + this.wsPort + "/#");
-            assertSame(this.space, Machine.current().memory().getSpaceFor(authority), "the space claims its sessions' addresses");
-            assertTrue(this.space.read(authority).stream().anyMatch(WebSocketRec.class::isInstance),
-                    "the open session should be readable through the space");
+            checkEquality(LOG, Machine.read(f(WS + "://" + this.wsHost + ":" + this.wsPort + "/#")), noobj(), true);
         }
     }
 }

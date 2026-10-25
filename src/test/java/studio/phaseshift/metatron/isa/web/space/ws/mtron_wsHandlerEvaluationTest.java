@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.parallel.Execution;
@@ -56,7 +57,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -79,7 +80,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
 
     private static PeerCluster cluster;
-    private static wsSpace local;
+    private static Listener local;
     private static int localPort;
 
     @BeforeAll
@@ -89,18 +90,16 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
         // an in-JVM mtron_ws endpoint, for the compiler only this JVM can install
         InstSet.importInstSet(WEB_ISA_TID);
         localPort = generatePort();
-        local = wsSpace.of(rec(
+        local = wsServer.of(rec(
                 uri(NAME), uri("evaluation-test"),
                 uri(HOST), uri("ws://localhost:" + localPort),
-                uri(PATTERN), uri("ws://#"),
                 uri(ROUTE), rec(uri(PeerCluster.MTRON_ROUTE), uri(WS_MTRON_HANDLER_TID.toString()))
-        ).jvm(), f("/sys/space/ws/evaluation-test"));
+        ));
     }
 
     @AfterAll
     static void stopEndpoints() {
         if (null != local) {
-            Machine.current().memory().removeSpace(local.vid());
             local.close();
         }
         if (null != cluster)

@@ -23,7 +23,8 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
@@ -35,22 +36,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
- * Abstract base for integration-testing WSServer implementations against a
- * real wsSpace and live WebSocket connection.
+ * Abstract base for integration-testing websocket handlers against a real
+ * ws_server and a live WebSocket connection.
  * <p>
  * Subclasses implement exactly one method:
  * <pre>
- *   protected wsSpace createWSSpace();
+ *   protected Listener createWSServer();
  * </pre>
- * Everything — host, port, routes, vid — is derived from the returned space:
+ * Everything — host, port, routes — is derived from the returned server:
  * <ul>
- *   <li>{@code space.at(HOST).uriValue()} → host and port</li>
- *   <li>{@code space.at(ROUTE)} → route table (path → type TID)</li>
+ *   <li>{@code server.authority()} → host and port</li>
+ *   <li>{@link #routes()} → this machine's route table on the socket (path → type TID)</li>
  * </ul>
  * The first entry in the route table is used as the primary connection path
  * for the base-class tests.
@@ -58,7 +60,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMetatronTest {
 
-    protected wsSpace space;
+    protected Listener server;
     protected String wsHost;
     protected int wsPort;
     protected HttpClient httpClient;
@@ -69,22 +71,30 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     // ========================================
 
     /**
-     * Create and return the fully configured, started wsSpace under test.
-     * The space must already be bound to its host/port when returned.
+     * Create and return the fully configured, serving ws_server under test ({@code wsServer.of(...)}).
+     * The server is bound to its host/port when returned.
      * Use {@link #generatePort()} inside this method to pick a free port.
      */
-    protected abstract wsSpace createWSSpace();
+    protected abstract Listener createWSServer();
 
     // ========================================
     // Derived helpers — no overrides needed
     // ========================================
 
     /**
+     * This machine's routes on the server's socket, as its listener entry keeps them.
+     */
+    protected Obj routes() {
+        final Obj entry = Machine.current().network().listenerAt(Network.Helper.keyOf(this.server.authority()));
+        return entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
+    }
+
+    /**
      * The primary WebSocket connection path for this test, derived from the
-     * first entry in {@code space.at(ROUTE)}.
+     * first entry in {@link #routes()}.
      */
     protected String primaryRoutePath() {
-        final Obj routes = space.at(ROUTE);
+        final Obj routes = this.routes();
         if (routes.isNoObj()) return "/";
         return routes.asRec().elements()
                 .map(r -> r.first().uriValue().toString())
@@ -96,23 +106,19 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     // Lifecycle
     // ========================================
     @BeforeAll
-    public void setupWsSpace() {
+    public void setupWsServer() {
         InstSet.importInstSet(WEB_ISA_TID);
-        this.space = createWSSpace();
-        assertNotNull(this.space, "wsSpace should be created");
-        assertTrue(this.space.at(HOST).uriValue().test(this.space.pattern()), "the space host should match the space pattern");
+        this.server = createWSServer();
+        assertNotNull(this.server, "the ws_server should be created");
 
-        // Derive host and port from the space
-        this.wsHost = this.space.at(HOST).uriValue().host();
-        this.wsPort = this.space.at(HOST).uriValue().port();
+        // Derive host and port from the server's socket
+        this.wsHost = this.server.authority().host();
+        this.wsPort = this.server.authority().port();
 
-        // Give the server a moment to start
-        CommonUtil.sleepThread(500);
+        // a constructed ws_server is already listening (its construction awaits the bind)
 
-        // InstSet.importInstSet(WEB_ISA_TID) above already registers all web types
-        // (WS_MCP_HANDLER_TYPE at WS_MCP_SERVER_TID, etc.) in the Router.
-        // createServer() reads from the TID directly via routeFromSpace(), so no
-        // additional per-host URI registration is needed here.
+        // InstSet.importInstSet(WEB_ISA_TID) above registers every web type (WS_MCP_HANDLER_TYPE at
+        // WS_MCP_SERVER_TID, etc.), which is what a route's handler resolves against per connection.
 
         this.httpClient = HttpClient.newHttpClient();
     }
@@ -129,12 +135,12 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     }
 
     @AfterAll
-    public void teardownWsSpace() {
-        if (this.space != null) {
-            Machine.current().memory().removeSpace(this.space.vid());
+    public void teardownWsServer() {
+        if (this.server != null) {
+            // the inverse of the construction: this machine stops serving, and the socket it opened is released
+            Machine.current().network().unlisten(this.server.authority());
             Machine.current().memory().removeSpace(WEB_ISA_TID);
-            this.space.close();
-            this.space = null;
+            this.server = null;
         }
         if (this.httpClient != null) {
             this.httpClient.close();
@@ -222,8 +228,8 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
 
     @Test
     public void testServerTypeIsRegisteredInRouter() {
-        final Obj routes = space.at(ROUTE);
-        assertFalse(routes.isNoObj(), "wsSpace should have a route table");
+        final Obj routes = this.routes();
+        assertFalse(routes.isNoObj(), "the ws_server should keep a route table");
         routes.asRec().elements().forEach(r -> {
             final Obj type = Machine.current().memory().read(r.second().uriValue());
             assertFalse(type.isNoObj(),

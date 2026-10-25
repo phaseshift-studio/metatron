@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -47,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 
 /**
  * NETWORK CONNECT OVER A REAL WIRE — the loop test's equality carried one transport out: the dial
@@ -61,13 +62,11 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
 
     @Override
-    protected wsSpace createWSSpace() {
-        return wsSpace.of(rec(
+    protected Listener createWSServer() {
+        return wsServer.of(rec(
                 uri(NAME), uri("network-dial-test"),
                 uri(HOST), uri("ws://localhost:" + generatePort()),
-                uri(PATTERN), uri("ws://#"),
-                uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
-        ).jvm(), f("/sys/space/ws/network-dial-test"));
+                uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
     }
 
     private studio.phaseshift.metatron.furi.fURI dialURI() {

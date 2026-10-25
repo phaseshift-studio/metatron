@@ -115,7 +115,7 @@ public final class CommonUtil {
      * catastrophic shape — the backtracking java regex engine then
      * recurses without bound against long text, and the resulting
      * StackOverflowError is an Error, so it blows through Exception
-     * handling and takes the worker thread (and, before the wsSpace
+     * handling and takes the worker thread (and, before the ws server
      * and mcpServer Throwable nets, the whole server) down.
      */
     private static final Pattern NESTED_QUANTIFIER = Pattern.compile("\\([^()]*[+*?]\\)[+*]{1,2}");

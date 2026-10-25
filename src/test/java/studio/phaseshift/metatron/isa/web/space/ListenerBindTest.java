@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.space;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
@@ -31,6 +32,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.IOException;
@@ -45,12 +47,13 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
- * A listener (a space that binds a server socket) either holds its port or fails its construction.
+ * A listener (a server that binds a socket) either holds its port or fails its construction.
  * <p>
  * Java-WebSocket binds on its own selector thread and reports a lost bind only to {@code onError(null, ex)}, so a
- * {@code wsspace} on a port already in use used to construct "successfully": the space mounted at its vid while
- * nothing listened, and the failure surfaced later, as a dial's unrelated {@code socket ... is not connected}.
- * {@code httpspace} binds synchronously in {@code HttpServer.create}; its rows pin that it stays loud.
+ * websocket server on a port already in use once constructed "successfully" while nothing listened, and the failure
+ * surfaced later, as a dial's unrelated {@code socket ... is not connected}. A {@code ws_server} awaits its bind; its
+ * presence is the network's {@code listener} entry, so a failed construction leaves none. {@code httpspace}, still a
+ * listening space, binds synchronously in {@code HttpServer.create}; its rows pin that it stays loud.
  * <p>
  * {@code {{port}}} is the row's port: held by a plain socket in the occupied rows, a {@link #generatePort()} pick in
  * the free ones. Whether a space is mounted is asked of the memory, not of a read: {@code [..]@vid} anchors the config
@@ -63,7 +66,7 @@ public class ListenerBindTest extends AbstractMetatronTest {
     /**
      * where the rows mount their listeners, unmounted after every row so no socket outlives it
      */
-    private static final List<String> VIDS = List.of("/sys/space/test/listener_ws", "/sys/space/test/listener_http");
+    private static final List<String> VIDS = List.of("/sys/space/test/listener_http");
 
     @BeforeAll
     public static void importWeb() {
@@ -84,7 +87,6 @@ public class ListenerBindTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "wsspace::[pattern=><ws://127.0.0.1:{{port}}/#>,host=><ws://127.0.0.1:{{port}}>]@/sys/space/test/listener_ws         % /sys/space/test/listener_ws",
             "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http",
     }, delimiter = '%')
     public void testOccupiedPortFailsConstruction(final String construction, final String vid) throws IOException {
@@ -99,7 +101,6 @@ public class ListenerBindTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "wsspace::[pattern=><ws://127.0.0.1:{{port}}/#>,host=><ws://127.0.0.1:{{port}}>]@/sys/space/test/listener_ws         % /sys/space/test/listener_ws   % */sys/space/test/listener_ws>>host   % <ws://127.0.0.1:{{port}}>",
             "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http % */sys/space/test/listener_http>>host % <http://127.0.0.1:{{port}}>",
     }, delimiter = '%')
     public void testFreePortListens(final String construction, final String vid, final String fetch, final String expected) throws IOException {
@@ -111,12 +112,40 @@ public class ListenerBindTest extends AbstractMetatronTest {
     }
 
     /**
+     * a ws_server on a port already in use fails its construction, and leaves no presence behind
+     */
+    @Test
+    public void testOccupiedPortFailsTheWsServer() throws IOException {
+        try (final ServerSocket occupant = new ServerSocket(0, 50, InetAddress.getLoopbackAddress())) {
+            final int port = occupant.getLocalPort();
+            checkCodeEvaluate(LOG, "ws_server::[host=><ws://127.0.0.1:" + port + ">]", "noobj", "<ERROR>");
+            checkEquality(LOG, Machine.current().network().listenerAt(Network.Helper.keyOf(f("ws://127.0.0.1:" + port))), noobj(), true);
+        }
+    }
+
+    /**
+     * a free port is listened on the moment the ws_server's construction returns, and the socket is this machine's
+     * presence: its listener entry
+     */
+    @Test
+    public void testFreePortListensTheWsServer() throws IOException {
+        final int port = generatePort();
+        try {
+            checkCodeEvaluate(LOG, "ws_server::[host=><ws://127.0.0.1:" + port + ">]",
+                    "*<~/network/listener/ws/localhost/" + port + "/authority>", "<ws://127.0.0.1:" + port + ">");
+            // no settle: a dial right away must find the socket bound
+            new Socket(InetAddress.getLoopbackAddress(), port).close();
+        } finally {
+            Machine.current().network().unlisten(f("ws://127.0.0.1:" + port));
+        }
+    }
+
+    /**
      * a listener's session cache is its own — read and written through the listener, behind its q-procs — and never
      * claims an address: while the listener listens, it alone claims its pattern
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "wsspace::[pattern=><ws://127.0.0.1:{{port}}/#>,host=><ws://127.0.0.1:{{port}}>]@/sys/space/test/listener_ws         % /sys/space/test/listener_ws   % ws://127.0.0.1:{{port}}/#",
             "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http % http://127.0.0.1:{{port}}/#",
     }, delimiter = '%')
     public void testSessionCacheClaimsNoAddress(final String construction, final String vid, final String pattern) {
@@ -131,7 +160,6 @@ public class ListenerBindTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "wsspace::[pattern=><ws://127.0.0.1:{{port}}/#>,host=><ws://127.0.0.1:{{port}}>]@/sys/space/test/listener_ws         % /sys/space/test/listener_ws   % ws://127.0.0.1:{{port}}/#",
             "httpspace::[pattern=><http://127.0.0.1:{{port}}/#>,host=><http://127.0.0.1:{{port}}>]@/sys/space/test/listener_http % /sys/space/test/listener_http % http://127.0.0.1:{{port}}/#",
     }, delimiter = '%')
     public void testClosedListenerClaimsNothing(final String construction, final String vid, final String pattern) {

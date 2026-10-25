@@ -31,7 +31,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder;
 import studio.phaseshift.metatron.isa.web.type.mcpServer;
@@ -68,7 +69,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 /**
  * Integration tests for the transport-agnostic {@code mcp_mtron} server,
  * exercised over both transports — Streamable HTTP (via {@link httpSpace}) and
- * WebSocket (via {@link wsSpace}).
+ * WebSocket (via a {@link wsServer}).
  * <p>
  * The direct-invocation (protocol-level) tests are inherited from
  * {@link AbstractMcpMtronHandlerTest}.  This class adds the type-level checks
@@ -84,7 +85,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     private String httpHost;
     private int httpPort;
 
-    private wsSpace wsSpace;
+    private Listener wsListener;
     private String wsHost;
     private int wsPort;
 
@@ -104,13 +105,11 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         ), f("/sys/space/http/mcp-mtron/test"));
     }
 
-    private wsSpace createWSSpace() {
+    private Listener createWSServer() {
         final fURI hostUri = f("ws://localhost:" + generatePort());
-        return wsSpace.of(rec(
+        return wsServer.of(rec(
                 uri(HOST), uri(hostUri.toString()),
-                uri(PATTERN), uri("ws://#"),
-                uri(ROUTE), rec(uri("/mcp-mtron"), uri(MCP_MTRON_SERVER_TID.toString()))
-        ).jvm(), f("/sys/space/ws/mcp-mtron/test"));
+                uri(ROUTE), rec(uri("/mcp-mtron"), uri(MCP_MTRON_SERVER_TID.toString()))));
     }
 
     @BeforeAll
@@ -121,11 +120,10 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         this.httpHost = this.httpSpace.at(HOST).uriValue().host();
         this.httpPort = this.httpSpace.at(HOST).uriValue().port();
 
-        this.wsSpace = createWSSpace();
-        assertNotNull(this.wsSpace, "wsSpace should be created");
-        assertTrue(this.wsSpace.at(HOST).uriValue().test(this.wsSpace.pattern()), "the space host should match the space pattern");
-        this.wsHost = this.wsSpace.at(HOST).uriValue().host();
-        this.wsPort = this.wsSpace.at(HOST).uriValue().port();
+        this.wsListener = createWSServer();
+        assertNotNull(this.wsListener, "the ws_server should be created");
+        this.wsHost = this.wsListener.authority().host();
+        this.wsPort = this.wsListener.authority().port();
 
         CommonUtil.sleepThread(100);
         this.httpClient = HttpClient.newHttpClient();
@@ -138,10 +136,9 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
             this.httpSpace.close();
             this.httpSpace = null;
         }
-        if (this.wsSpace != null) {
-            Machine.current().memory().removeSpace(this.wsSpace.vid());
-            this.wsSpace.close();
-            this.wsSpace = null;
+        if (this.wsListener != null) {
+            this.wsListener.close();
+            this.wsListener = null;
         }
         Machine.current().memory().removeSpace(WEB_ISA_TID);
         if (this.httpClient != null) {
@@ -446,7 +443,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     }
 
     // ========================================
-    // eval_mtron — full-stack corner cases (mcpClient → httpSpace + wsSpace)
+    // eval_mtron — full-stack corner cases (mcpClient → httpSpace + ws_server)
     // ========================================
 
     /**

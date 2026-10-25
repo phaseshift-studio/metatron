@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -37,30 +36,18 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * Unit characterization of {@code wsSpace#resolveRoute} — all four lanes, called directly rather than through a
+ * Unit characterization of {@link wsServer.RouteLane#resolve} — all four lanes, called directly rather than through a
  * connection, so the {@code NONE} lane (the {@code "websocket handler type required"} case) is covered too.
  * <p>
- * The routes are deliberately empty — this test exercises resolution only, and never opens a socket.
+ * Resolution needs no server: this test exercises the lanes only, and never opens a socket.
  */
 class wsRouteResolutionTest extends AbstractMetatronTest {
 
     private static final GraphittyLogger LOG = Graphitty.log(wsRouteResolutionTest.class);
-    private static wsSpace space;
 
     @BeforeAll
-    public static void bootEmptySpace() {
+    public static void importAll() {
         InstSet.importInstSet(f("#"));
-        space = wsSpace.of(mutableMap(
-                uri(PATTERN), uri(f("ws://#")),
-                uri(HOST), uri(f("ws://127.0.0.1:" + generatePort())),
-                uri(ROUTE), rec()),
-                f("/sys/space/test/wsRouteResolution"));
-    }
-
-    @AfterAll
-    public static void closeEmptySpace() {
-        if (null != space)
-            space.close();
     }
 
     @ParameterizedTest
@@ -72,7 +59,7 @@ class wsRouteResolutionTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testResolveRoute(final String value, final String expectedKind, final String desc) {
         final Obj input = ObjmtronSerializer.parse(value);
-        final wsSpace.RouteLane lane = space.resolveRoute(input);
+        final wsServer.RouteLane lane = wsServer.RouteLane.resolve(input, null);
         LOG.info("resolveRoute(%s) => %s", value, lane.kind());
         assertEquals(expectedKind, lane.kind().name(), desc);
     }
@@ -90,7 +77,7 @@ class wsRouteResolutionTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testResolveRouteAgainstConnection(final String value, final String requestUri, final String expectedKind,
                                           final String desc) {
-        final wsSpace.RouteLane lane = space.resolveRoute(ObjmtronSerializer.parse(value), f(requestUri));
+        final wsServer.RouteLane lane = wsServer.RouteLane.resolve(ObjmtronSerializer.parse(value), f(requestUri));
         LOG.info("resolveRoute(%s, %s) => %s [target=%s]", value, requestUri, lane.kind(), lane.target().toShortString());
         assertEquals(expectedKind, lane.kind().name(), desc);
     }

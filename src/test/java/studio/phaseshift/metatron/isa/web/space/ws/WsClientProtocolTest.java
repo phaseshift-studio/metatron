@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -51,14 +52,13 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @Execution(ExecutionMode.SAME_THREAD)
 public class WsClientProtocolTest extends AbstractMetatronTest {
 
-    private wsSpace space;
+    private Listener space;
     private int port;
 
     @AfterEach
     void tearDown() {
         if (null != this.space) {
             Machine.current().network().disconnect(f("ws://localhost:" + this.port));
-            Machine.current().memory().removeSpace(this.space.vid());
             this.space.close();
             this.space = null;
         }
@@ -70,11 +70,9 @@ public class WsClientProtocolTest extends AbstractMetatronTest {
     private Obj dial(final String clientExpr) {
         InstSet.importInstSet(WEB_ISA_TID);
         this.port = generatePort();
-        this.space = wsSpace.of(mutableMap(
-                        uri(PATTERN), uri("ws://#"),
+        this.space = wsServer.of(rec(mutableMap(
                         uri(HOST), uri("ws://localhost:" + this.port),
-                        uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))),
-                f("/sys/space/ws/protocol"));
+                        uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString())))));
         CommonUtil.sleepThread(500);
         return ObjmtronSerializer.parse(clientExpr.replace("{{port}}", String.valueOf(this.port))).apply();
     }

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -82,10 +83,9 @@ public abstract class AbstractWebSocketServerTest extends AbstractMetatronTest {
     @BeforeEach
     public void setupTestSpace() {
         InstSet.importInstSet(WEB_ISA_TID);
-        this.testSpace = wsSpace.of(mutableMap(
-                uri(PATTERN), uri(testSpacePattern()),
-                uri(HOST), uri("ws://localhost:" + generatePort()),
-                uri(ROUTE), rec()), f("/sys/space/test"));
+        // a store for the handlers under test (written at their vids, read back by serverType()) — it never needed a
+        // socket, only the space a wsspace used to be
+        this.testSpace = memSpace.of(testSpacePattern(), f("/sys/space/test"));
         this.server = createServer(createTestVid());
     }
 

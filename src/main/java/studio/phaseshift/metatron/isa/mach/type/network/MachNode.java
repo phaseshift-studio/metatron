@@ -22,13 +22,12 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * One peer mtron instance, in its own OS process — the production twin of the test harness's {@code PeerNode}.
@@ -73,12 +72,9 @@ public final class MachNode {
         // the namespace this node owns: a store that answers every address under the pushed path
         memSpace.of(rec(uri(PATTERN), uri(root + "/#")), f("/sys/space/mach/store"));
         trace("node: store mounted at %s/#", root);
-        // the ws server that makes this node addressable from the parent's roster
-        wsSpace.of(mutableMap(
-                        uri(PATTERN), uri("ws://#"),
-                        uri(HOST), uri("ws://0.0.0.0:" + port),
-                        uri(ROUTE), rec(uri(MTRON_ROUTE), uri(mtron_wsHandler.WS_MTRON_HANDLER_TID.toString()))),
-                f("/sys/space/mach/ws"));
+        // the ws server that makes this node addressable from the parent's roster: constructed, it is this node's
+        // presence (its network's listener), and the node's mtron route answers on it
+        wsServer.serve(f("ws://0.0.0.0:" + port), rec(uri(MTRON_ROUTE), uri(mtron_wsHandler.WS_MTRON_HANDLER_TID.toString())));
         trace("node: serving ws://0.0.0.0:%d%s", port, MTRON_ROUTE);
         System.out.println(READY + " " + port);
         System.out.flush();

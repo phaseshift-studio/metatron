@@ -11,12 +11,13 @@ description: |
 # web instruction set (`/m/web`)
 
 `/m/web` is the instruction set that carries the web *transport protocol* types, *MIME*
-types, and *endpoint* types that provide the server logic. The two spaces of `/m/web` are
-`httpspace` and `wsspace` — each carrying a `route::T` rec for routing connections to mounted services.
+types, and *endpoint* types that provide the server logic. The two servers of `/m/web` are
+`httpspace` (a space) and `ws_server` (a listener: constructed, it is the machine's presence at
+`~/network/listener/<key>`) — each carrying a `route` rec for routing connections to mounted services.
 
 ```mtron_pre
 [HIDDEN] /sys/space/web/http -> noobj
-[HIDDEN] /sys/space/web/ws   -> noobj
+[HIDDEN] </network/listener/ws/localhost/8555> -> noobj
 dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
 [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
@@ -27,9 +28,8 @@ httpspace::[pattern=> http://#,                    /
                        /usr    => /usr]]@/sys/space/web/http
 [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
-wsspace::[pattern=> ws:#,                          /
-          host   => ws://localhost:8555,           /
-          route  => [/basic   => !*</sys/space/mcp/web_basic>]]@/sys/space/web/ws
+ws_server::[host   => ws://localhost:8555,         /
+            route  => [/basic   => !*</sys/space/mcp/web_basic>]]
 ```
 
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
@@ -295,9 +295,10 @@ Three mtron mechanics the pattern leans on (each has bitten before):
   captured as *literal source* unless you wrap the rec in `-<`; the split `... .inst(payload=>_){ *payload>>>send(...)}
   ` then hands the evaluated rec to the sender, working around the evaluator's nested-call depth limit.
 * **subscriptions are in-memory.** A `?subq` registration lives only for the life of the VM — re-enable it at boot and
-  re-inject it after a crash (`/sys/space/web/ws>>=[q=>+[subq::[=>]]]` then re-register the `sub::`), no restart.
+  re-inject it into the space that holds it after a crash (`<space vid> >>= [q=>+[subq::[=>]]]`, then re-register the
+  `sub::`), no restart.
 
-The `?subq` framework is declared on the space the same way as any other q-proc — `wsspace::[q => [subq::[=>]], ...]`
+The `?subq` framework is declared on a space the same way as any other q-proc — `memspace::[pattern => /usr/#, q => [subq::[=>]]]`
 adds pub/sub semantics to that space. A server may push any of the standard notification methods; every one of them
 says "re-read what you already know":
 

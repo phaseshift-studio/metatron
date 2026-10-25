@@ -53,8 +53,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -75,7 +75,7 @@ public final class mcpMetatronBuilder {
     /**
      * The single transport-agnostic MCP server type exposing the metatron-native
      * tools ({@code eval_mtron}, {@code list_space}, {@code router_info}, …).
-     * Both {@code httpSpace} and {@code wsSpace} wrap this {@link mcpServer} in
+     * Both {@code httpSpace} and {@code ws_server} wrap this {@link mcpServer} in
      * their respective transport handler ({@code mcp_httpHandler} /
      * {@code mcp_wsHandler}).
      */

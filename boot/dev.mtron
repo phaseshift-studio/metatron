@@ -58,12 +58,10 @@ httpspace::[host     => !*boot/args/web/http/host,
                          /mcp       => mcp_mtron,
                          /docs      => <metatronfs:docs/website>,
                          /console   => <metatronfs:src/main/resources/web/console>]]@/sys/space/web/http;
-wsspace::[host      => !*boot/args/web/ws/host,
-          pattern   => <ws://#>,
-          q         => [docq::[=>],subq::[=>]],
-          route     => [/emulator => mcp_emulator_ws, 
+ws_server::[host    => !*boot/args/web/ws/host,
+            route   => [/emulator => mcp_emulator_ws,
                         /mtron    => mtron_ws,
-                        /mcp      => mcp_mtron]]@/sys/space/web/ws;
+                        /mcp      => mcp_mtron]];
 mqttspace::[pattern  => <z2m:#>,
             host     => <mqtt://localhost:1883>,
             q        => [subq::[=>]],

@@ -687,7 +687,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                         .map(Helper::authorityOf)
                         .filter(Objects::nonNull)
                         .forEach(mine::add);
-            // the listening spaces (httpspace, wsspace), until they are retired
+            // the listening spaces (httpspace), until it is retired
             for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous())
                 memory.spaces().jvm().values().stream()
                         .filter(space -> space instanceof Space listener && listener.listens())

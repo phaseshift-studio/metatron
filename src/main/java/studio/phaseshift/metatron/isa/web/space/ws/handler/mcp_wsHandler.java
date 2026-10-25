@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * MCP (Model Context Protocol) server for wsSpace.
+ * MCP (Model Context Protocol) server over a websocket (a ws_server route).
  * Handles JSON-RPC based communication for AI/LLM tool integration.
  * <p>
  * The MCP server type exposes three categories of capabilities:
@@ -70,7 +70,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *     ...]
  * ]]@mymcp
  * </pre>
- * Then register it in the wsSpace route table and connect via WebSocket.
+ * Then route it in a ws_server's table and connect via WebSocket.
  */
 public class mcp_wsHandler extends WebSocketRec {
 
