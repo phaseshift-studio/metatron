@@ -240,6 +240,11 @@ public final class Tokens {
     public static final String ORIGIN = "origin";
     public static final String PEER = "peer";
     public static final String ROSTER = "roster";
+    /**
+     * a socket a machine answers on — the network's presence, beside its {@link #ROSTER} (knowledge) and
+     * {@link #PEER} (reach)
+     */
+    public static final String LISTENER = "listener";
     public static final String NETWORK = "network";
     public static final String SUPERVISOR = "supervisor";
     public static final String CACHE = "cache";

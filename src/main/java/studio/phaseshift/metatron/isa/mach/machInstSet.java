@@ -120,6 +120,8 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI PEER_TID = MACH_ISA_TID.extend("peer");
 
     public static Type PEER_TYPE;
+    public static final fURI LISTENER_TID = MACH_ISA_TID.extend(LISTENER);
+    public static Type LISTENER_TYPE;
     public static final fURI NETWORK_SUPERVISOR_TID = MACH_ISA_TID.extend("network_supervisor");
     public static Type NETWORK_SUPERVISOR_TYPE;
     public static final fURI ID_CLIENT_TID = MACH_ISA_TID.extend("id_client");
@@ -482,6 +484,34 @@ public class machInstSet extends AbstractInstSet {
                                 """,
                                 "peer::[authority=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>,handler=></m/web/ws/mtron_ws>,name=>'builder-2'] [-- a peer the current machine can ship to --]",
                                 "peer::[authority=><ws://192.168.1.42:8555>,name=>'builder-2'] [-- known, and not reachable from here --]"),
+                        // network — a machine's PRESENCE: the sockets it answers on. A port binds once per physical
+                        // machine, so a socket is opened by one machine and inherited by every machine below it; each
+                        // machine serving through it keeps its OWN routing table on it, in its own level.
+                        docWrap(LISTENER_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LISTENER_TID)
+                                        .isaPredicate(rec(
+                                                // THE KEY: the socket's service uri, scheme://host:port
+                                                uri(AUTHORITY), URI_TYPE,
+                                                // THIS machine's routes on the socket, in the map idiom: path => target.
+                                                // Absent rather than empty while the machine serves nothing through it.
+                                                uri(ROUTE).maybe().asUri(), rec(URI_TYPE, T(ALL)),
+                                                // the protocol SERVER holding the socket (a ws_server::T or kin, typed
+                                                // ALL because this instruction set sits below /m/web) -- the opener's
+                                                // entry and every sharer's hold the same one
+                                                uri(SERVER).maybe(), T(ALL)))
+                                        .create(), null, null,
+                                Map.of(uri(AUTHORITY), "the socket's service uri, scheme://host:port — the key: one socket per authority on a physical machine",
+                                        uri(ROUTE), "this machine's routing table on the socket, <path> => target; a connection is answered by the most specific route across every machine sharing the socket",
+                                        uri(SERVER), "the protocol server holding the socket — held so the owner's pop can release the port"),
+                                """
+                                a socket a machine answers on, and that machine's routes on it. The machine that opens
+                                a socket owns it, and its pop releases the port. Every machine below it inherits the
+                                socket and serves through it by keeping its own routing table here, which its own pop
+                                takes away. A connection is answered by the most specific route across every machine
+                                sharing the socket, and the peer it makes joins that machine's network.
+                                """,
+                                "listener::[authority=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]] [-- a machine's routes on its socket --]"),
                         NETWORK_SUPERVISOR_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(NETWORK_SUPERVISOR_TID)
@@ -576,6 +606,10 @@ public class machInstSet extends AbstractInstSet {
                                                         // this one table -- an inst to apply, or an address to match.
                                                         uri(MACHINE).maybe(), rec(URI_TYPE, T(ALL.some()))),
                                                 uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID)),
+                                                // PRESENCE, the third question: the sockets THIS machine serves
+                                                // through, at ~ like peer -- its own and the inherited ones it keeps
+                                                // routes on, so a pop takes exactly this machine's routes
+                                                uri(LISTENER).maybe().asUri(), rec(URI_TYPE, T(LISTENER_TID)),
                                                 uri(SUPERVISOR).maybe().asUri(), T(NETWORK_SUPERVISOR_TID),
                                                 uri(SOURCE).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
                                                 // the AUTO STATUS INST BasicNetwork installs at construction --
@@ -588,6 +622,7 @@ public class machInstSet extends AbstractInstSet {
                                 Map.of(uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
                                         uri(ROSTER).maybe(), "known machines, connectionless: a declared peer is <authority> => transport, a discovered machine is <host> => uri{+} (every address it answers at); transportOf reads both",
                                         uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
+                                        uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",
                                         uri(SOURCE).maybe(), "the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism",
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"),
                                 """
@@ -596,8 +631,9 @@ public class machInstSet extends AbstractInstSet {
                                 declared, never emergent — a uri must not be able to make itself a peer merely
                                 by being addressed — and it is accumulating, so a child machine unions its own
                                 level over its parent's. The authorities this machine answers to are derived
-                                from the host every mounted space declares, so identity has exactly one
-                                source and cannot drift.
+                                from its listeners — the sockets it opened and those it inherits, up to the root —
+                                and, until httpspace and wsspace are retired, from the host every listening space
+                                declares.
                                 """,
                                 "network::[name=>'local',roster=>[b=><ws://192.168.1.42:8555>],source=>[mdns=></m/web/mdns>]] [-- a network that knows a peer before dialing it --]",
                                 "network::[peer=>[<ws/localhost/39111/worker>=>[authority=><ws://localhost:39111>]]] [-- a machine whose reach is the one node it holds --]"),
