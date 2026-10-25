@@ -163,21 +163,22 @@ tid instead of re-deriving it.
 >    computed at run time still reaches the peer through the `Network.read`/`write` ladder.
 > 2. **law_shard keeps `to(<peer>)`; no derived overrides.** A `to()` that compiles to an `eval()` form is rejected.
 >    Instead `ws_client` declares `to` and `from` itself, beside `eval`, each on its native signature with a ws body:
->    `from(<uri>)` ships `from(</path>)`, `obj.to(<uri>)` ships `start(obj).to(</path>)`. `PlanInterpreter` is
->    unchanged, and its emitted `to(<ws://…>)` reaches the ws client's `to` — **but not yet at compile time**: the
->    `to` sits inside `select([…])`, and the compiler keeps a blocking instruction's code arguments raw
->    (`Inst.Helper.resolveArgs`), so the compiled listing holds it unresolved and it is resolved when `select`
->    applies it (verified with a compile probe: `select` has its f, its `to(<peer>)` projection `hasf=false`).
->    Getting the binding into the listing is the open choice below.
+>    `from(<uri>)` ships `from(</path>)`, `obj.to(<uri>)` ships `start(obj).to(</path>)`. law_shard's emitted
+>    `to(<ws://…>)` reaches the ws client's `to`. The `to` sits inside `select([…])`, and the compiler keeps a
+>    blocking instruction's code arguments raw (`Inst.Helper.resolveArgs`), so nothing after the rewrite would bind
+>    it — hence the next ruling.
+> 2a. **The compiled code has the bindings** (Marko, 2026-10-24). `PlanInterpreter.shard` binds each route at plan
+>    time: it resolves `to(<target>)` against the slave the route carries, so `atPeer` runs there and the emitted
+>    `select` holds the native `to` with the target peer's own body (`Network$AtPeer`) — the listing says what runs
+>    where, at every level of a tree (an interior peer binds its own leaves' routes when it re-plans). A route that
+>    does not resolve stays the bare `to(<target>)`, resolved at run time as before. The compiler's raw-args rule for
+>    blocking instructions is unchanged. **Future:** a "strip bindings" tool that keeps code compiled but detaches
+>    its bindings, so new ones can be attached (the same listing re-targeted).
 >
 > Proven by `NetworkConnectTest` (`testResolutionBindsAPeersToAtCompileTime`, `…FromAtCompileTime`,
-> `testResolutionLeavesALocalAddressNative`, `testACompileTimeBoundToStillPassesTheNetworksLayer`) and
-> `NetworkWsDialTest` (`testWsClientDeclaresEvalFromAndTo`, `testCompiledToBindsTheWsClientsTo`).
-> **Open:**
-> - **Binding law_shard's routes at compile time.** Either `PlanInterpreter.shard` emits each route already bound
->   (resolve `to(<target>)` against its slave, so `atPeer` runs at plan time and the emitted `select` holds the
->   peer's `to`), or the compiler resolves — binds without applying — the code inside blocking instructions'
->   arguments, which reaches every nested call but changes a deliberate compiler rule. Not ruled.
+> `testResolutionLeavesALocalAddressNative`, `testACompileTimeBoundToStillPassesTheNetworksLayer`),
+> `NetworkWsDialTest` (`testWsClientDeclaresEvalFromAndTo`, `testCompiledToBindsTheWsClientsTo`) and
+> `ShardTargetSelectionTest.testLawShardShipsOnlyToPeersThatServeTo` (the emitted route carries `Network$AtPeer`).
 >
 > 3. **Shard targets are online AND serve the route** (Marko: "pick by both — online and can to()"). The requirement
 >    is `plan::T` data, so every present and future distribution rule inherits it: each `where` placement carries

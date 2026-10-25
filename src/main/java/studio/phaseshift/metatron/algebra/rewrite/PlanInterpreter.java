@@ -245,8 +245,8 @@ public final class PlanInterpreter {
         //
         // A SLAVE SHIPS UNQUOTED. Nothing on this machine evaluates it: a multi-instruction chain is Code, never
         // an Inst, so neither the lst nor select's at() auto-resolves it; to(<peer>) takes it as its lhs, raw; and
-        // the transport ships Network.write's message (start(slave).to(<>)) without computing it here (see
-        // Network.Helper.asTransport). The peer's evaluation of that start(...) is the one that runs the slave,
+        // the target's own to -- bound into the route below -- ships it as start(slave).to(<>) without computing it
+        // here. The peer's evaluation of that start(...) is the one that runs the slave,
         // so what comes back is its value, 12@<tag>. A quote would now be peeled on the far side instead, and
         // whether the code it uncovers still runs is left to the peer's processor -- so there is none.
         //
@@ -266,7 +266,14 @@ public final class PlanInterpreter {
             slave.addInsts(withoutHops(insts.subList(1, cutIndex)));
             slave.addInst(withoutHops(reducer));
             summands.add(slave);
-            routes.add(to_(targets.get(s)).tryToInst());
+            // THE ROUTE IS BOUND HERE, at plan time (Marko, 2026-10-24: the compiled code has the bindings): resolved
+            // against the slave it will carry, so the emitted select holds the native to with the target peer's own
+            // body (Network.Helper.atPeer) — what runs where is in the listing, not decided when select applies it
+            // (select keeps its projections raw, so nothing later would bind it). A route that does not resolve stays
+            // the bare to(<target>), resolved at run time as before.
+            final Inst ship = to_(targets.get(s)).tryToInst().asInst();
+            final Inst bound = ship.resolve(slave);
+            routes.add(null != bound && bound.hasf() ? bound : ship);
         }
         final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
         return emitted;
