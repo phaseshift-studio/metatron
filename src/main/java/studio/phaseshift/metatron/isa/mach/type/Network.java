@@ -35,9 +35,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -315,7 +313,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * is a typed inst — the peer's implementation — or noobj when the peer does not override that instruction
      * (the caller then derives it, or falls through to the local definition).
      */
-    default Obj overrideOf(final fURI authority, final fURI instrTid) {
+    default Obj overrideOf(final fURI authority, final fURI instTID) {
         final Obj peer = this.peerOf(authority);
         if (!peer.isRec())
             return noobj();
@@ -326,7 +324,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         if (!inst.isRec())
             return noobj();
         return inst.asRec().elements()
-                .filter(kv -> kv.first().isUri() && kv.first().uriValue().equals(instrTid))
+                .filter(kv -> kv.first().isUri() && kv.first().uriValue().equals(instTID))
                 .map(Rel::second)
                 .findFirst().orElse(noobj());
     }

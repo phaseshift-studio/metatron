@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.parser;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Fluent;
 import studio.phaseshift.metatron.isa.m.mInstSet;
@@ -80,6 +81,21 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F addInsts(final List<Inst> insts) {
         this.codeValue().addAll(insts);
+        return (F) this;
+    }
+
+    public F dom(final fURI dom) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().dom(dom));
+        return (F) this;
+    }
+
+    public F rng(final fURI rng) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().rng(rng));
+        return (F) this;
+    }
+
+    public F lastC(final cInt c) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().c(c));
         return (F) this;
     }
 

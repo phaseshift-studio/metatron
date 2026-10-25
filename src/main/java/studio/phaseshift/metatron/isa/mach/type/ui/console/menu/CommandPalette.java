@@ -61,8 +61,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -432,6 +434,28 @@ public final class CommandPalette extends MRec {
             return noobj();
         }), MUTABLE);
         bindKey("format", alt('f'));
+
+        // ===== max-lines (clip every rendered obj to N lines) =====
+        this.at("max_lines", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+            final String arg = lhs.isStr() ? lhs.strValue().trim() : "";
+            if (arg.isEmpty()) {
+                this.console.logger().info("usage: :max_lines <n> — clip each obj's render to n lines (-1 disables)");
+                return noobj();
+            }
+            final int maxLines;
+            try {
+                maxLines = Integer.parseInt(arg);
+            } catch (final NumberFormatException e) {
+                this.console.logger().error(":max_lines expects an integer (or -1 to disable), got '%s'", arg);
+                return noobj();
+            }
+            this.console.serializer.at(f("clip")).asRec().at(uri("lines"), jnt(maxLines), MUTABLE);
+            if (maxLines <= 0)
+                this.console.logger().info("max lines rendering turned off");
+            else
+                this.console.logger().info("max lines rendered per obj set to %d", maxLines);
+            return noobj();
+        }), MUTABLE);
 
         // ===== next-pane (Ctrl+W) =====
         this.at("next-pane", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {

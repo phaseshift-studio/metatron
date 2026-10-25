@@ -257,7 +257,8 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                 "str", jnt(60),
                 "uri", jnt(Integer.MAX_VALUE),
                 "bytes", jnt(60),
-                "fail", jnt(60)
+                "fail", jnt(60),
+                "lines", jnt(-1)
         );
     }
 
@@ -320,6 +321,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return this.clipVal("fail", 60);
     }
 
+    private int clipLines() {
+        return this.clipVal("lines", -1);
+    }
+
     /**
      * Whether auto-pointer instructions are drawn as a linked body ({@code body}) or
      * as their address ({@code address} — the default, the console REPL style).
@@ -354,9 +359,31 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
     @Override
     public String write(final Obj obj) {
-        final String written = super.write(obj);
+        final String written = this.limitLines(super.write(obj));
         final String output = this.pagerOn() ? this.page(written) : written;
         return postWrite(output);
+    }
+
+    /**
+     * A render cut to at most {@code clip->lines} lines, with a lone {@code ...} on the line
+     * after the cut: the head of the obj is kept and the elided tail is marked, so a reader
+     * still sees the shape and knows more was held back.  A clip of {@code -1} (the default)
+     * or zero leaves the render whole.
+     */
+    private String limitLines(final String written) {
+        final int max = this.clipLines();
+        if (max <= 0)
+            return written;
+        final String[] lines = written.split("\n");
+        if (lines.length <= max)
+            return written;
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < max; i++) {
+            if (i > 0)
+                sb.append("\n");
+            sb.append(lines[i]);
+        }
+        return sb.append("\n...").toString();
     }
 
     /**
@@ -515,16 +542,25 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         });
         if (params.length() > 0)
             sb.append("?").append(params);
-        final String internal = inst.args().elements()
-                .map(o -> {
-                    final StringBuilder temp = new StringBuilder();
-                    this.renderInstArg(temp, depth + 1, o);
-                    return this.cleanEnding(temp).toString();
-                })
-                .reduce(",", (a, b) -> a + b + ",");
-        sb.append("(")
-                .append((inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)))
-                .append(")")
+        sb.append("(");
+        if (!inst.args().isEmpty()) {
+            // an instruction whose arguments read wide breaks them onto lines of their own: the
+            // first argument rides the opening paren and the rest line up under it, the same shape
+            // a wide rec or lst takes — a tool schema's docstring arguments are the wall this tames
+            final boolean nested = this.isNestedInst(inst);
+            final int indent = nested ? this.lineWidth(sb) : 0;
+            final long count = inst.args().count();
+            final AtomicInteger counter = new AtomicInteger(0);
+            inst.args().elements().forEach(o -> {
+                final int index = counter.getAndIncrement();
+                if (nested && index > 0)
+                    sb.append("\n").append(" ".repeat(indent));
+                this.renderInstArg(sb, depth + 1, o);
+                if (index < count - 1)
+                    sb.append(",");
+            });
+        }
+        sb.append(")")
                 .append((inst.f() == null ? "" : "{" + inst.f() + "}"));
         return cleanEnding(sb);
     }
@@ -651,6 +687,19 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         if (poly.count() < 2)
             return false;
         return Graphitty.viewLength(ObjmtronSerializer.single().write(poly)) > NESTED_STRING_THRESHOLD;
+    }
+
+    /**
+     * Whether an instruction's arguments break across lines.  An instruction of fewer than two
+     * arguments never breaks: there is no boundary between arguments to break at, and its one
+     * argument rides the opening paren either way.  The width is measured on the plain
+     * serialization, the same way a rec or lst is measured, so the threshold is the one a reader
+     * already counts against.
+     */
+    private boolean isNestedInst(final Inst inst) {
+        if (inst.args().count() < 2)
+            return false;
+        return Graphitty.viewLength(ObjmtronSerializer.single().write(inst)) > NESTED_STRING_THRESHOLD;
     }
 
     /**
@@ -907,7 +956,13 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     @Override
     protected StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
         if (obj.isInst()) {
-            sb.append(this.writeInst(obj.asInst()));
+            final Inst inst = obj.asInst();
+            if (inst.isNoObj() || Obj.Helper.isAutoPointer(inst))
+                sb.append(this.writeInst(inst));  // a pointer or noobj is short; its own writer tags the target
+            else
+                // render the inst into the SHARED buffer, not writeInst's fresh one, so its broken
+                // argument lines indent against the column the inst actually sits at
+                this.generateInst(sb, inst, 0);
         } else if (obj.isCode()) {
             sb.append(this.writeCode(obj.asCode()));
         } else if (obj.isReal()) {
