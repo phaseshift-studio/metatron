@@ -23,6 +23,7 @@ import com.google.gson.stream.JsonReader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.parser.Parser;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -238,7 +239,8 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                     String clean = (jpstr.startsWith("<") && jpstr.endsWith(">")) ? jpstr.substring(1, jpstr.length() - 1) : jpstr;
                     obj = uri(f(clean), tid, null);
                 } else if (tid != null && T(tid).isRefinementOf(CODE_TYPE)) {
-                    obj = ObjmtronSerializer.parse(jpstr);
+                    // code::T must be a code even for a bare value ("1" parses to int) — lift it, as the parser does
+                    obj = Parser.Helper.toCode(ObjmtronSerializer.parse(jpstr));
                 } else if ((bid != null && T(bid).isRefinementOf(INST_TYPE)) || (tid != null && T(tid).isRefinementOf(INST_TYPE))) {
                     obj = ObjmtronSerializer.parse(jpstr);
                 } else if (tid != null && T(tid).isRootType()) {

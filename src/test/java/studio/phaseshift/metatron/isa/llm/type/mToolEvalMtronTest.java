@@ -28,7 +28,8 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.m.type.parser.Parser;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder;
 
 import java.util.LinkedHashMap;
@@ -58,7 +59,7 @@ public class mToolEvalMtronTest extends AbstractMetatronTest {
         InstSet.importInstSet(WEB_ISA_TID);
         final Map<Obj, Obj> jvm = mcpMetatronBuilder.build(new LinkedHashMap<>(), f("/test/mtool/eval"));
         final Rec tools = jvm.get(uri(TOOL)).asRec();
-        this.evalInst = tools.at(uri("m_web_mcp_mcp_mtron_eval_mtron")).asInst();
+        this.evalInst = tools.at(uri("m_inst_eval")).asInst();
     }
 
     /**
@@ -68,11 +69,9 @@ public class mToolEvalMtronTest extends AbstractMetatronTest {
      */
     private Obj evalMtronDirect(final String code) {
         try {
-            final String jsonArgs = ObjJSONSerializer.simple().write(rec(uri(CODE), str(code))).toString();
-            final Obj arguments = new ObjJSONSerializer()
-                    .schema(this.evalInst.args().asRec())
-                    .readString(jsonArgs);
-            return mTool.applyArguments(this.evalInst, arguments);
+            final Obj parsed = ObjmtronSerializer.parse(code);
+            if (parsed.isFail()) return parsed;
+            return this.evalInst.apply(Parser.Helper.toCode(parsed));
         } catch (final Exception e) {
             // a schema'd argument failed to parse (e.g. malformed code::T) — fail, like the MCP server
             return fail(e);

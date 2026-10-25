@@ -32,6 +32,7 @@ import dev.langchain4j.service.tool.ToolExecutionResult;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -46,6 +47,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.slf4j.event.Level.WARN;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -168,7 +170,23 @@ public class mcpClient extends MRec implements AutoCloseable {
                 if (tool.isRec() && kv.first().isUri()) {
                     final Obj body = tool.asRec().at(uri(INST));
                     if (body.isObjInst()) {
-                        final Obj override = studio.phaseshift.metatron.isa.mach.type.Network.Helper.override(kv.first().uriValue(), body.asInst().f());
+                        final fURI instructionTid = kv.first().uriValue();
+                        final Inst nativeDef = studio.phaseshift.metatron.isa.mach.type.Network.Helper.nativeOf(instructionTid);
+                        // an instruction whose code rides the LHS (eval?A{*}<=code) ships that lhs to the tool as its
+                        // `lhs` parameter — the generic body only serializes the instruction's args (the uri), so the
+                        // code would otherwise be dropped
+                        final boolean shipsLhs = null != nativeDef && !nativeDef.tid().dom().isZero()
+                                && !nativeDef.tid().dom().equals(ALL.maybe());
+                        final Obj override = shipsLhs
+                                ? studio.phaseshift.metatron.isa.mach.type.Network.Helper.override(instructionTid,
+                                        (lhs, inst) -> {
+                                            final Obj args = inst.args();
+                                            final Poly<?, ?> withLhs = args.isRec()
+                                                    ? args.asRec().at(uri(LHS), lhs, MUTABLE)
+                                                    : lst(Stream.concat(Stream.of(lhs), args.stream()));
+                                            return body.asInst().f().apply(lhs, inst.args(withLhs));
+                                        })
+                                : studio.phaseshift.metatron.isa.mach.type.Network.Helper.override(instructionTid, body.asInst().f());
                         if (override.isObjInst())
                             overrides.jvm().put(kv.first(), override);
                     }

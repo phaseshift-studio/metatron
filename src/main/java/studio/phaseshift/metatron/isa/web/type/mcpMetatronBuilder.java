@@ -128,48 +128,21 @@ public final class mcpMetatronBuilder {
         // ── tools ────────────────────────────────────────────────────────────
         if (!jvm.containsKey(uri(TOOL))) {
             final Rec tools = rec(mutableMap());
-            tools.at(uri(mTool.toolName(toolTid("write_memory"))), docWrap(instC(toolTid("write_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
-                            rec(uri("current_memory"), ALL_TYPE,
-                                    uri("previous_memory").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
-                                final Obj previousMemory = Machine.read(inst.arg(f("previous_memory"), 1).uriValue());
-                                final fURI memoryBasePath = previousMemory.vid().retract(1).basePath();
-                                final Obj currentMemory = inst.arg(f("current_memory"), 0).vid(CommonUtil.mintShortUUID(memoryBasePath, true));
-                                return rel(previousMemory, currentMemory, REL_TID, CommonUtil.mintShortUUID(memoryBasePath, true));
-                            }), "noobj lhs", "an memory chain relation (previous => current)@<vid> w/ id for future lookup",
-                    Map.of(uri("current_memory"), "the memory to remember -- e.g. a str::T, a markdown::T, etc.",
-                            uri("previous_memory"), "a previous memory vid to chain current memory to"),
-                    "(experimental) returns a memory relation of the form (current@<vid> => previous@<vid>)@<vid>"), MUTABLE);
-            tools.at(uri(mTool.toolName(toolTid("read_memory"))), docWrap(instC(toolTid("read_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
-                            rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
-                                final Obj memId = inst.arg(f("memory_vid"), 0);
-                                if (!memId.isNoObj())
-                                    return Machine.read(memId.uriValue());
-                                else
-                                    return noobj();
-                            }), "noobj lhs", "the memory fragment by vid which can then be walked with >>",
-                    Map.of(uri("memory_vid"), "the vid of the memory to read"),
-                    "(experimental) returns the result of reading the provided memory"), MUTABLE);
-            // eval_mtron — the foundational tool: evaluate metatron expressions
-            tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
-                            f(mTool.toolName(toolTid("eval_mtron"))).dom(ALL.maybe()).rng(ALL.maybeSome()),
-                            rec(uri(CODE), CODE_TYPE, uri(NATIVE).maybeSome(), BOOL_TYPE), (lhs, inst) -> {
-                                // code arrives already parsed to code::T by the schema-aware JSON
-                                // layer — no JSON-massaging here; just evaluate it.
-                                try {
-                                    Obj result = inst.arg(CODE, 0);
-                                    // surface evaluation failures as a fail (so callers can
-                                    // report an MCP error) rather than flattening them to text
-                                    if (result.isFail())
-                                        return result;
-                                    return inst.arg(NATIVE, 1).orElse(BOOL_TRUE).boolValue() ? str(result.toString()) : result;
-                                } catch (final Exception e) {
-                                    return fail(e);
-                                }
-
-                            }), "noobj lhs", "the result of the code evaluation",
-                    Map.of(uri(CODE), "mtron code to evaluate",
-                            uri(NATIVE).maybe(), "return result in native mtron format"),
-                    "returns the result of evaluating the provided mtron expression"), MUTABLE);
+            tools.at(uri(mTool.toolName(TO_INST_TID)), docWrap(instC(TO_INST_TID.dom(A.maybe()).rng(A.maybe()),
+                            rec(uri(URI), URI_TYPE), (lhs, inst) -> Machine.write(inst.arg(URI, 0).uriValue(), lhs)),
+                    "obj", "the obj written to the uri", Map.of(uri(URI), "the uri to write the lhs to"),
+                    "writes the lhs obj to the uri (to)"), MUTABLE);
+            tools.at(uri(mTool.toolName(FROM_INST_TID)), docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(B.maybeSome()),
+                            rec(uri(URI), URI_TYPE), (lhs, inst) -> Machine.read(inst.arg(URI, 0).uriValue())),
+                    "noobj lhs", "the obj at the uri", Map.of(uri(URI), "the uri to read"),
+                    "reads the obj at the uri (from)"), MUTABLE);
+            // eval — the eval instruction (code on the lhs, optional uri): the peer's execute primitive
+            tools.at(uri(mTool.toolName(EVAL_INST_TID)), docWrap(instC(
+                            EVAL_INST_TID.dom(CODE_TID).rng(A.maybeSome()),
+                            rec(uri(URI).maybe().asUri(), URI_TYPE), (lhs, inst) -> lhs.apply(noobj())),
+                    "code", "the value of evaluating the lhs code, optionally at the arg uri",
+                    Map.of(uri(URI), "the uri to evaluate at (optional)"),
+                    "evaluates the lhs code (eval)"), MUTABLE);
             // list_space — return an index of currently accessible spaces
             tools.at(uri(mTool.toolName(toolTid("list_space"))), docWrap(instC(
                             toolTid("list_space").dom(ALL.maybe()).rng(ALL.maybe()),
