@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -34,12 +33,10 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -203,36 +200,15 @@ public class catInstSet extends AbstractInstSet {
                             final Code code = path.atDirect(OBJ).asCode();
                             return PATH_TYPE.constructor().apply(realized(PlanInterpreter.bind(plan, code)));
                         }),
-                        instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, inst) -> MORPHISM_TYPE.constructor().apply(lhs)),
-                        instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, inst) -> OBJECT_TYPE.constructor().apply(lhs)),
-                        instC(AS_INST_TID.dom(ALL).rng(PATH_TID), lst(PATH_TYPE), (lhs, inst) -> PATH_TYPE.constructor().apply(lhs)),
-                        instC(AS_INST_TID.dom(ALL).rng(ABSTRACTION_TID), lst(ABSTRACTION_TYPE), (lhs, inst) -> ABSTRACTION_TYPE.constructor().apply(lhs)),
-                        instC(AS_INST_TID.dom(ALL).rng(PLACE_TID), lst(PLACE_TYPE), (lhs, inst) -> PLACE_TYPE.constructor().apply(lhs)),
-                        instC(CAT_C_INST_TID.dom(ALL.maybe()).rng(CODE_TID.maybe()), lst(URI_TYPE), (lhs, inst) -> {
-                            final List<Inst> newCode = lhs.isNoObj() ?
-                                    new ArrayList<>() :
-                                    new ArrayList<>(lhs.isCode() ?
-                                            lhs.asCode().insts() :
-                                            lhs.isInst() ?
-                                                    lhs.tid().basePath().equals(BLOCK_INST_TID) ?
-                                                            lhs.asInst().arg(0).asCall().insts() :
-                                                            (lhs.tid().basePath().equals(CAT_ISA_TID.extend("inst").extend("c")) ?
-                                                                    List.of(lhs.apply().asInst().c(lhs.c())) :
-                                                                    List.of(lhs.asInst())) :
-                                                    List.of(start_(lhs).tryToInst().asInst()));
-                            newCode.add(createInstLawLambda(inst.arg(0).uriValue()).c(inst.arg(0).c()));
-                            return block_(code(newCode)).tryToInst();
-                        })),
+                        instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, _) -> MORPHISM_TYPE.constructor().apply(lhs)),
+                        instC(AS_INST_TID.dom(ALL).rng(OBJECT_TID), lst(OBJECT_TYPE), (lhs, _) -> OBJECT_TYPE.constructor().apply(lhs)),
+                        instC(AS_INST_TID.dom(ALL).rng(PATH_TID), lst(PATH_TYPE), (lhs, _) -> PATH_TYPE.constructor().apply(lhs)),
+                        instC(AS_INST_TID.dom(ALL).rng(ABSTRACTION_TID), lst(ABSTRACTION_TYPE), (lhs, _) -> ABSTRACTION_TYPE.constructor().apply(lhs)),
+                        instC(AS_INST_TID.dom(ALL).rng(PLACE_TID), lst(PLACE_TYPE), (lhs, _) -> PLACE_TYPE.constructor().apply(lhs))),
                 uri(REWRITE), catRewrite.rules())
         ));
         docWrap(this, "categorical realization of types and insts as objects and morphisms");
         super.setup();
-    }
-
-    @Override
-    public Set<Sugar> sugars() {
-        return new LinkedHashSet<>(List.of(
-                Sugar.prefix("^", List.of(CAT_C_INST_TID), 1)));
     }
 
     /**
