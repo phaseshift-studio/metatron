@@ -154,7 +154,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
     /**
      * Read the source-of-truth JVM for this object.  If the object has a
      * persistent address ({@link #vid()}), the latest state is fetched from
-     * the space via {@link Machine#root() Machine.current().memory().read(vid())}.
+     * wherever the machine keeps it, via {@link Machine.Helper#readLocal} (its sphere, then its memory).
      * Otherwise the local construction-time JVM is returned.
      *
      * <p>Subclasses should call this before every rendering pass so that
@@ -163,7 +163,8 @@ public class JRec<OBJECT> extends MObj implements Rec {
     protected final Map<Obj, Obj> jvmRead() {
         if (this.vid() == null) return this.jvm();
         try {
-            final Obj fresh = Machine.current().memory().read(this.vid());
+            // a LOCAL read: an anchored rec may live in the machine's sphere (~/sys) as well as in memory
+            final Obj fresh = Machine.Helper.readLocal(Machine.current(), this.vid());
             return fresh.isRec() ? fresh.jvm() : this.jvm();
         } catch (final Exception e) {
             return this.jvm(); // fallback: space unavailable
@@ -191,13 +192,14 @@ public class JRec<OBJECT> extends MObj implements Rec {
             return;
         }
         try {
-            final Obj current = Machine.current().memory().read(this.vid());
+            // LOCAL, both ways: the rec is re-read and written back wherever the machine keeps it (sphere or memory)
+            final Obj current = Machine.Helper.readLocal(Machine.current(), this.vid());
             final Map<Obj, Obj> merged = new LinkedHashMap<>(current.isRec() ? current.jvm() : this.jvm());
             merged.put(key, value);
-            Machine.current().memory().write(this.vid(), rec(merged, current.tid(), this.vid()));
+            Machine.Helper.writeLocal(Machine.current(), this.vid(), rec(merged, current.tid(), this.vid()));
         } catch (final Exception e) {
             // Fallback: direct sub-path write
-            Machine.current().memory().write(this.vid().extend(key.uriValue()), value);
+            Machine.Helper.writeLocal(Machine.current(), this.vid().extend(key.uriValue()), value);
         }
     }
 

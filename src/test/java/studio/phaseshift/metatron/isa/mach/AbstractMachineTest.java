@@ -369,7 +369,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     // ======================== bootstrap: the machine's own system state ========================
 
     /**
-     * {@link Machine#bootstrap()} seeds the machine's log sink through its OWN memory at a resolved address, because it runs before the machine is reachable.
+     * {@link Machine#bootstrap()} seeds the machine's log sink into its OWN sphere's {@code ~/sys} at a resolved address, because it runs before the machine is reachable.
      */
     @Test
     public void testBootstrapSeedsMachineLogSink() {
@@ -385,15 +385,16 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     }
 
     /**
-     * The rest of the machine's own level must stay covered by the infra space, because a narrowed pattern de-homes {@code ~/sys/fail}, {@code ~/thread} and {@code /network/roster} silently.
+     * The machine's own level must stay covered: {@code ~/sys/fail} by the machine's sphere, which holds {@code ~/sys}, and
+     * {@code ~/thread} by the infra space in memory — a narrowed pattern or a lost sphere de-homes either silently.
      */
     @Test
     public void testBootstrapInfraSpaceCoversTheMachinesOwnLevel() {
-        assertNotNull(Machine.root().memory().findSpace(f("/sys/fail/_")),
-                "~/sys/fail must stay covered by the machine's infra space");
+        assertSame(Machine.root().space(), Machine.Helper.sphereOf(Machine.root(), f("/sys/fail/_")),
+                "~/sys/fail must stay covered by the machine's sphere");
         assertNotNull(Machine.root().memory().findSpace(f("/thread/main")),
                 "~/thread must stay covered by the machine's infra space");
         assertInstanceOf(Rec.class, Machine.root().network().roster(),
-                "the roster registers at /network/roster, which only the catch-all pattern answers");
+                "the roster registers at /network/roster, the network's own branch");
     }
 }
