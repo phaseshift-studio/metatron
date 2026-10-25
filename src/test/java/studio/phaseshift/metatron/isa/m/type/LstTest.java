@@ -159,6 +159,8 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             // Missing index
             "[1,2,3]>><2/0>                                                                % noobj",
             "[1,2,3]>><5>                                                                  % noobj",
+            // The root has no segment to walk
+            "[1,2,3]>></>                                                                  % noobj",
             // Leaf is not a poly — can't walk further
             "[1,2,3]>><0/0>                                                                % noobj",
             // Mixed — walk through rec nested in lst
@@ -189,6 +191,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
     @CsvSource(value = {
             // lst                                 | key                  | value
             "[a,[b,[c,d],e],f]                     | <>                   | noobj",
+            "[a,[b,[c,d],e],f]                     | </>                  | noobj",
             "[a,[b,[c,d],e],f]                     | <0>                  | a",
             "[a,[b,[c,d],e],f]                     | <1/0>                | b",
             "[a,[b,[c,d],e],f]                     | <1/1/0>              | c",
