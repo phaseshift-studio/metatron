@@ -62,6 +62,10 @@ public abstract class AbstractMachine extends MRec implements Machine {
     private Memory resolvedMemory = null;
     private Network resolvedNetwork = null;
     private InstSet resolvedInstSet = null;
+    /**
+     * this machine's own sphere, bound by {@code bootstrap} — the machine's, never a clone's (see {@link #clone})
+     */
+    private MachineSpace space = null;
 
     /**
      * Resolve each slot template exactly once. The first resolution happens in the constructor, where the
@@ -126,6 +130,20 @@ public abstract class AbstractMachine extends MRec implements Machine {
     @Override
     public Machine instset(final InstSet instset) {
         this.resolvedInstSet = instset;
+        return this;
+    }
+
+    @Override
+    public MachineSpace space() {
+        return this.space;
+    }
+
+    /**
+     * FIELD ONLY, as the components' setters: the sphere is the machine's view of itself, not a slot of its rec.
+     */
+    @Override
+    public Machine space(final MachineSpace space) {
+        this.space = space;
         return this;
     }
 
@@ -264,8 +282,11 @@ public abstract class AbstractMachine extends MRec implements Machine {
         // A COPIED CACHE WOULD ANSWER FOR THE WRONG MACHINE: the field is copied too, so a clone would report
         // whatever its source had resolved with. push() rebinds memory and instset explicitly; clearing here means a
         // clone can never be answered by a stale component.
-        if (copy instanceof AbstractMachine abstractCopy)
+        if (copy instanceof AbstractMachine abstractCopy) {
             abstractCopy.resolvedInstSet = null;
+            // a sphere answers for ONE machine: the copy's is bound by its own bootstrap (push), never inherited
+            abstractCopy.space = null;
+        }
         return copy;
     }
 

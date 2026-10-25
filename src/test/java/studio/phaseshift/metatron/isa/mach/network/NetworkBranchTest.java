@@ -43,8 +43,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * THE NETWORK BRANCH IS THE COMPONENT. A machine's {@code <vid>/network/#} is answered by its network itself — the
- * component is its own space, mounted per machine — so a field written there lands on the network the machine holds
+ * THE NETWORK BRANCH IS THE COMPONENT. A machine's {@code <vid>/network/#} is answered by its network itself — handed
+ * there by the machine's own sphere (MachineSpace), not mounted in memory — so a field written there lands on the network the machine holds
  * (never a rebuilt copy), the root's {@code /network/roster} is the root network's own roster, and the component itself
  * is not a value an address can overwrite. An address under no network branch is still the authority dispatch's.
  */
@@ -60,13 +60,15 @@ public class NetworkBranchTest extends AbstractMetatronTest {
     @Test
     public void testEachMachinesBranchIsItsOwnNetwork() {
         final Machine root = Machine.current();
-        assertSame(root.network(), root.memory().findSpace(f("/network/peer")), "the root's branch is the root's network");
+        // the branch is answered through the machine's own sphere (MachineSpace), never by a space in memory
+        assertSame(root.space(), Machine.Helper.sphereOf(root, f("/network/peer")), "the root's branch is in the root's own sphere");
+        assertNotSame(root.network(), root.memory().findSpace(f("/network/peer")), "the network is not a space in memory");
         checkEquality(LOG, root.network().atDirect(uri(PATTERN)), uri("/network/#"), true);
         final Machine child = root.push(f("branch_child"));
         try {
             assertNotSame(root.network(), child.network());
-            assertSame(child.network(), child.memory().findSpace(child.vid().resolve().extend("network").extend("peer")),
-                    "a pushed frame's branch is that frame's own level");
+            assertSame(child.space(), Machine.Helper.sphereOf(child, child.vid().resolve().extend("network").extend("peer")),
+                    "a pushed frame's branch is in that frame's own sphere");
             assertSame(child.network(), Machine.read(f("~/network")), "~/network reads the component itself");
             assertSame(child.network(), ObjmtronSerializer.parse("*<~/network>").apply(), "a dereference hands the component back as itself");
         } finally {
@@ -82,7 +84,8 @@ public class NetworkBranchTest extends AbstractMetatronTest {
             assertEquals(Optional.of("lab"), child.network().name(), "the write lands on the network the machine holds");
             this.script("*<~/network/name> % 'lab'");
             // the component is a space, so a step into it is read through the space, beneath its branch
-            checkEquality(LOG, ObjmtronSerializer.parse("*<~/network>>name").apply().vid(null), str("lab"), true);
+            // bare, not <~/network>: the uri's closing '>' would take the first '>' of the step and leave '>name'
+            checkEquality(LOG, ObjmtronSerializer.parse("*~/network>>name").apply().vid(null), str("lab"), true);
             this.script("[STATE] <~/network/name> -> noobj");
             assertEquals(Optional.empty(), child.network().name(), "a noobj write is the field's deletion");
         } finally {

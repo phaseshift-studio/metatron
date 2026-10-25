@@ -11,19 +11,22 @@ description: |
 
 ## What a Machine is
 
-A **Machine** is a *space of spaces* — the container in which address resolution happens. It is itself an address
-space: the interface is `Machine extends Rec, AutoCloseable` and the concrete body is `AbstractMachine extends
-AbstractSpace`. Its five members (`instset`, `memory`, `network`, `compiler`, `processor`) are rec entries shaped as
-`machine::T`. Of the five:
+A **Machine** is a *space of spaces* — the container in which address resolution happens. The interface is
+`Machine extends Rec, AutoCloseable` and the concrete body is `AbstractMachine extends MRec`. Its five members
+(`instset`, `memory`, `network`, `compiler`, `processor`) are rec entries shaped as `machine::T`. Its own address
+surface is its **sphere** — `MachineSpace`, a `memSpace` the machine holds and memory never indexes (2026-10-25):
+`Machine.read`/`write` ask the innermost machine whose sphere covers an address FIRST (the machine itself at its vid,
+its components, its `sys`), then the network, then memory, then instruction memory. The sphere declines everything
+else under the vid, so the machine's data stays memory's. Of the five:
 
 - **Memory** is the facade over the world of spaces — the single read/write surface.
 - **Compiler** lowers code; **Processor** runs it; neither is an address space.
 - **InstSet** and **Network** are *accumulating* components (a frame wraps them); **Compiler** and **Processor** are
   *constructive* (whole-value, inherited or replaced).
 
-A machine replaced the old `Router` as the root of the address space. `Router.java` is gone, and
-`AbstractMachine extends AbstractSpace` is the one concrete body — which is what makes a machine a `Space` that
-answers addresses, while `Machine` the interface stays a `Rec`.
+A machine replaced the old `Router` as the root of the address space. `Router.java` is gone, and `AbstractMachine` is
+the one concrete body — a `Rec` whose own addresses its `MachineSpace` answers, while `Machine` the interface stays a
+`Rec`.
 
 ## Package overview
 
@@ -39,7 +42,10 @@ isa/mach/type/memory/MemoryUnion.java ← the ONE read-through union today: fram
 isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
-isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec), and its own space at <vid>/network/#
+isa/mach/type/machine/MachineSpace.java     ← the machine's own sphere: the machine, its components and ~/sys — asked
+                                        first by Machine.read/write, held by the machine, never in memory
+isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec); answers its branch
+                                        <vid>/network/# when the machine's sphere hands it an address there
 isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
 isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
@@ -140,8 +146,9 @@ it stops, so its clients see `1000` whether it is restarting or gone.
 (`Network.Helper.keyOf`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every host
 label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()` of the
 dial, the loopback alias spelled first), and the service it reaches is the `authority` field — wire dispatch
-(`isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component is its own space:
-`BasicNetwork` extends `AbstractSpace` and `Machine.bootstrap()` mounts it at `<vid>/network/#`. It stores nothing
+(`isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component answers its own branch:
+`BasicNetwork` extends `AbstractSpace`, `Machine.bootstrap()` stamps it as `<vid>/network/#`, and the machine's
+`MachineSpace` hands it every address there — it is not a space in memory. It stores nothing
 beside its rec and answers every read from it, so `*</network/peer/ws/localhost/8555/mtron/authority>` walks a member
 by the space's base-poly read, and a noobj write there is `Network.disconnect` (at `listener/<key>`,
 `Network.unlisten`) — destruction on deletion from mtron. A value written at a member is refused (a peer is
@@ -289,10 +296,14 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
   no-op, so writes there are silently dropped. The roster lives at `/network/roster`.
 - **`push()` must mint a child, not the parent.** Use the 3-arg `clone` — `selfVID` *pins* an already-set vid, so a
   2-arg clone would silently keep the parent's address.
-- **A machine is a space, so its own read is a space read** (`AbstractSpace.read` → `Space.Helper.resolveRead`, q-procs
-  and all). Address *resolution* belongs to memory: `BasicMemory.read`/`write` route an address to the space that covers
-  it (`readAbsolute`/`writeAbsolute`) — which is why a bulk wildcard write reaches the space it names rather than the
-  argument stack.
+- **A machine's own addresses are its sphere's** (`MachineSpace`, asked before the network and memory, never in
+  memory): the machine at its vid, a component below it, `~/sys`. A covered address the sphere has no answer for is
+  declined, as is everything else under the vid. Address *resolution* of all the rest belongs to memory:
+  `BasicMemory.read`/`write` route an address to the space that covers it (`readAbsolute`/`writeAbsolute`) — which is
+  why a bulk wildcard write reaches the space it names rather than the argument stack. **First slice (2026-10-25):** the
+  sphere answers the machine and its components and writes only the network branch; `~/sys` and the other components'
+  writes are declined to memory until the logger, the reflected recs and the thread registry stop reaching `~/sys`
+  through memory directly.
 
 ## Migration state (why it reads as two systems at once)
 
