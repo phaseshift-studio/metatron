@@ -47,8 +47,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
- * The network dials https:// as it dials http://: a read of an undeclared https authority constructs the http client
- * peer on demand — the read is the dial — and answers through its {@code from} GET, over tls.
+ * The network dials https:// as it dials http://: a dial of an https authority constructs the http client peer (the
+ * dialer table's https row), and a read through it answers by its {@code from} GET, over tls. Construction is
+ * connection — a read alone dials nothing: addressing an authority no client was constructed for makes no peer.
  * <p>
  * No httpspace is mounted here, so no space can answer in the network's place: an https:// read that the network
  * declined used to fall through to an http space's https companion, which hid that the dialer table had no https row.
@@ -59,7 +60,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 @Execution(ExecutionMode.SAME_THREAD)
 public class httpsDialTest extends AbstractMetatronTest {
 
-    private static final String MOTTO = "the read is the dial";
+    private static final String MOTTO = "construction is connection";
     private static HttpsServer far;
     private static SSLContext jdkDefault;
 
@@ -91,11 +92,22 @@ public class httpsDialTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testReadDialsAnHttpsPeer() {
+    public void testAnHttpsDialReadsOverTls() {
         final fURI authority = f(HTTPS + "://127.0.0.1:" + far.getAddress().getPort());
         final fURI key = Network.Helper.keyOf(authority);
-        checkEquality(LOG, Machine.current().network().peerAt(key), noobj(), true);
-        assertEquals(MOTTO, Machine.read(authority + "/motto").strValue(), "the https read should answer through the dialed peer");
-        checkEquality(LOG, Machine.current().network().peerAt(key), noobj(), false);
+        final Network network = Machine.current().network();
+        checkEquality(LOG, network.peerAt(key), noobj(), true);
+        // A READ NEVER DIALS: the network answers nothing for an authority no client was constructed for, and the
+        // read leaves no peer behind
+        checkEquality(LOG, network.read(f(authority + "/motto")), noobj(), true);
+        checkEquality(LOG, network.peerAt(key), noobj(), true);
+        // the dial constructs the http client, and a read through it answers over tls
+        network.connect(authority);
+        try {
+            checkEquality(LOG, network.peerAt(key), noobj(), false);
+            assertEquals(MOTTO, Machine.read(authority + "/motto").strValue(), "the https read should answer through the dialed peer");
+        } finally {
+            network.disconnect(authority);
+        }
     }
 }

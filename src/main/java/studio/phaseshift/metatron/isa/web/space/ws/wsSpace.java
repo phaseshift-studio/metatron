@@ -59,6 +59,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
@@ -95,6 +96,8 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     // the mini-instset — {instruction tid => override}: what the network reaches this socket with; a
                     // spec that carries its own (a custom to(), say) keeps it, otherwise the socket declares eval/from/to
                     uri(INST).maybe().asUri(), REC_TYPE,
+                    // true while the socket is open — optional here, installed by the constructor, derived on read
+                    uri(STATUS).maybe().asUri(), BOOL_TYPE,
                     uri(ON_OPEN).maybe(), T(ALL),
                     uri(ON_ERROR).maybe(), T(ALL),
                     uri(ON_MESSAGE).maybe(), T(ALL),
@@ -135,7 +138,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                             // INDEXING IS UNCONDITIONAL. A dial whose far side is not up yet still declares a peer:
                             // the client is demoted to a bare rec inside its constructor and must be indexed so the
                             // supervisor redials it in place until the far side answers. Indexing is a background
-                            // behavior that never fails the construction, and Network.index re-checks the transport.
+                            // behavior that never fails the construction, and Network.index re-checks the inst.
                             Network.Helper.index(client);
                             return client;
                         } catch (final Exception e) {
@@ -422,7 +425,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         /**
          * THE CO-MOUNT — the listener's half of the dial (see {@code Network#accept}): an inbound
          * connection mints a {@code peer::T} on this machine's network exactly as {@code connect} does on
-         * the dialer's, keyed by the remote socket authority, transport = this session's reply channel.
+         * the dialer's, keyed by the remote socket authority, with this session as its client (its inst, over its reply channel).
          * Never breaks the accept path: a declined co-mount is a connection without a peer record, not a
          * dropped connection.
          */

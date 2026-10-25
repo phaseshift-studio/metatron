@@ -83,6 +83,15 @@ public class mcpServer extends MRec {
         // `tool => [!*eval, …]` list that reached the predicate unreshaped would throw before this constructor
         // had a chance to key it.
         super(Helper.reshape(jvm), tid, vid);
+        // THE STATUS — a transport-agnostic server holds no socket of its own (its transports do), so it is live when
+        // its own dispatch answers: each read asks it a json-rpc ping, in process, and an error reply is not live
+        this.jvm().putIfAbsent(uri(STATUS), studio.phaseshift.metatron.isa.mach.type.Network.Helper.statusOf(() -> {
+            final Obj pong = this.handleMessage(rec(
+                    uri(JSONRPC), str("2.0"),
+                    uri(ID), jnt(0),
+                    uri("method"), str("ping")));
+            return pong.isRec() && pong.asRec().at(uri(ERROR)).isNoObj();
+        }));
     }
 
     /**

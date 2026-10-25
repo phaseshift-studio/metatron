@@ -422,7 +422,7 @@ public interface QProc extends Rec {
      * <p>
      * The write's ANSWER is whatever the supplier returns: a space returns the obj the caller handed in (a
      * store's own return value is bookkeeping, and a caller that wrote {@code x} expects {@code x} back), while a
-     * transport returns the peer's reply, which is the value its caller is actually waiting for.
+     * peer's client returns the far side's reply, which is the value its caller is actually waiting for.
      */
     final class Layer {
 

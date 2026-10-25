@@ -204,7 +204,7 @@ public class machInstSet extends AbstractInstSet {
     // memory — the machine's address space: relative bindings plus the index of absolute spaces
     public static final fURI MACH_MEMORY_TID = MACH_MACHINE_COMPONENT_TID.extend(MEMORY);
     public static Type MACH_MEMORY_TYPE;
-    // network — the peers a machine can reach: a roster of authority => transport
+    // network — the machines a machine knows (the roster's addresses) and the peers it has dialed (their clients)
     public static final fURI MACH_NETWORK_TID = MACH_MACHINE_COMPONENT_TID.extend(NETWORK);
     public static Type MACH_NETWORK_TYPE;
     public static Type MACH_MACHINE_COMPONENT_TYPE;
@@ -393,7 +393,7 @@ public class machInstSet extends AbstractInstSet {
                         // constructor is the dial (as every client's is) and its eval override evaluates the
                         // shipped code against the LOCAL machine, so a read through a loop: peer IS the
                         // local read of the localized address. It lives HERE rather than /m/web because the
-                        // identity transport needs no wire — it is what makes the self-similarity contract
+                        // identity client needs no wire — it is what makes the self-similarity contract
                         // executable without a socket, and what keeps Helper.dial free of scheme branches:
                         // loop:'s default dialer is this type, resolved through the one dial path.
                         docWrap(ID_CLIENT_TYPE = Type.Builder.build()
@@ -402,6 +402,8 @@ public class machInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(INST).maybe().asUri(), REC_TYPE,
+                                                // optional here, installed by the constructor (mdns_discovery's rule)
+                                                uri(STATUS).maybe().asUri(), BOOL_TYPE,
                                                 uri(CLOSE).maybe().asUri(), INST_TYPE))
                                         .constructor(arg -> {
                                             // THE IDENTITY MINI-INSTSET — the ws client's instructions with "the far
@@ -416,6 +418,8 @@ public class machInstSet extends AbstractInstSet {
                                                             uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> inst.arg(0).apply(lhs)),
                                                             uri(FROM_INST_TID), Network.Helper.override(FROM_INST_TID, (lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize())),
                                                             uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst().apply(noobj()))),
+                                                    // the far side is this machine, so it is live as long as it exists
+                                                    uri(STATUS), Network.Helper.statusOf(() -> true),
                                                     uri(CLOSE), instLambda((lhs, inst) -> noobj()));
                                             // indexing is a BACKGROUND behavior upon successful construction:
                                             // the client exists as an obj either way, the index merely observes
@@ -425,6 +429,7 @@ public class machInstSet extends AbstractInstSet {
                                         .create(), null, null,
                                 Map.of(uri(HOST), "the dialed uri (identity: the local machine answers)",
                                         uri(INST), "the identity mini-instset: { eval, from, to } — the instructions a wire client serves, each evaluating what it ships against the local machine",
+                                        uri(STATUS), "true: the far side is this machine, live as long as the client exists",
                                         uri(CLOSE), "nothing to hang up"),
                                 """
                                 the identity client — the identity element of the protocol-client family:
@@ -440,8 +445,9 @@ public class machInstSet extends AbstractInstSet {
                                         // ONE TYPE, TWO HONEST STATES — and the difference is which fields are
                                         // filled, never which type it is. An authority alone is a peer we know
                                         // of but cannot reach from here, which is what a peer reference looks
-                                        // like after it has crossed a wire; an authority with a transport is a
-                                        // peer the current machine can ship to.
+                                        // like after it has crossed a wire; an authority with a client is a
+                                        // peer the current machine talks to — with the instructions that client
+                                        // declares (its `inst`), never through a field of the peer's own.
                                         .isaPredicate(rec(
                                                 // THE KEY, and the one field a peer cannot do without: a roster
                                                 // lookup matches on this same service uri.
@@ -460,14 +466,11 @@ public class machInstSet extends AbstractInstSet {
                                                 // name onto a discovered authority. Not decoration.
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(STATUS).maybe().asUri(), REC_TYPE,
-                                                // THE REACH: the inst that ships a message to this peer and answers
-                                                // with what it computed. It is what makes a connection a connection
-                                                // rather than a known address.
-                                                uri(TRANSPORT).maybe().asUri(), INST_TYPE,
                                                 // the protocol CLIENT the dial constructed (a ws_client::T or kin,
-                                                // typed ALL because this instruction set sits below /m/web) -- held
-                                                // so disconnect can hang up. absent for a connectionless transport
-                                                // (loop, http) and for a peer reference that crossed a wire.
+                                                // typed ALL because this instruction set sits below /m/web). It IS the
+                                                // connection: its `inst` is what the peer is talked to with, its
+                                                // `status` whether it is live, and disconnect hangs it up. absent only
+                                                // for a peer reference that crossed a wire.
                                                 uri(CLIENT).maybe(), T(ALL)))
                                         .create(), null, null,
                                 Map.of(uri(AUTHORITY), "the peer's service uri, scheme://host:port — the connection key, and the one field a peer cannot do without",
@@ -475,8 +478,7 @@ public class machInstSet extends AbstractInstSet {
                                         uri(HANDLER), "the protocol surface at that endpoint, named as a uri: </m/web/ws/mtron_ws>, </m/web/http/mtron_http>, </m/web/mcp/mcp_ws>",
                                         uri(NAME), "the machine's name in the distributed expression that means it — a bare name, never an address",
                                         uri(STATUS), "the health report computed for this peer — computed on call, never stored",
-                                        uri(TRANSPORT), "the reach: an inst that ships a message to this peer and answers with the peer's result",
-                                        uri(CLIENT), "the protocol client the dial constructed — held so disconnect can hang up; absent for connectionless transports"),
+                                        uri(CLIENT), "the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so disconnect can hang up"),
                                 """
                                 one metatron machine as the network records it — the value of a network peer
                                 connection. Absent `host` and `handler` is not a broken peer: it is a peer
@@ -600,11 +602,12 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(ROSTER).maybe().asUri(), rec(
                                                         uri(DISCOVER).maybe().asUri(), T(MACH_DISCOVERY_TID.maybeSome()),
-                                                        // A REACH PER HOST, not only an endpoint: discovery writes
-                                                        // addresses, a declaration writes the transport that reaches
-                                                        // the machine, and transportOf() already reads both out of
-                                                        // this one table -- an inst to apply, or an address to match.
-                                                        uri(MACHINE).maybe(), rec(URI_TYPE, T(ALL.some()))),
+                                                        // THE ADDRESSES PER HOST — knowledge, never reach: discovery
+                                                        // and a declaration both write where the machine answers
+                                                        // (scheme://host:port, a route where the dial needs one), and
+                                                        // reaching it is dialing one of them -- the client the dial
+                                                        // constructs brings its own instructions (its `inst`).
+                                                        uri(MACHINE).maybe(), rec(URI_TYPE, T(URI_TID.some()))),
                                                 uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID)),
                                                 // PRESENCE, the third question: the sockets THIS machine serves
                                                 // through, at ~ like peer -- its own and the inherited ones it keeps
@@ -620,7 +623,7 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
                                         .create(),
                                 Map.of(uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
-                                        uri(ROSTER).maybe(), "known machines, connectionless: a declared peer is <authority> => transport, a discovered machine is <host> => uri{+} (every address it answers at); transportOf reads both",
+                                        uri(ROSTER).maybe(), "known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme://host:port); knowledge, not reach — a machine is reached by dialing one of them",
                                         uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",
                                         uri(SOURCE).maybe(), "the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism",

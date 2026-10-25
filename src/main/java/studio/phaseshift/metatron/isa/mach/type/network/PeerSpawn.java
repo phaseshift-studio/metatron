@@ -19,17 +19,11 @@
 package studio.phaseshift.metatron.isa.mach.type.network;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
-import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
-import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
@@ -45,12 +39,8 @@ import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * SPAWNING A PEER: when an authority is still on this physical machine, the mtron instance that answers it is a real
@@ -67,15 +57,15 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   <li>the child is a separate JVM with its own {@code Router}, so nothing is shared but the socket;</li>
  *   <li>the parent waits for the child's {@link MachNode#READY} marker rather than guessing a sleep, and reports
  *       the child's own trace when it dies early or never arrives;</li>
- *   <li>the roster entry is what makes the authority reachable — membership is declared, never emergent, so a
- *       push that failed to start its node leaves no address that quietly resolves locally.</li>
+ *   <li>the roster entry is what makes the authority known (its address; dialing it is what reaches it) —
+ *       membership is declared, never emergent, so a push that failed to start its node leaves no address that
+ *       quietly resolves locally.</li>
  * </ul>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class PeerSpawn {
 
-    private static final long REPLY_TIMEOUT_MS = 15_000L;
     // A node boots in ~2-4s. 30s is generous headroom, and the difference matters: a starved container (no free
     // processes to fork) must FAIL LOUDLY AND FAST rather than look like a suite hung for three minutes per test.
     private static final long READY_TIMEOUT_MS = 30_000L;
@@ -99,8 +89,9 @@ public final class PeerSpawn {
     }
 
     /**
-     * Fork (when the authority is local) and declare a peer, then hand back the inst that reaches it. This is the
-     * process half only: nothing here dials the peer or builds anything that stands in it.
+     * Fork (when the authority is local) and declare a peer, then hand back the address it was declared at — the dial
+     * uri of its mtron endpoint. This is the process half only: the roster row is knowledge, and nothing here dials
+     * the peer or builds anything that stands in it — reaching it is dialing that address.
      * <p>
      * IDEMPOTENT BY ADDRESS: asking for an authority that is already declared FINDS the peer rather than forking a
      * twin.
@@ -108,9 +99,9 @@ public final class PeerSpawn {
     public static Obj spawn(final fURI requested) {
         final fURI authority = resolve(requested);
         final String key = keyOf(authority);
-        // A PEER IS DECLARED ONCE. Hand back the reach that already exists.
+        // A PEER IS DECLARED ONCE. Hand back the address it already has.
         if (FORKED.containsKey(key) || DECLARED.contains(key))
-            return transport(authority);
+            return address(authority);
         final boolean here = Network.Helper.isLoopbackHost(authority.host());
         try {
             if (here) {
@@ -119,10 +110,10 @@ public final class PeerSpawn {
                 FORKED.put(key, new Forked(process, log));
                 awaitReady(process, log, authority);
             }
-            final Obj transport = transport(authority);
-            declare(key, transport);
+            final Obj address = address(authority);
+            declare(key, address);
             LOG.warn("spawned node %s (forked=%s)", key, here);
-            return transport;
+            return address;
         } catch (final IOException | RuntimeException e) {
             // a half-spawned peer must leave nothing behind: no orphan process, and no roster entry claiming an
             // address nothing serves
@@ -179,59 +170,18 @@ public final class PeerSpawn {
     }
 
     /**
-     * The transport that reaches a spawned node: open one {@code wsclient} to its {@code mtron_ws} endpoint, send
-     * the message ({@code from(localized)} for a read, {@code obj.to(localized)} for a write), return the response.
-     * This is the inst the roster stores, so the transport is a roster value and swapping ws for another wire is a
-     * roster change rather than a code change.
+     * Where a spawned node answers: the dial uri of its {@code mtron_ws} endpoint. This is the value the roster
+     * stores — an address, knowledge only: a {@code ws_client} dialed at it is what reaches the node.
      */
-    public static Inst transport(final fURI authority) {
-        return instLambda((lhs, inst) -> {
-            final Obj response = send(authority, lhs);
-            return response.isNoObj() && !answers(authority)
-                    ? fail("node %s did not answer %s", keyOf(authority), lhs.toShortString())
-                    : response;
-        });
-    }
-
-    // ========================================================================
-    // the wire
-    // ========================================================================
-
-    private static Obj send(final fURI authority, final Obj message) {
-        WebSocketRecClient client = null;
-        try {
-            // the 2-arg (timeout) sendRecv lives on the WebSocketObj the client drives, so build the rec first
-            final WebSocketRec wsRec = new WebSocketRec(mutableMap(
-                    uri(HOST), uri(keyOf(authority) + MachNode.MTRON_ROUTE),
-                    uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
-                    uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null);
-            client = new WebSocketRecClient(wsRec);
-            // FORCE THE REPLY BEFORE THE finally HANGS UP. sendRecv answers a FutureObj: the send runs on a
-            // virtual thread, so handing the future out here lets the finally close the socket before the frame
-            // ever leaves, and the trip reports "socket ... is not connected" on a socket that was open the
-            // whole time. This method's contract is synchronous -- one short-lived client per message, closed
-            // on the way out -- so the round trip is settled while the client is still alive.
-            return FutureObj.resolveFuture(wsRec.sendRecv(message, REPLY_TIMEOUT_MS));
-        } catch (final Exception e) {
-            return fail(e);
-        } finally {
-            if (null != client)
-                client.close();
-        }
-    }
-
-    /**
-     * a trivial round trip that needs no store at all, so it separates "nothing there" from "not answering"
-     */
-    private static boolean answers(final fURI authority) {
-        return !send(authority, ObjmtronSerializer.parse("1.plus(1)")).isNoObj();
+    public static Obj address(final fURI authority) {
+        return uri(keyOf(authority) + MachNode.MTRON_ROUTE);
     }
 
     // ========================================================================
     // the roster
     // ========================================================================
 
-    private static void declare(final String key, final Obj transport) {
+    private static void declare(final String key, final Obj address) {
         // INTO roster/machine, and the roster rebuilt around it. The roster is a container now -- it carries
         // `discover` beside `machine` -- so a flat write at its root both loses the discovery registrations and
         // puts the entry where no reader looks.
@@ -239,7 +189,7 @@ public final class PeerSpawn {
         final Map<Obj, Obj> fields = new LinkedHashMap<>(roster.isRec() ? roster.asRec().jvm() : Map.of());
         final Obj known = roster.isRec() ? roster.asRec().at(uri(MACHINE)) : noobj();
         final Map<Obj, Obj> machines = new LinkedHashMap<>(known.isRec() ? known.asRec().jvm() : Map.of());
-        machines.put(uri(key), transport);
+        machines.put(uri(key), address);
         fields.put(uri(MACHINE), rec(machines));
         Machine.write(Network.ROOT_ROSTER, rec(fields));
         DECLARED.add(key);

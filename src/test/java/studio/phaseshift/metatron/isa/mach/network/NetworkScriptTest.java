@@ -31,7 +31,9 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -42,7 +44,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * against, so that a suite proves a NETWORK claim instead of re-implementing the plumbing.
  * {@code NetworkIsolationScriptTest} is the roster-half suite built on it.
  * <p>
- * A mtron expression cannot declare a peer that can never answer, start a detached cluster, or ask a Java-side
+ * A mtron expression cannot dial a peer that can never answer, start a detached cluster, or ask a Java-side
  * predicate such as {@code isPeer}. That is what a DIRECTIVE is for, and they are named in CAPS and bracketed
  * like {@code [STATE]} so it is obvious at a glance which lines leave mtron. A PROBE directive writes its answer
  * to {@code /m/networkProbe/<name>}, so a Java-side fact becomes a mtron observation the script asserts on — the
@@ -52,7 +54,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *   [ROSTER_CLEAR]                 remove every declared peer
  *   [CLUSTER n port]               declare n peer addresses (detached: no processes, no sockets)
  *   [CLUSTER_CLOSE]                close that cluster and clear the roster
- *   [DECLARE_SILENT uri]           declare one peer that can never answer — no socket is opened
+ *   [DECLARE uri]                  declare one machine's address in the roster — knowledge, nothing is dialed
+ *   [DIAL_SILENT uri]              dial one peer whose client is never live — no socket is opened
  *   [CONNECT uri [client]]         dial through the java face
  *   [DISCONNECT uri]               hang up one reach
  *   [PROBE_MACHINES] [PROBE_PEER uri] [PROBE_STATUS] [PROBE_PEERCOUNT]
@@ -61,8 +64,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <p>
  * "Is this address MINE?" is deliberately NOT a directive. {@link Network.Helper#authorities()} still answers it —
  * the mounted listeners, which is what mDNS announces — but nothing ROUTES on it: the listener
- * declines a self co-mount with its loopback test ({@code Network.accept}), and reach is decided by
- * {@code transportOf}'s service comparison. The identity half therefore belongs to {@code NetworkIdentityTest},
+ * declines a self co-mount with its loopback test ({@code Network.accept}), and reach is decided by the dialed
+ * peers' service comparison ({@code peerOf}). The identity half therefore belongs to {@code NetworkIdentityTest},
  * which asks the predicates directly — and a suite that needs a mounted authority can add its own directive;
  * {@code NetworkIdentityTest}'s {@code mountListener} is the recipe.
  * <p>
@@ -71,11 +74,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * anyone means by "the roster". The listing is {@code network().machines()}, its {@code machine} field. The
  * directive is therefore named {@code [PROBE_MACHINES]} and counts machine rows; naming it after
  * {@code roster()} would promise the container and deliver a machine count — the kind of word/semantics mismatch
- * that costs a reader a wrong number. Those rows carry TWO conventions in one table:
- * {@code <authority> => transport} for a declared/dialed peer ({@code PeerCluster.connect},
- * {@code [DECLARE_SILENT]}), and {@code <host> => address{+}} for a discovered machine (mDNS). So the count is
- * "rows in the machine table", not "servers declared by this script" — a suite that wants the latter clears the
- * roster first ({@code [ROSTER_CLEAR]}) and runs no discovery source, which is what these suites do.
+ * that costs a reader a wrong number. Every row is {@code <key> => address{+}} — a declared machine
+ * ({@code PeerCluster.connect}, {@code [DECLARE]}) keyed by its authority, a discovered one (mDNS) by its host — so
+ * the count is "rows in the machine table", not "servers declared by this script": a suite that wants the latter
+ * clears the roster first ({@code [ROSTER_CLEAR]}) and runs no discovery source, which is what these suites do.
  * <p>
  * These scripts drive the KNOWN-SERVER ROSTER at {@code /network/roster} — one shared address rather than
  * per-machine state. The CONNECTIONS a machine holds are a different question and live on the component
@@ -103,6 +105,11 @@ public abstract class NetworkScriptTest extends AbstractMetatronTest {
      */
     private PeerCluster cluster;
 
+    /**
+     * the never-live peers a script dialed ({@code [DIAL_SILENT]}) — hung up after each script
+     */
+    private final java.util.List<fURI> silent = new java.util.ArrayList<>();
+
     protected Network network() {
         return Machine.current().network();
     }
@@ -117,27 +124,34 @@ public abstract class NetworkScriptTest extends AbstractMetatronTest {
         all.put("ROSTER_CLEAR", args -> Machine.write(Network.ROOT_ROSTER, rec(mutableMap())));
         // A DETACHED cluster is deliberate where peers are only being COUNTED or the roster inspected: real peer
         // addresses and a roster written by the same PeerCluster.connect() production uses, but no processes and
-        // no sockets. Where a peer is instead ASKED something (status), a no-answer transport is declared
-        // (DECLARE_SILENT) — a real address with nothing listening would make the probe dial and log a
-        // connection refusal, and that case is about the report, not the refusal.
+        // no sockets. Where a peer is instead ASKED something (status), a never-live client is dialed
+        // (DIAL_SILENT) — a real address with nothing listening would make a dial wait out its connect timeout and
+        // log a refusal, and that case is about the report, not the refusal.
         all.put("CLUSTER", args -> {
             this.closeCluster();
             this.cluster = PeerCluster.detached(Integer.parseInt(args[0]), "/n", Integer.parseInt(args[1])).connect();
         });
         all.put("CLUSTER_CLOSE", args -> this.closeCluster());
-        // INTO roster/machine: the roster is a container ([discover, machine]) and a reach declared at
-        // its root lands where no reader looks
-        all.put("DECLARE_SILENT", args -> Machine.write(Network.ROOT_ROSTER, rec(mutableMap(
-                uri(MACHINE), rec(mutableMap(uri(args[0]), noAnswerTransport()))))));
+        // KNOWLEDGE: an address row, INTO roster/machine — the roster is a container ([discover, machine]) and a
+        // row declared at its root lands where no reader looks
+        all.put("DECLARE", args -> Machine.write(Network.ROOT_ROSTER, rec(mutableMap(
+                uri(MACHINE), rec(mutableMap(uri(args[0]), uri(args[0])))))));
+        // REACH THAT IS DOWN: a client that declares what a peer is talked to with, and whose status says it is not
+        // live — the client a dead link leaves. Indexed as a constructor indexes itself; hung up after the script.
+        all.put("DIAL_SILENT", args -> {
+            this.silent.add(f(args[0]));
+            this.network().index(silentClient(f(args[0])));
+        });
         // THE LISTING, NOT THE CONTAINER. machines() is roster().at(machine) and roster() reads
         // Machine.read(ROOT_ROSTER), so it is the roster's machine table -- named machines, not roster,
-        // because roster() itself answers the container [discover, machine]. The count is over BOTH row
-        // conventions (declared <authority> => transport, discovered <host> => address{+}), so a suite
-        // that wants "what this script declared" clears the roster first and runs no discovery source.
+        // because roster() itself answers the container [discover, machine]. The count is over every row
+        // (declared <authority> => address, discovered <host> => address{+}), so a suite that wants "what
+        // this script declared" clears the roster first and runs no discovery source.
         all.put("PROBE_MACHINES", args -> this.probe("machines", jnt(this.network().machines().jvm().size())));
         all.put("PROBE_PEER", args -> this.probe("peer", jnt(this.network().isPeer(f(args[0])) ? 1 : 0)));
         all.put("PROBE_STATUS", args -> {
-            final Obj report = this.network().status(noobj());
+            // the status method's own receiver: the network, whose dialed peers it reports (the roster when none)
+            final Obj report = this.network().status(this.network());
             final Obj first = report.stream().findFirst().orElse(noobj());
             final Obj peerStatus = first.isRec() ? (Obj) first.asRec().at(uri(STATUS)) : noobj();
             this.probe("status", peerStatus.isRec() ? (Obj) peerStatus.asRec().at(uri(KIND)) : noobj());
@@ -161,6 +175,8 @@ public abstract class NetworkScriptTest extends AbstractMetatronTest {
 
     @AfterEach
     public void clearNetworkScript() {
+        this.silent.forEach(this.network()::disconnect);
+        this.silent.clear();
         this.closeCluster();
         // the roster is an ADDRESS, not a Java field, so a test that wrote into it clears it by address too
         Machine.write(ROSTER_PATH, rec(mutableMap()));
@@ -179,10 +195,15 @@ public abstract class NetworkScriptTest extends AbstractMetatronTest {
     }
 
     /**
-     * A declared peer that cannot answer — the spelling a dead peer produces, and the one that keeps a probe from
-     * opening a socket.
+     * A dialed client that cannot answer — what a dead link leaves behind: it declares the instructions a peer is
+     * talked to with (each answering a fail), and its status says it is not live. No socket is opened.
      */
-    protected static Obj noAnswerTransport() {
-        return instLambda((lhs, inst) -> noobj());
+    protected static Obj silentClient(final fURI host) {
+        return rec(
+                uri(HOST), uri(host),
+                uri(INST), rec(
+                        uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> fail("%s does not answer", host)),
+                        uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> fail("%s does not answer", host))),
+                uri(STATUS), Network.Helper.statusOf(() -> false));
     }
 }

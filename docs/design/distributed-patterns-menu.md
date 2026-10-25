@@ -19,8 +19,8 @@ layout the processor runs:
 start([slave_1, …, slave_k]).select([to(p_1), …, to(p_k)]).merge().<combiner>.<tail>
 ```
 
-`select` pairs slave *i* with route *i*. `to(peer)` ships the slave unquoted through `Network.write` and the peer's
-transport (`asTransport`, a `send_recv?block` call); the peer evaluates the frame on receipt and replies. `merge()`
+`select` pairs slave *i* with route *i*. `to(peer)` — bound at plan time to the target client's own `to` — ships the slave
+unquoted as `start(slave).to(<>)`; the peer evaluates the frame on receipt and replies. `merge()`
 streams the replies and the combiner recombines them. `clstrSpace` is dead code and `RemoteSpace` is going away;
 neither is part of this path. `RemoteMachine` and `RemoteProcessor` (a frame that stood in a peer and shipped every
 code application made in it) were relics and are removed (2026-10-21): the `law_shard` layout is the distribution

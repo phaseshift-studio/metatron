@@ -48,9 +48,9 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * THE DIALED PEER, ACROSS A REAL PROCESS BOUNDARY. {@link NetworkTest} declares its peer in the roster with
- * {@link PeerCluster}'s own transports; a console dials with a {@code ws_client}, whose peer is reached through
- * {@code Network.Helper.asTransport} instead. That adapter used to compute the outbound message HERE — a read
+ * THE DIALED PEER, ACROSS A REAL PROCESS BOUNDARY. A console dials with a {@code ws_client}, whose peer is reached
+ * through the instructions that client declares (its {@code inst}). The adapter that once stood between them used to
+ * compute the outbound message HERE — a read
  * answered this machine's memory and a write landed in it — and no loopback suite could see it, because inside
  * one JVM the near store and the far store are the same store. A forked peer is the only witness, and a value
  * planted on each side of the same path is the only proof of which side answered.

@@ -349,6 +349,14 @@ written, `1.plus(2).send_recv(|plus(45))` evaluating `plus(45)` at the far side 
 total, $P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a reach never errors — it answers a smaller set, and $\emptyset$
 (noobj) is a legal answer, not an exception.
 
+**Status.** Every client and every server answers `status` — a bool, true while it is live, derived each time it is
+read and never stored. A `ws_client` is live while its socket is open, an `http_client` while its host answers a HEAD,
+a loop client always, an `mcp_client` by its health check, an `mcp_server` while its own dispatch answers a ping, and
+a server while its socket is bound. `*~/network/status` reports each dialed peer by its client's `status` — `up` or
+`down` — and a roster address that was never dialed as `known`. A peer carries no transport of its own: it is talked
+to with its client's `inst`. And a read never dials: construction connects (`http_client::[host=><http://h:p>]`),
+destruction disconnects, and an address no client was constructed for falls through to memory.
+
 **Supervision keeps the index true.** Between the index that granted a peer and the drop that retracts it, the
 network watches every peer whose client holds a live connection — a *link*, `ws_client` today — and keeps the listing
 honest. Connection on creation, destruction on deletion, and only the owner deletes:

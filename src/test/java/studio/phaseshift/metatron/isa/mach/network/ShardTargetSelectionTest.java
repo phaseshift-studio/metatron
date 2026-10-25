@@ -58,7 +58,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -94,14 +93,14 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     }
 
     /**
-     * A loop-style client that declares exactly {@code instTIDs}, each the native with an identity-shaped body; one
-     * with {@code eval} carries a transport (derived from it), which is what makes a link-less peer online.
+     * A loop-style client that declares exactly {@code instTIDs}, each the native with an identity-shaped body, and
+     * vouches for itself with a live {@code status} — what makes a link-less peer online.
      */
     private static Obj client(final fURI host, final fURI... instTIDs) {
         final Rec overrides = rec();
         for (final fURI instTID : instTIDs)
             overrides.jvm().put(uri(instTID), Network.Helper.override(instTID, (lhs, inst) -> inst.arg(0).apply(lhs)));
-        return rec(uri(HOST), uri(host), uri(INST), overrides);
+        return rec(uri(HOST), uri(host), uri(INST), overrides, uri(STATUS), Network.Helper.statusOf(() -> true));
     }
 
     /**
@@ -144,19 +143,21 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     @Test
     void testServesNeedsBothOnlineAndTo() {
         final Placement route = Placement.tree(1, Span.at());
-        final Obj transport = instLambda(message -> message);
-        final Obj online = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT), uri(TRANSPORT), transport,
+        final Obj online = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), client(SERVANT, EVAL_INST_TID, TO_INST_TID));
         assertTrue(Places.serves(online, route), "online and serving to: a target");
-        final Obj cannotTo = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER), uri(TRANSPORT), transport,
+        final Obj cannotTo = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER),
                 uri(CLIENT), client(EVALER, EVAL_INST_TID));
         assertFalse(Places.serves(cannotTo, route), "online, but its client declares no to: not a target");
-        final Obj writer = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER), uri(TRANSPORT), transport,
+        final Obj writer = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER),
                 uri(CLIENT), client(EVALER, FROM_INST_TID, TO_INST_TID));
         assertFalse(Places.serves(writer, route), "online and serving to, but no eval — a POST writer stores a program, it runs none");
         final Obj offline = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), new DownLink(client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().jvm()));
         assertFalse(Places.serves(offline, route), "serving to, but its link is down: not a target");
+        final Obj silent = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
+                uri(CLIENT), rec(uri(HOST), uri(SERVANT), uri(INST), client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().at(uri(INST))));
+        assertFalse(Places.serves(silent, route), "serving to, but its client never says it is live: not a target");
     }
 
     @Test
@@ -187,11 +188,18 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     }
 
     /**
-     * A client whose link is down — the supervised state between a failure and its redial.
+     * A client whose link is down — the supervised state between a failure and its redial. It carries no status
+     * field of its own, so the network asks the link ({@link Network.Link#connected}).
      */
     private static final class DownLink extends MRec implements Network.Link {
         DownLink(final Map<Obj, Obj> jvm) {
-            super(jvm, REC_TID, null);
+            super(withoutStatus(jvm), REC_TID, null);
+        }
+
+        private static Map<Obj, Obj> withoutStatus(final Map<Obj, Obj> jvm) {
+            final Map<Obj, Obj> copy = new java.util.LinkedHashMap<>(jvm);
+            copy.remove(uri(STATUS));
+            return copy;
         }
 
         @Override

@@ -151,9 +151,13 @@ when the surface is held. `disconnect(address)` reads what the address names —
 route that surface, a bare authority every surface of the service.
 
 Three consumers read the link: `PlanInterpreter.shardTargets` plans only over `Network.Helper.online` peers (an outage
-shrinks the fan-out), `Network.status` probes a `peer::T`'s transport (it reported every dialed peer `known`) and
-answers `down` for an offline link without a trip, and `index`/`connect` treat a hung-up member as absent so a fresh
-dial is never handed a dead peer.
+shrinks the fan-out), `Network.status` reports each dialed peer by its client's own `status` (a roster address is
+`known`, never `down`), and `index`/`connect` treat a hung-up member as absent so a fresh dial is never handed a dead
+peer. **Every client and server answers `status`** (2026-10-24): a bool, true while live, derived on read and never
+stored — `Network.Helper.statusOf(live)` installs it, `Network.Helper.status(obj)` reads it (a `Link` without the
+field answers `connected()`). ws: the socket is open; http: a bounded HEAD answers; loop: always; mcp_client: its
+health check; mcp_server: its own dispatch answers a ping; `Listener` (every server): not closed. A `peer::T`
+carries no transport: it is talked to with its client's `inst`, and a read never dials — construction connects.
 
 Two Java-side facts the design depends on. `index`, `accept` and `disconnect` serialize the peer map's
 read-modify-write on the level, and `disconnect` clears under the lock but closes outside it — closing a link is a

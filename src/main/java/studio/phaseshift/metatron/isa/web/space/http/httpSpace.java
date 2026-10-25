@@ -131,14 +131,20 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     uri(ON_CLOSE).maybe(), T(ALL)))
             .create();
 
+    /**
+     * how long an http client's status may wait for the server to answer its HEAD — the connect and the response
+     * both — before it reads not live
+     */
+    private static final java.time.Duration STATUS_TIMEOUT = java.time.Duration.ofSeconds(2);
+
     public static final Type HTTP_CLIENT_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(HTTP_CLIENT_TID)
             .constructor(socket -> {
                 // THE HTTP CLIENT — a connectionless reader and writer. It overrides `from` with an HTTP GET and `to`
-                // with an HTTP POST, and declares NO eval (hence no transport): it is reached only through those two
-                // overrides in the read/write ladders. Each override is the native itself with an http body, so the
-                // call arrives as it was written — the FULL address (with authority) in arg(0), sent verbatim.
+                // with an HTTP POST, and declares NO eval: it is reached only through those two overrides in the
+                // read/write ladders. Each override is the native itself with an http body, so the call arrives as it
+                // was written — the FULL address (with authority) in arg(0), sent verbatim.
                 // GET: the response is reified by its content type.
                 final Obj from = Network.Helper.override(FROM_INST_TID, (lhs, inst) -> {
                     final fURI uri = inst.arg(0).uriValue();
@@ -187,9 +193,32 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         return fail(e);
                     }
                 });
+                // THE STATUS — a connectionless client holds no socket to ask, so it asks the server, each time it is
+                // read: a bounded HEAD to the host it was dialed at. ANY response is a live server (a 404 still
+                // answers); a refused or timed-out connection is not.
+                final Obj host = socket.asRec().at(uri(HOST));
+                final Obj status = Network.Helper.statusOf(() -> {
+                    if (!host.isUri())
+                        return false;
+                    try (final HttpClient client = HttpClient.newBuilder().connectTimeout(STATUS_TIMEOUT).build()) {
+                        client.send(HttpRequest.newBuilder()
+                                        .uri(java.net.URI.create(host.uriValue().toString()))
+                                        .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                                        .timeout(STATUS_TIMEOUT)
+                                        .build(),
+                                HttpResponse.BodyHandlers.discarding());
+                        return true;
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return false;
+                    } catch (final Exception e) {
+                        return false;
+                    }
+                });
                 final Obj client = rec(
-                        uri(HOST), socket.asRec().at(uri(HOST)),
-                        uri(INST), rec(uri(FROM_INST_TID), from, uri(TO_INST_TID), to));
+                        uri(HOST), host,
+                        uri(INST), rec(uri(FROM_INST_TID), from, uri(TO_INST_TID), to),
+                        uri(STATUS), status);
                 Network.Helper.index(client);
                 return client;
             }).create();

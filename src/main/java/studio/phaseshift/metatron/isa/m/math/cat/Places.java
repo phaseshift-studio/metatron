@@ -184,16 +184,20 @@ public final class Places {
 
     /**
      * The realized half of the liveness test (§4) — {@link #admissible} is the declared half: a dialed {@code peer}
-     * can take {@code placement} when it is ONLINE and its client SERVES every instruction the placement requires
-     * ({@link Placement#inst()}: a distributing shape ships through {@code to(<target>)}, so its target must serve
-     * {@code to}). Serving is the client's mini-instset declaring an override the type system accepts
-     * ({@link Network.Helper#overrideIn}). Read off this peer's own client — not the first peer of its service.
+     * can take {@code placement} when its client SERVES every instruction the placement requires
+     * ({@link Placement#inst()}: a distributing shape ships through {@code to(<target>)} a program the target applies,
+     * so it must serve {@code to} and {@code eval}) and is ONLINE — the client's own {@code status}
+     * ({@link Network.Helper#online}). Serving is the client's mini-instset declaring an override the type system
+     * accepts ({@link Network.Helper#overrideIn}). Read off this peer's own client — not the first peer of its service.
      */
     public static boolean serves(final Obj peer, final Placement placement) {
-        if (!peer.isRec() || !Network.Helper.online(peer))
+        if (!peer.isRec())
             return false;
+        // what the client DECLARES first — a map read — and only then whether it is live: a status may be a round
+        // trip (an http client's HEAD), and a client that cannot serve the placement is never worth asking
         final Obj client = peer.asRec().at(uri(CLIENT));
-        return placement.inst().stream().allMatch(instTID -> Network.Helper.overrideIn(client, instTID).isObjInst());
+        return placement.inst().stream().allMatch(instTID -> Network.Helper.overrideIn(client, instTID).isObjInst())
+                && Network.Helper.online(peer);
     }
 
     /**

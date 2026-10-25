@@ -95,9 +95,8 @@ public class WebSocketRec extends MRec implements WebSocketObj {
         //   obj.to(<uri>) ships the localized write, start(obj).to(</path>) — the obj is the lhs, as the native's.
         // The far side evaluates what it is sent (the wire protocol), so a read answers its value and a shipped unquoted
         // program runs there. A compiled from/to whose address names this peer binds to these bodies
-        // (Network.Helper.atPeer); asTransport derives the peer's transport from eval. A caller that brings its OWN inst
-        // — a custom to(), say — keeps it. With no instruction memory to read the natives' signatures from, the client
-        // declares nothing.
+        // (Network.Helper.atPeer). A caller that brings its OWN inst — a custom to(), say — keeps it. With no instruction
+        // memory to read the natives' signatures from, the client declares nothing.
         if (!map.containsKey(uri(INST))) {
             final Rec overrides = rec();
             final Obj eval = Network.Helper.override(EVAL_INST_TID, shipAndAwait);
@@ -114,6 +113,13 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             if (!overrides.isEmpty())
                 this.jvm().put(uri(INST), overrides);
         }
+        // THE STATUS — live while its socket is open, derived on read: a socket that closed (or has not opened yet)
+        // reads false at once, and a redial that reopens it reads true again, with no field to update
+        if (!map.containsKey(uri(STATUS)))
+            this.jvm().put(uri(STATUS), Network.Helper.statusOf(() -> {
+                final WebSocket socket = this.getWebSocket();
+                return null != socket && socket.isOpen();
+            }));
         if (!map.containsKey(uri(CLOSE)))
             this.jvm().put(uri(CLOSE), instLambda((lhs, inst) -> {
                 LOG.debug("closing %s", this.vid());

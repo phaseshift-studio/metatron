@@ -440,6 +440,10 @@ public class webInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
                                                 uri(RESOURCE).maybe().asUri(), T(ALL),
+                                                // `status` is installed by the constructor (a json-rpc ping of its own
+                                                // dispatch) but NOT declared here: a refinement of mcp_server::T
+                                                // (mcp_message, …) is matched by predicate EQUALITY, and a key added
+                                                // here un-matches every one of them, which unwires the route lanes
                                                 uri(PROMPT).maybe().asUri(), T(ALL)))
                                         .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)), (lhs, inst) ->
                                                 new mcpServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), MCP_SERVER_TID, inst.arg(0).vid())))

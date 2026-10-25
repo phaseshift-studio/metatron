@@ -324,7 +324,7 @@ public interface WebSocketObj extends Rec, Closeable {
         final Inst anchor = instB(VID_INST_TID, lst(uri(tag)));
         // DESCEND THE BLOCKS FIRST. A payload may arrive quoted -- a user's `|` holds a chain back for the far
         // side -- and the peer's deserialization evaluates what it is sent, spending a quote. (A network read or
-        // write arrives unquoted: Network.Helper.asTransport hands its message over raw, start(...).to(...) and
+        // write arrives unquoted: the client's own from/to/eval hand their message over raw, start(...).to(...) and
         // all, so the anchor simply ends that chain.) The anchor must ride the chain the PEER evaluates, so it
         // goes on the INNERMOST code and is re-quoted to the same depth; appended outside, it would tag the quote
         // rather than the chain the peer runs.
