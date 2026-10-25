@@ -332,6 +332,44 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     }
 
     @Test
+    void testHttpClientPostsTheObjItWrites() throws Exception {
+        // the http client's to is a POST: obj.to(<http://…>) writes the obj — the lhs, serialized by the mime (json by
+        // default) — and answers what the native to answers, the obj written (the type system holds it to to's range,
+        // so the server's reply is not the answer). It WRITES and evaluates nothing: the client serves no eval, so it
+        // is never a place to ship a program.
+        final java.util.concurrent.atomic.AtomicReference<String> method = new java.util.concurrent.atomic.AtomicReference<>();
+        final java.util.concurrent.atomic.AtomicReference<String> posted = new java.util.concurrent.atomic.AtomicReference<>();
+        final HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        server.createContext("/sink", exchange -> {
+            method.set(exchange.getRequestMethod());
+            posted.set(new String(exchange.getRequestBody().readAllBytes()));
+            final byte[] body = "stored".getBytes();
+            exchange.getResponseHeaders().set("Content-Type", "text/plain");
+            exchange.sendResponseHeaders(200, body.length);
+            try (final var os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+            exchange.close();
+        });
+        server.start();
+        final String authority = "http://localhost:" + server.getAddress().getPort();
+        final Network network = Machine.current().network();
+        try {
+            network.connect(f(authority));
+            assertTrue(network.overrideOf(f(authority), TO_INST_TID).isObjInst(), "the http client serves to (POST)");
+            assertTrue(!network.overrideOf(f(authority), EVAL_INST_TID).isObjInst(), "and no eval: a POST evaluates nothing");
+            final Obj written = rec(uri("name"), str("marko"));
+            final Obj answer = Machine.write(f(authority + "/sink"), written);
+            assertEquals("POST", method.get(), "the write is a POST");
+            assertTrue(null != posted.get() && posted.get().contains("marko"), "whose body is the written obj, as json: " + posted.get());
+            assertEquals(written, answer, "the answer is the native to's: the obj written, not the server's reply");
+        } finally {
+            server.stop(0);
+            network.disconnect(f(authority));
+        }
+    }
+
+    @Test
     void testConnectIsEnsurePeered() {
         final Network network = Machine.current().network();
         final Obj first = network.connect(SELF);

@@ -249,7 +249,7 @@ infer the rest" — the loop peer's one maximal capability is "evaluate code (as
 |-----------------------|------------------------------------------------------------------------------|
 | `id_client` (loop)    | `{ eval, from, to }` — each the identity of the wire body (2026-10-24; was `{ eval => identity }`) |
 | `ws_client` (mtron)   | `{ eval => ship-code, from => ship-from_, to => ship-to_ }` — all three declared (ruling 2026-10-24: no `to` derived from `eval`) |
-| `http_client` (web)   | `{ from => GET }` — no `eval`, no `to`                                        |
+| `http_client` (web)   | `{ from => GET, to => POST }` — no `eval`: a POST writes an obj and evaluates nothing, so it is no shard target (2026-10-24) |
 | `mcpClient` (codegraph)| `{ codegraph_explore => tool-call, codegraph_search => tool-call, … }`      |
 
 The keys are instruction tids, the values are typed insts, and the set is whatever the peer natively does. The

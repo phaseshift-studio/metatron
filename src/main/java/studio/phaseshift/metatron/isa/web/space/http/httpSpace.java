@@ -69,6 +69,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.MIMEQ_PATTERN;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -134,11 +135,11 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .tid(REC_TID)
             .vid(HTTP_CLIENT_TID)
             .constructor(socket -> {
-                // THE HTTP CLIENT — a connectionless reader. It overrides `from` with an HTTP GET and declares NO
-                // eval (hence no transport): it is reachable only through its `from` override in the read ladder. The
-                // override is `from` itself with a GET body, so the call arrives as the read was written — from(<uri>),
-                // the FULL address (with authority) in arg(0), which the GET sends verbatim; the response is reified
-                // by its content type.
+                // THE HTTP CLIENT — a connectionless reader and writer. It overrides `from` with an HTTP GET and `to`
+                // with an HTTP POST, and declares NO eval (hence no transport): it is reached only through those two
+                // overrides in the read/write ladders. Each override is the native itself with an http body, so the
+                // call arrives as it was written — the FULL address (with authority) in arg(0), sent verbatim.
+                // GET: the response is reified by its content type.
                 final Obj from = Network.Helper.override(FROM_INST_TID, (lhs, inst) -> {
                     final fURI uri = inst.arg(0).uriValue();
                     try {
@@ -160,9 +161,35 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         return fail(e);
                     }
                 });
+                // POST: obj.to(<uri>) writes the obj — the lhs, as the native's — as httpSpace's directWriter sends it:
+                // the mime is the address's ?mimeq or json, the body that mime's bytes. The answer is the native to's:
+                // the obj written (its range is the lhs's — the type system checks it), so a reply the far side sends
+                // back is not the write's answer; a refusal (no 2xx) is a fail. A POST WRITES and nothing more: the far
+                // side stores what it is sent and evaluates nothing, so this client serves no eval and is no place to
+                // ship a program (Placement.Shape.inst requires both to and eval of a shard target).
+                final Obj to = Network.Helper.override(TO_INST_TID, (lhs, inst) -> {
+                    final fURI uri = inst.arg(0).uriValue();
+                    try {
+                        final MIME.MIMEType mime = Optional.ofNullable(MIME.MIMEType.of(uri.q(MIMEQ_PATTERN))).orElse(MIME.MIMEType.APPLICATION_JSON);
+                        final HttpRequest request = HttpRequest.newBuilder()
+                                .header(MIME.MIMEType.VALUE, mime.value)
+                                .uri(java.net.URI.create(uri.removeQ(MIMEQ_PATTERN).toString()))
+                                .POST(HttpRequest.BodyPublishers.ofByteArray(mime.toBytes(lhs)))
+                                .build();
+                        final HttpResponse<byte[]> response;
+                        try (final HttpClient client = HttpClient.newHttpClient()) {
+                            response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+                        }
+                        return 2 == response.statusCode() / 100
+                                ? lhs
+                                : fail("POST %s answered %s", uri, response.statusCode());
+                    } catch (final Exception e) {
+                        return fail(e);
+                    }
+                });
                 final Obj client = rec(
                         uri(HOST), socket.asRec().at(uri(HOST)),
-                        uri(INST), rec(uri(FROM_INST_TID), from));
+                        uri(INST), rec(uri(FROM_INST_TID), from, uri(TO_INST_TID), to));
                 Network.Helper.index(client);
                 return client;
             }).create();

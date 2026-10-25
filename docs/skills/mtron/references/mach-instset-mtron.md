@@ -334,14 +334,20 @@ message, no anonymous-then-upgrade: the listener co-mounts a **named** inbound p
 q-processor; the key carries none of them, while `host` keeps the dial as it was written.
 
 **The identity element.** `id_client::T` (`/m/mach/id_client`) is the identity of the protocol-client family, bound
-to the scheme `loop:`: its constructor is the dial, its `send_recv` applies the shipped message against the local
-machine. A read through a loop peer therefore *equals* the local read — the self-similarity contract in executable
-form, with no socket.
+to the scheme `loop:`: its constructor is the dial, and its mini-instset (`eval`, `from`, `to`) evaluates what it is
+sent against the local machine. A read through a loop peer therefore *equals* the local read — the self-similarity
+contract in executable form, with no socket.
 
-**Transport convention.** The message rides as `send_recv`'s argument, and a user's `|` (block) defers evaluation so
-code ships as written: `1.plus(2).send_recv(|plus(45))` evaluates `plus(45)` at the far side against the shipped
-monad. Insts are total, $P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a transport never errors — it answers a smaller set,
-and $\emptyset$ (noobj) is a legal answer, not an exception.
+**The mini-instset.** A client reaches the network through its `inst` — `{instruction tid => override}` — and
+nothing else. Each override is the native instruction with the client's own body (the same signature, so a call
+reaches it by swapping its function): `from(<uri>)` reads, `obj.to(<uri>)` writes (the obj is the lhs), and
+`eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client` declares
+`from` (GET) and `to` (POST) — a write that stores what it is sent and evaluates nothing, so it serves no `eval`. A
+shard target must serve both `to` (the route) and `eval` (the routed program must be applied there). `send_recv`
+remains a `ws_client`'s raw wire instruction, not a reach: a user's `|` (block) defers evaluation so code ships as
+written, `1.plus(2).send_recv(|plus(45))` evaluating `plus(45)` at the far side against the shipped monad. Insts are
+total, $P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a reach never errors — it answers a smaller set, and $\emptyset$
+(noobj) is a legal answer, not an exception.
 
 **Supervision keeps the index true.** Between the index that granted a peer and the drop that retracts it, the
 network watches every peer whose client holds a live connection — a *link*, `ws_client` today — and keeps the listing

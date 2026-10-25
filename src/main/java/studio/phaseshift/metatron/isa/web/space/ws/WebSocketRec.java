@@ -72,29 +72,33 @@ public class WebSocketRec extends MRec implements WebSocketObj {
                     return fail(e);
                 }
             }));
-        if (!map.containsKey(uri(SEND_RECV))) {
-            final BiFunction<Obj, Inst, Obj> shipAndAwait = (lhs1, inst1) -> {
-                try {
-                    final Obj toSend = inst1.arg(0);
-                    final Real timeoutMs = inst1.arg(1).orElse(real(-1.0));
-                    return timeoutMs.realValue() == -1.0
-                            ? this.sendRecv(toSend)
-                            : this.sendRecv(toSend, timeoutMs.realValue().longValue());
-                } catch (final Exception e) {
-                    LOG.error("error in sendRecv: %s", e);
-                    return fail(e);
-                }
-            };
+        // THE RAW WIRE INSTRUCTION — send a message and await its reply: a user's instruction (and the wire trace's
+        // round-trip kind), not the network's reach; the network reaches this connection through its mini-instset
+        final BiFunction<Obj, Inst, Obj> shipAndAwait = (lhs1, inst1) -> {
+            try {
+                final Obj toSend = inst1.arg(0);
+                final Real timeoutMs = inst1.arg(1).orElse(real(-1.0));
+                return timeoutMs.realValue() == -1.0
+                        ? this.sendRecv(toSend)
+                        : this.sendRecv(toSend, timeoutMs.realValue().longValue());
+            } catch (final Exception e) {
+                LOG.error("error in sendRecv: %s", e);
+                return fail(e);
+            }
+        };
+        if (!map.containsKey(uri(SEND_RECV)))
             this.jvm().put(uri(SEND_RECV), instLambda(shipAndAwait));
-            // THE MINI-INSTSET — the instructions you talk to this connection with, each on its native signature with
-            // this client's own body (Network.Helper.override), so the network reaches each by swapping f() alone:
-            //   eval(code)    the send_recv body: the network calls eval?block(code), so arg(0) is the code, raw;
-            //   from(<uri>)   ships the localized read, from(</path>);
-            //   obj.to(<uri>) ships the localized write, start(obj).to(</path>) — the obj is the lhs, as the native's.
-            // The far side evaluates what it is sent (the wire protocol), so a read answers its value and a shipped
-            // unquoted program runs there. A compiled from/to whose address names this peer binds to these bodies
-            // (Network.Helper.atPeer); asTransport derives the legacy transport from eval. With no instruction memory to
-            // read the natives' signatures from, the client declares nothing and stays on send_recv.
+        // THE MINI-INSTSET — the instructions you talk to this connection with, each on its native signature with this
+        // client's own body (Network.Helper.override), so the network reaches each by swapping f() alone:
+        //   eval(code)    ships the code: the network calls eval?block(code), so arg(0) is the code, raw;
+        //   from(<uri>)   ships the localized read, from(</path>);
+        //   obj.to(<uri>) ships the localized write, start(obj).to(</path>) — the obj is the lhs, as the native's.
+        // The far side evaluates what it is sent (the wire protocol), so a read answers its value and a shipped unquoted
+        // program runs there. A compiled from/to whose address names this peer binds to these bodies
+        // (Network.Helper.atPeer); asTransport derives the peer's transport from eval. A caller that brings its OWN inst
+        // — a custom to(), say — keeps it. With no instruction memory to read the natives' signatures from, the client
+        // declares nothing.
+        if (!map.containsKey(uri(INST))) {
             final Rec overrides = rec();
             final Obj eval = Network.Helper.override(EVAL_INST_TID, shipAndAwait);
             final Obj from = Network.Helper.override(FROM_INST_TID, (lhs, inst) ->

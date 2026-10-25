@@ -65,7 +65,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * A SHARD TARGET IS ONLINE AND SERVES THE ROUTE (Marko, 2026-10-24). law_shard ships each slave as
- * {@code to(<target>)}, so a peer is a target only when it is online AND its client declares {@code to}. The
+ * {@code to(<target>)}, a program the far side must apply, so a peer is a target only when it is online AND its client
+ * declares {@code to} and {@code eval} — {@code to} alone only writes an obj to an address. The
  * requirement is {@code plan::T} data — each placement's {@code inst} (the key mirrors a client's {@code inst}),
  * defaulted from the placement's shape — so every distribution rule reads it through one check,
  * {@link Places#serves}.
@@ -119,11 +120,13 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     }
 
     @Test
-    void testADistributingShapeRequiresTo() {
-        assertEquals(Set.of(TO_INST_TID), Placement.tree(1, Span.at()).inst(), "a tree ships through to(<target>)");
-        assertEquals(Set.of(TO_INST_TID), Placement.peers(Span.at()).inst(), "so does every distributing shape");
+    void testADistributingShapeRequiresToAndEval() {
+        // to is the route; eval because what the route carries is a program the target must apply — to alone only
+        // writes an obj to an address (an http POST stores the program and runs nothing)
+        assertEquals(Set.of(TO_INST_TID, EVAL_INST_TID), Placement.tree(1, Span.at()).inst(), "a tree ships a program through to(<target>)");
+        assertEquals(Set.of(TO_INST_TID, EVAL_INST_TID), Placement.peers(Span.at()).inst(), "so does every distributing shape");
         assertEquals(Set.of(), Placement.local(Span.at()).inst(), "a shape that stays home requires nothing");
-        assertEquals(Set.of(TO_INST_TID, FROM_INST_TID), Placement.tree(1, Span.at()).inst(FROM_INST_TID).inst(),
+        assertEquals(Set.of(TO_INST_TID, EVAL_INST_TID, FROM_INST_TID), Placement.tree(1, Span.at()).inst(FROM_INST_TID).inst(),
                 "a placement adds what its shipped chunk needs to what its shape ships through");
     }
 
@@ -131,10 +134,11 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     void testLawShardsPlanStatesWhatItsTargetMustServe() {
         final Plan shard = catRewrite.planOf("law_shard");
         final Placement route = shard.where().stream().filter(p -> p.shape().distributes()).findFirst().orElseThrow();
-        assertEquals(lst(uri(TO_INST_TID)), route.asRec().at(uri(INST)), "the plan says it: inst=>[</m/inst/to>] on its tree placement");
+        assertEquals(lst(uri(TO_INST_TID), uri(EVAL_INST_TID)), route.asRec().at(uri(INST)),
+                "the plan says it, in order: inst=>[</m/inst/to>,</m/inst/eval>] on its tree placement");
         assertTrue(shard.test(catInstSet.PLAN_TYPE), "and it is still a plan::T: " + shard);
         // a placement written as a rec, without inst, still requires what its shape ships through
-        assertEquals(Set.of(TO_INST_TID), Placement.of(rec(uri(SHAPE), uri("tree"), uri(SPAN), lst()).asRec()).inst());
+        assertEquals(Set.of(TO_INST_TID, EVAL_INST_TID), Placement.of(rec(uri(SHAPE), uri("tree"), uri(SPAN), lst()).asRec()).inst());
     }
 
     @Test
@@ -147,6 +151,9 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
         final Obj cannotTo = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER), uri(TRANSPORT), transport,
                 uri(CLIENT), client(EVALER, EVAL_INST_TID));
         assertFalse(Places.serves(cannotTo, route), "online, but its client declares no to: not a target");
+        final Obj writer = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER), uri(TRANSPORT), transport,
+                uri(CLIENT), client(EVALER, FROM_INST_TID, TO_INST_TID));
+        assertFalse(Places.serves(writer, route), "online and serving to, but no eval — a POST writer stores a program, it runs none");
         final Obj offline = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), new DownLink(client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().jvm()));
         assertFalse(Places.serves(offline, route), "serving to, but its link is down: not a target");

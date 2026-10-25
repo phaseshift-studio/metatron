@@ -50,8 +50,8 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 
 /**
  * NETWORK CONNECT OVER A REAL WIRE — the loop test's equality carried one transport out: the dial
- * constructs a {@code ws_client} (the client type's constructor IS the dialer), its {@code send_recv}
- * becomes the peer's transport, and a read through the peer must answer exactly what the far side's
+ * constructs a {@code ws_client} (the client type's constructor IS the dialer), its mini-instset
+ * becomes the peer's reach, and a read through the peer must answer exactly what the far side's
  * local read answers. The far side here is this same JVM's machine behind a real websocket, so the
  * equality is checkable without a second process.
  */
@@ -96,7 +96,7 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
                 "the peer keys on the service authority — the route stays on host");
         assertEquals(this.dialURI(), peer.asRec().<Obj>at(uri(HOST)).uriValue(),
                 "host remembers where it was dialed, route included — peer::T\u0027s own words");
-        assertEquals(true, peer.asRec().<Obj>at(uri(TRANSPORT)).isObjInst(), "the transport is the client\u0027s send_recv");
+        assertEquals(true, peer.asRec().<Obj>at(uri(TRANSPORT)).isObjInst(), "the transport is derived from the client\u0027s eval");
         assertEquals(true, peer.asRec().<Obj>at(uri(CLIENT)).isRec(), "the client is retained for the hang-up");
     }
 
@@ -136,6 +136,19 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
         assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "the compiled to is the ws client's: " + bound.functionClassName());
         FutureObj.resolveFuture(bound.apply(jnt(9)));
         assertEquals(jnt(9), Machine.read(f("/t/wire/z")), "the bound to landed the write at the far side");
+    }
+
+    @Test
+    void testASocketThatBringsItsOwnInstKeepsIt() {
+        // a client provides its own custom to(): a socket spec that carries an inst keeps it — the socket declares its
+        // eval/from/to only for a spec that carries none (no socket is opened: construction alone decides)
+        final Obj custom = Network.Helper.override(TO_INST_TID, (lhs, inst) -> lhs);
+        final WebSocketRec bespoke = new WebSocketRec(new java.util.LinkedHashMap<>(java.util.Map.of(uri(INST), rec(uri(TO_INST_TID), custom))), WS_CLIENT_TID, null);
+        assertEquals(custom, Network.Helper.overrideIn(bespoke, TO_INST_TID), "the spec's own to is the socket's to");
+        assertTrue(!Network.Helper.overrideIn(bespoke, EVAL_INST_TID).isObjInst(), "and nothing is declared beside it");
+        final WebSocketRec plain = new WebSocketRec(new java.util.LinkedHashMap<>(), WS_CLIENT_TID, null);
+        for (final fURI instTID : List.of(EVAL_INST_TID, FROM_INST_TID, TO_INST_TID))
+            assertTrue(Network.Helper.overrideIn(plain, instTID).isObjInst(), "a plain socket declares " + instTID);
     }
 
     @Test
