@@ -137,7 +137,18 @@ public class mParser {
     // Sugars defined with spaces (e.g., " * ") require those spaces in the source code.
     // Sugars without spaces (e.g., "*") are space-insensitive (use .trim()).
     // This allows: *x → from(x) and x * y → x.mult(y) to coexist.
-    private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>();
+    // ONE PARSER PER SUGAR, keyed by what the sugar IS (its tokens, position, inst chain and arity). An ISA's sugars are
+    // registered every time it is constructed (AbstractInstSet) or mounted (InstSet.mount) — every boot re-imports /m,
+    // and a test fixture builds an ISA per row — and a generated parser is a fresh object each time, so a set of parsers
+    // (identity equality) grew without bound in a long-lived JVM. Re-registering a sugar is a no-op: the first
+    // registration keeps its place, and with it its precedence.
+    private static final Map<SugarKey, Parser> PARSERS = new LinkedHashMap<>();
+
+    private record SugarKey(String start, String end, Sugar.Position position, List<fURI> chain, int arity) {
+        static SugarKey of(final Sugar sugar) {
+            return new SugarKey(sugar.getStartToken(), sugar.getEndToken(), sugar.getPosition(), sugar.getInstChain(), sugar.getArgCount());
+        }
+    }
     private static Parser cachedSugarParser = null;
     private static Parser cachedExpressionParser = null;
 
@@ -181,7 +192,7 @@ public class mParser {
         new mInstSet().sugars().forEach(mParser::addSugar);
         new catInstSet().sugars().forEach(mParser::addSugar);
         // Cache the sugar parser after all sugars are loaded
-        cachedSugarParser = PARSERS.isEmpty() ? null : choice(PARSERS.toArray(new Parser[0]));
+        cachedSugarParser = PARSERS.isEmpty() ? null : choice(PARSERS.values().toArray(new Parser[0]));
         // Initialize all parsers first
         furi_parser.set(seq(word().or(seq(of("::").not(),
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
@@ -304,7 +315,14 @@ public class mParser {
         // expression.
     }
 
-    public static LinkedHashSet<Parser> addSugar(final Sugar sugar) {
+    /**
+     * Register {@code sugar}'s parser, once: the parsers registered so far, in registration order. A sugar already
+     * registered (the same tokens, position, inst chain and arity) is not registered again.
+     */
+    public static synchronized Collection<Parser> addSugar(final Sugar sugar) {
+        final SugarKey key = SugarKey.of(sugar);
+        if (PARSERS.containsKey(key))
+            return Collections.unmodifiableCollection(PARSERS.values());
         final String startToken = sugar.getStartToken();
         final String endToken = sugar.getEndToken();
 
@@ -314,12 +332,12 @@ public class mParser {
         final String trimmedStart = startToken.trim();
 
         if (sugar.getPosition() == Sugar.Position.INFIX) {
-            PARSERS.add(generate_infix_sugar_parser(
+            PARSERS.put(key, generate_infix_sugar_parser(
                     sugar.getInstChain(),
                     trimmedStart
             ));
         } else if (startHasLeadingSpace || startHasTrailingSpace) {
-            PARSERS.add(generate_space_aware_sugar_parser(
+            PARSERS.put(key, generate_space_aware_sugar_parser(
                     sugar.getInstChain(),
                     trimmedStart,
                     startHasLeadingSpace,
@@ -329,14 +347,14 @@ public class mParser {
             ));
         } else {
             // Standard space-insensitive sugar (uses .trim())
-            PARSERS.add(generate_sugar_parser(
+            PARSERS.put(key, generate_sugar_parser(
                     sugar.getInstChain(),
                     of(startToken),
                     sugar.getArgCount(),
                     null == endToken ? null : of(endToken)
             ));
         }
-        return PARSERS;
+        return Collections.unmodifiableCollection(PARSERS.values());
     }
 
     private static Parser generate_infix_sugar_parser(final List<fURI> instChain, final String token) {
