@@ -496,10 +496,11 @@ public interface Machine extends Rec, AutoCloseable {
             machineSpace.addQ(QCollection.mimeQ());
             machineSpace.addQ(QCollection.lockQ());
             this.memory().addSpace(machineSpace);
-            // THE MACHINE'S REACH IS AN ADDRESS SPACE: <vid>/network/peer/# answers from the network component, so a
-            // peer sits at a valid path (its dial's own) and a noobj write there is the hang-up. More specific than the
-            // catch-all above, so it takes the peer branch and nothing else.
-            this.memory().addSpace(studio.phaseshift.metatron.isa.mach.type.network.PeerSpace.of(this));
+            // THE NETWORK IS ITS OWN ADDRESS SPACE: the component answers <vid>/network/# from its rec — every field at
+            // its own address, a peer or a listener at its key's path, and a noobj write on a member that member's
+            // retraction. More specific than the catch-all above, so the whole network branch is the component's.
+            if (this.network() instanceof BasicNetwork network)
+                network.mount(this);
             // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.
             this.memory().write(this.vid(), this);
             // this machine's log sink: a machine with none answers noobj, and GraphittyObjLogger.doLog then logs every level

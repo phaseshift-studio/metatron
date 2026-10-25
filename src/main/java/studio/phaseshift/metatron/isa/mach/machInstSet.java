@@ -598,6 +598,9 @@ public class machInstSet extends AbstractInstSet {
                                         // value to a bare rec — which reads stricter than ALL_TYPE while
                                         // admitting any rec at all.
                                         .isaPredicate(rec(
+                                                // the component is its own address space: the branch it answers
+                                                // for, <vid>/network/# once its machine mounts it (~/network/# until)
+                                                uri(PATTERN).maybe().asUri(), URI_TYPE,
                                                 uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(ROSTER).maybe().asUri(), rec(
@@ -622,7 +625,8 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(STATUS).maybe().asUri(), INST_TYPE))
                                         .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
                                         .create(),
-                                Map.of(uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
+                                Map.of(uri(PATTERN).maybe().asUri(), "the branch this network answers as a space: <vid>/network/#, every field at its own address and every member at its key's path",
+                                        uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
                                         uri(ROSTER).maybe(), "known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme://host:port); knowledge, not reach — a machine is reached by dialing one of them",
                                         uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",
