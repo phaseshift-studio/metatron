@@ -135,6 +135,11 @@ write : inst?dom=obj×uri  &rng=obj      // write obj to a uri
 not a flag. The `rng` matters as much as the `dom`: `inst?html<=uri` vs `inst?obj<=uri` is the difference between "I
 hand back html" and "I hand back something" — a consumer can type the result *without knowing the protocol*.
 
+> **Correction (2026-10-24, with the convention ruling).** In mtron's own signatures the payload is an *argument*
+> type, not the `dom` — the `dom` types the lhs. The natives are `eval(code)` and `from(uri)` (each `dom=obj?`) and
+> `obj.to(uri)` (`dom=A?`: the obj is the lhs). So "mtron-capable" reads "has an `eval` override", whose argument
+> admits code, and an override takes exactly its native's signature (§3.2).
+
 **Step two: the arrow is an instruction body.** The arrow view is the *type-side*; the override view is the *body-side*
 of the same object. A peer does not wrap `from()`/`to()` — it **redefines** them:
 
@@ -186,8 +191,10 @@ without disturbing the capability layer) and under `pop` (hang up the connection
 ```
 peer::T = {
   authority, host, name, status,        // identity, addressing, health
-  client (or link),                     // liveness: the live socket + Link
-  inst => { inst_tid => typed body }    // capability: the mini-instset
+  client => {                           // the connection itself (or link):
+    close, connected, hungUp, redial,   //   liveness: the live socket + Link
+    inst => { inst_tid => override }    //   capability: the mini-instset, read as peer.client.inst
+  }
 }
 ```
 
@@ -198,7 +205,8 @@ peer::T = {
   whose `inst` is `{from => GET}` *is* a web reader.
 - **`client` stays, demoted to liveness.** Its `send_recv` does not disappear — it *moves* into the bodies inside
   `inst` (a ws `from` body is `send_recv` carrying `from_`; a ws `eval` body is `send_recv` carrying code). What
-  remains on `client` is the live socket plus `close`/`connected`/`hungUp`/`redial`.
+  remains on `client` is the live socket plus `close`/`connected`/`hungUp`/`redial` — with `inst` beside them: the
+  client IS the connection, and `inst` is the instructions you talk to it with, never copied onto the peer.
 
 ### 3.2 `client::T`
 
@@ -221,14 +229,18 @@ transformation, from the session:
 // BEFORE — a generic send_recv:
 uri(SEND_RECV), instLambda((lhs, inst) -> inst.arg(0).apply(lhs))
 
-// AFTER — an instruction override, keyed by its tid, carrying its dom:
+// AFTER — an instruction override, keyed by its tid: the native eval with its own f()
 uri(INST), rec(
     uri(EVAL_INST_TID),
-    instLambda(EVAL_INST_TID, lst(CODE_TID), (lhs, inst) -> inst.arg(0).apply(lhs)))
+    Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> inst.arg(0).apply(lhs)))
 ```
 
-The override is a **typed inst** — its own `tid` (`EVAL_INST_TID`) and `dom` (`CODE_TID`) — so the signature survives
-and the subsumption lattice can read it. Overriding only `eval` is correct, not an omission: it is "declare the maximum,
+The override is **the native instruction with another body** — eval's own `tid` (its `dom`/`rng`) and argument types,
+read from instruction memory, with only `f()` replaced — so the signature survives by construction and the subsumption
+lattice can read it. Dispatch never repacks (ruling, 2026-10-24): the network builds the call exactly as a program
+issues it — `from(<uri>)`, `obj.to(<uri>)`, `eval?block(code)` — binds it to the native definition as resolution
+would, and swaps `f()` (`Network.Helper.dispatch`). An inst of any other signature is not accepted as an override
+(`Network.Helper.accepts`, by `Inst.test`). Overriding only `eval` is correct, not an omission: it is "declare the maximum,
 infer the rest" — the loop peer's one maximal capability is "evaluate code (as identity)," and `from`/`to` derive from it.
 
 ### 3.3 The `inst` map is a partial instset, open over tids

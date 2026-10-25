@@ -387,8 +387,8 @@ public class machInstSet extends AbstractInstSet {
                                 .constructor(arg -> new BasicMemory(arg.asRec().jvm(), arg.vid()))
                                 .create(),
                         // THE IDENTITY CLIENT — the identity element of the protocol-client family: its
-                        // constructor is the dial (as every client's is) and its send_recv applies the
-                        // shipped message against the LOCAL machine, so a read through a loop: peer IS the
+                        // constructor is the dial (as every client's is) and its eval override evaluates the
+                        // shipped code against the LOCAL machine, so a read through a loop: peer IS the
                         // local read of the localized address. It lives HERE rather than /m/web because the
                         // identity transport needs no wire — it is what makes the self-similarity contract
                         // executable without a socket, and what keeps Helper.dial free of scheme branches:
@@ -401,9 +401,11 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(INST).maybe().asUri(), REC_TYPE,
                                                 uri(CLOSE).maybe().asUri(), INST_TYPE))
                                         .constructor(arg -> {
+                                            // the override is eval itself with the identity body: the call arrives
+                                            // as eval?block(code), so arg(0) is the code, raw, and runs here
                                             final Obj client = rec(
                                                     uri(HOST), arg.asRec().at(uri(HOST)),
-                                                    uri(INST), rec(uri(EVAL_INST_TID), instLambda((lhs, inst) -> inst.arg(0).apply(lhs))),
+                                                    uri(INST), rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> inst.arg(0).apply(lhs))),
                                                     uri(CLOSE), instLambda((lhs, inst) -> noobj()));
                                             // indexing is a BACKGROUND behavior upon successful construction:
                                             // the client exists as an obj either way, the index merely observes
@@ -416,8 +418,8 @@ public class machInstSet extends AbstractInstSet {
                                         uri(CLOSE), "nothing to hang up"),
                                 """
                                 the identity client — the identity element of the protocol-client family:
-                                dialing loop://<name> constructs one, and its send_recv evaluates the shipped
-                                message against the local machine. The executable form of the self-similarity
+                                dialing loop://<name> constructs one, and its eval override evaluates the shipped
+                                code against the local machine. The executable form of the self-similarity
                                 contract: a read through a loop peer equals the local read.
                                 """,
                                 "*~/network.connect(<loop://self>) [-- the identity peer: reads and writes answer locally --]"),

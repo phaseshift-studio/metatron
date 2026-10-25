@@ -11,10 +11,10 @@ The model's *shape* and *dispatch primitive* are in place, additively, without b
 
 | piece | file | what changed |
 |---|---|---|
-| `peer::T.inst` | `machInstSet.java` | added an optional `inst` rec field — the mini-instset `{ inst_tid => typed body }` — beside the legacy `transport` |
+| client `inst` | `machInstSet.java` | the mini-instset `{ inst_tid => override }` lives on the **client** — the connection — and is read through `peer.client.inst`; `peer::T` carries no `inst` field (an earlier draft copied it onto the peer) |
 | `id_client` | `machInstSet.java` | migrated off `send_recv`: now declares `inst => { eval => identity }` (+ `close`). The canonical example |
 | `Helper.asTransport` | `Network.java` | derives the legacy transport from `inst.eval` (before falling back to `send_recv`), so read/write keep working unchanged |
-| `Network.index` | `Network.java` | copies `client.inst` onto the minted `peer.inst` |
+| `Network.index` | `Network.java` | holds the client on the minted peer — no copy of `inst` — and accepts an `inst`-only client (no eval, no transport) |
 | `Network.overrideOf` | `Network.java` | **the dispatch primitive**: `overrideOf(authority, instrTid) -> peer.inst[tid] \| noobj` |
 | test | `NetworkConnectTest.java` | `testOverrideOfDispatchesToThePeersOwnBodies` — loop peer declares `eval`, not `from` |
 
@@ -54,6 +54,23 @@ transport carrying everything.
    the *same* wrap, so `overrideOf(...eval).apply(code)` and the transport stay interchangeable. Write the convention
    down next to `wrapTransport`.
 
+   > **Settled — ruling, 2026-10-24 (supersedes the `send_recv`-shaped `arg(0)` wrap above).** An override has **the
+   > same signature as the instruction it replaces** (within the type system's acceptance), and dispatch **never
+   > repacks arguments: `Inst.f()` is the one thing swapped.** In code (`Network.Helper`):
+   >
+   > | piece | rule |
+   > |---|---|
+   > | `override(tid, body)` | declare: the native definition (read from instruction memory) with `body` as its `f()` — same signature by construction |
+   > | `accepts(tid, inst)` | validate: the native definition accepts the inst as itself (`Inst.test`: base, dom, rng, arg types), `f` aside; `overrideOf` answers only accepted overrides |
+   > | `dispatch(override, user, lhs)` | call: `user` is the instruction as a program issues it, bound to its native definition by the machine's `Binder` (generics, args, q-procs), then `.f(override.f())` |
+   > | `evaluate(eval, code)` | `eval?block(code)` — the only call that blocks: its code is a payload the peer evaluates. `from`/`to` carry an address, which computes to itself |
+   >
+   > The calls are the natives' own shapes: `from(<uri>)` (the full address in `arg(0)`), `obj.to(<uri>)` (the obj
+   > is the **lhs**, the address `arg(0)`), `eval?block(code)` (the code in `arg(0)`, raw). `wrapTransport` survives
+   > only as the legacy `send_recv` adapter. Proven by `NetworkConnectTest`
+   > (`testAnOverrideIsTheNativeInstructionWithItsOwnF`, `testDispatchIsTheNativeCallWithTheOverridesF`,
+   > `testSubmitShipsTheCodeRawThroughEval`, `testAnInstOfAnotherSignatureIsNotAnOverride`).
+
 **Verify:** loop peer read/write still green; add a test that a peer declaring `from` (not `eval`) answers reads via
 `from` directly, and one that a peer declaring only `eval` answers reads via the `eval` lowering.
 
@@ -72,7 +89,8 @@ transport carrying everything.
 > read/write from→eval/to→eval ladder (folded in from Phase A).
 >
 > **Ladder status: DONE and green (both directions).** `read` dispatches `from → eval → transport`; `write`
-> dispatches `to → eval → transport` (the `to` override is two-input: arg(0)=obj, arg(1)=dest uri). `index` accepts
+> dispatches `to → eval → transport` (the `to` override is the native `to`: the obj is the lhs, the dest uri arg(0) —
+> see Phase A step 4's ruling). `index` accepts
 > an `inst`-only client (no `eval`/transport), so a read-only or write-only peer is reachable through its single
 > override. Proven by `NetworkConnectTest.testReadDispatchesToANativeFromOverride` (loop reader) and
 > `testWriteDispatchesToANativeToOverride` (loop sink).
@@ -96,6 +114,14 @@ stay green with `send_recv` deleted and `inst` carrying the bodies.
 ---
 
 ## 3. Phase C — typed override bodies (dom/rng)
+
+> **Status: the typing is DONE, by the convention ruling (Phase A step 4).** Every override is declared on its
+> native's signature (`Network.Helper.override`) and validated against it (`Network.Helper.accepts`), so its tid
+> carries the native's `dom`/`rng` and its args the native's argument types. Note the coupling this resolves: in
+> mtron the `dom` types the **lhs** and the payload is an **argument** type (`eval(code)`, `from(uri)`,
+> `obj.to(uri)`), so the lattice reads from argument signatures and `rng`, not from a `dom=code`/`dom=uri`
+> vocabulary. What remains is the reading itself: the lowering rules (`from → eval`, `to → eval`) taken from those
+> signatures rather than hard-coded in the ladder.
 
 **Goal:** each override carries its own `dom`/`rng`, so the subsumption lattice is readable from the tid, not only
 from the key.
@@ -140,7 +166,8 @@ the general dispatch.
 ## 6. Open questions to settle during the hand-off (not blocking)
 
 1. **The override calling convention** (Phase A step 4) — the single most important thing to get written down; it is
-   the contract every client and every lowering rule shares.
+   the contract every client and every lowering rule shares. **Settled 2026-10-24:** same signature as the native,
+   dispatch swaps `Inst.f()` only — see the ruling under Phase A step 4.
 2. **Reach inheritance** (pre-existing, unchanged): whether a child frame reuses the parent's *live* overrides or
    re-dials a *known* authority. The capability/liveness split makes this a pure-liveness question now.
 3. **Tool→instruction naming** (Phase B, mcp): whether a tool's tid is the tool's own name (`codegraph_explore`) or
