@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.mdns.handler;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,7 +30,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.InetAddress;
@@ -388,9 +389,8 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
         final fURI backend = f("/sys/space/mdns-backend");
         // patterned as the boot's are: a <vid>/# pattern would retract onto the vid, and the cache a web space
         // indexes beside itself would evict the listener from the index
-        final wsSpace listener = wsSpace.of(mutableMap(
-                uri(PATTERN), uri("ws://#"),
-                uri(HOST), uri(listening.toString())), f("/sys/space/mdns-listener"));
+        final Listener listener = wsServer.of(rec(mutableMap(
+                uri(HOST), uri(listening.toString()))));
         mountBackend(backend);
         final mdnsDiscovery handler = handler();
         try {
@@ -408,8 +408,6 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
         } finally {
             handler.close();
             Machine.current().memory().removeSpace(backend);
-            Machine.current().memory().removeSpace(listener.vid());
-            Machine.current().memory().removeSpace(listener.pattern());
             listener.close();
         }
     }

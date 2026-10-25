@@ -159,7 +159,6 @@ according to their intended use and have different time and space considerations
 |:------------:|----------------------------------------------------------------|
 |  `memspace`  | in-memory trie data structure                                  |
 | `httpspace`  | the web as a metatron space                                    |
-|  `wsspace`   | web sockets as a space                                         |
 |  `fsspace`   | file system with nested directories and symlinks as a space    |
 | `mqttspace`  | mqtt broker with nested topics and topic references as a space |
 | `tblespace`  | relational database with foreign key edges as a space          |

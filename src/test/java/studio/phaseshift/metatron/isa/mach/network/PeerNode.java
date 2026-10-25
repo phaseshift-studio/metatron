@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.nio.file.Files;
@@ -108,11 +108,9 @@ public final class PeerNode {
             trace("peer %d: no provisioning script", index);
         }
         // the ws server that makes this peer addressable, exposing the mtron endpoint at /mtron
-        wsSpace.of(mutableMap(
-                        uri(PATTERN), uri("ws://#"),
+        wsServer.of(rec(mutableMap(
                         uri(HOST), uri("ws://0.0.0.0:" + port),
-                        uri(ROUTE), rec(uri("/mtron"), uri(mtron_wsHandler.WS_MTRON_HANDLER_TID.toString()))),
-                f("/sys/space/peer/ws"));
+                        uri(ROUTE), rec(uri("/mtron"), uri(mtron_wsHandler.WS_MTRON_HANDLER_TID.toString())))));
         trace("peer %d: serving ws://0.0.0.0:%d/mtron", index, port);
         System.out.println(READY + " " + index + " " + port);
         System.out.flush();

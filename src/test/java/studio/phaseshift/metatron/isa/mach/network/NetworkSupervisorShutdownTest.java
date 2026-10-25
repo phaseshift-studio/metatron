@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -26,7 +27,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,7 +37,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
@@ -54,12 +55,11 @@ public class NetworkSupervisorShutdownTest extends AbstractMetatronTest {
     void testNoSupervisorOutlivesTheVM() {
         InstSet.importInstSet(WEB_ISA_TID);
         final int port = generatePort();
-        final wsSpace server = wsSpace.of(rec(
+        final Listener server = wsServer.of(rec(
                 uri(NAME), uri("supervisor-shutdown"),
                 uri(HOST), uri("ws://localhost:" + port),
-                uri(PATTERN), uri("ws://#"),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
-        ).jvm(), f("/sys/space/ws/supervisor-shutdown"));
+        ));
         CommonUtil.sleepThread(300);
         try {
             // a dial at the root, and one in a frame that is never popped

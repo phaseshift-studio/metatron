@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
@@ -64,7 +65,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * the facts stay runtime. {@code {{ws_client}}} is pre-bound to the ws protocol client\u0027s vid.
  *
  * <pre>
- *   [WS_SERVER a]          start a wsSpace on a fresh port with the /mtron route; binds {{a}} = ws://localhost:port
+ *   [WS_SERVER a]          start a ws_server on a fresh port with the /mtron route; binds {{a}} = ws://localhost:port
  *   [AWAIT_PEERS n]        wait (max 3s) until this machine holds exactly n peers
  *   [PROBE_PEERS]          /m/networkProbe/peers  = how many peers the machine holds
  *   [PROBE_Q_LEAK]         /m/networkProbe/qleak  = 1 iff any roster KEY carries a ?q processor (must stay 0)
@@ -83,7 +84,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     /**
      * the servers scripts started, closed after each script so no socket leaks onward
      */
-    private final List<wsSpace> servers = new ArrayList<>();
+    private final List<Listener> servers = new ArrayList<>();
 
     public NetworkWireScriptTest() {
         this.bind("ws_client", WS_CLIENT_TID.toString());
@@ -175,7 +176,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     }
 
     /**
-     * Poll until something accepts on host:port. A fixed sleep assumes the wsSpace is listening
+     * Poll until something accepts on host:port. A fixed sleep assumes the ws_server is listening
      * within it, which under load it need not be — the client then reports "socket ... is not
      * connected" against a port that was never up. The probe connection is closed immediately;
      * the ws server sees a failed handshake and ignores it.
@@ -196,12 +197,11 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     private String startServer(final String name) {
         final int port = generatePort();
         this.bind(name + "_ip", "ws://127.0.0.1:" + port); // the loopback alias, for the same-service scripts
-        this.servers.add(wsSpace.of(rec(
+        this.servers.add(wsServer.of(rec(
                 uri(NAME), uri("wire-script-" + name),
                 uri(HOST), uri("ws://127.0.0.1:" + port),
-                uri(PATTERN), uri("ws://#"),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
-        ).jvm(), f("/sys/space/ws/wire-script-" + name)));
+        )));
         waitUntilAccepting("127.0.0.1", port, 10_000);
         return "ws://localhost:" + port;   // the CLIENT still dials the name: that is the alias under test
     }

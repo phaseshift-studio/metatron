@@ -15,7 +15,6 @@ isa/mach/type/Router.java                     ← the dispatch chokepoint (readF
 isa/mach/type/router/BasicRouter.java         ← authority guard, peer roster, foreign dispatch
 furi/fURI.java                                ← authority(), localize(), hasAuthority()
 isa/m/mInstSet.java                           ← from / to / ref — the language's own deref+ref primitives
-isa/web/space/ws/wsSpace.java                 ← wsspace::T  (WebSocket server)
 isa/web/space/ws/wsServer.java                ← ws_server::T (a machine's ws presence: a Listener on a socket)
 isa/web/space/ws/WebSocketRec.java            ← wsclient::T (WebSocket client, sendRecv)
 isa/web/space/ws/handler/mtron_wsHandler.java ← mtron_ws   (remote eval endpoint)
@@ -54,9 +53,8 @@ emergent membership.
 
 | type | direction | pattern | witness |
 |---|---|---|---|
-| `wsspace::T` | server | `ws://#` | `wsSpace.java:74` |
 | `ws_server::T` | server | `ws://host:port`, routes per machine | `wsServer.java` |
-| `wsclient::T` | client | `ws://host:port/path` | `wsSpace.java:77`, `WebSocketRecClient.java:121` |
+| `ws_client::T` | client | `ws://host:port/path` | `wsServer.java` (`WS_CLIENT_TYPE`), `WebSocketRecClient.java` |
 | `httpspace::T` | server | `http://#` | `httpSpace.java:76` |
 | `HttpRec` | client | `http(s)://…` | `HttpRec.java` |
 | `mqttspace::T` | both | broker URI | `mqttSpace.java` |
@@ -67,7 +65,7 @@ emergent membership.
 | `tblespace::T` | client | JDBC | `tbleSpace.java` |
 | `fsspace::T` | local | `local:#` | `fsSpace.java` |
 
-Only `wsspace` + `wsclient` carry **metatron-to-metatron** traffic today. The rest are remote *service* access.
+Only `ws_server` + `ws_client` carry **metatron-to-metatron** traffic today. The rest are remote *service* access.
 
 ## 3. Remote endpoints (what the far side runs)
 
@@ -108,8 +106,9 @@ Concurrent, not remote — but the same monad is the work unit in both cases.
 ## Rules that hold across all of them
 
 - **An authority you own is decoration unless a space serves that address.** `ws://localhost:8555/usr/x` localizes
-  to `/usr/x`; but `ws://localhost:8555/<route>/<n>` is a live session of the `wsspace`/`httpspace` whose pattern
-  (`ws://#`, `http://#`) claims that authority, so it is handed to the space instead. The literal rule in
+  to `/usr/x`; but `http://localhost:8777/<route>/<n>` is a live session of the `httpspace` whose pattern (`http://#`)
+  claims that authority, so it is handed to the space instead. A `ws_server`'s sessions are no addresses: a session is
+  held by its socket and reached through the peer it mints. The literal rule in
   `BasicRouter.dispatchForeign`: localize only when the authority-free path still resolves to a space.
 - **A space is not a wire payload.** Asking a peer for a space itself yields no response at all — ask for `.vid()`.
 - **A remote dereference returns a value whose tid carries coefficient `*`** (renders `{*}1`), because the reply is

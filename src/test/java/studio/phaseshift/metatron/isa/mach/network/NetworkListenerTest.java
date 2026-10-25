@@ -146,6 +146,27 @@ public class NetworkListenerTest extends AbstractMetatronTest {
         }
     }
 
+    /**
+     * destruction is disconnection in both directions: a socket closed by hand leaves no level holding an entry for it
+     */
+    @Test
+    public void testClosingTheServerWithdrawsEveryEntry() {
+        final Machine root = Machine.current();
+        final Recorder server = new Recorder(SOCKET, root.network());
+        root.network().listen(server, rec(uri("/"), uri("site:")));
+        final Machine child = root.push(f("listener_child"));
+        try {
+            child.network().listen(server, rec(uri("/drstynx"), uri("drstynx:")));
+            server.close();
+            assertEquals(1, server.unbinds.get(), "the socket is released once");
+            checkEquality(LOG, child.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+            checkEquality(LOG, root.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+            assertNull(Network.Helper.listenerFor(SOCKET));
+        } finally {
+            child.pop();
+        }
+    }
+
     @Test
     public void testPresenceIsInheritedTheEntryIsNot() {
         final Machine root = Machine.current();

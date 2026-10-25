@@ -78,8 +78,7 @@ import static studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHa
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_emulator_wsHandler.WS_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_SERVER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.*;
 import static studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder.MCP_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -405,9 +404,6 @@ public class webInstSet extends AbstractInstSet {
                                 "*<https://phaseshift.studio>                            [-- the same, over tls                                      --]",
                                 "*<http://phaseshift.studio>.as(rec::T)>>html/head/title [-- parse the document, then walk it to the str::T title     --]",
                                 "httpspace::[host=><https://0.0.0.0:8443>,pattern=><https://#>,keystore=><conf/server.p12>,pass=>'changeit',route=>[/=><metatronfs:docs/website>]]@/sys/space/web/https"),
-                        docWrap(WS_SPACE_TYPE, "a space for exposing and managing web socket servers.",
-                                "*<ws://localhost:8999/mtron>               [-- creates a wsmtron server session    --]",
-                                "<ws://localhost:8999/mtron/0/send>('ping') [-- sends str to wsmtron server session --]"),
                         /////////////////////////////////////////////////////////////////////////////////////////////////////
                         /*docWrap(CLIENT_TYPE = Type.Builder.build().tid(REC_TID).vid(CLIENT_TID).create(),
                                 "a generic web client which can be refined with useful behaviors"),

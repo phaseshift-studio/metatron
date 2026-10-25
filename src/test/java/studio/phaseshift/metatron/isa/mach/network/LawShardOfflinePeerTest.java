@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -32,7 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.List;
@@ -45,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /**
@@ -73,12 +74,11 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
         Machine.current().compiler(CatTheoryCompiler.single());
         final int port = generatePort();
         final fURI service = f("ws://localhost:" + port);
-        final wsSpace server = wsSpace.of(rec(
+        final Listener server = wsServer.of(rec(
                 uri(NAME), uri("law-shard-offline-peer"),
                 uri(HOST), uri(service),
-                uri(PATTERN), uri("ws://#"),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
-        ).jvm(), f("/sys/space/ws/law-shard-offline-peer"));
+        ));
         CommonUtil.sleepThread(300);
         try {
             Machine.current().network().connect(service.extend("mtron"), WS_CLIENT_TID);

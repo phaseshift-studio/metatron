@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.parallel.Execution;
@@ -34,7 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
@@ -90,7 +91,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     private static final long AWAIT_LINK_MS = NetworkSupervisor.BACKOFF_MAX_MS + 5_000L;
 
     private final Map<String, Integer> ports = new LinkedHashMap<>();
-    private final Map<String, wsSpace> servers = new LinkedHashMap<>();
+    private final Map<String, Listener> servers = new LinkedHashMap<>();
     private final Map<String, Obj> held = new LinkedHashMap<>();
     private final Map<String, Network> heldLevels = new LinkedHashMap<>();
     /**
@@ -175,14 +176,13 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
 
     private void start(final String name) {
         final int port = this.ports.get(name);
-        this.servers.put(name, wsSpace.of(rec(
+        this.servers.put(name, wsServer.of(rec(
                 uri(NAME), uri("supervision-" + name),
                 uri(HOST), uri("ws://localhost:" + port),
-                uri(PATTERN), uri("ws://#"),
                 // two surfaces of one service, so a script can dial both and see two members
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()),
                         uri("/eval"), uri(WS_MTRON_HANDLER_TID.toString()))
-        ).jvm(), f("/sys/space/ws/supervision-" + name + "-" + (++this.generation))));
+        )));
         CommonUtil.sleepThread(300);
     }
 

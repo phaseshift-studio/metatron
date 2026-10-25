@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -31,7 +32,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerIntegrationTest;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,11 +44,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 
 /**
  * {@code law_shard} availability needs no forked peer process — a {@code ws_client} self-dial against a
- * co-mounted {@code wsspace} mints the {@code /network/peer} the guard reads, and then {@code law_shard} must
+ * co-mounted {@code ws_server} mints the {@code /network/peer} the guard reads, and then {@code law_shard} must
  * be a live out-edge of the shardable chain's {@code path::T}. This is the manual console demo, automated.
  */
 @Isolated
@@ -55,13 +56,11 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegrationTest {
 
     @Override
-    protected wsSpace createWSSpace() {
-        return wsSpace.of(rec(
+    protected Listener createWSServer() {
+        return wsServer.of(rec(
                 uri(NAME), uri("law-shard-peer-test"),
                 uri(HOST), uri("ws://localhost:" + generatePort()),
-                uri(PATTERN), uri("ws://#"),
-                uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
-        ).jvm(), f("/sys/space/ws/law-shard-peer-test"));
+                uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
     }
 
     @Test

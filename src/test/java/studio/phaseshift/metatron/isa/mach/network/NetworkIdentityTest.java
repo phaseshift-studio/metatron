@@ -29,8 +29,10 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.*;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
+import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.io.Closeable;
 import java.util.Map;
 import java.util.Set;
 
@@ -82,12 +84,20 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
 
     /**
      * Mount a real LISTENER: its server binds the host, which is the only place an authority of this machine comes
-     * from. Patterned as the boot's are ({@code ws://#}): a web space indexes a cache beside itself under its
-     * RETRACTED pattern, so a {@code <vid>/#} pattern would retract onto the vid and evict the listener it serves.
+     * from. A websocket server is the network's own listener (ws_server::T), withdrawn when it closes. An http server
+     * is still a listening space, patterned as the boot's are ({@code http://#}): a web space indexes a cache beside
+     * itself under its RETRACTED pattern, so a {@code <vid>/#} pattern would retract onto the vid and evict the
+     * listener it serves.
      */
-    private static Space mountListener(final String scheme, final fURI host, final fURI vid) {
-        final Map<Obj, Obj> config = mutableMap(uri(PATTERN), uri(scheme + "://#"), uri(HOST), uri(host.toString()));
-        return "http".equals(scheme) ? httpSpace.of(rec(config), vid) : wsSpace.of(config, vid);
+    private static Closeable mountListener(final String scheme, final fURI host, final fURI vid) {
+        if (!"http".equals(scheme))
+            return wsServer.serve(host, rec());
+        final Space space = httpSpace.of(rec(mutableMap(uri(PATTERN), uri(scheme + "://#"), uri(HOST), uri(host.toString()))), vid);
+        assertTrue(space.listens(), "an http space listens");
+        return () -> {
+            unmount(space);
+            space.close();
+        };
     }
 
     /**
@@ -112,15 +122,14 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
         final fURI host = f(scheme + "://0.0.0.0:" + generatePort());
         final fURI vid = f("/sys/space/network-identity-" + scheme);
         assertFalse(Network.Helper.authorities().contains(host), "nothing has claimed that authority yet");
-        final Space listener = mountListener(scheme, host, vid);
+        final Closeable listener = mountListener(scheme, host, vid);
         try {
-            assertTrue(listener.listens(), desc);
             assertTrue(Network.Helper.authorities().contains(host),
                     desc + ", so its host IS an authority this machine answers on: " + Network.Helper.authorities());
         } finally {
-            unmount(listener);
-            listener.close();
+            CommonUtil.close(listener);
         }
+        assertFalse(Network.Helper.authorities().contains(host), "a closed listener answers on nothing");
     }
 
     /**

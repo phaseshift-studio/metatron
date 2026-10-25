@@ -189,13 +189,19 @@ public abstract class Listener extends MRec implements Closeable {
     }
 
     /**
-     * Release the socket and forget the sharers. Idempotent: the owner's level closes it, and nothing else may.
+     * Release the socket, and withdraw it from every level that served through it. Idempotent.
+     * <p>
+     * DESTRUCTION IS DISCONNECTION, in both directions: deleting a level's entry closes the socket it opened
+     * ({@link Network#unlisten}), and a socket closed by hand leaves no level holding an entry for it. The withdrawal
+     * comes back here through {@code unlisten}, and finds the socket already closed.
      */
     @Override
     public void close() {
         if (this.closed.compareAndSet(false, true)) {
+            final List<Network> levels = this.sharers();
             this.sharers.clear();
             this.unbind();
+            levels.forEach(level -> level.unlisten(this.authority));
         }
     }
 

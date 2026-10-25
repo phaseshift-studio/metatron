@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -48,7 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_HANDLER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 @Isolated
@@ -80,7 +81,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
         // WS_MCP_HANDLER_TYPE declares MCP_TID as its parent (tid) — a *protocol* surface, not a ws
         // handler subtype. The protocol is the type's semantic identity because that is what a transport
         // asks of it ("is this target a protocol surface?"); the carrier is expressed elsewhere — by the
-        // vid (/m/web/mcp/mcp_ws, in the mcp namespace) and by the code path (wsSpace.createServer builds
+        // vid (/m/web/mcp/mcp_ws, in the mcp namespace) and by the code path (the ws_server builds
         // mcp_wsHandler, httpSpace builds mcp_httpHandler). The carrier relation is a *binding*
         // (as?ws<=mcp), not a subtyping relation.
         // isRefinementOf() traverses parentType() which resolves via Router;
@@ -281,13 +282,11 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
     public static class Integration extends AbstractWebSocketServerIntegrationTest {
 
         @Override
-        protected studio.phaseshift.metatron.isa.web.space.ws.wsSpace createWSSpace() {
+        protected Listener createWSServer() {
             final fURI hostUri = f("ws://localhost:" + generatePort());
-            return studio.phaseshift.metatron.isa.web.space.ws.wsSpace.of(rec(
+            return wsServer.of(rec(
                     uri(HOST), uri(hostUri.toString()),
-                    uri(PATTERN), uri("ws://#"),
-                    uri(ROUTE), rec(uri("/wsmcp"), uri(WS_MCP_HANDLER_TID.toString()))
-            ).jvm(), f("/sys/space/ws/test"));
+                    uri(ROUTE), rec(uri("/wsmcp"), uri(WS_MCP_HANDLER_TID.toString()))));
         }
 
         @Test

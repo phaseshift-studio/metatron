@@ -40,7 +40,7 @@ import static studio.phaseshift.metatron.Tokens.DEBUG;
  * and an escaping formatter exception surfaces at the transport as a bogus protocol
  * error — this is the bug class that produced "error sending mcp response:
  * Conversion = '`'" and "MissingFormatArgumentException: Format specifier '%s'"
- * on the wsSpace MCP handler.
+ * on the ws_server MCP handler.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.parallel.Execution;
@@ -33,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * Characterization of {@code wsSpace.createServer}'s route dispatch — the ws twin of
+ * Characterization of {@code wsServer}'s route dispatch — the ws twin of
  * {@code httpRouteLadderTest}, pinned *before* the ladder is replaced by protocol projections (P1).
  * <p>
  * The ws ladder is separate code with its own semantics: it matches route keys by <em>prefix</em>
@@ -63,14 +64,12 @@ class wsRouteLadderTest extends AbstractWebSocketServerIntegrationTest {
             "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}";
 
     @Override
-    protected wsSpace createWSSpace() {
-        return wsSpace.of(mutableMap(
-                        uri(PATTERN), uri(f("ws://#")),
+    protected Listener createWSServer() {
+        return wsServer.of(rec(mutableMap(
                         uri(HOST), uri(f("ws://127.0.0.1:" + generatePort())),
                         uri(ROUTE), rec(
                                 uri(f("/mcp")), uri(f("mcp_mtron")),
-                                uri(f("/mtron")), uri(f("mtron_ws")))),
-                f("/sys/space/test/wsRouteLadder"));
+                                uri(f("/mtron")), uri(f("mtron_ws"))))));
     }
 
     /**
