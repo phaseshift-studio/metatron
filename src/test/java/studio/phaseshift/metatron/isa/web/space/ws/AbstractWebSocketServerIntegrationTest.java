@@ -189,6 +189,14 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
                         openLatch.countDown();
                         responseLatch.countDown();
                     }
+                })
+                // a refused connection or a failed handshake fails this future and never reaches the listener: without
+                // it, such a failure could only time out and say nothing of why
+                .whenComplete((socket, failure) -> {
+                    if (null != failure) {
+                        errorRef.set(failure);
+                        openLatch.countDown();
+                    }
                 });
 
         final boolean opened = openLatch.await(getWsTimeoutSeconds(), TimeUnit.SECONDS);
