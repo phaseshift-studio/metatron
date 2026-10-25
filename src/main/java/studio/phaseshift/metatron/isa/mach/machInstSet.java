@@ -56,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -401,11 +402,18 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(INST).maybe().asUri(), REC_TYPE,
                                                 uri(CLOSE).maybe().asUri(), INST_TYPE))
                                         .constructor(arg -> {
-                                            // the override is eval itself with the identity body: the call arrives
-                                            // as eval?block(code), so arg(0) is the code, raw, and runs here
+                                            // THE IDENTITY MINI-INSTSET — the ws client's instructions with "the far
+                                            // side" being this machine, each the native with the identity body:
+                                            //   eval?block(code) runs its raw code here;
+                                            //   from(<uri>) is the local read of the localized address;
+                                            //   obj.to(<uri>) evaluates start(obj).to(</path>) here, so an unquoted
+                                            //   program shipped to a loop peer runs, exactly as on a wire peer.
                                             final Obj client = rec(
                                                     uri(HOST), arg.asRec().at(uri(HOST)),
-                                                    uri(INST), rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> inst.arg(0).apply(lhs))),
+                                                    uri(INST), rec(
+                                                            uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> inst.arg(0).apply(lhs)),
+                                                            uri(FROM_INST_TID), Network.Helper.override(FROM_INST_TID, (lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize())),
+                                                            uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst().apply(noobj()))),
                                                     uri(CLOSE), instLambda((lhs, inst) -> noobj()));
                                             // indexing is a BACKGROUND behavior upon successful construction:
                                             // the client exists as an obj either way, the index merely observes
@@ -414,7 +422,7 @@ public class machInstSet extends AbstractInstSet {
                                         })
                                         .create(), null, null,
                                 Map.of(uri(HOST), "the dialed uri (identity: the local machine answers)",
-                                        uri(INST), "the identity instruction override: { eval => evaluate the shipped code locally } — the one maximal capability a loop peer declares",
+                                        uri(INST), "the identity mini-instset: { eval, from, to } — the instructions a wire client serves, each evaluating what it ships against the local machine",
                                         uri(CLOSE), "nothing to hang up"),
                                 """
                                 the identity client — the identity element of the protocol-client family:

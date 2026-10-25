@@ -44,6 +44,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -127,10 +128,12 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
      */
     @Test
     void testTheTwinIsNotAShardTarget() {
-        // indexed as a ws_client constructor indexes itself: the host is the claim
+        // indexed as a ws_client constructor indexes itself: the host is the claim, and the client serves to — a shard
+        // target must be online AND serve the route its slave ships through (Places.serves)
         Machine.current().network().index(rec(
                 uri(HOST), uri(DIALED),
-                uri(SEND_RECV), silent(DIALED)));
+                uri(SEND_RECV), silent(DIALED),
+                uri(INST), rec(uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> fail("no reply from %s", DIALED)))));
         // routing is decided at compile time, so neither reach is ever asked
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,32,4,5,999,6}.plus(1).sum()")).asCode();

@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.Derivation;
 import studio.phaseshift.metatron.isa.m.math.cat.Law;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
+import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.math.cat.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -232,7 +233,9 @@ public final class PlanInterpreter {
         if (2 > seed.size())
             return code;
 
-        final List<Obj> targets = shardTargets(env);
+        // the placement that ships — the plan's distributing route — states what its targets must serve
+        final Placement route = plan.where().stream().filter(placement -> placement.shape().distributes()).findFirst().orElse(null);
+        final List<Obj> targets = null == route ? List.of() : shardTargets(env, route);
         if (targets.isEmpty())
             return code;
         final int k = Math.min(targets.size(), seed.size());
@@ -325,17 +328,19 @@ public final class PlanInterpreter {
      * {@code host} is the field {@code peer::T} reserves for a peer the current machine can ship to — where to
      * dial it from here — so a target is a peer that carries one.
      */
-    private static List<Obj> shardTargets(final Env env) {
+    private static List<Obj> shardTargets(final Env env, final Placement route) {
         try {
-            // AN OFFLINE PEER IS NO TARGET. A dialed peer whose link is down stays in the map (it is being
-            // redialed), but a shard shipped down it answers `not connected` and that fail poisons the reduction --
-            // so an outage SHRINKS the fan-out instead, and the fold completes on the peers that answer. The seed
-            // bulk is factored over whatever is left, so nothing is dropped and nothing is computed twice.
+            // A TARGET IS ONLINE AND SERVES THE ROUTE (Places.serves). AN OFFLINE PEER IS NO TARGET: a dialed peer
+            // whose link is down stays in the map (it is being redialed), but a shard shipped down it answers `not
+            // connected` and that fail poisons the reduction -- so an outage SHRINKS the fan-out instead, and the fold
+            // completes on the peers that answer. A PEER THAT CANNOT `to` IS NO TARGET EITHER: the route ships each
+            // slave as to(<target>), so a client whose inst declares no to has nothing to take it with. The seed bulk
+            // is factored over whatever is left, so nothing is dropped and nothing is computed twice.
             // the route is the WIRE address the peer answers at -- its authority -- never its key, which is a local
             // path (where the member sits in the map) and would ship the shard nowhere
             return env.peers().values()
                     .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
-                    .filter(Network.Helper::online)
+                    .filter(peer -> Places.serves(peer, route))
                     .map(peer -> (Obj) peer.asRec().atDirect(uri(AUTHORITY)))
                     .filter(Obj::isUri)
                     .toList();

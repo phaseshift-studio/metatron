@@ -304,6 +304,7 @@ public class catTypes {
                                         uri(WHERE).maybe(), lst(rec(
                                                 uri(SHAPE), URI_TYPE,
                                                 uri(TARGET).maybe(), ALL_TYPE,
+                                                uri(INST).maybe(), lst(URI_TYPE),
                                                 uri(SPAN), lst(rec(
                                                         uri(SPAN), URI_TYPE,
                                                         uri(FLAGS).maybe(), lst(URI_TYPE))))).maybe()))
@@ -314,7 +315,7 @@ public class catTypes {
                                 .create(), Map.of(
                                 uri(NAME), "the plan's name — the rewrite rule it embodies",
                                 uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws + theory) the plan anchors on",
-                                uri(WHERE).maybe(), "the distribution: target + span regions the plan ships",
+                                uri(WHERE).maybe(), "the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)",
                                 uri(RESULT).maybe(), "only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T"),
                         "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)"),
                 docWrap(PLACE_TYPE = Type.Builder.build()

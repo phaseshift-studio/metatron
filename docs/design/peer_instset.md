@@ -247,7 +247,7 @@ infer the rest" — the loop peer's one maximal capability is "evaluate code (as
 
 | client                | `inst` map                                                                   |
 |-----------------------|------------------------------------------------------------------------------|
-| `id_client` (loop)    | `{ eval => identity }`                                                       |
+| `id_client` (loop)    | `{ eval, from, to }` — each the identity of the wire body (2026-10-24; was `{ eval => identity }`) |
 | `ws_client` (mtron)   | `{ eval => ship-code, from => ship-from_, to => ship-to_ }` — all three declared (ruling 2026-10-24: no `to` derived from `eval`) |
 | `http_client` (web)   | `{ from => GET }` — no `eval`, no `to`                                        |
 | `mcpClient` (codegraph)| `{ codegraph_explore => tool-call, codegraph_search => tool-call, … }`      |
@@ -276,9 +276,11 @@ general dispatch, and no longer special.
 > **Rulings (2026-10-24).** Resolution binds at **compile time**: `Inst.resolve` → `Network.Helper.atPeer` gives a
 > resolved `from`/`to` whose address names a dialed peer that peer's body, inside the network's q-proc layer
 > (`Network.AtPeer`), so the compiled code shows what runs where. And a protocol client **declares** the instructions
-> it serves rather than having them derived — `ws_client` declares `eval`, `from` and `to`. The `from → eval` /
-> `to → eval` lowering above survives only as the run-time ladder's rung for a client that declares `eval` alone
-> (the loop `id_client`).
+> it serves rather than having them derived — `ws_client` declares `eval`, `from` and `to`, and so does the loop
+> `id_client` (each the identity of the wire body, so the loop stays the family's identity element). The
+> `from → eval` / `to → eval` lowering above survives only as the run-time ladder's rung for a client that declares
+> `eval` alone. Placement reads the same declarations: a shard target must be online and serve its placement's
+> `inst` (`to`, for every distributing shape) — `Places.serves`.
 
 ---
 

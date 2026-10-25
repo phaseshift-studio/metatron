@@ -26,11 +26,13 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -50,10 +52,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * </ul>
  *
  * <p>A Placement is a {@code rec} — {@code [shape => uri(shape), target => uri(address)?, hops => int?,
- * span => lst(spanRecs)]}. {@code shape} is the topology token, {@code target} the concrete peer/space address, and
- * {@code hops} the tree budget when present. The shape carries its own {@link #obligations()} (§3) — the laws a cut
- * shipped to it and re-applied at home must declare. Every accessor reads {@code this.at(key)}; there are no Java
- * fields.
+ * span => lst(spanRecs), inst => lst(uri)?]}. {@code shape} is the topology token, {@code target} the concrete
+ * peer/space address, {@code hops} the tree budget when present, and {@code inst} the instructions the target must
+ * serve (the key mirrors a client's {@code inst}). The shape carries its own {@link #obligations()} (§3) — the laws a
+ * cut shipped to it and re-applied at home must declare — and its own {@link #inst()} — what its target must serve.
+ * Every accessor reads {@code this.at(key)}; there are no Java fields.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -114,6 +117,16 @@ public class Placement extends MRec {
         public boolean distributes() {
             return PEER == this || PEERS == this || TREE == this || SHUFFLE == this || CHAIN == this || STAR == this;
         }
+
+        /**
+         * The instructions a target of this shape must SERVE — the second axis beside {@link #obligations()}: what the
+         * shape demands of the place it ships to, not of the cut. Every distributing shape ships its chain through
+         * {@code to(<target>)} (each route contributes one chain and a {@code to()}), so its target's client must
+         * declare {@code to} in its {@code inst}; a shape that stays home demands nothing.
+         */
+        public Set<fURI> inst() {
+            return this.distributes() ? Set.of(TO_INST_TID) : Set.of();
+        }
     }
 
     public Placement(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -173,7 +186,36 @@ public class Placement extends MRec {
         if (0 != hops)
             jvm.put(uri(HOPS), jnt(hops));
         jvm.put(uri(SPAN), lst(Arrays.stream(spans).map(s -> (Obj) s).toList()));
+        // what the target must serve, written into the rec so the plan says it: the shape's own requirement
+        if (!shape.inst().isEmpty())
+            jvm.put(uri(INST), lst(shape.inst().stream().map(tid -> (Obj) uri(tid)).toList()));
         return new Placement(jvm, REC_TID, null);
+    }
+
+    /**
+     * The instructions this placement's target must serve — the shape's own requirement ({@link Shape#inst()}) plus
+     * whatever the placement adds for what its shipped chunk needs. Read from the rec, so a placement written in mtron
+     * without an {@code inst} still requires what its shape ships through. A target serves them when its client's
+     * {@code inst} — the mini-instset the key mirrors — declares an override for each.
+     */
+    public Set<fURI> inst() {
+        final Set<fURI> required = new LinkedHashSet<>(this.shape().inst());
+        final Obj declared = this.at(INST);
+        if (declared.isLst())
+            declared.asLst().elements().filter(Obj::isUri).map(Obj::uriValue).forEach(required::add);
+        return required;
+    }
+
+    /**
+     * This placement, requiring {@code instTIDs} of its target as well — for a plan whose shipped chunk calls a peer
+     * instruction beyond the one its shape ships through.
+     */
+    public Placement inst(final fURI... instTIDs) {
+        final Set<fURI> required = this.inst();
+        required.addAll(Arrays.asList(instTIDs));
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>(this.jvm());
+        jvm.put(uri(INST), lst(required.stream().map(tid -> (Obj) uri(tid)).toList()));
+        return new Placement(jvm, this.tid(), this.vid());
     }
 
     /**
