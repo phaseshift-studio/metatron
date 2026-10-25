@@ -175,6 +175,62 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         static RouteLane of(final Kind kind, final Obj target) {
             return new RouteLane(kind, target);
         }
+
+        /**
+         * The lane a route value selects for the connection it will serve — a wsspace's and a ws_server's alike. A
+         * websocket has no per-request uri, only a handshake, so the handshake uri is the lhs: a templated value
+         * addresses per connection, and an untemplated one ({@code null} request) resolves as it stands. Resolved in
+         * the machine the caller stands in, which is the machine whose route it is.
+         */
+        public static RouteLane resolve(final Obj routeValue, final fURI request) {
+            return classify(webHelper.align(null, routeValue, request));
+        }
+
+        private static RouteLane classify(final Obj resolved) {
+            Obj target = resolved.isUri() ? Machine.read(resolved.uriValue()) : resolved;
+            // ── mcp_server type: materialize it so the transport wraps it ──
+            if (target.isType() && target.asType().hasConstructor()
+                    && Obj.Helper.specificType(target).test(MCP_SERVER_TYPE)) {
+                final Obj mcp = target.asType().constructor().apply(rec(mutableMap())).as();
+                if (!mcp.isFail())
+                    target = mcp;
+            }
+            if (target instanceof mcpServer)
+                return RouteLane.of(RouteLane.Kind.MCP, target);
+            if (target.isType() && target.asType().hasConstructor())
+                return RouteLane.of(RouteLane.Kind.CONSTRUCT, target);
+            if (target.isType())
+                return RouteLane.of(RouteLane.Kind.RETAG, target);
+            return RouteLane.of(RouteLane.Kind.NONE, target);
+        }
+    }
+
+    /**
+     * The session a lane builds for one connection — a wsspace's and a ws_server's alike: an mcp server wrapped in its
+     * websocket carrier, a handler type constructed with the request's {@code ?in}/{@code ?out} serializers, or a
+     * constructor-less type re-tagged. Throws when the lane is no websocket handler or its construction fails.
+     */
+    public static WebSocketRec session(final RouteLane lane, final fURI request, final fURI vid) {
+        if (RouteLane.Kind.NONE == lane.kind())
+            throw MTronException.of("websocket handler type required: %s", lane.target());
+        final Obj wsHandlerType = lane.target();
+        final Rec config = rec(mutableMap(
+                uri(IN), request.hasQ(IN) ? uri(request.q(IN)) : noobj(),
+                uri(OUT), request.hasQ(OUT) ? uri(request.q(OUT)) : noobj()));
+        final Obj handler;
+        if (wsHandlerType instanceof mcpServer) {
+            handler = new mcp_wsHandler(new LinkedHashMap<>(((mcpServer) wsHandlerType).jvm()), WS_MCP_HANDLER_TID, vid);
+        } else if (wsHandlerType.asType().hasConstructor()) {
+            handler = wsHandlerType.asType().constructor().apply(config).as();
+            if (handler.isFail())
+                throw MTronException.of("wsserver construction failed: {{y}}%s{{X}}", handler);
+            handler.self(handler.jvm(), wsHandlerType.vid(), vid);
+        } else {
+            handler = config.tid(wsHandlerType.vid()).vid(vid);
+        }
+        if (handler.isNoObj() || handler.isFail())
+            throw MTronException.of("wsserver construction failed: {{y}}%s{{X}}", handler);
+        return handler.as();
     }
 
     /**
@@ -189,7 +245,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
      * </ol>
      */
     public RouteLane resolveRoute(final Obj routeValue) {
-        return this.classify(webHelper.align(this, routeValue, null));
+        return RouteLane.resolve(routeValue, null);
     }
 
     /**
@@ -201,25 +257,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
      * as {@link #resolveRoute(Obj)} does.
      */
     public RouteLane resolveRoute(final Obj routeValue, final fURI requestUri) {
-        return this.classify(webHelper.align(this, routeValue, requestUri));
-    }
-
-    private RouteLane classify(final Obj resolved) {
-        Obj target = resolved.isUri() ? Machine.read(resolved.uriValue()) : resolved;
-        // ── mcp_server type: materialize it so the transport wraps it ──
-        if (target.isType() && target.asType().hasConstructor()
-                && Obj.Helper.specificType(target).test(MCP_SERVER_TYPE)) {
-            final Obj mcp = target.asType().constructor().apply(rec(mutableMap())).as();
-            if (!mcp.isFail())
-                target = mcp;
-        }
-        if (target instanceof mcpServer)
-            return RouteLane.of(RouteLane.Kind.MCP, target);
-        if (target.isType() && target.asType().hasConstructor())
-            return RouteLane.of(RouteLane.Kind.CONSTRUCT, target);
-        if (target.isType())
-            return RouteLane.of(RouteLane.Kind.RETAG, target);
-        return RouteLane.of(RouteLane.Kind.NONE, target);
+        return RouteLane.resolve(routeValue, requestUri);
     }
 
     protected wsSpace(final WebSocketServer server, final Map<Obj, Obj> config, final fURI vid) {
@@ -379,32 +417,16 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                         .findFirst()
                         .orElse(noobj());
                 final RouteLane lane = this.space.resolveRoute(routeValue, routePath);
-                if (RouteLane.Kind.NONE == lane.kind())
-                    throw MTronException.of("websocket handler type required: %s", lane.target());
-                final Obj wsHandlerType = lane.target();
-                LOG.debug("starting session with websocket handler: %s", wsHandlerType);
+                LOG.debug("starting session with websocket handler: %s", lane.target());
                 final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
-                final Rec config = rec(mutableMap(
-                        uri(IN), routePath.hasQ(IN) ? uri(routePath.q(IN)) : noobj(),
-                        uri(OUT), routePath.hasQ(OUT) ? uri(routePath.q(OUT)) : noobj()));
-                final Obj handler;
-                if (wsHandlerType instanceof mcpServer) {
-                    handler = new mcp_wsHandler(new LinkedHashMap<>(((mcpServer) wsHandlerType).jvm()), WS_MCP_HANDLER_TID, vid);
-                } else if (wsHandlerType.asType().hasConstructor()) {
-                    handler = wsHandlerType.asType().constructor().apply(config).as();
-                    if (handler.isFail()) {
-                        conn.close(4000, "unable to construct handler: " + handler);
-                        throw MTronException.of("wsserver construction failed: {{y}}%s{{X}}", handler);
-                    }
-                    handler.self(handler.jvm(), wsHandlerType.vid(), vid);
-                } else {
-                    handler = config.tid(wsHandlerType.vid()).vid(vid);
+                try {
+                    return wsSpace.session(lane, routePath, vid);
+                } catch (final MTronException e) {
+                    // a lane that is no handler fails the connection below; a handler that would not construct closes it here
+                    if (RouteLane.Kind.NONE != lane.kind())
+                        conn.close(4000, "unable to construct handler: " + e.getMessage());
+                    throw e;
                 }
-                if (handler.isNoObj() || handler.isFail()) {
-                    conn.close(4000, "unable to construct server " + handler);
-                    throw MTronException.of("client {{b}}%s{{X}} wsserver construction failed: {{y}}%s{{X}}", conn.getRemoteSocketAddress(), handler);
-                }
-                return handler.as();
             } catch (final Exception e) {
                 throw MTronException.of("unable to create ws server for %s: %s", conn.getRemoteSocketAddress(), e);
             }

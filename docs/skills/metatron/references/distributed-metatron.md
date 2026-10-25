@@ -16,6 +16,7 @@ isa/mach/type/router/BasicRouter.java         ← authority guard, peer roster, 
 furi/fURI.java                                ← authority(), localize(), hasAuthority()
 isa/m/mInstSet.java                           ← from / to / ref — the language's own deref+ref primitives
 isa/web/space/ws/wsSpace.java                 ← wsspace::T  (WebSocket server)
+isa/web/space/ws/wsServer.java                ← ws_server::T (a machine's ws presence: a Listener on a socket)
 isa/web/space/ws/WebSocketRec.java            ← wsclient::T (WebSocket client, sendRecv)
 isa/web/space/ws/handler/mtron_wsHandler.java ← mtron_ws   (remote eval endpoint)
 isa/web/space/http/httpSpace.java             ← httpspace::T
@@ -54,6 +55,7 @@ emergent membership.
 | type | direction | pattern | witness |
 |---|---|---|---|
 | `wsspace::T` | server | `ws://#` | `wsSpace.java:74` |
+| `ws_server::T` | server | `ws://host:port`, routes per machine | `wsServer.java` |
 | `wsclient::T` | client | `ws://host:port/path` | `wsSpace.java:77`, `WebSocketRecClient.java:121` |
 | `httpspace::T` | server | `http://#` | `httpSpace.java:76` |
 | `HttpRec` | client | `http(s)://…` | `HttpRec.java` |

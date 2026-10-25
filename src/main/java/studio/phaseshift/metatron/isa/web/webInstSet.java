@@ -78,6 +78,7 @@ import static studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHa
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_emulator_wsHandler.WS_MCP_EMULTATOR_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
 import static studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder.MCP_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -415,6 +416,12 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_WEBSOCKET_TYPE, "a generic websocket obj which can be refined with useful behaviors"),
                         docWrap(WS_HANDLER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
+                        docWrap(WS_SERVER_TYPE, """
+                                                a websocket server as this machine's presence: it serves this machine's routes through a ws://host:port socket.
+                                                a socket a machine above already holds is joined (this machine adds its own routes); otherwise it is bound here, and this machine's pop releases it.
+                                                a connection takes the most specific route of every machine sharing the socket: that machine evaluates the session and holds its peer.
+                                                """,
+                                "ws_server::[host=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]] [-- serve mtron and mcp on 8555 --]"),
                         docWrap(WS_MCP_HANDLER_TYPE, "an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
                         docWrap(WS_MCP_EMULTATOR_TYPE, "a websocket mcp emulator server that provides an agent a stateful environment of mcp server access"),
                         docWrap(WS_MTRON_HANDLER_TYPE, "a simple websocket handler accepting mtron expressions and return mtron results", "mtron_ws::[=>]"),
