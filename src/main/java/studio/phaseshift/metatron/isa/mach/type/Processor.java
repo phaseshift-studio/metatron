@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -37,6 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -177,7 +179,7 @@ public interface Processor extends mThread, Machine.Component {
         public static Obj invoke(final Obj lhs, Inst cinst, final Inst original) {
             final boolean isMonadicInst = original.tid().hasQ(MONAD_IN) || original.tid().hasQ(MONAD_OUT);
             if (cinst.isNoObj())
-                return fail(MTronException.of("unable to locate inst-f %s::T => %s", Obj.Helper.specificTypeId(lhs).name(), original, lhs));
+                return unresolved(lhs, original);
             if (lhs.isNoObj() && !cinst.dom().c().isZeroable())
                 return noobj();
             Obj clhs = lhs;
@@ -190,13 +192,27 @@ public interface Processor extends mThread, Machine.Component {
                 cinst = resolveRuntime(clhs, original);
                 modulateC = true;
                 if (cinst.isNoObj())
-                    return fail(MTronException.of("unable to locate inst-f %s::T => %s", Obj.Helper.specificTypeId(clhs).name(), original, clhs));
+                    return unresolved(lhs, original);
                 if (!instDomRngMatch(clhs, cinst.dom()))
                     return fail("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst);
             }
             final Obj rhs = applyFunction(clhs, cinst, original, isMonadicInst);
             final cInt cc = cinst.c();
             return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
+        }
+
+        /**
+         * The answer to an inst that cannot be resolved against the lhs. The uncaught fails the lhs carries (the lhs
+         * itself, or members of the stream a gather collected) pass it, as they pass an inst that resolves
+         * ({@link #applyFunction}), coefficient included: "unable to locate inst-f fail::T" in their place would bury
+         * the upstream cause. With none, the miss is the failure. A catch is never missed for a fail: its domain is any
+         * obj, so it resolves against the fail and reaches {@link #applyFunction}.
+         */
+        private static Obj unresolved(final Obj lhs, final Inst original) {
+            final List<Obj> failed = lhs.stream().filter(Obj::isUncaughtFail).toList();
+            return failed.isEmpty() ?
+                    fail(MTronException.of("unable to locate inst-f %s::T => %s", Obj.Helper.specificTypeId(lhs).name(), original)) :
+                    objs(failed).c(c -> c.mult(original.c()));
         }
 
         /**
