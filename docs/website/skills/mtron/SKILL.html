@@ -600,8 +600,6 @@ according to their intended use and have different time and space considerations
 </thead>
 <tbody>
 <tr><td align="center"><code>memspace</code></td><td>in-memory trie data structure</td></tr>
-<tr><td align="center"><code>httpspace</code></td><td>the web as a metatron space</td></tr>
-<tr><td align="center"><code>wsspace</code></td><td>web sockets as a space</td></tr>
 <tr><td align="center"><code>fsspace</code></td><td>file system with nested directories and symlinks as a space</td></tr>
 <tr><td align="center"><code>mqttspace</code></td><td>mqtt broker with nested topics and topic references as a space</td></tr>
 <tr><td align="center"><code>tblespace</code></td><td>relational database with foreign key edges as a space</td></tr>
@@ -610,6 +608,8 @@ according to their intended use and have different time and space considerations
 <tr><td align="center"><code>dckrspace</code></td><td>docker images, containers, volumes, networks, etc. as a space</td></tr>
 </tbody>
 </table>
+<p>The web is no space: an <code>http_server</code> (or <code>ws_server</code>) is a machine's presence at <code>~/network/listener/&lt;key&gt;</code>, and the
+web is read through a constructed client, <code>http_client::[host =&gt; &lt;http://#&gt;]</code> — the gateway peer.</p>
 <h3>processing: the fluent chain</h3>
 <p>mtron is built on <strong>chained/nested function composition</strong> with attention to each function's <em>domain</em>, <em>range</em>, and
 <em>argument</em> types. A function is encapsulated in an instruction (and <code>inst::T</code>). There are two types of instruction whose

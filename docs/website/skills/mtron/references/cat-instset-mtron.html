@@ -439,7 +439,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">cat-instset</h1>
-        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse, combiner). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form), set-theoretic class (class), or declared process laws (law), when wiring the algebraic theories (ring / field / rig / group / monoid / boolean / lattice), when adding a law-driven rewrite — the category *is* the rewrite table — or when lifting code itself into the graph (path::T for value code with rewrite edges, abstraction::T for its pointwise type-level image) to navigate, prune, or plan rewrites.</small><br/>
+        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse, combiner). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form), set-theoretic class (class), or declared process laws (law), when wiring the algebraic theories (ring / field / rig / group / monoid / boolean / lattice), when adding a law-driven rewrite — the category *is* the rewrite table — or when lifting code itself into the graph (path::T for value code with rewrite edges, abstraction::T for its pointwise type-level image) to navigate, prune, or plan rewrites, and place::T for the location coordinate: where a chunk of code runs, how a peer is reached (the from/to/eval inst-f swap), and the liveness lattice (admissible / serves / shardTargets) that gates distribution.</small><br/>
         <a href="cat-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>cat-instset-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -700,6 +700,12 @@ laws):</p>
 <p>Everything above is also the rewriter's input. A rule fires only when the operand's type <strong>declares</strong> the law that
 the rule consumes, and the category is the rewrite table: an algebra registered on a type licenses the rules of that
 type, and a type that models no such structure is left unchanged.</p>
+<p>The declared laws split into two rewrite directions, and both were already <strong>latent in the stream-ring algebra</strong>
+(<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>). <strong>Time</strong> — the <em>optimization</em> direction — rewrites
+code <em>in place</em>: the local laws below (\(\mathrm{op}(\mathrm{id}) \leadsto \varepsilon\), $f \cdot f \leadsto
+\varepsilon$, \(f \cdot f \leadsto f\), absorption, derivation contraction) shorten a chain without moving it. <strong>Space</strong>
+— the <em>location</em> direction — moves code <em>across places</em>: that is Theorem 19's semi-right distributivity, which
+<code>law_shard</code> realizes — worked out below in the third lift, where the fold is actually partitioned.</p>
 <!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
 <img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
 <table>
@@ -897,7 +903,7 @@ every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value c
 <tr><td><code>obj</code></td><td>the chain itself (the value code)</td></tr>
 <tr><td><code>origin</code></td><td>(optional) where the code starts — the machine's own <code>place::T</code>, attached on lift when the machine answers; absent means not placeable (<code>bind</code> requires it)</td></tr>
 <tr><td><code>where</code></td><td>(optional) the realized placement — span → place, written by the pass that applied a distribution rule: <code>{[span=&gt;at] =&gt; [place…]}</code> lists the places the shard actually shipped to</td></tr>
-<tr><td><code>peer</code></td><td>(optional) the <code>peer::T</code> recs the deployment used</td></tr>
+<tr><td><code>peer</code></td><td>(reserved — declared in the type, not yet written by the distribution pass)</td></tr>
 <tr><td><code>&lt;rule name&gt;</code></td><td>one edge per <strong>live</strong> rewrite — the edge holds the <code>plan::T</code> (see below); <code>lower(plan)</code> applies it and re-lifts</td></tr>
 </tbody>
 </table>
@@ -1011,6 +1017,8 @@ names and where its <code>where</code> sends it:</p>
 <tr><td><strong>distribution</strong></td><td>a <code>form</code> + <code>law</code> anchor — the laws its <code>combiner</code> must declare</td><td>ships to <code>peers</code>, with the combiner re-applied locally</td><td><code>law_shard</code> → <code>cut =&gt; [form =&gt; reducer, law =&gt; [monoidic, commutative]]</code></td></tr>
 </tbody>
 </table>
+<p>A third kind — the <strong>cut-less</strong> distribution rule — has no <code>cut</code> at all: its one placement names a <code>target</code>, and
+<code>bind</code> (not <code>lower</code>) applies it. None is registered yet, so the two rows above are the only live plans today.</p>
 <p>The application is a <strong>type method</strong>, not a field: <code>lower(plan::T)</code> is one instruction registered in
 <code>catInstSet.insts()</code>, shared by every plan. It matches the plan's <code>cut</code> against the path's code, applies the rewrite,
 and re-lifts the result to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
@@ -1029,10 +1037,14 @@ declares the laws it demands of a cut shipped to it (§3, two directions):</p>
 </table>
 <p><code>PlanBuilder.create()</code> validates a cut plan against this table (<code>obligations(shape) ⊆ cut.laws</code>); the reverse
 traversal <code>admissible(laws)</code> reads it the other way.</p>
-<p><code>bind(plan::T)</code> is the cut-less operator — the distribution rule. It requires a plan with <strong>no cut</strong> and a path with
-an <code>origin</code>; <code>lower</code> is the cut-plan sibling, and both share one body (<code>apply(plan, env)</code> over an environment
-snapshot). Until the <code>move</code> rule ships (a later phase), a cut-less plan is the identity — the code stands where it
-stood.</p>
+<p><code>bind(plan::T)</code> is the <strong>cut-less operator</strong> — the distribution rule. It is <code>lower</code> restricted to distribution plans:
+a plan with a <code>cut</code> is <code>lower</code>'s, so <code>bind</code> <strong>declines it</strong> (the code passes through unchanged). A cut-less plan
+carries exactly one placement, and <code>bind</code> requires a placement with a <code>target</code> whose scheme resolves a dialer
+(<code>Signatures.resolves</code>); otherwise it is the identity, like <code>lower</code> on a plan that matches nothing. The one cut-less
+relocation implemented is <code>move</code>: it appends a terminal <code>to(&lt;target&gt;)</code> that ships the <em>whole program</em> as a program —
+the quine rule, the payload is a program the receiver re-plans on compile, never its value. <code>chain</code>/<code>star</code>/<code>lanes</code>
+shapes are deferred to later phases, and <strong>no cut-less plan is registered in the rewrite table yet</strong> — every
+registered rewrite has a <code>cut</code> — so <code>bind</code> is currently unexercised by the default rules.</p>
 <p><strong>A distribution plan requires peers.</strong> <code>law_shard</code> is live only over a non-empty peer roster: its guard reads the
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
@@ -1040,42 +1052,13 @@ self-registers a <code>peer::T</code> into the network; that registration is the
 ==&gt;[host=&gt;ws://localhost:8555/mtron,
     send=&gt;inst(){&lt;j&gt;},
     send_recv=&gt;inst(){&lt;j&gt;},
-    inst=&gt;[/m/inst/eval=&gt;inst(){&lt;j&gt;}],
+    inst=&gt;[/m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+           /m/inst/from=&gt;*uri::T,
+           /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!inst?bool&lt;=(){&lt;j&gt;},
     close=&gt;inst(){&lt;j&gt;},
     on_message=&gt;print('received ${_}')]
 mtron&gt; */network
-==&gt;network::[host=&gt;booger,
-             status=&gt;!inst(#{*}::T){&lt;j&gt;},
-             q=&gt;[subq::[pattern=&gt;subq,
-                        pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                        pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                        qless_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                        obj=&gt;[,]]],
-             peer=&gt;[http/localhost/64342/stream=&gt;peer::[
-              authority=&gt;&lt;http://127.0.0.1:64342&gt;,
-              host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-              client=&gt;mcp_client::[type=&gt;streamable-http,
-                                   url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-                                   headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron],
-                                   host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-                                   status=&gt;!inst?bool&lt;=(){&lt;j&gt;},
-                                   tool=&gt;[execute_tool=&gt;tool::[
-                                    inst=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
-                                    name=&gt;execute_tool,
-                                    desc=&gt;'Universal tool executor that can i...',
-                                    arg=&gt;[command=&gt;'Command-line string with tool name...']]],
-                                   inst=&gt;[/m/llm/tool/execute_tool=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;}]]],
-                    ws/localhost/8555/mtron=&gt;peer::[
-                     authority=&gt;ws://localhost:8555,
-                     host=&gt;ws://localhost:8555/mtron,
-                     transport=&gt;inst(#{*}::T){&lt;j&gt;},
-                     client=&gt;[host=&gt;ws://localhost:8555/mtron,
-                              send=&gt;inst(){&lt;j&gt;},
-                              send_recv=&gt;inst(){&lt;j&gt;},
-                              inst=&gt;[/m/inst/eval=&gt;inst(){&lt;j&gt;}],
-                              close=&gt;inst(){&lt;j&gt;},
-                              on_message=&gt;print('received ${_}')]]],
-             supervisor=&gt;network_supervisor::[status=&gt;supervising]]
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>
@@ -1098,8 +1081,18 @@ now holding that <code>peer::T</code>, the <code>path::T</code> lists the distri
                                       span=&gt;[
                                        [span=&gt;seed,flags=&gt;[partition]],
                                        [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-                                       [span=&gt;at]]]]]]]
+                                       [span=&gt;at]],
+                                      inst=&gt;[/m/inst/eval]]]]]]
 </code></pre>
+<p><code>law_shard</code> is Theorem 19 of the stream-ring algebra (<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>):
+monoidic reducers are <strong>semi-right distributive</strong>,
+\[(a+b)\cdot r \;=\; (a\cdot r + b\cdot r)\cdot r,\]
+so a fold factors across parallel branches and re-combines through the same reducer — sound, not merely partitioned.
+The two composition operators, \(+\) (parallel branching) and \(\cdot\) (serial composition), are where that law was
+latent: the split axiom \(\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b\) and the merge axiom say an
+object fans out across branches and merges back, and Thm 19 is the one reduce law that makes the fan-out <em>sound</em>. The
+same algebra that says \(x + 0 \leadsto x\) (a time rewrite) says \((a+b)\cdot r \leadsto (a\cdot r + b\cdot r)\cdot r\)
+(a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.</p>
 <p>Finally, the inst <code>lower?path&lt;=path(plan)</code> applies a plan read off the path's out-edge — the examples read
 <code>&gt;&gt;law_shard</code>. Its output is the same <code>path::T</code>, its <code>obj</code> now the distributed layout: the seed bulk partitioned into
 shards whose seed carries the remaining hop budget (<code>start?hops=0</code> at a leaf), each shard shipped by a
@@ -1125,7 +1118,8 @@ that licenses it are the same value: every rule is <code>lower(plan::T)</code>, 
                                       span=&gt;[
                                        [span=&gt;seed,flags=&gt;[partition]],
                                        [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-                                       [span=&gt;at]]]]]]]
+                                       [span=&gt;at]],
+                                      inst=&gt;[/m/inst/eval]]]]]]
 </code></pre>
 <p>A keyed fold lowers the same way, its master recombining pointwise: <code>merge().sum()</code> deep-merges the partial recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
@@ -1141,7 +1135,8 @@ that licenses it are the same value: every rule is <code>lower(plan::T)</code>, 
                                       span=&gt;[
                                        [span=&gt;seed,flags=&gt;[partition]],
                                        [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-                                       [span=&gt;at]]]]]]]
+                                       [span=&gt;at]],
+                                      inst=&gt;[/m/inst/eval]]]]]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1173,12 +1168,12 @@ abstraction. The replayed route <em>is</em> the derivation witness.</p>
 <p><code>place::T</code> is the <strong>location coordinate</strong>: the machine a chunk runs on, lifted into the same graph as a vertex beside
 <code>path::T</code>. It is read-through from the machine's two network tables — the <strong>roster</strong> (who is known) and the <strong>peer
 map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
-<pre><code class="language-mtron">mtron&gt; &lt;//ginger.local&gt;.as(place::T)
-==&gt;place::[obj=&gt;//ginger.local,
-           authority=&gt;[&lt;ws://ginger.local:8555&gt;],
-           linked_to=&gt;!inst(#{*}::T){&lt;j&gt;},
-           linked_from=&gt;!inst(#{*}::T){&lt;j&gt;},
-           status=&gt;!inst(#{*}::T){&lt;j&gt;}]
+<pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
+==&gt;place::[obj=&gt;//localhost,
+           authority=&gt;[ws://localhost:8555],
+           linked_to=&gt;!inst(){&lt;j&gt;},
+           linked_from=&gt;!inst(){&lt;j&gt;},
+           status=&gt;!inst(){&lt;j&gt;}]
 </code></pre>
 <table>
 <thead>
@@ -1187,7 +1182,7 @@ map</strong> (who is dialed) — and is not a rewrite projection at all: a place
 <tbody>
 <tr><td><code>obj</code></td><td>the machine address <code>//host[/path]</code> — <code>host()</code> is the roster key, <code>path()</code> the frame vid (empty = the host's root machine). Who evaluates.</td></tr>
 <tr><td><code>authority</code></td><td>the transports that reach it (<code>scheme://host:port</code>); two aliases of one machine are values, never two places</td></tr>
-<tr><td><code>instset</code></td><td>(optional) the ISAs resolvable here — the vocabulary coordinate</td></tr>
+<tr><td><code>instset</code></td><td>(reserved — the ISAs resolvable here, the vocabulary coordinate; joined when <code>/m/math/cat/signature</code> lands)</td></tr>
 <tr><td><code>source</code></td><td>(optional) who declared it (<code>mdns</code>, boot profile, a dial)</td></tr>
 <tr><td><code>linked_to</code></td><td><strong>derived</strong> — the peers this machine dialed to this place (outbound edges)</td></tr>
 <tr><td><code>linked_from</code></td><td><strong>derived</strong> — the peers this machine accepted from this place (inbound edges)</td></tr>
@@ -1197,7 +1192,98 @@ map</strong> (who is dialed) — and is not a rewrite projection at all: a place
 <p><code>obj</code> and <code>authority</code> are read from the roster once at lift; <code>linked_to</code>/<code>linked_from</code>/<code>status</code> are <code>auto</code> insts that
 re-read the live peer map each dereference (the <code>object::T.morphed_to</code> pattern). The alias quotient is
 <code>sameService</code>: a peer dialed at <code>127.0.0.1</code> links the place whose roster row says <code>0.0.0.0</code> — loopback aliases are one
-place.</p>
+place. A wildcard peer lifts the same way — the <code>http/#</code> / <code>https/#</code> web gateway is the place
+<code>place::[obj=&gt;//#, authority=&gt;[http://#, https://#]]</code>: a location reachable in the abstract but not yet dialed to a
+concrete host.</p>
+<h4>the place/peer capability — the inst-f swap</h4>
+<p>A <code>place::T</code> is a coordinate; a <code>peer::T</code> is how you <em>talk</em> to it. The bridge is the peer's <strong>client</strong>, which declares
+a <strong>mini-instset</strong> — <code>inst =&gt; { tid =&gt; override }</code>. Each override is the native instruction with a different <code>f()</code> and
+nothing else: <code>Network.Helper.accepts</code> checks the override has the instruction's own signature (base, dom, rng, arg
+types), and <code>Network.Helper.dispatch</code> binds to the native definition then swaps <code>f()</code>. An override <em>is</em> the
+instruction it replaces, with another body — the transport, serialization and protocol particulars live in the body,
+the signature stays the same.</p>
+<!-- figure source: assets/tikz/cat-place-capability.tex (same recipe) -->
+<img src="../assets/cat-place-capability.png" alt="a place::T is a machine; a peer::T is how you talk to it — its client's inst is a mini-instset of from/to/eval overrides, reached by swapping f() alone" width="90%" style="margin:0.3em 0 0 0"/>
+<p>The three wire instructions are <code>from</code> (read), <code>to</code> (write) and <code>eval</code> (evaluate). <code>from</code>/<code>to</code> take an address, which
+computes to itself; <code>eval?block(code)</code> ships the code as a <em>payload</em> — the <code>?block</code> keeps it raw so the far side is
+the one that evaluates it (without the block the code is evaluated here and only its result ships). Which instructions
+a client overrides is its protocol's capability:</p>
+<table>
+<thead>
+<tr><th>client</th><th>overrides</th></tr>
+</thead>
+<tbody>
+<tr><td><code>http_client</code></td><td><code>from</code> (GET), <code>to</code> (POST) — no <code>eval</code>: a web document is read or written, never asked to evaluate</td></tr>
+<tr><td><code>ws_client</code></td><td><code>eval</code>, <code>from</code>, <code>to</code> — the full set over the socket</td></tr>
+<tr><td><code>id_client</code> (<code>loop</code>)</td><td><code>eval</code>, <code>from</code>, <code>to</code> — all local: <code>eval</code> applies against this machine, <code>from</code>/<code>to</code> read/write it</td></tr>
+<tr><td><code>mcp_client</code> (tools)</td><td>one override per tool, keyed by the tool's tid — a tool answers as <code>eval</code>, another as <code>from</code>, …</td></tr>
+<tr><td><code>mqtt_client</code> (planned)</td><td><code>from</code> (SUBSCRIBE), <code>to</code> (PUBLISH) — no <code>eval</code>; the client is not yet isolated (<code>mqttspace::T</code> speaks the protocol today)</td></tr>
+</tbody>
+</table>
+<p>The planned <code>mqtt_client</code> speaks the same two verbs over MQTT: <code>to</code> is a <strong>retained PUBLISH</strong> (plus a write to a
+local cache, since a publisher never receives its own publish), and <code>from</code> is the clever half — MQTT has no read, so
+the space <strong>SUBSCRIBEs</strong> to its topic filter once (retained messages replayed) and serves reads from a local cache
+the callback fills; on a broker reconnect it <strong>RESUBSCRIBEs</strong> (<code>resubscribeIfSessionExpired</code>) so a broker that
+restarted with no memory of the client is rejoined with its filter intact and the retained replay resyncs the cache.</p>
+<p><code>Network.Helper.atPeer</code> does the <strong>compile-time binding</strong>: when the resolver binds <code>from(&lt;uri&gt;)</code> / <code>to(&lt;uri&gt;)</code> /
+<code>eval?block(code)</code> and the uri's authority names a dialed peer that overrides it, the peer's body is swapped in, so
+the <em>compiled code shows which peer's body runs</em> — the <code>eval?&lt;=code(&lt;ws://booger.local:8555&gt;)</code> a <code>law_shard</code> layout
+emits. A call whose authority no peer overrides, or whose address is computed at run time, resolves native and still
+reaches the peer through the run-time dispatch.</p>
+<h4>the location liveness lattice</h4>
+<!-- figure source: assets/tikz/cat-location-lattice.tex (same recipe) -->
+<img src="../assets/cat-location-lattice.png" alt="the location liveness lattice: origin → reachable → admissible (declared) → serves (realized) → shardTargets, addressed by wire authority" width="45%" style="float:right; margin:0 0 0.9em 1.5em"/>
+<p>Distribution liveness has the same declared/realized split as a-priori pruning, on the location side. A place is a
+candidate (<strong>declared</strong>) when some authority's scheme has a dialer in the ISA — <code>Signatures.resolves(scheme)</code>, the
+<code>ws → ws_client</code>, <code>http</code>/<code>https → http_client</code>, <code>loop → id_client</code> table, read with no dial attempted. A dialed peer
+can <em>take</em> a placement (<strong>realized</strong>) when its client <strong>overrides every instruction the placement requires</strong> and is
+<code>online</code> — <code>Places.serves(peer, placement)</code>. A distributing placement ships through <code>to</code> + <code>eval</code>, so an <code>http_client</code>
+(no <code>eval</code>) is not a shard target; an offline peer is not a target either, so an outage <em>shrinks</em> the fan-out rather
+than poisoning the reduction.</p>
+<p><code>law_shard</code> fans out over the surviving set: <code>shardTargets</code> keeps only <strong>dialed</strong> peers (they carry a <code>host</code> — the
+out/in marker, where to dial them back) that <code>serve</code> the route, and ships to their <strong>wire authority</strong> (never the
+local map key, which is a path that would ship the shard nowhere). The seed bulk is factored over whatever is left,
+so nothing is dropped and nothing is computed twice.</p>
+<h4>origin and the two <code>where</code>s</h4>
+<p>Three location fields, three questions — easy to conflate because two share the name <code>where</code>:</p>
+<table>
+<thead>
+<tr><th>field</th><th>on</th><th>computed by</th><th>the question it answers</th></tr>
+</thead>
+<tbody>
+<tr><td><code>origin</code></td><td><code>path::T</code></td><td><code>Places.self()</code> at lift</td><td>where the code <strong>starts</strong> — this machine's listeners (<code>//0.0.0.0</code>); absent → not placeable</td></tr>
+<tr><td><code>where</code></td><td><code>path::T</code></td><td><code>realizedWhere()</code> after a distribution</td><td>where it <strong>went</strong> — <code>{[span=&gt;at] =&gt; [place…]}</code>, read back off the emitted <code>select([to(…)])</code> hosts</td></tr>
+<tr><td><code>where</code></td><td><code>abstraction::T</code></td><td><code>placeWord()</code> — <code>Places.reachable()</code>, or the realized <code>path.where</code> places after a distribution</td><td>where it <strong>can go</strong> — roster ∪ dialed peers (the α place-class word)</td></tr>
+</tbody>
+</table>
+<p><code>Places.reachable()</code> deliberately excludes the origin — it is where the code starts, not where it can go. The
+<code>path::T.where</code> is the <em>realized</em> placement (the shard actually shipped); the <code>abstraction::T.where</code> is the <em>reach</em> a
+plan's placement guard reads to decide liveness. <code>law_shard</code> is a live out-edge only over a non-empty reach, and
+<code>bind</code> applies a distribution rule to whatever code it is handed — the lift, not <code>bind</code>, marks placeability by
+attaching (or omitting) the <code>origin</code>. <code>place.instset</code> (the vocabulary coordinate) and <code>path.peer</code> (the peers a
+deployment used) are declared but not yet written — reserved slots, pending <code>/m/math/cat/signature</code>.</p>
+<h4>the two fibers — a plan as a natural transformation</h4>
+<p>The third and fourth lifts are the <em>same construction over two words</em>. A <code>path::T</code> anchors both: its <code>obj</code> is the
+value code — the <strong>instruction fiber</strong>, α-lifted to <code>abstraction::T.obj</code> — and its <code>origin</code>/<code>where</code> are the actual
+places — the <strong>location fiber</strong>, α-lifted to <code>abstraction::T.where</code>. A <code>plan::T</code> acts over both at once: its <code>cut</code>
+over the code, its <code>where</code> over the location. That simultaneity is what makes the plan a single rewrite rather than
+two unrelated ones — a natural transformation whose two components read the two α-words, and whose one application
+(<code>lower</code>/<code>bind</code>) moves the path on both.</p>
+<!-- figure source: assets/tikz/cat-fibration.tex (same recipe) -->
+<img src="../assets/cat-fibration.png" alt="the two fibers: the instruction fiber (path::T ⇄ abstraction::T) and the location fiber (origin/where ⇄ reachable), with a plan::T acting over both via cut and where" width="90%" style="margin:0.3em 0 0 0"/>
+<p>The naturality is a <strong>commuting square</strong>: the location projection \(L\) (a path's place — <code>origin</code> before, <code>where</code>
+after) makes the plan's code-side and location-side agree. Applying the rewrite and then reading the location
+(top → right) equals reading the location and then applying the relocation (left → bottom):
+\(\mathrm{where} \circ \mathrm{lower}(\mathrm{plan}) = \mathrm{plan.where} \circ \mathrm{origin}\).</p>
+<!-- figure source: assets/tikz/cat-commute.tex (same recipe) -->
+<img src="../assets/cat-commute.png" alt="the commuting square: lower/bind(plan) on the code edge, plan.where on the location edge, origin and where as the location projection — the square commutes" width="90%" style="margin:0.3em 0 0 0"/>
+<h4>the machine ring — process, dual of the stream ring</h4>
+<p><code>catInstSet</code> models <em>data</em> as a category (types/insts as objects/morphisms) and <em>place</em> as its location coordinate.
+The machine those places address is its own algebra — the <strong>machine ring</strong>, dual of the stream ring over process:
+<code>+</code> (union the data fibers, branch the processor) and <code>·</code> (<code>move</code> navigation, identity <code>stay()</code>), with Thm 19 as the
+distributive law that makes <code>law_shard</code> sound. Sketched in <code>docs/design/machine-ring.md</code>. Only what <code>catInstSet</code>
+already needs is encoded today — <code>move</code>/<code>stay</code>/<code>pop</code> and <code>law_shard</code> — the explicit <code>0</code> element and the <code>+</code> operator
+are future work.</p>
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>

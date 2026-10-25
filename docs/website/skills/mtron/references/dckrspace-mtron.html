@@ -514,7 +514,7 @@ copy of the config — the rec you wrote is never mutated.</li>
 <code>owner</code> field, so &quot;what belongs to me?&quot; is a read:</p>
 <pre><code class="language-mtron">*docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;]      [-- everything this owner created --]
 </code></pre>
-<p><code>on_close</code> is the other half: an instruction applied when the space closes. The web/ws/http spaces already take
+<p><code>on_close</code> is the other half: an instruction applied when the space closes. The web handlers already take
 lifecycle hooks this way (<code>on_open</code>, <code>on_message</code>, <code>on_error</code>); <code>on_close</code> gives <em>any</em> space an mtron-controllable
 shutdown hook, which is what makes reaping declarative rather than hard-coded in Java.</p>
 <pre><code class="language-mtron">[-- a space that reaps what it owns when it goes away --]

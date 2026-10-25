@@ -1,0 +1,67 @@
+% cat-fibration.tex — one plan, two fibers: a plan::T acts over the instruction fiber (cut)
+% and the location fiber (where).
+% Rendered with the tikz MCP server (compile_tikz); the PNG drops in assets/ as cat-fibration.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels are UNFILLED and offset clear of the strokes.
+%
+% THE FIGURE, IN ONE PICTURE. The third lift is a fibration over the INSTRUCTION word —
+% value code below (path::T.obj), its α-word above (abstraction::T.obj), α a function up,
+% γ a replay down. The fourth lift is the SAME fibration over the LOCATION word — actual
+% places below (path::T.origin / where), their α place-class word above (abstraction::T.where
+% = reachable). A plan::T [name, cut, where] acts over BOTH fibers: its cut over the code,
+% its where over the location — the natural transformation role.
+%
+%        abstraction::T          abstraction::T.where        the α-words a plan reads
+%        (the α-word)            (the α place-class word)
+%          ^    :  γ                    ^
+%       α  |    :                    α  |
+%          |    :                       |
+%        path::T                   path::T.origin / where   the anchors γ replays through
+%        (value code)              (actual places)
+%          ^                            ^
+%          | cut                        | where
+%          \____________  plan::T  ____/
+%                       [name, cut, where]
+
+\begin{tikzpicture}[
+  c/.style={draw, rounded corners=2pt, thick, minimum width=15mm, minimum height=6.5mm,
+            font=\small, inner sep=1.2mm},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  ed/.style={-{Stealth[length=2.2mm]}, thick, dashed},
+  el/.style={font=\scriptsize, inner sep=1pt},
+  sub/.style={font=\tiny, text=white!60!black, align=left, inner sep=1pt},
+  note/.style={font=\scriptsize, inner sep=1pt},
+  color=white
+]
+
+% ---- top row: the two α-words ----
+\node[c] (A) at (0,2.6) {\texttt{abstraction::T}};
+\node[sub, anchor=north, align=center] at (0,3.15) {the $\alpha$-word\\ (morphisms)};
+\node[c] (W) at (6.8,2.6) {\texttt{abstraction::T.where}};
+\node[sub, anchor=north, align=center] at (6.8,3.15) {the $\alpha$ place-class\\ word (reachable)};
+
+% ---- bottom row: the two anchors ----
+\node[c] (p) at (0,0) {\texttt{path::T}};
+\node[sub, anchor=north, align=center] at (0,-0.55) {value code};
+\node[c] (O) at (6.8,0) {\texttt{path::T.origin / where}};
+\node[sub, anchor=north, align=center] at (6.8,-0.55) {actual places};
+
+% ---- the lifts: α up (a function), γ down (a replay) ----
+\draw[e] (p.north) -- node[el,left=2pt]{$\alpha$} (A.south);
+\draw[ed] (A.south) -- node[el,right=2pt]{$\gamma$} (p.north);
+\draw[e] (O.north) -- node[el,right=2pt]{$\alpha$} (W.south);
+
+% ---- column labels ----
+\node[sub, anchor=east, align=right] at (-1.35,1.3) {the instruction\\ fiber};
+\node[sub, anchor=west, align=left] at (8.15,1.3) {the location\\ fiber};
+
+% ---- the plan spanning both fibers ----
+\node[c] (pl) at (3.4,-1.7) {\texttt{plan::T}};
+\draw[e] (pl.north) -- node[el,left=9pt,pos=0.55]{$\mathrm{cut}$} (p.south);
+\draw[e] (pl.north) -- node[el,right=9pt,pos=0.55]{$\mathrm{where}$} (O.south);
+\node[sub, anchor=north, align=center] at (3.4,-2.35) {\texttt{[name, cut, where]}};
+
+% ---- the point ----
+\node[note, anchor=north, align=center] at (3.4,-2.85) {a plan acts over both fibers — $\mathrm{cut}$ over code, $\mathrm{where}$ over location};
+\end{tikzpicture}

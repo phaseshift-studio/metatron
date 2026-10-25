@@ -55,9 +55,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -104,6 +102,7 @@ public class machInstSet extends AbstractInstSet {
      */
     public static final fURI POP_INST_TID = MACH_INST_TID.extend("pop");
     public static final fURI MOVE_INST_TID = MACH_INST_TID.extend("move");
+    public static final fURI STAY_INST_TID = MACH_INST_TID.extend("stay");
 
     /**
      * The one spelling of "up", so {@code move()} and {@code move(<..>)} cannot come to mean different things.
@@ -800,6 +799,17 @@ public class machInstSet extends AbstractInstSet {
                                 "move(<a/c>)         [-- down a composed path in one step --]",
                                 "move(<~/..>)        [-- ~ is the current machine, consumed before the fold: the parent --]",
                                 "move(<../../..>)    [-- past the root: saturates at the root --]"),
+                        docWrap(instC(STAY_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(), (lhs, inst) -> {
+                                    final Machine moved = Machine.current(Machine.current());
+                                    MachinePerspective.publish(moved);
+                                    return moved;
+                                }),
+                                "the lhs is not consulted: stay re-stands the machine the code already runs in",
+                                "the machine the code is running in, re-bound to itself — \\(\\mathrm{stay}() \\mapsto \\mathrm{here}\\)",
+                                Map.of(),
+                                "stand in place: the identity of move, the machine pointer re-bound to itself. The mechanical behaviors fire — the re-binding and the perspective publish — but to the machine the code is already running in, so the operation is a fixed point rather than a noop. `stay()` is `move(<~>)`.",
+                                "stay()              [-- stand in place: the machine pointer re-binds to itself --]",
+                                "stay() = move(<~>)  [-- the identity move: ~ is the current machine --]"),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             ((AbstractThread) lhs).stop();
                             return lhs;

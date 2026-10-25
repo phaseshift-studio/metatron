@@ -65,6 +65,16 @@ none      — delete                        (the unit law)
 the algebra still implies and the DSL does not yet speak. (`SPACE`/`TREE` in `Route.Target` are the
 unused seeds of `pipeline`/`shuffle`.)
 
+**The route is the coefficient, read as location.** The route is not a second vocabulary beside the coefficient — it
+is the same slot, instantiated over the Machine Ring (`machine-ring.md`). `peers` (the star) is the free commutative
+monoid over the peer set — entry A's bag $\mathbb{N}[X]$, over machines instead of data. `pipeline` is the
+associative, order-bearing coefficient (the scan's running total); `shuffle` is the keyed coefficient; `native` is the
+backend's own coefficient (delegation); `local` is the identity location (`stay()`), and `none` is the zero (the unit
+law's delete). So the plan's `[cut, route, span]` is really `[coefficient-ring, law, span]`: `cut` names the
+*data*-side theorem (the Stream Ring), `route` names the *location*-side coefficient (the Machine Ring), and both are
+instantiations of the one `C<?,?>` parameter — $\mathbb{N}$ for multiplicity, the Machine Ring for location,
+$\mathbb{C}$ for amplitude.
+
 ## 5. The plan::T connection
 
 A distributed plan is two declarations over the same structure the folds already use:

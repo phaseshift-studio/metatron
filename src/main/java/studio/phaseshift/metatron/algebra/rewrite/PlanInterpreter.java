@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.math.cat.Derivation;
 import studio.phaseshift.metatron.isa.m.math.cat.Law;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.math.cat.Places;
+import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
 import studio.phaseshift.metatron.isa.m.math.cat.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -113,9 +114,10 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The cut-less operator (§12.1): a distribution rule applied to located code. Requires a plan with no cut; a
-     * cut plan is {@link #lower}'s, so it is declined. The site is the decision's span (there is exactly one),
-     * resolved and emitted over the environment snapshot.
+     * The cut-less operator (§12.1): a distribution rule applied to code. Requires a plan with no cut; a cut plan is
+     * {@link #lower}'s, so it is declined — the code passes through unchanged, the same identity a no-match plan is.
+     * The relocation itself is emitted by {@link #relocate}; whether the code is placeable (has an origin) is the
+     * lift's concern, not the operator's, so a machine that answers nowhere can still ship to a peer it dials.
      */
     public static Code bind(final Plan plan, final Code code) {
         if (null != plan.cut())
@@ -126,12 +128,15 @@ public final class PlanInterpreter {
     /**
      * The cut-less distribution rule (§12.1): the site is the decision's span, not a cut. A {@code move} decision
      * (a {@code chain}/{@code star} shape with a {@code target}) ships the whole code to that place — a hop is a
-     * re-compilation in a new environment (§6.3), so the receiver re-plans the program on compile. Other cut-less
-     * shapes are the identity: the code stands where it stood.
+     * re-compilation in a new environment (§6.3), so the receiver re-plans the program on compile. The target's
+     * scheme must resolve a dialer in the ISA ({@link Signatures#resolves}); other cut-less shapes, and a target
+     * nothing can dial, are the identity: the code stands where it stood.
      */
     private static Code relocate(final Plan plan, final Code code, final Env env) {
         final Placement decision = plan.where().stream().findFirst().orElse(null);
-        if (null == decision || null == decision.target())
+        // an admissible move: the decision must name a target whose scheme resolves a dialer in the ISA — no dial to
+        // decide otherwise. Declined as the identity, like every other cut-less shape without a target.
+        if (null == decision || null == decision.target() || !Signatures.resolves(decision.target().scheme()))
             return code;
         // a move hop: append the to(<target>) terminal instruction, which ships the WHOLE code as a program — the
         // transport wraps start(code).to(<>) and the receiver re-plans it (§6.3) — never the code's value (the quine

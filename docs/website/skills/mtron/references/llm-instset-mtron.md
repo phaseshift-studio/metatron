@@ -39,21 +39,13 @@ Create a workspace for the agent. Create a model for the agent to use for chatti
 the workspace and a chat feature. Then:
 
 ```mtron
-mtron> [MAX_OUTPUT 10] @chatter.chat('what is the meaning of nothing?')
-==>fail::[parse error at line 1, col 13:
-     [MAX_OUTPUT 10] @chatter.chat('what is the meaning o...
-                 ^
-     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/296011
+mtron> @chatter.chat('what is the meaning of nothing?')
 ```
 The `/usr/chatter/#` space serves a the default location for features to store their various constructions.
 
 ```mtron
 mtron> */usr/chatter/chat_result/+
-mtron> [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
-==>fail::[parse error at line 1, col 13:
-     [MAX_OUTPUT 10] */usr/chatter/chat_result/1/chat
-                 ^
-     a poly entry (a lst or a rec) — a value, key=>value, ',' or ']']@/sys/fail/297966
+mtron> */usr/chatter/chat_result/1/chat
 ```
 **A tool is an instruction.** There is no tool registry to populate: anything callable *is* a tool, and `mTool`
 derives both the JSON schema and the name from the instruction's tid. That one rule is why a `tool_feature` can
@@ -77,16 +69,17 @@ mtron> import(/m/llm)
 mtron> import(/m/web,web)
 mtron> [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server
-==>mcp_server::[tool=>[m_inst_eval=>eval(#::T){<j>}]]@/sys/space/mcp/basic_server
+==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
+                status=>!inst?bool<=(){<j>}]@/sys/space/mcp/basic_server
 ```
 What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
 per server, `mcp_mtron` for the metatron-native tools, `mcp_message` for the ledger, and `/basic` for the server
 just defined:
 
 ```mtron
-[-- a carrier is a space; a route binds a server to it. `else` makes a mount idempotent --]
-*/sys/space/web/http.else(httpspace::[pattern=> http://#, host => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*</sys/space/mcp/basic_server>, / => /usr]]@/sys/space/web/http)
-*/sys/space/web/ws.else(wsspace::[pattern=> ws:#, host => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]]@/sys/space/web/ws)
+[-- a carrier is a server (http_server, ws_server); a route binds an mcp server to it. `else` makes a mount idempotent --]
+*</network/listener/http/localhost/8777>.else(http_server::[host => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*</sys/space/mcp/basic_server>, / => /usr]])
+*</network/listener/ws/localhost/8555>.else(ws_server::[host => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]])
 ```
 
 ## types
@@ -246,9 +239,10 @@ Because a tool is an instruction, a server is a **selection over instructions**,
 
 ```mtron
 mtron> mcp_server::[tool => [!*eval, !*eval]]@/sys/space/mcp/two_say
-==>mcp_server::[tool=>[m_inst_eval=>eval(#::T){<j>}]]@/sys/space/mcp/two_say
+==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
+                status=>!inst?bool<=(){<j>}]@/sys/space/mcp/two_say
 mtron> */sys/space/mcp/two_say>>tool     [-- one entry: a collection is keyed by the instruction --]
-==>[m_inst_eval=>eval(#::T){<j>}]
+==>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}]
 ```
 Three rules follow, and the third is the one that surprises people:
 

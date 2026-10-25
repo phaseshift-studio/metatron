@@ -11,19 +11,22 @@ description: |
 
 ## What a Machine is
 
-A **Machine** is a *space of spaces* — the container in which address resolution happens. It is itself an address
-space: the interface is `Machine extends Rec, AutoCloseable` and the concrete body is `AbstractMachine extends
-AbstractSpace`. Its five members (`instset`, `memory`, `network`, `compiler`, `processor`) are rec entries shaped as
-`machine::T`. Of the five:
+A **Machine** is a *space of spaces* — the container in which address resolution happens. The interface is
+`Machine extends Rec, AutoCloseable` and the concrete body is `AbstractMachine extends MRec`. Its five members
+(`instset`, `memory`, `network`, `compiler`, `processor`) are rec entries shaped as `machine::T`. Its own address
+surface is its **sphere** — `MachineSpace`, a `memSpace` the machine holds and memory never indexes (2026-10-25):
+`Machine.read`/`write` ask the innermost machine whose sphere covers an address FIRST (the machine itself at its vid,
+its components, its `sys`), then the network, then memory, then instruction memory. `~/sys` lives in the sphere's own
+store; the sphere declines everything else under the vid, so the machine's data stays memory's. Of the five:
 
 - **Memory** is the facade over the world of spaces — the single read/write surface.
 - **Compiler** lowers code; **Processor** runs it; neither is an address space.
 - **InstSet** and **Network** are *accumulating* components (a frame wraps them); **Compiler** and **Processor** are
   *constructive* (whole-value, inherited or replaced).
 
-A machine replaced the old `Router` as the root of the address space. `Router.java` is gone, and
-`AbstractMachine extends AbstractSpace` is the one concrete body — which is what makes a machine a `Space` that
-answers addresses, while `Machine` the interface stays a `Rec`.
+A machine replaced the old `Router` as the root of the address space. `Router.java` is gone, and `AbstractMachine` is
+the one concrete body — a `Rec` whose own addresses its `MachineSpace` answers, while `Machine` the interface stays a
+`Rec`.
 
 ## Package overview
 
@@ -39,10 +42,12 @@ isa/mach/type/memory/MemoryUnion.java ← the ONE read-through union today: fram
 isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
-isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec)
+isa/mach/type/machine/MachineSpace.java     ← the machine's own sphere: the machine, its components and ~/sys — asked
+                                        first by Machine.read/write, held by the machine, never in memory
+isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec); answers its branch
+                                        <vid>/network/# when the machine's sphere hands it an address there
 isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
 isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
-isa/mach/type/network/PeerSpace.java        ← <vid>/network/peer/# as an address space: members read and deleted by path
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
                                         enclosing machine's (via `previous`)
 isa/mach/type/compiler/…                     ← Compiler impls + parser/rewriter/resolver/typer stages
@@ -56,7 +61,7 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 
 | Component | Interface (extends)                   | One-line job                                         | Frame behaviour                   |
 |-----------|---------------------------------------|------------------------------------------------------|-----------------------------------|
-| Memory    | `Space, Machine.Component, Closeable` | relative bindings (names) + absolute index of spaces | accumulates (`MemoryUnion`)       |
+| Memory    | `Space, Machine.Component, Closeable` | relative bindings (names) + absolute index of DATA spaces (no ISAs; its lookup weighs the instset's libraries) | accumulates (`MemoryUnion`)       |
 | Network   | `Addressable, Machine.Component, Closeable` | this frame's peers `service → peer::T` + the root-shared roster, `own`/`isPeer`, supervision of links | a level of its own (`NetworkUnion`): knowledge (the roster at `/network/roster`) is shared, reach (`peer`) is never inherited, and a pop hangs up the frame's dials |
 | InstSet   | `Space` (via `AbstractInstSet`)       | the vocabulary: types/insts/rewrites/sugars; `import` lands here | accumulates — `BasicInstSet` is own structure over its imports over the enclosing machine's ISA; membership in the rec under `reference` |
 | Compiler  | `Machine.Component, Rec`              | `code::T → code::T` in three stages                  | constructive (inherited/replaced) |
@@ -138,22 +143,30 @@ it stops, so its clients see `1000` whether it is restarting or gone.
 | `WebSocketRec.onClose` / `WebSocketObj` | a failed link `abandon`s its in-flight round trips (each answered with a fail at once) and keeps `ROUTED`, so the redialed connection does not wrap a second router; `awaitOpen` redials on demand |
 
 **Members are addresses (2026-10-21).** A member's key is the dial's own address as a path, one per surface
-(`Network.Helper.keyOf`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every
-host label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()`
-of the dial, the loopback alias spelled first), and the service it reaches is the `authority` field — wire dispatch (`transportOf`, `isPeer`,
-`peerOf`) and `law_shard`'s routes match on that, never on the key. `Machine.bootstrap()` mounts a `PeerSpace` at
-`<vid>/network/peer/#` (indexed at `<vid>/sys/space/network`): it stores nothing and answers from the network on every
-read, so `*</network/peer/ws/localhost/8555/mtron/authority>` walks a member by the space's base-poly read, and a noobj
-write there is `Network.disconnect` — destruction on deletion from mtron. Every other write is refused (a peer is
-constructed, not written). `index` keeps **no two equivalent connections**: a fresh client at a held key closes the
-member there and takes its place, while indexing the same client again is idempotent; `connect` still skips the dial
-when the surface is held. `disconnect(address)` reads what the address names — a key that member, a wire uri with a
-route that surface, a bare authority every surface of the service.
+(`Network.Helper.keyOf`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every host
+label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()` of the
+dial, the loopback alias spelled first), and the service it reaches is the `authority` field — wire dispatch
+(`isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component answers its own branch:
+`BasicNetwork` extends `AbstractSpace`, `Machine.bootstrap()` stamps it as `<vid>/network/#`, and the machine's
+`MachineSpace` hands it every address there — it is not a space in memory. It stores nothing
+beside its rec and answers every read from it, so `*</network/peer/ws/localhost/8555/mtron/authority>` walks a member
+by the space's base-poly read, and a noobj write there is `Network.disconnect` (at `listener/<key>`,
+`Network.unlisten`) — destruction on deletion from mtron. A value written at a member is refused (a peer is
+constructed, not written); every other field is written onto the live rec in place, so `/network/roster` is the root
+network's own field. An address off the branch is the authority dispatch (`Network.read`/`write`). `index` keeps **no
+two equivalent connections**: a fresh client at a held key closes the member there and takes its place, while indexing
+the same client again is idempotent; `connect` still skips the dial when the surface is held. `disconnect(address)`
+reads what the address names — a key that member, a wire uri with a route that surface, a bare authority every surface
+of the service.
 
 Three consumers read the link: `PlanInterpreter.shardTargets` plans only over `Network.Helper.online` peers (an outage
-shrinks the fan-out), `Network.status` probes a `peer::T`'s transport (it reported every dialed peer `known`) and
-answers `down` for an offline link without a trip, and `index`/`connect` treat a hung-up member as absent so a fresh
-dial is never handed a dead peer.
+shrinks the fan-out), `Network.status` reports each dialed peer by its client's own `status` (a roster address is
+`known`, never `down`), and `index`/`connect` treat a hung-up member as absent so a fresh dial is never handed a dead
+peer. **Every client and server answers `status`** (2026-10-24): a bool, true while live, derived on read and never
+stored — `Network.Helper.statusOf(live)` installs it, `Network.Helper.status(obj)` reads it (a `Link` without the
+field answers `connected()`). ws: the socket is open; http: a bounded HEAD answers; loop: always; mcp_client: its
+health check; mcp_server: its own dispatch answers a ping; `Listener` (every server): not closed. A `peer::T`
+carries no transport: it is talked to with its client's `inst`, and a read never dials — construction connects.
 
 Two Java-side facts the design depends on. `index`, `accept` and `disconnect` serialize the peer map's
 read-modify-write on the level, and `disconnect` clears under the lock but closes outside it — closing a link is a
@@ -283,10 +296,21 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
   no-op, so writes there are silently dropped. The roster lives at `/network/roster`.
 - **`push()` must mint a child, not the parent.** Use the 3-arg `clone` — `selfVID` *pins* an already-set vid, so a
   2-arg clone would silently keep the parent's address.
-- **A machine is a space, so its own read is a space read** (`AbstractSpace.read` → `Space.Helper.resolveRead`, q-procs
-  and all). Address *resolution* belongs to memory: `BasicMemory.read`/`write` route an address to the space that covers
-  it (`readAbsolute`/`writeAbsolute`) — which is why a bulk wildcard write reaches the space it names rather than the
-  argument stack.
+- **A machine's own addresses are its sphere's** (`MachineSpace`, asked before the network and memory, never in
+  memory): the machine at its vid, a component below it, `~/sys`. A covered address the sphere has no answer for is
+  declined, as is everything else under the vid. Address *resolution* of all the rest belongs to memory:
+  `BasicMemory.read`/`write` route an address to the space that covers it (`readAbsolute`/`writeAbsolute`) — which is
+  why a bulk wildcard write reaches the space it names rather than the argument stack.
+- **`~/sys` is the sphere's own store, not memory's** (Marko, 2026-10-25: "sys/# simply go into MachineSpace"). It
+  carries the q-procs `~/sys` speaks (docq, subq, incrq, mimeq, lockq), so a fail still mints at `~/sys/fail/_?incrq`.
+  A closing machine DROPS its sphere after memory's spaces and never closes its values: the system thread's executor
+  lives in `~/sys`, and closing it from one of its own threads waits on itself forever (memory's `removeSpace` only
+  logs "closed space" — it never closed the old sys space either). Code that re-reads an obj at its own vid goes through
+  `Machine.Helper.readLocal`/`writeLocal` (sphere, then memory), **never `memory()` directly**: memory holds no
+  `~/sys`, and `Machine.read` would scan instruction memory on a miss. The sphere owns writes to the network branch
+  and `~/sys`; the machine rec's and the other components' writes still go to memory. An address with a scheme or a
+  host is no sphere's (`ws://peer/sys/…` is the peer's), and a query on the machine or a component (`~/processor?docq`)
+  is declined to memory's q-procs. `~/sys` is a holding area: its parts are expected to move into the components.
 
 ## Migration state (why it reads as two systems at once)
 
@@ -356,6 +380,43 @@ in the read path:
   rec (`jvm().put`), because a rec write on a machine rec fails its own type check.
 * **`BasicInstSet.refer` holds the ISA by object** beside the vid recorded in the rec, so a member resolves without
   the address index — and a machine can hold a member that is **not** one of its spaces (`InstSetUnionReadTest`).
+
+## Instruction sets live in the instset, not memory (2026-10-25)
+
+Marko: "Instsets shouldn't be in Memory as spaces (though they are spaces). They should be in InstSet only. This will
+really clean up Memory and put items where they should logically be -- Network related objs in Network, InstSets in
+InstSet, and data spaces in Memory."
+
+* **Memory's index holds data spaces only.**
+  - `InstSet.mount` refers the ISA into `Machine.current().instset()`, and adds its sugars.
+  - `BasicMemory.addSpace` sends an `InstSet` there and never indexes it, which catches the hand-mounted schema
+    instsets (tble, dcmnt, vec, grph).
+  - The import probe checks `instset().members()`.
+  - `memory().spaces()` lists no instruction set.
+* **Memory's LOOKUP still routes an ISA's addresses.** `BasicMemory.findSpace`/`hasSpaceFor`/`getSpace` weigh the
+  libraries this level's machine mounted (`BasicInstSet.ownLibraries()`) against the level's data spaces, by
+  `Memory.mostSpecific`.
+  - "The most specific gains the write": `/m/math/cat/…` → `/m/math/cat`, `/m/math/…` → `/m/math`, the rest of
+    `/m/…` → `/m`.
+  - A data space more specific than an ISA keeps its addresses.
+  - Everything memory does around the contest applies unchanged: prefix and coefficient alignment, the stack first for
+    a short name, the `big()` retry, type-graph invalidation, the ISA's own q-procs (`?docq`).
+  - An ISA is weighed at the memory level of the frame that mounted it, as it was once indexed there, so a child does
+    not claim its parent's libraries ahead of the parent's own data spaces.
+  - A library is an ISA with a vid and a real path (`BasicInstSet.isLibrary`). A frame's own level (a
+    `ComponentUnion`) and an ISA whose pattern is everything (`#`, `/#`) are pure vocabulary, read through the union
+    fallback.
+* **Unmounting** (`memory().removeSpace(vid)`) un-routes an ISA (`BasicInstSet.unroute`) but keeps it a member, which
+  is what removing it from the index used to do. A re-mount routes it again.
+* **The vocabulary's pattern is the members' "lowest common denominator"** (Marko: "thus /m/#").
+  - `BasicInstSet.refer` writes the deepest path every referred ISA's pattern lies beneath.
+  - A level that refers nothing reports its enclosing machine's.
+  - With a schema instset at `/sys/space/…` among the members, the pattern is `/#` until schema instsets leave
+    `/sys/space`.
+* **Inherited references resolve through the enclosing levels** (`BasicInstSet.resolve`), not memory's index.
+* **Code enumerating instruction sets asks `instset().members()`**, never `memory().spaces()` (`catInstSetTest`).
+* `~/sys` yields to a deeper claimant named by memory's lookup (`MachineSpace.yields`), an ISA included, so a schema
+  instset at `/sys/space/<name>/instset/#` keeps its table types.
 * **The registration — an ISA also being a space — is the last artifact of that era.** Removing it is blocked on three
   measured things: migration writes that find the owning ISA by address, spaces that must decline a vid they cannot
   interpret instead of throwing, and documentation ownership, which resolves the owning space through the address index

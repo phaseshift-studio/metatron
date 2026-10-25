@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
-import studio.phaseshift.metatron.algebra.rewrite.Placement;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
@@ -185,19 +184,11 @@ public class catInstSet extends AbstractInstSet {
                             return PATH_TYPE.constructor().apply(realized(PlanInterpreter.lower(plan, code)));
                         }),
                         instC(CAT_BIND_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(PLAN_TYPE), (lhs, inst) -> {
-                            // bind(plan::T): path → path — the cut-less operator: re-route located code. Requires a
-                            // cut-less plan, a path with an origin, and an admissible target; declined (noobj) otherwise.
+                            // bind(plan::T): path → path — the cut-less operator: re-route located code. Symmetric
+                            // with lower: the gating (a cut-less plan, an admissible target) lives in
+                            // PlanInterpreter.bind and relocate; a declined bind is the identity, the path unchanged.
                             final Plan plan = Plan.of(inst.arg(0).asRec());
-                            if (null != plan.cut())
-                                return noobj();
-                            final Rec path = lhs.asRec();
-                            if (path.at(ORIGIN).isNoObj())
-                                return noobj();
-                            // resolve (§4): the decision's target scheme must have a dialer in the ISA — no dial to decide
-                            final Placement decision = plan.where().stream().findFirst().orElse(null);
-                            if (null == decision || null == decision.target() || !Signatures.resolves(decision.target().scheme()))
-                                return noobj();
-                            final Code code = path.atDirect(OBJ).asCode();
+                            final Code code = lhs.asRec().at(OBJ).asCode();
                             return PATH_TYPE.constructor().apply(realized(PlanInterpreter.bind(plan, code)));
                         }),
                         instC(AS_INST_TID.dom(ALL).rng(MORPHISM_TID), lst(MORPHISM_TYPE), (lhs, _) -> MORPHISM_TYPE.constructor().apply(lhs)),
@@ -230,6 +221,10 @@ public class catInstSet extends AbstractInstSet {
     /**
      * The realized placement of an emitted layout — the {@code select([to(uri)…])} routes, lifted to places, keyed by
      * the shard's AT span. {@code noobj} when the emitter shipped nothing (the layout has no {@code select}).
+     * <p>
+     * MOVE LANDMINE: a {@code move} relocation emits a bare terminal {@code to(<target>)} — no {@code select} — so
+     * this read-back would report no realized place for a moved program. When {@code move} ships, it needs its own
+     * realized-placement read-back (recognize the terminal {@code to} route), or this must.
      */
     static Obj realizedWhere(final Code emitted) {
         final List<Obj> places = emitted.insts().stream()

@@ -1,0 +1,53 @@
+% cat-place-capability.tex — a place is a machine; a peer is how you talk to it.
+% Rendered with the tikz MCP server (compile_tikz); the PNG drops in assets/ as
+% cat-place-capability.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels are UNFILLED and offset clear of the strokes.
+%
+% THE FIGURE, IN ONE PICTURE. place::T is the location coordinate — obj (//host) and
+% authority (the transports that reach it), read from the roster + peer map. Its
+% linked_to / linked_from auto insts resolve to peer::T recs. A peer holds a client
+% whose `inst` is a MINI-INSTSET — the from / to / eval overrides — and atPeer /
+% dispatch reach that peer by swapping f() and nothing else (same signature).
+%
+%       place::T  (the location coordinate)      peer::T  (the connection)
+%         obj        => //host                     authority, host
+%         authority  => [scheme://host:port …]     client ──► client.inst
+%         linked_to  (auto) ───────────────────►                (the mini-instset)
+%         linked_from(auto)                       /m/inst/from  => wire GET
+%         status     (auto)                       /m/inst/to    => wire POST
+%                                                 /m/inst/eval  => wire eval
+%                                     each override: the native inst, f() swapped
+
+\begin{tikzpicture}[
+  c/.style={draw, rounded corners=2pt, thick, minimum width=12mm, minimum height=6.5mm,
+            font=\small, inner sep=1.2mm},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  el/.style={font=\scriptsize, inner sep=1pt},
+  sub/.style={font=\tiny, text=white!60!black, align=left, inner sep=1pt},
+  note/.style={font=\scriptsize, inner sep=1pt},
+  color=white
+]
+
+% ---- the location coordinate (left) ----
+\node[c] (pl) at (0,0) {\texttt{place::T}};
+\node[sub, anchor=north, align=left] at (0,-0.45) {$\mathrm{obj}$\quad$\Rightarrow$\ $\texttt{//host}$\\$\mathrm{authority}$\ $\Rightarrow$\ $[\texttt{scheme://host:port}\,\dots]$};
+
+% ---- the connection (right) ----
+\node[c] (pe) at (6.4,0) {\texttt{peer::T}};
+\node[sub, anchor=south, align=center] at (6.4,0.7) {$\mathrm{authority}$, $\mathrm{host}$};
+
+% ---- the auto edges: linked_to / linked_from resolve to peers ----
+\draw[e] (pl) -- node[el,above=2pt]{$\mathrm{linked\_to}$ (auto)} (pe);
+
+% ---- the client's mini-instset ----
+\node[c] (inst) at (6.4,-2.0) {\texttt{client.inst}};
+\draw[e] (pe) -- node[el,right=2pt]{$\mathrm{client}$} (inst);
+
+% ---- the three wire instructions ----
+\node[sub, anchor=west, align=left] at (8.1,-2.4) {$\texttt{/m/inst/from}$\ $\Rightarrow$\ wire GET\\$\texttt{/m/inst/to}$\quad\ $\Rightarrow$\ wire POST\\$\texttt{/m/inst/eval}$\ $\Rightarrow$\ wire eval};
+
+% ---- the point ----
+\node[note, anchor=north, align=center] at (4.4,-3.6) {the override is the native inst with a different $\mathrm{f}()$ — same signature, body swapped};
+\end{tikzpicture}

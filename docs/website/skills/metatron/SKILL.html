@@ -454,7 +454,7 @@ snippet is sufficient for the spawned agent to execute mtron code.</p>
 ==&gt;fail::[parse error at line 1, col 2:
      ... [-- larger agent definition --]
       ^
-     expected an obj]@/sys/fail/43059
+     expected an obj]@/sys/fail/60220
 mtron&gt; feature=&gt;[
         tool_feature::[tool=&gt;[!*eval]]
         ... [-- other features attached to agent --]
@@ -462,12 +462,12 @@ mtron&gt; feature=&gt;[
      feature=&gt;[
            tool_feature::[tool=&gt;[!*eval...
             ^
-     unclosed triple-quote — missing closing '&quot;&quot;&quot;']@/sys/fail/43527
+     unclosed triple-quote — missing closing '&quot;&quot;&quot;']@/sys/fail/61215
 mtron&gt; ]
 ==&gt;fail::[parse error at line 1, col 1:
      ]
      ^
-     unclosed triple-quote — missing closing '&quot;&quot;&quot;']@/sys/fail/43794
+     unclosed triple-quote — missing closing '&quot;&quot;&quot;']@/sys/fail/62258
 </code></pre>
 <h3>References</h3>
 <ul>
@@ -490,7 +490,7 @@ select, KV), dialect handling, VID stamping, schema generation.</li>
 compile→run pipeline, threads/monads, and the read-path invariants + migration state.</li>
 <li><strong>Distributed primitives (Java)</strong>: <code>references/distributed-metatron.md</code> — Index of every place metatron crosses a
 process boundary: the Router dispatch seam (<code>own</code>/<code>isPeer</code>/<code>dispatchForeign</code>, <code>/sys/peer</code> roster), the wire
-transports (<code>wsspace</code>/<code>wsclient</code>, <code>httpspace</code>, <code>mqttspace</code>, <code>serialspace</code>, <code>dckrspace</code>, <code>grphspace</code>, <code>vecspace</code>,
+transports (<code>ws_server</code>/<code>ws_client</code>, <code>http_server</code>/<code>http_client</code>, <code>mqttspace</code>, <code>serialspace</code>, <code>dckrspace</code>, <code>grphspace</code>, <code>vecspace</code>,
 <code>tblespace</code>), the remote endpoints (<code>mtron_ws</code>, <code>mtron_http</code>, MCP, REST verbs), the in-VM concurrency motifs
 (threads, <code>ThreadExecutor</code>, <code>SwarmProcessor</code>), and the wire format.</li>
 </ul>
