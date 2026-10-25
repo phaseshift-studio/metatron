@@ -123,15 +123,14 @@ public class Placement extends MRec {
         /**
          * The instructions a target of this shape must SERVE — the second axis beside {@link #obligations()}: what the
          * shape demands of the place it ships to, not of the cut. Every distributing shape ships its chain through
-         * {@code to(<target>)} (each route contributes one chain and a {@code to()}), so its target's client must
-         * declare {@code to} in its {@code inst} — and {@code eval}, because what the route carries is a PROGRAM the
-         * target must apply. {@code to} alone means only "write this obj to this address": an http POST writes the
-         * program as data and runs nothing, so a peer that cannot evaluate is no place to ship code. A shape that
-         * stays home demands nothing.
+         * {@code eval(<target>)} (each route contributes one chain and an {@code eval()}), so its target's client must
+         * declare {@code eval} in its {@code inst} — the route carries a PROGRAM the target must apply, and {@code eval}
+         * is exactly "apply this program and answer its value". An http POST that only writes (no eval) runs nothing,
+         * so a peer that cannot evaluate is no place to ship code. A shape that stays home demands nothing.
          */
         public Set<fURI> inst() {
-            // ordered — the route, then what applies its cargo — so the plan prints the same list every time
-            return this.distributes() ? Collections.unmodifiableSet(new LinkedHashSet<>(List.of(TO_INST_TID, EVAL_INST_TID))) : Set.of();
+            // the route is what applies its cargo, so the plan prints exactly what the target must serve
+            return this.distributes() ? Collections.unmodifiableSet(new LinkedHashSet<>(List.of(EVAL_INST_TID))) : Set.of();
         }
     }
 

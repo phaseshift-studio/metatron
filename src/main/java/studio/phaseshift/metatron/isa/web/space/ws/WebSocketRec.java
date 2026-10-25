@@ -90,7 +90,7 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             this.jvm().put(uri(SEND_RECV), instLambda(shipAndAwait));
         // THE MINI-INSTSET — the instructions you talk to this connection with, each on its native signature with this
         // client's own body (Network.Helper.override), so the network reaches each by swapping f() alone:
-        //   eval(code)    ships the code: the network calls eval?block(code), so arg(0) is the code, raw;
+        //   code.eval(<uri>) ships the lhs code: the code is the lhs, the address arg(0), as the native's;
         //   from(<uri>)   ships the localized read, from(</path>);
         //   obj.to(<uri>) ships the localized write, start(obj).to(</path>) — the obj is the lhs, as the native's.
         // The far side evaluates what it is sent (the wire protocol), so a read answers its value and a shipped unquoted
@@ -99,7 +99,8 @@ public class WebSocketRec extends MRec implements WebSocketObj {
         // memory to read the natives' signatures from, the client declares nothing.
         if (!map.containsKey(uri(INST))) {
             final Rec overrides = rec();
-            final Obj eval = Network.Helper.override(EVAL_INST_TID, shipAndAwait);
+            final Obj eval = Network.Helper.override(EVAL_INST_TID, (lhs, inst) ->
+                    this.ship(() -> lhs));
             final Obj from = Network.Helper.override(FROM_INST_TID, (lhs, inst) ->
                     this.ship(() -> from_(inst.arg(0).uriValue().localize().toUri()).tryToInst()));
             final Obj to = Network.Helper.override(TO_INST_TID, (lhs, inst) ->

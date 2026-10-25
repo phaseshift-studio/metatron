@@ -166,9 +166,12 @@ async def oneshot(url, exprs):
 
 def usage():
     sys.stderr.write(
-        "usage: wsplus [-e EXPR ...] [URL]\n"
+        "usage: wsplus [-e EXPR ...] [-out MIME] [-in MIME] [URL]\n"
         "\n"
         "  -e <expr>   evaluate EXPR once and exit (repeatable; one shared session)\n"
+        "  -out <mime> append ?out=<mime> to the endpoint (as a bare name such as\n"
+        "              x-mtron-ui it becomes application/x-mtron-ui)\n"
+        "  -in <mime>  likewise ?in=<mime>, the inbound direction\n"
         "  <uri>       the metatron ws endpoint (default: ws://localhost:8555/mtron)\n"
         "\n"
         "  supported formats\n"
@@ -179,15 +182,36 @@ def usage():
         "without -e, an interactive REPL\n")
 
 
+def with_query(url, key, value):
+    """Attach key=value to a url, preserving whatever query it already carries."""
+    from urllib.parse import quote
+    sep = "&" if urlsplit(url).query else "?"
+    return f"{url}{sep}{key}={quote(value)}"
+
+
 def main():
     exprs = []
     url = None
+    out_mime = None
+    in_mime = None
     i = 1
     while i < len(sys.argv):
         arg = sys.argv[i]
         if arg in ("-h", "--help"):
             usage()
             return
+        elif arg in ("-out", "--out", "-in", "--in"):
+            if i + 1 >= len(sys.argv):
+                sys.stderr.write(f"==>ERROR: {arg} needs a mime type argument\n")
+                sys.exit(2)
+            mime = sys.argv[i + 1]
+            if "/" not in mime:
+                mime = "application/" + mime      # x-mtron-ui -> application/x-mtron-ui
+            if arg in ("-out", "--out"):
+                out_mime = mime
+            else:
+                in_mime = mime
+            i += 2
         elif arg == "-e":
             if i + 1 >= len(sys.argv):
                 sys.stderr.write("==>ERROR: -e needs an expression argument\n")
@@ -199,6 +223,10 @@ def main():
             i += 1
     if url is None:
         url = "ws://localhost:8555/mtron"
+    if out_mime:
+        url = with_query(url, "out", out_mime)
+    if in_mime:
+        url = with_query(url, "in", in_mime)
     if exprs:
         try:
             sys.exit(asyncio.run(oneshot(url, exprs)))

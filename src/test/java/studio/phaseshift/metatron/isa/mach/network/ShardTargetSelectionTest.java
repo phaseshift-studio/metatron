@@ -64,11 +64,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * A SHARD TARGET IS ONLINE AND SERVES THE ROUTE (Marko, 2026-10-24). law_shard ships each slave as
- * {@code to(<target>)}, a program the far side must apply, so a peer is a target only when it is online AND its client
- * declares {@code to} and {@code eval} — {@code to} alone only writes an obj to an address. The
- * requirement is {@code plan::T} data — each placement's {@code inst} (the key mirrors a client's {@code inst}),
- * defaulted from the placement's shape — so every distribution rule reads it through one check,
- * {@link Places#serves}.
+ * {@code eval(<target>)}, a program the far side must apply, so a peer is a target only when it is online AND its
+ * client declares {@code eval} — eval is exactly "apply this program and answer its value", and {@code to} alone only
+ * writes an obj to an address. The requirement is {@code plan::T} data — each placement's {@code inst} (the key
+ * mirrors a client's {@code inst}), defaulted from the placement's shape — so every distribution rule reads it through
+ * one check, {@link Places#serves}.
  */
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
@@ -119,13 +119,13 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     }
 
     @Test
-    void testADistributingShapeRequiresToAndEval() {
-        // to is the route; eval because what the route carries is a program the target must apply — to alone only
-        // writes an obj to an address (an http POST stores the program and runs nothing)
-        assertEquals(Set.of(TO_INST_TID, EVAL_INST_TID), Placement.tree(1, Span.at()).inst(), "a tree ships a program through to(<target>)");
-        assertEquals(Set.of(TO_INST_TID, EVAL_INST_TID), Placement.peers(Span.at()).inst(), "so does every distributing shape");
+    void testADistributingShapeRequiresEval() {
+        // eval is the route: the target applies the program it is shipped and answers its value — eval alone suffices,
+        // and to only writes an obj to an address (an http POST stores the program and runs nothing)
+        assertEquals(Set.of(EVAL_INST_TID), Placement.tree(1, Span.at()).inst(), "a tree ships a program through eval(<target>)");
+        assertEquals(Set.of(EVAL_INST_TID), Placement.peers(Span.at()).inst(), "so does every distributing shape");
         assertEquals(Set.of(), Placement.local(Span.at()).inst(), "a shape that stays home requires nothing");
-        assertEquals(Set.of(TO_INST_TID, EVAL_INST_TID, FROM_INST_TID), Placement.tree(1, Span.at()).inst(FROM_INST_TID).inst(),
+        assertEquals(Set.of(EVAL_INST_TID, FROM_INST_TID), Placement.tree(1, Span.at()).inst(FROM_INST_TID).inst(),
                 "a placement adds what its shipped chunk needs to what its shape ships through");
     }
 
@@ -133,42 +133,42 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     void testLawShardsPlanStatesWhatItsTargetMustServe() {
         final Plan shard = catRewrite.planOf("law_shard");
         final Placement route = shard.where().stream().filter(p -> p.shape().distributes()).findFirst().orElseThrow();
-        assertEquals(lst(uri(TO_INST_TID), uri(EVAL_INST_TID)), route.asRec().at(uri(INST)),
-                "the plan says it, in order: inst=>[</m/inst/to>,</m/inst/eval>] on its tree placement");
+        assertEquals(lst(uri(EVAL_INST_TID)), route.asRec().at(uri(INST)),
+                "the plan says it: inst=>[</m/inst/eval>] on its tree placement");
         assertTrue(shard.test(catInstSet.PLAN_TYPE), "and it is still a plan::T: " + shard);
         // a placement written as a rec, without inst, still requires what its shape ships through
-        assertEquals(Set.of(TO_INST_TID, EVAL_INST_TID), Placement.of(rec(uri(SHAPE), uri("tree"), uri(SPAN), lst()).asRec()).inst());
+        assertEquals(Set.of(EVAL_INST_TID), Placement.of(rec(uri(SHAPE), uri("tree"), uri(SPAN), lst()).asRec()).inst());
     }
 
     @Test
-    void testServesNeedsBothOnlineAndTo() {
+    void testServesNeedsBothOnlineAndEval() {
         final Placement route = Placement.tree(1, Span.at());
         final Obj online = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), client(SERVANT, EVAL_INST_TID, TO_INST_TID));
-        assertTrue(Places.serves(online, route), "online and serving to: a target");
-        final Obj cannotTo = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER),
+        assertTrue(Places.serves(online, route), "online and serving eval: a target");
+        final Obj evalOnly = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER),
                 uri(CLIENT), client(EVALER, EVAL_INST_TID));
-        assertFalse(Places.serves(cannotTo, route), "online, but its client declares no to: not a target");
+        assertTrue(Places.serves(evalOnly, route), "online and serving eval alone: a target — eval is all the route needs");
         final Obj writer = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER),
                 uri(CLIENT), client(EVALER, FROM_INST_TID, TO_INST_TID));
         assertFalse(Places.serves(writer, route), "online and serving to, but no eval — a POST writer stores a program, it runs none");
         final Obj offline = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), new DownLink(client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().jvm()));
-        assertFalse(Places.serves(offline, route), "serving to, but its link is down: not a target");
+        assertFalse(Places.serves(offline, route), "serving eval, but its link is down: not a target");
         final Obj silent = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), rec(uri(HOST), uri(SERVANT), uri(INST), client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().at(uri(INST))));
-        assertFalse(Places.serves(silent, route), "serving to, but its client never says it is live: not a target");
+        assertFalse(Places.serves(silent, route), "serving eval, but its client never says it is live: not a target");
     }
 
     @Test
-    void testLawShardShipsOnlyToPeersThatServeTo() {
+    void testLawShardShipsOnlyToPeersThatServeEval() {
         Network.Helper.index(client(SERVANT, EVAL_INST_TID, TO_INST_TID));
         Network.Helper.index(client(EVALER, EVAL_INST_TID));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
-        assertEquals(List.of(SERVANT), routes(compiled),
-                "the shard fans out over the peers that serve to, and only those: " + compiled);
-        // and the route is BOUND in the compiled code — the target peer's own to, not a bare to(<target>) left for
+        assertEquals(List.of(SERVANT, EVALER), routes(compiled),
+                "the shard fans out over the peers that serve eval, and only those: " + compiled);
+        // and the route is BOUND in the compiled code — the target peer's own eval, not a bare eval(<target>) left for
         // select to resolve when it runs
         final Inst to = compiled.insts().stream()
                 .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
@@ -176,15 +176,15 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
                 .map(route -> route.isObjCall() ? route.asCall().insts().getFirst() : route.asInst())
                 .findFirst().orElseThrow();
         assertTrue(to.hasf(), "the emitted route carries its function: " + to);
-        assertTrue(to.functionClassName().endsWith("Network$AtPeer"), "the target peer's own to: " + to.functionClassName());
+        assertTrue(to.functionClassName().endsWith("Network$AtPeer"), "the target peer's own eval: " + to.functionClassName());
     }
 
     @Test
-    void testNoPeerThatServesToLeavesTheFoldAtHome() {
-        Network.Helper.index(client(EVALER, EVAL_INST_TID));
+    void testNoPeerThatServesEvalLeavesTheFoldAtHome() {
+        Network.Helper.index(client(EVALER, TO_INST_TID));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
-        assertEquals(List.of(), routes(compiled), "an online peer that cannot to is no target, so nothing ships: " + compiled);
+        assertEquals(List.of(), routes(compiled), "an online peer that serves no eval is no target, so nothing ships: " + compiled);
     }
 
     /**

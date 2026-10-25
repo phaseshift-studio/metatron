@@ -174,14 +174,16 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     }
 
     @Test
-    void testSubmitShipsTheCodeRawThroughEval() {
-        // the eval call BLOCKS: its code is a payload for the peer to evaluate, so it must arrive unevaluated — were it
-        // computed here, the override would receive the local value (42) instead of the read
+    void testSubmitShipsTheCodeOnTheLhsThroughEval() {
+        // the eval code rides the LHS: it is a payload for the peer to evaluate, so it arrives unevaluated — were it
+        // computed here, the override would receive the local value (42) instead of the code
         Machine.write(f("/t/evaluator/x"), jnt(42));
         final List<Inst> calls = new ArrayList<>();
+        final List<Obj> lhss = new ArrayList<>();
         final Obj eval = Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> {
             calls.add(inst);
-            return inst.arg(0).apply(lhs);
+            lhss.add(lhs);
+            return lhs.apply(noobj());
         });
         final Obj client = rec(uri(HOST), uri(f("loop://evaluator")), uri(INST), rec(uri(EVAL_INST_TID), eval));
         Network.Helper.index(client);
@@ -190,8 +192,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             assertEquals(jnt(42), Machine.current().network().submit(f("loop://evaluator"), code),
                     "the override evaluates the code it was shipped");
             assertEquals(EVAL_INST_TID, calls.getFirst().tid().basePath(), "submit reaches the override as the eval call");
-            assertTrue(calls.getFirst().tid().hasQ(BLOCK), "the eval call blocks: the code is a payload, not a computation");
-            assertEquals(code, calls.getFirst().arg(0), "the code arrives raw — the peer evaluates it, never this side");
+            assertEquals(code, lhss.getFirst(), "the code arrives as the lhs — the peer evaluates it, never this side");
         } finally {
             Machine.current().network().disconnect(f("loop://evaluator"));
         }

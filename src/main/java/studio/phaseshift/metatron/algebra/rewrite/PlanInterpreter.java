@@ -267,11 +267,11 @@ public final class PlanInterpreter {
             slave.addInst(withoutHops(reducer));
             summands.add(slave);
             // THE ROUTE IS BOUND HERE, at plan time (Marko, 2026-10-24: the compiled code has the bindings): resolved
-            // against the slave it will carry, so the emitted select holds the native to with the target peer's own
+            // against the slave it will carry, so the emitted select holds the native eval with the target peer's own
             // body (Network.Helper.atPeer) — what runs where is in the listing, not decided when select applies it
             // (select keeps its projections raw, so nothing later would bind it). A route that does not resolve stays
-            // the bare to(<target>), resolved at run time as before.
-            final Inst ship = to_(targets.get(s)).tryToInst().asInst();
+            // the bare eval(<target>), resolved at run time as before.
+            final Inst ship = eval_(targets.get(s)).tryToInst().asInst();
             final Inst bound = ship.resolve(slave);
             routes.add(null != bound && bound.hasf() ? bound : ship);
         }

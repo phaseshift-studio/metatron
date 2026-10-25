@@ -65,8 +65,8 @@ public class mcp_stdioHandlerTest extends AbstractMcpHandlerTest {
     }
 
     /**
-     * The minimal server: one tool, written as a collection of instruction references rather than a
-     * hand-keyed rec, because the key is derived from the instruction.
+     * The minimal server: one tool, the eval instruction — an agent passes the code on the lhs (the block
+     * {@code |(1+2)} stays raw and ships), and the instruction evaluates it, optionally at a target uri.
      */
     @Override
     protected mcpServer createMcpServer() {
@@ -84,7 +84,7 @@ public class mcp_stdioHandlerTest extends AbstractMcpHandlerTest {
 
     private static Rec call(final String name, final String arg) {
         return rec(uri(JSONRPC), str("2.0"), uri(ID), str("1"), uri("method"), str("tools/call"),
-                uri("params"), rec(uri(NAME), str(name), uri("arguments"), rec(uri("0"), str(arg))));
+                uri("params"), rec(uri(NAME), str(name), uri("arguments"), rec(uri(LHS), str(arg))));
     }
 
     private mcp_stdioHandler carrier(final ByteArrayOutputStream sink) {
@@ -155,8 +155,8 @@ public class mcp_stdioHandlerTest extends AbstractMcpHandlerTest {
     }
 
     /**
-     * A {@code code::T} argument is evaluated on the way in — the reason {@code eval} is the foundational
-     * tool rather than an identity function over a string.
+     * The code arrives on the lhs (schema-parsed to code::T) and the instruction evaluates it — the reason
+     * {@code eval} is the foundational tool rather than an identity function over a string.
      */
     @ParameterizedTest
     @CsvSource(value = {
