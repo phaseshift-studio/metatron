@@ -280,7 +280,8 @@ general dispatch, and no longer special.
 > `id_client` (each the identity of the wire body, so the loop stays the family's identity element). The
 > `from → eval` / `to → eval` lowering above survives only as the run-time ladder's rung for a client that declares
 > `eval` alone. Placement reads the same declarations: a shard target must be online and serve its placement's
-> `inst` (`to`, for every distributing shape) — `Places.serves`.
+> `inst` (`to` and `eval`, for every distributing shape) — `Places.serves`. And the compiled code has the bindings:
+> law_shard binds each route at plan time, so its emitted `select` holds the target's own `to`.
 
 ---
 

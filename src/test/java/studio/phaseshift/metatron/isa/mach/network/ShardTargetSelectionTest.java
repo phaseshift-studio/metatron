@@ -167,6 +167,15 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
         assertEquals(List.of(SERVANT), routes(compiled),
                 "the shard fans out over the peers that serve to, and only those: " + compiled);
+        // and the route is BOUND in the compiled code — the target peer's own to, not a bare to(<target>) left for
+        // select to resolve when it runs
+        final Inst to = compiled.insts().stream()
+                .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
+                .map(select -> (Obj) select.arg(0).asLst().elements().findFirst().orElseThrow())
+                .map(route -> route.isObjCall() ? route.asCall().insts().getFirst() : route.asInst())
+                .findFirst().orElseThrow();
+        assertTrue(to.hasf(), "the emitted route carries its function: " + to);
+        assertTrue(to.functionClassName().endsWith("Network$AtPeer"), "the target peer's own to: " + to.functionClassName());
     }
 
     @Test
