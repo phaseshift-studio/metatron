@@ -195,22 +195,17 @@ public interface InstSet extends Space, Machine.Component {
     }
 
     /**
-     * MOUNT AN INSTRUCTION SET — the ONE door a machine gets an ISA through.
-     * <p>
-     * An ISA becomes part of a machine in two ways, and they are two views of one fact: it is REGISTERED for address
-     * (so {@code Machine.read} reaches it and the structure it brings) and REFERRED into the machine's own instset
-     * (so {@code instset()} knows the vocabulary). Both are decided in {@code BasicMemory.addSpace}, which is the
-     * index that holds it — so no caller, including a hand-mount of a generated schema instset, can do one without
-     * the other. This method is the spelling that says so at a call site.
-     * <p>
-     * Dropping the registration — leaving only the refer — is the later step that lets the {@code Space} half of
-     * {@code InstSet} go, and it cannot come first: a machine with no reachable vocabulary is a machine whose code
-     * cannot run.
+     * MOUNT AN INSTRUCTION SET — the ONE door a machine gets an ISA through: it is REFERRED into the machine's own
+     * instset, which is where it lives (Marko, 2026-10-25: "Instsets shouldn't be in Memory as spaces (though they are
+     * spaces). They should be in InstSet only."). It is NOT a space in memory's index, which holds data spaces alone —
+     * but the addresses it holds stay routable: memory's lookup weighs the libraries the machine mounted against its
+     * data spaces, and the most specific claimant answers and takes the write ("the most specific gains the write").
+     * A space handed to {@code BasicMemory.addSpace} that is an instruction set is referred into the instset too (its
+     * sugars are this door's alone), so no caller can mount one as data; {@code removeSpace} unmounts it (no longer
+     * routed, still a member).
      */
     static void mount(final InstSet isa) {
-        // The REFER lives in the memory index now (BasicMemory.addSpace decides it), so this cannot do half the job
-        // and no caller can skip it. The method stays as the SPELLING that says what mounting an ISA means.
-        Machine.current().memory().addSpace(isa);
+        Machine.current().instset().refer(isa);
         isa.sugars().forEach(mParser::addSugar);
     }
 
@@ -228,12 +223,11 @@ public interface InstSet extends Space, Machine.Component {
         // not something a re-import may change -- a user redefinition belongs at the redefiner's own
         // level, shadowing the import, never written into it (seal-and-shadow) -- so there is nothing
         // a reload could restore. a caller that wants a FRESH instance unmounts the old one first,
-        // which removes it from scope and makes the import real. the probe walks the index of spaces
-        // in scope, so a frame sees its enclosing machine's mounts.
-        final Set<fURI> mounted = Machine.current().memory().spaces().elements()
-                .map(e -> e.isRel() ? e.asRel().second() : e)
-                .filter(Obj::isInstSet)
+        // which removes it from scope and makes the import real. the probe walks the machine's vocabulary
+        // (its instset's members, the enclosing machines' included), so a frame sees its enclosing machine's mounts.
+        final Set<fURI> mounted = Machine.current().instset().members().stream()
                 .map(PlatonicObj::vid)
+                .filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.toSet());
         return loadInstSetProvider(vid)
                 .filter(p -> !mounted.contains(JREService.Helper.vid(p.type())))

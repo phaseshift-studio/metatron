@@ -370,12 +370,20 @@ public interface Memory extends Space, Machine.Component, Closeable {
     static <SPACE extends Space> SPACE mostSpecific(final Rec spaces, final fURI vid) {
         // snapshot first: the space index is a mutable LinkedHashMap, and addSpace can land a space on another
         // thread mid-iteration (or re-entrantly during boot), which trips the map's fail-fast iterator
-        final Optional<SPACE> space = new java.util.ArrayList<Obj>(spaces.jvm().values()).stream()
-                .map(Obj::<SPACE>as)
+        return mostSpecific(new java.util.ArrayList<Obj>(spaces.jvm().values()).stream().map(Obj::<Space>as).toList(), vid);
+    }
+
+    /**
+     * The space among {@code spaces} whose pattern holds {@code vid} most specifically — the one rule memory picks a
+     * space by, and the machine picks an instruction set by ("the most specific gains the write", Marko 2026-10-25).
+     */
+    @SuppressWarnings("unchecked")
+    static <SPACE extends Space> SPACE mostSpecific(final java.util.Collection<? extends Space> spaces, final fURI vid) {
+        final Optional<? extends Space> space = spaces.stream()
                 .filter(s -> vid.basePath().test(s.pattern()))
                 .min(Comparator
                         .comparing((Space s) -> !s.pattern().hasScheme())
                         .thenComparing(Space::pattern));
-        return space.orElse(null);
+        return (SPACE) space.orElse(null);
     }
 }

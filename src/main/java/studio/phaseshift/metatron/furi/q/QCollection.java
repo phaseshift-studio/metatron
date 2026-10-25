@@ -814,6 +814,9 @@ public final class QCollection {
         final Docs doc = Docs.doc(obj, domDesc, rngDesc, argDescription, description, examples);
         // objID is an ID, not an address: for an inst it is its tid, which during an ISA's own setup can be generic
         // (`#`) — getSpaceFor THROWS on an uncovered id, and a doc for such an id has nowhere to go anyway
+        // THE DOC'S OWNER is the space memory's lookup names for the id — the instruction set holding it when one does:
+        // an ISA is not in memory's index, but the lookup weighs the instset's libraries, so its own docq keeps the doc
+        // local (a fall-through to the enclosing data space's docq cost 52x per ISA setup, asColdProbeTest)
         final Space objSpace = Machine.current().memory().hasSpaceFor(objID)
                 ? Machine.current().memory().getSpaceFor(objID) : null;
         if (null == objSpace)

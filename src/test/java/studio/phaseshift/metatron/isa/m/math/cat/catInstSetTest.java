@@ -344,10 +344,10 @@ public class catInstSetTest extends AbstractInstSetTest {
         int hash = code.hashCode();
         int done = 2;
         while (done != 0) {
-            Machine.current().memory().spaces()
-                    .elements()
-                    .filter(r -> r.second() instanceof catInstSet)
-                    .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
+            // the machine's vocabulary, not memory's index: an instruction set lives in the instset (Marko, 2026-10-25)
+            Machine.current().instset().members().stream()
+                    .filter(isa -> isa instanceof catInstSet)
+                    .flatMap(isa -> isa.rewrites().stream())
                     .forEach(r -> {
                         final Obj rewritten = r.apply(rewrittenCode.get());
                         STATIC_LOG.warn(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));

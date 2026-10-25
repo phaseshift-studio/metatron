@@ -82,11 +82,11 @@ public class DocQTest extends AbstractMetatronTest {
     @Test
     public void testWritingDocumentation() {
         final fURI newURI = f("/m/some_obj");
-        Machine.current().memory().write(newURI, str("some obj"));
+        Machine.write(newURI, str("some obj"));
         Docs doc = new Docs(Machine.read(newURI.addQ(DOCQ)).asRec());
         assertEquals(NO_DOCS.at(DESC).strValue(), doc.description());
         /// //
-        Machine.current().memory().write(newURI.addQ(DOCQ), str("some obj"));
+        Machine.write(newURI.addQ(DOCQ), str("some obj"));
         doc = new Docs(Machine.read(newURI.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCS_TYPE));
         assertEquals("some obj", doc.description());
