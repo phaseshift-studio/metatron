@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.isa.m.type.resolver.Selector;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.Processor;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -344,8 +345,11 @@ public interface Inst extends Call {
                 /*if (cacheKey != null) {
                     RESOLUTION_CACHE.putIfAbsent(cacheKey, resolved);
                 }*/
+                // A PEER'S INSTRUCTION BINDS HERE, AT COMPILE TIME: a from/to whose address names a dialed peer that
+                // overrides it keeps this resolution's signature and binding, with f() swapped for the peer's body
+                final Inst bound = Network.Helper.atPeer(resolved);
                 // copy over any api query maps not already on the user instruction
-                return resolved.selfTID(resolved.tid().copyQ(this.tid())).as();
+                return bound.selfTID(bound.tid().copyQ(this.tid())).as();
             } else {
                 LOG.debug("unable to resolve: %s", this);
             }

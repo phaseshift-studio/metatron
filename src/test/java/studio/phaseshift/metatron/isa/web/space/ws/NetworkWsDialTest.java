@@ -23,14 +23,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.Isolated;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID;
@@ -102,6 +113,29 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
         Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
         Machine.write(f("ws://localhost:" + wsPort + "/t/wire/y"), jnt(7));
         assertEquals(jnt(7), Machine.read(f("/t/wire/y")), "a write through the peer lands at the far side");
+    }
+
+    @Test
+    void testWsClientDeclaresEvalFromAndTo() {
+        Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
+        final Network network = Machine.current().network();
+        // the ws client's mini-instset: each instruction on its native signature with the client's own wire body
+        for (final fURI instTID : List.of(EVAL_INST_TID, FROM_INST_TID, TO_INST_TID)) {
+            final Obj override = network.overrideOf(this.service(), instTID);
+            assertTrue(override.isObjInst(), "the ws client declares " + instTID);
+            assertTrue(Network.Helper.accepts(instTID, override.asInst()), "on " + instTID + "'s own signature");
+        }
+    }
+
+    @Test
+    void testCompiledToBindsTheWsClientsTo() {
+        Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
+        // compile-time binding over a real wire: to(<ws address>) resolves to the ws client's own to, and applying it
+        // ships start(9).to(</t/wire/z>) for the far side (this JVM behind the socket) to evaluate
+        final Inst bound = instB(TO_INST_TID, lst(uri(f("ws://localhost:" + wsPort + "/t/wire/z")))).resolve(jnt(9));
+        assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "the compiled to is the ws client's: " + bound.functionClassName());
+        FutureObj.resolveFuture(bound.apply(jnt(9)));
+        assertEquals(jnt(9), Machine.read(f("/t/wire/z")), "the bound to landed the write at the far side");
     }
 
     @Test

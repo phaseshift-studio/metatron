@@ -138,6 +138,34 @@ tid instead of re-deriving it.
 
 ## 4. Phase D — `law_shard` → `overrideOf`
 
+> **Rulings, 2026-10-24 (Marko), and status.**
+> 1. **Compile-time binding** — "it provides better debugging as to what is going on". `Inst.resolve` is the one
+>    choke point every resolution passes (both selectors, the runtime escape hatch). After the native resolution it
+>    calls `Network.Helper.atPeer`: a resolved `from`/`to` whose literal address names a dialed peer that overrides it
+>    keeps the native signature, binding and typing, with `f()` swapped for the peer's body. The body is wrapped in
+>    `Network.AtPeer`, which runs it inside the network's q-proc layer (the one place a vid is handed to a source:
+>    a local `ws://peer/x/#?subq` must still fire), and explain reports `Network$AtPeer` as the class. An address
+>    computed at run time still reaches the peer through the `Network.read`/`write` ladder.
+> 2. **law_shard keeps `to(<peer>)`; no derived overrides.** A `to()` that compiles to an `eval()` form is rejected.
+>    Instead `ws_client` declares `to` and `from` itself, beside `eval`, each on its native signature with a ws body:
+>    `from(<uri>)` ships `from(</path>)`, `obj.to(<uri>)` ships `start(obj).to(</path>)`. `PlanInterpreter` is
+>    unchanged, and its emitted `to(<ws://…>)` reaches the ws client's `to` — **but not yet at compile time**: the
+>    `to` sits inside `select([…])`, and the compiler keeps a blocking instruction's code arguments raw
+>    (`Inst.Helper.resolveArgs`), so the compiled listing holds it unresolved and it is resolved when `select`
+>    applies it (verified with a compile probe: `select` has its f, its `to(<peer>)` projection `hasf=false`).
+>    Getting the binding into the listing is the open choice below.
+>
+> Proven by `NetworkConnectTest` (`testResolutionBindsAPeersToAtCompileTime`, `…FromAtCompileTime`,
+> `testResolutionLeavesALocalAddressNative`, `testACompileTimeBoundToStillPassesTheNetworksLayer`) and
+> `NetworkWsDialTest` (`testWsClientDeclaresEvalFromAndTo`, `testCompiledToBindsTheWsClientsTo`).
+> **Open:**
+> - **Binding law_shard's routes at compile time.** Either `PlanInterpreter.shard` emits each route already bound
+>   (resolve `to(<target>)` against its slave, so `atPeer` runs at plan time and the emitted `select` holds the
+>   peer's `to`), or the compiler resolves — binds without applying — the code inside blocking instructions'
+>   arguments, which reaches every nested call but changes a deliberate compiler rule. Not ruled.
+> - Shard placement is still liveness-shaped — `PlanInterpreter.shardTargets` filters by `Helper.online`; choosing
+>   targets by capability (`overrideOf(peer, to)`) is proposed, not ruled.
+
 **Goal:** the distribution rewrite's `to(<peer>)` becomes "resolve `to` from the peer", the first real consumer of
 the general dispatch.
 

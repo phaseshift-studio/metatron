@@ -248,7 +248,7 @@ infer the rest" — the loop peer's one maximal capability is "evaluate code (as
 | client                | `inst` map                                                                   |
 |-----------------------|------------------------------------------------------------------------------|
 | `id_client` (loop)    | `{ eval => identity }`                                                       |
-| `ws_client` (mtron)   | `{ eval => ship-code, from => ship-from_, to => ship-to_ }` (or just `eval`) |
+| `ws_client` (mtron)   | `{ eval => ship-code, from => ship-from_, to => ship-to_ }` — all three declared (ruling 2026-10-24: no `to` derived from `eval`) |
 | `http_client` (web)   | `{ from => GET }` — no `eval`, no `to`                                        |
 | `mcpClient` (codegraph)| `{ codegraph_explore => tool-call, codegraph_search => tool-call, … }`      |
 
@@ -272,6 +272,13 @@ from(<peer>, x)  →  eval(<peer>, from_(x))        // when the peer has eval bu
 
 `law_shard`'s `to(<peer>)` then becomes "pull `to` from booger.local" — the first already-working consumer of the
 general dispatch, and no longer special.
+
+> **Rulings (2026-10-24).** Resolution binds at **compile time**: `Inst.resolve` → `Network.Helper.atPeer` gives a
+> resolved `from`/`to` whose address names a dialed peer that peer's body, inside the network's q-proc layer
+> (`Network.AtPeer`), so the compiled code shows what runs where. And a protocol client **declares** the instructions
+> it serves rather than having them derived — `ws_client` declares `eval`, `from` and `to`. The `from → eval` /
+> `to → eval` lowering above survives only as the run-time ladder's rung for a client that declares `eval` alone
+> (the loop `id_client`).
 
 ---
 

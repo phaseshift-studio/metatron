@@ -40,11 +40,13 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -190,6 +192,80 @@ public class NetworkConnectTest extends AbstractMetatronTest {
                     "with no accepted override (no eval, no transport either) the read falls through and misses");
         } finally {
             Machine.current().network().disconnect(f("loop://imposter"));
+        }
+    }
+
+    @Test
+    void testResolutionBindsAPeersToAtCompileTime() {
+        // COMPILE-TIME BINDING: resolving to(<peer address>) answers the native to — its signature, its binding to the
+        // lhs — with the PEER'S body as its f(), so the compiled code says whose to runs. The body is the client's
+        // override, run inside the network's q-proc layer (Network.AtPeer).
+        final Obj client = rec(uri(HOST), uri(f("loop://binder")),
+                uri(INST), rec(uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> Machine.write(inst.arg(0).uriValue().localize(), lhs))));
+        Network.Helper.index(client);
+        try {
+            final Inst bound = instB(TO_INST_TID, lst(uri(f("loop://binder/t/binder/z")))).resolve(jnt(5));
+            assertEquals(TO_INST_TID, bound.tid().basePath(), "the bound call is still the to instruction");
+            assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "its f() is the peer's body, named as such: " + bound.functionClassName());
+            bound.apply(jnt(5));
+            assertEquals(jnt(5), Machine.read(f("/t/binder/z")), "applying the bound call runs the peer's to");
+            // the same call through the language reaches the peer's to (end to end; the binding itself is asserted above)
+            ObjmtronSerializer.parse("6.to(<loop://binder/t/binder/w>)").apply();
+            assertEquals(jnt(6), Machine.read(f("/t/binder/w")), "a program's .to(<peer address>) runs the peer's to");
+        } finally {
+            Machine.current().network().disconnect(f("loop://binder"));
+        }
+    }
+
+    @Test
+    void testResolutionBindsAPeersFromAtCompileTime() {
+        final Obj client = rec(uri(HOST), uri(f("loop://lookup")),
+                uri(INST), rec(uri(FROM_INST_TID), Network.Helper.override(FROM_INST_TID, (lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize()))));
+        Network.Helper.index(client);
+        try {
+            Machine.write(f("/t/lookup/x"), jnt(42));
+            final Inst bound = instB(FROM_INST_TID, lst(uri(f("loop://lookup/t/lookup/x")))).resolve(noobj());
+            assertEquals(FROM_INST_TID, bound.tid().basePath(), "the bound call is still the from instruction");
+            assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "its f() is the peer's body: " + bound.functionClassName());
+            assertEquals(jnt(42), bound.apply(noobj()), "applying the bound call runs the peer's from");
+        } finally {
+            Machine.current().network().disconnect(f("loop://lookup"));
+        }
+    }
+
+    @Test
+    void testResolutionLeavesALocalAddressNative() {
+        // no authority, no peer: the to stays the native one, which writes through Machine.write as always
+        final Inst resolved = instB(TO_INST_TID, lst(uri(f("/t/native/z")))).resolve(jnt(5));
+        assertTrue(resolved.hasf(), "the local to resolves");
+        assertTrue(!resolved.functionClassName().contains("AtPeer"), "and keeps the native body: " + resolved.functionClassName());
+    }
+
+    @Test
+    void testACompileTimeBoundToStillPassesTheNetworksLayer() throws Exception {
+        // the layer is the one place a vid is handed to a source: a local subscription to the peer's namespace must
+        // still see a write that compiled straight to the peer's to (it broadcasts once the body has written)
+        final fURI fired = f("/t/layered/fired");
+        Machine.write(fired, noobj());
+        final Obj client = rec(uri(HOST), uri(f("loop://layered")),
+                uri(INST), rec(uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> Machine.write(inst.arg(0).uriValue().localize(), lhs))));
+        Network.Helper.index(client);
+        try {
+            final Obj code = ObjmtronSerializer.parse("[code=>>>1.to(" + fired + ")]").apply().asRec().at(uri(CODE));
+            Machine.write(f("loop://layered/t/layered/#").addQ("subq"), code);
+            final Inst bound = instB(TO_INST_TID, lst(uri(f("loop://layered/t/layered/a")))).resolve(str("payload"));
+            assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "the write is compile-time bound to the peer");
+            bound.apply(str("payload"));
+            assertEquals(str("payload"), Machine.read(f("/t/layered/a")), "the peer's to wrote");
+            final long deadline = System.currentTimeMillis() + 3000;   // the broadcast runs on a virtual thread
+            while (System.currentTimeMillis() < deadline && Machine.read(fired).isNoObj())
+                Thread.sleep(25);
+            assertEquals(str("payload"), Machine.read(fired), "and the network's subscription saw it: the layer was not bypassed");
+        } finally {
+            Machine.current().network().qs().lstValue().stream()
+                    .filter(q -> q.tid().equals(SUBQ_TID))
+                    .forEach(q -> q.asRec().at(uri(OBJ)).asLst().lstValue().clear());
+            Machine.current().network().disconnect(f("loop://layered"));
         }
     }
 
