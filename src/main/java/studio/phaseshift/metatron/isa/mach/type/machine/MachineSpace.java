@@ -140,14 +140,19 @@ public final class MachineSpace extends memSpace {
     }
 
     /**
-     * Does a space in memory claim {@code vid} MORE specifically than {@code ~/sys} does — a schema instset at
+     * Does a space claim {@code vid} MORE specifically than {@code ~/sys} does — a schema instset at
      * {@code /sys/space/<name>/instset/#}, a space mounted beneath {@code ~/sys}? Then that space answers it, as it did
      * while {@code ~/sys} was itself a space in memory and the most specific space won: the sphere's store holds what
      * nothing more specific claims. (Without this, a tbleSpace's table type, written to its schema instset by address,
      * landed in the root's {@code ~/sys} store instead: measured in SqliteTbleSpaceTest.)
      */
     private boolean yields(final fURI vid) {
-        final Space claimant = this.owner.memory().findSpace(vid);
+        // memory's lookup names the claimant — a data space, or an instruction set in the machine's vocabulary (a
+        // schema instset is not in memory's index, but the lookup weighs the instset's libraries)
+        return this.beneath(this.owner.memory().findSpace(vid));
+    }
+
+    private boolean beneath(final Space claimant) {
         if (null == claimant || claimant == this)
             return false;
         final fURI base = claimant.pattern().retractPattern();

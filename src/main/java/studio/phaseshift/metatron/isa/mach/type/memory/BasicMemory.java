@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
+import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -78,6 +79,27 @@ public class BasicMemory extends MRec implements Memory {
 
     public BasicMemory() {
         this(mutableMap(), null);
+    }
+
+    /**
+     * the union this level is the own level of, when it is one: its machine is the frame this level serves (the level
+     * itself is never parented — see {@link MemoryUnion}), and that frame's mounted instruction sets are what this
+     * level's lookup weighs
+     */
+    private Memory union = null;
+
+    public BasicMemory union(final Memory union) {
+        this.union = union;
+        return this;
+    }
+
+    /**
+     * the vocabulary this level routes: the instset of the frame it serves — the union's machine for a frame's own
+     * level, this level's own machine otherwise (the root's memory)
+     */
+    private InstSet vocabulary() {
+        final Machine machine = null != this.union ? this.union.machine() : this.machine();
+        return null == machine ? null : machine.instset();
     }
 
     /**
@@ -132,14 +154,20 @@ public class BasicMemory extends MRec implements Memory {
 
     @Override
     public void addSpace(final Space space) {
-        // MOUNTING AN INSTRUCTION SET IS JOINING THE MACHINE — the address entry AND membership in the machine's own
-        // instset, decided HERE so no caller can do one without the other. It is how a hand-mounted schema instset
-        // used to end up reachable by address while `instset()` knew nothing about it. The guard is the root's own
-        // construction: ROOT_MACHINE is assigned after it returns, and no ISA is mounted before that.
-        // REMOVING THE ADDRESS ENTRY is the step that makes an ISA "vocabulary, not a place" — it needs the migration
-        // and doc-owner paths reworked first (see the session note); this remains the one door until then.
-        if (space instanceof InstSet isa && null != isa.vid() && Machine.loaded())
-            Machine.current().instset().refer(isa);
+        // AN INSTRUCTION SET IS NOT A DATA SPACE (Marko, 2026-10-25: "Instsets shouldn't be in Memory as spaces
+        // (though they are spaces). They should be in InstSet only."). One handed here — a hand-mounted schema
+        // instset, an indexed construction — is referred into the machine's instset instead and is never entered in
+        // this index. The addresses it holds stay routable: this level's lookup (findSpace) weighs the
+        // libraries its machine mounted against its data spaces, the most specific answering. The guard is the root's
+        // own construction: ROOT_MACHINE is assigned after it returns, and no ISA is mounted before that.
+        // REFER ONLY — the sugars are the import's to add (InstSet.mount), never this door's: the parser's sugar set
+        // grows with every add (each is a new Parser), and a fixture mounting an ISA per test row (catInstSetTest) made
+        // every later parse in the fork pay for thousands of duplicates until it ran out of heap.
+        if (space instanceof InstSet isa) {
+            if (null != isa.vid() && Machine.loaded())
+                Machine.current().instset().refer(isa);
+            return;
+        }
         // A space with no vid is managed by the object that created it, not by the memory's index: it is reached
         // through its creator's own reference (a field, a closure), never by resolving an address. Indexing one by
         // its pattern would let an anonymous catch-all (the arg stack's +/#, the qproc-internal # spaces) shadow the
@@ -160,22 +188,52 @@ public class BasicMemory extends MRec implements Memory {
                 .filter(k -> k.isUri() && k.uriValue().test(pattern))
                 .toList()
                 .forEach(k -> Space.Helper.spaceCloseLog(this, (Space) this.spaces().jvm().remove(k)));
+        // an instruction set this level's machine mounted is UNMOUNTED here too: no longer routed by address, still a
+        // member of the vocabulary — what removing it from this index used to do while ISAs were indexed here
+        if (this.vocabulary() instanceof BasicInstSet vocabulary)
+            vocabulary.ownReferVids().stream()
+                    .filter(reference -> reference.isUri() && reference.uriValue().test(pattern))
+                    .forEach(reference -> vocabulary.unroute(reference.uriValue()));
     }
 
     // ======================== lookup ========================
 
+    /**
+     * THE INSTRUCTION SETS THIS LEVEL'S LOOKUP WEIGHS (Marko, 2026-10-25: "Instsets shouldn't be in Memory as spaces
+     * (though they are spaces). They should be in InstSet only."). They are not in this index — {@link #spaces()}
+     * holds data spaces alone — but the libraries this level's machine mounted ({@link BasicInstSet#ownLibraries()})
+     * compete with its data spaces for an address, so the most specific claimant answers exactly as when they were
+     * indexed here: "the most specific gains the write" — /m/math/cat/… to /m/math/cat, /m/math/… to /m/math.
+     */
+    private List<Space> libraries() {
+        final InstSet vocabulary = this.vocabulary();
+        if (null == vocabulary)
+            return List.of();
+        return vocabulary instanceof BasicInstSet basic
+                ? List.copyOf(basic.ownLibraries())
+                : vocabulary.members().stream().filter(BasicInstSet::isLibrary).map(isa -> (Space) isa).toList();
+    }
+
     @Override
     public <SPACE extends Space> SPACE findSpace(final fURI vid) {
-        return Memory.mostSpecific(this.spaces(), vid);
+        // snapshot first: the space index is a mutable LinkedHashMap, and addSpace can land a space on another thread
+        // mid-iteration (or re-entrantly during boot), which trips the map's fail-fast iterator
+        final List<Space> candidates = new ArrayList<>();
+        new ArrayList<Obj>(this.spaces().jvm().values()).forEach(space -> candidates.add(space.as()));
+        candidates.addAll(this.libraries());
+        return Memory.mostSpecific(candidates, vid);
     }
 
     @Override
     public <SPACE extends Space> SPACE getSpace(final fURI vid) {
-        return (SPACE) this.spaces().jvm().values().stream()
+        final Space indexed = this.spaces().jvm().values().stream()
                 .map(Obj::<Space>as)
                 .filter(s -> s.vid().test(vid))
                 .findFirst()
                 .orElse(null);
+        if (null != indexed)
+            return (SPACE) indexed;
+        return (SPACE) this.libraries().stream().filter(s -> s.vid().test(vid)).findFirst().orElse(null);
     }
 
     /**
@@ -199,7 +257,8 @@ public class BasicMemory extends MRec implements Memory {
     public boolean hasSpaceFor(final fURI vid) {
         return this.spaces().jvm().values().stream()
                 .map(Obj::<Space>as)
-                .anyMatch(s -> vid.test(s.pattern()));
+                .anyMatch(s -> vid.test(s.pattern()))
+                || this.libraries().stream().anyMatch(s -> vid.test(s.pattern()));
     }
 
     // ======================== the namespace: short names + prefixes ========================

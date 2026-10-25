@@ -61,7 +61,7 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 
 | Component | Interface (extends)                   | One-line job                                         | Frame behaviour                   |
 |-----------|---------------------------------------|------------------------------------------------------|-----------------------------------|
-| Memory    | `Space, Machine.Component, Closeable` | relative bindings (names) + absolute index of spaces | accumulates (`MemoryUnion`)       |
+| Memory    | `Space, Machine.Component, Closeable` | relative bindings (names) + absolute index of DATA spaces (no ISAs; its lookup weighs the instset's libraries) | accumulates (`MemoryUnion`)       |
 | Network   | `Addressable, Machine.Component, Closeable` | this frame's peers `service → peer::T` + the root-shared roster, `own`/`isPeer`, supervision of links | a level of its own (`NetworkUnion`): knowledge (the roster at `/network/roster`) is shared, reach (`peer`) is never inherited, and a pop hangs up the frame's dials |
 | InstSet   | `Space` (via `AbstractInstSet`)       | the vocabulary: types/insts/rewrites/sugars; `import` lands here | accumulates — `BasicInstSet` is own structure over its imports over the enclosing machine's ISA; membership in the rec under `reference` |
 | Compiler  | `Machine.Component, Rec`              | `code::T → code::T` in three stages                  | constructive (inherited/replaced) |
@@ -380,6 +380,43 @@ in the read path:
   rec (`jvm().put`), because a rec write on a machine rec fails its own type check.
 * **`BasicInstSet.refer` holds the ISA by object** beside the vid recorded in the rec, so a member resolves without
   the address index — and a machine can hold a member that is **not** one of its spaces (`InstSetUnionReadTest`).
+
+## Instruction sets live in the instset, not memory (2026-10-25)
+
+Marko: "Instsets shouldn't be in Memory as spaces (though they are spaces). They should be in InstSet only. This will
+really clean up Memory and put items where they should logically be -- Network related objs in Network, InstSets in
+InstSet, and data spaces in Memory."
+
+* **Memory's index holds data spaces only.**
+  - `InstSet.mount` refers the ISA into `Machine.current().instset()`, and adds its sugars.
+  - `BasicMemory.addSpace` sends an `InstSet` there and never indexes it, which catches the hand-mounted schema
+    instsets (tble, dcmnt, vec, grph).
+  - The import probe checks `instset().members()`.
+  - `memory().spaces()` lists no instruction set.
+* **Memory's LOOKUP still routes an ISA's addresses.** `BasicMemory.findSpace`/`hasSpaceFor`/`getSpace` weigh the
+  libraries this level's machine mounted (`BasicInstSet.ownLibraries()`) against the level's data spaces, by
+  `Memory.mostSpecific`.
+  - "The most specific gains the write": `/m/math/cat/…` → `/m/math/cat`, `/m/math/…` → `/m/math`, the rest of
+    `/m/…` → `/m`.
+  - A data space more specific than an ISA keeps its addresses.
+  - Everything memory does around the contest applies unchanged: prefix and coefficient alignment, the stack first for
+    a short name, the `big()` retry, type-graph invalidation, the ISA's own q-procs (`?docq`).
+  - An ISA is weighed at the memory level of the frame that mounted it, as it was once indexed there, so a child does
+    not claim its parent's libraries ahead of the parent's own data spaces.
+  - A library is an ISA with a vid and a real path (`BasicInstSet.isLibrary`). A frame's own level (a
+    `ComponentUnion`) and an ISA whose pattern is everything (`#`, `/#`) are pure vocabulary, read through the union
+    fallback.
+* **Unmounting** (`memory().removeSpace(vid)`) un-routes an ISA (`BasicInstSet.unroute`) but keeps it a member, which
+  is what removing it from the index used to do. A re-mount routes it again.
+* **The vocabulary's pattern is the members' "lowest common denominator"** (Marko: "thus /m/#").
+  - `BasicInstSet.refer` writes the deepest path every referred ISA's pattern lies beneath.
+  - A level that refers nothing reports its enclosing machine's.
+  - With a schema instset at `/sys/space/…` among the members, the pattern is `/#` until schema instsets leave
+    `/sys/space`.
+* **Inherited references resolve through the enclosing levels** (`BasicInstSet.resolve`), not memory's index.
+* **Code enumerating instruction sets asks `instset().members()`**, never `memory().spaces()` (`catInstSetTest`).
+* `~/sys` yields to a deeper claimant named by memory's lookup (`MachineSpace.yields`), an ISA included, so a schema
+  instset at `/sys/space/<name>/instset/#` keeps its table types.
 * **The registration — an ISA also being a space — is the last artifact of that era.** Removing it is blocked on three
   measured things: migration writes that find the owning ISA by address, spaces that must decline a vid they cannot
   interpret instead of throwing, and documentation ownership, which resolves the owning space through the address index

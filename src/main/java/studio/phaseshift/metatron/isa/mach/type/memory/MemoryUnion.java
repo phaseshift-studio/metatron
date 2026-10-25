@@ -57,7 +57,9 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
     public MemoryUnion(final Memory previous) {
         super(mutableMap(), MACH_MEMORY_TID, null);
         this.previous = previous;
-        this.current = new BasicMemory();
+        // the own level routes the instruction sets ITS frame mounted, so it must know the frame: the union's machine
+        // (the level itself stays unparented — its machine-key fallback is untouched)
+        this.current = new BasicMemory().union(this);
     }
 
     // ======================== the union ========================

@@ -18,7 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.REFERENCE;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -54,14 +57,54 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
 
     public BasicInstSet() {
         super(false);
+        // the jurisdiction is the references' (see pattern()), never the "#" a bare instset is built with: a level
+        // that refers nothing reports its enclosing machine's, through at()'s walk up the chain
+        this.jvm().remove(uri(PATTERN));
     }
 
     /**
      * A level over the enclosing machine's instset.
      */
     public BasicInstSet(final InstSet previous) {
-        super(false);
+        this();
         this.previous = previous;
+    }
+
+    /**
+     * THE VOCABULARY'S JURISDICTION: the "lowest common denominator" of the patterns of the instruction sets it refers
+     * to (Marko, 2026-10-25: "I would set the pattern to the 'lowerst common denominator' uri. thus /m/#") — the
+     * deepest path every member's pattern lies beneath, written into the rec by {@link #refer(InstSet)}. A level that
+     * refers nothing answers its enclosing machine's ({@link #at(Obj)} walks the chain), and a machine with no
+     * references at all answers the bare {@code #} it was built with.
+     */
+    @Override
+    public fURI pattern() {
+        final Obj pattern = this.at(uri(PATTERN));
+        return pattern.isUri() ? pattern.uriValue() : super.pattern();
+    }
+
+    /**
+     * the deepest path all of {@code members}' patterns lie beneath, as a pattern ({@code /m/#} for /m, /m/math, …;
+     * {@code /#} once a member lies elsewhere) — a scheme or a host shares no path with the rest, so it widens the
+     * jurisdiction to everything
+     */
+    private static fURI commonPattern(final List<InstSet> members) {
+        List<String> common = null;
+        for (final InstSet member : members) {
+            final fURI pattern = member.pattern();
+            if (null == pattern || pattern.hasScheme() || pattern.hasHost())
+                return ALL;
+            final List<String> segments = pattern.retractPattern().segments();
+            if (null == common)
+                common = new ArrayList<>(segments);
+            else {
+                int shared = 0;
+                while (shared < common.size() && shared < segments.size() && common.get(shared).equals(segments.get(shared)))
+                    shared++;
+                common = new ArrayList<>(common.subList(0, shared));
+            }
+        }
+        return null == common ? ALL : f("/" + String.join("/", common)).extend(ALL);
     }
 
     // ======================== the frame chain ========================
@@ -107,6 +150,8 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
             // whatever the first refer recorded: the map is what resolution reads, so leaving a retired instance in
             // it would keep answering from an ISA that has been replaced.
             this.imports.put(vid.toString(), isa);
+            this.unrouted.remove(vid.toString());
+            this.ownLibraries = null;
             return this;
         }
         final List<Obj> referred = new ArrayList<>();
@@ -120,7 +165,60 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         // which is what lets an instruction set be a member of a machine without being one of its spaces. Both are
         // written here, the only way in, so they cannot drift.
         this.imports.put(vid.toString(), isa);
+        this.unrouted.remove(vid.toString());
+        this.ownLibraries = null;
+        // the jurisdiction follows the membership: the deepest path every referred ISA lies beneath
+        this.jvm().put(uri(PATTERN), uri(commonPattern(this.references())));
         return this;
+    }
+
+    /**
+     * the vids this level referred and memory has since UNMOUNTED ({@code removeSpace}): still members — the union
+     * reads them (an unmounted instruction set is still a member and answers, {@code InstSetUnionReadTest}) — but no
+     * longer routed by address, exactly as removing an ISA from memory's index used to leave it. A re-mount clears it.
+     */
+    private final Set<String> unrouted = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private volatile List<InstSet> ownLibraries = null;
+
+    /**
+     * THE LIBRARIES THIS LEVEL ROUTES — the instruction sets this level referred that hold a jurisdiction of their own
+     * ({@link #isLibrary}) and are mounted. Memory's lookup weighs them against the data spaces of the memory level of
+     * the same machine (Marko, 2026-10-25: instruction sets live in the instset, not in memory's index): an ISA is
+     * routed where it would have been indexed, by the frame that mounted it, so a child's memory level does not
+     * claim its parent's libraries ahead of the parent's own, more specific, data spaces. Cached until this level
+     * refers or un-routes.
+     */
+    public List<InstSet> ownLibraries() {
+        final List<InstSet> cached = this.ownLibraries;
+        if (null != cached)
+            return cached;
+        final List<InstSet> fresh = this.ownReferences().stream()
+                .filter(isa -> isLibrary(isa) && !this.unrouted.contains(isa.vid().toString()))
+                .toList();
+        this.ownLibraries = fresh;
+        return fresh;
+    }
+
+    /**
+     * UNMOUNT: {@code vid}, if this level referred it, stops being routed by address and stays a member — what
+     * {@code memory().removeSpace(vid)} did to a mounted instruction set while ISAs were indexed in memory.
+     */
+    public void unroute(final fURI vid) {
+        if (this.ownReferVids().stream().anyMatch(reference -> reference.isUri() && reference.uriValue().equals(vid))) {
+            this.unrouted.add(vid.toString());
+            this.ownLibraries = null;
+        }
+    }
+
+    /**
+     * Does {@code isa} hold a jurisdiction of its own — a vid and a path its pattern names? A frame's own level (a
+     * {@link ComponentUnion}, the vocabulary's facade) does not, nor does an ISA whose pattern is everything
+     * ({@code #}, {@code /#}): that is pure vocabulary, reached through the union read, and must never outrank memory
+     * for an address it does not name.
+     */
+    public static boolean isLibrary(final InstSet isa) {
+        return !(isa instanceof ComponentUnion<?>) && null != isa.vid() && null != isa.pattern()
+                && !isa.pattern().retractPattern().segments().isEmpty();
     }
 
     /** The imported ISAs, by vid — see {@link #refer(InstSet)}. Resolution reads THIS; the rec is the reflection. */
@@ -212,6 +310,14 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         final InstSet imported = this.imports.get(vid.toString());
         if (null != imported)
             return imported;
+        // AN INHERITED REFERENCE IS HELD BY THE LEVEL THAT MADE IT: a child answers its enclosing machine's imports
+        // with the objects that level holds. (The data index below used to answer them too, while ISAs were mounted
+        // there; instruction sets are not in memory any more, so the chain is where the objects are.)
+        if (this.previous instanceof BasicInstSet enclosing) {
+            final InstSet inherited = enclosing.resolve(vid);
+            if (null != inherited)
+                return inherited;
+        }
         for (Memory memory = Machine.current().memory(); null != memory; memory = memory.previous()) {
             final Obj space = memory.spaces().at(uri(vid.toString()));
             if (space instanceof InstSet isa)

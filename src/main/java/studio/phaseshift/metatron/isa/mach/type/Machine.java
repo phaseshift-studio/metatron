@@ -188,7 +188,9 @@ public interface Machine extends Rec, AutoCloseable {
         if (!dispatched.isNoObj())
             return dispatched;
         // Local routing (~ resolution, relative→stack, absolute→space) lives in Memory.read, so there is exactly one
-        // place a read is turned into an address.
+        // place a read is turned into an address. An address an instruction set holds is routed there too: an ISA is
+        // not a space in memory's index (it lives in the instset), but memory's lookup weighs the instset's libraries
+        // against its own spaces, so the most specific claimant answers, as it always did.
         final Obj inMemory = machine.memory().read(name);
         if (!inMemory.isNoObj())
             return inMemory;
@@ -198,9 +200,8 @@ public interface Machine extends Rec, AutoCloseable {
         // import. Fetched through here, NOT by a caller reaching for instset() directly — a selector may do that as
         // an optimization, but the way instructions are fetched is this read.
         // It is asked on a MISS rather than before memory because an ISA read scans that ISA's tables and walks the
-        // machine chain, and every read in the VM comes through this method. Once the ISA mounts are dropped (nothing
-        // of an instruction set is in the data index) this becomes the only source for its jurisdiction, and the
-        // order stops mattering.
+        // machine chain, and every read in the VM comes through this method; memory's lookup already answers each
+        // library's own jurisdiction, so this union read is what answers the rest (a frame's own level).
         if (Helper.isReadingInstructionMemory())
             return noobj();
         Helper.readingInstructionMemory(true);
@@ -244,7 +245,9 @@ public interface Machine extends Rec, AutoCloseable {
                 : QProc.Layer.write(network, name, obj, () -> network.write(name, obj));
         if (!dispatched.isNoObj())
             return dispatched;
-        // Local pass-through to Memory (see read).
+        // Local pass-through to Memory (see read). An address an instruction set holds is written to it there:
+        // memory's lookup weighs the instset's libraries, so "the most specific gains the write" (Marko, 2026-10-25)
+        // — /m/math/cat/… to /m/math/cat, /m/math/… to /m/math, the rest of /m/… to /m.
         return machine.memory().write(name, obj);
     }
 
@@ -828,9 +831,10 @@ public interface Machine extends Rec, AutoCloseable {
 
         /**
          * A read IN THIS PROCESS: the machine's sphere, then its memory — where an address lives locally, without the
-         * network's gate or instruction memory's fallback. For code that re-reads an obj at its own vid (the log sink, a
-         * reflected rec): it must find the obj wherever the machine keeps it, and {@code ~/sys} is the sphere's, not
-         * memory's. A miss costs nothing here, where {@link Machine#read} would go on to scan instruction memory.
+         * network's gate or instruction memory's union fallback. For code that re-reads an obj at its own vid (the log
+         * sink, a reflected rec): it must find the obj wherever the machine keeps it, and {@code ~/sys} is the sphere's,
+         * not memory's. (An address an instruction set holds is memory's lookup to route: it weighs the instset's
+         * libraries.) A miss costs nothing here, where {@link Machine#read} would go on to scan instruction memory.
          */
         public static Obj readLocal(final Machine machine, final fURI vid) {
             final Obj owned = readSphere(machine, vid);
