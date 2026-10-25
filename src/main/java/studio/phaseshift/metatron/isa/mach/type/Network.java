@@ -497,7 +497,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      */
     default Obj submit(final fURI authority, final Obj code) {
         final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
-        return eval.isObjInst() ? Helper.evaluate(eval.asInst(), code) : noobj();
+        return eval.isObjInst() ? Helper.evaluate(eval.asInst(), authority, code) : noobj();
     }
 
     /**
@@ -532,7 +532,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         if (!eval.isObjInst())
             return noobj(); // no dialed peer serves this authority: not a peer this frame may reach
         final Obj message = from_(vid.localize().toUri()).tryToInst();
-        final Obj answer = Helper.evaluate(eval.asInst(), message);
+        final Obj answer = Helper.evaluate(eval.asInst(), authority, message);
         WIRE_LOG.debug("read %s message=%s answer=%s", vid, message, answer);
         return answer;
     }
@@ -568,7 +568,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // not mtron-parseable source: there is nothing to ship, so it is not a peer's to answer
             return noobj();
         }
-        return Helper.evaluate(eval.asInst(), message);
+        return Helper.evaluate(eval.asInst(), authority, message);
     }
 
     /**
@@ -632,9 +632,11 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * Named rather than a lambda so the compiled code says what it bound — explain reports this class, and the
      * string is the authority whose body runs.
      */
-    record AtPeer(Network network, fURI authority, Inst.f body, boolean read) implements BiFunction<Obj, Inst, Obj> {
+    record AtPeer(Network network, fURI authority, Inst.f body, boolean read, boolean submit) implements BiFunction<Obj, Inst, Obj> {
         @Override
         public Obj apply(final Obj lhs, final Inst inst) {
+            if (this.submit)
+                return this.body.apply(lhs, inst);
             final fURI vid = inst.arg(0).uriValue();
             return this.read
                     ? QProc.Layer.read(this.network, vid, () -> this.body.apply(lhs, inst))
@@ -1010,9 +1012,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * the processor's own switch, exactly as bindQ applies it -- so the far side is the one that evaluates what it
          * is sent. {@code from} and {@code to} need no block: their argument is an address, which computes to itself.
          */
-        public static Obj evaluate(final Inst eval, final Obj code) {
-            final Inst user = instB(EVAL_INST_TID, lst(code));
-            return Helper.dispatch(eval, user.tid(user.tid().addQ(BLOCK)), noobj());
+        public static Obj evaluate(final Inst eval, final fURI authority, final Obj code) {
+            final Inst user = instB(EVAL_INST_TID, lst(uri(authority)));
+            return Helper.dispatch(eval, user, code);
         }
 
         /**
@@ -1028,7 +1030,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         public static Inst atPeer(final Inst resolved) {
             final fURI base = resolved.tid().basePath();
             final boolean read = FROM_INST_TID.equals(base);
-            if (!read && !TO_INST_TID.equals(base))
+            final boolean submit = EVAL_INST_TID.equals(base);
+            if (!read && !submit && !TO_INST_TID.equals(base))
                 return resolved;
             final Obj address = resolved.arg(0);
             if (!address.isUri() || null == address.uriValue().host())
@@ -1041,7 +1044,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             if (!override.isObjInst())
                 return resolved;
             WIRE_LOG.debug("bound %s to the override %s declares", resolved, authority);
-            return resolved.f(Inst.f.of(new AtPeer(machine.network(), authority, override.asInst().f(), read)));
+            return resolved.f(Inst.f.of(new AtPeer(machine.network(), authority, override.asInst().f(), read, submit)));
         }
 
         /**

@@ -408,14 +408,14 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(arg -> {
                                             // THE IDENTITY MINI-INSTSET — the ws client's instructions with "the far
                                             // side" being this machine, each the native with the identity body:
-                                            //   eval?block(code) runs its raw code here;
+                                            //   code.eval(<uri>) evaluates the lhs code here (local);
                                             //   from(<uri>) is the local read of the localized address;
                                             //   obj.to(<uri>) evaluates start(obj).to(</path>) here, so an unquoted
                                             //   program shipped to a loop peer runs, exactly as on a wire peer.
                                             final Obj client = rec(
                                                     uri(HOST), arg.asRec().at(uri(HOST)),
                                                     uri(INST), rec(
-                                                            uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> inst.arg(0).apply(lhs)),
+                                                            uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> lhs.apply(noobj())),
                                                             uri(FROM_INST_TID), Network.Helper.override(FROM_INST_TID, (lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize())),
                                                             uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst().apply(noobj()))),
                                                     // the far side is this machine, so it is live as long as it exists

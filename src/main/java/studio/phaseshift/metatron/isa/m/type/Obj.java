@@ -1767,8 +1767,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                         .collect(new CommonUtil.RecCollector());
                             }),
                             "any objs", "a rec of the grouped results", Map.of(jnt(0), "the grouping key rec, the value inst computing each group"), "a grouping function \\(f(X) \\nearrow x'\\): groups the objs by the key rec and computes each group (sugar'd %==)"),
-                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0)),
-                            "maybe an obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
+                    docWrap(instC(EVAL_INST_TID.dom(CODE_TID).rng(A.maybeSome()), lst((Obj) URI_TYPE.maybe()), (lhs, inst) -> lhs.apply(noobj())),
+                            "code", "the value of evaluating the lhs code, optionally at the arg uri", Map.of(jnt(0), "the uri to evaluate at (optional)"), "evaluates the lhs code, optionally at the arg uri"),
                     docWrap(instC(PARSE_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> MIME.MIMEType.of(inst.arg(0).tid().toString(), MIME.MIMEType.APPLICATION_MTRON).serializer().inputBytes(inst.arg(0).strValue())),
                             "can be any obj", "the result of parsing arg into obj", Map.of(jnt(0), "a str encoding of an obj"), "parses the arg str based on str mime type (default application/mtron)",
                             """

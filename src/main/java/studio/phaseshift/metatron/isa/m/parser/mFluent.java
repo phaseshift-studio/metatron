@@ -386,6 +386,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.TO_INST_TID, lst(uri(uri))));
     }
 
+    public F eval_(final Obj obj) {
+        return this.addInst(instB(mInstSet.EVAL_INST_TID, lst(obj)));
+    }
+
+    public F eval_(final fURI uri) {
+        return this.addInst(instB(mInstSet.EVAL_INST_TID, lst(uri(uri))));
+    }
+
     public F from_(final Obj obj) {
         return this.addInst(instB(mInstSet.FROM_INST_TID, lst(obj)));
     }
@@ -814,6 +822,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F to_(final fURI id) {
             return to_(uri(id));
+        }
+
+        public static <F extends mFluent<F>> F eval_(final Obj obj) {
+            return new mFluent<F>().eval_(obj);
+        }
+
+        public static <F extends mFluent<F>> F eval_(final fURI id) {
+            return eval_(uri(id));
         }
 
 

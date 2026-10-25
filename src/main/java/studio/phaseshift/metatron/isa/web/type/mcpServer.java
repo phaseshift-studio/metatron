@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
@@ -202,11 +203,23 @@ public class mcpServer extends MRec {
         if (params.isNoObj() || !params.isRec()) return this.handleMessage(blind);
         final String toolName = params.asRec().at(uri(NAME)).isNoObj() ? "" : params.asRec().at(uri(NAME)).toCleanString();
         final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
-        if (toolEntry.isNoObj() || !toolEntry.isObjInst() || !toolEntry.asInst().args().isRec())
+        if (toolEntry.isNoObj() || !toolEntry.isObjInst())
+            return this.handleMessage(blind);
+        final Inst toolInst = toolEntry.asInst();
+        // a tool that declares a lhs (a non-trivial domain, e.g. eval's code lhs) schema-parses it beside its args, so
+        // a string arrives as its declared type (code::T) rather than a guessed string
+        final boolean hasLhs = !toolInst.tid().dom().isZero() && !toolInst.tid().dom().equals(ALL.maybe());
+        final boolean hasArgs = toolInst.args().isRec();
+        if (!hasLhs && !hasArgs)
             return this.handleMessage(blind);
         try {
+            final java.util.LinkedHashMap<Obj, Obj> schemaJvm = new java.util.LinkedHashMap<>();
+            if (hasArgs)
+                schemaJvm.putAll(toolInst.args().asRec().jvm());
+            if (hasLhs)
+                schemaJvm.put(uri(LHS), toolInst.dom());
             final Obj schemaAware = new ObjJSONSerializer()
-                    .schema(toolEntry.asInst().args().asRec())
+                    .schema(rec(schemaJvm))
                     .readString(rawJson);
             return this.handleMessage(schemaAware);
         } catch (final Exception e) {
