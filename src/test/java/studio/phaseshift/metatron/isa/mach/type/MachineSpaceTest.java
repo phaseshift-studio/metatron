@@ -27,6 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.type.machine.AbstractMachine;
@@ -157,6 +158,25 @@ public class MachineSpaceTest extends AbstractMetatronTest {
             Machine.write(f("~/sys/tally"), noobj());
         }
         assertTrue(machine.space().read(tally).isNoObj(), "and a noobj write is its deletion");
+    }
+
+    @Test
+    public void testASpaceBeneathSysStillGainsItsAddresses() {
+        // a space mounted beneath ~/sys (a tbleSpace's schema instset at /sys/space/<name>/instset/# is one) claims its
+        // addresses more specifically than ~/sys does, so it answers them — as when ~/sys was a space in memory
+        final fURI vid = f("/sys/space/sphere_yield/space");
+        final memSpace beneath = memSpace.of(f("/sys/space/sphere_yield/#"), vid);
+        try {
+            Machine.write(f("/sys/space/sphere_yield/tally"), jnt(4));
+            checkEquality(LOG, jnt(4), beneath.read(f("/sys/space/sphere_yield/tally")), true);
+            assertTrue(Machine.root().space().read(f("/sys/space/sphere_yield/tally")).isNoObj(), "the sphere declines it");
+            assertFalse(Machine.root().space().ownsWrite(f("/sys/space/sphere_yield/tally")), "and does not own its write");
+            checkEquality(LOG, jnt(4), Machine.read(f("/sys/space/sphere_yield/tally")), true);
+            // the rest of ~/sys is still the sphere's
+            assertTrue(Machine.root().space().ownsWrite(f("/sys/tally")));
+        } finally {
+            Machine.root().memory().removeSpace(vid);
+        }
     }
 
     @Test

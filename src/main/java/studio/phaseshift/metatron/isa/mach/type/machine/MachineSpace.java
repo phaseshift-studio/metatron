@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -59,7 +60,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *     <li>{@code <vid>/sys/#} — threads, processors, fails and the log sink, held in this space's OWN store (it is a
  *     {@link memSpace} for that), with the q-processors {@code ~/sys} speaks: Marko, 2026-10-25, "I would have sys/#
  *     simply go into MachineSpace". {@code ~/sys} is a holding area: its parts are expected to move, over time, into
- *     the components they belong to.</li>
+ *     the components they belong to. A space in memory that claims an address beneath it more specifically (a schema
+ *     instset at {@code /sys/space/<name>/instset/#}) still answers that address: the most specific claimant wins,
+ *     as when {@code ~/sys} was a space in memory.</li>
  * </ul>
  * A covered address this space has no answer for is declined too ({@code noobj} is the decline, by
  * {@link studio.phaseshift.metatron.isa.Addressable}'s convention), so the dispatch goes on to the network and memory —
@@ -81,6 +84,10 @@ public final class MachineSpace extends memSpace {
     private final Machine owner;
     private final fURI root;
     /**
+     * {@code <vid>/sys}: the store's own reach, which a more specific space in memory beneath it outranks
+     */
+    private final fURI sys;
+    /**
      * how many segments the machine's vid has: an address's next segment, at this index, names the sphere's part.
      * Counted from {@code segments()}, never {@code segmentLength()}: for {@code /} (the root's resolved vid) the
      * latter answers -1 while {@code segments()} is empty, and the depth must agree with the segments it indexes.
@@ -96,6 +103,7 @@ public final class MachineSpace extends memSpace {
         this.owner = machine;
         this.root = machine.vid().resolve();
         this.depth = this.root.segments().size();
+        this.sys = this.root.extend(SYS);
         // the q-processors ~/sys speaks — the ones the sys space in memory carried before the sphere took it over:
         // a fail is minted at ~/sys/fail/_?incrq, and a ?docq, ?subq, ?lockq or ?mimeq on ~/sys/… lands here too
         this.addQ(QCollection.docQ());
@@ -131,14 +139,30 @@ public final class MachineSpace extends memSpace {
         return segments.size() > this.depth ? segments.get(this.depth) : null;
     }
 
+    /**
+     * Does a space in memory claim {@code vid} MORE specifically than {@code ~/sys} does — a schema instset at
+     * {@code /sys/space/<name>/instset/#}, a space mounted beneath {@code ~/sys}? Then that space answers it, as it did
+     * while {@code ~/sys} was itself a space in memory and the most specific space won: the sphere's store holds what
+     * nothing more specific claims. (Without this, a tbleSpace's table type, written to its schema instset by address,
+     * landed in the root's {@code ~/sys} store instead: measured in SqliteTbleSpaceTest.)
+     */
+    private boolean yields(final fURI vid) {
+        final Space claimant = this.owner.memory().findSpace(vid);
+        if (null == claimant || claimant == this)
+            return false;
+        final fURI base = claimant.pattern().retractPattern();
+        return base.hasPrefix(this.sys) && base.segments().size() > this.depth + 1;
+    }
+
     @Override
     public Obj read(final fURI vid) {
         if (null == this.owner || !this.covers(vid))
             return noobj();
         final String part = this.part(vid);
-        // ~/sys is this space's own store: its q-processors run there, as a space's always do
+        // ~/sys is this space's own store: its q-processors run there, as a space's always do — unless a more specific
+        // space in memory claims the address, which then answers it (declined here)
         if (SYS.equals(part))
-            return super.read(vid);
+            return this.yields(vid) ? noobj() : super.read(vid);
         // the network answers its own branch: fields, and members at their keys' paths (and the q-procs it speaks)
         if (NETWORK.equals(part))
             return this.owner.network().read(vid);
@@ -156,13 +180,14 @@ public final class MachineSpace extends memSpace {
     /**
      * Is a write at {@code vid} this sphere's to make — and therefore final, whatever it answers? A write the sphere
      * owns is never handed on: a member's deletion answers {@code noobj} (the obj written), and passing that on as a
-     * decline would land a second, stray deletion in memory. The sphere owns the network branch and {@code ~/sys}.
+     * decline would land a second, stray deletion in memory. The sphere owns the network branch and {@code ~/sys} —
+     * the part of {@code ~/sys} no more specific space in memory claims ({@link #yields}).
      */
     public boolean ownsWrite(final fURI vid) {
         if (null == this.owner || !this.covers(vid))
             return false;
         final String part = this.part(vid);
-        return NETWORK.equals(part) || SYS.equals(part);
+        return NETWORK.equals(part) || (SYS.equals(part) && !this.yields(vid));
     }
 
     @Override
