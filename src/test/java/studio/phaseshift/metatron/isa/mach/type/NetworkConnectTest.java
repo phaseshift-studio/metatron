@@ -24,24 +24,30 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -99,10 +105,99 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     }
 
     @Test
+    void testAnOverrideIsTheNativeInstructionWithItsOwnF() {
+        final Network network = Machine.current().network();
+        network.connect(SELF);
+        // an override IS the instruction it replaces with another f(): the native eval's tid (its dom and rng) and its
+        // argument types — the function is the one thing that differs
+        final Inst eval = network.overrideOf(SELF, EVAL_INST_TID).asInst();
+        final Inst definition = Network.Helper.nativeOf(EVAL_INST_TID);
+        assertEquals(definition.tid(), eval.tid(), "the override's tid is the native eval's: the same dom and rng");
+        assertEquals(definition.args(), eval.args(), "the override's argument types are the native eval's");
+        assertNotEquals(definition.f(), eval.f(), "the function is the one thing an override changes");
+        assertTrue(Network.Helper.accepts(EVAL_INST_TID, eval), "the type system accepts the override as eval");
+    }
+
+    @Test
+    void testDispatchIsTheNativeCallWithTheOverridesF() {
+        // the call an override receives is the instruction exactly as a program issues it — nothing repacked, no seat
+        // moved: from(<uri>) with the address as read; obj.to(<uri>) with the obj as the lhs, as the native to takes it
+        final List<Inst> calls = new ArrayList<>();
+        final List<Obj> lhss = new ArrayList<>();
+        final Obj from = Network.Helper.override(FROM_INST_TID, (lhs, inst) -> {
+            calls.add(inst);
+            lhss.add(lhs);
+            return jnt(1);
+        });
+        final Obj to = Network.Helper.override(TO_INST_TID, (lhs, inst) -> {
+            calls.add(inst);
+            lhss.add(lhs);
+            return lhs;
+        });
+        final Obj client = rec(uri(HOST), uri(f("loop://probe")),
+                uri(INST), rec(uri(FROM_INST_TID), from, uri(TO_INST_TID), to));
+        Network.Helper.index(client);
+        try {
+            assertEquals(jnt(1), Machine.read(f("loop://probe/t/probe/x")), "the read answers the from override's result");
+            assertEquals(jnt(7), Machine.write(f("loop://probe/t/probe/y"), jnt(7)), "the write answers the to override's result");
+            assertEquals(2, calls.size(), "one call per dispatch");
+            assertEquals(FROM_INST_TID, calls.get(0).tid().basePath(), "the read reaches the override as the from call");
+            assertEquals(lst(uri(f("loop://probe/t/probe/x"))), calls.get(0).args(), "from's one argument: the address as read");
+            assertEquals(noobj(), lhss.get(0), "a bare read has no lhs");
+            assertEquals(TO_INST_TID, calls.get(1).tid().basePath(), "the write reaches the override as the to call");
+            assertEquals(lst(uri(f("loop://probe/t/probe/y"))), calls.get(1).args(), "to's one argument: the address");
+            assertEquals(jnt(7), lhss.get(1), "the written obj is the lhs, exactly as the native to takes it");
+        } finally {
+            Machine.current().network().disconnect(f("loop://probe"));
+        }
+    }
+
+    @Test
+    void testSubmitShipsTheCodeRawThroughEval() {
+        // the eval call BLOCKS: its code is a payload for the peer to evaluate, so it must arrive unevaluated — were it
+        // computed here, the override would receive the local value (42) instead of the read
+        Machine.write(f("/t/evaluator/x"), jnt(42));
+        final List<Inst> calls = new ArrayList<>();
+        final Obj eval = Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> {
+            calls.add(inst);
+            return inst.arg(0).apply(lhs);
+        });
+        final Obj client = rec(uri(HOST), uri(f("loop://evaluator")), uri(INST), rec(uri(EVAL_INST_TID), eval));
+        Network.Helper.index(client);
+        try {
+            final Obj code = from_(f("/t/evaluator/x")).tryToInst();
+            assertEquals(jnt(42), Machine.current().network().submit(f("loop://evaluator"), code),
+                    "the override evaluates the code it was shipped");
+            assertEquals(EVAL_INST_TID, calls.getFirst().tid().basePath(), "submit reaches the override as the eval call");
+            assertTrue(calls.getFirst().tid().hasQ(BLOCK), "the eval call blocks: the code is a payload, not a computation");
+            assertEquals(code, calls.getFirst().arg(0), "the code arrives raw — the peer evaluates it, never this side");
+        } finally {
+            Machine.current().network().disconnect(f("loop://evaluator"));
+        }
+    }
+
+    @Test
+    void testAnInstOfAnotherSignatureIsNotAnOverride() {
+        // `from` takes an address: a body declared on another signature (a bare lambda — not the from instruction, no
+        // uri argument) is not accepted by the type system as from, so the peer does not override from with it
+        final Obj client = rec(uri(HOST), uri(f("loop://imposter")),
+                uri(INST), rec(uri(FROM_INST_TID), instLambda((lhs, inst) -> jnt(13))));
+        Network.Helper.index(client);
+        try {
+            assertEquals(noobj(), Machine.current().network().overrideOf(f("loop://imposter"), FROM_INST_TID),
+                    "an inst whose signature is not from's is not an override of from");
+            assertEquals(noobj(), Machine.read(f("loop://imposter/t/imposter/x")),
+                    "with no accepted override (no eval, no transport either) the read falls through and misses");
+        } finally {
+            Machine.current().network().disconnect(f("loop://imposter"));
+        }
+    }
+
+    @Test
     void testReadDispatchesToANativeFromOverride() {
         // a READ-ONLY client: it overrides `from` (reads the localized uri locally) and declares NO eval, hence no
         // transport — the read ladder must reach it through its `from` override alone.
-        final Obj fromBody = instLambda((lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize()));
+        final Obj fromBody = Network.Helper.override(FROM_INST_TID, (lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize()));
         final Obj client = rec(uri(HOST), uri(f("loop://reader")),
                 uri(INST), rec(uri(FROM_INST_TID), fromBody));
         Network.Helper.index(client);
@@ -117,9 +212,9 @@ public class NetworkConnectTest extends AbstractMetatronTest {
 
     @Test
     void testWriteDispatchesToANativeToOverride() {
-        // a WRITE-ONLY client: it overrides `to` (writes arg(0) to arg(1) locally) and declares NO eval, hence no
-        // transport — the write ladder must reach it through its `to` override alone.
-        final Obj toBody = instLambda((lhs, inst) -> Machine.write(inst.arg(1).uriValue().localize(), inst.arg(0)));
+        // a WRITE-ONLY client: it overrides `to` (writes its lhs to the localized arg(0) — the native to's own shape)
+        // and declares NO eval, hence no transport — the write ladder must reach it through its `to` override alone.
+        final Obj toBody = Network.Helper.override(TO_INST_TID, (lhs, inst) -> Machine.write(inst.arg(0).uriValue().localize(), lhs));
         final Obj client = rec(uri(HOST), uri(f("loop://sink")),
                 uri(INST), rec(uri(TO_INST_TID), toBody));
         Network.Helper.index(client);

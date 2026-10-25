@@ -72,7 +72,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -137,9 +136,10 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .constructor(socket -> {
                 // THE HTTP CLIENT — a connectionless reader. It overrides `from` with an HTTP GET and declares NO
                 // eval (hence no transport): it is reachable only through its `from` override in the read ladder. The
-                // override payload is the FULL address (with authority), which the GET sends verbatim; the response is
-                // reified by its content type.
-                final Obj fromBody = instLambda((lhs, inst) -> {
+                // override is `from` itself with a GET body, so the call arrives as the read was written — from(<uri>),
+                // the FULL address (with authority) in arg(0), which the GET sends verbatim; the response is reified
+                // by its content type.
+                final Obj from = Network.Helper.override(FROM_INST_TID, (lhs, inst) -> {
                     final fURI uri = inst.arg(0).uriValue();
                     try {
                         final HttpRequest request = HttpRequest.newBuilder()
@@ -162,7 +162,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 });
                 final Obj client = rec(
                         uri(HOST), socket.asRec().at(uri(HOST)),
-                        uri(INST), rec(uri(FROM_INST_TID), fromBody));
+                        uri(INST), rec(uri(FROM_INST_TID), from));
                 Network.Helper.index(client);
                 return client;
             }).create();

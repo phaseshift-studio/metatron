@@ -160,15 +160,20 @@ public class mcpClient extends MRec implements AutoCloseable {
         // THE IMPLEMENTER'S DECLARATION: which of this server's tools ARE the primitive instructions. `inst_map` is
         // { instruction_tid => tool_name }, filled by the specific client — never inferred from a name suffix. After
         // tool discovery, each entry also registers the named tool's body under the primitive tid, so the server's
-        // eval tool becomes the peer's `eval`, its fetch tool the peer's `from`, etc.
+        // eval tool becomes the peer's `eval`, its fetch tool the peer's `from`, etc. The override is the PRIMITIVE
+        // with the tool's f(): the primitive's own signature, so eval(code) reaches the tool as the eval it stands in
+        // for (its arguments land on the tool's parameters in order).
         final Obj instMap = this.at(uri("inst_map"));
         if (instMap.isRec())
             instMap.asRec().elements().forEach(kv -> {
                 final Obj tool = tools.at(f(kv.second().strValue()));
-                if (tool.isRec()) {
+                if (tool.isRec() && kv.first().isUri()) {
                     final Obj body = tool.asRec().at(uri(INST));
-                    if (body.isObjInst())
-                        overrides.jvm().put(kv.first(), body);
+                    if (body.isObjInst()) {
+                        final Obj override = studio.phaseshift.metatron.isa.mach.type.Network.Helper.override(kv.first().uriValue(), body.asInst().f());
+                        if (override.isObjInst())
+                            overrides.jvm().put(kv.first(), override);
+                    }
                 }
             });
         if (!overrides.isEmpty())
