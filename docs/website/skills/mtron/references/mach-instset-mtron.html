@@ -830,7 +830,6 @@ dialect, the <code>..</code> motif — <code>~</code> is the frame you stand in,
 <strong>uri graph</strong> — a frame's child frames and its component slots, side by side — while <code>*…&gt;&gt;</code> walks the <strong>obj graph</strong>:
 the two graphs are linked by <code>-&gt;</code> and crossed by <code>*</code>.</p>
 <pre><code class="language-mtron">mtron&gt; push(xyz).vid()
-==&gt;/xyz
 mtron&gt; /.&gt;&gt;
 ==&gt;/xyz/
 mtron&gt; /xyz&gt;&gt;
@@ -842,7 +841,6 @@ mtron&gt; /xyz&gt;&gt;
 ==&gt;/xyz/compiler
 ==&gt;/xyz/processor
 mtron&gt; pop().vid()
-==&gt;&lt;/.&gt;
 </code></pre>
 <p>Every pushed frame is a fresh <strong>level</strong> over its parent's — its own memory, instruction set and network — so it is a
 clean scope: what it writes, imports and dials is its own, and a pop retracts exactly that. Reach in particular starts

@@ -228,7 +228,7 @@ type, and a type that models no such structure is left unchanged.
 
 The declared laws split into two rewrite directions, and both were already **latent in the stream-ring algebra**
 ([Stream Ring Theory](../../../articles/stream-ring-theory.html)). **Time** — the *optimization* direction — rewrites
-code *in place*: the local laws below ($\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$, $f \cdot f \leadsto
+code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \varepsilon$, $f \cdot f \leadsto
 \varepsilon$, $f \cdot f \leadsto f$, absorption, derivation contraction) shorten a chain without moving it. **Space**
 — the *location* direction — moves code *across places*: that is Theorem 19's semi-right distributivity, which
 `law_shard` realizes — worked out below in the third lift, where the fold is actually partitioned.
@@ -409,13 +409,13 @@ every instruction replaced by its `morphism::T`, i.e. **value code below, type c
 
 ### `path::T` — value code as a vertex
 
-| field         | what it is                                                                                                      |
-|---------------|-----------------------------------------------------------------------------------------------------------------|
-| `obj`         | the chain itself (the value code)                                                                               |
-| `origin`      | (optional) where the code starts — the machine's own `place::T`, attached on lift when the machine answers; absent means not placeable (`bind` requires it) |
+| field         | what it is                                                                                                                                                                        |
+|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `obj`         | the chain itself (the value code)                                                                                                                                                 |
+| `origin`      | (optional) where the code starts — the machine's own `place::T`, attached on lift when the machine answers; absent means not placeable (`bind` requires it)                       |
 | `where`       | (optional) the realized placement — span → place, written by the pass that applied a distribution rule: `{[span=>at] => [place…]}` lists the places the shard actually shipped to |
-| `peer`        | (reserved — declared in the type, not yet written by the distribution pass)                                    |
-| `<rule name>` | one edge per **live** rewrite — the edge holds the `plan::T` (see below); `lower(plan)` applies it and re-lifts |
+| `peer`        | (reserved — declared in the type, not yet written by the distribution pass)                                                                                                       |
+| `<rule name>` | one edge per **live** rewrite — the edge holds the `plan::T` (see below); `lower(plan)` applies it and re-lifts                                                                   |
 
 Only live edges are materialized (see *a-priori pruning*): a vertex lists exactly the rules that can move it, and a
 **normal form prints as its own certificate** — `[path::[obj=>...]]`, no out-edges, zero matches attempted. A
@@ -438,9 +438,9 @@ real match. A rule the pruner does not know is never pruned.
 
 ### `abstraction::T` — the α-word
 
-| field | description                                                                                                                                                                                                                                  |
-|-------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `obj` | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`: the surface a `plan::T`'s guard reads (its law/form/theory), the code and its descent staying anchored at `path::T.obj` |
+| field   | description                                                                                                                                                                                                                                                                                                      |
+|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `obj`   | the abstract word $\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)$ — each instruction as its `morphism::T`: the surface a `plan::T`'s guard reads (its law/form/theory), the code and its descent staying anchored at `path::T.obj`                                                                     |
 | `where` | (optional) the α **place-class word** — the places the code can be distributed TO (its declared roster machines and dialed peers) as a list of `place::T`; the surface a placement guard reads, the location twin of `obj`'s instruction word. Absent with no reach, and `law_shard` is then not a live morphism |
 
 The lift to `abstraction::T` is **lossy by design**: it carries the pointwise α-image — one `morphism::T` per
@@ -479,15 +479,15 @@ The application is a **type method**, not a field: `lower(plan::T)` is one instr
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
 and re-lifts the result to `path::T`. The plan carries no `result` λ; `lower` *is* the operator.
 
-A relocation decision in `plan.where` is `[shape, target?, hops?, span]` — `shape` is the topology token
-(`local` / `none` / `peer` / `peers` / `space` / `tree` / `shuffle`), `target` the concrete address. Each shape
+A relocation decision in `plan.where` is `[shape, target?, hops?, span]` — `shape` is the topology token (`local` /
+`none` / `peer` / `peers` / `space` / `tree` / `shuffle`), `target` the concrete address. Each shape
 declares the laws it demands of a cut shipped to it (§3, two directions):
 
-| shape    | obligations                              |
-|----------|------------------------------------------|
-| `local`, `space`, `none` | —                          |
-| `peer`, `peers`, `tree`  | `monoidic`, `commutative`  |
-| `shuffle`               | `monoidic`                 |
+| shape                    | obligations               |
+|--------------------------|---------------------------|
+| `local`, `space`, `none` | —                         |
+| `peer`, `peers`, `tree`  | `monoidic`, `commutative` |
+| `shuffle`                | `monoidic`                |
 
 `PlanBuilder.create()` validates a cut plan against this table (`obligations(shape) ⊆ cut.laws`); the reverse
 traversal `admissible(laws)` reads it the other way.
@@ -523,7 +523,7 @@ monoidic reducers are **semi-right distributive**,
 $$(a+b)\cdot r \;=\; (a\cdot r + b\cdot r)\cdot r,$$
 so a fold factors across parallel branches and re-combines through the same reducer — sound, not merely partitioned.
 The two composition operators, $+$ (parallel branching) and $\cdot$ (serial composition), are where that law was
-latent: the split axiom $\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b$ and the merge axiom say an
+latent: the split axiom $\langle x\rangle (a+b) = \langle x\rangle a + \langle x\rangle b$ and the merge axiom say an
 object fans out across branches and merges back, and Thm 19 is the one reduce law that makes the fan-out *sound*. The
 same algebra that says $x + 0 \leadsto x$ (a time rewrite) says $(a+b)\cdot r \leadsto (a\cdot r + b\cdot r)\cdot r$
 (a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.
@@ -583,15 +583,15 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 <//localhost>.as(place::T)
 ```
 
-| field | what it is |
-|---|---|
-| `obj` | the machine address `//host[/path]` — `host()` is the roster key, `path()` the frame vid (empty = the host's root machine). Who evaluates. |
-| `authority` | the transports that reach it (`scheme://host:port`); two aliases of one machine are values, never two places |
-| `instset` | (reserved — the ISAs resolvable here, the vocabulary coordinate; joined when `/m/math/cat/signature` lands) |
-| `source` | (optional) who declared it (`mdns`, boot profile, a dial) |
-| `linked_to` | **derived** — the peers this machine dialed to this place (outbound edges) |
-| `linked_from` | **derived** — the peers this machine accepted from this place (inbound edges) |
-| `status` | **derived** — `known` (roster only) / `up` / `down` (dialed, probed) |
+| field         | what it is                                                                                                                                 |
+|---------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `obj`         | the machine address `//host[/path]` — `host()` is the roster key, `path()` the frame vid (empty = the host's root machine). Who evaluates. |
+| `authority`   | the transports that reach it (`scheme://host:port`); two aliases of one machine are values, never two places                               |
+| `instset`     | (reserved — the ISAs resolvable here, the vocabulary coordinate; joined when `/m/math/cat/signature` lands)                                |
+| `source`      | (optional) who declared it (`mdns`, boot profile, a dial)                                                                                  |
+| `linked_to`   | **derived** — the peers this machine dialed to this place (outbound edges)                                                                 |
+| `linked_from` | **derived** — the peers this machine accepted from this place (inbound edges)                                                              |
+| `status`      | **derived** — `known` (roster only) / `up` / `down` (dialed, probed)                                                                       |
 
 `obj` and `authority` are read from the roster once at lift; `linked_to`/`linked_from`/`status` are `auto` insts that
 re-read the live peer map each dereference (the `object::T.morphed_to` pattern). The alias quotient is
@@ -617,12 +617,12 @@ computes to itself; `eval?block(code)` ships the code as a *payload* — the `?b
 the one that evaluates it (without the block the code is evaluated here and only its result ships). Which instructions
 a client overrides is its protocol's capability:
 
-| client                 | overrides                                                                                          |
-|------------------------|----------------------------------------------------------------------------------------------------|
-| `http_client`          | `from` (GET), `to` (POST) — no `eval`: a web document is read or written, never asked to evaluate    |
-| `ws_client`            | `eval`, `from`, `to` — the full set over the socket                                                  |
-| `id_client` (`loop`)   | `eval`, `from`, `to` — all local: `eval` applies against this machine, `from`/`to` read/write it      |
-| `mcp_client` (tools)   | one override per tool, keyed by the tool's tid — a tool answers as `eval`, another as `from`, …      |
+| client                  | overrides                                                                                                                 |
+|-------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `http_client`           | `from` (GET), `to` (POST) — no `eval`: a web document is read or written, never asked to evaluate                         |
+| `ws_client`             | `eval`, `from`, `to` — the full set over the socket                                                                       |
+| `id_client` (`loop`)    | `eval`, `from`, `to` — all local: `eval` applies against this machine, `from`/`to` read/write it                          |
+| `mcp_client` (tools)    | one override per tool, keyed by the tool's tid — a tool answers as `eval`, another as `from`, …                           |
 | `mqtt_client` (planned) | `from` (SUBSCRIBE), `to` (PUBLISH) — no `eval`; the client is not yet isolated (`mqttspace::T` speaks the protocol today) |
 
 The planned `mqtt_client` speaks the same two verbs over MQTT: `to` is a **retained PUBLISH** (plus a write to a
@@ -640,7 +640,7 @@ reaches the peer through the run-time dispatch.
 ### the location liveness lattice
 
 <!-- figure source: assets/tikz/cat-location-lattice.tex (same recipe) -->
-<img src="../assets/cat-location-lattice.png" alt="the location liveness lattice: origin → reachable → admissible (declared) → serves (realized) → shardTargets, addressed by wire authority" width="45%" style="float:right; margin:0 0 0.9em 1.5em"/>
+<img src="../assets/cat-location-lattice.png" alt="the location liveness lattice: origin → reachable → admissible (declared) → serves (realized) → shardTargets, addressed by wire authority" width="55%" style="float:right; margin:0 0 0.9em 1.5em"/>
 
 Distribution liveness has the same declared/realized split as a-priori pruning, on the location side. A place is a
 candidate (**declared**) when some authority's scheme has a dialer in the ISA — `Signatures.resolves(scheme)`, the
@@ -659,11 +659,11 @@ so nothing is dropped and nothing is computed twice.
 
 Three location fields, three questions — easy to conflate because two share the name `where`:
 
-| field      | on                | computed by                             | the question it answers                                                                                     |
-|------------|-------------------|-----------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| `origin`   | `path::T`         | `Places.self()` at lift                 | where the code **starts** — this machine's listeners (`//0.0.0.0`); absent → not placeable                  |
-| `where`    | `path::T`         | `realizedWhere()` after a distribution  | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `select([to(…)])` hosts            |
-| `where`    | `abstraction::T`  | `placeWord()` — `Places.reachable()`, or the realized `path.where` places after a distribution | where it **can go** — roster ∪ dialed peers (the α place-class word)                                        |
+| field    | on               | computed by                                                                                    | the question it answers                                                                           |
+|----------|------------------|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| `origin` | `path::T`        | `Places.self()` at lift                                                                        | where the code **starts** — this machine's listeners (`//0.0.0.0`); absent → not placeable        |
+| `where`  | `path::T`        | `realizedWhere()` after a distribution                                                         | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `select([to(…)])` hosts |
+| `where`  | `abstraction::T` | `placeWord()` — `Places.reachable()`, or the realized `path.where` places after a distribution | where it **can go** — roster ∪ dialed peers (the α place-class word)                              |
 
 `Places.reachable()` deliberately excludes the origin — it is where the code starts, not where it can go. The
 `path::T.where` is the *realized* placement (the shard actually shipped); the `abstraction::T.where` is the *reach* a
@@ -685,12 +685,12 @@ two unrelated ones — a natural transformation whose two components read the tw
 <img src="../assets/cat-fibration.png" alt="the two fibers: the instruction fiber (path::T ⇄ abstraction::T) and the location fiber (origin/where ⇄ reachable), with a plan::T acting over both via cut and where" width="90%" style="margin:0.3em 0 0 0"/>
 
 The naturality is a **commuting square**: the location projection $L$ (a path's place — `origin` before, `where`
-after) makes the plan's code-side and location-side agree. Applying the rewrite and then reading the location
-(top → right) equals reading the location and then applying the relocation (left → bottom):
-$\mathrm{where} \circ \mathrm{lower}(\mathrm{plan}) = \mathrm{plan.where} \circ \mathrm{origin}$.
+after) makes the plan's code-side and location-side agree. Applying the rewrite and then reading the location (top →
+right) equals reading the location and then applying the relocation (left → bottom):
+$\mathrm{where} \circ \mathrm{lower} (\mathrm{plan}) = \mathrm{plan.where} \circ \mathrm{origin}$.
 
 <!-- figure source: assets/tikz/cat-commute.tex (same recipe) -->
-<img src="../assets/cat-commute.png" alt="the commuting square: lower/bind(plan) on the code edge, plan.where on the location edge, origin and where as the location projection — the square commutes" width="90%" style="margin:0.3em 0 0 0"/>
+<img src="../assets/cat-commute.png" alt="the commuting square: lower/bind(plan) on the code edge, plan.where on the location edge, origin and where as the location projection — the square commutes" width="80%" style="margin:0.3em 0 0 0"/>
 
 ### the machine ring — process, dual of the stream ring
 

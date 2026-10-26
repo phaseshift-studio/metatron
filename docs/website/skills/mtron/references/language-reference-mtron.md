@@ -183,7 +183,7 @@ mtron> {1,2,3}.(a=>+2{ +*a }                             [-- sugar syntax for th
 ==>fail::[parse error at line 1, col 15:
      {1,2,3}.(a=>+2{ +*a }                             [-- ...
                    ^
-     unexpected '{']@/sys/fail/325162
+     unexpected '{']@/sys/fail/291885
 ```
 ### Boolean logic
 
@@ -315,7 +315,7 @@ mtron> posint::2                    [-- posint::2  (admitted: the predicate lets
 ==>posint::2
 mtron> posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==>fail::[parse error at line 1, col 1: -1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/399351
+   	while parsing: posint::-1]@/sys/fail/359802
 ```
 ---
 
