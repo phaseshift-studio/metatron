@@ -157,7 +157,7 @@ to; the rest specialize it.
 
 ### A — homomorphism shard (`sum`, `prod`, `count`, `order(s)`, rec `sum`)
 
-```
+```mtron
 slave_i:  start?hops=0(<part_i>).plus(1).count()
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().sum()
 ```
@@ -178,7 +178,7 @@ The cat graph answers lazily: `|count?int<=#{*}().as(morphism::T)>>analysis>>com
 **`order` is the distributed sort.** The slave sorts its shard and the master k-way-merges the runs — the same shard,
 with `kmerge` as the combiner instead of `sum`:
 
-```
+```mtron
 slave_i:  start?hops=0(<part_i>).order(>>)                     [-- each shard sorts by its key --]
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().kmerge(>>)
 ```
@@ -198,7 +198,7 @@ emitted rec stays serializable.
 
 ### E — tree reduction (`?hops=n`)
 
-```
+```mtron
 root:      {1,…,8}.plus(1).sum?hops=2()
         ⇒  start([start?hops=1({1,…,8}).plus(1).sum()]).select([to(p_1)]).merge().sum()
 on p_1:    start([start?hops=0({1,3,5,7}).plus(1).sum(), start?hops=0({2,4,6,8}).plus(1).sum()])
@@ -210,7 +210,7 @@ peer re-plans its part because applying a code compiles it (`Machine.applyCode`)
 
 ### G — keyed reduce (`group([k ⇒ h])`)
 
-```
+```mtron
 slave_i:  start?hops=0(<part_i>).group([mod(3)=>sum()])              [-- [1=>1,0=>3,2=>5] --]
 master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=>sum()]   [-- [1=>{1,4},…] → [1=>5,…] --]
 ```

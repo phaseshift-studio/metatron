@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.mach.type.compiler.rewriter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -35,10 +34,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.MAX;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_FIXPOINT_REWRITER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -97,10 +96,10 @@ public class FixPointRewriter extends MRec implements Rewriter {
                         final Obj out = r.apply(before);
                         final long t1 = System.nanoTime();
                         final String name = r.tid().name();
-                        REWRITE_TIMINGS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(t1 - t0);
+                        REWRITE_TIMINGS.computeIfAbsent(name, _ -> new AtomicLong()).addAndGet(t1 - t0);
                         final int outSize = out.isCode() ? out.asCode().codeValue().size() : in;
-                        REWRITE_INS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(in);
-                        REWRITE_OUTS.computeIfAbsent(name, k -> new AtomicLong()).addAndGet(outSize);
+                        REWRITE_INS.computeIfAbsent(name, _ -> new AtomicLong()).addAndGet(in);
+                        REWRITE_OUTS.computeIfAbsent(name, _ -> new AtomicLong()).addAndGet(outSize);
                         if (out.isCode())
                             rewritten.set(out.asCode());
                     });

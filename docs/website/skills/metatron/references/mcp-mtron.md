@@ -56,12 +56,12 @@ mtron> {"mcpServers": {
             "intellij": {
             }
                   ^
-     unexpected ':']@/sys/fail/74498
+     unexpected ':']@/sys/fail/66230
 mtron> }}
 ==>fail::[parse error at line 1, col 1:
      }}
      ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/76254
+     unclosed triple-quote — missing closing '"""']@/sys/fail/68362
 ```
 For `STDIO` transport MCP servers, the same process works:
 
@@ -79,13 +79,114 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][fail][fail]@/sys/fail/77689
-   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]@/sys/fail/77691
+==>mcp_client::[host=>http://localhost:8777/mcp,
+                status=>!λstatus?bool<=(){<j>},
+                tool=>[m_web_mcp_mcp_mtron_write_memory=>tool::[
+                 inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
+                            previous_memory=>'a previous memory vid to chain current memory to'){<j>},
+                 name=>m_web_mcp_mcp_mtron_write_memory,
+                 desc=>'(experimental) returns a memory re...',
+                 arg=>[current_memory=>'the memory to remember -- e.g. a s...',
+                       previous_memory=>'a previous memory vid to chain cur...']],
+                       m_web_mcp_mcp_mtron_read_memory=>tool::[
+                        inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
+                        name=>m_web_mcp_mcp_mtron_read_memory,
+                        desc=>'(experimental) returns the result ...',
+                        arg=>[memory_vid=>'the vid of the memory to read']],
+                       m_web_mcp_mcp_mtron_eval_mtron=>tool::[
+                        inst=>inst(code=>'/m/code',
+                                   native=>'/m/bool'){<j>},
+                        name=>m_web_mcp_mcp_mtron_eval_mtron,
+                        desc=>'<no description>',
+                        arg=>[code=>'/m/code',native=>'/m/bool']],
+                       m_web_mcp_mcp_mtron_list_space=>tool::[
+                        inst=>inst(){<j>},
+                        name=>m_web_mcp_mcp_mtron_list_space,
+                        desc=>'returns a rec identifying all acti...',
+                        arg=>[=>]],
+                       m_web_mcp_mcp_mtron_router_info=>tool::[
+                        inst=>inst(){<j>},
+                        name=>m_web_mcp_mcp_mtron_router_info,
+                        desc=>'returns router vid, tid, and space...',
+                        arg=>[=>]],
+                       m_web_mcp_mcp_mtron_find_inst=>tool::[
+                        inst=>inst(pattern=>'the inst tid to match',
+                                   dom=>'the dom of inst to match (can be added to pattern arg)',
+                                   rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
+                        name=>m_web_mcp_mcp_mtron_find_inst,
+                        desc=>'returns a lst of all instruction p...',
+                        arg=>[pattern=>'the inst tid to match',
+                              dom=>'the dom of inst to match (can be a...',
+                              rng=>'the rng of inst to match (can be a...']],
+                       m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
+                        inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
+                                   on_message=>'the function to evaluate on every received message'){<j>},
+                        name=>m_web_mcp_mcp_mtron_spawn_wsclient,
+                        desc=>'create a websocket client with pro...',
+                        arg=>[host=>'the full ws:// uri of the websocke...',
+                              on_message=>'the function to evaluate on every ...']],
+                       ...(1 more)],
+                inst=>[/m/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
+                                                                          previous_memory=>'a previous memory vid to chain current memory to'){<j>},
+                       /m/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
+                       /m/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',
+                                                                        native=>'/m/bool'){<j>},
+                       /m/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
+                       /m/llm/tool/m_web_mcp_mcp_mtron_router_info=>inst(){<j>},
+                       /m/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
+                                                                       dom=>'the dom of inst to match (can be added to pattern arg)',
+                                                                       rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
+                       /m/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
+                                                                            on_message=>'the function to evaluate on every received message'){<j>},
+                       ...(1 more)]]@a
 mtron> *a>>tool
+==>[m_web_mcp_mcp_mtron_write_memory=>tool::[
+     inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
+                previous_memory=>'a previous memory vid to chain current memory to'){<j>},
+     name=>m_web_mcp_mcp_mtron_write_memory,
+     desc=>'(experimental) returns a memory re...',
+     arg=>[current_memory=>'the memory to remember -- e.g. a s...',
+           previous_memory=>'a previous memory vid to chain cur...']],
+    m_web_mcp_mcp_mtron_read_memory=>tool::[
+     inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
+     name=>m_web_mcp_mcp_mtron_read_memory,
+     desc=>'(experimental) returns the result ...',
+     arg=>[memory_vid=>'the vid of the memory to read']],
+    m_web_mcp_mcp_mtron_eval_mtron=>tool::[inst=>inst(code=>'/m/code',
+                                                      native=>'/m/bool'){<j>},
+                                           name=>m_web_mcp_mcp_mtron_eval_mtron,
+                                           desc=>'<no description>',
+                                           arg=>[code=>'/m/code',native=>'/m/bool']],
+    m_web_mcp_mcp_mtron_list_space=>tool::[inst=>inst(){<j>},
+                                           name=>m_web_mcp_mcp_mtron_list_space,
+                                           desc=>'returns a rec identifying all acti...',
+                                           arg=>[=>]],
+    m_web_mcp_mcp_mtron_router_info=>tool::[
+     inst=>inst(){<j>},
+     name=>m_web_mcp_mcp_mtron_router_info,
+     desc=>'returns router vid, tid, and space...',
+     arg=>[=>]],
+    m_web_mcp_mcp_mtron_find_inst=>tool::[inst=>inst(pattern=>'the inst tid to match',
+                                                     dom=>'the dom of inst to match (can be added to pattern arg)',
+                                                     rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
+                                          name=>m_web_mcp_mcp_mtron_find_inst,
+                                          desc=>'returns a lst of all instruction p...',
+                                          arg=>[
+                                           pattern=>'the inst tid to match',
+                                           dom=>'the dom of inst to match (can be a...',
+                                           rng=>'the rng of inst to match (can be a...']],
+    m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
+     inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
+                on_message=>'the function to evaluate on every received message'){<j>},
+     name=>m_web_mcp_mcp_mtron_spawn_wsclient,
+     desc=>'create a websocket client with pro...',
+     arg=>[host=>'the full ws:// uri of the websocke...',
+           on_message=>'the function to evaluate on every ...']],
+    ...(1 more)]
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")
-==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')@<0>]@/sys/fail/78773
+==>fail::[unable to locate inst-f noobj::T => a/tool/m_inst_eval_mtron/inst('1+2')@<0>]@/sys/fail/73363
 mtron> [-- => 3 --]
 ```
 ### WebSocket

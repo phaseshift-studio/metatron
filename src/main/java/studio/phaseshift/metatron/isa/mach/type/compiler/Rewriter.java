@@ -19,8 +19,11 @@
 package studio.phaseshift.metatron.isa.mach.type.compiler;
 
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+
+import java.util.Set;
 
 /**
  * Rewriter — the first stage of {@code compiler::T}: lowers {@code code::T} to {@code code::T} by
@@ -38,4 +41,8 @@ public interface Rewriter extends Machine.Component {
      * @return the rewritten code
      */
     Code apply(final Obj code);
+
+    default Set<Inst> rewrites() {
+        return Machine.current().instset().rewrites();
+    }
 }

@@ -645,15 +645,15 @@ self-registers a `peer::T` into the network; that registration is the condition 
 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>[host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[/m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-           /m/inst/from=>*uri::T,
-           /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    on_message=>print('received ${_}')]
+==>ws_client::[host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[/m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                      /m/inst/from=>*uri::T,
+                      /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               on_message=>print('received ${_}')]
 mtron> */network
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
@@ -702,44 +702,44 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+==>[path::[obj=>start([start?hops=0({1,2,3,4,5}).plus(10).sum()]).select([virtual::[code=>eval?<=code(ws://localhost:8555){<j>},
+                     source=>!*/sys/thread/main,
+                     rhs=>!λawait(){<j>}]@~/sys/thread/42ab3c25]).select([rshift(rhs)]).merge().sum(),
+           where=>[[span=>at]=>[place::[obj=>//localhost,
+                                        authority=>[
+                                         http://localhost:8777,
+                                         ws://localhost:8555],
+                                        linked_to=>!λ(){<j>},
+                                        linked_from=>!λ(){<j>},
+                                        status=>!λ(){<j>}]]],
            theory_unit_removal=>plan::[name=>theory_unit_removal,
                                        cut=>[role=>id],
                                        where=>[[shape=>none,span=>[[span=>at]]]]],
            derivation_contraction=>plan::[name=>derivation_contraction,
                                           cut=>[role=>derivation],
-                                          where=>[[shape=>local,span=>[[span=>at]]]]],
-           law_shard=>plan::[name=>law_shard,
-                             cut=>[form=>reducer,
-                                   law=>[monoidic,commutative]],
-                             where=>[[shape=>local,
-                                      span=>[[span=>at],[span=>post]]],
-                                     [shape=>tree,
-                                      hops=>1,
-                                      span=>[
-                                       [span=>seed,flags=>[partition]],
-                                       [span=>pre,flags=>[floatable,no_seed]],
-                                       [span=>at]],
-                                      inst=>[/m/inst/eval]]]]]]
+                                          where=>[[shape=>local,span=>[[span=>at]]]]]]]
 ```
 A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
 `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()]),
-           law_shard=>plan::[name=>law_shard,
-                             cut=>[form=>reducer,
-                                   law=>[monoidic,commutative]],
-                             where=>[[shape=>local,
-                                      span=>[[span=>at],[span=>post]]],
-                                     [shape=>tree,
-                                      hops=>1,
-                                      span=>[
-                                       [span=>seed,flags=>[partition]],
-                                       [span=>pre,flags=>[floatable,no_seed]],
-                                       [span=>at]],
-                                      inst=>[/m/inst/eval]]]]]]
+==>[path::[obj=>start([start?hops=0({1,2,3,4,5,6}).group([mod(3)=>sum()])]).select([virtual::[code=>eval?<=code(ws://localhost:8555){<j>},
+                     source=>!*/sys/thread/main,
+                     rhs=>!λawait(){<j>}]@~/sys/thread/a76f7964]).select([rshift(rhs)]).merge().sum().select([id()=>sum()]),
+           where=>[[span=>at]=>[place::[obj=>//localhost,
+                                        authority=>[
+                                         http://localhost:8777,
+                                         ws://localhost:8555],
+                                        linked_to=>!λ(){<j>},
+                                        linked_from=>!λ(){<j>},
+                                        status=>!λ(){<j>}]]],
+           theory_unit_removal=>plan::[name=>theory_unit_removal,
+                                       cut=>[role=>id],
+                                       where=>[[shape=>none,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[name=>derivation_contraction,
+                                          cut=>[role=>derivation],
+                                          where=>[[shape=>local,span=>[[span=>at]]]]]]]
 ```
 ### may / must — the fiber modality
 
@@ -776,7 +776,8 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 ```mtron
 mtron> <//localhost>.as(place::T)
 ==>place::[obj=>//localhost,
-           authority=>[ws://localhost:8555],
+           authority=>[http://localhost:8777,
+                       ws://localhost:8555],
            linked_to=>!λ(){<j>},
            linked_from=>!λ(){<j>},
            status=>!λ(){<j>}]

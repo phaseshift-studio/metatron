@@ -1,0 +1,41 @@
+# ExplainTool recursive drill-down — an instruction argument that is code must open
+# a nested full ExplainTool level (same columns, same selection), not a popup.
+#
+#   open:   type a nested expression, tab opens the table
+#   nav:    down to the row whose arg is code, right onto the args column
+#   drill:  enter → a nested level (depth: 2)
+#   back:   ctrl-d pops the nested level, then closes the tool
+#
+#   bin/metatron-docker build console --steps bin/test/explain-tool-recursive.steps
+
+WAIT_CONSOLE
+
+MARK open
+TYPE 1.plus(plus(2).mult(4).id()).plus(233)
+SLEEP 0.6
+KEY tab
+WAIT_SINCE open c_dom
+
+# down to the plus row whose arg is the nested code (plus.mult.id), then onto args
+KEY down
+SLEEP 0.2
+KEY right
+SLEEP 0.2
+KEY right
+SLEEP 0.2
+KEY right
+SLEEP 0.2
+
+# enter the args column: the nested code opens as a full level (depth 2)
+MARK drill
+KEY enter
+WAIT_SINCE drill depth: 2
+
+# ctrl-d pops the nested level, then closes the tool
+KEY ctrl+d
+SLEEP 0.3
+MARK exit
+KEY ctrl+d
+WAIT_SINCE exit mtron>
+
+SLEEP 1
