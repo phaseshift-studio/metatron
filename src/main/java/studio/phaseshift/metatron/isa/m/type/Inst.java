@@ -50,6 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -262,6 +263,7 @@ public interface Inst extends Call {
                 //   map:                     inst.arg(0).apply(lhs)  (x.map(f) = f(x))
                 //   select:                  rec arg whose VALUES are per-element projections
                 base.equals(AUTO_INST_TID) ||
+                base.equals(CUT_INST_TID) ||
                 base.equals(AUTO_FROM_INST_TID) ||
                 base.equals(AUTO_AT_INST_TID) ||
                 base.equals(MAP_INST_TID) ||

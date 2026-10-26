@@ -99,6 +99,7 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI POP_INST_TID = MACH_INST_TID.extend("pop");
     public static final fURI MOVE_INST_TID = MACH_INST_TID.extend("move");
     public static final fURI STAY_INST_TID = MACH_INST_TID.extend("stay");
+    public static final fURI CUT_INST_TID = MACH_INST_TID.extend("cut");
 
     /**
      * The one spelling of "up", so {@code move()} and {@code move(<..>)} cannot come to mean different things.
@@ -819,6 +820,12 @@ public class machInstSet extends AbstractInstSet {
                         instC(MACH_INST_TID.extend("resume").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             ((AbstractThread) lhs).resume();
                             return lhs;
+                        }),
+                        instC(CUT_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(URI_TYPE, ALL_TYPE), (lhs, inst) -> {
+                            final List<Inst> insts = new ArrayList<>(start_(lhs).insts());
+                            insts.addAll(move_(uri(inst.arg(0).uriValue().path().isEmpty() ? ROOT_MACHINE_VID : f().path(inst.arg(0).uriValue().path()))).insts());
+                            insts.addAll(inst.arg(1).asCall().insts());
+                            return map_(lst(code(insts))).select_(lst(eval_(inst.arg(0).uriValue().origin()).tryToInst())).merge_();
                         })
                 ))),
                 uri(REWRITE), lst(
@@ -854,22 +861,9 @@ public class machInstSet extends AbstractInstSet {
                 final Inst inst = insts.get(i);
                 if (!MOVE_INST_TID.equals(inst.tid().basePath()) || inst.arg(0).isNoObj() || inst.arg(0).uriValue().isLocal())
                     continue;
-                final fURI target = inst.arg(0).uriValue();
-                // everything left of move stays; the move becomes a scatter:
-                //   -<[...] . -<[as(code::T)] == [eval(origin)] >-
-                final List<Inst> rewritten = new ArrayList<>(insts.subList(0, i));
-                // the split branches: |move(localize), _, |tail — the blocks keep each unevaluated
-                final Obj branches = lst(
-                        block_(instB(MOVE_INST_TID, lst(uri(target.localize())))).tryToInst(),
-                        merge_(lst()).tryToInst(),
-                        block_(merge_()).tryToInst(),
-                        block_(code(new ArrayList<>(insts.subList(i + 1, insts.size())))).tryToInst());
-                rewritten.addAll(split_(branches).domRng(ALL.maybeSome(), ALL)
-                        .split_(lst(as_(CODE_TYPE).tryToInst()))
-                        .select_(lst(eval_(target.origin()).tryToInst()))
-                        .merge_()
-                        .insts());
-                return code(rewritten);
+                final List<Inst> newCode = new ArrayList<>(insts.subList(0, i));
+                newCode.add(instB(CUT_INST_TID, lst(inst.arg(0), code(new ArrayList<>(insts.subList(i + 1, insts.size()))))));
+                return code(newCode);
             }
             return code;
         }

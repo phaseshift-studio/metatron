@@ -742,7 +742,7 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
-==&gt;12
+==&gt;11
 mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;mtronfs:#
 ==&gt;local:#
@@ -755,7 +755,6 @@ mtron&gt; */sys/space/+.&gt;&gt;pattern
 ==&gt;loc:#
 ==&gt;fs:#
 ==&gt;farm:#
-==&gt;acme:#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
 ==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
 ==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]
@@ -766,8 +765,7 @@ mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
 ==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
 ==&gt;[fs:#=&gt;[fs:m=&gt;/home/killswitch/software/metatron,
            fs:=&gt;/home/killswitch/]]
-==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
-==&gt;[acme:#=&gt;[acme:=&gt;&lt;&gt;]]</code></pre>
+==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]</code></pre>
 </div>
 </div>
 <br><br></main>

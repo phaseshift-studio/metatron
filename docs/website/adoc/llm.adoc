@@ -10,17 +10,17 @@
 [NO_OUTPUT] import(/m/web)
 [NO_OUTPUT] import(/m/llm)
 [NO_OUTPUT] import(/m/math)
-httpspace::[host     => http://localhost:8777,                        /
-            q        => [mimeq::[=>]],                                /
-            pattern  => <http://#>,                                   /
-            route    => [/mcp     => mcp_mtron_http,                  /
-                         /       => <>]]@/sys/space/web/http
-wsspace::[host     => ws://localhost:8555,                            /
-          pattern  => <ws://#>,                                       /
-          q        => [docq::[=>],subq::[=>]],                        /
-          route    => [/mtron  => mtron_ws,                           /
-                       /mcp    => mcp_mtron_ws]]@/sys/space/web/ws
-fsspace::[pattern  => fs:#,                                           /
+http_server::[origin     => http://localhost:8777,                      /
+              q        => [mimeq::[=>]],                                /
+              pattern  => <http://#>,                                   /
+              route    => [/mcp     => mcp_mtron_http,                  /
+                            /       => <>]]
+ws_server::[host     => ws://localhost:8555,                            /
+            pattern  => <ws://#>,                                       /
+            q        => [docq::[=>],subq::[=>]],                        /
+            route    => [/mtron  => mtron_ws,                           /
+                       /mcp    => mcp_mtron_ws]]
+fsspace::[pattern  => fs:#,                                             /
           route    => [fs:=><.metatron>]]@/sys/space/fs
 ----
 ====
@@ -54,7 +54,7 @@ A `model::T` references a LLM endpoint.
 
 [mtron]
 ----
-*/m/llm/model
+|/m/llm/model::T
 ----
 
 Models can be either cloud-based AI LLMs or local LLMs.
@@ -104,7 +104,7 @@ The purpose of breaking up the example into two expression is to highlight the O
 
 [mtron]
 ----
-*http://localhost:11434/api/tags/+.>>.                          /
+*http://localhost:11434/v1/models/+.>>.                          /
   =?=[size=>as(real::T).as(bB::T).                              /
             ?>gB::1.0.                                          /
             ?<gB::5.0].                                         /

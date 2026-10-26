@@ -121,8 +121,8 @@ int{50}::10.mult(10)          [-- int{50}::100 (coefficient account for) --]
 **compound ops:** `inst?rng<=dom(args){body}` for inline insts (lambdas):
 
 ```mtron_pre
-{1,2,3}.inst?int<=int(a=>plus(2)){ plus(*a) }     [-- {4,8,18} --]
-{1,2,3}.(a=>+2{ +*a }                             [-- sugar syntax for the above --]
+{1,2,3}.inst?int<=int(a=>plus(2)){ plus(*a) }      [-- {4,8,18} --]
+{1,2,3}.(a=>+2){ +*a }                             [-- sugar syntax for the above --]
 ```
 
 ### Boolean logic

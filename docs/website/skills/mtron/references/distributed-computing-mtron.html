@@ -582,7 +582,7 @@ address, <code>M</code> decomposes into O / A / G over three index splits, <code
 <p>The four done patterns, with the slave/master forms written in full. <code>law_shard</code> (A) is the one engine they all lower
 to; the rest specialize it.</p>
 <h4>A — homomorphism shard (<code>sum</code>, <code>prod</code>, <code>count</code>, <code>order(s)</code>, rec <code>sum</code>)</h4>
-<pre><code>slave_i:  start?hops=0(&lt;part_i&gt;).plus(1).count()
+<pre><code class="language-mtron">slave_i:  start?hops=0(&lt;part_i&gt;).plus(1).count()
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().sum()
 </code></pre>
 <p>The combiner is computed, never declared — a fold that declares <code>monoidic</code> + <code>commutative</code> is its own, and a fold
@@ -602,7 +602,7 @@ defined by its <code>derivation</code> recombines through the fold that defines 
 <code>/m/inst/sum?rng=/m/int&amp;dom=/m/int{*}</code>. <code>mean</code> (magmadic) and <code>str</code> <code>sum</code> (not commutative) correctly do not shard.</p>
 <p><strong><code>order</code> is the distributed sort.</strong> The slave sorts its shard and the master k-way-merges the runs — the same shard,
 with <code>kmerge</code> as the combiner instead of <code>sum</code>:</p>
-<pre><code>slave_i:  start?hops=0(&lt;part_i&gt;).order(&gt;&gt;)                     [-- each shard sorts by its key --]
+<pre><code class="language-mtron">slave_i:  start?hops=0(&lt;part_i&gt;).order(&gt;&gt;)                     [-- each shard sorts by its key --]
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().kmerge(&gt;&gt;)
 </code></pre>
 <p><code>order(&gt;&gt;)</code> on a stream of single-key recs sorts by value, and <code>kmerge(&gt;&gt;)</code> merges the sorted partial runs — a k-way
@@ -616,7 +616,7 @@ thread — and the second reads each thread's future off its <code>rhs</code> sl
 is <code>eval</code> (the client's mini-instset override), and the result hangs off <code>rhs</code> as a lazy <code>auto</code> over the future, so the
 emitted rec stays serializable.</p>
 <h4>E — tree reduction (<code>?hops=n</code>)</h4>
-<pre><code>root:      {1,…,8}.plus(1).sum?hops=2()
+<pre><code class="language-mtron">root:      {1,…,8}.plus(1).sum?hops=2()
         ⇒  start([start?hops=1({1,…,8}).plus(1).sum()]).select([to(p_1)]).merge().sum()
 on p_1:    start([start?hops=0({1,3,5,7}).plus(1).sum(), start?hops=0({2,4,6,8}).plus(1).sum()])
               .select([to(p_2), to(p_3)]).merge().sum()
@@ -624,7 +624,7 @@ on p_1:    start([start?hops=0({1,3,5,7}).plus(1).sum(), start?hops=0({2,4,6,8})
 <p>The budget resolves nearest first — a <code>?hops</code> on any instruction, else the plan's tree route (default 1, the star). A
 peer re-plans its part because applying a code compiles it (<code>Machine.applyCode</code>); at <code>hops = 0</code> the part is a leaf.</p>
 <h4>G — keyed reduce (<code>group([k ⇒ h])</code>)</h4>
-<pre><code>slave_i:  start?hops=0(&lt;part_i&gt;).group([mod(3)=&gt;sum()])              [-- [1=&gt;1,0=&gt;3,2=&gt;5] --]
+<pre><code class="language-mtron">slave_i:  start?hops=0(&lt;part_i&gt;).group([mod(3)=&gt;sum()])              [-- [1=&gt;1,0=&gt;3,2=&gt;5] --]
 master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=&gt;sum()]   [-- [1=&gt;{1,4},…] → [1=&gt;5,…] --]
 </code></pre>
 <p>The combiner is pointwise, computed from <code>h</code>'s (<code>LawTable.pointwise</code>). The rec <code>sum</code> is the deep merge: colliding

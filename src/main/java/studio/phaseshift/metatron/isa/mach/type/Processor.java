@@ -279,7 +279,7 @@ public interface Processor extends mThread, Machine.Component {
                 if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail()
                         && !instDomRngMatch(rhs, cinst.rng())) {
                     final Fail child = Poly.Helper.failChild(rhs);
-                    final String text = "rhs does not match inst range: " + Poly.Helper.mismatchText(cinst.rng(), rhs);
+                    final String text = "rhs does not match inst range -- " + Poly.Helper.mismatchText(cinst.rng(), rhs) + ":" + cinst;
                     rhs = null == child ? fail(MTronException.of(text)) : fail(MTronException.of(child.jvm(), text));
                 }
             } else {

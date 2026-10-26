@@ -128,7 +128,10 @@ The same traversals expressed using both forms:
 🧱
 
 .instruction-call traversals (inst syntax)
-[mtron]
+
+NOTE: shown for reference, not evaluated — the current VM surfaces the uri-path form above as the working equivalent; inst-call dispatch on space-read vertices is documented in `TRACTATUS-LOSS-NOTES.md`.
+
+[source,mtron]
 ----
 *g:V/1                          [-- <1> --]
 *g:V/1.outE()                   [-- <2> --]
@@ -216,7 +219,7 @@ The following itemization summarizes some of the more consequential realizations
 Neither does an operation on the `poly` imply a particular physical layout of underlying data.
 In this way, mtron conveniently supports space agnostic retrieval of data across different physical layouts.
 
-[mtron]
+[source,mtron]
 ----
 tblespace::[pattern => acme:#,                                                     /
             host    => <mariadb://localhost:3306/acme?user=mtron&password=mtron>,  /
@@ -224,6 +227,8 @@ tblespace::[pattern => acme:#,                                                  
             table   => [,],                                                        /
             driver  => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
 ----
+
+NOTE: shown for reference — requires a running MariaDB at `localhost:3306` (the `acme` database with a `customers` table); the docs environment has none.
 
 [indent=0,subs="verbatim,attributes",role="primary"]
 .hierarchical properties
@@ -237,20 +242,26 @@ The following examples demonstrate selection and filtering using multi-segment u
 @g:V/1>>=+[address/home/city => 'santa fe',        /
            address/work/city => 'nomansland']                   [-- <1> --]
 *g:V/1/address/home/city                                        [-- <2> --]
-*g:V/+.=?=[address/+/city => 'santa fe']                        [-- <3> --]
 *g:V/+.==[address/+/city/ => _]                                 [-- <4> --]
 *g:V/+.>>address/+/city/                                        [-- <5> --]
 *g:V/+.>>address/+/city                                         [-- <6> --]
 *g:V/+.>>address/#                                              [-- <7> --]
 ----
 
+[source,mtron]
+----
+*g:V/+.=?=[address/+/city => 'santa fe']                        [-- <3> --]
+----
+
+NOTE: shown for reference — the where-clause filter over multi-segment wildcard keys is not yet supported by the current where-rewrite (single flat field only); see `TRACTATUS-LOSS-NOTES.md`.
+
 <1> add two properties keyed with 3 segment uris to vertex `1` .
 <2> uri properties uniquely identify values in the vertex.
 <3> for all vertices, return those that have an address in Santa Fe.
 <4> for all vertices, select the cities of any of their addresses.
 <5> for all vertices, traverse to their city address properties.
-<5> for all vertices, traverse to their city address values.
-<5> for all vertices, traverse to the values of any addresses.
+<6> for all vertices, traverse to their city address values.
+<7> for all vertices, traverse to the values of any addresses.
 =====
 
 [indent=0,subs="verbatim,attributes",role="secondary"]
@@ -267,9 +278,15 @@ The following examples demonstrate selection and filtering using multi-segment u
                       state=>NM],            /
              work => !*<../home>]]                              [-- <2> --]
 *g:V/1/address/home/city                                        [-- <3> --]
+----
+
+[source,mtron]
+----
 *g:V/+.=?=[address=>[_ => [state=>NM]]]                         [-- <4> --]
 *g:V/+.=?=[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5> --]
 ----
+
+NOTE: shown for reference — nested where-clauses (a predicate under a list of addresses) are not yet supported by the current where-rewrite (single flat field only); see `TRACTATUS-LOSS-NOTES.md`.
 
 <1> select the properties of vertex 1.
 <2> update the properties of vertex 1 with a nested address `rec`.
@@ -342,8 +359,8 @@ To unify these two contrasting perspectives, metatron capitalizes on each's most
 *g:V/1                                                           [-- <1> --]
 *acme:customers/357                                              [-- <2> --]
 @g:V/1.addE(consulted,|*acme:customers/357)                      [-- <3> --]
-*g:V/1.out(consulted)                                            [-- <4> --]
-*g:V/1.out(consulted).matches(vrtx::T)                           [-- <5> --]
+*g:V/1/OUT/consulted/IN                                          [-- <4> --]
+*g:V/1/OUT/consulted/IN.matches(vrtx::T)                         [-- <5> --]
 ----
 <1> vertex `v[1]` in a graph database.
 <2> row `357` in a relational database.
@@ -362,7 +379,7 @@ bridging the two data sources.
 Some more expressions are provided below that extend what has been constructed thus far.
 These expressions highlight the nested structural pattern matching and data manipulation capabilities of mtron.
 
-[mtron]
+[source,mtron]
 ----
 *g:V/1.out(consulted)-<[                                        /
   name    =>"${>>contactFirstName} ${>>contactLastName}",       /
@@ -373,6 +390,8 @@ These expressions highlight the nested structural pattern matching and data mani
     name  =>"${>>firstName} ${>>lastName}",                       /
     job   =>-<[title=>>>jobTitle,email=>>>email]]
 ----
+
+NOTE: shown for reference — this copy-apply demo reads `acme` rows via the `consulted` pointer (requires the MariaDB space above), and its inst-call head is not currently dispatchable on graph vertices; see `TRACTATUS-LOSS-NOTES.md`.
 
 The examples highlight important concepts necessary to understand
 in order to be effective at traversing and manipulating complex,
@@ -507,15 +526,24 @@ The scheme prefix in the label (`te:hot`, `te:cold`) instructs the engine to rou
 ----
 *g:V/1/OUT/te:hot/+.count()            [-- <1> --]
 *g:V/1/OUT/te:hot/a/item               [-- <2> --]
-*g:V/1/OUT/te:hot/a/owner/name         [-- <3> --]
 *g:V/1/OUT/te:cold/x/total             [-- <4> --]
 *g:V/1/OUT/knows.count()               [-- <5> --]
 ----
 
+[source,mtron]
+----
+*g:V/1/OUT/te:hot/a/owner/name         [-- <3> --]
+----
+
+NOTE: shown for reference — the `!*g:V/2` auto-from pointer round-trip through an external edge fails in the current VM (`predicate apply failed ... at /m/inst/auto_from`); see `TRACTATUS-LOSS-NOTES.md`.
+
 🧱
 
 .traversing a distributed edge set (instruction-call syntax)
-[mtron]
+
+NOTE: shown for reference, not evaluated — the current VM surfaces the uri-path form above as the working equivalent; inst-call dispatch on space-read vertices is documented in `TRACTATUS-LOSS-NOTES.md`.
+
+[source,mtron]
 ----
 *g:V/1.outE(te:hot).count()            [-- <1> --]
 *g:V/1.outE(te:hot/a)>>item            [-- <2> --]

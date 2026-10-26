@@ -46,13 +46,17 @@ public class MoveRemoteTest extends AbstractMetatronTest {
     }
 
     @TestData(value = {
-            "push(a)"}, oneTime = true)
+            "push(a)",
+            "push(<../b>)",
+            "move(</.>)",
+            "push(c)"}, oneTime = true)
     @ParameterizedTest
     @CsvSource(value = {
-            // expression                                 | rewritten (localized move + eval)                  | result
-            "5.move(<loop://self/a>).plus(1)                          % start(5)..split?#<=#{*}([|move(/a),>-[,],|>-,|plus(1)]).-<[as(code::T)]==[eval(<loop://self>)]>-        % 6",
-            "5.move(<loop://self/a>).mult(2).plus(1)                  % start(5)..split?#<=#{*}([|move(/a),>-[,],|>-,|(mult(2).plus(1))]).-<[as(code::T)]==[eval(<loop://self>)]>-        % 11",
-            "{1,2,3}.move(<loop://self/a>).mult(2).plus(1).sum()      % start({1,2,3}).split?#<=#{*}([|move(/a),>-[,],|>-,|(mult(2).plus(1).sum())]).-<[as(code::T)]==[eval(<loop://self>)]>-        % 15",
+            "5.move(<loop://self/a>).plus(1).mult(2)                                                                                  % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                  % 12",
+            "5.move(<loop://self/a>).mult(2).plus(1)                                                                                  % start(5).cut(<loop://self/a>,mult(2).plus(1))                                                                                  % 11",
+            "{1,2,3}.move(<loop://self/a>).mult(2).plus(1).sum()                                                                      % start({1,2,3}).cut(<loop://self/a>,mult(2).plus(1).sum())                                                                      % 15",
+            "{1,2,3}.move(<loop://self/a>).mult(2).plus(1).sum().move(<loop://self/b>).plus(7).plus(1)                                % start({1,2,3}).cut(<loop://self/a>,mult(2).plus(1).sum().move(<loop://self/b>).plus(7).plus(1))                                % 23",
+            "{1,2,3}.move(<loop://self/a>).branch(move(<loop://self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod() % start({1,2,3}).cut(<loop://self/a>,branch(move(<loop://self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod()) % 9767520",
     }, delimiter = '%')
     void testMoveRewrite(final String code, final String expected, final String expectedResult) {
         checkCodeRewrite(LOG, code, expected, expectedResult, false);
