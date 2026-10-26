@@ -191,7 +191,7 @@ public class web_httpHandlerTest extends AbstractHTTPServerTest {
         protected Listener createHTTPServer() {
             // Web route: the route value is a URI (not a Type) → auto-creates web_httpHandler
             return httpServer.of(rec(
-                    uri(HOST), uri("http://localhost:" + generatePort()),
+                    uri(ORIGIN), uri("http://localhost:" + generatePort()),
                     uri(ROUTE), rec(
                             uri("/"), uri("mem:test-pages"))));
         }

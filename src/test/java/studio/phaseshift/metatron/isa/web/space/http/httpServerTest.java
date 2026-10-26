@@ -23,9 +23,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -59,8 +56,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
  * An http_server serving a directory, read back through the web gateway — {@code http_client::[host=><http://#>]}, the
  * peer every http address a program reads goes through — and written to through that client's POST.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class httpServerTest extends AbstractMetatronTest {
     private static final String BASE_URL = "http://localhost:" + generatePort();
     private static final String GATEWAY = "http://#";
@@ -78,7 +75,7 @@ public class httpServerTest extends AbstractMetatronTest {
                 uri(PATTERN), uri("local:#"),
                 uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR + "/"))), f("/sys/space/fs"));
         httpServer.of(rec(
-                uri(HOST), uri(BASE_URL),
+                uri(ORIGIN), uri(BASE_URL),
                 uri(ROUTE), rec(uri("/"), uri("local:web"))));
         // the web gateway: a read never dials, so the http addresses below answer through the client constructed here
         Machine.current().network().connect(f(GATEWAY));

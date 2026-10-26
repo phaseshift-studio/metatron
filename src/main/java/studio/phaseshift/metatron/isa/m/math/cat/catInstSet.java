@@ -219,8 +219,9 @@ public class catInstSet extends AbstractInstSet {
     }
 
     /**
-     * The realized placement of an emitted layout — the {@code select([to(uri)…])} routes, lifted to places, keyed by
-     * the shard's AT span. {@code noobj} when the emitter shipped nothing (the layout has no {@code select}).
+     * The realized placement of an emitted layout — the fan-out {@code select}'s routes
+     * ({@code virtual::[code=>eval(<uri>)]}), lifted to places, keyed by the shard's AT span. {@code noobj} when the
+     * emitter shipped nothing (the layout has no {@code select}).
      * <p>
      * MOVE LANDMINE: a {@code move} relocation emits a bare terminal {@code to(<target>)} — no {@code select} — so
      * this read-back would report no realized place for a moved program. When {@code move} ships, it needs its own
@@ -231,7 +232,7 @@ public class catInstSet extends AbstractInstSet {
                 .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
                 .findFirst()
                 .map(select -> select.arg(0).asLst().lstValue().stream()
-                        .map(route -> route.asInst().arg(0).uriValue().host())
+                        .map(route -> route.asRec().at(uri(CODE)).asInst().arg(0).uriValue().host())
                         .filter(Objects::nonNull)
                         .distinct()
                         .map(host -> Places.place(uri("//" + host)))

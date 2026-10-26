@@ -77,7 +77,7 @@ public class ListenerBindTest extends AbstractMetatronTest {
     public void testOccupiedPortFailsConstruction(final String scheme, final String server) throws IOException {
         try (final ServerSocket occupant = new ServerSocket(0, 50, InetAddress.getLoopbackAddress())) {
             final int port = occupant.getLocalPort();
-            checkCodeEvaluate(LOG, server + "::[host=><" + socket(scheme, port) + ">]", "noobj", "<ERROR>");
+            checkCodeEvaluate(LOG, server + "::[origin=><" + socket(scheme, port) + ">]", "noobj", "<ERROR>");
             checkEquality(LOG, entry(scheme, port), noobj(), true);
         }
     }
@@ -90,16 +90,16 @@ public class ListenerBindTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "ws   % ws_server::[host=><{{socket}}>]",
-            "http % http_server::[host=><{{socket}}>]",
-            "ws   % <{{socket}}>.-<([host => _]).as(ws_server::T)",
-            "http % <{{socket}}>.-<([host => _]).as(http_server::T)",
+            "ws   % ws_server::[origin=><{{socket}}>]",
+            "http % http_server::[origin=><{{socket}}>]",
+            "ws   % <{{socket}}>.-<([origin => _]).as(ws_server::T)",
+            "http % <{{socket}}>.-<([origin => _]).as(http_server::T)",
     }, delimiter = '%')
     public void testFreePortListens(final String scheme, final String construction) throws IOException {
         final int port = generatePort();
         try {
             checkCodeEvaluate(LOG, construction.replace("{{socket}}", socket(scheme, port).toString()),
-                    "*<~/network/listener/" + scheme + "/localhost/" + port + "/authority>", "<" + socket(scheme, port) + ">");
+                    "*<~/network/listener/" + scheme + "/localhost/" + port + "/origin>", "<" + socket(scheme, port) + ">");
             // no settle: a dial right away must find the socket bound
             new Socket(InetAddress.getLoopbackAddress(), port).close();
         } finally {
@@ -118,7 +118,7 @@ public class ListenerBindTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testUnroutableTableFailsConstruction(final String scheme, final String server) throws IOException {
         final int port = generatePort();
-        checkCodeEvaluate(LOG, server + "::[host=><" + socket(scheme, port) + ">,route=>[13=>/usr]]", "noobj", "<ERROR>");
+        checkCodeEvaluate(LOG, server + "::[origin=><" + socket(scheme, port) + ">,route=>[13=>/usr]]", "noobj", "<ERROR>");
         checkEquality(LOG, entry(scheme, port), noobj(), true);
         // a port the failed construction still held would refuse this bind
         new ServerSocket(port, 50, InetAddress.getLoopbackAddress()).close();

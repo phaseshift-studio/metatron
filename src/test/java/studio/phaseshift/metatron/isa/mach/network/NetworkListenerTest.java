@@ -20,9 +20,6 @@ package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -36,7 +33,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.AUTHORITY;
+import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -54,8 +51,8 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.LISTENER_TID;
  * <p>
  * No socket is bound here: {@link Recorder} is the protocol half, and it only counts its releases.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class NetworkListenerTest extends AbstractMetatronTest {
 
     private static final fURI SOCKET = f("ws://0.0.0.0:28555");
@@ -91,11 +88,11 @@ public class NetworkListenerTest extends AbstractMetatronTest {
         root.network().listen(server, rec(uri("/mtron"), uri("mtron_ws")));
         final Obj entry = root.network().listenerAt(Network.Helper.keyOf(SOCKET));
         assertEquals(LISTENER_TID, entry.tid(), "a listener entry is a listener::T");
-        checkEquality(LOG, entry.asRec().at(uri(AUTHORITY)), uri(SOCKET), true);
+        checkEquality(LOG, entry.asRec().at(uri(ORIGIN)), uri(SOCKET), true);
         assertSame(server, Network.Helper.listenerFor(SOCKET), "the entry holds the server itself");
         assertTrue(Network.Helper.authorities().contains(SOCKET), "a listener is an authority this machine answers on");
         // the entry sits at its key's path, and each of its fields at its own address beneath it
-        this.script("*<~/network/listener/ws/localhost/28555/authority> % <ws://0.0.0.0:28555>");
+        this.script("*<~/network/listener/ws/localhost/28555/origin> % <ws://0.0.0.0:28555>");
         checkEquality(LOG, Machine.read(f("~/network/listener/ws/localhost/28555/route")), rec(uri("/mtron"), uri("mtron_ws")), true);
         // the owner's unlisten releases the port, and the entry goes
         root.network().unlisten(SOCKET);
@@ -114,8 +111,8 @@ public class NetworkListenerTest extends AbstractMetatronTest {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
         root.network().listen(server, rec(uri("/mtron"), uri("mtron_ws")));
-        this.script("[STATE] <~/network/listener/ws/localhost/28555/authority> -> <ws://0.0.0.0:9999>");
-        this.script("*<~/network/listener/ws/localhost/28555/authority> % <ws://0.0.0.0:28555>");
+        this.script("[STATE] <~/network/listener/ws/localhost/28555/origin> -> <ws://0.0.0.0:9999>");
+        this.script("*<~/network/listener/ws/localhost/28555/origin> % <ws://0.0.0.0:28555>");
         assertFalse(server.closed(), "a refused write touches nothing");
         this.script("[STATE] <~/network/listener/ws/localhost/28555> -> noobj");
         checkEquality(LOG, root.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);

@@ -62,7 +62,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * network owns at its key's path; everything deeper is the unrolling every space gets ({@link Space.Helper#resolveRead}):
  * <pre>
  *   *</network/peer/ws/localhost/8555/mtron>             [-- the peer::T --]
- *   *</network/peer/ws/localhost/8555/mtron/authority>   [-- one of its fields --]
+ *   *</network/peer/ws/localhost/8555/mtron/origin>   [-- one of its fields --]
  *   *</network/peer/ws/#>                                [-- every ws member --]
  *   </network/peer/ws/localhost/8555/mtron> -> noobj     [-- hang up: the member leaves the map --]
  *   *</network/listener/ws/localhost/8555/route>         [-- this machine's routes on its socket --]
@@ -96,7 +96,8 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
      * A map the network OWNS: its members as the component holds them, the retraction a member's deletion is, and why
      * a value written there is refused.
      */
-    private record Branch(String field, Function<Network, Rec> members, BiConsumer<Network, fURI> retract, String refusal) {
+    private record Branch(String field, Function<Network, Rec> members, BiConsumer<Network, fURI> retract,
+                          String refusal) {
     }
 
     private static final List<Branch> BRANCHES = List.of(
@@ -285,7 +286,7 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
      * serving on
      */
     private static void unlisten(final Network network, final fURI key) {
-        final fURI authority = Network.Helper.authorityOf(network.listenerAt(key));
+        final fURI authority = Network.Helper.originOf(network.listenerAt(key));
         if (null != authority)
             network.unlisten(authority);
     }

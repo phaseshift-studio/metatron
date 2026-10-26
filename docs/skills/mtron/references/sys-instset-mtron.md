@@ -234,7 +234,7 @@ into its structural form. Where in doubt, `?docq` and `.explain()` say what an i
 is doing — the sugar is short precisely because it is legible once:
 
 ```mtron_pre
-[MAX_OUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
+[MAXOUTPUT 5] *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
 [NO_PROMPT] [MAXOUTPUT 15] *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ```
 

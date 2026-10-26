@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -479,8 +480,8 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
                        mult_monoid=&gt;monoid_theory::[
                         op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
                         id=&gt;1]],
-                 morphed_to=&gt;!inst(){&lt;j&gt;},
-                 morphed_from=&gt;!inst(){&lt;j&gt;}]
+                 morphed_to=&gt;!λ(){&lt;j&gt;},
+                 morphed_from=&gt;!λ(){&lt;j&gt;}]
 </code></pre>
 <h4>the object fields</h4>
 <table>
@@ -497,21 +498,21 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T).morphed_to()
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst(#{*}::T){&lt;j&gt;},
-              trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
-              analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+              src=&gt;!λ(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!λ(#{*}::T){&lt;j&gt;},
+              analysis=&gt;!λ?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?bool&lt;=int(bool::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst(#{*}::T){&lt;j&gt;},
-              trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
-              analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+              src=&gt;!λ(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!λ(#{*}::T){&lt;j&gt;},
+              analysis=&gt;!λ?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?bytes&lt;=int(bytes::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
-              src=&gt;!inst(#{*}::T){&lt;j&gt;},
-              trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
-              analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+              src=&gt;!λ(#{*}::T){&lt;j&gt;},
+              trgt=&gt;!λ(#{*}::T){&lt;j&gt;},
+              analysis=&gt;!λ?#&lt;=#(#{*}::T){&lt;j&gt;},
               obj=&gt;as?real&lt;=int(real::T){&lt;j&gt;}]
 ==&gt;morphism::[name=&gt;as,
               form=&gt;mapper,
@@ -545,9 +546,9 @@ group/monoid instances. <code>theory::T</code> is the nominal super-type groupin
     name=&gt;plus,
     form=&gt;mapper,
     class=&gt;[endo],
-    src=&gt;!inst(#{*}::T){&lt;j&gt;},
-    trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
-    analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+    src=&gt;!λ(#{*}::T){&lt;j&gt;},
+    trgt=&gt;!λ(#{*}::T){&lt;j&gt;},
+    analysis=&gt;!λ?#&lt;=#(#{*}::T){&lt;j&gt;},
     obj=&gt;plus?int&lt;=int(int::T),
     ...(1 more)]
 </code></pre>
@@ -960,17 +961,17 @@ and computes its cut/span/where without consulting the code below; the descent (
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
 ==&gt;[abstraction::[obj=&gt;[morphism[start]::[name=&gt;start,
                                           form=&gt;initial,
-                                          src=&gt;!inst(#{*}::T){&lt;j&gt;},
-                                          trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
-                                          analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+                                          src=&gt;!λ(#{*}::T){&lt;j&gt;},
+                                          trgt=&gt;!λ(#{*}::T){&lt;j&gt;},
+                                          analysis=&gt;!λ?#&lt;=#(#{*}::T){&lt;j&gt;},
                                           obj=&gt;start(5)],
                         morphism[plus?rng=int&amp;dom=int]::[
                          name=&gt;plus,
                          form=&gt;mapper,
                          class=&gt;[endo],
-                         src=&gt;!inst(#{*}::T){&lt;j&gt;},
-                         trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
-                         analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+                         src=&gt;!λ(#{*}::T){&lt;j&gt;},
+                         trgt=&gt;!λ(#{*}::T){&lt;j&gt;},
+                         analysis=&gt;!λ?#&lt;=#(#{*}::T){&lt;j&gt;},
                          obj=&gt;plus(0),
                          ...(1 more)],
                         morphism[neg?rng=int&amp;dom=int]::[
@@ -983,9 +984,9 @@ and computes its cut/span/where without consulting the code below; the descent (
                                  retraction,
                                  mono,
                                  epi],
-                         src=&gt;!inst(#{*}::T){&lt;j&gt;},
-                         trgt=&gt;!inst(#{*}::T){&lt;j&gt;},
-                         analysis=&gt;!inst?#&lt;=#(#{*}::T){&lt;j&gt;},
+                         src=&gt;!λ(#{*}::T){&lt;j&gt;},
+                         trgt=&gt;!λ(#{*}::T){&lt;j&gt;},
+                         analysis=&gt;!λ?#&lt;=#(#{*}::T){&lt;j&gt;},
                          obj=&gt;neg(),
                          ...(1 more)],
                         morphism[neg?rng=int&amp;dom=int]::[
@@ -1050,13 +1051,13 @@ machine's dialed peers, and with no peer it matches nothing, so <code>lower</cod
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
 ==&gt;[host=&gt;ws://localhost:8555/mtron,
-    send=&gt;inst(){&lt;j&gt;},
-    send_recv=&gt;inst(){&lt;j&gt;},
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
     inst=&gt;[/m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
            /m/inst/from=&gt;*uri::T,
            /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-    status=&gt;!inst?bool&lt;=(){&lt;j&gt;},
-    close=&gt;inst(){&lt;j&gt;},
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
     on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 </code></pre>
@@ -1171,9 +1172,9 @@ map</strong> (who is dialed) — and is not a rewrite projection at all: a place
 <pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
 ==&gt;place::[obj=&gt;//localhost,
            authority=&gt;[ws://localhost:8555],
-           linked_to=&gt;!inst(){&lt;j&gt;},
-           linked_from=&gt;!inst(){&lt;j&gt;},
-           status=&gt;!inst(){&lt;j&gt;}]
+           linked_to=&gt;!λ(){&lt;j&gt;},
+           linked_from=&gt;!λ(){&lt;j&gt;},
+           status=&gt;!λ(){&lt;j&gt;}]
 </code></pre>
 <table>
 <thead>

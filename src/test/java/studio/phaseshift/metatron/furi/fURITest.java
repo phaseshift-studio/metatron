@@ -410,6 +410,63 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "a/b/c                   | true  | false | false",
+            "/a/b/c                  | true  | false | false",
+            "~/x                     | true  | false | false",
+            "http://fhatos.org/a     | false | true  | false",
+            "//fhatos.org/a          | false | true  | false",
+            "ws://localhost:8555/x   | false | true  | false",
+            "mtron:lang/obj          | false | false | true",
+            "loop:/sys/tmp           | false | false | true",
+            "mtron:                  | false | false | true",
+    }, delimiter = '|')
+    void testLocalAddressedPrefixed(final String furi, final boolean local, final boolean addressed, final boolean prefixed) {
+        final fURI f = f(furi);
+        assertEquals(local, f.isLocal(), furi + " isLocal");
+        assertEquals(addressed, f.isAddressed(), furi + " isAddressed");
+        assertEquals(prefixed, f.isPrefixed(), furi + " isPrefixed");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ws://localhost:8555/x   | localhost:8555",
+            "http://fhatos.org:80/a  | fhatos.org:80",
+            "ws://[::1]:8555/x       | [::1]:8555",
+            "http://fhatos.org/a     | fhatos.org",
+            "//fhatos.org/a          | fhatos.org",
+            "/a/b/c                  | null",
+            "a/b/c                   | null",
+    }, delimiter = '|', nullValues = "null")
+    void testAuthorityString(final String furi, final String authority) {
+        assertEquals(authority, f(furi).authority(), furi + " authority()");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "+://localhost/a        | +  | true",
+            "m:/a                   | m  | true",
+            "http://fhatos.org/a    | +  | false",
+            "http://fhatos.org/a    | h  | false",
+            "/a/b/c                 | +  | false",
+    }, delimiter = '|')
+    void testHasSchemeWildcard(final String furi, final String wildcard, final boolean expected) {
+        assertEquals(expected, f(furi).hasScheme(wildcard.charAt(0)), furi + " hasScheme(" + wildcard + ")");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "http://+/a/b/c         | +  | true",
+            "http://#               | #  | true",
+            "http://fhatos.org/a    | +  | false",
+            "http://fhatos.org/a    | f  | false",
+            "/a/b/c                 | +  | false",
+    }, delimiter = '|')
+    void testHasHostWildcard(final String furi, final String wildcard, final boolean expected) {
+        assertEquals(expected, f(furi).hasHost(wildcard.charAt(0)), furi + " hasHost(" + wildcard + ")");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "127.0.0.1    % 127.0.0.1",
             "::1          % [0:0:0:0:0:0:0:1]",
             "2001:db8::1  % [2001:db8:0:0:0:0:0:1]",

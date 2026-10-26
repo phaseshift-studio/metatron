@@ -49,26 +49,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.LISTENER_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TYPE;
@@ -135,19 +128,13 @@ public final class httpServer extends Listener {
             .create();
 
     public static final Type HTTP_SERVER_TYPE = Type.Builder.build()
-            .tid(REC_TID)
+            .tid(LISTENER_TID)
             .vid(HTTP_SERVER_TID)
             .isaPredicate(rec(
-                    // the socket to serve, http(s)://host:port
-                    uri(HOST).maybe().asUri(), URI_TYPE,
-                    // this machine's routes on the socket: <path> => handler (a uri, a type, or an instruction)
-                    uri(ROUTE).maybe().asUri(), rec(URI_TYPE, T(ALL)),
                     // an https host's certificate: its key store (a path or bytes) and the pass that opens it, read at
                     // the bind and kept by no rec
                     uri(KEYSTORE).maybe().asUri(), T(ALL),
                     uri(PASS).maybe().asUri(), T(ALL),
-                    // the socket bound, and whether it is still served — the server's own fields once constructed
-                    uri(AUTHORITY).maybe().asUri(), URI_TYPE,
                     uri(STATUS).maybe().asUri(), BOOL_TYPE))
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(HTTP_SERVER_TID),
                     lst(T(REC_TID)), (_, inst) -> httpServer.of(inst.arg(0).asRec()))).create();
@@ -170,10 +157,10 @@ public final class httpServer extends Listener {
     private final Map<LaneKey, RouteLane> lanes = new ConcurrentHashMap<>();
     private final Map<HandlerKey, HttpRec> handlers = new ConcurrentHashMap<>();
 
-    private httpServer(final fURI authority, final Network owner, final SSLContext tls) {
-        super(authority, HTTP_SERVER_TID, owner);
-        this.socket = bind(authority, tls, this);
-        LOG.info("http_server listening: %s", authority);
+    private httpServer(final fURI origin, final Network owner, final SSLContext tls) {
+        super(origin, HTTP_SERVER_TID, owner);
+        this.socket = bind(origin, tls, this);
+        LOG.info("http_server listening: %s", origin);
     }
 
     /**
@@ -181,11 +168,11 @@ public final class httpServer extends Listener {
      * routes, served through the socket at {@code host} ({@link #serve}).
      */
     public static Listener of(final Rec config) {
-        final Obj host = config.at(uri(HOST)).autoResolve(noobj());
-        if (!host.isUri())
-            throw MTronException.of("an http_server serves a socket: host=><http://host:port> required, got %s", host);
+        final Obj origin = config.at(uri(ORIGIN));
+        if (!origin.isUri())
+            throw MTronException.of("an http_server serves a socket: origin=><http://host:port> required, got %s", origin);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec(), config);
+        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec(), config);
     }
 
     /**
@@ -197,20 +184,20 @@ public final class httpServer extends Listener {
     }
 
     private static Listener serve(final fURI host, final Rec routes, final Rec config) {
-        final fURI authority = host.qLess().path(List.of());
+        final fURI origin = host.qLess().path(List.of());
         final Network level = Machine.current().network();
         // a table it cannot serve is reported here, at the mount, rather than met later as a 500
         final Obj problems = webHelper.routeProblems(routes);
         if (!problems.isNoObj())
-            LOG.warn("%s route table problems: %s", authority, problems);
-        final Listener held = Network.Helper.listenerFor(authority);
+            LOG.warn("%s route table problems: %s", origin, problems);
+        final Listener held = Network.Helper.listenerFor(origin);
         if (null != held) {
             level.listen(held, routes);
             return held;
         }
         // the certificate is loaded before anything binds, so a keystore that cannot serve never holds the port
-        final SSLContext tls = HTTPS.equals(authority.scheme()) ? tls(config) : null;
-        final httpServer server = new httpServer(authority, level, tls);
+        final SSLContext tls = HTTPS.equals(origin.scheme()) ? tls(config) : null;
+        final httpServer server = new httpServer(origin, level, tls);
         try {
             level.listen(server, routes);
         } catch (final RuntimeException e) {
@@ -248,7 +235,7 @@ public final class httpServer extends Listener {
             final fURI request = request(exchange);
             final Optional<Route> route = this.route(request);
             if (route.isEmpty()) {
-                LOG.debug("no route for %s on %s", request, this.authority());
+                LOG.debug("no route for %s on %s", request, this.origin());
                 respond(exchange, 404, "no route for " + request.qLess());
                 return;
             }
@@ -376,11 +363,11 @@ public final class httpServer extends Listener {
      * Bind the socket — synchronously, so a lost bind throws before the server exists — mount the one root context that
      * routes every request, and start it.
      */
-    private static HttpServer bind(final fURI authority, final SSLContext tls, final httpServer server) {
-        if (null == authority.host() || authority.port() < 0)
-            throw MTronException.of("an http_server binds a host and a port: %s", authority);
+    private static HttpServer bind(final fURI origin, final SSLContext tls, final httpServer server) {
+        if (null == origin.host() || origin.port() < 0)
+            throw MTronException.of("an http_server binds a host and a port: %s", origin);
         try {
-            final InetSocketAddress address = new InetSocketAddress(authority.host(), authority.port());
+            final InetSocketAddress address = new InetSocketAddress(origin.host(), origin.port());
             final HttpServer socket;
             if (null == tls)
                 socket = HttpServer.create(address, 0);
@@ -394,7 +381,7 @@ public final class httpServer extends Listener {
             socket.start();
             return socket;
         } catch (final IOException e) {
-            throw MTronException.of(e, "unable to bind %s: %s", authority, MTronException.translateMessage(e));
+            throw MTronException.of(e, "unable to bind %s: %s", origin, MTronException.translateMessage(e));
         }
     }
 

@@ -1,7 +1,7 @@
 [== boot args ==]
 [web    => [
-   http/host  => <http://0.0.0.0:8777>,
-   ws/host    => <ws://0.0.0.0:8555>],
+   http/origin  => <http://0.0.0.0:8777>,
+   ws/origin    => <ws://0.0.0.0:8555>],
  typer/stage  => [inst_dom     => false, 
                   inst_rng     => false,
                   type_pred    => false,
@@ -37,11 +37,11 @@ import(/m/tble);
                   q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;       
  fsspace::[pattern    => local:#,
             route     => [local:=><~/>]]@/sys/space/fs/home;
- http_server::[host   => !*boot/args/web/http/host,
+ http_server::[origin => !*boot/args/web/http/origin,
                route  => [/ => <metatronfs:docs/website>]];
  http_client::[host   => <http://#>];
  http_client::[host   => <https://#>];
- ws_server::[host     => !*boot/args/web/ws/host,
+ ws_server::[origin   => !*boot/args/web/ws/origin,
              route    => [/mtron    => mtron_ws,
                           /mcp      => mcp_mtron]];
 mdns_discovery::[=>];

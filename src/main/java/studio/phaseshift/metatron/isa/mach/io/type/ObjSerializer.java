@@ -72,7 +72,6 @@ public interface ObjSerializer<T> extends Rec, Serializer<Obj, T> {
                 case Code objs -> this.writeCode(objs);
                 case Objs objs -> this.writeObjs(objs);
                 case Type objs -> this.writeType(objs);
-
                 case FutureObj<?> objs -> this.write(objs.get(5000));
                 default -> throw MTronException.of("unknown obj class: %s", obj.getClass());
             };

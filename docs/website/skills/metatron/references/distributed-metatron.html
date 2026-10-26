@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -447,9 +448,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 <p>An index of every place metatron crosses a process boundary. Each motif is atomic and user-composable; the witness
 column is where to look when a byte moves.</p>
 <h3>Package map</h3>
-<pre><code>isa/mach/type/Router.java                     ← the dispatch chokepoint (readFromSpace / writeToSpace)
-isa/mach/type/router/BasicRouter.java         ← authority guard, peer roster, foreign dispatch
-furi/fURI.java                                ← authority(), localize(), hasAuthority()
+<pre><code>isa/mach/type/Machine.java                    ← the dispatch chokepoint (read / write)
+isa/mach/type/Network.java                    ← the network component: peer roster, listeners, authority dispatch
+isa/mach/type/Memory.java                     ← data memory + the space index (findSpace)
+isa/mach/type/machine/MachineSpace.java       ← the machine's own sphere (routes ~/network to Network)
+furi/fURI.java                                ← origin(), authority(), localize()
 isa/m/mInstSet.java                           ← from / to / ref — the language's own deref+ref primitives
 isa/web/space/ws/wsServer.java                ← ws_server::T (a machine's ws presence: a Listener on a socket)
 isa/web/space/ws/WebSocketRec.java            ← wsclient::T (WebSocket client, sendRecv)
@@ -471,21 +474,26 @@ isa/mach/io/type/*Serializer.java             ← what actually goes on the wire
 <tr><th>primitive</th><th>what it does</th><th>witness</th></tr>
 </thead>
 <tbody>
-<tr><td><code>*x</code> / <code>from(x)</code></td><td>dereference — reads through the Router</td><td><code>mInstSet.java:146</code></td></tr>
-<tr><td><code>x -&gt; y</code> / <code>to(x)</code></td><td>reference — writes through the Router</td><td><code>mInstSet.java:145</code></td></tr>
+<tr><td><code>*x</code> / <code>from(x)</code></td><td>dereference — reads through the Machine</td><td><code>mInstSet.java:146</code></td></tr>
+<tr><td><code>x -&gt; y</code> / <code>to(x)</code></td><td>reference — writes through the Machine</td><td><code>mInstSet.java:145</code></td></tr>
 <tr><td><code>x.ref(y)</code></td><td>reference, explicit</td><td><code>mInstSet.java:147</code></td></tr>
-<tr><td><code>Router.readFromSpace</code> / <code>writeToSpace</code></td><td>the only two doors; every deref and ref ends here</td><td><code>Router.java:81</code>, <code>:90</code></td></tr>
-<tr><td><code>BasicRouter.getSpaceFor</code></td><td>picks the space by pattern — most specific wins</td><td><code>BasicRouter.java:385</code></td></tr>
-<tr><td><code>own(vid)</code></td><td>is this authority mine? (<code>0.0.0.0</code>/<code>127.0.0.1</code>/<code>localhost</code>/<code>::1</code> are one service)</td><td><code>BasicRouter.java:307</code></td></tr>
-<tr><td><code>isPeer(vid)</code></td><td>is this authority in the declared roster?</td><td><code>BasicRouter.java:340</code></td></tr>
-<tr><td><code>dispatchForeign(vid, obj)</code></td><td>sends <code>from(localized)</code> / <code>ref(localized, obj)</code> to a peer</td><td><code>BasicRouter.java:362</code></td></tr>
-<tr><td><code>/sys/peer</code> roster</td><td>declared membership: authority → transport inst</td><td><code>BasicRouter.java:272</code></td></tr>
-<tr><td><code>selfAuthorities()</code></td><td>the authorities this VM answers to, memoized</td><td><code>BasicRouter.java:283</code></td></tr>
-<tr><td><code>fURI.authority()</code> / <code>localize()</code></td><td><code>host:port</code>; strip scheme+authority, keep path</td><td><code>fURI.java:276</code>, <code>:297</code></td></tr>
+<tr><td><code>Machine.read</code> / <code>Machine.write</code></td><td>the only two doors; every deref and ref ends here</td><td><code>Machine.java:154</code>, <code>:224</code></td></tr>
+<tr><td><code>Network.read</code> / <code>Network.write</code></td><td>authority dispatch — a dialed peer's origin answers, else fall through</td><td><code>Network.java:526</code>, <code>:556</code></td></tr>
+<tr><td><code>Network.peerOf</code></td><td>the member that serves an origin (exact match, then wildcard)</td><td><code>Network.java:350</code></td></tr>
+<tr><td><code>Network.overrideOf</code></td><td>the peer's override for an instruction (<code>from</code> / <code>to</code> / <code>eval</code>)</td><td><code>Network.java:373</code></td></tr>
+<tr><td><code>Network.index</code></td><td>construct = connect: index a client as a peer</td><td><code>Network.java:303</code></td></tr>
+<tr><td><code>Memory.findSpace</code></td><td>picks the space by pattern — most specific wins</td><td><code>Memory.java</code></td></tr>
+<tr><td><code>Network.Helper.isLoopbackHost</code></td><td><code>0.0.0.0</code>/<code>127.0.0.1</code>/<code>localhost</code>/<code>::1</code> are one service</td><td><code>Network.java:1112</code></td></tr>
+<tr><td><code>Network.Helper.sameService</code></td><td>origin equality, loopback-aliased</td><td><code>Network.java:909</code></td></tr>
+<tr><td><code>~/network/peer</code></td><td>dialed peers: origin → peer::T (the connection)</td><td><code>Network.java:333</code></td></tr>
+<tr><td><code>~/network/listener</code></td><td>bound sockets: origin → listener::T (a machine's presence)</td><td><code>Network.java:199</code></td></tr>
+<tr><td><code>Network.Helper.authorities()</code></td><td>the origins this VM answers on (its listeners)</td><td><code>Network.java:695</code></td></tr>
+<tr><td><code>fURI.origin()</code> / <code>authority()</code> / <code>localize()</code></td><td><code>scheme://host:port</code>; <code>host:port</code>; strip scheme+origin, keep path</td><td><code>fURI.java:215</code>, <code>:319</code>, <code>:353</code></td></tr>
 </tbody>
 </table>
-<p>Order in <code>read</code>/<code>write</code>: guard <strong>before</strong> <code>getSpaceFor</code>. Undeclared authority → falls through (fail-closed), never
-emergent membership.</p>
+<p>Order in <code>read</code>/<code>write</code>: <strong>authority dispatch before memory</strong>. An address carrying an origin a peer has declared is
+that peer's to answer; memory only ever sees an address already localized. An undeclared origin → falls through
+(fail-closed), never emergent membership.</p>
 <h3>2. Wire transports</h3>
 <table>
 <thead>
@@ -552,10 +560,10 @@ emergent membership.</p>
 </table>
 <h3>Rules that hold across all of them</h3>
 <ul>
-<li><strong>An authority you own is decoration unless a space serves that address.</strong> <code>ws://localhost:8555/usr/x</code> localizes
+<li><strong>An origin you own is decoration unless a space serves that address.</strong> <code>ws://localhost:8555/usr/x</code> localizes
 to <code>/usr/x</code>. A server's sessions and handlers are no addresses: a ws session is held by its socket and reached
 through the peer it mints, and an http handler is held by its server. The literal rule in
-<code>BasicRouter.dispatchForeign</code>: localize only when the authority-free path still resolves to a space.</li>
+<code>Network.read</code> / <code>Network.write</code>: localize only when the origin-free path still resolves to memory.</li>
 <li><strong>A space is not a wire payload.</strong> Asking a peer for a space itself yields no response at all — ask for <code>.vid()</code>.</li>
 <li><strong>A remote dereference returns a value whose tid carries coefficient <code>*</code></strong> (renders <code>{*}1</code>), because the reply is
 typed by the transport inst's rng. The value is correct; only the coefficient differs.</li>

@@ -18,12 +18,8 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -36,6 +32,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.network.PeerCluster;
 import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -53,7 +50,6 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
@@ -75,8 +71,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * and leaves the frame unevaluated, so an endpoint that merely stopped re-applying would answer the program instead
  * of its result. A forked peer cannot install that compiler, which is why that half stays in this JVM.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
 
     private static PeerCluster cluster;
@@ -92,7 +88,7 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
         localPort = generatePort();
         local = wsServer.of(rec(
                 uri(NAME), uri("evaluation-test"),
-                uri(HOST), uri("ws://localhost:" + localPort),
+                uri(ORIGIN), uri("ws://localhost:" + localPort),
                 uri(ROUTE), rec(uri(PeerCluster.MTRON_ROUTE), uri(WS_MTRON_HANDLER_TID.toString()))
         ));
     }

@@ -22,30 +22,30 @@ mtron> dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/doc
 mtron> [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
 ==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
-                status=>!inst?bool<=(){<j>}]@/sys/space/mcp/web_basic
-mtron> http_server::[host  => http://localhost:8777,
+                status=>!λstatus?bool<=(){<j>}]@/sys/space/mcp/web_basic
+mtron> http_server::[origin => http://localhost:8777,
                      route => [/mcp    => mcp_mtron,
                                /docker => docker:,
                                /usr    => /usr]]
-==>http_server::[authority=>http://localhost:8777,
-                 status=>!inst?bool<=(){<j>}]
+==>http_server::[origin=>http://localhost:8777,
+                 status=>!λstatus?bool<=(){<j>}]
 mtron> [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron> http_client::[host => <http://#>]
 ==>http_client::[host=>http://#,
                  inst=>[/m/inst/from=>*uri::T,
                         /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-                 status=>!inst?bool<=(){<j>}]
+                 status=>!λstatus?bool<=(){<j>}]
 mtron> http_client::[host => <https://#>]
 ==>http_client::[host=>https://#,
                  inst=>[/m/inst/from=>*uri::T,
                         /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-                 status=>!inst?bool<=(){<j>}]
+                 status=>!λstatus?bool<=(){<j>}]
 mtron> [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 mtron> [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
-mtron> ws_server::[host   => ws://localhost:8555,
+mtron> ws_server::[origin  => ws://localhost:8555,
                    route  => [/basic   => !*</sys/space/mcp/web_basic>]]
-==>ws_server::[authority=>ws://localhost:8555,
-               status=>!inst?bool<=(){<j>}]
+==>ws_server::[origin=>ws://localhost:8555,
+               status=>!λstatus?bool<=(){<j>}]
 ```
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
 websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
@@ -68,13 +68,13 @@ mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-m
 ==>
    html::"""<h1>web instruction set (<code>/m/web</code>)</h1>
    <p><code>/m/web</code> is the instruction set that carries the web <em>transport protocol</em> types, <em>MIME</em>
-   types, and <em>endpoint</em> types that provide the server logic. The two spaces of <code>/m/web</code> are
-   <code>httpspace</code> and <code>wsspace</code> — each carrying a <code>route::T</code> rec for routing connections to mounted services.</p>
+   types, and <em>endpoint</em> types that provide the server logic. The two servers of <code>/m/web</code> are
+   <code>http_server</code> and <code>ws_server</code> — each a listener: constructed, it is the machine's presence at
+   <code>~/network/listener/&lt;key&gt;</code> — each carrying a <code>route</code> rec for routing connections to mounted services.
+   Reading the web is a client's: <code>http_client::[host =&gt; &lt;http://#&gt;]</code> (and <code>&lt;https://#&gt;</code>) is the gateway, a peer every
+   http(s) read goes through. A read never dials, so a machine with no gateway reads no web.</p>
    <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@/sys/space/docker
    mtron&gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
-   mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
-   ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval(#::T){&lt;j&gt;}]]@/sys/space/mcp/web_basic
-   mtron&gt; httpspace::[pattern=&gt; http://#,
    ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
 ==>[html=>[head=>[=>],

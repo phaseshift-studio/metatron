@@ -26,6 +26,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttServer.MQTT_SERVER_TYPE;
+import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSession.MQTT_SESSION_TYPE;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -63,6 +65,8 @@ public class iotInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(IOT_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
                         MQTT_SPACE_TYPE,
+                        MQTT_SERVER_TYPE,
+                        MQTT_SESSION_TYPE,
                         HAOS_SPACE_TYPE)));
         docWrap(this, "mqtt, esp32, home assistant, and more accessible within the metatron");
         super.setup();

@@ -25,8 +25,10 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import java.util.ArrayList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.Tokens.CODE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BLOCK_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * The reduction (master/slave) reading of a {@link DistributedComputation}: one local master whose code carries the
@@ -96,7 +98,9 @@ public final class Reduction {
     }
 
     /**
-     * Peel the {@code to(uri)} routing targets in peer order out of a {@code law_shard} master's {@code select}.
+     * Peel the routing targets in peer order out of a {@code law_shard} master's fan-out {@code select}. A fan-out
+     * route is {@code virtual::[code=>eval(<target>)]} — the ship is the thread's {@code code} slot, so the target is
+     * peeled off that, not off the select member itself.
      */
     public static List<fURI> routes(final Code master) {
         return master.insts().stream()
@@ -104,7 +108,7 @@ public final class Reduction {
                 .findFirst()
                 .orElseThrow()
                 .arg(0).asLst().lstValue().stream()
-                .map(o -> o.asInst().arg(0).uriValue())
+                .map(o -> o.asRec().at(uri(CODE)).asInst().arg(0).uriValue())
                 .toList();
     }
 

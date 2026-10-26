@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -491,14 +492,14 @@ mtron&gt; import(/m/web,web)
 mtron&gt; [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/basic_server
 ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
-                status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/basic_server
+                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/basic_server
 </code></pre>
 <p>What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
 per server, <code>mcp_mtron</code> for the metatron-native tools, <code>mcp_message</code> for the ledger, and <code>/basic</code> for the server
 just defined:</p>
 <pre><code class="language-mtron">[-- a carrier is a server (http_server, ws_server); a route binds an mcp server to it. `else` makes a mount idempotent --]
-*&lt;/network/listener/http/localhost/8777&gt;.else(http_server::[host =&gt; http://localhost:8777, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message, /basic =&gt; !*&lt;/sys/space/mcp/basic_server&gt;, / =&gt; /usr]])
-*&lt;/network/listener/ws/localhost/8555&gt;.else(ws_server::[host =&gt; ws://localhost:8555, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message]])
+*&lt;/network/listener/http/localhost/8777&gt;.else(http_server::[origin =&gt; http://localhost:8777, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message, /basic =&gt; !*&lt;/sys/space/mcp/basic_server&gt;, / =&gt; /usr]])
+*&lt;/network/listener/ws/localhost/8555&gt;.else(ws_server::[origin =&gt; ws://localhost:8555, route =&gt; [/mcp =&gt; mcp_mtron, /message =&gt; mcp_message]])
 </code></pre>
 <h3>types</h3>
 <table>
@@ -629,7 +630,7 @@ transport-agnostic: mount it, and the carrier supplies the bytes.</p>
 <p>Because a tool is an instruction, a server is a <strong>selection over instructions</strong>, and that selection is boot data:</p>
 <pre><code class="language-mtron">mtron&gt; mcp_server::[tool =&gt; [!*eval, !*eval]]@/sys/space/mcp/two_say
 ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
-                status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/two_say
+                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/two_say
 mtron&gt; */sys/space/mcp/two_say&gt;&gt;tool     [-- one entry: a collection is keyed by the instruction --]
 ==&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}]
 </code></pre>

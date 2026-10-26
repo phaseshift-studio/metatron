@@ -30,8 +30,8 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.web.space.http.httpServer;
 import studio.phaseshift.metatron.isa.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.web.space.http.httpServer;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.isa.web.type.mcpMetatronBuilder;
@@ -44,11 +44,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.WebSocket;
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
@@ -104,14 +100,14 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     private Listener createHTTPServer() {
         final fURI hostUri = f("http://localhost:" + generatePort());
         return httpServer.of(rec(
-                uri(HOST), uri(hostUri.toString()),
+                uri(ORIGIN), uri(hostUri.toString()),
                 uri(ROUTE), rec(uri("/mcp"), uri(MCP_MTRON_SERVER_TID.toString()))));
     }
 
     private Listener createWSServer() {
         final fURI hostUri = f("ws://localhost:" + generatePort());
         return wsServer.of(rec(
-                uri(HOST), uri(hostUri.toString()),
+                uri(ORIGIN), uri(hostUri.toString()),
                 uri(ROUTE), rec(uri("/mcp-mtron"), uri(MCP_MTRON_SERVER_TID.toString()))));
     }
 
@@ -120,13 +116,13 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         InstSet.importInstSet(WEB_ISA_TID);
         this.httpListener = createHTTPServer();
         assertNotNull(this.httpListener, "the http_server should be created");
-        this.httpHost = this.httpListener.authority().host();
-        this.httpPort = this.httpListener.authority().port();
+        this.httpHost = this.httpListener.origin().host();
+        this.httpPort = this.httpListener.origin().port();
 
         this.wsListener = createWSServer();
         assertNotNull(this.wsListener, "the ws_server should be created");
-        this.wsHost = this.wsListener.authority().host();
-        this.wsPort = this.wsListener.authority().port();
+        this.wsHost = this.wsListener.origin().host();
+        this.wsPort = this.wsListener.origin().port();
 
         CommonUtil.sleepThread(100);
         this.httpClient = HttpClient.newHttpClient();

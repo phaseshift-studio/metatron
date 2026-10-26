@@ -24,9 +24,6 @@ import com.sun.net.httpserver.HttpsServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -62,8 +59,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * The far side is a plain JDK {@link HttpsServer} with the self-signed test certificate ({@link TlsTestKeys}), trusted
  * through the JDK's default context — which Jsoup and HttpClient both take — for the class.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class httpGatewayTest extends AbstractMetatronTest {
 
     private static final String GATEWAY = "https://#";
@@ -146,11 +143,11 @@ public class httpGatewayTest extends AbstractMetatronTest {
         network().connect(f(GATEWAY));
         final Obj gateway = network().peerAt(Network.Helper.keyOf(f(GATEWAY)));
         assertFalse(gateway.isNoObj(), "the constructed gateway should be a peer");
-        checkEquality(LOG, uri(Network.Helper.authorityOf(gateway)), uri(f(GATEWAY)), true);
+        checkEquality(LOG, uri(Network.Helper.originOf(gateway)), uri(f(GATEWAY)), true);
         // a wildcard host names no one server to ask: the gateway is live
         assertTrue(Network.Helper.online(gateway), "the gateway should read live");
-        // and it covers the far side, whose authority no client was built for
-        assertSame(gateway, network().peerOf(f(far())), "the gateway should answer for an https authority");
+        // and it covers the far side, whose origin no client was built for
+        assertSame(gateway, network().peerOf(f(far())), "the gateway should answer for an https origin");
     }
 
     /**
@@ -163,7 +160,7 @@ public class httpGatewayTest extends AbstractMetatronTest {
             checkCodeEvaluate(LOG, "http_client::[host=><http://#>]", "noobj", "noobj");
             final Obj gateway = network().peerAt(Network.Helper.keyOf(web));
             assertFalse(gateway.isNoObj(), "the constructed client should be a peer");
-            assertSame(gateway, network().peerOf(f("http://markorodriguez.com")), "it should cover every http authority");
+            assertSame(gateway, network().peerOf(f("http://markorodriguez.com")), "it should cover every http origin");
         } finally {
             network().disconnect(web);
         }
@@ -193,12 +190,12 @@ public class httpGatewayTest extends AbstractMetatronTest {
         network().connect(site);
         try {
             final Obj member = network().peerOf(site);
-            checkEquality(LOG, uri(Network.Helper.authorityOf(member)), uri(Network.Helper.serviceOf(site)), true);
+            checkEquality(LOG, uri(Network.Helper.originOf(member)), uri(Network.Helper.serviceOf(site)), true);
             assertEquals(MOTTO, Machine.read(far() + "/motto").strValue(), "the site's own client should answer the read");
         } finally {
             network().disconnect(site);
         }
         // the gateway answers again once the site's client is gone
-        checkEquality(LOG, uri(Network.Helper.authorityOf(network().peerOf(site))), uri(f(GATEWAY)), true);
+        checkEquality(LOG, uri(Network.Helper.originOf(network().peerOf(site))), uri(f(GATEWAY)), true);
     }
 }

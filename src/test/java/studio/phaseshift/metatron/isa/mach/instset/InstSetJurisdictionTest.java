@@ -20,9 +20,6 @@ package studio.phaseshift.metatron.isa.mach.instset;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -32,9 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.ComponentUnion;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.INSTSET_TID;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -53,8 +48,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * The libraries here are throwaway instruction sets mounted inside a pushed frame, so the machine's real vocabulary is
  * never written and everything leaves with the frame.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class InstSetJurisdictionTest extends AbstractMetatronTest {
 
     @AfterEach

@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -468,6 +469,8 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
                      obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
                      inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
           type=&gt;[space::T[?[host=&gt;uri::T]][ctor?mqttspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/iot/space/mqttspace,
+                 listener::T[?[{?}SYS=&gt;[uri::T=&gt;&lt;#&gt;::T]]][ctor?mqtt_server&lt;=(#{*}::T){&lt;j&gt;}]@/m/iot/mqtt/mqtt_server,
+                 rec::T[?[client=&gt;str::T,keepAlive=&gt;int::T]]@/m/iot/mqtt/mqtt_session,
                  mqttspace::T[][inst?haos&lt;=#(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/iot/haos/space/haos]]@/m/iot</code></pre>
                     </div>
                 </div>
@@ -476,7 +479,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">9</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -501,6 +504,12 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
 </a><a href="#__m__iot__haos__switch" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">switch</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mqtt</small></div><div class="d-flex flex-wrap"><a href="#__m__iot__mqtt__mqtt_server" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mqtt_server</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__iot__mqtt__mqtt_session" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mqtt_session</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">haos&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#__m__iot__haos__space__haos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">haos</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -514,7 +523,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">7</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">9</span></h3>
     <div class="card mb-3" id="__m__iot__haos__button">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -617,6 +626,31 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
              {?}hw_version=&gt;str::T,
              {?}identifiers=&gt;lst::T,
              {?}name=&gt;str::T]]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__iot__mqtt__mqtt_server">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mqtt_server::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_mach.html#__m__mach__listener" class="instset-doc-small-code text-info code">/m/mach/listener::T</a></span>
+        </span>
+        <small class="text-muted code">/m/iot/mqtt/mqtt_server</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">listener::T[?[{?}SYS=&gt;[uri::T=&gt;&lt;#&gt;::T]]][ctor?mqtt_server&lt;=(#{*}::T){&lt;j&gt;}]@/m/iot/mqtt/mqtt_server</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_mach.html#__m__mach__listener" class="code inherited-link">listener::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+ {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+ {?}server=&gt;&lt;#&gt;::T,
+ {?}status=&gt;bool::T]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__iot__mqtt__mqtt_session">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mqtt_session::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/iot/mqtt/mqtt_session</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[client=&gt;str::T,keepAlive=&gt;int::T]]@/m/iot/mqtt/mqtt_session</code></pre></div>
+    
     
 </div><div class="card mb-3" id="__m__iot__haos__number">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

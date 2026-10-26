@@ -188,6 +188,39 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return null != this.host() && -1 != this.port();
     }
 
+    /**
+     * A local furi carries no authority — neither a scheme nor a host — so its address is elided to the machine it is
+     * evaluated in ({@code /a/b}, {@code a/b}, {@code ~/x}). This is the predicate a distribution scan reads to reject
+     * an <em>implicit</em> local reference: one whose denotation silently changes when the code ships to another
+     * machine. The authority-qualified spellings of the same place ({@code loop:/…}, {@code ws://host:port/…}) are not
+     * local.
+     *
+     * @return whether the furi has neither a scheme nor a host
+     */
+    default boolean isLocal() {
+        return !this.hasScheme() && !this.hasHost();
+    }
+
+    /**
+     * An addressed furi names a machine by its host (scheme and port optional) — the authority-qualified form a
+     * shipped tail may use, since the host's denotation is independent of where the code runs.
+     *
+     * @return whether the furi carries a host
+     */
+    default boolean isAddressed() {
+        return this.hasHost();
+    }
+
+    /**
+     * A prefixed furi has a scheme but no host: an alias or prefix spelling ({@code ide:command}, {@code loop:/x})
+     * rather than a machine address. It is neither local (it names a scheme) nor addressed (it names no host).
+     *
+     * @return whether the furi has a scheme but no host
+     */
+    default boolean isPrefixed() {
+        return this.hasScheme() && !this.hasHost();
+    }
+
     default boolean isGeneric() {
         if (this.hasScheme() || this.hasAuthority() || this.path().isEmpty())
             return false;
@@ -212,9 +245,14 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return hasCapitalGeneric;
     }
 
-    default fURI authoritySchemaLess() {
-        return fURI.of(null, null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+    default fURI origin() {
+        return fURI.of(this.scheme(), this.host(), this.port(), List.of(), null, null, Map.of(), null);
     }
+
+    default fURI origin(final fURI origin) {
+        return fURI.of(origin.scheme(), origin.host(), origin.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+    }
+
 
     default boolean hasAnchor() {
         if (this.hasScheme())
@@ -297,6 +335,17 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return null != this.scheme();
     }
 
+    /**
+     * Whether the scheme is the given wildcard — a scheme-pattern ({@code +} or {@code #}) rather than a concrete
+     * transport.
+     *
+     * @param wildcard the scheme character to test for
+     * @return whether the scheme is present and equals the wildcard character
+     */
+    default boolean hasScheme(final char wildcard) {
+        return null != this.scheme() && this.scheme().equals(String.valueOf(wildcard));
+    }
+
     default fURI big() {
         if (!Machine.loaded())
             return this;
@@ -315,6 +364,13 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return !this.hasScheme() && !this.hasHost() && !this.hasPort() && this.path().isEmpty() && !this.hasQ();
     }
 
+    /**
+     * The authority this uri reaches, as a string: {@code host:port} when a port is specified, {@code host} alone when
+     * it is not, or {@code null} when there is no host. This is the string form of the complete authority
+     * ({@link #hasAuthority()}), which additionally demands a port.
+     *
+     * @return the host and (when specified) port, or null when there is no host
+     */
     default String authority() {
         if (this.hasHost())
             return this.hasPort() ? this.host() + ":" + this.port() : this.host();
@@ -361,6 +417,17 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     default boolean hasHost() {
         return this.host() != null;
+    }
+
+    /**
+     * Whether the host is the given wildcard — a host-pattern ({@code +} or {@code #}) that broadcasts over machines
+     * rather than naming one.
+     *
+     * @param wildcard the host character to test for
+     * @return whether the host is present and equals the wildcard character
+     */
+    default boolean hasHost(final char wildcard) {
+        return null != this.host() && this.host().equals(String.valueOf(wildcard));
     }
 
     default boolean hasSubdomain() {

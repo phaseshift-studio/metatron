@@ -18,11 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
@@ -31,15 +27,13 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerIntegrationTest;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -51,15 +45,15 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID
  * co-mounted {@code ws_server} mints the {@code /network/peer} the guard reads, and then {@code law_shard} must
  * be a live out-edge of the shardable chain's {@code path::T}. This is the manual console demo, automated.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegrationTest {
 
     @Override
     protected Listener createWSServer() {
         return wsServer.of(rec(
                 uri(NAME), uri("law-shard-peer-test"),
-                uri(HOST), uri("ws://localhost:" + generatePort()),
+                uri(ORIGIN), uri("ws://localhost:" + generatePort()),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
     }
 

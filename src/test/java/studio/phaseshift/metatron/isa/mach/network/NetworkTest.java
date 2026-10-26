@@ -34,7 +34,7 @@ import studio.phaseshift.metatron.isa.mach.type.Network;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static studio.phaseshift.metatron.Tokens.AUTHORITY;
+import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.KIND;
 import static studio.phaseshift.metatron.Tokens.MACHINE;
 import static studio.phaseshift.metatron.Tokens.STATUS;
@@ -106,7 +106,7 @@ public class NetworkTest extends AbstractMetatronTest {
                     uri("ws://metatron.local."), uri("ws://10.0.0.1:8777/"))))));
             final Obj report = Machine.current().network().status(noobj());
             final Rec entry = report.stream().map(Obj::asRec)
-                    .filter(one -> "ws://metatron.local.".equals(one.at(uri(AUTHORITY)).uriValue().toString()))
+                    .filter(one -> "ws://metatron.local.".equals(one.at(uri(ORIGIN)).uriValue().toString()))
                     .findFirst().orElse(null);
             assertNotNull(entry, "an address entry must still be reported, not omitted: " + report);
             assertEquals("known", entry.at(uri(STATUS)).asRec().at(uri(KIND)).strValue(),

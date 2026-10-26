@@ -93,7 +93,7 @@ class httpRouteLadderTest extends AbstractHTTPServerIntegrationTest {
         studio.phaseshift.metatron.isa.mach.type.Machine.write(f("/data/person/35"),
                 rec(uri("name"), str("Grace"), uri("born"), jnt(1906)));
         return httpServer.of(rec(
-                        uri(HOST), uri(f("http://127.0.0.1:" + generatePort())),
+                        uri(ORIGIN), uri(f("http://127.0.0.1:" + generatePort())),
                         uri(ROUTE), rec(
                                 uri(f("/mcp")), uri(f("mcp_mtron")),
                                 uri(f("/content")), uri(f("/m/web/helper")),

@@ -70,7 +70,7 @@ mtron> import(/m/web,web)
 mtron> [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server
 ==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
-                status=>!inst?bool<=(){<j>}]@/sys/space/mcp/basic_server
+                status=>!λstatus?bool<=(){<j>}]@/sys/space/mcp/basic_server
 ```
 What the shown blocks assume is a route table like this one — the same mounts the live profile uses, one route
 per server, `mcp_mtron` for the metatron-native tools, `mcp_message` for the ledger, and `/basic` for the server
@@ -78,8 +78,8 @@ just defined:
 
 ```mtron
 [-- a carrier is a server (http_server, ws_server); a route binds an mcp server to it. `else` makes a mount idempotent --]
-*</network/listener/http/localhost/8777>.else(http_server::[host => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*</sys/space/mcp/basic_server>, / => /usr]])
-*</network/listener/ws/localhost/8555>.else(ws_server::[host => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]])
+*</network/listener/http/localhost/8777>.else(http_server::[origin => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*</sys/space/mcp/basic_server>, / => /usr]])
+*</network/listener/ws/localhost/8555>.else(ws_server::[origin => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]])
 ```
 
 ## types
@@ -240,7 +240,7 @@ Because a tool is an instruction, a server is a **selection over instructions**,
 ```mtron
 mtron> mcp_server::[tool => [!*eval, !*eval]]@/sys/space/mcp/two_say
 ==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
-                status=>!inst?bool<=(){<j>}]@/sys/space/mcp/two_say
+                status=>!λstatus?bool<=(){<j>}]@/sys/space/mcp/two_say
 mtron> */sys/space/mcp/two_say>>tool     [-- one entry: a collection is keyed by the instruction --]
 ==>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}]
 ```

@@ -23,7 +23,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -59,7 +58,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * {@code {{port}}} is a free port: the mqtt row dials it and finds no broker. {@code {{corrupt}}} is a memspace data
  * file whose first line loads and whose second does not parse.
  */
-@Isolated
+//@Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 public class SpaceConstructionTest extends AbstractMetatronTest {
 

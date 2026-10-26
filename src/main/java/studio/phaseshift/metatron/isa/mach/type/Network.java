@@ -26,9 +26,9 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -58,7 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * The <b>Network</b> component of a Machine: the peers this frame can reach, and the authority arithmetic that
+ * The <b>Network</b> component of a Machine: the peers this frame can reach, and the origin arithmetic that
  * decides what "reachable" and "mine" mean.
  * <p>
  * It carries two maps, deliberately not one: {@code roster} is what the system <b>knows</b> — connectionless
@@ -79,12 +79,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * its parent is therefore the union's open question, and it needs a shadow-and-deny arm rather than a copy of
  * {@link studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion}.
  * <p>
- * The authority algebra lives here rather than on the Router because it is not routing — it is what the network
+ * The origin algebra lives here rather than on the Router because it is not routing — it is what the network
  * <em>is</em>. Every question about whether two addresses denote the same service, or whether a host names this
  * machine, is a question about reachability.
  * <p>
  * <b>Denotation is not scoped by this component.</b> Scoping decides which peers a frame can reach; it never
- * changes what an absolute URI means. An unreachable authority fails loudly rather than resolving elsewhere.
+ * changes what an absolute URI means. An unreachable origin fails loudly rather than resolving elsewhere.
  * <p>
  * <b>The index is kept true.</b> A member whose client is a {@link Link} is supervised for as long as it is
  * indexed: a connection that fails is redialed in place (on a capped backoff, and at once when a request needs it),
@@ -135,7 +135,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * This level's members: {@code <key> => peer::T}, where the KEY is the dial's own address as a valid local path,
      * one per surface ({@link Helper#keyOf}: {@code ws://localhost:8555/mtron} is {@code ws/localhost/8555/mtron}). So a
      * member is addressable at {@code ~/network/peer/<key>} — read field by field, deleted to hang it up — and the
-     * service it reaches is the {@code authority} it carries, never its key.
+     * service it reaches is the {@code origin} it carries, never its key.
      */
     default Rec peers() {
         return this.at(PEER).orElse(rec());
@@ -182,10 +182,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     default Obj listen(final Listener server, final Rec routes) {
         // a route is keyed by the path it serves: a key that is no path routes nothing, so it fails the listen
         routes.keys().filter(route -> !route.isUri()).findFirst().ifPresent(route -> {
-            throw MTronException.of("a route is keyed by the path it serves, got %s on %s", route, server.authority());
+            throw MTronException.of("a route is keyed by the path it serves, got %s on %s", route, server.origin());
         });
-        final fURI key = Helper.keyOf(server.authority());
-        final Obj entry = rec(uri(AUTHORITY), uri(server.authority()), uri(SERVER), server);
+        final fURI key = Helper.keyOf(server.origin());
+        final Obj entry = rec(uri(ORIGIN), uri(server.origin()), uri(SERVER), server);
         // absent rather than empty: the map idiom of the predicate rejects an empty rec
         if (!routes.isEmpty())
             entry.asRec().at(uri(ROUTE), routes, MUTABLE);
@@ -204,12 +204,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * The inverse of {@link #listen}: this level stops serving through the socket at {@code authority}. Its routes
+     * The inverse of {@link #listen}: this level stops serving through the socket at {@code origin}. Its routes
      * leave the socket, and a socket this level OPENED is released with them. Answers the entry, or noobj when this
      * level served nothing there.
      */
-    default Obj unlisten(final fURI authority) {
-        final fURI key = Helper.keyOf(authority);
+    default Obj unlisten(final fURI origin) {
+        final fURI key = Helper.keyOf(origin);
         final Obj entry;
         synchronized (this) {
             entry = this.listenerAt(key);
@@ -252,18 +252,18 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     /**
      * CONNECT — the network's MOUNT op, the third copy of memory's {@code addSpace} and the ISA's
      * {@code refer}: take a connectionless description and make it a live member of this machine's reach.
-     * ENSURE PEERED, never rebuild: an authority this machine has already dialed answers its existing
+     * ENSURE PEERED, never rebuild: an origin this machine has already dialed answers its existing
      * {@code peer::T} — connect is an optimization, never a protection, because a re-dial could not change
      * the far side. A fresh connection is a disconnect first, exactly as a fresh instruction set is an
      * unmount first.
      * <p>
      * The dial uri may carry the protocol ROUTE ({@code ws://host:port/mtron}); the peer keys on the
-     * SERVICE authority alone, so data reads address {@code ws://host:port/<path>} while the peer's
+     * SERVICE origin alone, so data reads address {@code ws://host:port/<path>} while the peer's
      * {@code host} field remembers where it was dialed, route included — peer::T's own words.
      * <p>
      * The handler names the DIALER, resolved through instruction memory at dial time (which is what lets
      * this component stay below {@code /m/web} while web's protocol clients do the dialing); {@code loop:}
-     * needs none. No dialer answers {@code noobj}: the authority stays known, not reachable from here.
+     * needs none. No dialer answers {@code noobj}: the origin stays known, not reachable from here.
      */
     default Obj connect(final fURI dialURI) {
         return this.connect(dialURI, null);
@@ -325,7 +325,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // the client IS the connection: its `inst` (the instructions you talk to it with) and its `status` stay on
             // the client — the peer holds the client, and overrideOf and online read through it. No copy, no divergence.
             peer = rec(
-                    uri(AUTHORITY), uri(Helper.serviceOf(dialURI)),
+                    uri(ORIGIN), uri(Helper.serviceOf(dialURI)),
                     uri(HOST), uri(dialURI));
             peer.asRec().at(uri(CLIENT), client, MUTABLE);
             peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
@@ -344,34 +344,34 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * The first member this level holds for a SERVICE — matched by the authority it carries, so any of its surfaces —
+     * The first member this level holds for a SERVICE — matched by the origin it carries, so any of its surfaces —
      * or noobj. {@link #peerAt} is the exact lookup, by key.
      */
     default Obj peerOf(final fURI service) {
         final List<Obj> members = this.peers().values().toList();
         return members.stream()
-                .filter(peer -> Helper.sameService(Helper.authorityOf(peer), service))
+                .filter(peer -> Helper.sameService(Helper.originOf(peer), service))
                 .findFirst()
-                // A WILDCARD AUTHORITY COVERS WHAT IT MATCHES, after every exact one: http_client::[host=><http://#>] is
+                // A WILDCARD ORIGIN COVERS WHAT IT MATCHES, after every exact one: http_client::[host=><http://#>] is
                 // the web's gateway, and a client built for one site answers for that site before it
                 .or(() -> members.stream()
-                        .filter(peer -> Helper.covers(Helper.authorityOf(peer), service))
-                        .max(Comparator.comparingInt(peer -> Helper.specificity(Helper.authorityOf(peer)))))
+                        .filter(peer -> Helper.covers(Helper.originOf(peer), service))
+                        .max(Comparator.comparingInt(peer -> Helper.specificity(Helper.originOf(peer)))))
                 .orElse(noobj());
     }
 
     /**
-     * THE DISPATCH PRIMITIVE — the peer's OVERRIDE for an instruction, by the authority that owns it. A peer
+     * THE DISPATCH PRIMITIVE — the peer's OVERRIDE for an instruction, by the origin that owns it. A peer
      * overrides instructions with its own wire bodies (its mini-instset, {@code inst => { tid => override }}); this
-     * answers "does the peer at {@code authority} implement {@code instTID}, and with what body". An override IS the
+     * answers "does the peer at {@code origin} implement {@code instTID}, and with what body". An override IS the
      * instruction it replaces with another f(): the same signature, within the type system's acceptance
      * ({@link Helper#accepts}), so a call reaches it by swapping f() and nothing else ({@link Helper#dispatch}). The
      * value is that inst, or noobj when the peer does not override the instruction — and an inst of a signature the
      * instruction's own does not accept is not an override of it (the caller then derives it, or falls through to the
      * local definition).
      */
-    default Obj overrideOf(final fURI authority, final fURI instTID) {
-        final Obj peer = this.peerOf(authority);
+    default Obj overrideOf(final fURI origin, final fURI instTID) {
+        final Obj peer = this.peerOf(origin);
         if (!peer.isRec())
             return noobj();
         // the capability lives on the CLIENT — the connection — not on the peer: the client's `inst` is the set of
@@ -382,7 +382,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     /**
      * ACCEPT — the CO-MOUNT: the listener's half of {@link #connect(fURI)}. An INBOUND connection mints a
      * peer exactly as an outbound dial does (server : peer :: constructor : instance), keyed by the
-     * remote's socket authority, with the server session as its client: the session's {@code inst} is what the
+     * remote's socket origin, with the server session as its client: the session's {@code inst} is what the
      * peer is talked to with, over the session's reply channel. The inbound peer is
      * ANONYMOUS until an identity exchange upgrades it — no {@code host} field, because an ephemeral
      * client port is not a place to dial back to: reach lives exactly as long as the socket, and the
@@ -390,7 +390,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      */
     default Obj accept(final fURI remote, final Obj session) {
         // SELF-LOOP: a loopback dialer is THIS machine. The outbound half of the dial — the ws_client
-        // constructor's index — already records the peer (keyed by OUR authority, with a dial-back host
+        // constructor's index — already records the peer (keyed by OUR origin, with a dial-back host
         // and the dialer's own client). Minting a second peer keyed by the dialer's ephemeral source port
         // would leave one socket as two peers: the twin is anonymous, undialable, and a fan-out target
         // that no one answers. Decline the co-mount; the dialer records the peer.
@@ -401,7 +401,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // upgrade), so a server that exposes the full connection uri mints a NAMED peer on accept.
         final String name = remote.qMap().get(NAME);
         final fURI service = remote.path(List.of()).removeQ(NAME);
-        // the co-mount is keyed like a dial: the remote's socket authority and the route it dialed, as a path
+        // the co-mount is keyed like a dial: the remote's socket origin and the route it dialed, as a path
         final fURI key = Helper.keyOf(remote);
         // serialized with index and disconnect: the listener accepts on its own worker threads
         synchronized (this) {
@@ -411,7 +411,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // a session is reached, as a dialed client is, by the instructions it declares — none, no peer
             if (!session.isRec() || !session.asRec().at(uri(INST)).isRec())
                 return noobj();
-            final Obj peer = rec(uri(AUTHORITY), uri(service));
+            final Obj peer = rec(uri(ORIGIN), uri(service));
             if (null != name && !name.isEmpty())
                 peer.asRec().at(uri(NAME), str(name), MUTABLE);
             peer.asRec().at(uri(CLIENT), session, MUTABLE);
@@ -422,8 +422,8 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * The inverse of {@link #connect(fURI)}: retract THIS level's dial for the authority — hang up its
-     * client, remove the member. An authority that was never dialed is a no-op answering {@code noobj}.
+     * The inverse of {@link #connect(fURI)}: retract THIS level's dial for the origin — hang up its
+     * client, remove the member. An origin that was never dialed is a no-op answering {@code noobj}.
      * Nothing left dialed removes the {@code peer} field entirely: an EMPTY rec is not the same value as
      * an absent one (the component predicate's map idiom rejects the empty rec's noobj entry — measured).
      */
@@ -438,7 +438,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
     /**
      * Retract members, by what the address names: a peer KEY ({@code ws/localhost/8555/mtron}) names that member; a
-     * wire uri with a route ({@code ws://localhost:8555/mtron}) names that surface; a bare authority
+     * wire uri with a route ({@code ws://localhost:8555/mtron}) names that surface; a bare origin
      * ({@code ws://localhost:8555}) names every surface of the service. Answers what was dropped — the member, or a bag
      * of them — or noobj when the address held nothing here.
      */
@@ -495,32 +495,32 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             return noobj(); // nothing declared: an empty cluster, not an error
         return objs(roster.asRec().jvm().entrySet().stream()
                 .filter(e -> e.getKey().isUri() && !e.getValue().isNoObj())   // a hollow key is not a machine
-                // a member reports the authority it reaches; its key is only where it sits in this map
-                .map(e -> Helper.probe(null == Helper.authorityOf(e.getValue()) ? e.getKey() : uri(Helper.authorityOf(e.getValue())),
+                // a member reports the origin it reaches; its key is only where it sits in this map
+                .map(e -> Helper.probe(null == Helper.originOf(e.getValue()) ? e.getKey() : uri(Helper.originOf(e.getValue())),
                         e.getValue())));
     }
 
     /**
-     * SUBMIT — the eval verb: evaluate {@code code} on the peer that owns {@code authority}, and answer its result.
+     * SUBMIT — the eval verb: evaluate {@code code} on the peer that owns {@code origin}, and answer its result.
      * This is the general "ship mtron, get the result" that the distribution rewrite and any parallel fan-out use: a
      * peer that declares an {@code eval} override answers {@code eval(code)} with its own f() — the code BLOCKED, so it
      * rides raw as the payload ({@link Helper#evaluate}); one that declares none evaluates nothing: noobj.
      */
-    default Obj submit(final fURI authority, final Obj code) {
-        final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
-        return eval.isObjInst() ? Helper.evaluate(eval.asInst(), authority, code) : noobj();
+    default Obj submit(final fURI origin, final Obj code) {
+        final Obj eval = this.overrideOf(origin, EVAL_INST_TID);
+        return eval.isObjInst() ? Helper.evaluate(eval.asInst(), origin, code) : noobj();
     }
 
     /**
      * Authority dispatch — resolve a read against a <em>dialed peer</em> rather than the local memory. An
-     * address without an authority, or whose authority no dialed peer serves, answers {@code noobj} so the
+     * address without an origin, or whose origin no dialed peer serves, answers {@code noobj} so the
      * caller falls through to {@code memory()}. A dialed peer answers through the instructions its client
      * declares: its {@code from}, else its {@code eval} of the destination-relative read ({@code localize()}).
      * <p>
      * A READ NEVER DIALS. Connection is construction and disconnection is destruction — {@code http_client::[…]},
-     * {@code ws_client::[…]} or {@link #connect} make a peer, and addressing an authority makes none: membership is
+     * {@code ws_client::[…]} or {@link #connect} make a peer, and addressing an origin makes none: membership is
      * declared, never emergent. The web's gateway is such a client too: {@code http_client::[host=><http://#>]}, a
-     * wildcard authority {@link #peerOf} matches after every exact one. An http(s) address no client covers falls
+     * wildcard origin {@link #peerOf} matches after every exact one. An http(s) address no client covers falls
      * through to memory, which holds no web.
      */
     default Obj read(final fURI vid) {
@@ -532,19 +532,19 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // own patterns on the fall-through exactly as before.
         if (null == vid.host())
             return noobj();
-        final fURI authority = vid.path(List.of());
+        final fURI origin = vid.path(List.of());
         // DISPATCH LADDER: the peer's native `from` override first (a read-only client), then `eval` (the lowering —
         // the read message IS code). Each rung is the instruction's own call with the peer's f(): from(<vid>) — the
         // address exactly as read — on its from, eval(from(<localized>)) on its eval. A client that declares neither
         // is not read through: noobj, and the read stays local.
-        final Obj from = this.overrideOf(authority, FROM_INST_TID);
+        final Obj from = this.overrideOf(origin, FROM_INST_TID);
         if (from.isObjInst())
             return Helper.dispatch(from.asInst(), instB(FROM_INST_TID, lst(vid.toUri())), noobj());
-        final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
+        final Obj eval = this.overrideOf(origin, EVAL_INST_TID);
         if (!eval.isObjInst())
-            return noobj(); // no dialed peer serves this authority: not a peer this frame may reach
+            return noobj(); // no dialed peer serves this origin: not a peer this frame may reach
         final Obj message = from_(vid.localize().toUri()).tryToInst();
-        final Obj answer = Helper.evaluate(eval.asInst(), authority, message);
+        final Obj answer = Helper.evaluate(eval.asInst(), origin, message);
         WIRE_LOG.debug("read %s message=%s answer=%s", vid, message, answer);
         return answer;
     }
@@ -562,15 +562,15 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // raised it besides. Answering noobj sends the write down the local path, which is where a fail belongs.
         if (obj.isFail())
             return noobj();
-        final fURI authority = vid.path(List.of());
+        final fURI origin = vid.path(List.of());
         // DISPATCH LADDER: the peer's native `to` override first (a write-only sink), then `eval` (the write message IS
         // code). Each rung is the instruction's own call with the peer's f(): obj.to(<vid>) — the obj the lhs, the
         // address the arg, exactly as the native to — on its to, eval(start(obj).to(<localized>)) on its eval. A client
         // that declares neither is not written through: noobj, and the write stays local.
-        final Obj to = this.overrideOf(authority, TO_INST_TID);
+        final Obj to = this.overrideOf(origin, TO_INST_TID);
         if (to.isObjInst())
             return Helper.dispatch(to.asInst(), instB(TO_INST_TID, lst(vid.toUri())), obj);
-        final Obj eval = this.overrideOf(authority, EVAL_INST_TID);
+        final Obj eval = this.overrideOf(origin, EVAL_INST_TID);
         if (!eval.isObjInst())
             return noobj();
         final Obj message;
@@ -580,7 +580,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // not mtron-parseable source: there is nothing to ship, so it is not a peer's to answer
             return noobj();
         }
-        return Helper.evaluate(eval.asInst(), authority, message);
+        return Helper.evaluate(eval.asInst(), origin, message);
     }
 
     /**
@@ -642,9 +642,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * the one place a vid is handed to a source ({@link Machine#read}, {@link Machine#write}): a local
      * {@code ws://peer/x/#?subq} subscription must still see a write that compiled straight to the peer's {@code to}.
      * Named rather than a lambda so the compiled code says what it bound — explain reports this class, and the
-     * string is the authority whose body runs.
+     * string is the origin whose body runs.
      */
-    record AtPeer(Network network, fURI authority, Inst.f body, boolean read, boolean submit) implements BiFunction<Obj, Inst, Obj> {
+    record AtPeer(Network network, fURI origin, Inst.f body, boolean read,
+                  boolean submit) implements BiFunction<Obj, Inst, Obj> {
         @Override
         public Obj apply(final Obj lhs, final Inst inst) {
             if (this.submit)
@@ -657,7 +658,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
         @Override
         public String toString() {
-            return this.authority.toString();
+            return this.origin.toString();
         }
     }
 
@@ -675,7 +676,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         public static Set<fURI> peerAuthorities(final Network network) {
-            return network.peers().values().map(Helper::authorityOf).filter(Objects::nonNull).collect(Collectors.toSet());
+            return network.peers().values().map(Helper::originOf).filter(Objects::nonNull).collect(Collectors.toSet());
         }
 
         public static Set<fURI> peerAuthorities() {
@@ -697,14 +698,14 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // root -- a port binds once per physical machine, so a child serves through the sockets above it
             for (Obj at = Machine.current(); at instanceof Machine machine; at = machine.parent())
                 machine.network().listeners().values()
-                        .map(Helper::authorityOf)
+                        .map(Helper::originOf)
                         .filter(Objects::nonNull)
                         .forEach(mine::add);
             return mine;
         }
 
         /**
-         * Two uris denote the same service: the same authority, or two loopback aliases at the same port.
+         * Two uris denote the same service: the same origin, or two loopback aliases at the same port.
          */
         /**
          * INDEXING IS A BACKGROUND BEHAVIOR. Network, Memory and InstSet are INDICES over objs that have
@@ -776,7 +777,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * applies it.
          */
         public static Obj statusOf(final BooleanSupplier live) {
-            return auto_(instLambda(ALL.maybe(), BOOL_TID, (lhs, inst) -> bool(live.getAsBoolean()))).tryToInst();
+            return auto_(instLambda("status", ALL.maybe(), BOOL_TID, (_, _) -> bool(live.getAsBoolean()))).tryToInst();
         }
 
         /**
@@ -816,19 +817,19 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * The authority a member reaches — the service it carries, never its key — or null for a value that is not
+         * The origin a member reaches — the service it carries, never its key — or null for a value that is not
          * a member (a roster row's address).
          */
-        public static fURI authorityOf(final Obj peer) {
+        public static fURI originOf(final Obj peer) {
             if (!peer.isRec())
                 return null;
-            final Obj authority = peer.asRec().atDirect(uri(AUTHORITY));
-            return authority.isUri() ? authority.uriValue() : null;
+            final Obj origin = peer.asRec().atDirect(uri(ORIGIN));
+            return origin.isUri() ? origin.uriValue() : null;
         }
 
         /**
          * What a retraction's address names (see {@link Network#disconnect}): a key that member, a wire uri with a
-         * route that surface, a bare authority every surface of the service.
+         * route that surface, a bare origin every surface of the service.
          */
         static java.util.function.Predicate<Rel> naming(final fURI address) {
             if (null == address.host())
@@ -839,7 +840,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 return kv -> kv.first().uriValue().equals(key);
             }
             final fURI service = serviceOf(address);
-            return kv -> sameService(authorityOf(kv.second()), service);
+            return kv -> sameService(originOf(kv.second()), service);
         }
 
         /**
@@ -854,13 +855,13 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * The socket serving {@code authority} as the current machine sees it: one its own level holds, or one
+         * The socket serving {@code origin} as the current machine sees it: one its own level holds, or one
          * inherited from the machines above it, up to the root. A port binds once per physical machine, so a machine
-         * that wants to serve at an authority an ancestor already listens on serves through that socket. null when no
+         * that wants to serve at an origin an ancestor already listens on serves through that socket. null when no
          * machine in the chain holds one.
          */
-        public static Listener listenerFor(final fURI authority) {
-            final fURI key = keyOf(authority);
+        public static Listener listenerFor(final fURI origin) {
+            final fURI key = keyOf(origin);
             for (Obj at = Machine.current(); at instanceof Machine machine; at = machine.parent()) {
                 final Obj entry = machine.network().listenerAt(key);
                 if (entry.isRec() && entry.asRec().atDirect(uri(SERVER)) instanceof Listener listener && !listener.closed())
@@ -884,7 +885,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * The service KEY for any client-facing uri: bare authority, with exactly the processor the dial
+         * The service KEY for any client-facing uri: bare origin, with exactly the processor the dial
          * spends (?name) retracted — every other ?q rides through.
          */
         public static fURI serviceOf(final fURI uri) {
@@ -908,26 +909,26 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         public static boolean sameService(final fURI a, final fURI b) {
             if (null == a || null == b)
                 return false;
-            return Objects.equals(a.authority(), b.authority())
+            return Objects.equals(a.origin(), b.origin())
                     || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
         }
 
         /**
-         * Does a WILDCARD authority cover a service — {@code http://#} every http authority, {@code http://+:8777} any
-         * host's 8777? A literal authority covers nothing: it is {@link #sameService}'s to match.
+         * Does a WILDCARD origin cover a service — {@code http://#} every http origin, {@code http://+:8777} any
+         * host's 8777? A literal origin covers nothing: it is {@link #sameService}'s to match.
          */
-        public static boolean covers(final fURI authority, final fURI service) {
-            return null != authority && null != service && authority.hasPattern() && service.test(authority);
+        public static boolean covers(final fURI origin, final fURI service) {
+            return null != origin && null != service && origin.hasPattern() && service.test(origin);
         }
 
         /**
-         * How narrowly an authority names its services, for choosing among the wildcards that cover one: a literal
+         * How narrowly an origin names its services, for choosing among the wildcards that cover one: a literal
          * host over {@code +} over {@code #}, then a port over none.
          */
-        static int specificity(final fURI authority) {
-            final String host = authority.host();
+        static int specificity(final fURI origin) {
+            final String host = origin.host();
             final int named = "#".equals(host) ? 0 : "+".equals(host) ? 1 : 2;
-            return 2 * named + (-1 == authority.port() ? 0 : 1);
+            return 2 * named + (-1 == origin.port() ? 0 : 1);
         }
 
 
@@ -1032,19 +1033,19 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * the processor's own switch, exactly as bindQ applies it -- so the far side is the one that evaluates what it
          * is sent. {@code from} and {@code to} need no block: their argument is an address, which computes to itself.
          */
-        public static Obj evaluate(final Inst eval, final fURI authority, final Obj code) {
-            final Inst user = instB(EVAL_INST_TID, lst(uri(authority)));
+        public static Obj evaluate(final Inst eval, final fURI origin, final Obj code) {
+            final Inst user = instB(EVAL_INST_TID, lst(uri(origin)));
             return Helper.dispatch(eval, user, code);
         }
 
         /**
          * COMPILE-TIME BINDING (Marko, 2026-10-24) — {@code resolved}, a call the resolver has just bound to its native
          * definition, with the PEER'S body when its address names a dialed peer that overrides it: the address
-         * instructions, {@code from(<uri>)} and {@code to(<uri>)}, whose literal uri argument carries an authority. The
+         * instructions, {@code from(<uri>)} and {@code to(<uri>)}, whose literal uri argument carries an origin. The
          * signature, the binding and the typing are the native resolution's, untouched; f() is the one thing swapped,
          * so the compiled code shows which peer's body runs, and nothing is decided later inside {@link Network#read}
          * or {@link Network#write}. The body runs inside the network's q-proc layer ({@link AtPeer}). Every other call — another
-         * instruction, an address computed at run time, an authority no peer here overrides — answers as resolved,
+         * instruction, an address computed at run time, an origin no peer here overrides — answers as resolved,
          * and a computed address still reaches the peer through the run-time dispatch.
          */
         public static Inst atPeer(final Inst resolved) {
@@ -1059,12 +1060,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             final Machine machine = Machine.current();
             if (null == machine || null == machine.network())
                 return resolved;
-            final fURI authority = address.uriValue().path(List.of());
-            final Obj override = machine.network().overrideOf(authority, base);
+            final fURI origin = address.uriValue().path(List.of());
+            final Obj override = machine.network().overrideOf(origin, base);
             if (!override.isObjInst())
                 return resolved;
-            WIRE_LOG.debug("bound %s to the override %s declares", resolved, authority);
-            return resolved.f(Inst.f.of(new AtPeer(machine.network(), authority, override.asInst().f(), read, submit)));
+            WIRE_LOG.debug("bound %s to the override %s declares", resolved, origin);
+            return resolved.f(Inst.f.of(new AtPeer(machine.network(), origin, override.asInst().f(), read, submit)));
         }
 
         /**
@@ -1073,12 +1074,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * dependency and no socket — its instructions apply what they are handed against the LOCAL machine,
          * so its {@code from(<path>)} reads the path here and its {@code obj.to(<path>)} writes it here. That makes
          * "a read through a loop peer equals the local read" an executable contract, which is the property every
-         * real client must then preserve one authority over.
+         * real client must then preserve one origin over.
          * <p>
          * Any other scheme needs a HANDLER — a vocabulary vid resolved through instruction memory at dial
          * time. A protocol CLIENT TYPE is a dialer whose constructor takes {@code [host=>...]} (the
          * constructor IS the dial — ws_client, mcp_client); a handler that resolves to an inst is applied
-         * to the dial uri instead. No handler, or one that declines: {@code noobj}, and the authority
+         * to the dial uri instead. No handler, or one that declines: {@code noobj}, and the origin
          * stays known rather than reachable.
          */
         public static Obj dial(final fURI dialURI, final fURI handler) {
@@ -1113,10 +1114,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * one reach the network reports, asked once: {@code [authority, status=>[kind=>up|down|known, time=>ms]]}.
+         * one reach the network reports, asked once: {@code [origin, status=>[kind=>up|down|known, time=>ms]]}.
          * The time is how long the answer took — a ws client's is its socket state, an http client's is a round trip.
          */
-        static Rec probe(final Obj authority, final Obj reach) {
+        static Rec probe(final Obj origin, final Obj reach) {
             final long start = System.currentTimeMillis();
             // A DIALED PEER ANSWERS FOR ITSELF: the peer map's value is a peer::T holding its client, and the client's
             // own status (derived on read) says whether it is live. A ROSTER ROW IS AN ADDRESS — knowledge, not reach —
@@ -1128,7 +1129,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             final String kind = client.isNoObj() ? "known" : Helper.status(client) ? "up" : "down";
             final long time = System.currentTimeMillis() - start;
             return rec(
-                    uri(AUTHORITY), authority,
+                    uri(ORIGIN), origin,
                     uri(STATUS), rec(uri(KIND), str(kind), uri(TIME), jnt(time)));
         }
     }

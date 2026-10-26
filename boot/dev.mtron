@@ -4,8 +4,8 @@
  host   => localhost:${!*boot/args/port},
  space  => /sys/space,
  web    => [
-   http/host  => <http://0.0.0.0:8777>,
-   ws/host    => <ws://0.0.0.0:8555>],
+   http/origin  => <http://0.0.0.0:8777>,
+   ws/origin    => <ws://0.0.0.0:8555>],
  mqtt/broker  => <mqtt://ginger.local:1883>,
  typer/stage  => [inst_dom     => true, 
                   inst_rng     => true,
@@ -51,7 +51,7 @@ fsspace::[
         [=====================]  
         [======== WEB ========]
         [=====================]   
-http_server::[host     => !*boot/args/web/http/host,
+http_server::[origin   => !*boot/args/web/http/origin,
               route    => [/          => <>,
                            /emulator  => mcp_emulator_http,
                            /mcp       => mcp_mtron,
@@ -59,7 +59,7 @@ http_server::[host     => !*boot/args/web/http/host,
                            /console   => <metatronfs:src/main/resources/web/console>]];
 http_client::[host     => <http://#>];
 http_client::[host     => <https://#>];
-ws_server::[host    => !*boot/args/web/ws/host,
+ws_server::[origin  => !*boot/args/web/ws/origin,
             route   => [/emulator => mcp_emulator_ws,
                         /mtron    => mtron_ws,
                         /mcp      => mcp_mtron]];

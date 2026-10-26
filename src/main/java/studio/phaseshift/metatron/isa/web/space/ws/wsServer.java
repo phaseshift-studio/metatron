@@ -42,12 +42,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -56,15 +51,11 @@ import java.util.concurrent.TimeoutException;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
@@ -76,7 +67,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * WS_SERVER — a websocket server as a machine's PRESENCE: a {@link Listener} on a {@code ws://host:port} socket, serving
  * the routes of every machine that shares it.
  * <pre>
- *   ws_server::[host=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]]
+ *   ws_server::[origin=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]]
  * </pre>
  * THE CONSTRUCTOR SERVES. A socket no machine at or above this one holds is bound here, and this machine's network owns
  * it (its pop releases the port); a socket already held above is JOINED — this machine adds its own routes to it, and
@@ -179,7 +170,7 @@ public final class wsServer extends Listener {
                     // this machine's routes on the socket: <path> => handler (a uri, a type, or an instruction)
                     uri(ROUTE).maybe().asUri(), rec(URI_TYPE, T(ALL)),
                     // the socket bound, and whether it is still served — the server's own fields once constructed
-                    uri(AUTHORITY).maybe().asUri(), URI_TYPE,
+                    uri(ORIGIN).maybe().asUri(), URI_TYPE,
                     uri(STATUS).maybe().asUri(), BOOL_TYPE))
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_SERVER_TID),
                     lst(T(REC_TID)), (_, inst) -> wsServer.of(inst.arg(0).asRec()))).create();
@@ -271,36 +262,35 @@ public final class wsServer extends Listener {
      */
     private final Map<WebSocket, Session> sessions = Collections.synchronizedMap(new IdentityHashMap<>());
 
-    private wsServer(final fURI authority, final Network owner) {
-        super(authority, WS_SERVER_TID, owner);
-        this.socket = new Socket(authority);
+    private wsServer(final fURI origin, final Network owner) {
+        super(origin, WS_SERVER_TID, owner);
+        this.socket = new Socket(origin);
     }
 
     /**
-     * A ws_server from its configuration — {@code ws_server::[host=>...,route=>...]} in Java: this machine's routes,
-     * served through the socket at {@code host} ({@link #serve}).
+     * A ws_server from its configuration — {@code ws_server::[origin=>...,route=>...]} in Java: this machine's routes,
+     * served through the socket at {@code origin} ({@link #serve}).
      */
     public static Listener of(final Rec config) {
-        final Obj host = config.at(uri(HOST)).autoResolve(noobj());
-        if (!host.isUri())
-            throw MTronException.of("a ws_server serves a socket: host=><ws://host:port> required, got %s", host);
+        final Obj origin = config.at(uri(ORIGIN));
+        if (!origin.isUri())
+            throw MTronException.of("a ws_server serves a socket: origin=><ws://origin:port> required, got %s", origin);
         final Obj routes = config.at(uri(ROUTE));
-        return serve(host.uriValue(), routes.isRec() ? routes.asRec() : rec());
+        return serve(origin.uriValue(), routes.isRec() ? routes.asRec() : rec());
     }
 
     /**
-     * SERVE {@code routes} through the socket at {@code host}, from the current machine: join the socket a machine at
+     * SERVE {@code routes} through the socket at {@code origin}, from the current machine: join the socket a machine at
      * or above this one already holds, or bind it here. Answers the server.
      */
-    public static Listener serve(final fURI host, final Rec routes) {
-        final fURI authority = host.qLess().path(List.of());
+    public static Listener serve(final fURI origin, final Rec routes) {
         final Network level = Machine.current().network();
-        final Listener held = Network.Helper.listenerFor(authority);
+        final Listener held = Network.Helper.listenerFor(origin);
         if (null != held) {
             level.listen(held, routes);
             return held;
         }
-        final wsServer server = new wsServer(authority, level);
+        final wsServer server = new wsServer(origin, level);
         try {
             level.listen(server, routes);
         } catch (final RuntimeException e) {
@@ -340,7 +330,7 @@ public final class wsServer extends Listener {
             if ("/".equals(request.qLess().toString()))
                 this.banner(conn);
             else {
-                LOG.debug("no route for %s on %s", request, this.authority());
+                LOG.debug("no route for %s on %s", request, this.origin());
                 conn.close(4004, "no route for " + request);
             }
             return;
@@ -399,10 +389,10 @@ public final class wsServer extends Listener {
     private void banner(final WebSocket conn) {
         for (final String line : CommonUtil.getHeader(CommonUtil.HEADER_FILE, null, true).split("\n"))
             conn.send(line);
-        conn.send(String.format("metatron ws_server at {{b}}%s{{X}}\n", this.authority()));
+        conn.send(String.format("metatron ws_server at {{b}}%s{{X}}\n", this.origin()));
         conn.send("\t{{y}}available routes{{X}}:\n");
         for (final Network level : this.sharers()) {
-            final Obj entry = level.listenerAt(Network.Helper.keyOf(this.authority()));
+            final Obj entry = level.listenerAt(Network.Helper.keyOf(this.origin()));
             final Obj routes = entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
             if (routes.isRec())
                 conn.send(Highlighter.format(routes));
@@ -410,10 +400,10 @@ public final class wsServer extends Listener {
         conn.closeConnection(1000, "end transmission");
     }
 
-    private static InetSocketAddress address(final fURI authority) {
-        if (null == authority.host() || authority.port() < 0)
-            throw MTronException.of("a ws_server binds a host and a port: %s", authority);
-        return new InetSocketAddress(authority.host(), authority.port());
+    private static InetSocketAddress address(final fURI origin) {
+        if (null == origin.host() || origin.port() < 0)
+            throw MTronException.of("a ws_server binds a origin and a port: %s", origin);
+        return new InetSocketAddress(origin.host(), origin.port());
     }
 
     private static fURI request(final WebSocket conn) {
@@ -452,15 +442,15 @@ public final class wsServer extends Listener {
          */
         private final CompletableFuture<Void> started = new CompletableFuture<>();
 
-        private Socket(final fURI authority) {
-            super(address(authority));
+        private Socket(final fURI origin) {
+            super(address(origin));
             if (!Machine.loaded())
-                throw MTronException.of("unable to start %s: no machine is loaded", authority);
+                throw MTronException.of("unable to start %s: no machine is loaded", origin);
             this.setReuseAddr(true);
             this.setDaemon(true);
             this.start();
             this.awaitStart();
-            LOG.info("ws_server listening: %s", authority);
+            LOG.info("ws_server listening: %s", origin);
         }
 
         /**

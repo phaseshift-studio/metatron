@@ -33,7 +33,7 @@ architecture, and every entry here lowers to it. `PeerSpawn` (forking a peer JVM
 | a stream is a **bag**, bulked by coefficient: `{1,2,1}` is `{2}1, 2`                                                                                                                                                                                                                                                                                                                                       | a fold over a stream must be commutative to exist at all; order lives in `lst`, so ship a `lst` when order matters                                                                                                                                     |
 | a `lst` is **slot-oriented, never a bag**: a coefficient on a `lst` goes into its slots (`{2}[1,2]` is `[{2}1,{2}2]`); only the expression bags a `lst`'s slots (`[1,2,3]>-`); inside a rec merge a `lst` is an **atom** — colliding `lst`s make a bag of `lst`s, each whole (`[a=>[1,2,3]]+[a=>[2,3]]` is `[a=>{[1,2,3],[2,3]}]`), and concatenating them is a select's `+` (`[a=>[1,2,3]]==[a=>+[2,3]]`) | the rec merge is commutative, so rec `sum` is a defined fold over a bag; `lst` partials (G's `group([k⇒order(s)])`) reach their combiner as a bag of runs                                                                                              |
 | a fold reads a coefficient through its monoid: `c·x = x ⊕ … ⊕ x`                                                                                                                                                                                                                                                                                                                                           | `merge()` bulks equal partials (`{2}6`), so a fold that misreads `c` makes the sharded answer differ from the local one                                                                                                                                |
-| the fan-out is **sequential** today                                                                                                                                                                                                                                                                                                                                                                        | `applyFunction` resolves each `to(peer)`'s future before `select` sends the next shard: latency is Σ RTT (see D)                                                                                                                                       |
+| the fan-out is **parallel** — one virtual thread per route, awaited at the gather                                                                                                                                                                                                                                                                                                                            | `select([virtual::[code=>eval(p)]])` submits every round trip at once and `select([>>rhs])` awaits them: latency is max RTT, not Σ (see D)                                                                                                            |
 | targets are **dialed** peers only                                                                                                                                                                                                                                                                                                                                                                          | accepted twins (keyed by the dialer's ephemeral port, no `host`) never receive shards                                                                                                                                                                  |
 | `Route.peer`, `Route.space`, `Route.tree` have no lowering                                                                                                                                                                                                                                                                                                                                                 | each entry that needs one adds its emitter; a generic interpreter is entry I                                                                                                                                                                           |
 | the a-priori pruner fails open on bulk seeds                                                                                                                                                                                                                                                                                                                                                               | `path::T` lists every rule for `start({…})…` chains (fixed: a bulk seed's carrier is its member type); compilation is unaffected                                                                                                                       |
@@ -48,7 +48,7 @@ architecture, and every entry here lowers to it. `PeerSpawn` (forking a peer JVM
 | A | homomorphism shard        | `h(a ⊎ b) = h(a) ⊕ h(b)`                                 | **done**: `sum`, `prod`, `count`, `order`, rec `sum` |
 | B | data-local shard          | the store is the sum of its owners' stores               | needs a denotation decision                          |
 | C | authority push-down       | delegation (Thm 5 + a pure chain)                        | open                                                 |
-| D | parallel fan-out          | Thm 5                                                    | open (plumbing)                                      |
+| D | parallel fan-out          | Thm 5                                                    | **done** (2026-10-26): virtual-threaded routes, max RTT |
 | E | tree reduction            | associativity + commutativity: any bracketing, any shape | **v1 done**: `?hops=n`                               |
 | F | ordered fold              | associativity alone                                      | struck for streams; `lst` only                       |
 | G | keyed reduce              | Thm 19 per key                                           | **v1 done**: pointwise, `lst` values too             |
@@ -136,20 +136,24 @@ emit:    start([from?hops=0(</n/+>).plus(1).sum()]).select([to(<ws://booger.loca
 stops at side effects and master-local names (`to`, `print`, `~`, relative names). B is C with many owners: one
 emitter, two seed shapes.
 
-### D. Parallel fan-out
+### D. Parallel fan-out — done (2026-10-26)
 
 **Law.** Thm 5: no required order of apply or merge.
 
-**Today.** Sequential. `send_recv` returns a `FutureObj`, and `Processor.Helper.applyFunction` resolves every
-result (`FutureObj.resolveFuture`, a blocking `get`) before `select` sends the next shard.
+**Realized.** One virtual thread per route, awaited at the gather. `law_shard` now emits
+`select([virtual::[code=>eval(p_1)], …]).select([>>rhs, …])`: the first `select` submits every round trip at once —
+`virtual::[code=>eval(p_i)]` applied to its slave returns the thread immediately, each waiting on its own virtual
+thread — and the second reads each thread's `rhs` (an `auto` that resolves the thread's future), so the master pays
+max RTT, not Σ RTT. The ship is `eval` (the client's `inst` mini-instset override), and the thread's result hangs off
+`rhs` as a lazy `auto` over the future — not the future itself — so the emitted rec stays serializable and
+type-checkable. Witnessed by `ParallelFanOutTest` (two slow loop peers dispatched together, never one delay apart) and
+the forked-peer suites (`DistributedRewriteTransportTest`, `TreeShardTransportTest`).
 
-**Needs.** The gather (`merge`) as the await boundary, with `select`'s zip leaving transport futures in flight; the
-master taking a share of its own (k+1 parts — S); a timing test with forked peers (Σ vs max). D multiplies every other
-entry.
-
-**Spelling (Marko, 2026-10-21):** a virtual thread per route —
-`[virtual::[code=>to(ws://s1)],virtual::[code=>to(ws://s2)]]` —
-so each round trip waits on its own thread and the gather awaits them all.
+**Left open.** The `virtual` + `>>rhs` spelling is the "easiest way": it confines the change to the emitter and leaves
+the transport's eager future-resolution (`Processor.Helper.applyFunction`'s `resolveFuture`) untouched. The
+paradigmatic form is an async `eval`/`to` returning a `future::T` with `merge()` as the await — collapsing the layout
+back to `select([eval(p_i)]).merge().<combiner>` and making the thread invisible (see §5). S (the master's own k+1
+lane) is the remaining piece.
 
 ### E. Tree reduction — `Route.tree(hops)` — v1 done (2026-10-21)
 
@@ -358,7 +362,7 @@ is a fan-out target **always**, not just the peerless fallback §13.3 frames it 
 ## 3. How the entries compose
 
 - **E applies to every A-fold**, and to G, J and L: any combiner recombines at any interior node.
-- **D multiplies everything.** It is the one entry whose absence makes distribution slower, not wrong.
+- **D multiplies everything** — done: its absence made distribution slower, not wrong.
 - **S applies to every fan-out** — A, E, G, and any shipped partial: the master (and every interior node) folds its own
   slice instead of only recombining.
 - **N is G + J + O under `kleene`**, with R for rounds.

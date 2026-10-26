@@ -18,22 +18,17 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PRINT_INST_TID;
@@ -48,8 +43,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * apply-and-respond {@code on_message} (instead of the {@code print} default), so the client can answer a
  * server-initiated request over the established socket — the client half of a symmetric peer.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class WsClientProtocolTest extends AbstractMetatronTest {
 
     private Listener space;
@@ -71,8 +66,8 @@ public class WsClientProtocolTest extends AbstractMetatronTest {
         InstSet.importInstSet(WEB_ISA_TID);
         this.port = generatePort();
         this.space = wsServer.of(rec(mutableMap(
-                        uri(HOST), uri("ws://localhost:" + this.port),
-                        uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString())))));
+                uri(ORIGIN), uri("ws://localhost:" + this.port),
+                uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString())))));
         CommonUtil.sleepThread(500);
         return ObjmtronSerializer.parse(clientExpr.replace("{{port}}", String.valueOf(this.port))).apply();
     }

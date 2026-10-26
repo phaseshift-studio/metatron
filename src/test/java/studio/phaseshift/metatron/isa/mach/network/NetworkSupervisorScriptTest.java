@@ -18,12 +18,8 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.StatefulCSVSource;
@@ -34,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -80,8 +77,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  *   [NETWORK_CLEAR]         disconnect every peer and close every server
  * </pre>
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
 
     private static final fURI PROBE = f("/m/networkProbe");
@@ -178,7 +175,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
         final int port = this.ports.get(name);
         this.servers.put(name, wsServer.of(rec(
                 uri(NAME), uri("supervision-" + name),
-                uri(HOST), uri("ws://localhost:" + port),
+                uri(ORIGIN), uri("ws://localhost:" + port),
                 // two surfaces of one service, so a script can dial both and see two members
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()),
                         uri("/eval"), uri(WS_MTRON_HANDLER_TID.toString()))
@@ -381,7 +378,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             "[WS_SERVER a]",
             "[STATE] ws_client::[pattern=><{{a}}/mtron?name=addressed>]",
             "[AWAIT_PEERS 1]",
-            "*</network/peer/ws/localhost/{{a_port}}/mtron/authority> % <{{a}}>   [-- the dial's own path names the member --]",
+            "*</network/peer/ws/localhost/{{a_port}}/mtron/origin> % <{{a}}>   [-- the dial's own path names the member --]",
             "*</network/peer/ws/localhost/{{a_port}}/mtron/host> % <{{a}}/mtron?name=addressed> [-- the dial, identity included, is its host --]"
     })
     public void testAPeerIsAddressableAtItsDialsPath() {
@@ -443,7 +440,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             "[AWAIT_PEERS 2]                               [-- the two surfaces of one service coexist --]",
             "[STATE] </network/peer/ws/localhost/{{a_port}}/eval> -> noobj",
             "[AWAIT_PEERS 1]                               [-- deleting one leaves the other --]",
-            "*</network/peer/ws/localhost/{{a_port}}/mtron/authority> % <{{a}}>",
+            "*</network/peer/ws/localhost/{{a_port}}/mtron/origin> % <{{a}}>",
             "[STATE] </t/peer/s> -> 'surface'",
             "*<{{a}}/t/peer/s> % 'surface'                 [-- and the wire still reaches the service --]"
     })
@@ -460,8 +457,8 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             "[STATE] *~.push(dialer)",
             "[STATE] ws_client::[pattern=><{{a}}/mtron?name=framed>]",
             "[AWAIT_PEERS 1]",
-            "*<~/network/peer/ws/localhost/{{a_port}}/mtron/authority> % <{{a}}>   [-- the frame's own member --]",
-            "*</network/peer/ws/localhost/{{a_port}}/mtron/authority> % noobj      [-- the root never held it --]",
+            "*<~/network/peer/ws/localhost/{{a_port}}/mtron/origin> % <{{a}}>   [-- the frame's own member --]",
+            "*</network/peer/ws/localhost/{{a_port}}/mtron/origin> % noobj      [-- the root never held it --]",
             "[STATE] *~.pop(_)"
     })
     public void testAFramesPeersSitAtItsOwnPath() {

@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -510,17 +511,17 @@ asserted in the acceptance test).</p>
 an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
 maven build commands are attached to the <code>project::T</code> for each of access.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
-==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]]@/sys/fail/4887
+==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]]@/sys/fail/5753
 </code></pre>
 <p>Now that the project is stored in space, build commands can be added and the project can be built.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
                                        mvn_clean =&gt; !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  =&gt; !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==&gt;[root=&gt;mfs:src/test/resources/scratch,
-    src=&gt;[Operation=&gt;inst(){&lt;j&gt;},
-          Echo=&gt;inst(){&lt;j&gt;},
-          Calculator=&gt;inst(){&lt;j&gt;},
-          EchoTest=&gt;inst(){&lt;j&gt;}],
+    src=&gt;[Operation=&gt;λ(){&lt;j&gt;},
+          Echo=&gt;λ(){&lt;j&gt;},
+          Calculator=&gt;λ(){&lt;j&gt;},
+          EchoTest=&gt;λ(){&lt;j&gt;}],
     code=&gt;[,],
     idx=&gt;[=&gt;],
     command=&gt;[read_file=&gt;/dev/scratch/command/read_file(file=&gt;uri::T,
@@ -532,9 +533,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
               mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;second::4.018,
+            runtime=&gt;second::3.914,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/78c48046]
+            output=&gt;!*/sys/tmp/bae65da2]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -766,11 +767,11 @@ with it, then save (<code>code/N.to</code>).</p>
          [?&gt;2.?&lt;4 =&gt; 'return &quot;marko&quot;;'])&gt;&gt;.
          &gt;-?str&lt;=str{*}('
 ')].explain()
-==&gt;explanation::[format=&gt;!inst?str&lt;=(){&lt;j&gt;},
+==&gt;explanation::[format=&gt;!λ?str&lt;=(){&lt;j&gt;},
                  desc=&gt;[rng=&gt;&lt;#&gt;,
                         insts=&gt;2,
                         rewrite=&gt;explanation::[
-                         format=&gt;!inst?str&lt;=(){&lt;j&gt;},
+                         format=&gt;!λ?str&lt;=(){&lt;j&gt;},
                          desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],
                          per_inst=&gt;[[op=&gt;at,
                                      args=&gt;[/dev/scratch/idx/Echo/method/speak],

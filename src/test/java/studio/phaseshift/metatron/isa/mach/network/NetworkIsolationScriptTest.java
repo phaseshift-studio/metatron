@@ -167,7 +167,7 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
             "[roster => [b => <ws://192.168.1.42:8555>]]                                     % true  % known endpoints alone",
             "[source => [mdns => </m/web/mdns>]]                                             % true  % a discovery source alone",
             "[source => [mdns-lan => </m/web/mdns>, mdns-bridge => </m/web/mdns>]]            % true  % ONE MECHANISM, TWO SEGMENTS: the key is a free label, so a source per LAN segment (different interfaces, different trust) sits side by side",
-            "[peer => [<ws://192.168.1.42:8555> => [authority => <ws://192.168.1.42:8555>]]] % true  % a connection alone",
+            "[peer => [<ws://192.168.1.42:8555> => [origin => <ws://192.168.1.42:8555>]]] % true  % a connection alone",
             "[name => 'local', roster => [b => <ws://192.168.1.42:8555>], source => [mdns => </m/web/mdns>]] % true % name, roster and source together",
             "[name => 5]                                                                     % false % a name that is not a str",
             "[source => [mdns => 5]]                                                         % false % a source names a handler tid, not a value",
@@ -189,8 +189,8 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
     @ParameterizedTest
     @CsvSource(value = {
             // peer                                                                                                                                    % accepted % why
-            "[authority => <ws://192.168.1.42:8555>]                                                                                                  % true  % known: the authority is the connection key",
-            "[authority => <ws://192.168.1.42:8555>, host => <ws://192.168.1.42:8555/mtron>, handler => </m/web/ws/mtron_ws>, name => 'builder-2']    % true  % reachable: host and surface filled in",
+            "[origin => <ws://192.168.1.42:8555>]                                                                                                  % true  % known: the authority is the connection key",
+            "[origin => <ws://192.168.1.42:8555>, host => <ws://192.168.1.42:8555/mtron>, handler => </m/web/ws/mtron_ws>, name => 'builder-2']    % true  % reachable: host and surface filled in",
             "[name => 'builder-2']                                                                                                                    % false % a peer with no authority is not a peer",
     }, delimiter = '%')
     void testThePeerPredicateIsAnAuthorityAndNothingMore(final String shape, final boolean accepted,

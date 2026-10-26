@@ -61,8 +61,8 @@ mtron> int::T.as(object::T)
                        mult_monoid=>monoid_theory::[
                         op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
                         id=>1]],
-                 morphed_to=>!inst(){<j>},
-                 morphed_from=>!inst(){<j>}]
+                 morphed_to=>!λ(){<j>},
+                 morphed_from=>!λ(){<j>}]
 ```
 ### the object fields
 
@@ -77,21 +77,21 @@ mtron> int::T.as(object::T)
 mtron> int::T.as(object::T).morphed_to()
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst(#{*}::T){<j>},
-              trgt=>!inst(#{*}::T){<j>},
-              analysis=>!inst?#<=#(#{*}::T){<j>},
+              src=>!λ(#{*}::T){<j>},
+              trgt=>!λ(#{*}::T){<j>},
+              analysis=>!λ?#<=#(#{*}::T){<j>},
               obj=>as?bool<=int(bool::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst(#{*}::T){<j>},
-              trgt=>!inst(#{*}::T){<j>},
-              analysis=>!inst?#<=#(#{*}::T){<j>},
+              src=>!λ(#{*}::T){<j>},
+              trgt=>!λ(#{*}::T){<j>},
+              analysis=>!λ?#<=#(#{*}::T){<j>},
               obj=>as?bytes<=int(bytes::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!inst(#{*}::T){<j>},
-              trgt=>!inst(#{*}::T){<j>},
-              analysis=>!inst?#<=#(#{*}::T){<j>},
+              src=>!λ(#{*}::T){<j>},
+              trgt=>!λ(#{*}::T){<j>},
+              analysis=>!λ?#<=#(#{*}::T){<j>},
               obj=>as?real<=int(real::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
@@ -125,9 +125,9 @@ mtron> |plus?int<=int(int::T).as(morphism::T)
     name=>plus,
     form=>mapper,
     class=>[endo],
-    src=>!inst(#{*}::T){<j>},
-    trgt=>!inst(#{*}::T){<j>},
-    analysis=>!inst?#<=#(#{*}::T){<j>},
+    src=>!λ(#{*}::T){<j>},
+    trgt=>!λ(#{*}::T){<j>},
+    analysis=>!λ?#<=#(#{*}::T){<j>},
     obj=>plus?int<=int(int::T),
     ...(1 more)]
 ```
@@ -553,17 +553,17 @@ and computes its cut/span/where without consulting the code below; the descent (
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
 ==>[abstraction::[obj=>[morphism[start]::[name=>start,
                                           form=>initial,
-                                          src=>!inst(#{*}::T){<j>},
-                                          trgt=>!inst(#{*}::T){<j>},
-                                          analysis=>!inst?#<=#(#{*}::T){<j>},
+                                          src=>!λ(#{*}::T){<j>},
+                                          trgt=>!λ(#{*}::T){<j>},
+                                          analysis=>!λ?#<=#(#{*}::T){<j>},
                                           obj=>start(5)],
                         morphism[plus?rng=int&dom=int]::[
                          name=>plus,
                          form=>mapper,
                          class=>[endo],
-                         src=>!inst(#{*}::T){<j>},
-                         trgt=>!inst(#{*}::T){<j>},
-                         analysis=>!inst?#<=#(#{*}::T){<j>},
+                         src=>!λ(#{*}::T){<j>},
+                         trgt=>!λ(#{*}::T){<j>},
+                         analysis=>!λ?#<=#(#{*}::T){<j>},
                          obj=>plus(0),
                          ...(1 more)],
                         morphism[neg?rng=int&dom=int]::[
@@ -576,9 +576,9 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
                                  retraction,
                                  mono,
                                  epi],
-                         src=>!inst(#{*}::T){<j>},
-                         trgt=>!inst(#{*}::T){<j>},
-                         analysis=>!inst?#<=#(#{*}::T){<j>},
+                         src=>!λ(#{*}::T){<j>},
+                         trgt=>!λ(#{*}::T){<j>},
+                         analysis=>!λ?#<=#(#{*}::T){<j>},
                          obj=>neg(),
                          ...(1 more)],
                         morphism[neg?rng=int&dom=int]::[
@@ -646,13 +646,13 @@ self-registers a `peer::T` into the network; that registration is the condition 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
 ==>[host=>ws://localhost:8555/mtron,
-    send=>inst(){<j>},
-    send_recv=>inst(){<j>},
+    send=>λ(){<j>},
+    send_recv=>λ(){<j>},
     inst=>[/m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
            /m/inst/from=>*uri::T,
            /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-    status=>!inst?bool<=(){<j>},
-    close=>inst(){<j>},
+    status=>!λstatus?bool<=(){<j>},
+    close=>λ(){<j>},
     on_message=>print('received ${_}')]
 mtron> */network
 ```
@@ -777,9 +777,9 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 mtron> <//localhost>.as(place::T)
 ==>place::[obj=>//localhost,
            authority=>[ws://localhost:8555],
-           linked_to=>!inst(){<j>},
-           linked_from=>!inst(){<j>},
-           status=>!inst(){<j>}]
+           linked_to=>!λ(){<j>},
+           linked_from=>!λ(){<j>},
+           status=>!λ(){<j>}]
 ```
 | field | what it is |
 |---|---|

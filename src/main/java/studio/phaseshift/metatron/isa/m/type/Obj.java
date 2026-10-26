@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.processor.monad.StatefulMonad;
+import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 import studio.phaseshift.metatron.util.*;
@@ -992,7 +993,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
          */
         public static boolean testObjs(final Obj lhs, final Obj rhs) {
             // ── universal quick-exits ──
-            if (isAuto(rhs))
+            if (isAuto(rhs) || rhs instanceof FutureObj<?> || lhs instanceof FutureObj<?>)
                 return true;
             if (lhs.isNoObj())
                 return rhs.tid().c().isZeroable();

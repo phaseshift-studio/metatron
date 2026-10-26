@@ -51,7 +51,7 @@ class httpWildcardMountTest extends AbstractHTTPServerIntegrationTest {
         memSpace.of(rec(uri(PATTERN), uri(f("/wild/#"))), f("/sys/space/test/wild"));
         Machine.write(f("/wild/people/34"), rec(uri("name"), str("Ada")));
         return httpServer.of(rec(
-                uri(HOST), uri(f("http://127.0.0.1:" + generatePort())),
+                uri(ORIGIN), uri(f("http://127.0.0.1:" + generatePort())),
                 uri(ROUTE), rec(
                         // a literal prefix key mounts its subtree
                         uri(f("/literal")), uri(f("/m/web/helper")),

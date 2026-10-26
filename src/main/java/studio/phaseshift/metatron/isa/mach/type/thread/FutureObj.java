@@ -25,14 +25,13 @@ import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-
 import java.util.Iterator;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.M_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 
 /*
@@ -53,7 +52,7 @@ import static studio.phaseshift.metatron.Tokens.M_ISA_TID;
  */
 public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
-    public static final int DEFAULT_TIMEOUT_MS = 2000;
+    public static final int DEFAULT_TIMEOUT_MS = 5000;
     public static final fURI FUTURE_TID = M_ISA_TID.extend("future");
 
     private volatile boolean isCanceled;

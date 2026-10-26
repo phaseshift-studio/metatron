@@ -18,29 +18,22 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -57,15 +50,15 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID
  * local read answers. The far side here is this same JVM's machine behind a real websocket, so the
  * equality is checkable without a second process.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
 
     @Override
     protected Listener createWSServer() {
         return wsServer.of(rec(
                 uri(NAME), uri("network-dial-test"),
-                uri(HOST), uri("ws://localhost:" + generatePort()),
+                uri(ORIGIN), uri("ws://localhost:" + generatePort()),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
     }
 
@@ -92,7 +85,7 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
     void testWsConnectMintsPeerWithClient() {
         final Obj peer = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
         assertEquals(PEER_TID, peer.tid().basePath(), "connect must answer a peer::T");
-        assertEquals(this.service(), peer.asRec().<Obj>at(uri(AUTHORITY)).uriValue(),
+        assertEquals(this.service(), peer.asRec().<Obj>at(uri(ORIGIN)).uriValue(),
                 "the peer keys on the service authority — the route stays on host");
         assertEquals(this.dialURI(), peer.asRec().<Obj>at(uri(HOST)).uriValue(),
                 "host remembers where it was dialed, route included — peer::T\u0027s own words");

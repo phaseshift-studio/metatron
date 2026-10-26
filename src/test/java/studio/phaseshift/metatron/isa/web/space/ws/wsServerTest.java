@@ -24,9 +24,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -43,8 +40,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.NAME;
+import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -63,8 +60,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * the peer and the listener declines a twin ({@link Network#accept}), so the inbound peer is pinned through
  * {@link wsServer#admit} with a remote address.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class wsServerTest extends AbstractMetatronTest {
 
     private fURI socket;
@@ -101,7 +98,7 @@ public class wsServerTest extends AbstractMetatronTest {
 
     @Test
     void testServesItsRoutesThroughTheSocket() {
-        final Obj server = wsServer.WS_SERVER_TYPE.constructor().apply(rec(uri(HOST), uri(this.socket), uri(ROUTE), mtron("/mtron")));
+        final Obj server = wsServer.WS_SERVER_TYPE.constructor().apply(rec(uri(ORIGIN), uri(this.socket), uri(ROUTE), mtron("/mtron")));
         assertInstanceOf(wsServer.class, server, "the constructor answers the server: " + server);
         assertTrue(Network.Helper.status(server), "a server is live while it holds its socket");
         assertSame(server, Network.Helper.listenerFor(this.socket), "the socket is this machine's presence");

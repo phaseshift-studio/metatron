@@ -20,14 +20,10 @@ package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TypeCheck;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -38,10 +34,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MERGE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /**
@@ -52,8 +45,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class PlacementEquivalenceTest extends AbstractMetatronTest {
 
     @BeforeEach
@@ -83,8 +76,8 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
         Machine.current().network().connect(f("loop://localhost:8555"));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
-        // the emitter fired the tree layout: the master leads start·select·merge·sum
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
+        // the emitter fired the tree layout: the master leads start·select·select·merge·sum
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
                 TransportRewriteHarness.ops(compiled), "the master recombines through the combiner: " + compiled);
         checkEquality(LOG, jnt(expected),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
