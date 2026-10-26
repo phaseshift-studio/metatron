@@ -65,7 +65,7 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
             "*~.eq(*/xyz)                                    % true",
             "*</.>.eq(*/xyz)                                 % false",
             "*~.tid().eq(/m/mach/machine)                    % true",
-            "*~.pop(_).eq(*</.>)                              % true"
+            "*~.pop(_).*<~>.eq(*</.>)                        % true"
     })
     void testTildeTracksTheCurrentMachine() {
     }

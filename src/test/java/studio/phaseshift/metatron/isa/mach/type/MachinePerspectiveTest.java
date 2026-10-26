@@ -19,13 +19,13 @@
 package studio.phaseshift.metatron.isa.mach.type;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /**
  * The published perspective: the mtron instructions that move a thread are what makes a move visible to a reader
@@ -57,7 +57,7 @@ public class MachinePerspectiveTest extends AbstractMetatronTest {
      */
     @Test
     void shouldFollowAPushAndItsPop() {
-        final Obj pushed = Machine.evaluate("push()");
+        final Obj pushed = Machine.evaluate("push().*<~>");
         assertTrue(pushed.isMachine(), "push() minted and entered a machine: " + pushed);
         final Machine child = pushed.asMachine();
         assertEquals(child, MachinePerspective.last().machine(), "the push publishes the frame it entered");
@@ -68,5 +68,37 @@ public class MachinePerspectiveTest extends AbstractMetatronTest {
         assertNotNull(MachinePerspective.last(), "a pop publishes too");
         assertEquals(Machine.root(), MachinePerspective.last().machine(),
                 "and the frame it landed on is what the bar shows again");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the value flows through every move spelling: move is a re-homing identity
+            "5.move(<~>)            % 5",
+            "5.move()               % 5",
+            "5.move(<..>)           % 5",
+            "5.move(<.>)            % 5",
+            "push(abc)..34.to(~/sys/temp).move(</.>).abc.move(_).from(~/sys/temp)           % 34",
+            "push(abc)..34.to(~/sys/temp).move(</.>).from(~/sys/temp)                       % noobj",
+            // and an expression continues on the same data after the move
+            "5.move(<~>).plus(1)    % 6",
+            "5.move().mult(2)       % 10",
+            "5.move(<..>).plus(3)   % 8",
+            // the value flows through regardless of its type
+            "[1,2,3].move(<~>)      % [1,2,3]",
+            "[1,2,3].move().>-.sum()   % 6",
+            "{1,2,3}.move(<~>).sum()% 6",
+    }, delimiter = '%')
+    void testMoveFlowsData(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * move() is data-transparent: it re-homes the machine as a side effect, and the value flows through so an
+     * expression continues on the same data in the new machine.
+     */
+    @Test
+    void shouldFlowDataThroughMove() {
+        final Obj result = Machine.evaluate("5.move().plus(1)");
+        assertEquals(jnt(6), result, "move re-homes the machine; the value flows through so plus(1) sees 5");
     }
 }
