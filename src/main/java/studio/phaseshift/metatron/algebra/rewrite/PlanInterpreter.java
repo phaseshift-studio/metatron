@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,13 +46,14 @@ import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.ADD;
-import static studio.phaseshift.metatron.Tokens.AUTHORITY;
+import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
 import static studio.phaseshift.metatron.Tokens.DERIVATION;
 import static studio.phaseshift.metatron.Tokens.HOPS;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ID;
 import static studio.phaseshift.metatron.Tokens.INVERSE;
+import static studio.phaseshift.metatron.Tokens.RHS;
 import static studio.phaseshift.metatron.Tokens.ZERO;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carriers;
@@ -262,6 +264,7 @@ public final class PlanInterpreter {
         // duplicates or drops it, and the budget bounds the bounce.
         final List<Obj> summands = new ArrayList<>();
         final List<Obj> routes = new ArrayList<>();
+        final List<Obj> gathers = new ArrayList<>();
         final mFluent<?> master = merge_().addInsts(withoutHops(combiner)).addInsts(withoutHops(insts.subList(cutIndex + 1, insts.size())));
         for (int s = 0; s < k; s++) {
             final List<Obj> part = new ArrayList<>();
@@ -278,9 +281,15 @@ public final class PlanInterpreter {
             // the bare eval(<target>), resolved at run time as before.
             final Inst ship = eval_(targets.get(s)).tryToInst().asInst();
             final Inst bound = ship.resolve(slave);
-            routes.add(null != bound && bound.hasf() ? bound : ship);
+            final Inst boundRoute = null != bound && bound.hasf() ? bound : ship;
+            // THE PARALLEL FAN-OUT (Thm 5, entry D): wrap each ship in a virtual thread, so the first select submits
+            // every round trip at once — none blocks the next, and each waits on its own thread. The gather select
+            // below (>>rhs) reads each thread's future off its rhs slot; the deref's FutureObj passes back through
+            // the processor's own FutureObj.resolveFuture, so the await boundary is the gather, not the fan-out.
+            routes.add(VirtualThread.virtual(boundRoute));
+            gathers.add(rshift_(uri(RHS)).tryToInst().asInst());
         }
-        final Code emitted = start_(lst(summands)).select_(lst(routes)).addInsts(master.insts());
+        final Code emitted = start_(lst(summands)).select_(lst(routes)).select_(lst(gathers)).addInsts(master.insts());
         return emitted;
     }
 
@@ -353,7 +362,7 @@ public final class PlanInterpreter {
             return env.peers().values()
                     .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
                     .filter(peer -> Places.serves(peer, route))
-                    .map(peer -> (Obj) peer.asRec().atDirect(uri(AUTHORITY)))
+                    .map(peer -> (Obj) peer.asRec().atDirect(uri(ORIGIN)))
                     .filter(Obj::isUri)
                     .toList();
         } catch (final Exception e) {

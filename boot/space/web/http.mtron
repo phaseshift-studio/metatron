@@ -1,5 +1,5 @@
 [-- http_server — the http presence of this machine: the mcp route and this directory.  Binds 0.0.0.0 for the container. --]
 |inst?http_server<=uri() {
-  -<([host    => _,
+  -<([origin  => _,
       route   => [/mcp   => mcp_mtron,
                   /      => fs:boot/space/web]]).as(http_server::T) }

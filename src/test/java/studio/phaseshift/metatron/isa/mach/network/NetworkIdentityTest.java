@@ -197,7 +197,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
             // its dial's own path and carries the service it reaches as its authority.
             network.at(uri(PEER), rec(mutableMap(
                     uri(Network.Helper.keyOf(f("ws://localhost:21001/n"))),
-                    rec(mutableMap(uri(AUTHORITY), uri("ws://localhost:21001"))))), MUTABLE);
+                    rec(mutableMap(uri(ORIGIN), uri("ws://localhost:21001"))))), MUTABLE);
             assertEquals(Set.of(f("ws://localhost:21001")), Network.Helper.peerAuthorities(),
                     "the members' authorities ARE the peers — declared, not emergent");
             assertTrue(Network.Helper.authorities().stream()
@@ -254,7 +254,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
         final Machine child = Machine.current().push(f("network-roster-scope"));
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(
                 uri("ws://declared-in-child:21011"),
-                rec(mutableMap(uri(AUTHORITY), uri("ws://declared-in-child:21011"))))));
+                rec(mutableMap(uri(ORIGIN), uri("ws://declared-in-child:21011"))))));
         child.pop();
         try {
             assertTrue(parent.roster().jvm().keySet().stream()

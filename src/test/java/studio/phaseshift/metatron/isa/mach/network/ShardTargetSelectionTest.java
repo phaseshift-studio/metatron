@@ -21,9 +21,6 @@ package studio.phaseshift.metatron.isa.mach.network;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.rewrite.Placement;
@@ -34,11 +31,7 @@ import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.math.cat.catRewrite;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -49,15 +42,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -70,8 +58,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * mirrors a client's {@code inst}), defaulted from the placement's shape — so every distribution rule reads it through
  * one check, {@link Places#serves}.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class ShardTargetSelectionTest extends AbstractMetatronTest {
 
     private static final fURI SERVANT = f("loop://servant");   // online, serves to
@@ -104,18 +92,27 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     }
 
     /**
-     * The authorities the lowered layout ships to: its {@code select}'s routes, each {@code to(<authority>)}.
+     * The authorities the lowered layout ships to: its fan-out {@code select}'s routes, each
+     * {@code virtual::[code=>eval(<authority>)]}.
      */
     private static List<fURI> routes(final Code code) {
         final List<fURI> routes = new ArrayList<>();
+        // the FAN-OUT select (the first) ships; the gather select (>>rhs) reads the threads' rhs and is not a route
         for (final Inst inst : code.insts())
-            if (SELECT_INST_TID.equals(inst.tid().basePath()))
-                inst.arg(0).asLst().elements().forEach(element -> {
-                    final Obj route = (Obj) element;
-                    final Inst to = route.isObjCall() ? route.asCall().insts().getFirst() : route.asInst();
-                    routes.add(to.arg(0).uriValue());
-                });
+            if (SELECT_INST_TID.equals(inst.tid().basePath())) {
+                inst.arg(0).asLst().elements().forEach(element -> routes.add(ship((Obj) element).arg(0).uriValue()));
+                break;
+            }
         return routes;
+    }
+
+    /**
+     * A fan-out route is {@code virtual::[code=>eval(<target>)]} — the ship is the thread's code slot, peeled off the
+     * select member (a bare eval answers as itself, for a route that never wrapped).
+     */
+    private static Inst ship(final Obj route) {
+        final Obj eval = route.isRec() && !route.asRec().at(uri(CODE)).isNoObj() ? route.asRec().at(uri(CODE)) : route;
+        return eval.isObjCall() ? eval.asCall().insts().getFirst() : eval.asInst();
     }
 
     @Test
@@ -143,19 +140,19 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     @Test
     void testServesNeedsBothOnlineAndEval() {
         final Placement route = Placement.tree(1, Span.at());
-        final Obj online = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
+        final Obj online = rec(uri(ORIGIN), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), client(SERVANT, EVAL_INST_TID, TO_INST_TID));
         assertTrue(Places.serves(online, route), "online and serving eval: a target");
-        final Obj evalOnly = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER),
+        final Obj evalOnly = rec(uri(ORIGIN), uri(EVALER), uri(HOST), uri(EVALER),
                 uri(CLIENT), client(EVALER, EVAL_INST_TID));
         assertTrue(Places.serves(evalOnly, route), "online and serving eval alone: a target — eval is all the route needs");
-        final Obj writer = rec(uri(AUTHORITY), uri(EVALER), uri(HOST), uri(EVALER),
+        final Obj writer = rec(uri(ORIGIN), uri(EVALER), uri(HOST), uri(EVALER),
                 uri(CLIENT), client(EVALER, FROM_INST_TID, TO_INST_TID));
         assertFalse(Places.serves(writer, route), "online and serving to, but no eval — a POST writer stores a program, it runs none");
-        final Obj offline = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
+        final Obj offline = rec(uri(ORIGIN), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), new DownLink(client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().jvm()));
         assertFalse(Places.serves(offline, route), "serving eval, but its link is down: not a target");
-        final Obj silent = rec(uri(AUTHORITY), uri(SERVANT), uri(HOST), uri(SERVANT),
+        final Obj silent = rec(uri(ORIGIN), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), rec(uri(HOST), uri(SERVANT), uri(INST), client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().at(uri(INST))));
         assertFalse(Places.serves(silent, route), "serving eval, but its client never says it is live: not a target");
     }
@@ -173,7 +170,7 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
         final Inst to = compiled.insts().stream()
                 .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
                 .map(select -> (Obj) select.arg(0).asLst().elements().findFirst().orElseThrow())
-                .map(route -> route.isObjCall() ? route.asCall().insts().getFirst() : route.asInst())
+                .map(ShardTargetSelectionTest::ship)
                 .findFirst().orElseThrow();
         assertTrue(to.hasf(), "the emitted route carries its function: " + to);
         assertTrue(to.functionClassName().endsWith("Network$AtPeer"), "the target peer's own eval: " + to.functionClassName());

@@ -27,22 +27,9 @@ import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.AUTHORITY;
-import static studio.phaseshift.metatron.Tokens.CLIENT;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.LINKED_FROM;
-import static studio.phaseshift.metatron.Tokens.LINKED_TO;
-import static studio.phaseshift.metatron.Tokens.OBJ;
-import static studio.phaseshift.metatron.Tokens.STATUS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PLACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -55,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * Places — the builder of {@link Place}: the read-through projection of the network's two tables into a
  * {@code place::T} vertex. The roster's {@code machine} field is the machine's <em>identity</em> (host → addresses);
- * the peer map is its <em>reach</em> (this machine's dials). {@link #place} reads {@code obj} and {@code authority}
+ * the peer map is its <em>reach</em> (this machine's dials). {@link #place} reads {@code obj} and {@code origin}
  * from the roster once, then hangs three derived {@code auto} insts ({@code linked_to}/{@code linked_from}/
  * {@code status}) off the rec that re-read the live peer map each dereference — the {@code object::T.morphed_to}
  * pattern. The {@link Place} facade is what the graph hands out; this class only builds it.
@@ -112,9 +99,9 @@ public final class Places {
         // the peer map (realized): the authorities this machine dialed to that host
         network.peers().values()
                 .filter(Obj::isRec)
-                .map(Network.Helper::authorityOf)
+                .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
-                .filter(authority -> host.equals(authority.host()))
+                .filter(origin -> host.equals(origin.host()))
                 .forEach(transports::add);
         final List<Obj> uris = transports.stream()
                 .map(fURI::basePath)
@@ -128,7 +115,7 @@ public final class Places {
     /**
      * This machine's own place — the {@code origin} a located {@code path::T} carries: the transports it answers on
      * (its listeners), never its dials. {@code noobj} when nothing listens (a program on a silent machine is not
-     * placeable). The identity is the first authority's host as {@code //host}, the root frame.
+     * placeable). The identity is the first origin's host as {@code //host}, the root frame.
      */
     public static Obj self() {
         final List<fURI> authorities = Network.Helper.authorities().stream()
@@ -160,7 +147,7 @@ public final class Places {
         Machine.current().network().peers().values()
                 .filter(Obj::isRec)
                 .filter(peer -> peer.asRec().has(uri(HOST)))
-                .map(Network.Helper::authorityOf)
+                .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
                 .map(fURI::host)
                 .filter(Objects::nonNull)
@@ -173,8 +160,8 @@ public final class Places {
     }
 
     /**
-     * The declared-liveness test (§4): a place is an admissible candidate when some authority's scheme has a dialer
-     * that resolves in this machine's ISA. No dial is attempted — it reads the place's authority schemes and the ISA,
+     * The declared-liveness test (§4): a place is an admissible candidate when some origin's scheme has a dialer
+     * that resolves in this machine's ISA. No dial is attempted — it reads the place's origin schemes and the ISA,
      * nothing live.
      */
     public static boolean admissible(final Obj place) {
@@ -221,7 +208,7 @@ public final class Places {
                 .filter(Obj::isRec)
                 .filter(peer -> outbound == peer.asRec().has(uri(HOST)))
                 .filter(peer -> authorities.elements().anyMatch(a ->
-                        Network.Helper.sameService(Network.Helper.authorityOf(peer), a.uriValue())))
+                        Network.Helper.sameService(Network.Helper.originOf(peer), a.uriValue())))
                 .toList();
         return objs(peers.toArray(Obj[]::new));
     }
@@ -235,7 +222,7 @@ public final class Places {
         final Obj peer = Machine.current().network().peers().values()
                 .filter(Obj::isRec)
                 .filter(p -> authorities.elements().anyMatch(a ->
-                        Network.Helper.sameService(Network.Helper.authorityOf(p), a.uriValue())))
+                        Network.Helper.sameService(Network.Helper.originOf(p), a.uriValue())))
                 .findFirst().orElse(noobj());
         return peer.isNoObj() ? uri("known") : uri(Network.Helper.online(peer) ? "up" : "down");
     }

@@ -25,8 +25,6 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.sys.LogObj;
 
 import static org.slf4j.event.Level.*;
-import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.BootLoader.CLOSING;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 
 
@@ -51,8 +49,8 @@ public class GraphittyObjLogger extends GraphittyLogger {
                 // a LOCAL read: the sink is in the machine's sphere (~/sys), and a miss must not scan instruction memory
                 final Obj o = Machine.Helper.readLocal(Machine.current(), LOG_VID);
                 if (o.isNoObj()) {
-                    if (!BOOTING && !CLOSING)
-                        this.none("no space embedded logger found at %s\n", LOG_VID.toUri());
+                    //if (!BOOTING && !CLOSING)
+                    //    this.none("no space embedded logger found at %s\n", LOG_VID.toUri());
                     return true;
                 } else
                     return null == this.source || LogObj.from(o.as()).check(level, ((Obj) this.source).vidOrTid());

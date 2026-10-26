@@ -18,16 +18,13 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.provider.Arguments;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
@@ -35,7 +32,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_TID;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -49,11 +45,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
 
     @Override
@@ -285,7 +281,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
         protected Listener createWSServer() {
             final fURI hostUri = f("ws://localhost:" + generatePort());
             return wsServer.of(rec(
-                    uri(HOST), uri(hostUri.toString()),
+                    uri(ORIGIN), uri(hostUri.toString()),
                     uri(ROUTE), rec(uri("/wsmcp"), uri(WS_MCP_HANDLER_TID.toString()))));
         }
 

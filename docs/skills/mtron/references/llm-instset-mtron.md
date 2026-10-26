@@ -77,8 +77,8 @@ just defined:
 
 ```mtron
 [-- a carrier is a server (http_server, ws_server); a route binds an mcp server to it. `else` makes a mount idempotent --]
-*</network/listener/http/localhost/8777>.else(http_server::[host => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*</sys/space/mcp/basic_server>, / => /usr]])
-*</network/listener/ws/localhost/8555>.else(ws_server::[host => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]])
+*</network/listener/http/localhost/8777>.else(http_server::[origin => http://localhost:8777, route => [/mcp => mcp_mtron, /message => mcp_message, /basic => !*</sys/space/mcp/basic_server>, / => /usr]])
+*</network/listener/ws/localhost/8555>.else(ws_server::[origin => ws://localhost:8555, route => [/mcp => mcp_mtron, /message => mcp_message]])
 ```
 
 ## types

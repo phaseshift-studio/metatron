@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -575,11 +576,11 @@ it stops, so its clients see <code>1000</code> whether it is restarting or gone.
 <p><strong>Members are addresses (2026-10-21).</strong> A member's key is the dial's own address as a path, one per surface
 (<code>Network.Helper.keyOf</code>: <code>ws://peer.local:8555/mtron?name=me</code> → <code>ws/peer/local/8555/mtron</code> — a legal path, every host
 label its own segment and no dot in any, no <code>?q</code>, loopback aliases spelled <code>localhost</code>; it is <code>fURI.toPath()</code> of the
-dial, the loopback alias spelled first), and the service it reaches is the <code>authority</code> field — wire dispatch
+dial, the loopback alias spelled first), and the service it reaches is the <code>origin</code> field — wire dispatch
 (<code>isPeer</code>, <code>peerOf</code>) and <code>law_shard</code>'s routes match on that, never on the key. The component answers its own branch:
 <code>BasicNetwork</code> extends <code>AbstractSpace</code>, <code>Machine.bootstrap()</code> stamps it as <code>&lt;vid&gt;/network/#</code>, and the machine's
 <code>MachineSpace</code> hands it every address there — it is not a space in memory. It stores nothing
-beside its rec and answers every read from it, so <code>*&lt;/network/peer/ws/localhost/8555/mtron/authority&gt;</code> walks a member
+beside its rec and answers every read from it, so <code>*&lt;/network/peer/ws/localhost/8555/mtron/origin&gt;</code> walks a member
 by the space's base-poly read, and a noobj write there is <code>Network.disconnect</code> (at <code>listener/&lt;key&gt;</code>,
 <code>Network.unlisten</code>) — destruction on deletion from mtron. A value written at a member is refused (a peer is
 constructed, not written); every other field is written onto the live rec in place, so <code>/network/roster</code> is the root

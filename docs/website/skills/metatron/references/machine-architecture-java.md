@@ -145,11 +145,11 @@ it stops, so its clients see `1000` whether it is restarting or gone.
 **Members are addresses (2026-10-21).** A member's key is the dial's own address as a path, one per surface
 (`Network.Helper.keyOf`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every host
 label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()` of the
-dial, the loopback alias spelled first), and the service it reaches is the `authority` field — wire dispatch
+dial, the loopback alias spelled first), and the service it reaches is the `origin` field — wire dispatch
 (`isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component answers its own branch:
 `BasicNetwork` extends `AbstractSpace`, `Machine.bootstrap()` stamps it as `<vid>/network/#`, and the machine's
 `MachineSpace` hands it every address there — it is not a space in memory. It stores nothing
-beside its rec and answers every read from it, so `*</network/peer/ws/localhost/8555/mtron/authority>` walks a member
+beside its rec and answers every read from it, so `*</network/peer/ws/localhost/8555/mtron/origin>` walks a member
 by the space's base-poly read, and a noobj write there is `Network.disconnect` (at `listener/<key>`,
 `Network.unlisten`) — destruction on deletion from mtron. A value written at a member is refused (a peer is
 constructed, not written); every other field is written onto the live rec in place, so `/network/roster` is the root

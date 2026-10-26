@@ -349,7 +349,7 @@ public final class PeerCluster implements AutoCloseable {
         try {
             // the 2-arg (timeout) sendRecv lives on the WebSocketObj the client drives, so build the rec first
             final WebSocketRec wsRec = new WebSocketRec(mutableMap(
-                    uri(HOST), uri(f("").scheme("ws").host("localhost").port(port).extend(MTRON_ROUTE)),
+                    uri(HOST), uri(f().scheme("ws").host("localhost").port(port).extend(MTRON_ROUTE)),
                     uri(IN), uri(MTRON.value),
                     uri(OUT), uri(MTRON.value)), WS_CLIENT_TID, null);
             client = new WebSocketRecClient(wsRec);

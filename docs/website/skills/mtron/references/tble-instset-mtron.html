@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -539,6 +540,10 @@ keeps what SQL cannot say:</p>
     base_vid=&gt;'/m/inst',
     obj_tid=&gt;'/m/inst/auto_from',
     ref_table=&gt;'person']
+==&gt;[table_name=&gt;'note',
+    column_name=&gt;'$table',
+    base_vid=&gt;'/m/rec',
+    obj_tid=&gt;'/m/rec']
 ==&gt;[table_name=&gt;'person',
     column_name=&gt;'age',
     base_vid=&gt;'/m/int',
@@ -547,10 +552,6 @@ keeps what SQL cannot say:</p>
     column_name=&gt;'name',
     base_vid=&gt;'/m/str',
     obj_tid=&gt;'/m/str']
-==&gt;[table_name=&gt;'note',
-    column_name=&gt;'$table',
-    base_vid=&gt;'/m/rec',
-    obj_tid=&gt;'/m/rec']
 ==&gt;[table_name=&gt;'note',
     column_name=&gt;'body',
     base_vid=&gt;'/m/str',
@@ -823,14 +824,20 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/3
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/9
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/4
+==&gt;[body=&gt;'another one']@tbledoc:note/10
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;1
 ==&gt;3
+==&gt;10
 ==&gt;2
 ==&gt;4
+==&gt;5
+==&gt;6
+==&gt;7
+==&gt;8
+==&gt;9
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC

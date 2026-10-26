@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -835,6 +836,10 @@ and how a machine nests as a frame of reference) and, at its centre, the compile
 with a default, so <code>compiler::[=&gt;]</code> is the default compiler and naming one entry overrides that stage. Then the
 processor that runs what the compiler produced, the other slots, threads, and the recipe for hosting another
 language.</li>
+<li><a href="references/distributed-computing-mtron.html">distributed computing</a> -- the pattern menu (A–S): distribution is a theorem,
+not a feature. One row per pattern — its algebraic law (Thm 5/6/16/17/19), the mtron you write <em>before</em> the rewrite,
+and the sharded layout the rewrite emits — grounded in the machine nest, <code>Network</code>, the <code>rewriter::T</code> stage, and the
+<code>plan::T</code> / <code>PlanBuilder</code> / <code>PlanInterpreter</code> / <code>LawTable</code>-combiner machinery. ✅ marks what is implemented today.</li>
 </ul>
 <p><strong>Spaces &amp; data sources</strong></p>
 <ul>

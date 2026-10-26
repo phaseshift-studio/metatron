@@ -18,11 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
@@ -33,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -57,8 +54,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * The peer is this JVM's own machine behind a real websocket (the {@code LawShardPeerAvailabilityTest} self-dial),
  * so the outage is the server stopping.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class LawShardOfflinePeerTest extends AbstractMetatronTest {
 
     private static final String FOLD = "{1,2,3,4}.plus(1).sum()";
@@ -76,7 +73,7 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
         final fURI service = f("ws://localhost:" + port);
         final Listener server = wsServer.of(rec(
                 uri(NAME), uri("law-shard-offline-peer"),
-                uri(HOST), uri(service),
+                uri(ORIGIN), uri(service),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
         ));
         CommonUtil.sleepThread(300);

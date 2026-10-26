@@ -22,9 +22,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -59,8 +56,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * {@code https://} host runs the same suite over tls (with {@link #createHttpClient()} trusting its certificate).
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatronTest {
 
     protected Listener server;
@@ -96,7 +93,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
      * This machine's routes on the server's socket, as its listener entry keeps them.
      */
     protected Obj routes() {
-        final Obj entry = Machine.current().network().listenerAt(Network.Helper.keyOf(this.server.authority()));
+        final Obj entry = Machine.current().network().listenerAt(Network.Helper.keyOf(this.server.origin()));
         return entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
     }
 
@@ -127,9 +124,9 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
         assertNotNull(this.server, "the http_server should be created");
 
         // derived from the server's socket; a constructed http_server is already listening
-        this.httpScheme = null == this.server.authority().scheme() ? HTTP : this.server.authority().scheme();
-        this.httpHost = this.server.authority().host();
-        this.httpPort = this.server.authority().port();
+        this.httpScheme = null == this.server.origin().scheme() ? HTTP : this.server.origin().scheme();
+        this.httpHost = this.server.origin().host();
+        this.httpPort = this.server.origin().port();
 
         this.httpClient = this.createHttpClient();
     }
@@ -142,7 +139,7 @@ public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatron
         }
         if (this.server != null) {
             // the inverse of the construction: this machine stops serving, and the socket it opened is released
-            Machine.current().network().unlisten(this.server.authority());
+            Machine.current().network().unlisten(this.server.origin());
             Machine.current().memory().removeSpace(WEB_ISA_TID);
             this.server = null;
         }

@@ -23,7 +23,7 @@ http(s) read goes through. A read never dials, so a machine with no gateway read
 dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
 [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
-http_server::[host  => http://localhost:8777,      /
+http_server::[origin => http://localhost:8777,     /
               route => [/mcp    => mcp_mtron,      /
                         /docker => docker:,        /
                         /usr    => /usr]]
@@ -32,7 +32,7 @@ http_client::[host => <http://#>]
 http_client::[host => <https://#>]
 [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
-ws_server::[host   => ws://localhost:8555,         /
+ws_server::[origin  => ws://localhost:8555,        /
             route  => [/basic   => !*</sys/space/mcp/web_basic>]]
 ```
 

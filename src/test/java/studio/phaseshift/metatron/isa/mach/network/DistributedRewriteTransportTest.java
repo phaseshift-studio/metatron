@@ -132,8 +132,8 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
 
         // the reduction reading: master (fold) + slaves (slice + reducer)
         final Reduction r = Reduction.of(c);
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
-                TransportRewriteHarness.ops(r.masterCode()), "the master runs start·select·merge·sum");
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
+                TransportRewriteHarness.ops(r.masterCode()), "the master runs start·select·select·merge·sum");
         assertEquals(2, r.slaveCodes().size(), "two slaves");
         assertSlice(TransportRewriteHarness.seedOf(r.slaveCodes().get(0)), 1, 3, 5);
         assertSlice(TransportRewriteHarness.seedOf(r.slaveCodes().get(1)), 2, 4, 6);
@@ -186,8 +186,8 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
     void testCombinerShardsOverTransport(final String source, final String combiner, final String expected) {
         final DistributedComputation c = DistributedComputation.of(source);
         final List<fURI> ops = TransportRewriteHarness.ops(Reduction.of(c).masterCode());
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, MERGE_INST_TID, M_ISA_INST_TID.extend(combiner)),
-                ops.subList(0, Math.min(4, ops.size())), "the master recombines the partials through the combiner: " + ops);
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, M_ISA_INST_TID.extend(combiner)),
+                ops.subList(0, Math.min(5, ops.size())), "the master recombines the partials through the combiner: " + ops);
         checkEquality(LOG, ObjmtronSerializer.parse(expected), c.result(), true);
     }
 

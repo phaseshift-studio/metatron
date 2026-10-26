@@ -390,7 +390,7 @@ public class mdnsDiscoveryTest extends AbstractMetatronTest {
         // patterned as the boot's are: a <vid>/# pattern would retract onto the vid, and the cache a web space
         // indexes beside itself would evict the listener from the index
         final Listener listener = wsServer.of(rec(mutableMap(
-                uri(HOST), uri(listening.toString()))));
+                uri(ORIGIN), uri(listening.toString()))));
         mountBackend(backend);
         final mdnsDiscovery handler = handler();
         try {

@@ -18,13 +18,9 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.StatefulCSVSource;
@@ -36,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -72,8 +69,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  *   [NETWORK_CLEAR]        disconnect every peer and close every script-started server
  * </pre>
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class NetworkWireScriptTest extends AbstractMetatronTest {
 
     /**
@@ -157,7 +154,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
                 return "peer is not a rec: " + key + " => " + peer;
             if (!machInstSet.PEER_TID.equals(peer.tid().basePath()))
                 return "peer is not tid\u0027d peer::T: " + key + " => " + peer.tid();
-            final studio.phaseshift.metatron.isa.m.type.Obj authority = peer.asRec().at(uri(AUTHORITY));
+            final studio.phaseshift.metatron.isa.m.type.Obj authority = peer.asRec().at(uri(ORIGIN));
             if (!authority.isUri())
                 return "peer has no authority uri: " + key;
             // the key is the dial\u0027s own address as a path, one per surface -- what keyOf makes of where it was dialed
@@ -199,7 +196,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
         this.bind(name + "_ip", "ws://127.0.0.1:" + port); // the loopback alias, for the same-service scripts
         this.servers.add(wsServer.of(rec(
                 uri(NAME), uri("wire-script-" + name),
-                uri(HOST), uri("ws://127.0.0.1:" + port),
+                uri(ORIGIN), uri("ws://127.0.0.1:" + port),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
         )));
         waitUntilAccepting("127.0.0.1", port, 10_000);

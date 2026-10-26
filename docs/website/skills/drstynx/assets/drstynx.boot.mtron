@@ -87,7 +87,7 @@ fsspace::[
         [=====================]  
         [======== WEB ========]
         [=====================]              
-http_server::[host     => !*<boot/args/external/web/http>,
+http_server::[origin   => !*<boot/args/external/web/http>,
               route    => [/drstynx   => *dr.as(skill::T).as(mcp_server::T),
                            /mcp       => mcp_mtron,
                            /docker    => docker:,
@@ -98,7 +98,7 @@ http_server::[host     => !*<boot/args/external/web/http>,
 [== the web gateway: a peer for every http(s) authority, so the web tool's *<url> reads the web ==]
 http_client::[host => <http://#>];
 http_client::[host => <https://#>];
-
+mqtt_server::[origin => <mqtt://0.0.0.0:1883>];
 
         [=====================]
         [======= DOCKER ======]

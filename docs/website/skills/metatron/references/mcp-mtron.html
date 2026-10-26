@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -471,7 +472,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
                 headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron],
                 host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
-                status=&gt;!inst?bool&lt;=(){&lt;j&gt;},
+                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
                 tool=&gt;[execute_tool=&gt;tool::[
                  inst=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
                  name=&gt;execute_tool,
@@ -488,12 +489,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             &quot;intellij&quot;: {
             }
                   ^
-     unexpected ':']@/sys/fail/75046
+     unexpected ':']@/sys/fail/70067
 mtron&gt; }}
 ==&gt;fail::[parse error at line 1, col 1:
      }}
      ^
-     unclosed triple-quote — missing closing '&quot;&quot;&quot;']@/sys/fail/77058
+     unclosed triple-quote — missing closing '&quot;&quot;&quot;']@/sys/fail/71261
 </code></pre>
 <p>For <code>STDIO</code> transport MCP servers, the same process works:</p>
 <pre><code>mcp_client::[command=&gt;[&lt;/home/killswitch/.local/bin/codegraph&gt;,'serve', '--mcp']]@codegraph;
@@ -506,13 +507,13 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]][fail][fail]@/sys/fail/79110
-   	while parsing: mcp_client::[host=&gt;http://localhost:8777/mcp]@a]@/sys/fail/79115
+==&gt;fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]][fail][fail]@/sys/fail/72503
+   	while parsing: mcp_client::[host=&gt;http://localhost:8777/mcp]@a]@/sys/fail/72508
 mtron&gt; *a&gt;&gt;tool
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-==&gt;fail::[unable to locate inst-f noobj::T =&gt; a/tool/m_inst_eval_mtron/inst('1+2')@&lt;0&gt;]@/sys/fail/80655
+==&gt;fail::[unable to locate inst-f noobj::T =&gt; a/tool/m_inst_eval_mtron/inst('1+2')@&lt;0&gt;]@/sys/fail/74026
 mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>

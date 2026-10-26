@@ -28,19 +28,11 @@ import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.Tokens.AUTHORITY;
-import static studio.phaseshift.metatron.Tokens.ROUTE;
-import static studio.phaseshift.metatron.Tokens.STATUS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -79,7 +71,7 @@ public abstract class Listener extends MRec implements Closeable {
             .thenComparingLong(key -> -key.segments().stream().filter(Listener::wildcard).count())
             .thenComparing(Comparator.comparing(fURI::toString).reversed());
 
-    private final fURI authority;
+    private final fURI origin;
     private final Network owner;
     /**
      * the levels keeping a routing table on this socket, by IDENTITY: a network level is a rec, and two levels with
@@ -88,9 +80,9 @@ public abstract class Listener extends MRec implements Closeable {
     private final Set<Network> sharers = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<>()));
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    protected Listener(final fURI authority, final fURI tid, final Network owner) {
-        super(mutableMap(uri(AUTHORITY), uri(authority)), tid, null);
-        this.authority = authority;
+    protected Listener(final fURI origin, final fURI tid, final Network owner) {
+        super(mutableMap(uri(ORIGIN), uri(origin)), tid, null);
+        this.origin = origin;
         this.owner = owner;
         // THE STATUS every server answers — live until the socket is released, derived on read (Network.Helper.status)
         this.jvm().put(uri(STATUS), Network.Helper.statusOf(() -> !this.closed()));
@@ -99,8 +91,8 @@ public abstract class Listener extends MRec implements Closeable {
     /**
      * the service uri the socket is bound to, {@code scheme://host:port}
      */
-    public fURI authority() {
-        return this.authority;
+    public fURI origin() {
+        return this.origin;
     }
 
     /**
@@ -145,7 +137,7 @@ public abstract class Listener extends MRec implements Closeable {
             final Rec claimed = this.tableOf(sharer);
             routes.keys().filter(Obj::isUri).map(Obj::uriValue).forEach(key -> {
                 if (claimed.keys().filter(Obj::isUri).map(Obj::uriValue).anyMatch(key::equals))
-                    throw MTronException.of("route %s on %s is already served by %s", key, this.authority, sharer.machine().vid());
+                    throw MTronException.of("route %s on %s is already served by %s", key, this.origin, sharer.machine().vid());
             });
         }
     }
@@ -174,7 +166,7 @@ public abstract class Listener extends MRec implements Closeable {
      * a level's routing table on this socket, read live from its {@code listener::T} entry — empty when it keeps none
      */
     private Rec tableOf(final Network level) {
-        final Obj entry = level.listenerAt(Network.Helper.keyOf(this.authority));
+        final Obj entry = level.listenerAt(Network.Helper.keyOf(this.origin));
         final Obj table = entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
         return table.isRec() ? table.asRec() : rec();
     }
@@ -201,7 +193,7 @@ public abstract class Listener extends MRec implements Closeable {
             final List<Network> levels = this.sharers();
             this.sharers.clear();
             this.unbind();
-            levels.forEach(level -> level.unlisten(this.authority));
+            levels.forEach(level -> level.unlisten(this.origin));
         }
     }
 

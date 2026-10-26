@@ -296,6 +296,10 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   with a default, so `compiler::[=>]` is the default compiler and naming one entry overrides that stage. Then the
   processor that runs what the compiler produced, the other slots, threads, and the recipe for hosting another
   language.
+* [distributed computing](references/distributed-computing-mtron.md) -- the pattern menu (A–S): distribution is a theorem,
+  not a feature. One row per pattern — its algebraic law (Thm 5/6/16/17/19), the mtron you write *before* the rewrite,
+  and the sharded layout the rewrite emits — grounded in the machine nest, `Network`, the `rewriter::T` stage, and the
+  `plan::T` / `PlanBuilder` / `PlanInterpreter` / `LawTable`-combiner machinery. ✅ marks what is implemented today.
 
 **Spaces & data sources**
 

@@ -18,16 +18,13 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
@@ -52,8 +49,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * constructor indexes the OUTBOUND peer (keyed by our own authority); the listener must not co-mount a second
  * inbound peer keyed by the dialer's ephemeral source port, or sharding would fan out over a socket nobody answers.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class SelfLoopPeerTest extends AbstractMetatronTest {
 
     @Test
@@ -63,8 +60,8 @@ public class SelfLoopPeerTest extends AbstractMetatronTest {
         Listener space = null;
         try {
             space = wsServer.of(rec(mutableMap(
-                            uri(HOST), uri("ws://localhost:" + port),
-                            uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString())))));
+                    uri(ORIGIN), uri("ws://localhost:" + port),
+                    uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString())))));
             CommonUtil.sleepThread(500);
 
             // the idiomatic self-loop dial (ws_client::[host=><ws://localhost:<port>/mtron>]): the constructor

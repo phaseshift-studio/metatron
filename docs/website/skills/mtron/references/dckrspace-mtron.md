@@ -410,11 +410,11 @@ mtron> *mydb:people/+/name                                      [-- all names   
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
 ==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]
-==>explanation::[format=>!inst?str<=(){<j>},
+==>explanation::[format=>!λ?str<=(){<j>},
                  desc=>[rng=><#>,
                         insts=>2,
                         rewrite=>explanation::[
-                         format=>!inst?str<=(){<j>},
+                         format=>!λ?str<=(){<j>},
                          desc=>[rng=><#>,insts=>3],
                          per_inst=>[[op=>from,
                                      args=>[mydb:people/+],
@@ -452,11 +452,11 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
 mtron> *mydb:people/+.count()                                   [-- number of rows        --]
 ==>3
 mtron> *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==>explanation::[format=>!inst?str<=(){<j>},
+==>explanation::[format=>!λ?str<=(){<j>},
                  desc=>[rng=>int,
                         insts=>1,
                         rewrite=>explanation::[
-                         format=>!inst?str<=(){<j>},
+                         format=>!λ?str<=(){<j>},
                          desc=>[rng=>int,insts=>2],
                          per_inst=>[[op=>from,
                                      args=>[mydb:people/+],

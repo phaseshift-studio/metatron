@@ -299,6 +299,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
@@ -454,30 +455,30 @@ http(s) read goes through. A read never dials, so a machine with no gateway read
 mtron&gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
 ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
-                status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/web_basic
-mtron&gt; http_server::[host  =&gt; http://localhost:8777,
+                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/web_basic
+mtron&gt; http_server::[origin =&gt; http://localhost:8777,
                      route =&gt; [/mcp    =&gt; mcp_mtron,
                                /docker =&gt; docker:,
                                /usr    =&gt; /usr]]
-==&gt;http_server::[authority=&gt;http://localhost:8777,
-                 status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]
+==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron&gt; http_client::[host =&gt; &lt;http://#&gt;]
 ==&gt;http_client::[host=&gt;http://#,
                  inst=&gt;[/m/inst/from=&gt;*uri::T,
                         /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-                 status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; http_client::[host =&gt; &lt;https://#&gt;]
 ==&gt;http_client::[host=&gt;https://#,
                  inst=&gt;[/m/inst/from=&gt;*uri::T,
                         /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-                 status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 mtron&gt; [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
-mtron&gt; ws_server::[host   =&gt; ws://localhost:8555,
+mtron&gt; ws_server::[origin  =&gt; ws://localhost:8555,
                    route  =&gt; [/basic   =&gt; !*&lt;/sys/space/mcp/web_basic&gt;]]
-==&gt;ws_server::[authority=&gt;ws://localhost:8555,
-               status=&gt;!inst?bool&lt;=(){&lt;j&gt;}]
+==&gt;ws_server::[origin=&gt;ws://localhost:8555,
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 </code></pre>
 <p>The organizing idea is that <strong>a protocol is a projection of an obj, not a copy of it</strong>. An <code>mcp_server</code> rides http,
 websockets and stdio alike; a <code>str</code> that is css is <code>css::T</code> whoever asks for it. A mount then only has to say which
@@ -498,13 +499,13 @@ mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-ins
 ==&gt;
    html::&quot;&quot;&quot;&lt;h1&gt;web instruction set (&lt;code&gt;/m/web&lt;/code&gt;)&lt;/h1&gt;
    &lt;p&gt;&lt;code&gt;/m/web&lt;/code&gt; is the instruction set that carries the web &lt;em&gt;transport protocol&lt;/em&gt; types, &lt;em&gt;MIME&lt;/em&gt;
-   types, and &lt;em&gt;endpoint&lt;/em&gt; types that provide the server logic. The two spaces of &lt;code&gt;/m/web&lt;/code&gt; are
-   &lt;code&gt;httpspace&lt;/code&gt; and &lt;code&gt;wsspace&lt;/code&gt; — each carrying a &lt;code&gt;route::T&lt;/code&gt; rec for routing connections to mounted services.&lt;/p&gt;
+   types, and &lt;em&gt;endpoint&lt;/em&gt; types that provide the server logic. The two servers of &lt;code&gt;/m/web&lt;/code&gt; are
+   &lt;code&gt;http_server&lt;/code&gt; and &lt;code&gt;ws_server&lt;/code&gt; — each a listener: constructed, it is the machine's presence at
+   &lt;code&gt;~/network/listener/&amp;lt;key&amp;gt;&lt;/code&gt; — each carrying a &lt;code&gt;route&lt;/code&gt; rec for routing connections to mounted services.
+   Reading the web is a client's: &lt;code&gt;http_client::[host =&amp;gt; &amp;lt;http://#&amp;gt;]&lt;/code&gt; (and &lt;code&gt;&amp;lt;https://#&amp;gt;&lt;/code&gt;) is the gateway, a peer every
+   http(s) read goes through. A read never dials, so a machine with no gateway reads no web.&lt;/p&gt;
    &lt;pre&gt;&lt;code class=&quot;language-mtron&quot;&gt;mtron&amp;gt; dckrspace::[pattern =&amp;gt; docker:#, route =&amp;gt; [docker: =&amp;gt; &amp;lt;&amp;gt;]]@/sys/space/docker
    mtron&amp;gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
-   mtron&amp;gt; mcp_server::[tool =&amp;gt; [!*eval]]@/sys/space/mcp/web_basic
-   ==&amp;gt;mcp_server::[tool=&amp;gt;[m_inst_eval=&amp;gt;eval(#::T){&amp;lt;j&amp;gt;}]]@/sys/space/mcp/web_basic
-   mtron&amp;gt; httpspace::[pattern=&amp;gt; http://#,
    ...
 mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;.as(html::T).as(rec::T)
 ==&gt;[html=&gt;[head=&gt;[=&gt;],

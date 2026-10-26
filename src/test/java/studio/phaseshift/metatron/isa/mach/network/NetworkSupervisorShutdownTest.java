@@ -18,14 +18,11 @@
 
 package studio.phaseshift.metatron.isa.mach.network;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -47,8 +44,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * <p>
  * A class of its own because it shuts the VM down mid-test (and boots it again for the harness's own teardown).
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class NetworkSupervisorShutdownTest extends AbstractMetatronTest {
 
     @Test
@@ -57,7 +54,7 @@ public class NetworkSupervisorShutdownTest extends AbstractMetatronTest {
         final int port = generatePort();
         final Listener server = wsServer.of(rec(
                 uri(NAME), uri("supervisor-shutdown"),
-                uri(HOST), uri("ws://localhost:" + port),
+                uri(ORIGIN), uri("ws://localhost:" + port),
                 uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))
         ));
         CommonUtil.sleepThread(300);

@@ -109,8 +109,8 @@ public final class PeerNode {
         }
         // the ws server that makes this peer addressable, exposing the mtron endpoint at /mtron
         wsServer.of(rec(mutableMap(
-                        uri(HOST), uri("ws://0.0.0.0:" + port),
-                        uri(ROUTE), rec(uri("/mtron"), uri(mtron_wsHandler.WS_MTRON_HANDLER_TID.toString())))));
+                uri(ORIGIN), uri("ws://0.0.0.0:" + port),
+                uri(ROUTE), rec(uri("/mtron"), uri(mtron_wsHandler.WS_MTRON_HANDLER_TID.toString())))));
         trace("peer %d: serving ws://0.0.0.0:%d/mtron", index, port);
         System.out.println(READY + " " + index + " " + port);
         System.out.flush();

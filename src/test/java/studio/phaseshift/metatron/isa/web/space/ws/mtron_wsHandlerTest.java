@@ -18,32 +18,29 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler;
 import studio.phaseshift.metatron.isa.web.type.MIME;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class mtron_wsHandlerTest extends AbstractWebSocketServerTest {
     @Override
     protected WebSocketRec createServer(final fURI vid) {
@@ -58,7 +55,7 @@ public class mtron_wsHandlerTest extends AbstractWebSocketServerTest {
         protected Listener createWSServer() {
             return wsServer.of(rec(
                     uri(NAME), uri("mtron-test"),
-                    uri(HOST), uri("ws://localhost:" + generatePort()),
+                    uri(ORIGIN), uri("ws://localhost:" + generatePort()),
                     uri(ROUTE), rec(uri("/mtron"), uri(WS_MTRON_HANDLER_TID.toString()))));
         }
 

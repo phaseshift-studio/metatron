@@ -20,9 +20,6 @@ package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -32,10 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.Network;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.MACHINE;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.ROSTER;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -48,8 +42,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * (never a rebuilt copy), the root's {@code /network/roster} is the root network's own roster, and the component itself
  * is not a value an address can overwrite. An address under no network branch is still the authority dispatch's.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class NetworkBranchTest extends AbstractMetatronTest {
 
     @AfterEach

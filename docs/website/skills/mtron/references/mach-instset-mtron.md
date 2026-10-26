@@ -292,14 +292,14 @@ the member `localhost` already holds.
 
 | field       | what it is                                                                         |
 |-------------|------------------------------------------------------------------------------------|
-| `authority` | the service it reaches (`scheme://host:port`) — the one field a peer cannot lack   |
+| `origin` | the service it reaches (`scheme://host:port`) — the one field a peer cannot lack   |
 | `host`      | where it was dialed, route and `?q` processors included (`ws://h:p/mtron?name=me`) |
 | `name`      | the identity the dialer announced                                                  |
 | `transport` | an inst, $\mathit{message} \mapsto \mathit{answer}$ — the reach itself             |
 | `client`    | the protocol client the dial constructed, held for the hang-up                     |
 
-One type, **two honest states**: an `authority` alone is *known, not reachable from here* — the form a peer reference
-takes after crossing a wire; an authority with a `transport` is reachable.
+One type, **two honest states**: an `origin` alone is *known, not reachable from here* — the form a peer reference
+takes after crossing a wire; an origin with a `transport` is reachable.
 
 **Construction is connection.** There is no connect inst, as there is no add-space inst: constructing a protocol
 client *is* the dial, and indexing is a background behavior of a valid construction —
@@ -315,7 +315,7 @@ $\mathrm{drop} (id)$ — $id \mapsto \mathrm{noobj}$, the universal close. What 
 value is closed (close-before-clear), so "write noobj" and "hang up" are one act — at the member's own address:
 
 ```mtron
-*</network/peer/ws/localhost/8555/mtron/authority>   [-- a member, field by field --]
+*</network/peer/ws/localhost/8555/mtron/origin>   [-- a member, field by field --]
 </network/peer/ws/localhost/8555/mtron> -> noobj     [-- hang up: the member leaves the map --]
 </network/peer> -> noobj                             [-- hang up every member --]
 ```

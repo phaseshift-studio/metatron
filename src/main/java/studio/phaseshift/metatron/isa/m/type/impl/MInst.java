@@ -95,15 +95,28 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instLambda(final Lst args, final BiFunction<Obj, Inst, Obj> f) {
-        return instC(Tokens.M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
+        return instC(Tokens.LAMBDA_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
     }
 
+    public static Inst instLambda(final String name, final BiFunction<Obj, Inst, Obj> f) {
+        return instC(fURI.Singleton.f(Tokens.LAMBDA + name), lst(), f);
+    }
+
+    public static Inst instLambda(final String name, final fURI dom, final fURI rng, final BiFunction<Obj, Inst, Obj> f) {
+        return instC(fURI.Singleton.f(Tokens.LAMBDA + name).dom(dom).rng(rng), lst(), f);
+    }
+
+
     public static Inst instLambda(final fURI dom, final fURI rng, final BiFunction<Obj, Inst, Obj> f) {
-        return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), lst(), f);
+        return instC(Tokens.LAMBDA_TID.dom(dom).rng(rng), lst(), f);
     }
 
     public static Inst instLambda(final fURI dom, final fURI rng, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
-        return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), args, f);
+        return instC(Tokens.LAMBDA_TID.dom(dom).rng(rng), args, f);
+    }
+
+    public static Inst instLambda(final fURI furi, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
+        return instC(fURI.Singleton.f(Tokens.LAMBDA + furi.toString()), args, f);
     }
 
     /**
@@ -112,15 +125,15 @@ public class MInst extends MObj implements Inst {
      * {@code (in, ignored) -> ...}.
      */
     public static Inst instLambda(final Function<Obj, Obj> f) {
-        return instC(Tokens.M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), f);
+        return instC(Tokens.LAMBDA_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), f);
     }
 
     public static Inst instLambda(final Lst args, final Function<Obj, Obj> f) {
-        return instC(Tokens.M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
+        return instC(Tokens.LAMBDA_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), args, f);
     }
 
     public static Inst instLambda(final fURI dom, final fURI rng, final Function<Obj, Obj> f) {
-        return instC(Tokens.M_ISA_INST_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
+        return instC(Tokens.LAMBDA_TID.dom(dom).rng(rng), lst(T(ALL.maybeSome())), f);
     }
 
     @Override

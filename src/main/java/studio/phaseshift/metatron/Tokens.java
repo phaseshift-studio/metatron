@@ -36,6 +36,8 @@ public final class Tokens {
     }
 
     // furi tokens
+    public static final String LAMBDA = "λ";
+    public static final fURI LAMBDA_TID = f(LAMBDA);
     public static final fURI M_ISA_TID = f("/m");
     public static final fURI MACH_ISA_TID = M_ISA_TID.extend(MACH);
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
@@ -55,6 +57,7 @@ public final class Tokens {
     public static final fURI BYTES_TID = M_ISA_TID.extend("bytes");
     public static final fURI URI_TID = M_ISA_TID.extend("uri");
     public static final fURI AUTHORITY_TID = URI_TID.extend("authority");
+    public static final fURI ORIGIN_TID = URI_TID.extend("origin");
     public static final fURI STR_TID = M_ISA_TID.extend("str");
     public static final fURI REAL_TID = M_ISA_TID.extend("real");
     public static final fURI INT_TID = M_ISA_TID.extend("int");
@@ -251,6 +254,15 @@ public final class Tokens {
     public static final String CONST = "const";
     public static final String CONSTQ = "constq";
     public static final String CLIENT = "client";
+    // -- MQTT tokens -----------------------------------------------------------
+    public static final String KEEP_ALIVE = "keepAlive";
+    public static final String WILL = "will";
+    public static final String QOS = "qos";
+    public static final String RETAIN = "retain";
+    public static final String TOPIC = "topic";
+    public static final String PAYLOAD = "payload";
+    public static final String QUEUE = "queue";
+    public static final String OFFER = "offer";
     public static final String SCRIPT = "script";
     public static final String REWRITE = "rewrite";
     public static final String SUGAR = "sugar";

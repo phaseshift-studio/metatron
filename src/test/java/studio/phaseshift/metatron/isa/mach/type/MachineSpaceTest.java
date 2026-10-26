@@ -20,9 +20,6 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -33,13 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.type.machine.AbstractMachine;
 import studio.phaseshift.metatron.isa.mach.type.machine.MachineSpace;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -51,8 +42,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  * machine's data — so memory's spaces answer that exactly as before. A child's sphere is its own vid; an address outside
  * every enclosing sphere, or carrying a scheme or a host, is no sphere's.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class MachineSpaceTest extends AbstractMetatronTest {
 
     @AfterEach

@@ -18,16 +18,14 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws;
 
-import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
+import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.ORIGIN;
+import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -56,8 +54,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * collides with a running server.
  */
 @Timeout(60)
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 class wsRouteLadderTest extends AbstractWebSocketServerIntegrationTest {
 
     private static final String INITIALIZE =
@@ -66,10 +64,10 @@ class wsRouteLadderTest extends AbstractWebSocketServerIntegrationTest {
     @Override
     protected Listener createWSServer() {
         return wsServer.of(rec(mutableMap(
-                        uri(HOST), uri(f("ws://127.0.0.1:" + generatePort())),
-                        uri(ROUTE), rec(
-                                uri(f("/mcp")), uri(f("mcp_mtron")),
-                                uri(f("/mtron")), uri(f("mtron_ws"))))));
+                uri(ORIGIN), uri(f("ws://127.0.0.1:" + generatePort())),
+                uri(ROUTE), rec(
+                        uri(f("/mcp")), uri(f("mcp_mtron")),
+                        uri(f("/mtron")), uri(f("mtron_ws"))))));
     }
 
     /**

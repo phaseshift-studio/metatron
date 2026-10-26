@@ -79,7 +79,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/4887
+==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/5753
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -88,10 +88,10 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
                                        mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==>[root=>mfs:src/test/resources/scratch,
-    src=>[Operation=>inst(){<j>},
-          Echo=>inst(){<j>},
-          Calculator=>inst(){<j>},
-          EchoTest=>inst(){<j>}],
+    src=>[Operation=>λ(){<j>},
+          Echo=>λ(){<j>},
+          Calculator=>λ(){<j>},
+          EchoTest=>λ(){<j>}],
     code=>[,],
     idx=>[=>],
     command=>[read_file=>/dev/scratch/command/read_file(file=>uri::T,
@@ -103,9 +103,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
               mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>second::4.018,
+            runtime=>second::3.914,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/78c48046]
+            output=>!*/sys/tmp/bae65da2]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -358,11 +358,11 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
          [?>2.?<4 => 'return "marko";'])>>.
          >-?str<=str{*}('
 ')].explain()
-==>explanation::[format=>!inst?str<=(){<j>},
+==>explanation::[format=>!λ?str<=(){<j>},
                  desc=>[rng=><#>,
                         insts=>2,
                         rewrite=>explanation::[
-                         format=>!inst?str<=(){<j>},
+                         format=>!λ?str<=(){<j>},
                          desc=>[rng=><#>,insts=>2],
                          per_inst=>[[op=>at,
                                      args=>[/dev/scratch/idx/Echo/method/speak],

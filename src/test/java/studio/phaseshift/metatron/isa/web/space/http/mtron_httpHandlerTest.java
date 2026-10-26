@@ -19,9 +19,6 @@
 package studio.phaseshift.metatron.isa.web.space.http;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler;
@@ -32,7 +29,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.MTRON_HTTP_TID;
@@ -40,8 +36,8 @@ import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHa
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class mtron_httpHandlerTest extends AbstractHTTPServerTest {
 
     @Override
@@ -89,7 +85,7 @@ public class mtron_httpHandlerTest extends AbstractHTTPServerTest {
         @Override
         protected Listener createHTTPServer() {
             return httpServer.of(rec(
-                    uri(HOST), uri("http://localhost:" + generatePort()),
+                    uri(ORIGIN), uri("http://localhost:" + generatePort()),
                     uri(ROUTE), rec(uri("/mtron"), uri(MTRON_HTTP_TID.toString()))));
         }
 

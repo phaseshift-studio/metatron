@@ -82,7 +82,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
         final Network network = Machine.current().network();
         final Obj peer = network.connect(SELF);
         assertEquals(PEER_TID, peer.tid().basePath(), "connect must answer a peer::T");
-        assertEquals(SELF, peer.asRec().<Obj>at(uri(AUTHORITY)).uriValue(), "the peer keys on the dialed authority");
+        assertEquals(SELF, peer.asRec().<Obj>at(uri(ORIGIN)).uriValue(), "the peer keys on the dialed authority");
         // THE CLIENT IS THE REACH: what the peer is talked to with is its client's inst, never a field of the peer's own
         assertTrue(peer.asRec().<Obj>at(uri(CLIENT)).asRec().at(uri(INST)).isRec(), "the peer holds the client the dial constructed");
         assertTrue(peer.asRec().atDirect(uri("transport")).isNoObj(), "a peer::T carries no transport: " + peer);

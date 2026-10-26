@@ -118,7 +118,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     void testTreeOverTransport(final int hops, final int expected) {
         final Code master = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6,7,8}.plus(1).sum?hops=" + hops + "()")).asCode();
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID), TransportRewriteHarness.ops(master),
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID), TransportRewriteHarness.ops(master),
                 "the root recombines its child's partial: " + master);
         final Code slave = Reduction.slaves(master).getFirst();
         final fURI seed = slave.insts().getFirst().tid();
@@ -142,7 +142,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testKeyedTreeOverTransport(final String source, final String expected) {
         final Code master = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source)).asCode();
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID, SELECT_INST_TID), TransportRewriteHarness.ops(master),
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID, SELECT_INST_TID), TransportRewriteHarness.ops(master),
                 "the root merges its child's partial rec by key, then folds each key: " + master);
         final Code slave = Reduction.slaves(master).getFirst();
         checkEquality(LOG, uri("1"), uri(slave.insts().getFirst().tid().qMap().get(HOPS)), true);

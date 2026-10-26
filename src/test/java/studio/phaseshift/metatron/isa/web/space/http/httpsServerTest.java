@@ -22,9 +22,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -70,8 +67,8 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TYPE;
  * through {@link #createHttpClient()}, and the gateway client — Jsoup and HttpClient, which both take the JDK's default
  * context — through {@link SSLContext#setDefault}, restored after the class.
  */
-@Isolated
-@Execution(ExecutionMode.SAME_THREAD)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
 public class httpsServerTest extends AbstractHTTPServerIntegrationTest {
 
     private static final String GATEWAY = "https://#";
@@ -104,7 +101,7 @@ public class httpsServerTest extends AbstractHTTPServerIntegrationTest {
                 uri(PATTERN), uri("local:#"),
                 uri(ROUTE), rec(uri("local:"), uri(WEB_DATA_DIR + "/"))), f("/sys/space/fs"));
         return httpServer.of(rec(
-                uri(HOST), uri("https://127.0.0.1:" + generatePort()),
+                uri(ORIGIN), uri("https://127.0.0.1:" + generatePort()),
                 uri(KEYSTORE), uri(TlsTestKeys.keystore().toAbsolutePath().toString()),
                 uri(PASS), str(TlsTestKeys.PASS),
                 uri(ROUTE), rec(
@@ -206,13 +203,13 @@ public class httpsServerTest extends AbstractHTTPServerIntegrationTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "http_server::[host=><https://127.0.0.1:{{port}}>,keystore=><{{keystore}}>,pass=>'{{pass}}',route=>[/=><local:web>]]",
-            "http_server::[host=><https://127.0.0.1:{{port}}>,keystore=>*<local:tls/server.p12>,pass=>'{{pass}}',route=>[/=><local:web>]]",
+            "http_server::[origin=><https://127.0.0.1:{{port}}>,keystore=><{{keystore}}>,pass=>'{{pass}}',route=>[/=><local:web>]]",
+            "http_server::[origin=><https://127.0.0.1:{{port}}>,keystore=>*<local:tls/server.p12>,pass=>'{{pass}}',route=>[/=><local:web>]]",
     }, delimiter = '%')
     public void testMtronConstructionServesTls(final String construction) throws Exception {
         final int port = generatePort();
         this.constructed = port;
-        checkCodeEvaluate(LOG, fill(construction, port), "*<" + listener(port) + "/authority>", "<https://127.0.0.1:" + port + ">");
+        checkCodeEvaluate(LOG, fill(construction, port), "*<" + listener(port) + "/origin>", "<https://127.0.0.1:" + port + ">");
         final HttpResponse<String> response = this.httpClient.send(HttpRequest.newBuilder()
                         .uri(java.net.URI.create(HTTPS + "://127.0.0.1:" + port + "/index.html"))
                         .timeout(Duration.ofSeconds(10))
@@ -230,12 +227,12 @@ public class httpsServerTest extends AbstractHTTPServerIntegrationTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "http_server::[host=><https://127.0.0.1:{{port}}>]                                                    % <ERROR>",
-            "http_server::[host=><https://127.0.0.1:{{port}}>,keystore=><{{keystore}}>]                           % <ERROR>",
-            "http_server::[host=><https://127.0.0.1:{{port}}>,keystore=><{{keystore}}>,pass=>'out-of-tune']       % <ERROR>",
-            "http_server::[host=><https://127.0.0.1:{{port}}>,keystore=><{{keystore}}.gone>,pass=>'{{pass}}']     % <ERROR>",
-            "http_server::[host=><https://127.0.0.1:{{port}}>,keystore=><{{certificate_only}}>,pass=>'{{pass}}'] % <ERROR>",
-            "http_server::[host=><https://127.0.0.1:{{port}}>,keystore=>8443,pass=>'{{pass}}']                    % <ERROR>",
+            "http_server::[origin=><https://127.0.0.1:{{port}}>]                                                    % <ERROR>",
+            "http_server::[origin=><https://127.0.0.1:{{port}}>,keystore=><{{keystore}}>]                           % <ERROR>",
+            "http_server::[origin=><https://127.0.0.1:{{port}}>,keystore=><{{keystore}}>,pass=>'out-of-tune']       % <ERROR>",
+            "http_server::[origin=><https://127.0.0.1:{{port}}>,keystore=><{{keystore}}.gone>,pass=>'{{pass}}']     % <ERROR>",
+            "http_server::[origin=><https://127.0.0.1:{{port}}>,keystore=><{{certificate_only}}>,pass=>'{{pass}}'] % <ERROR>",
+            "http_server::[origin=><https://127.0.0.1:{{port}}>,keystore=>8443,pass=>'{{pass}}']                    % <ERROR>",
     }, delimiter = '%')
     public void testUnservableKeystoreFailsConstruction(final String construction, final String expected) throws IOException {
         final int port = generatePort();

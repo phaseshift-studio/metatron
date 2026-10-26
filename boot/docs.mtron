@@ -1,8 +1,8 @@
 [== boot args ==]
 [space  => /sys/space,
  web    => [
-   http/host  => <http://localhost:8777>,
-   ws/host    => <ws://localhost:8555>],
+   http/origin  => <http://localhost:8777>,
+   ws/origin    => <ws://localhost:8555>],
  typer/stage  => [inst_dom     => true, 
                   inst_rng     => true,
                   type_pred    => true,

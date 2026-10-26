@@ -51,7 +51,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * </pre>
  * Everything — host, port, routes — is derived from the returned server:
  * <ul>
- *   <li>{@code server.authority()} → host and port</li>
+ *   <li>{@code server.origin()} → host and port</li>
  *   <li>{@link #routes()} → this machine's route table on the socket (path → type TID)</li>
  * </ul>
  * The first entry in the route table is used as the primary connection path
@@ -85,7 +85,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
      * This machine's routes on the server's socket, as its listener entry keeps them.
      */
     protected Obj routes() {
-        final Obj entry = Machine.current().network().listenerAt(Network.Helper.keyOf(this.server.authority()));
+        final Obj entry = Machine.current().network().listenerAt(Network.Helper.keyOf(this.server.origin()));
         return entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
     }
 
@@ -112,8 +112,8 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
         assertNotNull(this.server, "the ws_server should be created");
 
         // Derive host and port from the server's socket
-        this.wsHost = this.server.authority().host();
-        this.wsPort = this.server.authority().port();
+        this.wsHost = this.server.origin().host();
+        this.wsPort = this.server.origin().port();
 
         // a constructed ws_server is already listening (its construction awaits the bind)
 
@@ -138,7 +138,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
     public void teardownWsServer() {
         if (this.server != null) {
             // the inverse of the construction: this machine stops serving, and the socket it opened is released
-            Machine.current().network().unlisten(this.server.authority());
+            Machine.current().network().unlisten(this.server.origin());
             Machine.current().memory().removeSpace(WEB_ISA_TID);
             this.server = null;
         }

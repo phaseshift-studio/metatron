@@ -155,7 +155,7 @@ public final class PeerSpawn {
         // node running.
         network.<Network>as().peers().jvm().values().stream()
                 .filter(Obj::isRec)
-                .map(connection -> connection.asRec().<Obj>atDirect(uri(AUTHORITY)))
+                .map(connection -> connection.asRec().<Obj>atDirect(uri(ORIGIN)))
                 .filter(Obj::isUri)
                 .forEach(authority -> cleanup(keyOf(authority.uriValue())));
     }
