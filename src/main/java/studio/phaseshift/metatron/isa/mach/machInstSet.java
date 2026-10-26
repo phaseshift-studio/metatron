@@ -21,9 +21,7 @@ package studio.phaseshift.metatron.isa.mach;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.mach.type.Network;
@@ -43,9 +41,7 @@ import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -57,8 +53,8 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
@@ -712,7 +708,7 @@ public class machInstSet extends AbstractInstSet {
                         // parent, never from beside it. Nothing in Machine.push had to change for this — it mints
                         // a child of the machine it is CALLED ON, so the memory and instset unions it builds come
                         // from that parent, which is exactly where the new frame belongs.
-                        docWrap(instC(PUSH_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) -> {
+                        docWrap(instC(PUSH_INST_TID.dom(A.maybe()).rng(A.maybeSome()), lst(T(URI_TID.maybe())), (lhs, inst) -> {
                                     final Machine here = Machine.current();
                                     final Machine pushed;
                                     if (inst.arg(0).isNoObj())
@@ -736,7 +732,7 @@ public class machInstSet extends AbstractInstSet {
                                         }
                                     }
                                     MachinePerspective.publish(pushed);
-                                    return pushed;
+                                    return lhs;
                                 }),
                                 "the lhs is not consulted: push acts on the machine the code is running in, and carries the value flowing through untouched",
                                 "the machine just minted and entered \\(c\\)",
@@ -755,7 +751,7 @@ public class machInstSet extends AbstractInstSet {
                         // Reaching a frame you OWN but have stepped out of needs the downward link the frame
                         // tree does not have yet (t-murdnd40-rpdahi), and closing an address-read handle would
                         // silently do nothing — so it is refused loudly rather than appearing to work.
-                        docWrap(instC(POP_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(ALL.maybe())), (lhs, inst) -> {
+                        docWrap(instC(POP_INST_TID.dom(A.maybe()).rng(A.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> {
                                     final Machine here = Machine.current();
                                     if (here == Machine.root())
                                         throw MTronException.of("the root machine can not be closed via pop");
@@ -772,7 +768,7 @@ public class machInstSet extends AbstractInstSet {
                                         landed = here.pop();
                                     }
                                     MachinePerspective.publish(landed);
-                                    return landed;
+                                    return lhs;
                                 }),
                                 "the lhs is not consulted: pop acts on the machine the code is running in",
                                 "the machine that held the one discarded — \\(\\mathrm{pop}(f) \\mapsto \\mathrm{parent}(f)\\), so the current machine becomes \\(f\\)'s \\(..\\)",
@@ -785,14 +781,14 @@ public class machInstSet extends AbstractInstSet {
                                 "pop()               [-- at the root: refused, reset metatron instead --]"),
                         // move() is move(<..>): the NON-destructive way up, and the whole point of the motif —
                         // pop() destroys the frame it leaves, move() leaves it standing and reachable by address
-                        docWrap(instC(MOVE_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(T(URI_TID.maybe())), (lhs, inst) -> {
-                                    final Machine moved = Machine.current(Helper.machineAt(Machine.current(),
-                                            inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue(), "move"));
+                        docWrap(instC(MOVE_INST_TID.dom(A.maybe()).rng(A.maybeSome()), lst(T(URI_TID.maybe())), (lhs, inst) -> {
+                                    final fURI target = inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue();
+                                    final Machine moved = Machine.current(Helper.machineAt(Machine.current(), target, "move"));
                                     MachinePerspective.publish(moved);
-                                    return moved;
+                                    return lhs;
                                 }),
-                                "the lhs is not consulted: move chooses the machine the next code runs in",
-                                "the machine moved to — \\(\\mathrm{move}(t) \\mapsto f\\) where \\(f\\) is the machine \\(t\\) addresses",
+                                "the lhs flows through: move re-homes the machine the next code runs in, and the value continues untouched",
+                                "the value, unchanged — \\(\\mathrm{move}(t) \\mapsto x\\) where the machine \\(t\\) addresses becomes current",
                                 Map.of(jnt(0), "\\(t\\), the address to stand in: `~` is the current machine, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling \\(b\\), and `../../..` walks up. Absent, \\(t = \\;..\\) — bare `move()` is `move(<..>)`"),
                                 "choose where the next inst will evaluate, and close nothing. The address is folded against the current machine, and an address that walks past the root saturates there rather than failing.",
                                 "move(<..>)          [-- up: the parent machine, without closing this one --]",
@@ -801,10 +797,10 @@ public class machInstSet extends AbstractInstSet {
                                 "move(<a/c>)         [-- down a composed path in one step --]",
                                 "move(<~/..>)        [-- ~ is the current machine, consumed before the fold: the parent --]",
                                 "move(<../../..>)    [-- past the root: saturates at the root --]"),
-                        docWrap(instC(STAY_INST_TID.dom(ALL.maybe()).rng(MACH_MACHINE_TID), lst(), (lhs, inst) -> {
+                        docWrap(instC(STAY_INST_TID.dom(A.maybe()).rng(A.maybeSome()), lst(), (lhs, inst) -> {
                                     final Machine moved = Machine.current(Machine.current());
                                     MachinePerspective.publish(moved);
-                                    return moved;
+                                    return lhs;
                                 }),
                                 "the lhs is not consulted: stay re-stands the machine the code already runs in",
                                 "the machine the code is running in, re-bound to itself — \\(\\mathrm{stay}() \\mapsto \\mathrm{here}\\)",
@@ -824,7 +820,11 @@ public class machInstSet extends AbstractInstSet {
                             ((AbstractThread) lhs).resume();
                             return lhs;
                         })
-                )))));
+                ))),
+                uri(REWRITE), lst(
+                        docWrap(InstSet.Helper.rewriter(MACH_INST_TID.extend(REWRITE).extend("move_extract"), Helper::extractMove),
+                                "the move-extractor: a move(<authority>) with a tail ships the tail, so the compiler packages it as the move's blocked-code argument — move(//host/xyz).c().d() becomes move(//host/xyz, |c().d())")
+                )));
         docWrap(this, "the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor");
         super.setup();
 
@@ -838,6 +838,40 @@ public class machInstSet extends AbstractInstSet {
     public static class Helper {
         private Helper() {
             // do nothing
+        }
+
+        /**
+         * The move-extractor: a {@code move(<authority>)} is a scatter, so this rule splits the chain at the move and
+         * ships the whole thing through the peer's eval:
+         * {@code a().b().move(//host/xyz).c().d()} → {@code a().b().-<[|move(xyz),_,|c().d()].as(code::T).eval(//host)}.
+         * The split's lst holds the localized move, the identity (the lhs flows through here), and the tail; casting it
+         * to {@code code::T} rebuilds the chain, and the peer re-compiles the shipped code, so a nested remote move is
+         * extracted where it lands. A local move (no authority) is left alone.
+         */
+        static Code extractMove(final Code code) {
+            final List<Inst> insts = code.insts();
+            for (int i = 0; i < insts.size(); i++) {
+                final Inst inst = insts.get(i);
+                if (!MOVE_INST_TID.equals(inst.tid().basePath()) || inst.arg(0).isNoObj() || inst.arg(0).uriValue().isLocal())
+                    continue;
+                final fURI target = inst.arg(0).uriValue();
+                // everything left of move stays; the move becomes a scatter:
+                //   -<[...] . -<[as(code::T)] == [eval(origin)] >-
+                final List<Inst> rewritten = new ArrayList<>(insts.subList(0, i));
+                // the split branches: |move(localize), _, |tail — the blocks keep each unevaluated
+                final Obj branches = lst(
+                        block_(instB(MOVE_INST_TID, lst(uri(target.localize())))).tryToInst(),
+                        merge_(lst()).tryToInst(),
+                        block_(merge_()).tryToInst(),
+                        block_(code(new ArrayList<>(insts.subList(i + 1, insts.size())))).tryToInst());
+                rewritten.addAll(split_(branches).domRng(ALL.maybeSome(), ALL)
+                        .split_(lst(as_(CODE_TYPE).tryToInst()))
+                        .select_(lst(eval_(target.origin()).tryToInst()))
+                        .merge_()
+                        .insts());
+                return code(rewritten);
+            }
+            return code;
         }
 
         /**
