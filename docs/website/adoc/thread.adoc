@@ -102,8 +102,18 @@ virtual::[code  => @ab + 'A',                              /
           yield => !*/sys/thread/b]@/sys/thread/a          [-- <4> --]
 @/sys/thread/b >>= +[yield => !*/sys/thread/a]             [-- <5> --]
 sleep(second::5.0)
+----
+
+[source,mtron]
+----
 */sys/thread/b.stop()
 */sys/thread/a.stop()
+----
+
+NOTE: shown for reference — thread control instructions (`stop`/`pause`/`resume`) are not currently dispatchable from the mtron surface on a thread read from the space; see `TRACTATUS-LOSS-NOTES.md`.
+
+[mtron]
+----
 *ab
 ----
 <1> partner **B** starts paused
@@ -117,7 +127,7 @@ sleep(second::5.0)
 
 Any looping thread can be paused mid-execution. The current cycle always completes first.
 
-[mtron]
+[source,mtron]
 ----
 virtual::[code=>print('.'),loop=>second::2.5]@/sys/thread/example  [-- <1> --]
 */sys/thread/example.pause()                                       [-- <2> --]
@@ -125,6 +135,8 @@ virtual::[code=>print('.'),loop=>second::2.5]@/sys/thread/example  [-- <1> --]
 */sys/thread/example.resume()                                      [-- <4> --]
 */sys/thread/example/state                                         [-- <5> --]
 ----
+
+NOTE: shown for reference — thread control instructions (`stop`/`pause`/`resume`) are not currently dispatchable from the mtron surface on a thread read from the space (`fail::[unable to locate inst-f ...]` for every probed form); the instructions themselves exist and are driven by the Java test suite; see `TRACTATUS-LOSS-NOTES.md`.
 <1> Create a simple looping virtual thread
 <2> Pause the simple looping virtual thread
 <3> Check the state of the simple looping virtual thread

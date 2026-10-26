@@ -34,20 +34,19 @@ The https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop[console] 
 The console is also an `obj`.
 [mtron]
 ----
-console::[=>]@/usr/ui/console                        [-- <1> --]
-*/usr/ui/console/pane/0                              [-- <2> --]
-/usr/ui/console/pane/0/result('printed at ==>xyz')   [-- <3> --]
+console::[=>]@/usr/ui/console                     [-- <1> --]
+*/usr/ui/console/pane/0                           [-- <2> --]
+/usr/ui/console/pane/0/out -> 'printed at xyz'    [-- <3> --]
 ----
 
 <1> A console `obj` is spawned at `/usr/ui/console`.
 <2> The console's pane system allows for multiple parallel views.
-<3> Console pane's have obj local instructions availale for updating views.
+<3> the pane's `out` stream renders the written obj as a result line in the pane.
 
-There are 3 instructions associated with a `/m/mach/console/pane`.
+There are 2 streams exposed by each pane for updating its view.
 
-1. `prompt(str::T)` - write to the pane using the standard prompt prefix `mtron> xyz`.
-2. `result(str::T)` - write to the pane using the standard result prefix `=\=> xyz`.
-3. `stream(str::T)` - write to the pane without a newline as in `abc xyz`.
+1. `<pane-vid>/in` - an input line written to the pane with the standard prompt prefix `mtron> xyz`.
+2. `<pane-vid>/out` - a result line written to the pane with the standard result prefix `==> xyz`.
 
 [cols="4a,6a",separator=🧱,role="no-border small center"]
 |===

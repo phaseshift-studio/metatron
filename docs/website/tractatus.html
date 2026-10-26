@@ -870,12 +870,12 @@ mtron&gt; 10.&lt;1&gt;()                  [-- 3 --]
 ==&gt;fail::[unable to determine inst function:
    	10          =&gt; 1?dom=int()@&lt;1&gt;   | [inst]
    	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/254
+   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/228
 mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 ==&gt;fail::[unable to determine inst function:
    	12          =&gt; 1?dom=int()   | [inst]
    	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/255</code></pre>
+   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/229</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -920,7 +920,7 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 ==&gt;&lt;#&gt;=&gt;plus?int&lt;=int(fail::[unable to determine inst function:
    	12          =&gt; 1?dom=int()   | [inst]
    	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/255){&lt;j&gt;}
+   	int::T     ==&gt; [,]   |  \_args]@/sys/fail/229){&lt;j&gt;}
 ==&gt;&lt;#&gt;=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
 ==&gt;&lt;#&gt;=&gt;animal::T@chicken
 ==&gt;&lt;#&gt;=&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
@@ -1056,7 +1056,7 @@ mtron&gt; 3.band(2,8)     ​2​
 mtron&gt; 3.band(max=&gt;8,min=&gt;2)     ​3​
 ==&gt;3
 mtron&gt; 'abc'.band(2,8)     ​4​
-==&gt;fail::[unable to locate inst-f str::T =&gt; band(2,8)@&lt;1&gt;]@/sys/fail/256</code></pre>
+==&gt;fail::[unable to locate inst-f str::T =&gt; band(2,8)@&lt;1&gt;]@/sys/fail/230</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1173,12 +1173,12 @@ mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;as(nat::T),max=&gt;as(nat::T))
 mtron&gt; 15.band(10,20)     ​4​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)     ​5​
-==&gt;fail::[inst apply failure: -20 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as)]@/sys/fail/261
+==&gt;fail::[inst apply failure: -20 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as)]@/sys/fail/235
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(throw()),max=&gt;?nat::T.else(throw())){ is(and(gte(*min),lte(*max))) }
 mtron&gt; 15.band(10,20)     ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)     ​7​
-==&gt;fail::[noobj]@/sys/fail/264
+==&gt;fail::[noobj]@/sys/fail/238
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 mtron&gt; 15.band(10,20)     ​8​
 ==&gt;15
@@ -1199,6 +1199,30 @@ mtron&gt; -15.band(-20,-10)     ​9​
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>The <code>?nat</code> query parameter requires the respective argument be some \(n \in \mathbb{N}\).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code>as(nat::T)</code> enforces the argument type.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>A non-<code>nat</code> argument fails at the <code>as()</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td><code>?nat::T.else(throw())</code> throws when the typed argument is not a <code>nat</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Demonstrates the throw.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td><code>?nat::T.else(-100)</code> / <code>else(100)</code> fall back to the defaults when the typed argument is not a <code>nat</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>With the fallback band <code>[-100,100]</code>, -15 is within range.</td>
 </tr>
 </table>
 </div>
@@ -1312,7 +1336,7 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     ​1​</code></pre>
 mtron&gt; 10.is_divisible(2)
 ==&gt;true
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[inst apply failure: 'abc' [value] unable to convert str::T (at /m/inst/mod@1)]@/sys/fail/266</code></pre>
+==&gt;fail::[inst apply failure: 'abc' [value] unable to convert str::T (at /m/inst/mod@1)]@/sys/fail/240</code></pre>
 </div>
 </div>
 </div>
@@ -1366,7 +1390,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​1​
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/267
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]]@/sys/fail/241
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     ​2​
 mtron&gt; *trpl     ​3​</code></pre>
 </div>
@@ -1709,34 +1733,24 @@ mtron&gt; import(/m/llm)
 ...
 mtron&gt; import(/m/math)
 ...
-mtron&gt; httpspace::[host     =&gt; http://localhost:8777,
-                   q        =&gt; [mimeq::[=&gt;]],
-                   pattern  =&gt; &lt;http://#&gt;,
-                   route    =&gt; [/mcp     =&gt; mcp_mtron_http,
-                                /       =&gt; &lt;&gt;]]@/sys/space/web/http
-==&gt;httpspace::[host=&gt;http://localhost:8777,
-               q=&gt;[mimeq::[pattern=&gt;mimeq,
-                           post_read=&gt;inst(uri::T,#::T){&lt;j&gt;}]],
-               pattern=&gt;http://#,
-               route=&gt;[/mcp=&gt;mcp_mtron_http,/=&gt;&lt;&gt;]]@/sys/space/web/http
-mtron&gt; wsspace::[host     =&gt; ws://localhost:8555,
-                 pattern  =&gt; &lt;ws://#&gt;,
-                 q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
-                 route    =&gt; [/mtron  =&gt; mtron_ws,
-                              /mcp    =&gt; mcp_mtron_ws]]@/sys/space/web/ws
-==&gt;wsspace::[host=&gt;ws://localhost:8555,
-             pattern=&gt;ws://#,
-             q=&gt;[docq::[pattern=&gt;docq,
-                        pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                        pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                        obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                        inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-                 subq::[pattern=&gt;subq,
-                        pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                        pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                        qless_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                        obj=&gt;[,]]],
-             route=&gt;[/mtron=&gt;mtron_ws,/mcp=&gt;mcp_mtron_ws]]@/sys/space/web/ws
+mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
+                     q        =&gt; [mimeq::[=&gt;]],
+                     pattern  =&gt; &lt;http://#&gt;,
+                     route    =&gt; [/mcp     =&gt; mcp_mtron_http,
+                                   /       =&gt; &lt;&gt;]]
+==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
+mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
+                   pattern  =&gt; &lt;ws://#&gt;,
+                   q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
+                   route    =&gt; [/mtron  =&gt; mtron_ws,
+                              /mcp    =&gt; mcp_mtron_ws]]
+==&gt;fail::[parse error at line 1, col 1: unable to construct ws_server::T: fail::[inst apply failure: a ws_server serves a socket: origin=&gt;&lt;ws://origin:port&gt; required, got noobj (at /m/inst/ctor)]@/sys/fail/242
+   	while parsing: ws_server::[host     =&gt; ws://localhost:8555,
+                      pattern  =&gt; &lt;ws://#&gt;,
+                      q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
+                      route    =&gt; [/mtron  =&gt; mtron_ws,
+                                 /mcp    =&gt; mcp_mtron_ws]]]@/sys/fail/243
 mtron&gt; fsspace::[pattern  =&gt; fs:#,
                  route    =&gt; [fs:=&gt;&lt;.metatron&gt;]]@/sys/space/fs</code></pre>
 </div>
@@ -1803,7 +1817,7 @@ MCP servers and their tools offer numerous ways by which LLMs can interact with 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |/m/llm/model::T</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1883,7 +1897,7 @@ The purpose of breaking up the example into two expression is to highlight the O
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *http://localhost:11434/api/tags/+.&gt;&gt;.
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *http://localhost:11434/v1/models/+.&gt;&gt;.
          =?=[size=&gt;as(real::T).as(bB::T).
                    ?&gt;gB::1.0.
                    ?&lt;gB::5.0].
@@ -1892,11 +1906,11 @@ The purpose of breaking up the example into two expression is to highlight the O
                =?=[capabilities=&gt;has(thinking).has(tools)]].dom().
          order(&gt;&gt;size * -1).
          take(1).to(ollama_model)
-==&gt;fail::[parse error at line 1, col 38:
-     *http://localhost:11434/api/tags/+.&gt;&gt;.
+==&gt;fail::[parse error at line 1, col 39:
+     *http://localhost:11434/v1/models/+.&gt;&gt;.
             =?=[size=&gt;as(real::T).as(bB::...
-                                          ^
-     expected an obj]@/sys/fail/268</code></pre>
+                                           ^
+     expected an obj]@/sys/fail/244</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2181,7 +2195,7 @@ mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*eval],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/269
+==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/245
 ----
 
 [source,mtron]
@@ -2225,13 +2239,13 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][fail][fail]@/sys/fail/270
-   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]@/sys/fail/271
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::[inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]][java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]][fail][fail]@/sys/fail/246
+   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]@/sys/fail/247
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
           response  => [to=>_]]]
-==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/272
+==>fail::[unable to locate inst-f noobj::T => doc_model(aix)@<0>]@/sys/fail/248
 ----
 
 Given that an `mcp_client::T` is an index of `insts`.
@@ -2316,7 +2330,7 @@ mtron> *ollama:+.
                  tool     => [!*eval],
                  think    => print(_),
                  response => [to=>to(/usr/ai/response)]]].
-           to(aix)]@/sys/fail/273
+           to(aix)]@/sys/fail/249
 ----
 
 <1> create a `lst` to server as the an ordered sequence of chat interactions.
@@ -2737,7 +2751,7 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 <h2 id="sec-a-hybrid-structuralnominal-type-system" class="discrete">A Hybrid Structural/Nominal Type System</h2>
 <div class="legend-index">
 <ul>
-<li class="legend-lvl-3"><a href="#sec-sturctural-types" onclick="var t=document.getElementById('sec-sturctural-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Sturctural Types</a></li>
+<li class="legend-lvl-3"><a href="#sec-structural-types" onclick="var t=document.getElementById('sec-structural-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Structural Types</a></li>
 <li class="legend-lvl-4"><a href="#sec-type-predicates" onclick="var t=document.getElementById('sec-type-predicates');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Type Predicates</a></li>
 <li class="legend-lvl-4"><a href="#sec-structural-type-hierarchy" onclick="var t=document.getElementById('sec-structural-type-hierarchy');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Structural Type Hierarchy</a></li>
 <li class="legend-lvl-3"><a href="#sec-type-constructors" onclick="var t=document.getElementById('sec-type-constructors');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Type Constructors</a></li>
@@ -2786,7 +2800,7 @@ The set of natural numbers is defined in mtron as:</p>
 <div class="paragraph">
 <p>Non-base types will be notated <code>B::T &lt; A::T</code>: " <code>B::T</code> captures a subset of the values captured by <code>A::T</code>." When notated
 <code>B::T == A::T</code>: " <code>B::T</code> has the same values as <code>A::T</code> ".
-When two types have the same values but different names (vids) There exists only a <a href="https://en.wikipedia.org/wiki/Nominal_type_system">nominal</a> difference between <code>A::T</code> and <code>B::T</code>.
+When two types have the same values but different names (vids), there exists only a <a href="https://en.wikipedia.org/wiki/Nominal_type_system">nominal</a> difference between <code>A::T</code> and <code>B::T</code>.
 In such situation, values of <code>A::T</code> and values of <code>B::T</code> are different in that they are being type/classified as being distinct through label (through name).
 As an example, the type <code>int::T@age</code> is not the same as <code>int::T@zipcode</code>.
 The structure of a nominal type is specified as:</p>
@@ -2814,7 +2828,7 @@ With no constraint on structure, then the implied constraint is on vid, i.e. nam
 </tr>
 </table>
 </div>
-<h3 id="sec-sturctural-types" class="discrete">Sturctural Types</h3>
+<h3 id="sec-structural-types" class="discrete">Structural Types</h3>
 <h4 id="sec-type-predicates" class="discrete">Type Predicates</h4>
 <div class="paragraph">
 <p>A <a href="https://en.wikipedia.org/wiki/First-order_logic">predicate</a> is any <code>inst</code> of the form</p>
@@ -2849,7 +2863,7 @@ mtron&gt; int::-4     ​3​
 ==&gt;-4
 mtron&gt; nat::-4     ​4​
 ==&gt;fail::[parse error at line 1, col 1: -4 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-4]@/sys/fail/302
+   	while parsing: nat::-4]@/sys/fail/263
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@chicken     ​5​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​6​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2862,7 +2876,7 @@ mtron&gt; chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
      [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
       age=&gt;(/=&gt;age)=&gt;'four'=&gt;X=&gt;int::T]]
      predicate apply failed on execution
-   	while parsing: chicken::[name=&gt;'punky',age=&gt;'four']]@/sys/fail/303</code></pre>
+   	while parsing: chicken::[name=&gt;'punky',age=&gt;'four']]@/sys/fail/264</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2902,7 +2916,7 @@ mtron&gt; chicken::[name=&gt;'punky',age=&gt;'four']     ​7​
 <p>A structural type can be refined with further structural requirements.
 An example is the concept of age.
 No human being in modern recorded history has been reported to be over the age of 120 years old.
-Furthermore, no person has a negative age as at birth, the age is 0. Together, age can be defined as any natural number less than 120 (<code>0 &gt; age &lt; 120</code>).</p>
+Furthermore, no person has a negative age as at birth, the age is 0. Together, age can be defined as any natural number less than 120 (<code>0 &lt; age &lt; 120</code>).</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2925,9 +2939,9 @@ mtron&gt; nat::T[?&lt;120]@age     ​2​
 mtron&gt; 21.as(int::T).as(nat::T).as(age::T)     ​3​
 ==&gt;age::21
 mtron&gt; -21.as(int::T).as(nat::T).as(age::T)     ​4​
-==&gt;fail::[inst apply failure: -21 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@2)]@/sys/fail/304
+==&gt;fail::[inst apply failure: -21 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@2)]@/sys/fail/265
 mtron&gt; 121.as(int::T).as(nat::T).as(age::T)     ​5​
-==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural] (at /m/inst/as@3)]@/sys/fail/305
+==&gt;fail::[inst apply failure: nat::121 is not a nat::T[is(lt(120))]@age [structural] (at /m/inst/as@3)]@/sys/fail/266
 mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;age::T]]@chicken     ​6​
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7]     ​7​
 ==&gt;chicken::[name=&gt;'snowbutt',age=&gt;7]
@@ -2941,7 +2955,7 @@ mtron&gt; chicken::[name=&gt;'punky',age=&gt;444]     ​8​
      [name=&gt;(==&gt;name)=&gt;'punky'=&gt;==&gt;str::T,
       age=&gt;(/=&gt;age)=&gt;444=&gt;X=&gt;age::T]]
      predicate apply failed on execution
-   	while parsing: chicken::[name=&gt;'punky',age=&gt;444]]@/sys/fail/306</code></pre>
+   	while parsing: chicken::[name=&gt;'punky',age=&gt;444]]@/sys/fail/267</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3023,11 +3037,8 @@ mtron&gt; *select?&lt;=str&amp;docq     ​2​
                     "'241G'.regex('(\d+)([KMGT])') [-- ..."]]
 mtron&gt; 'marko'=='m.{3}o'     ​3​
 ==&gt;['marko']
-mtron&gt; 'marko'==re:'m.{3}o'     ​4​
-==&gt;fail::[parse error at line 1, col 13:
-     'marko'==re:'m.{3}o'
-                 ^
-     expected an obj]@/sys/fail/307</code></pre>
+mtron&gt; 'marko'==re::'m.{3}o'     ​4​
+==&gt;['marko']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3046,7 +3057,7 @@ mtron&gt; 'marko'==re:'m.{3}o'     ​4​
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td><code>regex</code> with with a particular type of nominally defined string.</td>
+<td><code>regex</code> is a particular type of nominally defined string.</td>
 </tr>
 </table>
 </div>
@@ -3066,11 +3077,12 @@ mtron&gt; being::T@chicken     ​3​
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)     ​4​
 ==&gt;chicken::[name=&gt;'marko',age=&gt;29]
 mtron&gt; chicken::[name=&gt;'snowbutt',age=&gt;7].as(human::T)     ​5​
-==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as@1)]@/sys/fail/310
+==&gt;fail::[inst apply failure: chicken::[name=&gt;'snowbutt',age=&gt;7] is not a being::T@human [nominal] (at /m/inst/as@1)]@/sys/fail/270
 mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)     ​6​
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
-mtron&gt; 'punky'.as(chicken::T)     ​7​
-==&gt;fail::[inst apply failure: Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null (at /m/inst/as@1) [Rec$RecType&lt;391&gt;]][Cannot invoke "studio.phaseshift.metatron.isa.m.type.Call.apply(studio.phaseshift.metatron.isa.m.type.Obj)" because the return value of "studio.phaseshift.metatron.isa.m.type.Type.constructor()" is null [Rec$RecType&lt;391&gt;]]@/sys/fail/311</code></pre>
+mtron&gt; chicken::'punky'     ​7​
+==&gt;fail::[parse error at line 1, col 1: chicken::'punky' [string] is not a being::T[?[name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age]]@chicken
+   	while parsing: chicken::'punky']@/sys/fail/271</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3171,51 +3183,61 @@ Yield the <em>range</em> (<code>&gt;&gt;</code>) of the relation constructed (th
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1,_ =&gt; _]&gt;&gt;]     ​1​
-mtron&gt; *nat     ​2​
-mtron&gt; nat::2     ​3​
-==&gt;nat::2
-mtron&gt; nat::-2     ​4​
-==&gt;fail::[parse error at line 1, col 1: -2 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-2]@/sys/fail/313
-mtron&gt; 2.as(nat::T)     ​5​
-==&gt;nat::2
-mtron&gt; -2.as(nat::T)     ​6​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/314
-mtron&gt; nat::2 * -1     ​7​
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))]@nat (at /m/inst/mult@1)]@/sys/fail/315</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; natc -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1,_ =&gt; _]&gt;&gt;]     ​1​
+mtron&gt; *natc     ​2​
+mtron&gt; natc::2     ​3​
+==&gt;natc::2
+mtron&gt; natc::-2     ​4​
+==&gt;natc::2
+mtron&gt; 2.as(natc::T)     ​5​
+==&gt;2
+mtron&gt; -2.as(natc::T)     ​6​
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()] [structural] (at /m/inst/as@1)]@/sys/fail/273
+mtron&gt; natc::2 * -1     ​7​
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()] (at /m/inst/mult@1)]@/sys/fail/274</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>A natural number (<code>nat</code>) is a positive <code>int</code>.
-The predicate component of the type definition tests an <code>int</code> to determine if it&#8217;s a <code>nat</code> and the constructor component will generate a positive <code>int</code> given any <code>int</code> (i.e. the absolute value).</td>
+<td>A natural number with a constructor: the predicate keeps only positive <code>int`s, and the constructor component turns any `int</code> into a positive one (i.e. the absolute value).</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>the <code>nat</code> <em>tid</em> references the respective <code>nat</code> type <code>obj</code>.</td>
+<td>The <code>natc</code> <em>tid</em> references the respective <code>natc</code> type <code>obj</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>2 is an <code>nat</code>.</td>
+<td>2 is a <code>natc</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>-2 is not a <code>nat</code>, but given the constructor, becomes a <code>nat</code>.</td>
+<td>-2 is not a <code>natc</code>, but given the constructor, it is construed as the <code>natc</code> 2.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>2 satisfies the <code>natc</code> predicate.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>-2 fails the <code>natc</code> predicate.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td><code>natc::2 * -1</code> is -2, which fails the <code>natc</code> predicate.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}M{{r}}E{{g}}t{{y}}a{{r}}T{{y}}r{{b}}o{{b}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}M{{y}}E{{b}}t{{r}}A{{y}}T{{c}}r{{m}}o{{m}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
 <div class="paragraph">
-<p>An <code>obj</code> that is not composed of other <code>objs</code> is a mono type and are exhaustively itemized in the table below.</p>
+<p>An <code>obj</code> that is not composed of other <code>objs</code> is a mono type. The mono types are exhaustively itemized in the table below.</p>
 </div>
 <table class="tableblock frame-none grid-all stretch">
 <colgroup>
@@ -3303,9 +3325,8 @@ mtron&gt; a/b/c * d/e/f     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'metatron'.as(bytes::T)     ​1​
 ==&gt;0x6d65746174726f6e
-mtron&gt; bytes::'48656c6c6f'     ​2​
-==&gt;fail::[parse error at line 1, col 1: '48656c6c6f' [string] is not a bytes::T
-   	while parsing: bytes::'48656c6c6f']@/sys/fail/316</code></pre>
+mtron&gt; 0x48656c6c6f     ​2​
+==&gt;0x48656c6c6f</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3316,7 +3337,7 @@ mtron&gt; bytes::'48656c6c6f'     ​2​
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Create bytes from hexadecimal representation</td>
+<td>Create bytes from the hexadecimal representation of 'hello'</td>
 </tr>
 </table>
 </div>
@@ -3759,12 +3780,15 @@ mtron&gt; *result     ​3​
 ==&gt;3
 ==&gt;4
 ==&gt;5
-mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;     ​2​
-==&gt;fail::[parse error at line 1, col 20:
-     filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
-                        ^
-     unexpected '[']@/sys/fail/329
-mtron&gt; *filtered     ​3​</code></pre>
+mtron&gt; filtered -&gt; *nums.-&lt;[is(?&gt;3) =&gt; _, _ =&gt; noobj]&gt;&gt;     ​2​
+==&gt;4
+==&gt;5
+mtron&gt; *filtered     ​3​
+==&gt;1
+==&gt;2
+==&gt;3
+==&gt;4
+==&gt;5</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3858,13 +3882,13 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[parse error at line 1, col 1: -10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/335
+   	while parsing: nat::-10]@/sys/fail/294
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/336</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/295</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>If <code>a</code> is an <code>obj</code> When a <code>tid</code> is specified for an <code>obj</code>, the <code>tid</code> is resolved to an <code>obj</code> denoting the type of <code>A</code>.</p>
+<p>When a <code>tid</code> is specified for an <code>obj</code>, the <code>tid</code> is resolved to an <code>obj</code> denoting the type of that <code>obj</code>.</p>
 </div>
 <div class="paragraph">
 <p>Every mtron <code>obj</code> has a type.</p>
@@ -3959,9 +3983,9 @@ mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
 ==&gt;fail::[parse error at line 1, col 1: -10 is not a int::T[is(gt(0))]@nat
-   	while parsing: nat::-10]@/sys/fail/338
+   	while parsing: nat::-10]@/sys/fail/297
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/339</code></pre>
+==&gt;fail::[inst apply failure: -10 is not a int::T[is(gt(0))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/298</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3984,11 +4008,11 @@ mtron&gt; int::T</code></pre>
 ==&gt;nat::125
 mtron&gt; age::125
 ==&gt;fail::[parse error at line 1, col 1: 125 is not a int::T[is(lt(120))]@nat
-   	while parsing: age::125]@/sys/fail/341
+   	while parsing: age::125]@/sys/fail/300
 mtron&gt; nat::125.as(age::T)
-==&gt;fail::[inst apply failure: nat::125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/342
+==&gt;fail::[inst apply failure: nat::125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@1)]@/sys/fail/301
 mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[inst apply failure: nat::125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@2)]@/sys/fail/343</code></pre>
+==&gt;fail::[inst apply failure: nat::125 is not a int::T[is(lt(120))]@nat [structural] (at /m/inst/as@2)]@/sys/fail/302</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4189,8 +4213,8 @@ mtron&gt; memspace::[
                     clear=&gt;inst?noobj{0}&lt;=(){&lt;j&gt;},
                     ...(31 more)]]@/usr/ui/console
 mtron&gt; */usr/ui/console/pane/0     ​2​
-mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​
-==&gt;fail::[unable to locate inst-f noobj::T =&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')@&lt;0&gt;]@/sys/fail/107</code></pre>
+mtron&gt; /usr/ui/console/pane/0/out -&gt; 'printed at xyz'     ​3​
+==&gt;'printed at xyz'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4205,23 +4229,20 @@ mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Console pane&#8217;s have obj local instructions availale for updating views.</td>
+<td>the pane&#8217;s <code>out</code> stream renders the written obj as a result line in the pane.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>There are 3 instructions associated with a <code>/m/mach/console/pane</code>.</p>
+<p>There are 2 streams exposed by each pane for updating its view.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><code>prompt(str::T)</code> - write to the pane using the standard prompt prefix <code>mtron&gt; xyz</code>.</p>
+<p><code>&lt;pane-vid&gt;/in</code> - an input line written to the pane with the standard prompt prefix <code>mtron&gt; xyz</code>.</p>
 </li>
 <li>
-<p><code>result(str::T)</code> - write to the pane using the standard result prefix <code>==&gt; xyz</code>.</p>
-</li>
-<li>
-<p><code>stream(str::T)</code> - write to the pane without a newline as in <code>abc xyz</code>.</p>
+<p><code>&lt;pane-vid&gt;/out</code> - a result line written to the pane with the standard result prefix <code>=&#8658; xyz</code>.</p>
 </li>
 </ol>
 </div>
@@ -4279,7 +4300,7 @@ mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     ​3​
 </ul>
 </div>
 <div class="paragraph">
-<p>The <strong>poly</strong> types are one of the more interesting aspects of metatron. They are used to structure data (serving as collections) and for for flow control (code branching). There are 3 <strong>poly</strong> types in metatron: <code>rec</code> (record), <code>lst</code> (list), and <code>rel</code> (relation)&#8201;&#8212;&#8201;the linchpins of metatron.</p>
+<p>The <strong>poly</strong> types are one of the more interesting aspects of metatron. They are used to structure data (serving as collections) and for flow control (code branching). There are 3 <strong>poly</strong> types in metatron: <code>rec</code> (record), <code>lst</code> (list), and <code>rel</code> (relation)&#8201;&#8212;&#8201;the linchpins of metatron.</p>
 </div>
 <h3 id="sec-data-structures" class="discrete">data structures</h3>
 <div class="paragraph">
@@ -4662,7 +4683,7 @@ a──c──⮞2</code></pre>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>the uri ring defines multiplcation as "extension", where \(x \cdot y\) is <code>x/y</code>.</td>
+<td>the uri ring defines multiplication as "extension", where \(x \cdot y\) is <code>x/y</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -4722,7 +4743,7 @@ a─┤
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>On the other hand, the additive union of the uris is an <strong>independent relationship</strong>. There are two representations of <code>a</code> and thus, <code>a/b =&gt; 1</code> is distinct, requiring no colocation with <code>a/c =&gt; 2</code>. This means that <code>a/b</code> can be stored in a document database in Japan and <code>a/c</code> an be stored in <code>.txt</code> file on some file system in Ohio and when resolved, the same <code>{1,2}</code> result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).</p>
+<p>On the other hand, the additive union of the uris is an <strong>independent relationship</strong>. There are two representations of <code>a</code> and thus, <code>a/b =&gt; 1</code> is distinct, requiring no colocation with <code>a/c =&gt; 2</code>. This means that <code>a/b</code> can be stored in a document database in Japan and <code>a/c</code> can be stored in a <code>.txt</code> file on some file system in Ohio and when resolved, the same <code>{1,2}</code> result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -5164,11 +5185,11 @@ it — is unchanged.</p>
 <h3 id="sec-the-algebraic-structure-of-data" class="discrete">The Algebraic Structure of Data</h3>
 <div class="paragraph">
 <p>The examples thus far using algebra to construct and deconstruct data structures have been relatively basic.
-It&#8217;s important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.</p>
+It&#8217;s important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presented.</p>
 </div>
 <div class="paragraph">
 <p>In mathematics, addition is denoted with a \(+\) as in \(a + b\).
-In code, addition represented with a <code>,</code>.
+In code, addition is represented with a <code>,</code>.
 A <code>,</code> separates two independent <code>objs</code> as in <code>[a,b]</code>.
 For multiplication, mathematical notation uses \(a \cdot b\) or \(a \ast b\) or simply character incidence as in \(ab\).
 In code, <code>.</code> denotes multiplication.
@@ -5240,1738 +5261,52 @@ mtron> [x0,x1,x2]>-.-<[*(* a/+/+)]
 ==>{2}[{1,2,3,4,5}]
 ==>[{3,4,5}]
 mtron> [x0,x1,x2]>-.-<[*(* +/b/+)]
-==>{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/345]
+==>{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/304]
 mtron> [x0,x1,x2]>-.-<[*(* +/b/c)]
-==>{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/348]
+==>{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/307]
 mtron> [x0,x1,x2]>-.-<[*(* a/+/c)]
 ==>{2}[{1,3}]
 ==>[3]
 mtron> [x0,x1,x2]>-.-<[*(* +/+/c)]
-==>{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/351]
+==>{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/310]
 mtron> [x0,x1,x2]>-.-<[*(* g/+/+)]
 ==>{2}[6]
 ==>[noobj]
-mtron> -->
-==>fail::[parse error at line 1, col 4:
-     -->
-        ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/354
-mtron> ++++
-mtron> [discrete]
-==>[discrete]
-mtron> [[sec-navigating-the-reference-structure]]
-==>[[sec-navigating-the-reference-structure]]
-mtron> === Navigating the Reference Structure
-==>fail::[parse error at line 1, col 3:
-     === Navigating the Reference Structure
-       ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/355
-mtron> Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
-==>fail::[parse error at line 1, col 10:
-     Metatron is address-first: `a` answers the *addre...
-              ^
-     unexpected 'i']@/sys/fail/356
-mtron> The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
-==>fail::[parse error at line 1, col 5:
-     The uri is the reference; the obj is the ref...
-         ^
-     unexpected 'u']@/sys/fail/357
-mtron> The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
-==>fail::[parse error at line 1, col 5:
-     The address space is first-class, obj-free n...
-         ^
-     unexpected 'a']@/sys/fail/358
-mtron> [mtron]
-==>[mtron]
 ----
-a/b/c/d -> 1                        [-- seed a leaf --]
-a/b/c/d/e -> 2                      [-- seed a deeper leaf --]
-a/b/c >>                            [-- <1> --]
-a/b/c >> 2                          [-- <2> --]
-a/b/c/d <<                          [-- <3> --]
-a/b/c/d/e << d/e                    [-- <4> --]
-a/b/c/d >> 0                        [-- <5> --]
-----
-
-<1> the **edge**: `a/b/c`'s child uris, obj-less.
-<2> the **walk**: descendants exactly 2 levels deep.
-<3> **retract** one level: the parent uri.
-<4> **retract** a matching postfix.
-<5> descend zero — the uri itself (the identity).
-
-`>>` on a **poly** selects a branch — keyed on a `rec`, indexed on a `lst` (the referent walk). `>>` on a **uri** extends — descends the address tree (the reference walk, nothing resolves). `<<` is pure uri arithmetic — the uri carries its own parent in its segments, never an obj parent link.
-The `@` anchor collapses the bridge: `5@a` is the value *with* its address, so writes flow back (pass-by-value@reference).
-
-Navigation never invents an address: `uri >> <path>` returns the child only if it *exists* (it resolves through the space); otherwise `noobj`.
-Walking the reference is safe because the reference is real — a made-up path is not an address, it is a lie.
-See `docs/design/ring-uri.md` for the full theory.
+-->
+<h3 id="sec-navigating-the-reference-structure" class="discrete">Navigating the Reference Structure</h3>
 <div class="paragraph">
-<p>&lt;/div&gt;</p>
-</div>
-:card-id: 10
-:card-file: qproc.adoc
-[subs="attributes"]
-<div class="paragraph">
-<p>&lt;div class="collapse position-relative" id="card-9"&gt;
-&lt;button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-9" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"&gt;&lt;/button&gt;
-&lt;button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"&gt;&lt;i class="fas fa-link"&gt;&lt;/i&gt;&lt;/button&gt;</p>
-</div>
-[discrete]
-[[sec-uniform-resource-identifiers]]
-== Uniform Resource Identifiers
-<div class="paragraph">
-<p>&lt;div class="legend-index"&gt;
-&lt;ul&gt;
-&lt;li class="legend-lvl-3"&gt;&lt;a href="#sec-spatial-embeddings" onclick="var t=document.getElementById('sec-spatial-embeddings');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Spatial Embeddings&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-4"&gt;&lt;a href="#sec-the-uri-reference-ring" onclick="var t=document.getElementById('sec-the-uri-reference-ring');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;The Uri Reference Ring&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-5"&gt;&lt;a href="#sec-referential-distributivity" onclick="var t=document.getElementById('sec-referential-distributivity');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Referential Distributivity&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-5"&gt;&lt;a href="#sec-referential-factoring" onclick="var t=document.getElementById('sec-referential-factoring');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Referential Factoring&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-5"&gt;&lt;a href="#sec-the-type-level-ring-and" onclick="var t=document.getElementById('sec-the-type-level-ring-and');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;The Type-Level Ring: <code>[]</code> and <code>{}</code>&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-4"&gt;&lt;a href="#sec-isomorphic-identical" onclick="var t=document.getElementById('sec-isomorphic-identical');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Isomorphic != Identical&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-3"&gt;&lt;a href="#sec-the-algebraic-structure-of-data" onclick="var t=document.getElementById('sec-the-algebraic-structure-of-data');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;The Algebraic Structure of Data&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-3"&gt;&lt;a href="#sec-navigating-the-reference-structure" onclick="var t=document.getElementById('sec-navigating-the-reference-structure');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Navigating the Reference Structure&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;</p>
-</div>
-[source,mtron]
-----
-file://domain.local:22/usr/data/abc{*}?sub
-  │    └──────────┘ │  └──────────┘ │  └────⮞ q(uery)
-  │          │      │        │      └───────⮞ c(oefficient)
-  │          │      │        └──────────────⮞ path
-  │          │      └───────────────────────⮞ port
-  │          └──────────────────────────────⮞ host
-  └─────────────────────────────────────────⮞ scheme
-----
-
-[cols="7a,5a",separator=🧱,role=noborder]
-|===
-🧱
-
-metatron was designed to support the creation and manipulation of _abstract data types_ in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space's espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various peculiarities between.
-
-metatron's `uri` addressing scheme makes it possible to encode arbitrary data structures into a metatron-specific construct called "space". In space, `uris` are coupled together with `objs`, where the `uri` component is called the https://en.wikipedia.org/wiki/Reference[__reference__], the `obj` component __the referent__, and the act of retrieving an `obj` by its associated `uri` is called https://en.wikipedia.org/wiki/Pointer_(computer_programming)[__dereferencing__] (or resolving). The primitive instructions enabling referencing and dereferencing are the `from` and `to` instructions which have the signatures
-
-[source,mtron]
-----
-from?B{*}<=A{?}(?uri::T)
-to?A{?}<=A{?}(?uri::T)
-----
-
-and example usages
-
-[source,mtron]
-----
-1.to(a) [-- write 1 to a  --]
-from(a) [-- read 1 from a --]
-----
-
-These two reference-oriented instructions have sugar forms:
-
-[source,mtron]
-----
-a -> 1  [-- write 1 to a --]
-*a      [-- read 1 from a --]
-----
-
-From `to` and `from` more complex spatial read/write patterns are realized such as `select` and `update` (discussed elsewhere in the Tractatus).
-
-[source,mtron]
-----
-               ┌─────── a/b
- ┌─────────────┼────────────── b
- │     ┌───────┼─────────── a/b/c
- │     │   ┌───┼─── http://localhost:8080
- │   ┌─▼┐  │  ┌▼┐
-┌▼─┐ │  │  │  └─┘
-│  │ └──┘┌─▼┐    ┌──┐
-└──┘  ┌─┐└──┘ ┌─┐│  ◄──────── a.local
- ┌────►─┘     └▲┘└──┘
- │ ┌─┐ ┌─◄┐┌──┐│    ┌◄─────── xyz
- │ └▲┘ └─┘││  ││    └┘
- │  │ ┌──┐│└─▲┘└─────── mtron:ab
- │  │ │  ││  └───────────── z
- │  │ └─▲┘└────────────────── /a/b
- │  │   └────────────── xx:host.com/abc
- │  └───────────────────────── yy
- └────────────────────── xx
-----
-
-|===
-
-Any `obj` can be referenced by a `uri` -- from simple **mono** objs such as `bool`, `int`, etc. to complex nested **poly** objs such as `rec`, `lst`, etc.
-Poly objs provide another layer of addressing in that once a poly obj has a `uri` reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly.
-This inter/intra-poly sub-reference resolution is called a __cascading resolution__.
-
-[cols="7a,7a",separator=🧱]
-|===
-
-
-.^🧱
-The **router** is the __space resolver__ responsible for identifying the space containing the referenced obj data.
-
-The **space** is the __obj resolver__ responsible for identifying the `obj` containing the referenced data.
-
-The **obj** is the __data resolver__ responsible for identifying the data being referenced.
-
-When the `uri` references beyond the boundaries of the `obj` (polys), the extended address resolution is handled through inter-
-and intra-poly traversals called cascades.
-
-a🧱
-
-[source,mtron]
-----
-
-         ┌──space────────────────────────┐
-         │                       ┌─obj─┐ │
-         │                       │ ▲──┐│ │
-         │       ┌──space idx───►│    ││ │
-         │       │               │ ▲  ││ │
-         │       │               └─┼──┼┘ │
-         │       │                 │  │c │
-         │       │                 │  │a │
-         │       │        ┌obj──┐  │  │s │
-         │       │        │   ──┼──┘  │c │
-router ──┼space idx───────►─┐  ▲│     │a │
-         │       │        │ ▼ ─┘◄───┐ │d │
-         │       │        └─────┘   │ │i │
-         │       │                  │ │n │
-         │       │                  │ │g │
-         │       │               ┌──┼─┼┐ │
-         │       │               │  │ ││ │
-         │       └──space idx───►│    ▼│ │
-         │                       │     │ │
-         │                       └─obj─┘ │
-         └───────────────────────────────┘
-----
-
-🧱
-[source,mtron]
-----
-g     -> 'ping'◄───────────┐
-a/b/c -> [x,[y=>[z=>2,zz=>!*g]]]
-         ▲▲ ▲   ▲   ▲      ▲
-         ││ │   │   │      └─ a/b/c/y/zz    <6>
-         ││ │   │   └──────── a/b/c/y/z     <5>
-         ││ │   └──────────── a/b/c/1/y     <4>
-         ││ └──────────────── a/b/c/1       <3>
-         │└────────────────── a/b/c/0       <2>
-         └─────────────────── a/b/c         <1>
-----
-
-[source,mtron]
-----
-mtron> g     -> 'ping'     ​1​
-==>'ping'
-mtron> a/b/c -> [x,[y=>[z=>2,zz=>!*g]]]     ​2​
-==>[x,[y=>[z=>2,zz=>!*g]]]
-mtron> *a/b/c     ​3​
-==>[x,[y=>[z=>2,zz=>!*g]]]
-mtron> *a/b/c/0     ​4​
-==>x
-mtron> *a/b/c/1     ​5​
-==>[y=>[z=>2,zz=>!*g]]
-mtron> *a/b/c/1/y     ​6​
-==>[z=>2,zz=>!*g]
-mtron> *a/b/c/1/y/z     ​7​
-==>2
-mtron> *a/b/c/1/y/zz     ​8​
-==>'ping'
-----
-
-🧱
-<1> the uri `g` references the `str` "ping".
-<2> the uri `a/b/c` references a nested `poly`.
-<3> the uri `a/b` references a space containing a `lst` poly at `a/b/c`.
-<4> the resolution of the uri `a/b/c/0` cascades into an intra-`lst` `uri` mono.
-<5> the uri resolution of `a/b/c/1` cascades into an intra-`rec` poly.
-<6> the uri resolution of `a/b/c/1/y` cascades into another nested, intra-`rec` poly.
-<7> the cascading resolution of the uri `a/b/c/1/y/z` reaches a doubly nested intra-`int` mono.
-<8> the uri `a/b/c/1/y/zz` cascade breaks the poly boundary yielding an inter-`obj` resolution.
-|===
-
-[discrete]
-[[sec-spatial-embeddings]]
-=== Spatial Embeddings
-
-[discrete]
-[[sec-the-uri-reference-ring]]
-==== The Uri Reference Ring
-
-When a nested poly structure is written to space an ambiguity emerges.
-This ambiguity touches at the heart of ring theory -- the relationship between latexmath:[+] and latexmath:[*] -- and provides just enough "sleight of hand wiggle room" for useful consequences to emerge in distributed computing.
-
-[discrete]
-[[sec-referential-distributivity]]
-===== Referential Distributivity
-
-This section aims to demonstrate that the two data structures in the table below are referentially equivalent.
-
-[cols="8a,8a",frame="all"]
-|===
-|
-[cols="5a,5a",option="header",frame="all",grid="cols"]
-!===
-^!
-**form A**
-^!
-**form B**
-!
-[source,mtron]
-----
-[a=>[b=>1,c=>2]]
-----
-!
-[source,mtron]
-----
-{[a=>[b=>1]],
- [a=>[c=>2]]}
-----
-!
-[source,mtron]
-----
-  ┌──b──⮞1
-a─┤
-  └──c──⮞2
-----
-!
-[source,mtron]
-----
-a──b──⮞1
-
-a──c──⮞2
-----
-!===
-<1> the uri ring defines multiplcation as "extension", where latexmath:[x \cdot y] is `x/y`.
-<2> the uri ring defines addition as "branching", where latexmath:[x + y] is `{x,y}`.
-
-The characteristic marks of latexmath:[\ast] are `.`,`\=>`,`\<=`. +
-The characteristic marks of latexmath:[+] are `,`, `-<`,`>-`.
-|
-The two examples are __referentially equivalent__ because there exists a bijection that maps **A** to **B** and **B** to **A**. In other words, they are iso-referential structures within the category of the obj ring. The form **A** is captured by the equation:
-
-\[
-a \cdot (b + c) = \{1,2\}
-\]
-
-Form **B** has the equation:
-
-\[
-(a \cdot b) + (a \cdot c) = \{1,2\}
-\]
-
-Thus, due to the latexmath:[\small{+/*}]-coupling axiom of ring theory which states that multiplication distributes over addition, the two equations, while __typographically__ different, are, in fact, algebraically equivalent. Thus, the two structures, while __structurally__ different, are referentially equivalent.
-
-\[
-\begin{align}
-a \cdot (b + c)  &= (a \cdot b) + (a \cdot c)         \\
-a (b + c)        &= ab + ac \\
-\end{align}
-\]
-
-|===
-
-[cols="5a,5a",separator=🧱,frame=all]
-|===
-.^🧱
-If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a **dependent relationship**. There exists a colocational requirement that `a` couples `b` and `c` into a single structure.
-
-
-
-[source,mtron]
-----
-  ┌──b──⮞1
-a─┤
-  └──c──⮞2
-----
-
-🧱
-
-
-On the other hand, the additive union of the uris is an **independent relationship**. There are two representations of `a` and thus, `a/b \=> 1` is distinct, requiring no colocation with `a/c \=> 2`. This means that `a/b` can be stored in a document database in Japan and `a/c` an be stored in `.txt` file on some file system in Ohio and when resolved, the same `{1,2}` result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).
-
-[source,mtron]
-----
-a──b──⮞1
-
-a──c──⮞2
-----
-
-.^🧱
-[source,mtron]
-----
-mtron> x0 -> [a=>[b=>1,c=>2]]
-==>[a=>[b=>1,c=>2]]
-mtron> x1 -> {[a=>[b=>1]],[a=>[c=>2]]}
-==>[a=>[b=>1]]
-==>[a=>[c=>2]]
-----
-
-🧱
-
-[source,mtron]
-----
-mtron> [x0,x1]>-.-<[*(* /a/b)]
-==>{2}[1]
-mtron> [x0,x1]>-.-<[*(* /a/c)]
-==>{2}[2]
-mtron> [x0,x1]>-.-<[*(* /a/+)]
-==>{2}[{1,2}]
-mtron> [x0,x1]>-.-<[*(* /+/+)]
-==>{2}[{1,2}]
-mtron> [x0,x1]>-.-<[*(* /+/b)]
-==>{2}[1]
-mtron> [x0,x1]>-.-<[*(* /+/c)]
-==>{2}[2]
-----
-
-|===
-
-[discrete]
-[[sec-referential-factoring]]
-===== Referential Factoring
-
-If references form a ring, then references can be __factored__.
-Sub-uri decompositions maintain referential integrity.
-Assume that the additive branches of the running example thus far now end with a `d` entry.
-It stands that the following equalities hold.
-
-[source,mtron]
-----
-a──b──d──⮞1          ┌──b──d──⮞1          ┌──b──┐                  a──b──┐
-               =   a─┤              =   a─┤      ├─d──⮞{1,2}   =          ├─d──⮞{1,2}
-a──c──d──⮞2          └──c──d──⮞2          └──c──┘                  a──c──┘
-----
-
-The symbolic notation below reiterates what is stated diagrammatically above.
-
-[cols="2a,4",separator=🧱]
-|===
-
-.^🧱
-\[
-\begin{align}
-\;         & (a \cdot b \cdot d) & + \;\; & (a \cdot c \cdot d)                &=& \; \{1,2\} \\
-a \cdot \; & ( (b \cdot d)       & + \;\; & (c \cdot d) )                      &=& \; \{1,2\} \\
-a \cdot \; & ( b                 & + \;\; & c )                   \cdot \; d   &=& \; \{1,2\} \\
-( & (a \cdot b)                    & + \;\; & (a \cdot c))       \cdot \; d   &=&  \; \{1,2\}
-\end{align}
-\]
-
-a🧱
-
-.rings of rings
-[.card]
---
-Why the unordered set latexmath:[\{1,2\}] and not latexmath:[1+2=3]?
-
-\[
-\begin{align}
-+\_\text{uri}: (\text{uri} \times \text{uri}) \rightarrow \text{uri} \\
-\cdot_\text{uri}:(\text{uri} \times \text{uri}) \rightarrow \text{uri}
-\end{align}
-\]
-
-is not
-
-\[
-\begin{align}
-+\_\text{int}: (\text{int} \times \text{int}) \rightarrow \text{uri} \\
-\cdot_\text{int}:(\text{int} \times \text{int}) \rightarrow \text{uri}.
-\end{align}
-\]
-
-These are two different + and * operators (binary functions). The + and * operators that unify the uri ring and the int ring is + and * of the obj ring. In the obj ring, 1 + 2 = {1,2}  and 1 * 2 = (1 \=> 2).
---
-
-|===
-
-Finally, the programmatic expression below captures the equivalent aforementioned representations.
-
-[source,mtron]
-----
-mtron> x0 -> {[a=>[b=>[d=>1]]],[a=>[c=>[d=>2]]]}
-==>[a=>[b=>[d=>1]]]
-==>[a=>[c=>[d=>2]]]
-mtron> x1 -> [a=>[b=>[d=>1],c=>[d=>2]]]
-==>[a=>[b=>[d=>1],c=>[d=>2]]]
-mtron> x2 -> [a=>[b=>!*d,[c=>!*d]]];d->{1,2};
-mtron> x3 -> {[a=>[b=>!*d]],[a=>[c=>!*d]]};d->{1,2}
-==>1
-==>2
-----
-
-[source,mtron]
-----
-mtron> [x0,x1]>-.-<[*(* /a/b/d)]
-==>{2}[1]
-mtron> [x0,x1]>-.-<[*(* /a/b/+)]
-==>{2}[1]
-mtron> [x0,x1]>-.-<[*(* /a/+/+)]
-==>{2}[{1,2}]
-mtron> [x0,x1]>-.-<[*(* /+/+/+)]
-==>{2}[{1,2}]
-mtron> [x0,x1]>-.-<[*(* /+/+/d)]
-==>{2}[{1,2}]
-mtron> [x0,x1]>-.-<[*(* /+/c/d)]
-==>{2}[2]
-mtron> [x0,x1]>-.-<[*(* /+/c/+)]
-==>{2}[2]
-mtron> [x0,x1]>-.-<[*(* /a/+/d)]
-==>{2}[{1,2}]
-----
-
-A subsequent, practical entailment states that all ring-based addressing schemes can be transformed from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for its production requirements and the other subset can be contained in another space specialized accordingly to its requirements.
-For example, some data can be "hot in cache" in order to satisfy demand, while some other data can be "archivally iced" when the production usage doesn't require a rapid response time and production costs can be reduced with cheaper disk storage.
-The fundamental mathematics and the subsequent algorithmic embodiment in metatron enables the symbolic manipulation of referentially consistent structural partitions. **Ring-theoretic references** make this possible.
-
-[discrete]
-[[sec-the-type-level-ring-and]]
-===== The Type-Level Ring: `[]` and `{}`
-
-The reference ring is usually stated over *values* — `[a=>{b,c}]` against its `{...}`-branched form — but the same
-two operators are the components of the *type* itself, carried in the `uri`/`tid`:
-
-* `[]` — the list — is `·` (extension). A list *extends* by position: `lst[{2}str]` is two `str` slots addressed
-  as `…/0`, `…/1`, which is exactly latexmath:[x \cdot y = x/y].
-* `{}` — the stream — is `+` (branching). A stream *branches*: `str{3}` is three `str`s, which is exactly
-  latexmath:[x + y = \{x,y\}].
-
-A type such as `lst[{2}str{3}]::T{2}` is therefore a *term* in the uri ring:
-
-[source,mtron]
-----
-lst[{2}str{3}]::T{2}   ≡   ((str+str+str) · (str+str+str))  +  ((str+str+str) · (str+str+str))
-----
-
-where `·` gives the _rank_ (how many slots extend) and `+` gives the _extent_ (how many branches), alternating
-through the nesting. The value `[{'a','b','c'},{'d','e','f'}]` is an instance of that term and obeys the same laws:
-the outer `[]` extends (rank), the inner `{}` branches (extent). `{}` never nests because addition flattens —
-latexmath:[a+(b+c) = a+b+c] — while `[]` nests because multiplication extends. Hence the single invariant: no
-`{{ }}` — a stream binds to a list slot, never to another stream.
-
-The point is that `[]` and `{}` are not merely *nominal* markers on a type: they are the value-level `·` and `+`
-lifted to the type level. A type and its instances obey the *identical* algebra, so distributivity
-latexmath:[a \cdot (b+c) = a \cdot b + a \cdot c] holds for both.
-
-[discrete]
-[[sec-isomorphic-identical]]
-==== Isomorphic != Identical
-
-A _matrix_ is an latexmath:[n \times m] data structure composed of latexmath:[n] vectors/row, each with latexmath:[m] elements/columns.
-A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
-Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining iso-referential with respect to the structural ring algebra.
-
-[cols="5,5,5",frame=none,subs="+macros",separator=🧱,grid=cols,role="center"]
-|===
-
-^a🧱
-
-[.big]
-[source,mtron]
-----
- \    |   |    /
- [■] [■] [■] [■]
-
--[■] [■] [■] [■]-
-
- [■] [■] [■] [■]
- /    |   |    \
-
-----
-
-^a🧱
-
-[.big]
-[source,mtron]
-----
-​
-[■]-[■]-[■]-[■]
-
-[■]-[■]-[■]-[■]
-
-[■]-[■]-[■]-[■]
-​
-----
-
-^a🧱
-
-[.big]
-[source,mtron]
-----
-​
-[■]-[■]-[■]-[■]
- |   |   |   |
-[■]-[■]-[■]-[■]
- |   |   |   |
-[■]-[■]-[■]-[■]
-​
-----
-
-a🧱
-
-[source,mtron]
-----
-mtron> m/0/0 -> 0
-==>0
-mtron> m/0/1 -> 1
-==>1
-mtron> m/0/2 -> 2
-==>2
-mtron> m/0/3 -> 3
-==>3
-mtron> m/1/0 -> 4
-==>4
-mtron> m/1/1 -> 5
-==>5
-mtron> m/1/2 -> 6
-==>6
-mtron> m/1/3 -> 7
-==>7
-mtron> m/2/0 -> 8
-==>8
-mtron> m/2/1 -> 9
-==>9
-mtron> m/2/2 -> 10
-==>10
-mtron> m/2/3 -> 11
-==>11
-mtron> *m/0/0     ​1​
-==>0
-mtron> *m/0/+     ​2​
-==>0
-==>1
-==>2
-==>3
-mtron> *m/+/0     ​3​
-==>0
-==>4
-==>8
-----
-
-a🧱
-
-[source,mtron]
-----
-mtron> m/0 -> [0,1,2,3]
-==>[0,1,2,3]
-mtron> m/1 -> [4,5,6,7]
-==>[4,5,6,7]
-mtron> m/2 -> [8,9,10,11]
-==>[8,9,10,11]
-mtron> *m/0/0     ​1​
-==>0
-mtron> *m/0/+     ​2​
-==>0
-==>1
-==>2
-==>3
-mtron> *m/+/0     ​3​
-==>0
-==>4
-==>8
-----
-
-a🧱
-
-[source,mtron]
-----
-mtron> m -> [[0,1,2,3],
-             [4,5,6,7],
-             [8,9,10,11]]
-==>[[0,1,2,3],[4,5,6,7],[8,9,10,11]]
-mtron> *m/0/0     ​1​
-==>0
-mtron> *m/0/+     ​2​
-==>0
-==>1
-==>2
-==>3
-mtron> *m/+/0     ​3​
-==>0
-==>4
-==>8
-----
-
-|===
-
-<1> Retrieve the first element of matrix `m`.
-<2> Retrieve the first row of matrix `m`.
-<3> Retrieve the first column of matrix `m`.
-
-The above example demonstrates what is possible with referentially consistent structural embeddings.
-The platonic matrix latexmath:[m] was embedded in a space using 3 different representations: _entry-wise_, _row-wise_, and _row-column wise_.
-Next, each embedding was read: an _element read_, a _row read_ and a _column read_.
-The expression used to read from each of the three embeddings is the same (typographically verbatim) and so is the result (algebraically isomorphic).
-
-Why does the same read return the same result from all three embeddings? Because each embedding is a different
-_factorization_ of the same ring term. In the uri ring, `·` is extension and `+` is branching, with distributivity
-latexmath:[a \cdot (b+c) = a \cdot b + a \cdot c]:
-
-* _entry-wise_ is the fully branched form — every element is a separate `+` leaf: latexmath:[m/0/0 + m/0/1 + \ldots].
-* _row-wise_ factors the row `·` out of each row's `+`: latexmath:[m/0 \cdot (0+1+2+3)].
-* _row-column-wise_ factors the whole matrix into one `·` tree:
-  latexmath:[m \cdot (\,(0 \cdot 1 \cdot 2 \cdot 3) + (4 \cdot 5 \cdot 6 \cdot 7) + \ldots\,)].
-
-Distributivity moves `·` past `+` (or vice versa), so the three embeddings are the *same term* rearranged — hence
-`*m/0/+` (a row) or `*m/+/0` (a column) resolves to the same value in all three. The time/space tables differ only
-because each factorization chooses a different *physical* layout; the *logical* term — and so every reference into
-it — is unchanged.
-
-.Amortized Costs in Terms of Time
-[%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
-|===
-| [.red]#embedding#              | [.red]#single-element#| [.red]#row-access#  | [.red]#column-access#
-| [.red]#entry#          | \[O(1)\]       | \[O(n)\]    | \[O(m)\]
-| [.red]#row#            | \[O(m)\]       | \[O(1)\]    | \[O(m)\]
-| [.red]#row_column#     | \[O(1)\]       | \[O(1)\]    | \[O(1)\]
-|===
-
-The different embeddings also have different space costs, where space is defined as the amount of data accessed (i.e. retrieved from the structure) in order to satisfy the resolution of the respective `uri`.
-
-.Amortized Costs in Terms of Space
-[.center]
-[%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
-|===
-| [.red]#embedding#              | [.red]#single-element# | [.red]#row-access#    | [.red]#column-access#
-| [.red]#entry#          | \[O(1)\]       | \[O(n)\]      | \[O(m)\]
-| [.red]#row#            | \[O(n)\]       | \[O(n)\]      | \[O(n+m)\]
-| [.red]#row_column#     | \[O(n+m)\]     | \[O(n+m)\]    | \[O(n+m)\]
-|===
-
-[discrete]
-[[sec-the-algebraic-structure-of-data]]
-=== The Algebraic Structure of Data
-
-The examples thus far using algebra to construct and deconstruct data structures have been relatively basic.
-It's important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.
-
-In mathematics, addition is denoted with a latexmath:[+] as in latexmath:[a + b].
-In code, addition represented with a `,`.
-A `,` separates two independent `objs` as in `[a,b]`.
-For multiplication, mathematical notation uses latexmath:[a \cdot b] or latexmath:[a \ast b] or simply character incidence as in latexmath:[ab].
-In code, `.` denotes multiplication.
-For instance, `a.b`.
-Given this rule, the following metatron `rec`
-
-[source,mtron]
-----
-mtron> x0 -> [a=>[b=>[c=>1,d=>2],
-                  e=>[c=>3,d=>4,f=>5]],
-              g=>[b=>[c=>6]]]
-==>[a=>[b=>[c=>1,d=>2],e=>[c=>3,d=>4,f=>5]],
-    g=>[b=>[c=>6]]]
-----
-
-...
-<div class="paragraph">
-<p>&lt;!--</p>
-</div>
-<div class="paragraph">
-<p>can be systematically and unambiguously transformed into the equation:</p>
-</div>
-<div class="paragraph">
-<p>\[
-\begin{align}
-    a(b(c \cdot 1) + (d \cdot 2)) + (e( (c \cdot 3)  + (d \cdot 4) +  (f \cdot 5) )) +  (g(b(c \cdot 6))) \\
-(a+e+g)(b(c\cdot 1) + b(c\cdot 3) + b(c \cdot 6)) + (a+e)(d\cdot 2 + d \cdot 4) \\
-(a+e+g)(b(c(1+3))) + (a+e)(d(2 + 4))
-\end{align}
-\]</p>
-</div>
-<div class="paragraph">
-<p>Common left side variables amongst summed components can be factored to the left. Likewise, right side variable can be factored to the right. From the inverse of distributivity, the <code>rec</code> can be written:</p>
+<p>Metatron is address-first: <code>a</code> answers the <strong>address</strong>, <code><strong>a</code> answers the *value</strong>.
+The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
+The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x1 -&gt; [a/b =&gt; [c=&gt;1,d=&gt;2],
-              a/e/c =&gt; 3,
-              a/e/d =&gt; 4,
-              a/e/f =&gt; 5,
-              g/b =&gt; [c=&gt;6]]
-==&gt;[a/b=&gt;[c=&gt;1,d=&gt;2],
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b=&gt;[c=&gt;6]]
-mtron&gt; x2 -&gt; [a/b/c =&gt; 1,
-              a/b/d =&gt; 2,
-              a/e/c =&gt; 3,
-              a/e/d =&gt; 4,
-              a/e/f =&gt; 5,
-              g/b/c =&gt; 6]
-==&gt;[a/b/c=&gt;1,
-    a/b/d=&gt;2,
-    a/e/c=&gt;3,
-    a/e/d=&gt;4,
-    a/e/f=&gt;5,
-    g/b/c=&gt;6]</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/b/c)]
-==&gt;{2}[1]
-==&gt;[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/b/+)]
-==&gt;{2}[{1,2}]
-==&gt;[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/+/+)]
-==&gt;{2}[{1,2,3,4,5}]
-==&gt;[{3,4,5}]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/+)]
-==&gt;{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/345]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/c)]
-==&gt;{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/348]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a/+/c)]
-==&gt;{2}[{1,3}]
-==&gt;[3]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/+/c)]
-==&gt;{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/351]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* g/+/+)]
-==&gt;{2}[6]
-==&gt;[noobj]
-mtron&gt; --&gt;
-==&gt;fail::[parse error at line 1, col 4:
-     --&gt;
-        ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/354
-mtron&gt; ++++
-mtron&gt; [discrete]
-==&gt;[discrete]
-mtron&gt; [[sec-navigating-the-reference-structure]]
-==&gt;[[sec-navigating-the-reference-structure]]
-mtron&gt; === Navigating the Reference Structure
-==&gt;fail::[parse error at line 1, col 3:
-     === Navigating the Reference Structure
-       ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/355
-mtron&gt; Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
-==&gt;fail::[parse error at line 1, col 10:
-     Metatron is address-first: `a` answers the *addre...
-              ^
-     unexpected 'i']@/sys/fail/356
-mtron&gt; The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
-==&gt;fail::[parse error at line 1, col 5:
-     The uri is the reference; the obj is the ref...
-         ^
-     unexpected 'u']@/sys/fail/357
-mtron&gt; The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
-==&gt;fail::[parse error at line 1, col 5:
-     The address space is first-class, obj-free n...
-         ^
-     unexpected 'a']@/sys/fail/358
-mtron&gt; [mtron]
-==&gt;[mtron]</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>a/b/c/d &#8594; 1                        [-- seed a leaf --]
-a/b/c/d/e &#8594; 2                      [-- seed a deeper leaf --]
-a/b/c &gt;&gt;                            [-- &lt;1&gt; --]
-a/b/c &gt;&gt; 2                          [-- &lt;2&gt; --]
-a/b/c/d &lt;&lt;                          [-- &lt;3&gt; --]
-a/b/c/d/e &lt;&lt; d/e                    [-- &lt;4&gt; --]
-a/b/c/d &gt;&gt; 0                        [-- &lt;5&gt; --]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>&lt;1&gt; the **edge**: `a/b/c`'s child uris, obj-less.
-&lt;2&gt; the **walk**: descendants exactly 2 levels deep.
-&lt;3&gt; **retract** one level: the parent uri.
-&lt;4&gt; **retract** a matching postfix.
-&lt;5&gt; descend zero — the uri itself (the identity).
-
-`&gt;&gt;` on a **poly** selects a branch — keyed on a `rec`, indexed on a `lst` (the referent walk). `&gt;&gt;` on a **uri** extends — descends the address tree (the reference walk, nothing resolves). `&lt;&lt;` is pure uri arithmetic — the uri carries its own parent in its segments, never an obj parent link.
-The `@` anchor collapses the bridge: `5@a` is the value *with* its address, so writes flow back (pass-by-value@reference).
-
-Navigation never invents an address: `uri &gt;&gt; &lt;path&gt;` returns the child only if it *exists* (it resolves through the space); otherwise `noobj`.
-Walking the reference is safe because the reference is real — a made-up path is not an address, it is a lie.
-See `docs/design/ring-uri.md` for the full theory.
-++++
-&lt;/div&gt;
-++++
-
-:card-id: 11
-:card-file: mqtt.adoc
-[subs="attributes"]
-++++
-&lt;div class="collapse position-relative" id="card-{card-id}"&gt;
-&lt;button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-{card-id}" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"&gt;&lt;/button&gt;
-&lt;button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"&gt;&lt;i class="fas fa-link"&gt;&lt;/i&gt;&lt;/button&gt;
-++++
-[discrete]
-[[sec-uniform-resource-identifiers]]
-== Uniform Resource Identifiers
-
-++++
-&lt;div class="legend-index"&gt;
-&lt;ul&gt;
-&lt;li class="legend-lvl-3"&gt;&lt;a href="#sec-spatial-embeddings" onclick="var t=document.getElementById('sec-spatial-embeddings');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Spatial Embeddings&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-4"&gt;&lt;a href="#sec-the-uri-reference-ring" onclick="var t=document.getElementById('sec-the-uri-reference-ring');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;The Uri Reference Ring&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-5"&gt;&lt;a href="#sec-referential-distributivity" onclick="var t=document.getElementById('sec-referential-distributivity');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Referential Distributivity&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-5"&gt;&lt;a href="#sec-referential-factoring" onclick="var t=document.getElementById('sec-referential-factoring');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Referential Factoring&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-5"&gt;&lt;a href="#sec-the-type-level-ring-and" onclick="var t=document.getElementById('sec-the-type-level-ring-and');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;The Type-Level Ring: `[]` and `{}`&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-4"&gt;&lt;a href="#sec-isomorphic-identical" onclick="var t=document.getElementById('sec-isomorphic-identical');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Isomorphic != Identical&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-3"&gt;&lt;a href="#sec-the-algebraic-structure-of-data" onclick="var t=document.getElementById('sec-the-algebraic-structure-of-data');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;The Algebraic Structure of Data&lt;/a&gt;&lt;/li&gt;
-&lt;li class="legend-lvl-3"&gt;&lt;a href="#sec-navigating-the-reference-structure" onclick="var t=document.getElementById('sec-navigating-the-reference-structure');if(t){var c=t.closest('.collapse');if(c&amp;&amp;!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;"&gt;Navigating the Reference Structure&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-++++
-
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p><a href="file://domain.local:22/usr/data/abc{*}?sub" class="bare">file://domain.local:22/usr/data/abc{*}?sub</a>
-  │    └──────────┘ │  └──────────┘ │  └────⮞ q(uery)
-  │          │      │        │      └───────⮞ c(oefficient)
-  │          │      │        └──────────────⮞ path
-  │          │      └───────────────────────⮞ port
-  │          └──────────────────────────────⮞ host
-  └─────────────────────────────────────────⮞ scheme</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>[cols="7a,5a",separator=🧱,role=noborder]
-|===
-🧱
-
-metatron was designed to support the creation and manipulation of _abstract data types_ in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space's espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various peculiarities between.
-
-metatron's `uri` addressing scheme makes it possible to encode arbitrary data structures into a metatron-specific construct called "space". In space, `uris` are coupled together with `objs`, where the `uri` component is called the https://en.wikipedia.org/wiki/Reference[__reference__], the `obj` component __the referent__, and the act of retrieving an `obj` by its associated `uri` is called https://en.wikipedia.org/wiki/Pointer_(computer_programming)[__dereferencing__] (or resolving). The primitive instructions enabling referencing and dereferencing are the `from` and `to` instructions which have the signatures
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>from?B{*}&#8656;A{?}(?uri::T)
-to?A{?}&#8656;A{?}(?uri::T)</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>and example usages
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>1.to(a) [-- write 1 to a  --]
-from(a) [-- read 1 from a --]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>These two reference-oriented instructions have sugar forms:
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>a &#8594; 1  [-- write 1 to a --]
-*a      [-- read 1 from a --]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>From `to` and `from` more complex spatial read/write patterns are realized such as `select` and `update` (discussed elsewhere in the Tractatus).
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>               ┌─────── a/b
- ┌─────────────┼────────────── b
- │     ┌───────┼─────────── a/b/c
- │     │   ┌───┼─── http://localhost:8080
- │   ┌─▼┐  │  ┌▼┐
-┌▼─┐ │  │  │  └─┘
-│  │ └──┘┌─▼┐    ┌──┐
-└──┘  ┌─┐└──┘ ┌─┐│  ◄──────── a.local
- ┌────►─┘     └▲┘└──┘
- │ ┌─┐ ┌─◄┐┌──┐│    ┌◄─────── xyz
- │ └▲┘ └─┘││  ││    └┘
- │  │ ┌──┐│└─▲┘└─────── mtron:ab
- │  │ │  ││  └───────────── z
- │  │ └─▲┘└────────────────── /a/b
- │  │   └────────────── xx:host.com/abc
- │  └───────────────────────── yy
- └────────────────────── xx</pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>|===
-
-Any `obj` can be referenced by a `uri` -- from simple **mono** objs such as `bool`, `int`, etc. to complex nested **poly** objs such as `rec`, `lst`, etc.
-Poly objs provide another layer of addressing in that once a poly obj has a `uri` reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly.
-This inter/intra-poly sub-reference resolution is called a __cascading resolution__.
-
-[cols="7a,7a",separator=🧱]
-|===
-
-
-.^🧱
-The **router** is the __space resolver__ responsible for identifying the space containing the referenced obj data.
-
-The **space** is the __obj resolver__ responsible for identifying the `obj` containing the referenced data.
-
-The **obj** is the __data resolver__ responsible for identifying the data being referenced.
-
-When the `uri` references beyond the boundaries of the `obj` (polys), the extended address resolution is handled through inter-
-and intra-poly traversals called cascades.
-
-a🧱
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>         ┌──space────────────────────────┐
-         │                       ┌─obj─┐ │
-         │                       │ ▲──┐│ │
-         │       ┌──space idx───►│    ││ │
-         │       │               │ ▲  ││ │
-         │       │               └─┼──┼┘ │
-         │       │                 │  │c │
-         │       │                 │  │a │
-         │       │        ┌obj──┐  │  │s │
-         │       │        │   ──┼──┘  │c │
-router ──┼space idx───────►─┐  ▲│     │a │
-         │       │        │ ▼ ─┘◄───┐ │d │
-         │       │        └─────┘   │ │i │
-         │       │                  │ │n │
-         │       │                  │ │g │
-         │       │               ┌──┼─┼┐ │
-         │       │               │  │ ││ │
-         │       └──space idx───►│    ▼│ │
-         │                       │     │ │
-         │                       └─obj─┘ │
-         └───────────────────────────────┘</pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>🧱
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>g     &#8594; 'ping'◄───────────┐
-a/b/c &#8594; [x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]
-         ▲▲ ▲   ▲   ▲      ▲
-         ││ │   │   │      └─ a/b/c/y/zz    &lt;6&gt;
-         ││ │   │   └──────── a/b/c/y/z     &lt;5&gt;
-         ││ │   └──────────── a/b/c/1/y     &lt;4&gt;
-         ││ └──────────────── a/b/c/1       &lt;3&gt;
-         │└────────────────── a/b/c/0       &lt;2&gt;
-         └─────────────────── a/b/c         &lt;1&gt;</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; g     &#8594; 'ping'     ​1​
-=&#8658;'ping'
-mtron&gt; a/b/c &#8594; [x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]     ​2​
-=&#8658;[x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]
-mtron&gt; *a/b/c     ​3​
-=&#8658;[x,[y&#8658;[z&#8658;2,zz&#8658;!*g]]]
-mtron&gt; *a/b/c/0     ​4​
-=&#8658;x
-mtron&gt; *a/b/c/1     ​5​
-=&#8658;[y&#8658;[z&#8658;2,zz&#8658;!*g]]
-mtron&gt; *a/b/c/1/y     ​6​
-=&#8658;[z&#8658;2,zz&#8658;!*g]
-mtron&gt; *a/b/c/1/y/z     ​7​
-=&#8658;2
-mtron&gt; *a/b/c/1/y/zz     ​8​
-=&#8658;'ping'</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>🧱
-&lt;1&gt; the uri `g` references the `str` "ping".
-&lt;2&gt; the uri `a/b/c` references a nested `poly`.
-&lt;3&gt; the uri `a/b` references a space containing a `lst` poly at `a/b/c`.
-&lt;4&gt; the resolution of the uri `a/b/c/0` cascades into an intra-`lst` `uri` mono.
-&lt;5&gt; the uri resolution of `a/b/c/1` cascades into an intra-`rec` poly.
-&lt;6&gt; the uri resolution of `a/b/c/1/y` cascades into another nested, intra-`rec` poly.
-&lt;7&gt; the cascading resolution of the uri `a/b/c/1/y/z` reaches a doubly nested intra-`int` mono.
-&lt;8&gt; the uri `a/b/c/1/y/zz` cascade breaks the poly boundary yielding an inter-`obj` resolution.
-|===
-
-[discrete]
-[[sec-spatial-embeddings]]
-=== Spatial Embeddings
-
-[discrete]
-[[sec-the-uri-reference-ring]]
-==== The Uri Reference Ring
-
-When a nested poly structure is written to space an ambiguity emerges.
-This ambiguity touches at the heart of ring theory -- the relationship between latexmath:[+] and latexmath:[*] -- and provides just enough "sleight of hand wiggle room" for useful consequences to emerge in distributed computing.
-
-[discrete]
-[[sec-referential-distributivity]]
-===== Referential Distributivity
-
-This section aims to demonstrate that the two data structures in the table below are referentially equivalent.
-
-[cols="8a,8a",frame="all"]
-|===
-|
-[cols="5a,5a",option="header",frame="all",grid="cols"]
-!===
-^!
-**form A**
-^!
-**form B**
-!
-[source,mtron]</pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>!
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>{[a&#8658;[b&#8658;1]],
- [a&#8658;[c&#8658;2]]}</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>!
-[source,mtron]</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>  ┌──b──⮞1
-a─┤
-  └──c──⮞2</pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>!
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>a──b──⮞1</p>
-</div>
-<div class="paragraph">
-<p>a──c──⮞2</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>!===
-&lt;1&gt; the uri ring defines multiplcation as "extension", where latexmath:[x \cdot y] is `x/y`.
-&lt;2&gt; the uri ring defines addition as "branching", where latexmath:[x + y] is `{x,y}`.
-
-The characteristic marks of latexmath:[\ast] are `.`,`\=&gt;`,`\&lt;=`. +
-The characteristic marks of latexmath:[+] are `,`, `-&lt;`,`&gt;-`.
-|
-The two examples are __referentially equivalent__ because there exists a bijection that maps **A** to **B** and **B** to **A**. In other words, they are iso-referential structures within the category of the obj ring. The form **A** is captured by the equation:
-
-\[
-a \cdot (b + c) = \{1,2\}
-\]
-
-Form **B** has the equation:
-
-\[
-(a \cdot b) + (a \cdot c) = \{1,2\}
-\]
-
-Thus, due to the latexmath:[\small{+/*}]-coupling axiom of ring theory which states that multiplication distributes over addition, the two equations, while __typographically__ different, are, in fact, algebraically equivalent. Thus, the two structures, while __structurally__ different, are referentially equivalent.
-
-\[
-\begin{align}
-a \cdot (b + c)  &amp;= (a \cdot b) + (a \cdot c)         \\
-a (b + c)        &amp;= ab + ac \\
-\end{align}
-\]
-
-|===
-
-[cols="5a,5a",separator=🧱,frame=all]
-|===
-.^🧱
-If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a **dependent relationship**. There exists a colocational requirement that `a` couples `b` and `c` into a single structure.
-
-
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>  ┌──b──⮞1
-a─┤
-  └──c──⮞2</pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>🧱
-
-
-On the other hand, the additive union of the uris is an **independent relationship**. There are two representations of `a` and thus, `a/b \=&gt; 1` is distinct, requiring no colocation with `a/c \=&gt; 2`. This means that `a/b` can be stored in a document database in Japan and `a/c` an be stored in `.txt` file on some file system in Ohio and when resolved, the same `{1,2}` result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>a──b──⮞1</p>
-</div>
-<div class="paragraph">
-<p>a──c──⮞2</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>.^🧱
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; x0 &#8594; [a&#8658;[b&#8658;1,c&#8658;2]]
-=&#8658;[a&#8658;[b&#8658;1,c&#8658;2]]
-mtron&gt; x1 &#8594; {[a&#8658;[b&#8658;1]],[a&#8658;[c&#8658;2]]}
-=&#8658;[a&#8658;[b&#8658;1]]
-=&#8658;[a&#8658;[c&#8658;2]]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>🧱
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/b)]
-=&#8658;{2}[1]
-mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/c)]
-=&#8658;{2}[2]
-mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/)]
-==&gt;{2}[{1,2}]
-mtron&gt; [x0,x1]&gt;-.-&lt;[*(* //)]
-==&gt;{2}[{1,2}]
-mtron&gt; [x0,x1]&gt;-.-&lt;[*(* //b)]
-=&#8658;{2}[1]
-mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /+/c)]
-=&#8658;{2}[2]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>|===
-
-[discrete]
-[[sec-referential-factoring]]
-===== Referential Factoring
-
-If references form a ring, then references can be __factored__.
-Sub-uri decompositions maintain referential integrity.
-Assume that the additive branches of the running example thus far now end with a `d` entry.
-It stands that the following equalities hold.
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>a──b──d──⮞1          ┌──b──d──⮞1          ┌──b──┐                  a──b──┐
-               =   a─┤              =   a─┤      ├─d──⮞{1,2}   =          ├─d──⮞{1,2}
-a──c──d──⮞2          └──c──d──⮞2          └──c──┘                  a──c──┘</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>The symbolic notation below reiterates what is stated diagrammatically above.
-
-[cols="2a,4",separator=🧱]
-|===
-
-.^🧱
-\[
-\begin{align}
-\;         &amp; (a \cdot b \cdot d) &amp; + \;\; &amp; (a \cdot c \cdot d)                &amp;=&amp; \; \{1,2\} \\
-a \cdot \; &amp; ( (b \cdot d)       &amp; + \;\; &amp; (c \cdot d) )                      &amp;=&amp; \; \{1,2\} \\
-a \cdot \; &amp; ( b                 &amp; + \;\; &amp; c )                   \cdot \; d   &amp;=&amp; \; \{1,2\} \\
-( &amp; (a \cdot b)                    &amp; + \;\; &amp; (a \cdot c))       \cdot \; d   &amp;=&amp;  \; \{1,2\}
-\end{align}
-\]
-
-a🧱
-
-.rings of rings
-[.card]
---
-Why the unordered set latexmath:[\{1,2\}] and not latexmath:[1+2=3]?
-
-\[
-\begin{align}
-+\_\text{uri}: (\text{uri} \times \text{uri}) \rightarrow \text{uri} \\
-\cdot_\text{uri}:(\text{uri} \times \text{uri}) \rightarrow \text{uri}
-\end{align}
-\]
-
-is not
-
-\[
-\begin{align}
-+\_\text{int}: (\text{int} \times \text{int}) \rightarrow \text{uri} \\
-\cdot_\text{int}:(\text{int} \times \text{int}) \rightarrow \text{uri}.
-\end{align}
-\]
-
-These are two different + and * operators (binary functions). The + and * operators that unify the uri ring and the int ring is + and * of the obj ring. In the obj ring, 1 + 2 = {1,2}  and 1 * 2 = (1 \=&gt; 2).
---
-
-|===
-
-Finally, the programmatic expression below captures the equivalent aforementioned representations.
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; x0 &#8594; {[a&#8658;[b&#8658;[d&#8658;1]]],[a&#8658;[c&#8658;[d&#8658;2]]]}
-=&#8658;[a&#8658;[b&#8658;[d&#8658;1]]]
-=&#8658;[a&#8658;[c&#8658;[d&#8658;2]]]
-mtron&gt; x1 &#8594; [a&#8658;[b&#8658;[d&#8658;1],c&#8658;[d&#8658;2]]]
-=&#8658;[a&#8658;[b&#8658;[d&#8658;1],c&#8658;[d&#8658;2]]]
-mtron&gt; x2 &#8594; [a&#8658;[b&#8658;!*d,[c&#8658;!*d]]];d&#8594;{1,2};
-mtron&gt; x3 &#8594; {[a&#8658;[b&#8658;!*d]],[a&#8658;[c&#8658;!*d]]};d&#8594;{1,2}
-=&#8658;1
-=&#8658;2</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/b/d)]
-=&#8658;{2}[1]
-mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> /a/b/)]
-==&gt;{2}[1]
-mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a//)]
-==&gt;{2}[{1,2}]
-mtron&gt; [x0,x1]&gt;-.-&lt;[*(* ///)]
-=&#8658;{2}[{1,2}]
-mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> ///d)]
-=&#8658;{2}[{1,2}]
-mtron&gt; [x0,x1]&gt;-.-&lt;[<strong>(</strong> //c/d)]
-==&gt;{2}[2]
-mtron&gt; [x0,x1]&gt;-.-&lt;[*(* //c/)]
-==&gt;{2}[2]
-mtron&gt; [x0,x1]&gt;-.-&lt;[*(* /a//d)]
-=&#8658;{2}[{1,2}]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>A subsequent, practical entailment states that all ring-based addressing schemes can be transformed from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for its production requirements and the other subset can be contained in another space specialized accordingly to its requirements.
-For example, some data can be "hot in cache" in order to satisfy demand, while some other data can be "archivally iced" when the production usage doesn't require a rapid response time and production costs can be reduced with cheaper disk storage.
-The fundamental mathematics and the subsequent algorithmic embodiment in metatron enables the symbolic manipulation of referentially consistent structural partitions. **Ring-theoretic references** make this possible.
-
-[discrete]
-[[sec-the-type-level-ring-and]]
-===== The Type-Level Ring: `[]` and `{}`
-
-The reference ring is usually stated over *values* — `[a=&gt;{b,c}]` against its `{...}`-branched form — but the same
-two operators are the components of the *type* itself, carried in the `uri`/`tid`:
-
-* `[]` — the list — is `·` (extension). A list *extends* by position: `lst[{2}str]` is two `str` slots addressed
-  as `…/0`, `…/1`, which is exactly latexmath:[x \cdot y = x/y].
-* `{}` — the stream — is `+` (branching). A stream *branches*: `str{3}` is three `str`s, which is exactly
-  latexmath:[x + y = \{x,y\}].
-
-A type such as `lst[{2}str{3}]::T{2}` is therefore a *term* in the uri ring:
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>lst[{2}str{3}]::T{2}   ≡   str+str+str) · (str+str+str  +  str+str+str) · (str+str+str</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>where `·` gives the _rank_ (how many slots extend) and `+` gives the _extent_ (how many branches), alternating
-through the nesting. The value `[{'a','b','c'},{'d','e','f'}]` is an instance of that term and obeys the same laws:
-the outer `[]` extends (rank), the inner `{}` branches (extent). `{}` never nests because addition flattens —
-latexmath:[a+(b+c) = a+b+c] — while `[]` nests because multiplication extends. Hence the single invariant: no
-`{{ }}` — a stream binds to a list slot, never to another stream.
-
-The point is that `[]` and `{}` are not merely *nominal* markers on a type: they are the value-level `·` and `+`
-lifted to the type level. A type and its instances obey the *identical* algebra, so distributivity
-latexmath:[a \cdot (b+c) = a \cdot b + a \cdot c] holds for both.
-
-[discrete]
-[[sec-isomorphic-identical]]
-==== Isomorphic != Identical
-
-A _matrix_ is an latexmath:[n \times m] data structure composed of latexmath:[n] vectors/row, each with latexmath:[m] elements/columns.
-A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
-Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining iso-referential with respect to the structural ring algebra.
-
-[cols="5,5,5",frame=none,subs="+macros",separator=🧱,grid=cols,role="center"]
-|===
-
-^a🧱
-
-[.big]
-[source,mtron]</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>\    |   |    /
-[■] [■] [■] [■]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>-[■] [■] [■] [■]-</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>[■] [■] [■] [■]
-/    |   |    \</pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>^a🧱
-
-[.big]
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>​
-[■]-[■]-[■]-[■]</p>
-</div>
-<div class="paragraph">
-<p>[■]-[■]-[■]-[■]</p>
-</div>
-<div class="paragraph">
-<p>[■]-[■]-[■]-[■]
-​</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>^a🧱
-
-[.big]
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>​
-[■]-[■]-[■]-[■]
- |   |   |   |
-[■]-[■]-[■]-[■]
- |   |   |   |
-[■]-[■]-[■]-[■]
-​</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>a🧱
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; m/0/0 &#8594; 0
-=&#8658;0
-mtron&gt; m/0/1 &#8594; 1
-=&#8658;1
-mtron&gt; m/0/2 &#8594; 2
-=&#8658;2
-mtron&gt; m/0/3 &#8594; 3
-=&#8658;3
-mtron&gt; m/1/0 &#8594; 4
-=&#8658;4
-mtron&gt; m/1/1 &#8594; 5
-=&#8658;5
-mtron&gt; m/1/2 &#8594; 6
-=&#8658;6
-mtron&gt; m/1/3 &#8594; 7
-=&#8658;7
-mtron&gt; m/2/0 &#8594; 8
-=&#8658;8
-mtron&gt; m/2/1 &#8594; 9
-=&#8658;9
-mtron&gt; m/2/2 &#8594; 10
-=&#8658;10
-mtron&gt; m/2/3 &#8594; 11
-=&#8658;11
-mtron&gt; *m/0/0     ​1​
-=&#8658;0
-mtron&gt; *m/0/+     ​2​
-=&#8658;0
-=&#8658;1
-=&#8658;2
-=&#8658;3
-mtron&gt; *m/+/0     ​3​
-=&#8658;0
-=&#8658;4
-=&#8658;8</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>a🧱
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; m/0 &#8594; [0,1,2,3]
-=&#8658;[0,1,2,3]
-mtron&gt; m/1 &#8594; [4,5,6,7]
-=&#8658;[4,5,6,7]
-mtron&gt; m/2 &#8594; [8,9,10,11]
-=&#8658;[8,9,10,11]
-mtron&gt; *m/0/0     ​1​
-=&#8658;0
-mtron&gt; *m/0/+     ​2​
-=&#8658;0
-=&#8658;1
-=&#8658;2
-=&#8658;3
-mtron&gt; *m/+/0     ​3​
-=&#8658;0
-=&#8658;4
-=&#8658;8</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>a🧱
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; m &#8594; [[0,1,2,3],
-             [4,5,6,7],
-             [8,9,10,11]]
-=&#8658;[[0,1,2,3],[4,5,6,7],[8,9,10,11]]
-mtron&gt; *m/0/0     ​1​
-=&#8658;0
-mtron&gt; *m/0/+     ​2​
-=&#8658;0
-=&#8658;1
-=&#8658;2
-=&#8658;3
-mtron&gt; *m/+/0     ​3​
-=&#8658;0
-=&#8658;4
-=&#8658;8</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>|===
-
-&lt;1&gt; Retrieve the first element of matrix `m`.
-&lt;2&gt; Retrieve the first row of matrix `m`.
-&lt;3&gt; Retrieve the first column of matrix `m`.
-
-The above example demonstrates what is possible with referentially consistent structural embeddings.
-The platonic matrix latexmath:[m] was embedded in a space using 3 different representations: _entry-wise_, _row-wise_, and _row-column wise_.
-Next, each embedding was read: an _element read_, a _row read_ and a _column read_.
-The expression used to read from each of the three embeddings is the same (typographically verbatim) and so is the result (algebraically isomorphic).
-
-Why does the same read return the same result from all three embeddings? Because each embedding is a different
-_factorization_ of the same ring term. In the uri ring, `·` is extension and `+` is branching, with distributivity
-latexmath:[a \cdot (b+c) = a \cdot b + a \cdot c]:
-
-* _entry-wise_ is the fully branched form — every element is a separate `+` leaf: latexmath:[m/0/0 + m/0/1 + \ldots].
-* _row-wise_ factors the row `·` out of each row's `+`: latexmath:[m/0 \cdot (0+1+2+3)].
-* _row-column-wise_ factors the whole matrix into one `·` tree:
-  latexmath:[m \cdot (\,(0 \cdot 1 \cdot 2 \cdot 3) + (4 \cdot 5 \cdot 6 \cdot 7) + \ldots\,)].
-
-Distributivity moves `·` past `+` (or vice versa), so the three embeddings are the *same term* rearranged — hence
-`*m/0/+` (a row) or `*m/+/0` (a column) resolves to the same value in all three. The time/space tables differ only
-because each factorization chooses a different *physical* layout; the *logical* term — and so every reference into
-it — is unchanged.
-
-.Amortized Costs in Terms of Time
-[%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
-|===
-| [.red]#embedding#              | [.red]#single-element#| [.red]#row-access#  | [.red]#column-access#
-| [.red]#entry#          | \[O(1)\]       | \[O(n)\]    | \[O(m)\]
-| [.red]#row#            | \[O(m)\]       | \[O(1)\]    | \[O(m)\]
-| [.red]#row_column#     | \[O(1)\]       | \[O(1)\]    | \[O(1)\]
-|===
-
-The different embeddings also have different space costs, where space is defined as the amount of data accessed (i.e. retrieved from the structure) in order to satisfy the resolution of the respective `uri`.
-
-.Amortized Costs in Terms of Space
-[.center]
-[%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
-|===
-| [.red]#embedding#              | [.red]#single-element# | [.red]#row-access#    | [.red]#column-access#
-| [.red]#entry#          | \[O(1)\]       | \[O(n)\]      | \[O(m)\]
-| [.red]#row#            | \[O(n)\]       | \[O(n)\]      | \[O(n+m)\]
-| [.red]#row_column#     | \[O(n+m)\]     | \[O(n+m)\]    | \[O(n+m)\]
-|===
-
-[discrete]
-[[sec-the-algebraic-structure-of-data]]
-=== The Algebraic Structure of Data
-
-The examples thus far using algebra to construct and deconstruct data structures have been relatively basic.
-It's important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.
-
-In mathematics, addition is denoted with a latexmath:[+] as in latexmath:[a + b].
-In code, addition represented with a `,`.
-A `,` separates two independent `objs` as in `[a,b]`.
-For multiplication, mathematical notation uses latexmath:[a \cdot b] or latexmath:[a \ast b] or simply character incidence as in latexmath:[ab].
-In code, `.` denotes multiplication.
-For instance, `a.b`.
-Given this rule, the following metatron `rec`
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; x0 &#8594; [a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],
-                  e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],
-              g&#8658;[b&#8658;[c&#8658;6]]]
-=&#8658;[a&#8658;[b&#8658;[c&#8658;1,d&#8658;2],e&#8658;[c&#8658;3,d&#8658;4,f&#8658;5]],
-    g&#8658;[b&#8658;[c&#8658;6]]]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>...
-++++
-&lt;!--
-
-
-can be systematically and unambiguously transformed into the equation:
-
-\[
-\begin{align}
-    a(b(c \cdot 1) + (d \cdot 2)) + (e( (c \cdot 3)  + (d \cdot 4) +  (f \cdot 5) )) +  (g(b(c \cdot 6))) \\
-(a+e+g)(b(c\cdot 1) + b(c\cdot 3) + b(c \cdot 6)) + (a+e)(d\cdot 2 + d \cdot 4) \\
-(a+e+g)(b(c(1+3))) + (a+e)(d(2 + 4))
-\end{align}
-\]
-
-Common left side variables amongst summed components can be factored to the left. Likewise, right side variable can be factored to the right. From the inverse of distributivity, the `rec` can be written:
-
-[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; x1 &#8594; [a/b &#8658; [c&#8658;1,d&#8658;2],
-              a/e/c &#8658; 3,
-              a/e/d &#8658; 4,
-              a/e/f &#8658; 5,
-              g/b &#8658; [c&#8658;6]]
-=&#8658;[a/b&#8658;[c&#8658;1,d&#8658;2],
-    a/e/c&#8658;3,
-    a/e/d&#8658;4,
-    a/e/f&#8658;5,
-    g/b&#8658;[c&#8658;6]]
-mtron&gt; x2 &#8594; [a/b/c &#8658; 1,
-              a/b/d &#8658; 2,
-              a/e/c &#8658; 3,
-              a/e/d &#8658; 4,
-              a/e/f &#8658; 5,
-              g/b/c &#8658; 6]
-=&#8658;[a/b/c&#8658;1,
-    a/b/d&#8658;2,
-    a/e/c&#8658;3,
-    a/e/d&#8658;4,
-    a/e/f&#8658;5,
-    g/b/c&#8658;6]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>[source,mtron]</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> a/b/c)]
-=&#8658;{2}[1]
-=&#8658;[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> a/b/)]
-==&gt;{2}[{1,2}]
-==&gt;[noobj]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a//)]
-==&gt;{2}[{1,2,3,4,5}]
-==&gt;[{3,4,5}]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* +/b/)]
-=&#8658;{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/345]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> /b/c)]
-==&gt;{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/348]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[*(* a//c)]
-=&#8658;{2}[{1,3}]
-=&#8658;[3]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> //c)]
-=&#8658;{3}[fail::[inst apply failure: unable to parse { to a furi: { (at /m/inst/from)]@/sys/fail/351]
-mtron&gt; [x0,x1,x2]&gt;-.-&lt;[<strong>(</strong> g//)]
-=&#8658;{2}[6]
-=&#8658;[noobj]
-mtron&gt; -&#8594;
-=&#8658;fail::[parse error at line 1, col 4:
-     -&#8594;
-        ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/354
-mtron&gt; 
-mtron&gt; [discrete]
-=&#8658;[discrete]
-mtron&gt; <a id="sec-navigating-the-reference-structure"></a>
-=&#8658;<a id="sec-navigating-the-reference-structure"></a>
-mtron&gt; === Navigating the Reference Structure
-=&#8658;fail::[parse error at line 1, col 3:
-     === Navigating the Reference Structure
-       ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/355
-mtron&gt; Metatron is address-first: <code>a</code> answers the <strong>address</strong>, <code><strong>a</code> answers the *value</strong>.
-=&#8658;fail::[parse error at line 1, col 10:
-     Metatron is address-first: <code>a</code> answers the *addre&#8230;&#8203;
-              ^
-     unexpected 'i']@/sys/fail/356
-mtron&gt; The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
-=&#8658;fail::[parse error at line 1, col 5:
-     The uri is the reference; the obj is the ref&#8230;&#8203;
-         ^
-     unexpected 'u']@/sys/fail/357
-mtron&gt; The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
-=&#8658;fail::[parse error at line 1, col 5:
-     The address space is first-class, obj-free n&#8230;&#8203;
-         ^
-     unexpected 'a']@/sys/fail/358
-mtron&gt; [mtron]
-=&#8658;[mtron]</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre>a/b/c/d -&gt; 1                        [-- seed a leaf --]
-a/b/c/d/e -&gt; 2                      [-- seed a deeper leaf --]
-a/b/c &gt;&gt;                            [-- &lt;1&gt; --]
-a/b/c &gt;&gt; 2                          [-- &lt;2&gt; --]
-a/b/c/d &lt;&lt;                          [-- &lt;3&gt; --]
-a/b/c/d/e &lt;&lt; d/e                    [-- &lt;4&gt; --]
-a/b/c/d &gt;&gt; 0                        [-- &lt;5&gt; --]</pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; n/m/r -&gt; 1                        [-- seed a leaf --]
+==&gt;1
+mtron&gt; n/m/r/s -&gt; 2                      [-- seed a deeper leaf --]
+==&gt;2
+mtron&gt; *n/m     ​1​
+==&gt;[r=&gt;[s=&gt;2]]
+mtron&gt; n/m &gt;&gt; r     ​2​
+==&gt;n/m/r
+mtron&gt; n/m/r &lt;&lt;     ​3​
+==&gt;n/m
+mtron&gt; n/m/r/s &lt;&lt; r/s     ​4​
+==&gt;n/m
+mtron&gt; n/m/r &gt;&gt; 0     ​5​
+==&gt;n/m/r</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>the <strong>edge</strong>: `a/b/c&#8217;s child uris, obj-less.</td>
+<td>the <strong>branch</strong>: the child uris of <code>n/m</code>, each with its subtree.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>the <strong>walk</strong>: descendants exactly 2 levels deep.</td>
+<td>the <strong>walk</strong>: descend to the child <code>r</code> through the address tree.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
@@ -6995,6 +5330,317 @@ The <code>@</code> anchor collapses the bridge: <code>5@a</code> is the value <s
 <p>Navigation never invents an address: <code>uri &gt;&gt; &lt;path&gt;</code> returns the child only if it <strong>exists</strong> (it resolves through the space); otherwise <code>noobj</code>.
 Walking the reference is safe because the reference is real — a made-up path is not an address, it is a lie.
 See <code>docs/design/ring-uri.md</code> for the full theory.</p>
+</div>
+</div>
+<div class="collapse position-relative" id="card-10">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-10" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="sec-q-processors" class="discrete">Q Processors</h2>
+<div class="legend-index">
+<ul>
+<li class="legend-lvl-3"><a href="#sec-qproc-examples" onclick="var t=document.getElementById('sec-qproc-examples');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">qproc examples</a></li>
+<li class="legend-lvl-4"><a href="#sec-subq-publish-and-subscribe-to-patterns-in-space" onclick="var t=document.getElementById('sec-subq-publish-and-subscribe-to-patterns-in-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">subq: publish and subscribe to patterns in space</a></li>
+<li class="legend-lvl-4"><a href="#sec-docq-read-and-write-obj-documentation-for-humans-and-agents" onclick="var t=document.getElementById('sec-docq-read-and-write-obj-documentation-for-humans-and-agents');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">docq: read and write obj documentation for humans and agents</a></li>
+<li class="legend-lvl-4"><a href="#sec-typeq-read-and-write-type-constraints-in-space" onclick="var t=document.getElementById('sec-typeq-read-and-write-type-constraints-in-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">typeq: read and write type constraints in space</a></li>
+<li class="legend-lvl-4"><a href="#sec-incrq-reada-and-write-furis-with-counters" onclick="var t=document.getElementById('sec-incrq-reada-and-write-furis-with-counters');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">incrq: reada and write furis with counters</a></li>
+<li class="legend-lvl-4"><a href="#sec-lineq-read-and-write-strt-with-line-precision" onclick="var t=document.getElementById('sec-lineq-read-and-write-strt-with-line-precision');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">lineq: read and write str::T with line precision</a></li>
+<li class="legend-lvl-4"><a href="#sec-mimeq-read-and-write-objs-using-mime-types" onclick="var t=document.getElementById('sec-mimeq-read-and-write-objs-using-mime-types');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">mimeq: read and write objs using mime-types</a></li>
+</ul>
+</div>
+<div class="paragraph">
+<p>A query process (<em>qproc</em>) is a space attachment that intercepts reads and writes according to the query parameters of the uri.
+These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more.</p>
+</div>
+<div class="paragraph">
+<p>Currently, metarton provides the following qprocs in the core distribution.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 25%;">
+<col style="width: 62.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">q</th>
+<th class="tableblock halign-center valign-top">key=value</th>
+<th class="tableblock halign-left valign-top">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subscribe to obj mutations within a furi pattern.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>docq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>docq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>read and write obj documentation.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>incrq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>incrq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>increment a space global counter.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>typeq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>T</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>constrain furis to only allow objs of a certain type.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>constq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>constq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>prevent objs from being mutated (updated or deleted).</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The q-processor type is defined as</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *qproc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where a qproc may implement any of the associated read/write interception stages.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 63.6363%;">
+<col style="width: 36.3637%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="olist arabic">
+<div class="title">read processors</div>
+<ol class="arabic">
+<li>
+<p><strong>pre-read</strong>: prior to reading the space, any <code>?pattern</code> furi will be first processed by pre-read.</p>
+</li>
+<li>
+<p><strong>post-read</strong>: prior to returning an <code>obj</code> from the space, any <code>?pattern</code> furi will be first processed by post-read.</p>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<div class="title">write processors</div>
+<ol class="arabic">
+<li>
+<p><strong>pre-write</strong>: prior to writing to the space, any <code>?pattern</code> furi will be first processed by pre-write.</p>
+</li>
+<li>
+<p><strong>post-write</strong>: prior to returning an <code>obj</code> written to the space, any <code>?pattern</code> furi will be first processed by post-write.</p>
+</li>
+<li>
+<p><strong>qless-write</strong>: regardless of a <code>?pattern</code> furi, all writes to the space will be processed by qless-write.</p>
+</li>
+</ol>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">       ┌──────────┐        ┌─────────────┐
+───────► pre-read ┼────────┼──┐          │
+       └──────────┘        │  │          │
+       ┌───────────┐       │  │          │
+◄──────┼ post-read │◄──────┼──┘          │
+       └───────────┘       │             │
+       ┌───────────┐       │             │
+────┬──► pre-write ┼───────┼──┐          │
+    │  └───────────┘       │  │          │
+    │  ┌────────────┐      │  │          │
+◄───┼──┼ post-write ◄──────┼──▲          │
+    │  └────────────┘      │  │          │
+    │  ┌─────────────┐     │  │          │
+    └──► qless-write ┼─────┼──┘   space  │
+       └─────────────┘     └─────────────┘</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec-qproc-examples" class="discrete">qproc examples</h3>
+<h4 id="sec-subq-publish-and-subscribe-to-patterns-in-space" class="discrete">subq: publish and subscribe to patterns in space</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/usr
+mtron&gt; /usr/notes/#?subq -&gt; sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]
+==&gt;sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+         target=&gt;/usr/notes/#]
+mtron&gt; */usr/notes/#?subq
+==&gt;[sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+          target=&gt;/usr/notes/#]]
+mtron&gt; /usr/notes/#?subq -&gt; none
+==&gt;true
+mtron&gt; */usr/notes/#?subq
+==&gt;[,]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For target removal of subscriptions, place the subscription in space by vid.
+Then use <code>subq</code> value to match on the vid.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /usr/notes/#?subq -&gt; sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]@abc
+==&gt;sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+         target=&gt;/usr/notes/#]@abc
+mtron&gt; */usr/notes/#?subq
+==&gt;[sub::[code=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+          target=&gt;/usr/notes/#]@abc]
+mtron&gt; /usr/notes/#?subq=abc -&gt; none
+==&gt;true
+mtron&gt; */usr/notes/#?subq
+==&gt;[,]</code></pre>
+</div>
+</div>
+<h4 id="sec-docq-read-and-write-obj-documentation-for-humans-and-agents" class="discrete">docq: read and write obj documentation for humans and agents</h4>
+<h4 id="sec-typeq-read-and-write-type-constraints-in-space" class="discrete">typeq: read and write type constraints in space</h4>
+<h4 id="sec-incrq-reada-and-write-furis-with-counters" class="discrete">incrq: reada and write furis with counters</h4>
+<h4 id="sec-lineq-read-and-write-strt-with-line-precision" class="discrete">lineq: read and write str::T with line precision</h4>
+<h4 id="sec-mimeq-read-and-write-objs-using-mime-types" class="discrete">mimeq: read and write objs using mime-types</h4>
+</div>
+<div class="collapse position-relative" id="card-11">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="sec-internet-of-things-with-mqtt" class="discrete">Internet of Things with MQTT</h2>
+<div class="legend-index">
+<ul>
+<li class="legend-lvl-3"><a href="#sec-building-a-home-automation-system" onclick="var t=document.getElementById('sec-building-a-home-automation-system');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">building a home automation system</a></li>
+</ul>
+</div>
+<details>
+<summary class="title">/m/iot instset import</summary>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/iot)
+mtron&gt; import(/m/llm)
+...</code></pre>
+</div>
+</div>
+</div>
+</details>
+<div class="paragraph">
+<p><a href="https://mqtt.org/">MQTT</a> is a lightweight messaging protocol commonly used for IoT (<a href="https://en.wikipedia.org/wiki/Internet_of_things">Internet of Things</a>) applications.
+The protocol offers <a href="https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern">publish-subscribe</a> messaging and a wildcard-based addressing scheme that conveniently maps to the URI address space.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The inspiration for metatron&#8217;s URI addressing schema was inspired by the various standards developed by the Semantic Web community and the MQTT standard developed by the IoT community. The integration of these worlds into programming language and compiler design as it applies to distributed data management is the driving force behind metatron.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/iot/space/mqtt</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The MQTT space is a client of the MQTT broker referenced by <code>host</code>. This client maintains a router-detached caching space (default is <code>memspace::T</code>) which maintains synchronization with that subset of the broker identified in the MQTT space&#8217;s routing table. In the examples to follow, the pattern prefix <code>ha:</code> stands for "home automation."</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mqtt::[pattern =&gt; &lt;ha:#&gt;,
+              host    =&gt; mqtt://localhost:1883,
+              route   =&gt; [ha:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     ​1​
+==&gt;mqtt::[pattern=&gt;ha:#,
+          host=&gt;mqtt://localhost:1883,
+          route=&gt;[ha:=&gt;/home/chips]]@/sys/space/esp32
+mtron&gt; *ha:main_field/sensor/+.-&lt;|[
+         &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
+         &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
+         _            =&gt; print('starting drip system').
+                         ha:main_field/actuator/drip(minutes::25)]     ​2​
+mtron&gt; ha:main_field/actuator/+/active?subq -&gt; sub::[on_recv=&gt;print(_)]     ​3​
+==&gt;fail::[parse error at line 1, col 1: obj does not match /m/qproc/subq/sub::T
+     [[on_recv=&gt;print(id())]
+         X=&gt;
+     rec::T[?[{?}target=&gt;uri::T,code=&gt;&lt;#?dom=lst&gt;::T]]@/m/qproc/subq/sub
+     ───────────────────────────────────────────────────────────────────
+     [noobj=&gt;(==&gt;{?}target)=&gt;noobj=&gt;/=&gt;uri::T,
+      noobj=&gt;(X=&gt;code)=&gt;noobj=&gt;X=&gt;#::T]]
+     predicate apply failed on execution
+   	while parsing: ha:main_field/actuator/+/active?subq -&gt; sub::[on_recv=&gt;print(_)]]@/sys/fail/251
+mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>the <code>mqtt::T</code> space maintains a subset of the larger address space of the broker.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>the <code>mqtt::T</code> space can be queried like a database due to mqtt persist being enabled by default.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>the <code>mqtt::T</code> space addresses can be subscribed to and receive updates via <code>inst</code> callbacks.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>query the for all subscriptions whose target uri matches <code>ha:main_field/actuator/#</code>.</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">        mqtt broker
+       ┌──────────────────────────┐
+       │ /a       -&gt; [b=&gt;[c=&gt;1]]  │
+       │ /a/b     -&gt; [c=&gt;1]       │
+   ┌───► /a/b/c   -&gt; 1            ◄───┐
+   │   └──▲─────▲──────▲──────▲───┘   │
+   │      │pub  │      │pub   │       │pub
+   │sub   │     │sub   │      │sub    │
+┌──▼─┐ ┌──▼─┐ ┌─▼──┐ ┌─▼──┐ ┌─▼──┐ ┌──▼─┐
+│    │ │    │ │    │ │    │ │    │ │    │
+└────┘ └────┘ └────┘ └────┘ └────┘ └────┘
+└───────────── mqtt clients ────────────┘</code></pre>
+</div>
+</div>
+<h3 id="sec-building-a-home-automation-system" class="discrete">building a home automation system</h3>
+<div class="paragraph">
+<p>metatron provides all the necessary (digital) plumbing to create a home automation system. With the inclusion of the <code>/m/llm</code> instruction set, a world of opportunities presents itself.</p>
 </div>
 </div>
 <div class="collapse position-relative" id="card-12">
@@ -7132,22 +5778,23 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355852       6712   6349140   1% /run'
+==&gt;'tmpfs                    6355852       6756   6349096   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  575555548 335402276  64% /'
-==&gt;'tmpfs                   31779244      43488  31735756   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  578110088 332847736  64% /'
+==&gt;'tmpfs                   31779244      35780  31743464   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779244          0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355848        268   6355580   1% /run/user/1000'
+==&gt;'tmpfs                    6355848        260   6355588   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1284560748 636647796  67% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1284956100 636252444  67% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
 ==&gt;boot
 ==&gt;conf
 ==&gt;'CONTRIBUTING.md'
+==&gt;diagrams
 ==&gt;dist
 ==&gt;docs
 ==&gt;dsh-plugins
@@ -7165,8 +5812,9 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;'RELEASE.md'
 ==&gt;src
 ==&gt;target
-mtron&gt; bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_&gt;-.sum()
-==&gt;fail::[MAChiNE faiLeD][infinite fail-loop detected][obj/inst coefficients yielding unsolvable monad]@/sys/fail/230</code></pre>
+==&gt;'TRACTATUS-LOSS-NOTES.md'
+mtron&gt; bin:bash('-c','ls -all').split(' ').count()
+==&gt;84</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -7354,7 +6002,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime:://2026.10:2603/12/36/810?tz=-0600
+==&gt;datetime:://2026.10:2615/40/21/633?tz=-0600
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7370,11 +6018,7 @@ mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;host     ​7​
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;port     ​8​
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;path&gt;&gt;0     ​9​
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;==[port=&gt;+1]&gt;&gt;port     ​10​
-mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]     ​11​
-==&gt;fail::[parse error at line 1, col 37:
-     &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;=?=[port=&gt;25]
-                                         ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/274
+mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?isa([port=&gt;25])     ​11​
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;.as(rec::T)&gt;&gt;=[q=&gt;[tz=&gt;'+0000']].as(datetime::T)     ​12​
 ==&gt;datetime:://2024.12:25/09/00/00/000?tz=+0000
 mtron&gt; '2026-08-01T23:37:33-06:00'.as(datetime::T)&gt;&gt;year     ​13​
@@ -7635,23 +6279,28 @@ mtron&gt; *g:E/7/IN/name     ​7​
 ==&gt;'vadas'</code></pre>
 </div>
 </div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
 <div class="title">instruction-call traversals (inst syntax)</div>
+shown for reference, not evaluated — the current VM surfaces the uri-path form above as the working equivalent; inst-call dispatch on space-read vertices is documented in <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
-==&gt;person::[age=&gt;29,name=&gt;'marko']
-mtron&gt; *g:V/1.outE()     ​2​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/231
-mtron&gt; *g:V/1.outE(created)     ​3​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/232
-mtron&gt; *g:V/1.out(created)     ​4​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/233
-mtron&gt; *g:V/1.out(knows)&gt;&gt;name     ​5​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/234
-mtron&gt; *g:V/1.out(knows).count()     ​6​
-==&gt;1
-mtron&gt; *g:E/7.inV()&gt;&gt;name     ​7​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/inV) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/236</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/1                          [-- &lt;1&gt; --]
+*g:V/1.outE()                   [-- &lt;2&gt; --]
+*g:V/1.outE(created)            [-- &lt;3&gt; --]
+*g:V/1.out(created)             [-- &lt;4&gt; --]
+*g:V/1.out(knows)&gt;&gt;name         [-- &lt;5&gt; --]
+*g:V/1.out(knows).count()       [-- &lt;6&gt; --]
+*g:E/7.inV()&gt;&gt;name              [-- &lt;7&gt; --]</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7821,12 +6470,24 @@ In this way, mtron conveniently supports space agnostic retrieval of data across
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; tblespace::[pattern =&gt; acme:#,
-                   host    =&gt; &lt;mariadb://localhost:3306/acme?user=mtron&amp;password=mtron&gt;,
-                   route   =&gt; [&lt;acme:&gt;=&gt;&lt;&gt;],
-                   table   =&gt; [,],
-                   driver  =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme;</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">tblespace::[pattern =&gt; acme:#,                                                     /
+            host    =&gt; &lt;mariadb://localhost:3306/acme?user=mtron&amp;password=mtron&gt;,  /
+            route   =&gt; [&lt;acme:&gt;=&gt;&lt;&gt;],                                              /
+            table   =&gt; [,],                                                        /
+            driver  =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme;</code></pre>
 </div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+shown for reference — requires a running MariaDB at <code>localhost:3306</code> (the <code>acme</code> database with a <code>customers</code> table); the docs environment has none.
+</td>
+</tr>
+</table>
 </div>
 <div class="exampleblock primary">
 <div class="title">hierarchical properties</div>
@@ -7844,11 +6505,6 @@ The following examples demonstrate selection and filtering using multi-segment u
             address/home/city=&gt;'santa fe',
             address/work/city=&gt;'nomansland']
 mtron&gt; *g:V/1/address/home/city     ​2​
-mtron&gt; *g:V/+.=?=[address/+/city =&gt; 'santa fe']     ​3​
-==&gt;fail::[parse error at line 1, col 8:
-     *g:V/+.=?=[address/+/city =&gt; 'santa fe']
-            ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/237
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
 ==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
@@ -7859,6 +6515,23 @@ mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
 ==&gt;'nomansland'
 ==&gt;'santa fe'</code></pre>
 </div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/+.=?=[address/+/city =&gt; 'santa fe']                        [-- &lt;3&gt; --]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+shown for reference — the where-clause filter over multi-segment wildcard keys is not yet supported by the current where-rewrite (single flat field only); see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
 </div>
 <div class="colist arabic">
 <table>
@@ -7909,18 +6582,26 @@ mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
             name=&gt;'marko',
             address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],
                       work=&gt;!*&lt;../home&gt;]]
-mtron&gt; *g:V/1/address/home/city     ​3​
-mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]     ​4​
-==&gt;fail::[parse error at line 1, col 8:
-     *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]
-            ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/238
-mtron&gt; *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     ​5​
-==&gt;fail::[parse error at line 1, col 8:
-     *g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;addre...
-            ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/239</code></pre>
+mtron&gt; *g:V/1/address/home/city     ​3​</code></pre>
 </div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]                         [-- &lt;4&gt; --]
+*g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city        [-- &lt;5&gt; --]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+shown for reference — nested where-clauses (a predicate under a list of addresses) are not yet supported by the current where-rewrite (single flat field only); see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
 </div>
 <div class="colist arabic">
 <table>
@@ -8027,10 +6708,9 @@ To unify these two contrasting perspectives, metatron capitalizes on each&#8217;
 mtron&gt; *acme:customers/357     ​2​
 mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
 ==&gt;consulted::[=&gt;]@g:E/29
-mtron&gt; *g:V/1.out(consulted)     ​4​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/240
-mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     ​5​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/241</code></pre>
+mtron&gt; *g:V/1/OUT/consulted/IN     ​4​
+mtron&gt; *g:V/1/OUT/consulted/IN.matches(vrtx::T)     ​5​
+==&gt;false</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8072,17 +6752,27 @@ These expressions highlight the nested structural pattern matching and data mani
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.out(consulted)-&lt;[
-         name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
-         address =&gt;==[city=&gt;_,country=&gt;_]]
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/242
-mtron&gt; *g:V/1.out(consulted)
-         &gt;&gt;salesRepEmployeeNumber
-         &gt;&gt;reportsTo.-&lt;[
-           name  =&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
-           job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/out@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/243</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/1.out(consulted)-&lt;[                                        /
+  name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",       /
+  address =&gt;==[city=&gt;_,country=&gt;_]]
+*g:V/1.out(consulted)                                           /
+  &gt;&gt;salesRepEmployeeNumber                                      /
+  &gt;&gt;reportsTo.-&lt;[                                               /
+    name  =&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",                       /
+    job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]</code></pre>
 </div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+shown for reference — this copy-apply demo reads <code>acme</code> rows via the <code>consulted</code> pointer (requires the MariaDB space above), and its inst-call head is not currently dispatchable on graph vertices; see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>The examples highlight important concepts necessary to understand
@@ -8230,35 +6920,49 @@ The scheme prefix in the label (<code>te:hot</code>, <code>te:cold</code>) instr
 ==&gt;2
 mtron&gt; *g:V/1/OUT/te:hot/a/item     ​2​
 ==&gt;'laptop'
-mtron&gt; *g:V/1/OUT/te:hot/a/owner/name     ​3​
-==&gt;fail::[asRec onto a fail: inst apply failure: obj does not match person::T
-     [[name=&gt;'vadas',age=&gt;27]
-         X=&gt;
-     rec::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person
-     ───────────────────────────────────────────────────────
-     [age=&gt;(==&gt;age)=&gt;27=&gt;==&gt;int::T,
-      name=&gt;(==&gt;name)=&gt;'vadas'=&gt;==&gt;str::T,
-      noobj=&gt;(X=&gt;city)=&gt;noobj=&gt;X=&gt;str::T]]
-     predicate apply failed on execution (at /m/inst/auto_from)]@/sys/fail/246
 mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
 ==&gt;15.0
 mtron&gt; *g:V/1/OUT/knows.count()     ​5​
 ==&gt;2</code></pre>
 </div>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="title">traversing a distributed edge set (instruction-call syntax)</div>
+</div>
+<div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.outE(te:hot).count()     ​1​
-==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; rec{*}::T [count?rng=int&amp;dom=rec{*}()@&lt;2&gt;]]@/sys/fail/248
-mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;item     ​2​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/249
-mtron&gt; *g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     ​3​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/250
-mtron&gt; *g:V/1.outE(te:cold/x)&gt;&gt;total     ​4​
-==&gt;fail::[inst apply failure: unable to convert linkedhashmap to elementmap (at /m/grph/inst/outE@1) [ElementRec&lt;83&gt;]][unable to convert linkedhashmap to elementmap [ElementRec&lt;83&gt;]]@/sys/fail/251
-mtron&gt; *g:V/1.outE(knows).count()     ​5​
-==&gt;fail::[lhs range does not match inst domain: fail::T =&gt; rec{*}::T [count?rng=int&amp;dom=rec{*}()@&lt;2&gt;]]@/sys/fail/253</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/1/OUT/te:hot/a/owner/name         [-- &lt;3&gt; --]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+shown for reference — the <code>!*g:V/2</code> auto-from pointer round-trip through an external edge fails in the current VM (<code>predicate apply failed &#8230;&#8203; at /m/inst/auto_from</code>); see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="title">traversing a distributed edge set (instruction-call syntax)</div>
+shown for reference, not evaluated — the current VM surfaces the uri-path form above as the working equivalent; inst-call dispatch on space-read vertices is documented in <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/1.outE(te:hot).count()            [-- &lt;1&gt; --]
+*g:V/1.outE(te:hot/a)&gt;&gt;item            [-- &lt;2&gt; --]
+*g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     [-- &lt;3&gt; --]
+*g:V/1.outE(te:cold/x)&gt;&gt;total          [-- &lt;4&gt; --]
+*g:V/1.outE(knows).count()             [-- &lt;5&gt; --]</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -9138,7 +7842,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime:://2026.10:2603/12/38/245?tz=-0600,
+             time=&gt;datetime:://2026.10:2615/40/23/062?tz=-0600,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -9157,15 +7861,33 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime:://2026.10:2603/12/38/245?tz=-0600,
+             time=&gt;datetime:://2026.10:2615/40/23/062?tz=-0600,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
-mtron&gt; sleep(second::5.0)
-mtron&gt; */sys/thread/b.stop()
-==&gt;fail::[unable to locate inst-f virtual::T =&gt; stop()@&lt;1&gt;]@/sys/fail/292
-mtron&gt; */sys/thread/a.stop()
-==&gt;fail::[unable to locate inst-f virtual::T =&gt; stop()@&lt;1&gt;]@/sys/fail/295
-mtron&gt; *ab
+mtron&gt; sleep(second::5.0)</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*/sys/thread/b.stop()
+*/sys/thread/a.stop()</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+shown for reference — thread control instructions (<code>stop</code>/<code>pause</code>/<code>resume</code>) are not currently dispatchable from the mtron surface on a thread read from the space; see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ab
 ==&gt;'BABABABABABA'</code></pre>
 </div>
 </div>
@@ -9194,46 +7916,27 @@ mtron&gt; *ab
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; virtual::[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example     ​1​
-==&gt;virtual::[code=&gt;print('.'),
-             loop=&gt;second::2.5,
-             source=&gt;!*/sys/thread/main,
-             rhs=&gt;!λawait(){&lt;j&gt;},
-             lhs=&gt;noobj,
-             state=&gt;run,
-             time=&gt;datetime:://2026.10:2603/12/43/308?tz=-0600,
-             ...(1 more)]@/sys/thread/example
-mtron&gt; */sys/thread/example.pause()     ​2​
-==&gt;fail::[unable to locate inst-f virtual::T =&gt; pause()@&lt;1&gt;]@/sys/fail/298
-mtron&gt; */sys/thread/example/state     ​3​
-==&gt;run
-mtron&gt; */sys/thread/example.resume()     ​4​
-==&gt;fail::[unable to locate inst-f virtual::T =&gt; resume()@&lt;1&gt;]@/sys/fail/301
-mtron&gt; */sys/thread/example/state     ​5​
-==&gt;run</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">virtual::[code=&gt;print('.'),loop=&gt;second::2.5]@/sys/thread/example  [-- &lt;1&gt; --]
+*/sys/thread/example.pause()                                       [-- &lt;2&gt; --]
+*/sys/thread/example/state                                         [-- &lt;3&gt; --]
+*/sys/thread/example.resume()                                      [-- &lt;4&gt; --]
+*/sys/thread/example/state                                         [-- &lt;5&gt; --]</code></pre>
 </div>
 </div>
-<div class="colist arabic">
+<div class="admonitionblock note">
 <table>
 <tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Create a simple looping virtual thread</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Pause the simple looping virtual thread</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Check the state of the simple looping virtual thread</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Resume the simple looping virtual thread</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Check the state of the simple looping virtual thread</td>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+shown for reference — thread control instructions (<code>stop</code>/<code>pause</code>/<code>resume</code>) are not currently dispatchable from the mtron surface on a thread read from the space (<code>fail::[unable to locate inst-f &#8230;&#8203;]</code> for every probed form); the instructions themselves exist and are driven by the Java test suite; see <code>TRACTATUS-LOSS-NOTES.md</code>.
+&lt;1&gt; Create a simple looping virtual thread
+&lt;2&gt; Pause the simple looping virtual thread
+&lt;3&gt; Check the state of the simple looping virtual thread
+&lt;4&gt; Resume the simple looping virtual thread
+&lt;5&gt; Check the state of the simple looping virtual thread
+</td>
 </tr>
 </table>
 </div>
@@ -9250,7 +7953,7 @@ mtron&gt; */sys/thread/example/state     ​5​
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime:://2026.10:2603/12/25/327?tz=-0600,
+          time=&gt;datetime:://2026.10:2615/40/08/843?tz=-0600,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[desc=&gt;'no documentation available',
@@ -9258,7 +7961,7 @@ mtron&gt; */sys/thread/main?docq
                       rhs=&gt;!λawait(){&lt;j&gt;},
                       lhs=&gt;noobj,
                       state=&gt;stop,
-                      time=&gt;datetime:://2026.10:2603/12/25/327?tz=-0600,
+                      time=&gt;datetime:://2026.10:2615/40/08/843?tz=-0600,
                       runtime=&gt;!λ(){&lt;j&gt;},
                       result=&gt;noobj]@/sys/thread/main]</code></pre>
 </div>
@@ -9341,7 +8044,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)/html/head/tit
 ==&gt;fail::[parse error at line 1, col 51:
      ...haseshift.studio/splash.html&gt;.as(rec::T)/html/head/title
                                                 ^
-     expected an obj]@/sys/fail/359
+     expected an obj]@/sys/fail/313
 mtron&gt; *&lt;http://phaseshift.studio/splash.html?mimeq=application/x-mtron&gt;     ​5​
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(rec::T)     ​6​</code></pre>
 </div>
@@ -9979,11 +8682,9 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
-==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -10028,21 +8729,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            location=&gt;isa(area:V/+/id).!*id(),
-            {?}parent=&gt;auto_from::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
-            recipient=&gt;isa(person/+/id).!*id(),
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-            {?}points=&gt;int::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            {?}age=&gt;int::T,
-            {?}skill=&gt;uri::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -10052,21 +8739,7 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            location=&gt;isa(area:V/+/id).!*id(),
-            {?}parent=&gt;auto_from::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
-            recipient=&gt;isa(person/+/id).!*id(),
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-            {?}points=&gt;int::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            {?}age=&gt;int::T,
-            {?}skill=&gt;uri::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 </div>
@@ -10168,11 +8841,14 @@ code''' └────────────────┘ └────�
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+.=?=[age=&gt;?&lt;30]     ​1​
-==&gt;fail::[parse error at line 1, col 16:
-     *lite:person/+.=?=[age=&gt;?&lt;30]
-                    ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/278
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+/+.?[age=&gt;?&lt;30]     ​1​
+==&gt;[name=&gt;'marko',
+    age=&gt;29]@lite:person/noobj
+==&gt;[name=&gt;'grant',
+    age=&gt;25]@lite:person/noobj
+==&gt;[name=&gt;'alex',
+    age=&gt;25,
+    skill=&gt;graph]@lite:person/noobj
 mtron&gt; *lite:person/+/name.count()     ​2​
 ==&gt;3
 mtron&gt; *lite:person/+.==[name=&gt;_]     ​3​
@@ -10259,11 +8935,9 @@ mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     ​2​
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     ​3​
 ==&gt;[player=&gt;'grant',points=&gt;99]
-mtron&gt; *lite:score/+.=?=[player=&gt;'marko']     ​4​
-==&gt;fail::[parse error at line 1, col 15:
-     *lite:score/+.=?=[player=&gt;'marko']
-                   ^
-     unclosed triple-quote — missing closing '"""']@/sys/fail/289
+mtron&gt; *lite:score/+/+.?[player=&gt;'marko']     ​4​
+==&gt;[player=&gt;'marko',
+    points=&gt;42]@lite:score/noobj
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     ​5​
 ==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
 ==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
@@ -10285,7 +8959,7 @@ mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN 
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>find all scores for <code>'marko'</code> — <code>=?=</code> (<code>where</code>) rewrites to <code>SELECT * FROM score WHERE player = 'marko'</code>; the join is computed on demand.</td>
+<td>find all scores for <code>'marko'</code> — the <code>.?[col&#8658;val]</code> where-clause rewrites to <code>SELECT * FROM score WHERE player = 'marko'</code>; the join is computed on demand.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>

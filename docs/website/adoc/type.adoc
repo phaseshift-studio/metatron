@@ -33,7 +33,7 @@ The set of natural numbers is defined in mtron as:
 
 Non-base types will be notated `B::T < A::T`: " `B::T` captures a subset of the values captured by `A::T`." When notated
 `B::T == A::T`: " `B::T` has the same values as `A::T` ".
-When two types have the same values but different names (vids) There exists only a https://en.wikipedia.org/wiki/Nominal_type_system[nominal] difference between `A::T` and `B::T`.
+When two types have the same values but different names (vids), there exists only a https://en.wikipedia.org/wiki/Nominal_type_system[nominal] difference between `A::T` and `B::T`.
 In such situation, values of `A::T` and values of `B::T` are different in that they are being type/classified as being distinct through label (through name).
 As an example, the type `int::T@age` is not the same as `int::T@zipcode`.
 The structure of a nominal type is specified as:
@@ -52,7 +52,7 @@ IMPORTANT: The distinction between structural and nominal types depends solely o
 With no constraint on structure, then the implied constraint is on vid, i.e. name.
 
 [discrete]
-=== Sturctural Types
+=== Structural Types
 
 [discrete]
 ==== Type Predicates
@@ -92,7 +92,7 @@ chicken::[name=>'snowbutt',age=>7]             [-- <6> --]
 A structural type can be refined with further structural requirements.
 An example is the concept of age.
 No human being in modern recorded history has been reported to be over the age of 120 years old.
-Furthermore, no person has a negative age as at birth, the age is 0. Together, age can be defined as any natural number less than 120 (`0 > age < 120`).
+Furthermore, no person has a negative age as at birth, the age is 0. Together, age can be defined as any natural number less than 120 (`0 < age < 120`).
 
 NOTE: The examples below make use of mtron's `as?B\<=A(B::T)` instruction.
 For the purpose of these examples, `as()` is being used to determine whether a value meets the structural requirements of the respective type.
@@ -141,13 +141,13 @@ IMPORTANT: An `int` is an `int` because it is named `int`.
 str::T@re                    [-- <1> --]
 *select?<=str&docq           [-- <2> --]
 'marko'=='m.{3}o'            [-- <3> --]
-'marko'==re:'m.{3}o'         [-- <4> --]
+'marko'==re::'m.{3}o'        [-- <4> --]
 ----
 
 <1> `re::T` is a regular expression string.
 <2> `select?<=str` performs a projection from a `str::T`.
 <3> a `str::T` is not an `re::T` nominally.
-<4> `regex` with with a particular type of nominally defined string.
+<4> `regex` is a particular type of nominally defined string.
 
 
 ==== Integrating Nominal Types with Structural Types
@@ -165,7 +165,7 @@ being::T@chicken                                        [-- <3> --]
 [ERROR] human::[name=>'marko',age=>29].as(chicken::T)   [-- <4> --]
 [ERROR] chicken::[name=>'snowbutt',age=>7].as(human::T) [-- <5> --]
 [name=>'fuzzy feet',age=>2].as(chicken::T)              [-- <6> --]
-'punky'.as(chicken::T)                                  [-- <7> --]
+[ERROR] chicken::'punky'                                [-- <7> --]
 ----
 
 <1> A being is a `rec::T` with a name and age.
@@ -214,20 +214,22 @@ Example usage of the defined `nat` type is presented below.
 
 [mtron]
 ----
-nat -> int::T[?>0][-<|[is(lt(0)) => * -1,_ => _]>>]   [-- <1> --]
-*nat                                                  [-- <2> --]
-nat::2                                                [-- <3> --]
-nat::-2                                               [-- <4> --]
-2.as(nat::T)                                          [-- <5> --]
-[ERROR] -2.as(nat::T)                                         [-- <6> --]
-[ERROR] nat::2 * -1                                           [-- <7> --]
+natc -> int::T[?>0][-<|[is(lt(0)) => * -1,_ => _]>>]  [-- <1> --]
+*natc                                                 [-- <2> --]
+natc::2                                               [-- <3> --]
+natc::-2                                              [-- <4> --]
+2.as(natc::T)                                         [-- <5> --]
+[ERROR] -2.as(natc::T)                                [-- <6> --]
+[ERROR] natc::2 * -1                                  [-- <7> --]
 ----
 
-<1> A natural number (`nat`) is a positive `int`.
-The predicate component of the type definition tests an `int` to determine if it's a `nat` and the constructor component will generate a positive `int` given any `int` (i.e. the absolute value).
-<2> the `nat` _tid_ references the respective `nat` type `obj`.
-<2> 2 is an `nat`.
-<3> -2 is not a `nat`, but given the constructor, becomes a `nat`.
+<1> A natural number with a constructor: the predicate keeps only positive `int`s, and the constructor component turns any `int` into a positive one (i.e. the absolute value).
+<2> The `natc` _tid_ references the respective `natc` type `obj`.
+<3> 2 is a `natc`.
+<4> -2 is not a `natc`, but given the constructor, it is construed as the `natc` 2.
+<5> 2 satisfies the `natc` predicate.
+<6> -2 fails the `natc` predicate.
+<7> `natc::2 * -1` is -2, which fails the `natc` predicate.
 
 While every `type` is an `obj`, not every `obj` is a `type`.
 Those `objs` that are not `types` are _instances_ of some `type`.
@@ -240,7 +242,7 @@ This is the foundation for all other `objs` in [metatron].
 [[sec-mono-types]]
 === mono types
 
-An `obj` that is not composed of other `objs` is a mono type and are exhaustively itemized in the table below.
+An `obj` that is not composed of other `objs` is a mono type. The mono types are exhaustively itemized in the table below.
 
 [cols="5,7",frame="none",separator=🧱]
 |===
@@ -282,11 +284,11 @@ The `bytes` type represents binary data as a sequence of bytes.
 [mtron]
 ----
 'metatron'.as(bytes::T)        [-- <1> --]
-bytes::'48656c6c6f'            [-- <2> --]
+0x48656c6c6f                  [-- <2> --]
 ----
 
 <1> Convert string to bytes
-<2> Create bytes from hexadecimal representation
+<2> Create bytes from the hexadecimal representation of 'hello'
 
 **Type Conversion with `.as()`:**
 
@@ -506,7 +508,7 @@ result -> *base.plus(5).mult(2)                           [-- <2> --]
 [mtron]
 ----
 nums -> {1,2,3,4,5}                                       [-- <1> --]
-filtered -> *nums-<[?>3 => _, _ => noobj]>>               [-- <2> --]
+filtered -> *nums.-<[is(?>3) => _, _ => noobj]>>          [-- <2> --]
 *filtered                                                 [-- <3> --]
 ----
 
@@ -573,7 +575,7 @@ nat::10
 [ERROR] int::-10.as(nat::T)
 ----
 
-If `a` is an `obj` When a `tid` is specified for an `obj`, the `tid` is resolved to an `obj` denoting the type of `A`.
+When a `tid` is specified for an `obj`, the `tid` is resolved to an `obj` denoting the type of that `obj`.
 
 Every mtron `obj` has a type.
 
@@ -625,7 +627,7 @@ int::T
 [mtron]
 ----
 nat::125
-age::125
+[ERROR] age::125
 [ERROR] nat::125.as(age::T)
 [ERROR] 125.as(nat::T).as(age::T)
 ----

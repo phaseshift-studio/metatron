@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.Fluent;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -120,6 +121,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F start_(final Obj obj) {
         return this.addInst(instB(mInstSet.START_INST_TID, lst(obj)));
+    }
+
+    public F move_(final Obj obj) {
+        return this.addInst(instB(machInstSet.MOVE_INST_TID, lst(obj)));
     }
 
     public F update_(final Obj obj) {
@@ -559,6 +564,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F start_(final Obj obj) {
             return new mFluent<F>().start_(obj);
+        }
+
+        public static <F extends mFluent<F>> F move_(final Obj obj) {
+            return new mFluent<F>().move_(obj);
         }
 
         public static <F extends mFluent<F>> F update_(final Obj obj) {

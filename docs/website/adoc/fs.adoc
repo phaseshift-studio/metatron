@@ -73,7 +73,7 @@ From there,the `bash` binary has `obj` args applied to it. These `obj` args are 
 ----
 bin:bash('-c',df)
 bin:bash('-c',ls)
-bin:bash('-c','ls -all').regex('\b*\w+')._/count()\_>-.sum()
+bin:bash('-c','ls -all').split(' ').count()
 ----
 
 [discrete]

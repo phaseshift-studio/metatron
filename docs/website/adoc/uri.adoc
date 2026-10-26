@@ -199,7 +199,7 @@ a──b──⮞1
 a──c──⮞2  
 ----
 !===
-<1> the uri ring defines multiplcation as "extension", where latexmath:[x \cdot y] is `x/y`.
+<1> the uri ring defines multiplication as "extension", where latexmath:[x \cdot y] is `x/y`.
 <2> the uri ring defines addition as "branching", where latexmath:[x + y] is `{x,y}`.
 
 The characteristic marks of latexmath:[\ast] are `.`,`\=>`,`\<=`. +
@@ -245,7 +245,7 @@ a─┤
 🧱
 
 
-On the other hand, the additive union of the uris is an **independent relationship**. There are two representations of `a` and thus, `a/b \=> 1` is distinct, requiring no colocation with `a/c \=> 2`. This means that `a/b` can be stored in a document database in Japan and `a/c` an be stored in `.txt` file on some file system in Ohio and when resolved, the same `{1,2}` result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).
+On the other hand, the additive union of the uris is an **independent relationship**. There are two representations of `a` and thus, `a/b \=> 1` is distinct, requiring no colocation with `a/c \=> 2`. This means that `a/b` can be stored in a document database in Japan and `a/c` can be stored in a `.txt` file on some file system in Ohio and when resolved, the same `{1,2}` result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).
 
 [source,mtron]
 ----
@@ -537,10 +537,10 @@ The different embeddings also have different space costs, where space is defined
 === The Algebraic Structure of Data
 
 The examples thus far using algebra to construct and deconstruct data structures have been relatively basic.
-It's important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presetented.
+It's important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presented.
 
 In mathematics, addition is denoted with a latexmath:[+] as in latexmath:[a + b].
-In code, addition represented with a `,`.
+In code, addition is represented with a `,`.
 A `,` separates two independent `objs` as in `[a,b]`.
 For multiplication, mathematical notation uses latexmath:[a \cdot b] or latexmath:[a \ast b] or simply character incidence as in latexmath:[ab].
 In code, `.` denotes multiplication.
@@ -596,6 +596,7 @@ x2 -> [a/b/c => 1,         /
 [x0,x1,x2]>-.-<[*(* a/+/c)]
 [x0,x1,x2]>-.-<[*(* +/+/c)]
 [x0,x1,x2]>-.-<[*(* g/+/+)]
+----
 -->
 ++++
 
@@ -608,17 +609,17 @@ The address space is first-class, obj-free navigation; the referent is what you 
 
 [mtron]
 ----
-a/b/c/d -> 1                        [-- seed a leaf --]
-a/b/c/d/e -> 2                      [-- seed a deeper leaf --]
-a/b/c >>                            [-- <1> --]
-a/b/c >> 2                          [-- <2> --]
-a/b/c/d <<                          [-- <3> --]
-a/b/c/d/e << d/e                    [-- <4> --]
-a/b/c/d >> 0                        [-- <5> --]
+n/m/r -> 1                        [-- seed a leaf --]
+n/m/r/s -> 2                      [-- seed a deeper leaf --]
+*n/m                              [-- <1> --]
+n/m >> r                          [-- <2> --]
+n/m/r <<                          [-- <3> --]
+n/m/r/s << r/s                    [-- <4> --]
+n/m/r >> 0                        [-- <5> --]
 ----
 
-<1> the **edge**: `a/b/c`'s child uris, obj-less.
-<2> the **walk**: descendants exactly 2 levels deep.
+<1> the **branch**: the child uris of `n/m`, each with its subtree.
+<2> the **walk**: descend to the child `r` through the address tree.
 <3> **retract** one level: the parent uri.
 <4> **retract** a matching postfix.
 <5> descend zero — the uri itself (the identity).

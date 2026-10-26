@@ -146,7 +146,7 @@ mtron> hundreds::150                [-- 150  (passes both levels) --]
 ==>hundreds::150
 mtron> hundreds::50         [-- dies at posint's level — the ancestor stack is enforced, not just the top --]
 ==>fail::[parse error at line 1, col 1: 50 is not a posint::T[is(gt(100))]@hundreds
-   	while parsing: hundreds::50]@/sys/fail/1639125
+   	while parsing: hundreds::50]@/sys/fail/1643711
 ```
 ### non-isa predicates (nominal)
 
@@ -213,7 +213,7 @@ mtron> -2.isa(intabs::T)                [-- noobj  (the filter drops it: the ver
 mtron> 2.as(intabs::T)                  [-- intabs::2  (admitted; the id branch of the ctor leaves it as-is) --]
 ==>intabs::2
 mtron> -2.as(intabs::T)         [-- refused: the predicate tests before the constructor could run --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/1684118
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/1697769
 ```
 A converting constructor is visible the same way — it runs on the admitted value, and on nothing else:
 
@@ -224,7 +224,7 @@ mtron> int2x::2                         [-- int2x::20  (the constructor mult(10)
 mtron> 2.as(int2x::T)                   [-- int2x::20  (admitted at the gate, then converted) --]
 ==>int2x::20
 mtron> -2.as(int2x::T)          [-- refused for the same reason — the gate runs first --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]@/sys/fail/1693333
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]@/sys/fail/1705710
 ```
 A type with no constructor is a pure constraint — values must already satisfy the predicate to be members; there is
 nothing to run them through.
@@ -261,7 +261,7 @@ mtron> being::T@human                 [-- nominal siblings under being --]
 mtron> being::T@chicken
 mtron> [-- A human is NOT a chicken, despite identical structure --]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)
-==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/1708420
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/1720227
 ```
 This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
 knowledge** (nominal — what has been declared).
@@ -343,10 +343,10 @@ mtron> [-- intabs has a constructor (absolute value), but the gate still runs fi
 mtron> 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
 ==>intabs::2
 mtron> -2.as(intabs::T) [-- refused: -2 is not an intabs — construction (intabs::-2) is the door that coerces --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/1746161
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/1750900
 mtron> [-- Without a constructor the cast is a pure test --]
 mtron> -2.as(int::T[?>0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/1753098
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/1757542
 ```
 `.as()` is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
 and the stamp records the fit:
@@ -355,7 +355,7 @@ and the stamp records the fit:
 mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- chicken::[name=>'fuzzy feet',age=>2]  (nominally a being: the stamp goes on) --]
 ==>chicken::[name=>'fuzzy feet',age=>2]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
-==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/1760069
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/1767268
 ```
 Note the asymmetry: an anonymous rec has no lineage to contradict it, so its fields alone decide the fit — the
 `chicken` demands `age=>int::T`, and the rec supplies it. A stamped `human`, though, carries a lineage — `human`
