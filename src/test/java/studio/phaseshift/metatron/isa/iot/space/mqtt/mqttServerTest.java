@@ -33,9 +33,14 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
@@ -221,6 +226,29 @@ public class mqttServerTest extends AbstractMetatronTest {
         }
     }
 
+    @Test
+    public void rootWildcardHearsAnyTopicOnASubqSpace() throws Exception {
+        final fURI topic = FOUNDRY.extend("anneal/1/temp");
+        try (final Live live = serve()) {
+            try (final Socket client = open(live.port())) {
+                MqttCodec.write(client.getOutputStream(), connect("root-listener"));
+                readConnAck(client);
+                // a root # fans the delivery code out to every space that declares subq — granted, and a write to
+                // any topic the foundry space covers reaches the subscriber (a topic no subq space covers would not)
+                MqttCodec.write(client.getOutputStream(), new MqttPacket.Subscribe(31,
+                        List.of(new MqttPacket.Subscription(ALL, AT_MOST_ONCE))));
+                readSubAck(client, 31, List.of(0));
+                final byte[] payload = "{\"temp\":820}".getBytes(StandardCharsets.UTF_8);
+                MqttCodec.write(client.getOutputStream(), new MqttPacket.Publish(topic, payload, AT_MOST_ONCE, false, false, 0));
+                final MqttPacket delivered = readWithin(client, WINDOW_MS);
+                assertInstanceOf(MqttPacket.Publish.class, delivered);
+                final MqttPacket.Publish pub = (MqttPacket.Publish) delivered;
+                assertEquals(topic, pub.topic());
+                assertEquals(820, ObjJSONSerializer.simple().inputBytes(pub.payload()).asRec().at(uri("temp")).intValue());
+            }
+        }
+    }
+
     // ======================== the broker's own namespace: $SYS ========================
 
     @Test
@@ -258,9 +286,10 @@ public class mqttServerTest extends AbstractMetatronTest {
             readConnAck(watcher);
             MqttCodec.write(watcher.getOutputStream(), new MqttPacket.Subscribe(22,
                     List.of(new MqttPacket.Subscription(f("$SYS/broker/load/clients"), AT_MOST_ONCE))));
-            readSubAck(watcher, 22, List.of(0));
-            final MqttPacket first = readWithin(watcher, WINDOW_MS);
-            assertInstanceOf(MqttPacket.Publish.class, first);
+            // the ack and the initial leaf race on the same socket — judge both from the burst
+            final List<MqttPacket> burst = readSubAckBurst(watcher, 22, List.of(0), 2);
+            final MqttPacket first = burst.stream().filter(MqttPacket.Publish.class::isInstance).findFirst()
+                    .orElseThrow(() -> new AssertionError("no initial leaf in the burst: " + burst));
             assertEquals(1, ObjJSONSerializer.simple().inputBytes(((MqttPacket.Publish) first).payload()).intValue());
             MqttCodec.write(joiner.getOutputStream(), connect("second-hand"));
             readConnAck(joiner);
@@ -281,16 +310,16 @@ public class mqttServerTest extends AbstractMetatronTest {
                 readConnAck(client);
                 MqttCodec.write(client.getOutputStream(), new MqttPacket.Subscribe(23,
                         List.of(new MqttPacket.Subscription(f("$SYS/broker/version"), AT_MOST_ONCE))));
-                readSubAck(client, 23, List.of(0));
-                readWithin(client, WINDOW_MS);
+                // the ack and the leaf race on the same socket — read the burst and judge both from it
+                readSubAckBurst(client, 23, List.of(0), 2);
                 // the forged publish is dropped, never written — so the broker's own value answers a fresh read
                 MqttCodec.write(client.getOutputStream(), new MqttPacket.Publish(f("$SYS/broker/version"),
                         "a forged entry".getBytes(StandardCharsets.UTF_8), AT_MOST_ONCE, false, false, 0));
                 MqttCodec.write(client.getOutputStream(), new MqttPacket.Subscribe(24,
                         List.of(new MqttPacket.Subscription(f("$SYS/broker/version"), AT_MOST_ONCE))));
-                readSubAck(client, 24, List.of(0));
-                final MqttPacket still = readWithin(client, WINDOW_MS);
-                assertInstanceOf(MqttPacket.Publish.class, still);
+                final List<MqttPacket> burst = readSubAckBurst(client, 24, List.of(0), 2);
+                final MqttPacket still = burst.stream().filter(MqttPacket.Publish.class::isInstance).findFirst()
+                        .orElseThrow(() -> new AssertionError("no version leaf in the burst: " + burst));
                 assertEquals("mqtt 5.0 / metatron",
                         ObjJSONSerializer.simple().inputBytes(((MqttPacket.Publish) still).payload()).strValue());
             }
@@ -306,6 +335,88 @@ public class mqttServerTest extends AbstractMetatronTest {
                             && "$SYS".equals(key.uriValue().path().stream().filter(s -> !s.isEmpty()).findFirst().orElse(""))),
                     "the broker's own $SYS route is in its table: " + table);
             assertTrue(live.server().sys().atDirect(uri("broker")).isRec(), "the SYS tree hangs off the broker itself");
+        }
+    }
+
+    // ======================== stress: many parallel subscribers and publishers ========================
+
+    @Test
+    public void stressManyParallelSubscribersAndPublishers() throws Exception {
+        final int subscribers = 8;
+        final int publishers = 8;
+        final int topicsPerPublisher = 40;
+        final int total = publishers * topicsPerPublisher;
+        final Random random = new Random(0x575E55);
+
+        try (final Live live = serve()) {
+            // the publish plan — every topic is unique (publisher, index) and carries a distinct value, to prove the
+            // round-trip
+            final Map<fURI, Long> plan = new LinkedHashMap<>();
+            for (int p = 0; p < publishers; p++)
+                for (int t = 0; t < topicsPerPublisher; t++) {
+                    final fURI topic = FOUNDRY.extend("mill").extend(Integer.toHexString(random.nextInt()))
+                            .extend(String.valueOf(p)).extend(String.valueOf(t));
+                    plan.put(topic, random.nextLong(1_000_000L));
+                }
+            final List<Map.Entry<fURI, Long>> entries = new ArrayList<>(plan.entrySet());
+
+            // connect and subscribe every watcher up front, so no publish lands before its filter is registered
+            final List<Socket> watchers = new ArrayList<>();
+            for (int s = 0; s < subscribers; s++) {
+                final Socket socket = open(live.port());
+                MqttCodec.write(socket.getOutputStream(), connect("watcher-" + s));
+                readConnAck(socket);
+                MqttCodec.write(socket.getOutputStream(), new MqttPacket.Subscribe(70 + s,
+                        List.of(new MqttPacket.Subscription(FOUNDRY.extend(ALL), AT_MOST_ONCE))));
+                readSubAck(socket, 70 + s, List.of(0));
+                watchers.add(socket);
+            }
+
+            final ExecutorService pool = Executors.newFixedThreadPool(subscribers + publishers);
+            try {
+                // every watcher drains the same full stream, concurrently
+                final List<Future<Map<fURI, Long>>> reads = new ArrayList<>();
+                for (final Socket socket : watchers)
+                    reads.add(pool.submit(() -> {
+                        final Map<fURI, Long> seen = new HashMap<>();
+                        for (int i = 0; i < total; i++) {
+                            final MqttPacket.Publish pub = (MqttPacket.Publish) readWithin(socket, WINDOW_MS);
+                            seen.put(pub.topic(), ObjJSONSerializer.simple().inputBytes(pub.payload())
+                                    .asRec().at(uri("temp")).intValue());
+                        }
+                        return seen;
+                    }));
+
+                // and every publisher writes its own slice, concurrently
+                final List<Future<?>> writes = new ArrayList<>();
+                for (int p = 0; p < publishers; p++) {
+                    final int from = p * topicsPerPublisher;
+                    final int to = from + topicsPerPublisher;
+                    final String clientId = "caster-" + p;
+                    writes.add(pool.submit(() -> {
+                        try (final Socket socket = open(live.port())) {
+                            MqttCodec.write(socket.getOutputStream(), connect(clientId));
+                            readConnAck(socket);
+                            for (int i = from; i < to; i++) {
+                                final Map.Entry<fURI, Long> entry = entries.get(i);
+                                MqttCodec.write(socket.getOutputStream(), new MqttPacket.Publish(entry.getKey(),
+                                        ("{\"temp\":" + entry.getValue() + "}").getBytes(StandardCharsets.UTF_8),
+                                        AT_MOST_ONCE, false, false, 0));
+                            }
+                        }
+                        return null;
+                    }));
+                }
+
+                for (final Future<?> write : writes)
+                    write.get(); // surface any publisher failure
+                for (final Future<Map<fURI, Long>> read : reads)
+                    assertEquals(plan, read.get(), "every watcher must hear every publish exactly once");
+            } finally {
+                pool.shutdownNow();
+                for (final Socket socket : watchers)
+                    socket.close();
+            }
         }
     }
 
@@ -365,6 +476,21 @@ public class mqttServerTest extends AbstractMetatronTest {
         final MqttPacket.SubAck subAck = (MqttPacket.SubAck) reply;
         assertEquals(packetId, subAck.packetId());
         assertEquals(codes, subAck.returnCodes());
+    }
+
+    /**
+     * Read a burst holding a SubAck and the $SYS leaves its subscription immediately earned — the ack and the
+     * leaves race on the same socket, so the SubAck is judged from the burst, not as the first packet. The burst is
+     * returned so the caller can judge the leaves too.
+     */
+    private static List<MqttPacket> readSubAckBurst(final Socket client, final int packetId, final List<Integer> codes,
+                                                    final int count) throws IOException {
+        final List<MqttPacket> burst = readBurst(client, count);
+        final MqttPacket subAck = burst.stream().filter(MqttPacket.SubAck.class::isInstance).findFirst()
+                .orElseThrow(() -> new AssertionError("no SubAck in the burst: " + burst));
+        assertEquals(packetId, ((MqttPacket.SubAck) subAck).packetId());
+        assertEquals(codes, ((MqttPacket.SubAck) subAck).returnCodes());
+        return burst;
     }
 
     private static MqttPacket readWithin(final Socket client, final int windowMs) throws IOException {

@@ -420,7 +420,6 @@ the two graphs are linked by `->` and crossed by `*`.
 
 ```mtron
 mtron> push(xyz).vid()
-==>/xyz
 mtron> /.>>
 ==>/xyz/
 mtron> /xyz>>
@@ -432,7 +431,6 @@ mtron> /xyz>>
 ==>/xyz/compiler
 ==>/xyz/processor
 mtron> pop().vid()
-==></.>
 ```
 Every pushed frame is a fresh **level** over its parent's — its own memory, instruction set and network — so it is a
 clean scope: what it writes, imports and dials is its own, and a pop retracts exactly that. Reach in particular starts

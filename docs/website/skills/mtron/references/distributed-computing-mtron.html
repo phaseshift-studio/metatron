@@ -470,7 +470,8 @@ menu, fix the five pieces a row names:</p>
 <p><code>LawTable.combiner(keyed, laws)</code> is the one function that decides a fold's recombination:</p>
 <ul>
 <li>a fold that declares <code>monoidic</code> + <code>commutative</code> is <strong>its own</strong> combiner (<code>sum</code>, <code>prod</code>);</li>
-<li>a fold defined by its <code>derivation</code> recombines through the fold that defines it (<code>count ↦ sum</code>, <code>order(s) ↦ kmerge(s)</code>);</li>
+<li>a fold defined by its <code>derivation</code> recombines through the fold that defines it (<code>count ↦ sum</code>,
+<code>order(s) ↦ kmerge(s)</code>);</li>
 <li>a keyed fold <code>group([k ⇒ h])</code> recombines <strong>pointwise</strong> — <code>sum()==[_=&gt;combiner(h)]</code> — which no single edge names.</li>
 </ul>
 <h3>the theorem bindings</h3>
@@ -506,7 +507,7 @@ rings the shapes live in. The full paper is <a href="../../../articles/stream-ri
 <tr><td><code>none</code></td><td>delete (the unit law's transform)</td><td>—</td></tr>
 </tbody>
 </table>
-<p><code>PlanBuilder.create()</code> validates \(\texttt{obligations}(\texttt{shape}) \subseteq \texttt{cut.laws}\); a cut shipped to a
+<p><code>PlanBuilder.create()</code> validates \(\texttt{obligations} (\texttt{shape}) \subseteq \texttt{cut.laws}\); a cut shipped to a
 shape and re-applied at home must declare every law that shape demands, or the plan refuses to build.</p>
 <hr />
 <h3>the menu</h3>
@@ -519,15 +520,15 @@ are placeholders — the schemas below are motifs, not literal runs.</p>
 <tr><th>pattern</th><th>law (latex)</th><th>mtron pre-write motif</th><th>mtron rewrite motif</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>A</strong> homomorphism shard ✅</td><td>\(h(a \uplus b) = h(a) \oplus h(b)\)</td><td><code>{1,2,3,4}.plus(1).count()</code></td><td><code>start([start?hops=0(part_i).plus(1).count(), …]).select([to(p_i), …]).merge().sum()</code></td></tr>
-<tr><td><strong>B</strong> data-local shard</td><td>\(\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)\)</td><td><code>*/usr/data/+/current.plus(1).sum()</code></td><td><code>start([from?hops=0(&lt;/usr/data/+/current&gt;).plus(1).sum(), …]).select([to(p_i), …]).merge().sum()</code></td></tr>
-<tr><td><strong>C</strong> authority push-down</td><td>\(\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}\) (Thm 5 + a pure chain)</td><td><code>*&lt;ws://host:8555/n/+&gt;.plus(1).sum()</code></td><td><code>start([from?hops=0(&lt;/n/+&gt;).plus(1).sum()]).select([to(&lt;ws://host:8555&gt;)]).merge()</code></td></tr>
-<tr><td><strong>D</strong> parallel fan-out ✅</td><td>\(\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b\) (Thm 5)</td><td>any shard; the transport, not a new fold</td><td><code>start([s_i, …]).select([virtual::[code=&gt;eval(p_i)], …]).select([&gt;&gt;rhs, …]).merge().combiner</code></td></tr>
-<tr><td><strong>E</strong> tree reduction ✅</td><td>\((a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C\)</td><td><code>{1,…,8}.plus(1).sum?hops=2()</code></td><td>nested <code>start?hops=n-1(part_i)…</code> at each interior node — the dial graph is the tree</td></tr>
+<tr><td><strong>A</strong> homomorphism shard ✅</td><td>\(h(a \uplus b) = h(a) \oplus h(b)\)</td><td><code>{1,2,3,4}.plus(1).count()</code></td><td><code>[start?hops=0(p_i).plus(1).count(),…]==[eval(p_i), …]&gt;-.sum()</code></td></tr>
+<tr><td><strong>B</strong> data-local shard</td><td>\(\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)\)</td><td><code>*/usr/data/+/current.plus(1).sum()</code></td><td><code>[from?hops=0(&lt;/usr/data/+/current&gt;).plus(1).sum(),…]==[eval(p_i),…]&gt;-.sum()</code></td></tr>
+<tr><td><strong>C</strong> authority push-down</td><td>\(\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}\) (Thm 5 + a pure chain)</td><td><code>*&lt;ws://host:8555/n/+&gt;.plus(1).sum()</code></td><td><code>[from?hops=0(&lt;/n/+&gt;).plus(1).sum()]==[eval(&lt;ws://host:8555&gt;)]&gt;-</code></td></tr>
+<tr><td><strong>D</strong> parallel fan-out ✅</td><td>\(\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b\) (Thm 5)</td><td>any shard; the transport, not a new fold</td><td><code>[s_i, …]==[virtual::[code=&gt;eval(p_i)],…]==[&gt;&gt;rhs,…]&gt;-.combiner</code></td></tr>
+<tr><td><strong>E</strong> tree reduction ✅</td><td>\((a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C\)</td><td><code>{1,…,8}.plus(1).sum?hops=2()</code></td><td>nested <code>start?hops=n-1(p_i)…</code> at each interior node — the dial graph is the tree</td></tr>
 <tr><td><strong>F</strong> ordered fold</td><td>\(a \cdot (b \cdot c) = (a \cdot b) \cdot c\) (associativity alone)</td><td>a <code>lst</code>-partitioned fold (streams never shard)</td><td>pipeline — carry the running total, neighbor-to-neighbor</td></tr>
-<tr><td><strong>G</strong> keyed reduce ✅</td><td>\(\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])\)</td><td><code>{1,2,3,4,5,6}.group([mod(3)=&gt;sum()])</code></td><td><code>start([start?hops=0(part_i).group([mod(3)=&gt;sum()]), …]).select([to(p_i), …]).merge().sum()==[_=&gt;sum()]</code></td></tr>
+<tr><td><strong>G</strong> keyed reduce ✅</td><td>\(\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])\)</td><td><code>{1,2,3,4,5,6}.group([mod(3)=&gt;sum()])</code></td><td><code>[start?hops=0(p_i).group([mod(3)=&gt;sum()]),…]==[eval(p_i),…]&gt;-.sum()==[_=&gt;sum()]</code></td></tr>
 <tr><td><strong>H</strong> redundant / hedged shards</td><td>\(x \oplus x = x\)</td><td>a partition shipped to r peers</td><td>every reply folds (at-least-once); non-idempotent → hedge, first reply wins</td></tr>
-<tr><td><strong>I</strong> span/route interpreter</td><td>\(\mathrm{plan} \mapsto \mathrm{layout}\) (infrastructure)</td><td><code>[start({1,2,3}).plus(1).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]</code></td><td><code>PlanInterpreter</code> lowers <code>plan.routes()</code> + a real span <code>[(lo, hi, role)]</code></td></tr>
+<tr><td><strong>I</strong> span/route interpreter</td><td>\(\mathrm{plan} \mapsto \mathrm{layout}\) (infrastructure)</td><td><code>[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]</code></td><td><code>PlanInterpreter</code> lowers <code>plan.routes()</code> + a real span <code>[(lo, hi, role)]</code></td></tr>
 <tr><td><strong>J</strong> algebraic aggregates</td><td>\(\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}\)</td><td><code>{...}.mean()</code></td><td>pointwise tuple partials; the finalizer runs once at the master</td></tr>
 <tr><td><strong>K</strong> limit / top-k push-down</td><td>\(\mathrm{take}(k) \cdot \oplus = \mathrm{take}(k) \cdot \oplus \cdot \mathrm{take}(k)\)</td><td><code>{...}.order(s).take(k)</code></td><td>slaves <code>order(s).take(k)</code>; master <code>kmerge(s).take(k)</code></td></tr>
 <tr><td><strong>L</strong> mergeable sketches</td><td>\(\hat h(a \uplus b) = \hat h(a) \oplus \hat h(b)\)</td><td><code>{...}.hll()</code> (a sketch fold)</td><td>A / E / H once the sketch declares its monoid theory</td></tr>
@@ -536,8 +537,9 @@ are placeholders — the schemas below are motifs, not literal runs.</p>
 <tr><td><strong>O</strong> broadcast constants ✅</td><td>\(ca \cdot 1b = 1a \cdot 1b \cdot c1\) (Thm 6)</td><td><code>{...}.plus(B).sum()</code> (B a constant)</td><td>the constant rides as an argument of the floatable run — no fan-out change</td></tr>
 <tr><td><strong>P</strong> computed seeds</td><td>\([0, n) = \uplus_i \mathrm{index}_i\)</td><td>Monte Carlo — each peer gets a count + its own RNG seed</td><td>one O(1) message per peer; nothing shipped</td></tr>
 <tr><td><strong>Q</strong> monad migration</td><td>\(\mathrm{authority}(m)\) — ship the monad, not the value</td><td>a remote read mid-chain</td><td><code>law_shard</code> per step — the continuation ships instead of the value</td></tr>
-<tr><td><strong>R</strong> durable results</td><td>\(\mathrm{id} : \mathrm{partial} \mapsto \mathrm{address}\)</td><td><code>to(&lt;/usr/job/round/shard&gt;)</code></td><td><code>Route.space</code> + <code>shard_result::[authority, round, status, value]</code></td></tr>
+<tr><td><strong>R</strong> durable results</td><td>\(\mathrm{id} : \mathrm{partial} \mapsto \mathrm{address}\)</td><td><code>to(&lt;/usr/job/round/shard&gt;)</code></td><td><code>space</code> + <code>shard_result::[authority, round, status, value]</code></td></tr>
 <tr><td><strong>S</strong> master-participates</td><td>\(\bigoplus_{i=0}^{k} a_i \cdot r\) over \(\{\mathrm{master}\} \cup \mathrm{peers}\)</td><td><code>{1,…,8}.plus(1).sum()</code></td><td>the master folds its own slice (a local lane) and ships k−1</td></tr>
+<tr><td><strong>T</strong> reference frame migration ✅</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\) — machine semiring groupoid, stream ring's process dual</td><td><code>{1,2,3}.plus(5).move(//host/a).plus(2).sum()</code></td><td><code>{1,2,3}.plus(5).-&lt;[\|move(/a),_,plus(2).sum()]==[as(code::T).eval(//host)]&gt;-</code></td></tr>
 </tbody>
 </table>
 <p><strong>Legend.</strong> ✅ = implemented (<code>A</code> done; <code>D</code> done 2026-10-26; <code>E</code>, <code>G</code> v1 done; <code>O</code> free today — it needs no plumbing).
@@ -548,16 +550,16 @@ An empty box is <em>not</em> &quot;unsound&quot;: the law holds, the lowering is
 fixes the route shape), and the <em>location-side</em> question of where the work lives — plus a set of <strong>orthogonal</strong> rules
 that multiply any fan-out and a set of <strong>composites</strong> that build on the rest. The table above keeps the A–S lettering
 stable; this is the lay of the land.</p>
-<pre><code>distribution — the menu (A–S)
+<pre><code>distribution — the menu (A–T)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
-│  ├─ free · floatable (Thm 6)        → O ✅
-│  ├─ star · comm. monoid (Thm 19)    → A ✅  E ✅  G ✅  J  K  L  H
+│  ├─ free · floatable (Thm 6)        → O:✅
+│  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J  K  L  H
 │  ├─ pipeline · associative          → F
 │  └─ shuffle · keyed                 → (G's hash-route; M(3))
 ├─ by the location                (native · delegation — where the work lives)
-│  └─ B  C  Q  P
+│  └─ B  C  Q  P  T:✅
 ├─ orthogonal                     (multiply any fan-out)
-│  └─ D ✅  S
+│  └─ D:✅  S
 └─ composite &amp; substrate          (built from the above)
    └─ N  R  M  I
 </code></pre>
@@ -568,7 +570,7 @@ stable; this is the lay of the land.</p>
 <li><strong>the anchor's law</strong> is the <em>data-side</em> theorem, and it <em>is</em> the route shape: <code>free</code> (floatable, Thm 6) replicates
 the run with no coordination; <code>star</code> (commutative monoid, Thm 19) scatters, partial-reduces, and gathers — <code>A</code> is
 the one engine, and <code>E</code> / <code>G</code> / <code>J</code> / <code>K</code> / <code>L</code> / <code>H</code> are its refinements; <code>pipeline</code> (associative) carries the
-running total; <code>shuffle</code> (keyed) co-locates the key (G's future hash-route, and M(3)).</li>
+running total; <code>shuffle</code> (keyed) co-locates the key (G's future hash-route, and M (3)).</li>
 <li><strong>the location</strong> is the <em>machine-side</em> question — native / delegation: <code>B</code> moves the code to the data, <code>C</code> is <code>B</code>
 with one owner, <code>Q</code> is <code>C</code> per step, <code>P</code> partitions the index space instead of data.</li>
 <li><strong>orthogonal</strong> multiplies any fan-out: <code>D</code> ships every round trip in parallel (max RTT), <code>S</code> keeps a slice home.</li>
@@ -629,6 +631,22 @@ master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=&gt;sum()
 partials append into a bag, and a bulked partial reads as its copies (<code>merge()</code> bulks equal ones). <code>==[_=&gt;C]</code> is
 <code>select</code>, the per-key fold. A <code>lst</code> is an atom of the merge, so an <code>order</code>'s sorted partials bag whole per key and
 <code>kmerge</code> merges the runs.</p>
+<h4>T — migrating a frame of reference</h4>
+<p><code>move()</code> relocates the <em>frame of reference</em> — the machine the code runs in — rather than moving data. It is the
+machine ring's serial <code>·</code> (<code>move</code> points the machine pointer at an existing machine, and the value flows through
+unchanged), so it is the one distributed pattern that is <strong>not a fold</strong>: no reducer, no combiner, no <code>LawTable</code>, no
+<code>plan::T</code>. A hand-crafted <code>rewriter</code> rule (<code>extractMove</code>) tails the code at the first remote move, ships the tail to
+that authority via <code>eval</code>, and stops. The receiving machine re-compiles the shipped tail, finds the next move, and
+tails-and-ships again — the one dumb step propagates <em>fractally</em>, machine to machine, without the origin ever
+re-entering the loop. This head/tail-aware rewrite does not propagate by local recursion — each machine re-compiles
+the shipped tail, so the chain of machines is itself the recursion: a compilation and execution distributed across
+them.</p>
+<p>The value snakes forward; only the terminal result back-propagates as each nested continuation resolves — <code>~&gt;</code> ships
+forward, <code>&lt;-</code> returns the resolved future:</p>
+<p>\[\begin{matrix}&amp; \curvearrowleft_4 &amp; &amp; \curvearrowleft_3 &amp; \\ \mathrm{move} (a) &amp; \rightsquigarrow_1 &amp; \mathrm{move} (b) &amp; \rightsquigarrow_2 &amp; \mathrm{move} (c)\end{matrix}\]</p>
+<p>Each hop is a re-compilation in a new environment, so the tail ships as <em>source</em>, never as compiled code; the
+receiver's own compiler re-runs the same rule, which is what keeps the snake sound across a variegated chain of
+machines with different co-located resources and instruction sets.</p>
 <h3>how the entries compose</h3>
 <ul>
 <li><strong>E applies to every A-fold</strong>, and to G, J and L: any combiner recombines at any interior node.</li>

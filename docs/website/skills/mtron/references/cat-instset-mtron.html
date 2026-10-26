@@ -703,7 +703,7 @@ the rule consumes, and the category is the rewrite table: an algebra registered 
 type, and a type that models no such structure is left unchanged.</p>
 <p>The declared laws split into two rewrite directions, and both were already <strong>latent in the stream-ring algebra</strong>
 (<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>). <strong>Time</strong> — the <em>optimization</em> direction — rewrites
-code <em>in place</em>: the local laws below (\(\mathrm{op}(\mathrm{id}) \leadsto \varepsilon\), $f \cdot f \leadsto
+code <em>in place</em>: the local laws below (\(\mathrm{op} (\mathrm{id}) \leadsto \varepsilon\), $f \cdot f \leadsto
 \varepsilon$, \(f \cdot f \leadsto f\), absorption, derivation contraction) shorten a chain without moving it. <strong>Space</strong>
 — the <em>location</em> direction — moves code <em>across places</em>: that is Theorem 19's semi-right distributivity, which
 <code>law_shard</code> realizes — worked out below in the third lift, where the fold is actually partitioned.</p>
@@ -1023,8 +1023,8 @@ names and where its <code>where</code> sends it:</p>
 <p>The application is a <strong>type method</strong>, not a field: <code>lower(plan::T)</code> is one instruction registered in
 <code>catInstSet.insts()</code>, shared by every plan. It matches the plan's <code>cut</code> against the path's code, applies the rewrite,
 and re-lifts the result to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
-<p>A relocation decision in <code>plan.where</code> is <code>[shape, target?, hops?, span]</code> — <code>shape</code> is the topology token
-(<code>local</code> / <code>none</code> / <code>peer</code> / <code>peers</code> / <code>space</code> / <code>tree</code> / <code>shuffle</code>), <code>target</code> the concrete address. Each shape
+<p>A relocation decision in <code>plan.where</code> is <code>[shape, target?, hops?, span]</code> — <code>shape</code> is the topology token (<code>local</code> /
+<code>none</code> / <code>peer</code> / <code>peers</code> / <code>space</code> / <code>tree</code> / <code>shuffle</code>), <code>target</code> the concrete address. Each shape
 declares the laws it demands of a cut shipped to it (§3, two directions):</p>
 <table>
 <thead>
@@ -1090,7 +1090,7 @@ monoidic reducers are <strong>semi-right distributive</strong>,
 \[(a+b)\cdot r \;=\; (a\cdot r + b\cdot r)\cdot r,\]
 so a fold factors across parallel branches and re-combines through the same reducer — sound, not merely partitioned.
 The two composition operators, \(+\) (parallel branching) and \(\cdot\) (serial composition), are where that law was
-latent: the split axiom \(\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b\) and the merge axiom say an
+latent: the split axiom \(\langle x\rangle (a+b) = \langle x\rangle a + \langle x\rangle b\) and the merge axiom say an
 object fans out across branches and merges back, and Thm 19 is the one reduce law that makes the fan-out <em>sound</em>. The
 same algebra that says \(x + 0 \leadsto x\) (a time rewrite) says \((a+b)\cdot r \leadsto (a\cdot r + b\cdot r)\cdot r\)
 (a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.</p>
@@ -1233,7 +1233,7 @@ emits. A call whose authority no peer overrides, or whose address is computed at
 reaches the peer through the run-time dispatch.</p>
 <h4>the location liveness lattice</h4>
 <!-- figure source: assets/tikz/cat-location-lattice.tex (same recipe) -->
-<img src="../assets/cat-location-lattice.png" alt="the location liveness lattice: origin → reachable → admissible (declared) → serves (realized) → shardTargets, addressed by wire authority" width="45%" style="float:right; margin:0 0 0.9em 1.5em"/>
+<img src="../assets/cat-location-lattice.png" alt="the location liveness lattice: origin → reachable → admissible (declared) → serves (realized) → shardTargets, addressed by wire authority" width="55%" style="float:right; margin:0 0 0.9em 1.5em"/>
 <p>Distribution liveness has the same declared/realized split as a-priori pruning, on the location side. A place is a
 candidate (<strong>declared</strong>) when some authority's scheme has a dialer in the ISA — <code>Signatures.resolves(scheme)</code>, the
 <code>ws → ws_client</code>, <code>http</code>/<code>https → http_client</code>, <code>loop → id_client</code> table, read with no dial attempted. A dialed peer
@@ -1273,11 +1273,11 @@ two unrelated ones — a natural transformation whose two components read the tw
 <!-- figure source: assets/tikz/cat-fibration.tex (same recipe) -->
 <img src="../assets/cat-fibration.png" alt="the two fibers: the instruction fiber (path::T ⇄ abstraction::T) and the location fiber (origin/where ⇄ reachable), with a plan::T acting over both via cut and where" width="90%" style="margin:0.3em 0 0 0"/>
 <p>The naturality is a <strong>commuting square</strong>: the location projection \(L\) (a path's place — <code>origin</code> before, <code>where</code>
-after) makes the plan's code-side and location-side agree. Applying the rewrite and then reading the location
-(top → right) equals reading the location and then applying the relocation (left → bottom):
-\(\mathrm{where} \circ \mathrm{lower}(\mathrm{plan}) = \mathrm{plan.where} \circ \mathrm{origin}\).</p>
+after) makes the plan's code-side and location-side agree. Applying the rewrite and then reading the location (top →
+right) equals reading the location and then applying the relocation (left → bottom):
+\(\mathrm{where} \circ \mathrm{lower} (\mathrm{plan}) = \mathrm{plan.where} \circ \mathrm{origin}\).</p>
 <!-- figure source: assets/tikz/cat-commute.tex (same recipe) -->
-<img src="../assets/cat-commute.png" alt="the commuting square: lower/bind(plan) on the code edge, plan.where on the location edge, origin and where as the location projection — the square commutes" width="90%" style="margin:0.3em 0 0 0"/>
+<img src="../assets/cat-commute.png" alt="the commuting square: lower/bind(plan) on the code edge, plan.where on the location edge, origin and where as the location projection — the square commutes" width="80%" style="margin:0.3em 0 0 0"/>
 <h4>the machine ring — process, dual of the stream ring</h4>
 <p><code>catInstSet</code> models <em>data</em> as a category (types/insts as objects/morphisms) and <em>place</em> as its location coordinate.
 The machine those places address is its own algebra — the <strong>machine ring</strong>, dual of the stream ring over process:
