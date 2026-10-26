@@ -54,7 +54,23 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     private static final GraphittyLogger LOG = Graphitty.log(ExplainTool.class);
 
     enum Action {
-        QUIT, DOWN_ROW, UP_ROW, RIGHT_COL, LEFT_COL, SELECT, SPACE
+        QUIT, DOWN_ROW, UP_ROW, RIGHT_COL, LEFT_COL, SELECT, SPACE, STEP
+    }
+
+    /**
+     * One frame in a poly drill-down: a selection table over a rec/lst's
+     * elements, each of which may itself be code (→ nested ExplainLevel), a
+     * poly (→ another frame), or a scalar (→ popup).
+     */
+    private static class ArgFrame {
+        final TableWidget table;
+        final List<Obj> entries;
+        int selectedRow;
+
+        ArgFrame(final TableWidget table, final List<Obj> entries) {
+            this.table = table;
+            this.entries = entries;
+        }
     }
 
     /**
@@ -78,10 +94,8 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final int spawnCol;        // Column in parent that spawned this (-1 if root)
 
         // ── Popup overlay state ──────────────────────────────────────
-        PanelWidget panelPopup;         // Info panel popup (docs, type, form desc, coeff)
-        TableWidget argTablePopup;      // Multi-arg selection table
-        List<Obj> argEntries;           // Arg objects for drill-down from arg table
-        int argTableSelectedRow = 0;    // Selected row in arg table popup
+        PanelWidget panelPopup;                              // Info panel popup (docs, type, form desc, coeff)
+        final Deque<ArgFrame> argFrames = new ArrayDeque<>(); // Poly drill-down stack (args / collection navigation)
 
         ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol) {
             this.code = code;//.resolve(noobj());
@@ -124,6 +138,14 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     private final Code rootCode;
     private String lastFrameMarkup = "";  // The last full frame, settled into the transcript on exit
 
+    // ── Single-step rewrite state (ctrl+space) ─────────────────────
+    private Map<String, List<Inst>> rewritesByCategory;  // category → ordered rewrites (lazily built)
+    private List<String> categoryNames;                  // ordered categories
+    private int categoryIndex = 0;                       // focused category
+    private boolean categoryMode = false;                // category list open
+    private int stepIndex = 0;                           // next rewrite in the focused category
+    private String stepNote = "";                        // "[i/n] name" shown in the status bar
+
     public ExplainTool(final Code code) {
         this.rootCode = code;
     }
@@ -164,6 +186,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         keyMap.bind(Action.QUIT, "\u0004"); // Ctrl-D
         keyMap.bind(Action.SELECT, Utilities.enter_key);
         keyMap.bind(Action.SPACE, " ");
+        keyMap.bind(Action.STEP, KeyMap.ctrl(' ')); // ctrl+space
         return keyMap;
     }
 
@@ -172,15 +195,20 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         if (current == null) return;
 
         // ── Popup-mode dispatch ──────────────────────────────────────
-        if (current.argTablePopup != null) {
-            handleArgTableAction(current, action);
-            return;
-        }
         if (current.panelPopup != null) {
-            // SELECT or QUIT dismisses a panel popup
+            // SELECT or QUIT dismisses a panel popup, returning to whatever
+            // was underneath (the arg-frame stack, if any)
             if (action == Action.SELECT || action == Action.QUIT) {
                 current.panelPopup = null;
             }
+            return;
+        }
+        if (this.categoryMode) {
+            handleCategoryAction(current, action);
+            return;
+        }
+        if (!current.argFrames.isEmpty()) {
+            handleArgTableAction(current, action);
             return;
         }
 
@@ -210,6 +238,10 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 handleCompile(current);
                 break;
 
+            case STEP:
+                handleStep(current);
+                break;
+
             case QUIT:
                 popLevel();
                 if (stack.isEmpty()) {
@@ -224,22 +256,22 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
      * Up/Down navigate rows, Enter drills into the selected arg, Esc/QUIT dismisses.
      */
     private void handleArgTableAction(ExplainLevel current, Action action) {
+        final ArgFrame frame = current.argFrames.peek();
+        if (frame == null) return;
         switch (action) {
             case DOWN_ROW:
-                if (current.argEntries != null && !current.argEntries.isEmpty())
-                    current.argTableSelectedRow = Math.min(current.argTableSelectedRow + 1, current.argEntries.size() - 1);
+                if (!frame.entries.isEmpty())
+                    frame.selectedRow = Math.min(frame.selectedRow + 1, frame.entries.size() - 1);
                 break;
             case UP_ROW:
-                current.argTableSelectedRow = Math.max(current.argTableSelectedRow - 1, 0);
+                frame.selectedRow = Math.max(frame.selectedRow - 1, 0);
                 break;
             case SELECT:
-                drillIntoSelectedArg(current);
+                drillIntoSelectedArg(current, frame);
                 break;
             case QUIT:
-                // Dismiss arg table popup, return to cell navigation
-                current.argTablePopup = null;
-                current.argEntries = null;
-                current.argTableSelectedRow = 0;
+                // Pop this frame, return to the outer frame or cell navigation
+                current.argFrames.pop();
                 break;
             default:
                 // Other keys ignored in arg-table mode
@@ -248,30 +280,148 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     }
 
     /**
-     * Drill into the currently selected arg in the arg-table popup.
+     * Drill into the currently selected arg in an arg-frame.
      */
-    private void drillIntoSelectedArg(ExplainLevel current) {
-        if (current.argEntries == null || current.argTableSelectedRow >= current.argEntries.size()) return;
-        Obj selectedArg = current.argEntries.get(current.argTableSelectedRow);
-        current.argTablePopup = null;
-        current.argEntries = null;
-        current.argTableSelectedRow = 0;
+    private void drillIntoSelectedArg(ExplainLevel current, ArgFrame frame) {
+        if (frame.entries == null || frame.selectedRow >= frame.entries.size()) return;
+        final Obj selectedArg = frame.entries.get(frame.selectedRow);
+        // Keep the frame on the stack: a pushed code level or a scalar popup
+        // must return to this frame on back / dismiss.
+        drillIntoObj(current, selectedArg);
+    }
 
-        if (selectedArg.isCode()) {
-            // Code arg → push new ExplainLevel
-            int newOffsetX = current.offsetX + 4;
-            int newOffsetY = current.offsetY + current.selectedRow + 3;
-            pushLevel(selectedArg.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
-        } else {
-            // Non-code arg → show in panel popup
-            current.panelPopup = CardUtil.popup(selectedArg);
+    /**
+     * What a drill-down argument is, so the routing is one switch and the
+     * classification is unit-testable without a terminal.
+     */
+    enum DrillKind { CODE, POLY, EMPTY_POLY, SCALAR }
+
+    static DrillKind drillKind(final Obj obj) {
+        if (obj.isObjCall())
+            return DrillKind.CODE;
+        if (obj.isPoly()) {
+            final Poly<?, ?> poly = obj.as();
+            return poly.isEmpty() ? DrillKind.EMPTY_POLY : DrillKind.POLY;
+        }
+        return DrillKind.SCALAR;
+    }
+
+    /**
+     * Recursively drill into an argument value. A code value pushes a full
+     * {@link ExplainLevel}; a non-empty poly pushes an arg-selection frame (so
+     * its elements — which may themselves be code — are one Enter away); an
+     * empty poly or a scalar (an empty code is a noobj, which is scalar) shows
+     * a popup.
+     */
+    private void drillIntoObj(final ExplainLevel current, final Obj obj) {
+        switch (drillKind(obj)) {
+            case CODE -> {
+                final int newOffsetX = current.offsetX + 4;
+                final int newOffsetY = current.offsetY + current.selectedRow + 3;
+                pushLevel(obj.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
+            }
+            case POLY -> showArgTablePopup(current, obj.as());
+            case EMPTY_POLY -> current.panelPopup = CardUtil.popup((obj.isRec() ? "rec" : "lst") + " arguments", "{{y}}empty{{X}}");
+            case SCALAR -> current.panelPopup = CardUtil.popup(obj);
         }
     }
 
     private void handleCompile(ExplainLevel current) {
+        this.categoryMode = false;
+        this.stepNote = "";
+        this.stepIndex = 0;
         this.popLevel();
         this.pushLevel(current.code.resolve(noobj()).rewrite(), current.offsetX, current.offsetY, current.spawnRow, current.spawnCol);
+    }
 
+    /**
+     * ctrl+space in normal mode: open the rewrite category list (rules grouped by
+     * {@code tid().retract(1)}), from which space runs a whole category and
+     * ctrl+space steps through it one rule at a time.
+     */
+    private void handleStep(ExplainLevel current) {
+        this.buildRewriteCategories();
+        if (this.categoryNames.isEmpty()) {
+            current.panelPopup = CardUtil.popup("rewrite", "{{y}}no rewrite rules registered{{X}}");
+            return;
+        }
+        this.categoryMode = true;
+        this.categoryIndex = 0;
+        this.stepIndex = 0;
+        this.stepNote = "";
+    }
+
+    /** Lazily group the rewriter's rules by their URI category ({@code tid().retract(1)}). */
+    private void buildRewriteCategories() {
+        if (this.categoryNames != null) return;
+        this.rewritesByCategory = new TreeMap<>();
+        for (final Inst r : Machine.current().compiler().rewriter().rewrites()) {
+            this.rewritesByCategory.computeIfAbsent(categoryOf(r), k -> new ArrayList<>()).add(r);
+        }
+        this.rewritesByCategory.values().forEach(l -> l.sort(Comparator.comparing(r -> r.tid().name())));
+        this.categoryNames = new ArrayList<>(this.rewritesByCategory.keySet());
+        this.categoryIndex = 0;
+    }
+
+    private static String categoryOf(final Inst rewrite) {
+        return rewrite.tid().retract(1).basePath().toString();
+    }
+
+    /** Category-mode key dispatch: navigate, run a category, or step through one. */
+    private void handleCategoryAction(final ExplainLevel current, final Action action) {
+        switch (action) {
+            case DOWN_ROW -> this.categoryIndex = Math.min(this.categoryIndex + 1, this.categoryNames.size() - 1);
+            case UP_ROW -> this.categoryIndex = Math.max(this.categoryIndex - 1, 0);
+            case SPACE -> runFocusedCategory(current);
+            case STEP -> stepFocusedCategory(current);
+            case QUIT -> {
+                this.categoryMode = false;
+                this.stepNote = "";
+            }
+            default -> { }
+        }
+    }
+
+    /** ctrl+space in category mode: apply the next rule in the focused category. */
+    private void stepFocusedCategory(final ExplainLevel current) {
+        final List<Inst> rewrites = this.rewritesByCategory.get(this.categoryNames.get(this.categoryIndex));
+        if (rewrites == null || rewrites.isEmpty()) return;
+        if (this.stepIndex >= rewrites.size()) this.stepIndex = 0;
+        final Inst rewrite = rewrites.get(this.stepIndex);
+        final String name = rewrite.tid().name();
+        final Obj out = rewrite.apply(current.code.resolve(noobj()));
+        if (out.isCode()) {
+            this.popLevel();
+            this.pushLevel(out.asCode(), current.offsetX, current.offsetY, current.spawnRow, current.spawnCol);
+        }
+        this.stepIndex++;
+        this.stepNote = "  {{y}}[" + this.stepIndex + "/" + rewrites.size() + "] " + name + "{{X}}";
+    }
+
+    /** space in category mode: run the focused category's rules to a fixpoint. */
+    private void runFocusedCategory(final ExplainLevel current) {
+        final List<Inst> rewrites = this.rewritesByCategory.get(this.categoryNames.get(this.categoryIndex));
+        final Code rewritten = applyFixpoint(current.code.resolve(noobj()), rewrites);
+        this.popLevel();
+        this.pushLevel(rewritten, current.offsetX, current.offsetY, current.spawnRow, current.spawnCol);
+        this.categoryMode = false;
+        this.stepNote = "";
+    }
+
+    /** The full rewrite's fixpoint loop, scoped to one category's rules (top-level only, no branch descent). */
+    private static Code applyFixpoint(final Code code, final List<Inst> rewrites) {
+        Code current = code;
+        int stable = 0;
+        while (stable < 2) {
+            final Code before = current;
+            for (final Inst r : rewrites) {
+                final Obj out = r.apply(current);
+                if (out.isCode()) current = out.asCode();
+            }
+            if (current.hashCode() == before.hashCode()) stable++;
+            else stable = 0;
+        }
+        return current;
     }
 
     // =====================================================================
@@ -300,7 +450,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     private void handleOpSelect(ExplainLevel current, int row) {
         Inst inst = getMetadataInst(current, row);
         if (inst == null) return;
-        String title = Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}/m/inst{{\\b}}{{m}}::T{{\\m}}",
+        String title = Graphitty.string("{{b}}%s{{/b}}{{m}}::T{{/m}} refines {{b}}/m/inst{{/b}}{{m}}::T{{/m}}",
                 inst.tid().basePath());
         current.panelPopup = CardUtil.popup(title, CardUtil.bodyOf(inst));
     }
@@ -314,9 +464,9 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         String suffix = isDom ? " domain" : " range";
         String title;
         if (type.isBaseType()) {
-            title = Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}}%s", type.vid(), suffix);
+            title = Graphitty.string("{{b}}%s{{/b}}{{m}}::T{{/m}}%s", type.vid(), suffix);
         } else {
-            title = Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}%s{{\\b}}{{m}}::T{{\\m}}%s",
+            title = Graphitty.string("{{b}}%s{{/b}}{{m}}::T{{/m}} refines {{b}}%s{{/b}}{{m}}::T{{/m}}%s",
                     type.vid(), type.tid(), suffix);
         }
         current.panelPopup = CardUtil.popup(title, CardUtil.bodyOf(type));
@@ -332,19 +482,12 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             return;
         }
 
-        long count = args.count();
-        if (count == 1) {
-            // Single arg — show directly
+        if (args.count() == 1) {
+            // Single arg — drill straight into it (code → level, poly → frame, scalar → popup)
             Obj singleArg = args.isLst()
                     ? args.lstValue().getFirst()
                     : args.recValue().values().iterator().next();
-            if (singleArg.isCode()) {
-                int newOffsetX = current.offsetX + 4;
-                int newOffsetY = current.offsetY + current.selectedRow + 3;
-                pushLevel(singleArg.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
-            } else {
-                current.panelPopup = CardUtil.popup(singleArg);
-            }
+            drillIntoObj(current, singleArg);
         } else {
             // Multiple args — show selection table
             showArgTablePopup(current, args);
@@ -352,8 +495,8 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     }
 
     private void showArgTablePopup(ExplainLevel current, Poly<?, ?> args) {
-        List<Obj> entries = new ArrayList<>();
-        List<String> labels = new ArrayList<>();
+        final List<Obj> entries = new ArrayList<>();
+        final List<String> labels = new ArrayList<>();
 
         if (args.isLst()) {
             int idx = 0;
@@ -368,11 +511,8 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             }
         }
 
-        current.argEntries = entries;
-        current.argTableSelectedRow = 0;
-
         // Build a small TableWidget for arg selection
-        TableWidget tbl = new TableWidget(List.of("arg"));
+        final TableWidget tbl = new TableWidget(List.of("arg"));
         for (String label : labels) {
             tbl.addRow(List.of(Highlighter.format(label)));
         }
@@ -381,7 +521,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 .divider("{{b}}|")
                 .pointer("{{r}}>")
                 .applyStyle();
-        current.argTablePopup = tbl;
+        current.argFrames.push(new ArgFrame(tbl, entries));
     }
 
     private static String summarizeArg(Obj arg) {
@@ -389,6 +529,12 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             return arg.asCall().insts().stream()
                     .map(i -> i.tid().name())
                     .reduce((a, b) -> a + "." + b).orElse("call");
+        }
+        if (arg.isRec()) {
+            return "{…" + arg.asRec().count() + " rels}";
+        }
+        if (arg.isLst()) {
+            return "[…" + arg.asLst().count() + " objs]";
         }
         return arg.toShortString().replace("\n", " ").trim();
     }
@@ -422,18 +568,13 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                     className, docBody);
             current.panelPopup = CardUtil.popup(inst.tid().name() + " <j>", body);
         } else {
-            // <m> — mtron code → push new ExplainLevel
+            // <m> — mtron code → push a full ExplainLevel (or drill into a poly function obj)
             Obj mtronObj = inst.getMtronFunctionObj();
-            if (mtronObj.isCode()) {
-                int newOffsetX = current.offsetX + 4;
-                int newOffsetY = current.offsetY + current.selectedRow + 3;
-                pushLevel(mtronObj.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
-            } else if (mtronObj.isNoObj()) {
+            if (mtronObj.isNoObj()) {
                 current.panelPopup = CardUtil.popup("function",
                         "{{y}}mtron function object is empty.{{X}}");
             } else {
-                current.panelPopup = CardUtil.popup("function <m>",
-                        mtronObj.toCleanString());
+                drillIntoObj(current, mtronObj);
             }
         }
     }
@@ -543,6 +684,10 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 }
             }
 
+            if (isTop && this.categoryMode) {
+                renderCategoryList(canvas, indent);
+            }
+
             if (hasChild) canvas.blankLine();
             if (isTop && stack.size() > 1) {
                 canvas.line(Graphitty.string(indent + "  {{y}}[depth: %d]{{X}}", stack.size()));
@@ -554,12 +699,14 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         if (top != null) {
             final String mark = top.rewritten ? "{{[g]&w}} R {{X}}" : "{{[y]&w}} R {{X}}";
             final String hint;
-            if (top.argTablePopup != null) {
-                hint = mark + " {{w}}<^v>{{g}}:nav-arg {{w}}enter{{g}}:drill {{w}}ctrl-d{{g}}:back {{X}}";
+            if (this.categoryMode) {
+                hint = mark + " {{w}}<^v>{{g}}:category {{w}}space{{g}}:run-category {{w}}ctrl+space{{g}}:step {{w}}ctrl-d{{g}}:back {{X}}" + this.stepNote;
             } else if (top.panelPopup != null) {
                 hint = mark + " {{w}}enter/ctrl-d{{g}}:dismiss {{X}}";
+            } else if (!top.argFrames.isEmpty()) {
+                hint = mark + " {{w}}<^v>{{g}}:nav-arg {{w}}enter{{g}}:drill {{w}}ctrl-d{{g}}:back {{X}}";
             } else {
-                hint = mark + " {{w}}ctrl-d{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:inspect {{w}}space{{g}}:rewrite {{X}}";
+                hint = mark + " {{w}}ctrl-d{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:inspect {{w}}space{{g}}:rewrite {{w}}ctrl+space{{g}}:step {{X}}" + this.stepNote;
             }
             canvas.statusLine(hint);
         }
@@ -659,7 +806,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
 
                 // Start highlight after the divider before target cell
                 if (dividerCount == colIndex + 1) {
-                    result.append("{{[R]}}");
+                    result.append("{{[r]}}");
                     inTargetCell = true;
                 }
             } else {
@@ -690,10 +837,25 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
      * indented relative to the level's offset.
      */
     private void renderPopupLines(ExplainLevel level, WidgetCanvas canvas, String indent) {
-        if (level.argTablePopup != null) {
-            renderArgTablePopupLines(level, canvas, indent);
-        } else if (level.panelPopup != null) {
+        if (level.panelPopup != null) {
             renderPanelPopupLines(level, canvas, indent);
+        } else if (!level.argFrames.isEmpty()) {
+            renderArgTablePopupLines(level, canvas, indent);
+        }
+    }
+
+    /**
+     * Render the rewrite-category list (ctrl+space), with the focused category
+     * marked by a red pointer and each category's rule count beside it.
+     */
+    private void renderCategoryList(WidgetCanvas canvas, String indent) {
+        final String popupIndent = indent + "  ";
+        canvas.line(Graphitty.string(popupIndent + "{{w}}rewrite categories:{{X}}"));
+        for (int i = 0; i < this.categoryNames.size(); i++) {
+            final String category = this.categoryNames.get(i);
+            final int count = this.rewritesByCategory.get(category).size();
+            final String marker = (i == this.categoryIndex) ? "{{r}}>" : " ";
+            canvas.line(Graphitty.string(popupIndent + marker + " {{b}}" + category + "{{X}} {{y}}(" + count + "){{X}}"));
         }
     }
 
@@ -710,7 +872,9 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     }
 
     private void renderArgTablePopupLines(ExplainLevel level, WidgetCanvas canvas, String indent) {
-        TableWidget tbl = level.argTablePopup;
+        final ArgFrame frame = level.argFrames.peek();
+        if (frame == null) return;
+        TableWidget tbl = frame.table;
         String popupIndent = indent + "  ";
         List<String> headers = tbl.headers();
         List<List<Object>> rows = tbl.rows();
@@ -721,7 +885,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         List<String> popupLines = new ArrayList<>();
         final String divider = "{{b}}|";
         final String pointer = "{{r}}>";
-        final int selRow = level.argTableSelectedRow;
+        final int selRow = frame.selectedRow;
 
         // Header line
         if (!headers.isEmpty()) {
@@ -766,7 +930,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
      * Returns true if the given level has any active popup overlay.
      */
     private boolean hasPopup(ExplainLevel level) {
-        return level != null && (level.panelPopup != null || level.argTablePopup != null);
+        return level != null && (level.panelPopup != null || !level.argFrames.isEmpty());
     }
 
     @Override

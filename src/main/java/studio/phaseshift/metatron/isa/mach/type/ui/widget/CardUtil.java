@@ -120,22 +120,22 @@ public final class CardUtil {
     public static String titleOf(final Obj obj) {
         if (obj.isType()) {
             if (((studio.phaseshift.metatron.isa.m.type.Type) obj).isBaseType()) {
-                return Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}}", obj.vid());
+                return Graphitty.string("{{b}}%s{{/b}}{{m}}::T{{/m}}", obj.vid());
             } else {
-                return Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}%s{{\\b}}{{m}}::T{{\\m}}",
+                return Graphitty.string("{{b}}%s{{/b}}{{m}}::T{{/m}} refines {{b}}%s{{/b}}{{m}}::T{{/m}}",
                         obj.vid(), obj.tid());
             }
         }
         if (obj.isInst()) {
-            return Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}} refines {{b}}/m/inst{{\\b}}{{m}}::T{{\\m}}",
+            return Graphitty.string("{{b}}%s{{/b}}{{m}}::T{{/m}} refines {{b}}/m/inst{{/b}}{{m}}::T{{/m}}",
                     obj.tid().basePath());
         }
         // Value obj — use its type identity
         final fURI tid = obj.tid();
         if (tid != null && !tid.isGeneric()) {
-            return Graphitty.string("{{b}}%s{{\\b}}{{m}}::T{{\\m}}", tid);
+            return Graphitty.string("{{b}}%s{{/b}}{{m}}::T{{/m}}", tid);
         }
-        return Graphitty.string("{{b}}%s{{\\b}}", obj.getClass().getSimpleName());
+        return Graphitty.string("{{b}}%s{{/b}}", obj.getClass().getSimpleName());
     }
 
     // =====================================================================

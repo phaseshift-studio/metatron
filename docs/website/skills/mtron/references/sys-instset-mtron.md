@@ -74,9 +74,9 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.6M ...',
+    'tmpfs                  6.1G  6.7M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  550G ...',
+    '/dev/nvme1n1p2         916G  552G ...',
     'tmpfs                   31G   43M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -86,15 +86,15 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/1057842
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/1440048
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 13ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 15ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 13ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 15ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/1060935
+    [ProcBuilder<228>]]@/sys/fail/1443540
 ```
 ### batch
 
@@ -219,9 +219,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/1220744
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/1616022
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/1227660
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/1622706
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -254,15 +254,15 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>58
+==>93
 mtron> sys_stat()
-==>[total_mem_jvm=>gB::12.0703,
-    free_mem_jvm=>gB::2.6024,
+==>[total_mem_jvm=>gB::15.1562,
+    free_mem_jvm=>gB::3.9112,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>gB::9.4678,
+    used_mem_jvm=>gB::11.2450,
     free_jvm=>percent::0,
     free_mach=>percent::0,
-    thread=>[run=>139,stop=>244747]]
+    thread=>[run=>140,stop=>256730]]
 ```
 # file system space (`fsspace::T`)
 
@@ -327,7 +327,7 @@ is doing — the sugar is short precisely because it is legible once:
 
 ```mtron
 mtron> *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
-==>fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]@/sys/fail/1277070
+==>fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]@/sys/fail/1692450
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ```
 ## walking the tree
