@@ -119,21 +119,18 @@ public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
     }
 
     /*
-     * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet,
-     * or whose body needs a helper this slice cannot import. The `as` conversions declare one side of an opposing
-     * edge (a pair, and the direction is the claim), `div` and `minus` declare their defining equations (a
-     * Derivation), and the `math` and `order` bodies reach for MathUtil/ExpressionBuilder/Machine and
-     * MLst.lst/Comparator respectively. The rows they carry stay in mInstSetLawTable; everything the builder CAN say
-     * lives in mInsts.reals() -- and these retire as InstBuilder grows `inverse`/`derivation`.
+     * WHAT REMAINS HERE, and why: the ROW-LESS `as` conversion real->int (no law-table row, hence no claim and no
+     * inverse) and the `math`/`order` bodies, which reach for MathUtil/ExpressionBuilder/Machine and
+     * MLst.lst/Comparator. THE ROWED PAIR IS GONE: real->str is the SOUND direction (the printed decimal reads
+     * back to the same double) and is declared WITH its inverse beside the other real operations in
+     * mInsts.reals(); str->real is LOSSY and declares no inverse anywhere. The rest of real's operations live in
+     * mInsts.reals(), `div` and `minus` included (their `derivation` is what lets the rows retire).
      */
     final class RealType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     docWrap(instC(AS_INST_TID.dom(REAL_TID).rng(Tokens.INT_TID), lst(T(Tokens.INT_TID)), (lhs, inst) -> jnt(lhs.realValue().longValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())), "a real", "the lhs real truncated to an int", Map.of(jnt(0), "the target type (int::T)"), "an int function: the lhs real truncated to an int"),
-                    docWrap(instC(AS_INST_TID.dom(REAL_TID).rng(Tokens.STR_TID), lst(T(Tokens.STR_TID)), (lhs, inst) -> str(String.valueOf(lhs.realValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())), "a real", "the lhs real as a str", Map.of(jnt(0), "the target type (str::T)"), "a str function: the lhs real rendered as a str"),
-                    docWrap(instC(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.asReal().div(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal())), "a real", "the quotient", Map.of(jnt(0), "the rhs real"), "a quotient function \\(f(x, y) \nearrow x/y\\): the lhs real divided by the rhs real"),
-                    docWrap(instC(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.asReal().minus(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal())), "a real", "the difference", Map.of(jnt(0), "the rhs real"), "a difference function \\(f(x, y) \nearrow x - y\\): the rhs real subtracted from the lhs real"),
                     docWrap(instC(MATH_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(T(Tokens.STR_TID)), (lhs, inst) -> {
                                 final String equation = inst.arg(0).strValue();
                                 final Set<String> variables = MathUtil.getVariables(equation);

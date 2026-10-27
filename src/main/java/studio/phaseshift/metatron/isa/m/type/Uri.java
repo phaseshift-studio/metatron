@@ -349,18 +349,18 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
         private final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
         /*
-         * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet,
-         * or whose body reads a member only this class has. The `as` conversions declare an opposing edge (a pair,
-         * and the direction is the claim) -- their law rows stay in mInstSetLawTable -- and the has/split bodies read
-         * this type's private REGEX_CACHE, a field of UriType that cannot travel to mInsts. Everything the builder
-         * CAN say lives in mInsts.uris(); these retire as InstBuilder grows `inverse` and the cache moves to a
-         * shared helper.
+         * WHAT REMAINS HERE, and why: two ROW-LESS `as` conversions (uri->int, uri->uri) -- no law-table row, hence
+         * no claim and no inverse -- the has/split bodies, which read this type's PRIVATE REGEX_CACHE, and
+         * uri->rec, whose body calls Uri.Helper.parseQ (package-private here), so the builder cannot import it yet.
+         * THE SOUND uri->str DIRECTION IS GONE FROM HERE: a uri prints and the same uri parses back, so it is
+         * declared WITH its inverse (str->uri) in mInsts.uris(); the LOSSY str->uri direction declares none. The
+         * uri->rec ROW STAYS as the pair's one remaining claim, and it is the SOUND direction (a component rec
+         * reads back as its uri) -- no row declares rec->uri any more.
          */
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(URI_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Integer.parseInt(lhs.uriValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)),
                     instC(AS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(URI_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.uriValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(URI_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> {
                         final fURI lhsUri = lhs.asUri().uriValue();
                         return rec(

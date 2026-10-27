@@ -33,7 +33,6 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -116,11 +115,14 @@ public interface Int extends Mono, Ring.O<Int> {
     Int self(final Long jvm, final fURI tid, final fURI vid);
 
     /*
-     * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet.
-     * The `as` conversions declare an opposing edge (a pair, and the direction is the claim), `mult` declares the
-     * one-way retraction to `div`, `minus` declares its defining equation (a Derivation), and `prod`'s body needs a
-     * helper this slice cannot import yet. Their law rows stay in mInstSetLawTable; everything the builder CAN say
-     * lives in mInsts.ints() -- and these retire as InstBuilder grows `inverse`/`derivation`.
+     * WHAT REMAINS HERE, and why: the ROW-LESS `as` conversions. int->bool, int->bytes, int->real and int->uri
+     * carry no law-table row -- hence no claim and no inverse -- so there is nothing for a slice to preserve yet;
+     * they move to mInsts.ints() when their bodies' imports travel with them. THE ROWED PAIR IS GONE: int->str is
+     * the SOUND direction (print an int, read the printed str back, and the value returns) and is declared WITH
+     * its inverse beside the other int operations in mInsts.ints(), while str->int is LOSSY ("007" -> 7 -> "7")
+     * and declares no inverse anywhere. `plus` below states its own contract and laws through InstBuilder; the
+     * rest of int's operations live in mInsts.ints(), `mult` and `minus` included (their `inverse` and
+     * `derivation` are what let the rows retire).
      */
     final class IntType {
 
@@ -129,11 +131,7 @@ public interface Int extends Mono, Ring.O<Int> {
                     instC(AS_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(lhs.intValue() > 0, inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(ByteBuffer.allocate(8).putLong(lhs.intValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.intValue().doubleValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(INT_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.intValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.intValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    docWrap(instC(MULT_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue())), "the lhs int", "the result of the multiplication", Map.of(INT_TYPE, "the int to multiply the lhs by"), "multiply the lhs int by the argument int"),
-                    docWrap(instC(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())), "the lhs int", "the result of the subtraction", Map.of(INT_TYPE, "the int to subtract from the lhs"), "subtract the argument int from the lhs int"),
-                    instC(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().map(l -> l.c().isOne() ? l.intValue() : Math.powExact(l.intValue(), l.c().max().intValue())).reduce(inst.seed().intValue(), (a, b) -> a * b)), jnt(1)),
                     InstBuilder.build().tid(PLUS_INST_TID).dom(INT_TID).rng(INT_TID)
                             .argLst(INT_TYPE)
                             .body((lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue()))

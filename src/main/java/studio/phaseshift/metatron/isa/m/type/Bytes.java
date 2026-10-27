@@ -107,19 +107,17 @@ public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
     }
 
     /*
-     * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet,
-     * or that declares no law at all. The `as` conversion to str declares an opposing edge (a pair, and the
-     * direction is the claim), the conversion to bool has no row at all, and `within` is row-less too -- it applies
-     * an arbitrary argument inst, so no law of its own can be asserted. The `as` row stays in mInstSetLawTable;
-     * everything the builder CAN say lives in mInsts.bytess() -- and the pair retires as InstBuilder grows
-     * `inverse`/`derivation`.
+     * WHAT REMAINS HERE, and why: two ROW-LESS entries. The `as` conversion to bool carries no law-table row (no
+     * claim, no inverse), and `within` applies an arbitrary argument inst, so no law of its own can be asserted.
+     * THE ROWED PAIR IS GONE: bytes->str is LOSSY (arbitrary bytes need not be UTF-8 text), so it declares NO
+     * inverse anywhere; str->bytes is the SOUND direction (the bytes of a str are that str again) and is declared
+     * WITH its inverse beside str's other operations in mInsts.strs().
      */
     final class BytesType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(!Arrays.stream(lhs.bytesValue().asIntBuffer().array()).allMatch(b -> b == 0), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.STR_TID), lst(STR_TYPE), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     //instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
                     //instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
                     instC(WITHIN_INST_TID.dom(Tokens.BYTES_TID).rng(B), lst(T(B)), (lhs, inst) -> IntStream.range(0, lhs.bytesValue().array().length).map(i -> lhs.bytesValue().array()[i]).boxed().map(b -> inst.arg(0).apply(bytes(ByteBuffer.wrap(new byte[]{(byte) b.intValue()})))).map(o -> (PlusMonoid.O) o).reduce((a, b) -> (PlusMonoid.O) a.plus(b)).map(Obj::<Obj>as).orElse(noobj()))

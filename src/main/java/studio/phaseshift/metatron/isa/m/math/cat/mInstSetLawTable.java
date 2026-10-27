@@ -18,11 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.Derivation;
 
-import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -32,25 +29,21 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.Law.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * The law table of {@code /m} — the base types' declared laws, collocated.
+ * The law table of {@code /m} — the base types' declared PROCESS laws, collocated.
  *
- * <p>Both axes of the {@link LawTable} live here: the process laws each base type's operations obey
- * (the {@code declared ∩ process} cell served to {@code morphism::T>>law}), and the structural theories
- * each base type models (the theory recs served to {@code object::T>>law}). The base types' laws never
- * (or rarely) change, so one table per family beats declarations scattered across the type classes.
+ * <p>An instruction's declared laws are a fact about the instruction, and each family keeps its process rows here
+ * ({@code declared ∩ process}, served to {@code morphism::T>>law}). The base types' STRUCTURAL laws — the theory
+ * instances a carrier models, served to {@code object::T>>law} — are not here: a carrier declares its algebra at
+ * the type itself ({@code mTypes.declareAlgebras()}), which is what makes a type definition an algebraic
+ * specification. {@link #typeLawsUncached(Type)} therefore used to hold one branch per carrier and now returns the
+ * empty rec: {@code LawTable.typeLaws(Type)} serves the {@code ?lawq} declaration, and this table is no longer its
+ * fallback.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -75,206 +68,87 @@ public final class mInstSetLawTable extends LawTable {
         loadAll();
     }
 
+    /**
+     * NO CARRIER LAW IS RESTATED HERE. Every base carrier declares its algebra at its own type
+     * ({@code mTypes.declareAlgebras()} {@code -> Type.Builder.declare -> ?lawq}), and
+     * {@link LawTable#typeLaws(Type)} serves that declaration first. The empty rec is the correct answer for a type
+     * that declares nothing: a type models exactly what is written on it, and the algebra of the /m carriers is
+     * written on them. The hook stays so the contract — and any family that still writes its carriers' laws in a
+     * table, as {@code mathInstSetLawTable} does for nat and cmplx — keeps one place to answer.
+     */
     @Override
     protected Rec typeLawsUncached(final Type type) {
-        final fURI t = type.vid().basePath();
-        // int declares its algebra where its TYPE is declared (mInstSet, Type.Builder.declare) -> ?lawq
-        if (t.equals(REAL_TID)) {
-            // real: a field — a ring where the non-zero mult elements are a group (inv = 1/x); plus the constituents
-            return rec(mutableMap(
-                    uri("field"), rec(mutableMap(
-                                    uri(ADD), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
-                                    uri(MUL), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
-                                    uri(Tokens.ZERO), real(0.0d),
-                                    uri(Tokens.ONE), real(1.0d),
-                                    uri(INV), auto_from_(INV_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst()),
-                            FIELD_THEORY_TID, null),
-                    uri("ring"), rec(mutableMap(
-                                    uri(ADD), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
-                                    uri(MUL), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
-                                    uri(Tokens.ZERO), real(0.0d),
-                                    uri(Tokens.ONE), real(1.0d)),
-                            RING_THEORY_TID, null),
-                    uri("add_group"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
-                                    uri(ID), real(0.0d),
-                                    uri(INV), auto_from_(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst()),
-                            GROUP_THEORY_TID, null),
-                    uri("mult_group"), rec(mutableMap(
-                                    uri(OP), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
-                                    uri(ID), real(1.0d),
-                                    uri(INV), auto_from_(INV_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst()),
-                            GROUP_THEORY_TID, null),
-                    uri("add_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
-                                    uri(ID), real(0.0d)),
-                            MONOID_THEORY_TID, null),
-                    uri("mult_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
-                                    uri(ID), real(1.0d)),
-                            MONOID_THEORY_TID, null)));
-        }
-        if (t.equals(BOOL_TID)) {
-            // bool: a Boolean algebra — or=join(PLUS), and=meet(MULT), not=complement — a complemented distributive
-            // lattice and a rig (idempotent semiring) with bottom=false / top=true
-            return rec(mutableMap(
-                    uri("boolean"), rec(mutableMap(
-                                    uri(OR), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
-                                    uri(AND), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
-                                    uri(NOT), auto_from_(NOT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
-                                    uri(Tokens.ZERO), bool(false),
-                                    uri(Tokens.ONE), bool(true)),
-                            BOOLEAN_THEORY_TID, null),
-                    uri("rig"), rec(mutableMap(
-                                    uri(ADD), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
-                                    uri(MUL), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
-                                    uri(Tokens.ZERO), bool(false),
-                                    uri(Tokens.ONE), bool(true)),
-                            RIG_THEORY_TID, null),
-                    uri("lattice"), rec(mutableMap(
-                                    uri(MEET), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
-                                    uri(JOIN), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
-                                    uri(BOTTOM), bool(false),
-                                    uri(TOP), bool(true)),
-                            LATTICE_THEORY_TID, null)));
-        }
-        if (t.equals(STR_TID)) {
-            // str: a monoid under concatenation (PLUS), identity ""
-            return rec(mutableMap(
-                    uri("concat_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(STR_TID).rng(STR_TID)).tryToInst(),
-                                    uri(ID), str("")),
-                            MONOID_THEORY_TID, null)));
-        }
-        if (t.equals(URI_TID)) {
-            // uri: a monoid under extension (mult), identity the empty uri <>; branch (plus) is a commutative
-            // semigroup with no identity — a/b + <> = {a/b,<>}, never a/b, so there is no zero object, only a one.
-            return rec(mutableMap(
-                    uri("mult_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                    uri(ID), uri("")),
-                            MONOID_THEORY_TID, null)));
-        }
-        if (t.equals(BYTES_TID)) {
-            // bytes: a monoid under concatenation (PLUS), identity the empty buffer
-            return rec(mutableMap(
-                    uri("concat_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID)).tryToInst(),
-                                    uri(ID), bytes(new byte[0])),
-                            MONOID_THEORY_TID, null)));
-        }
-        if (t.equals(CODE_TID)) {
-            // code: the function/stream ring — add=branch (parallel split/merge), mul=compose (serial),
-            // zero=end (the 0-function, ≡ id{0}::T), one=id (the parametric identity), inv=additive inverse (coeff −1)
-            return rec(mutableMap(
-                    uri("ring"), rec(mutableMap(
-                                    uri(ADD), auto_from_(PLUS_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
-                                    uri(MUL), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
-                                    uri(Tokens.ZERO), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
-                                    uri(Tokens.ONE), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
-                            RING_THEORY_TID, null),
-                    uri("add_group"), rec(mutableMap(
-                                    uri(OP), auto_from_(BRANCH_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
-                                    uri(ID), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
-                                    uri(INV), auto_from_(NEG_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
-                            GROUP_THEORY_TID, null),
-                    uri("mult_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
-                                    uri(ID), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
-                            MONOID_THEORY_TID, null)));
-        }
-        if (t.equals(MACH_MACHINE_TID)) {
-            // machine: the frame system is a GROUPOID — the objects are machines (frames), the morphisms are the
-            // invertible URI extensions, composition is descent (push) and its inverse is ascent (pop). The
-            // extensions are the NAMES of the morphisms, so there are infinitely many: one per address. At any
-            // one object that endomorphism monoid is FREE on the extensions, and the machine stack is one
-            // particular such structure — the groupoid of frames. Its identity is `here` (`.`), matching uri::T
-            // below, so `push … pop` reduces to the identity exactly as `a/../` does.
-            //
-            // The morphisms act on the ADDRESS, which is why the operation is bound to the uri ring's `*`
-            // (path composition): push is vid·e and pop is vid·e⁻¹, and the strict-descendant requirement is
-            // what makes e invertible — an escaping extension is not in this groupoid at all.
-            return rec(mutableMap(
-                    uri("free_groupoid"), rec(mutableMap(
-                                    uri("objects"), uri(MACH_MACHINE_TID),
-                                    uri("morphisms"), uri(URI_TID),
-                                    uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                    uri(ID), uri("."),
-                                    uri(INV), uri("..")),
-                            GROUP_THEORY_TID, null),
-                    uri("mult_monoid"), rec(mutableMap(
-                                    uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
-                                    uri(ID), uri(".")),
-                            MONOID_THEORY_TID, null)));
-        }
         return rec0();
     }
 
     private void loadInt() {
-        entry(AS_INST_TID.dom(INT_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(INT_TID), pure);
+        // NO `as` ROW HERE, AND NONE FOR int->str's OPPOSITE EITHER: int->str is the SOUND direction (print an int,
+        // read the printed str back) and DECLARES its inverse beside itself in mInsts.ints(); str->int is LOSSY
+        // ("007" -> 7 -> "7") and declares none. The pair's two rows are deleted.
         // the plus/minus pair is DERIVED: int models an add_group (op=plus, inv=neg) and minus is DEFINED as
         // plus applied to its inverted argument, so neither side's inverse is declared
-        // plus?int DECLARES its laws at its registration (Int.java, InstBuilder) -> ?lawq; no row here
-        // the ONE inverse no algebra states: int models a mult_monoid, not a group (5.div(2).mult(2) is 4)
-        entry(MULT_INST_TID.dom(INT_TID).rng(INT_TID), DIV_INST_TID.dom(INT_TID).rng(INT_TID), commutative, right_distributive, action, pure);
-        entry(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), null,
-                new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())),
-                action, pure);
+        // plus, mult and minus DECLARE their laws (and, for mult, its inverse; for minus, its defining equation)
+        // at their registration (mInsts.ints(), InstBuilder) -> ?lawq; no row here
+        // the ONE inverse no algebra states: int models a mult_monoid, not a group (5.div(2).mult(2) is 4), so
+        // mult's retraction to div is declared beside mult itself
         // no inverse: int div truncates, so x.div(a).mult(a) is not x (5.div(2).mult(2) is 4); mult's inverse is div
         // THE COMPARISONS ARE FILTERS, and a filter applies pointwise: the split axiom plus the apply axiom give
         // (a+b)c = ac + bc for it, so `right_distributive` here is TRUE in the stream ring -- not an error, and not
         // a scalar claim ((a+b) > c is not a > c or b > c). It is commented out because no DECLARED theory licenses
         // it yet, and an axiom-driven table would prune it as unlicensed; do not delete it for that reason.
         // Lemma 1 denies the law for REDUCERS, where Thm 19 gives the semi-right form (a+b)c = (ac+bc)c -- so the
-        // sum/prod rows below are the ones that need relabeling (semi_right_distributive), not these.
-        entry(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), null, monoidic, commutative, semi_right_distributive, pure);
+        // sum/prod folds are the ones that need relabeling (semi_right_distributive), not these.
     }
 
     private void loadReal() {
-        entry(AS_INST_TID.dom(REAL_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(REAL_TID), pure);
+        // `as` DECLARES ITSELF NOW: real->str is SOUND (the printed decimal reads back to the same double) and
+        // states its inverse at its registration (mInsts.reals()); str->real is LOSSY and states none. No row here.
         // real is a field, so both its group sides DERIVE their inverse pairs: plus/minus from add_group, and
-        // mult/div from mult_group (op=mult, inv=inv) together with div's definition div ≡ mult ∘ inv
-        entry(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), null,
-                new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())),
-                action, pure);
-        entry(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), null,
-                new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())),
-                right_distributive, action, pure);
+        // mult/div from mult_group (op=mult, inv=inv) together with div's definition div ≡ mult ∘ inv.
+        // minus and div DECLARE their defining equations at their registration (mInsts.reals(), InstBuilder) -> ?lawq
     }
 
     private void loadStr() {
-        entry(AS_INST_TID.dom(STR_TID).rng(BYTES_TID), AS_INST_TID.dom(BYTES_TID).rng(STR_TID), pure);
-        entry(AS_INST_TID.dom(STR_TID).rng(BOOL_TID), AS_INST_TID.dom(BOOL_TID).rng(STR_TID), pure);
-        entry(AS_INST_TID.dom(STR_TID).rng(INT_TID), AS_INST_TID.dom(INT_TID).rng(STR_TID), pure);
-        entry(AS_INST_TID.dom(STR_TID).rng(REAL_TID), AS_INST_TID.dom(REAL_TID).rng(STR_TID), pure);
-        entry(AS_INST_TID.dom(STR_TID).rng(URI_TID), AS_INST_TID.dom(URI_TID).rng(STR_TID), pure);
-        entry(SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), pure);
-        entry(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), monoidic, pure);
+        // EVERY ROW THIS METHOD CARRIED HAS RETIRED TO THE INSTRUCTIONS THEMSELVES (mInsts.strs()). str is the
+        // SOUND side of exactly ONE of its `as` pairs -- str->bytes, whose bytes are that str again -- and that
+        // direction declares its inverse beside itself; str->int/real/bool/uri are LOSSY (only SOME strs are the
+        // type: "007" -> 7 -> "7", and only a legal uri is a uri) and declare none. `split` and `merge` preserve
+        // nothing in either direction -- an empty segment does not survive the round trip -- so neither declares an
+        // inverse, and each keeps the laws its row carried: split pure, merge monoidic and pure.
     }
 
     private void loadBool() {
-        entry(AS_INST_TID.dom(BOOL_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(BOOL_TID), pure);
+        // bool->str is SOUND ("true"/"false" reads back to the same bool) and declares its inverse beside itself
+        // (mInsts.bools()); str->bool is LOSSY (false for every str that does not spell true) and declares none.
     }
 
     private void loadBytes() {
-        entry(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(BYTES_TID), pure);
+        // bytes->str is LOSSY (arbitrary bytes need not be UTF-8 text) and declares NO inverse; str->bytes is the
+        // SOUND direction and declares its inverse beside itself (mInsts.strs()).
     }
 
     private void loadUri() {
-        entry(AS_INST_TID.dom(URI_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(URI_TID), pure);
+        // uri->str is SOUND (a uri prints and the same uri parses back) and declares its inverse beside itself
+        // (mInsts.uris()); str->uri is LOSSY (only a legal uri is one) and declares none.
+        // uri->rec KEEPS ITS ROW: it is the pair's SOUND direction (a component rec reads back as its uri) and its
+        // body cannot leave Uri.UriType yet -- it calls Uri.Helper.parseQ, package-private there. rec->uri is LOSSY
+        // (only a rec of uri components survives) and its row is deleted: no row declares it any more.
         entry(AS_INST_TID.dom(URI_TID).rng(REC_TID), AS_INST_TID.dom(REC_TID).rng(URI_TID), pure);
     }
 
     private void loadLst() {
-        entry(AS_INST_TID.dom(LST_TID).rng(REC_TID), AS_INST_TID.dom(REC_TID).rng(LST_TID), pure);
+        // lst<->rec preserves nothing in EITHER direction (the round trip re-keys and reorders what it carries), so
+        // both directions declare NO inverse and neither has a row: lst->rec declares itself beside lst's
+        // operations (mInsts.lsts(), no inverse) and rec->lst does the same in mInsts.recs().
         // kmerge: the fold of the commutative monoid of sorted lsts (identity []) -- a merge of one merge is that
         // merge, and the merge order is free
         entry(KMERGE_INST_TID.dom(LST_TID.poly(InstSet.A.maybeSome()).maybeSome()).rng(LST_TID.poly(InstSet.A.maybeSome())), null, monoidic, commutative, pure);
     }
 
     private void loadRec() {
-        entry(AS_INST_TID.dom(REC_TID).rng(LST_TID), AS_INST_TID.dom(LST_TID).rng(REC_TID), pure);
-        entry(AS_INST_TID.dom(REC_TID).rng(URI_TID), AS_INST_TID.dom(URI_TID).rng(REC_TID), pure);
+        // NO `as` ROW HERE: rec->lst and rec->uri are the LOSSY directions of their pairs and declare NO inverse
+        // anywhere (mInsts.recs()). uri->rec, their sound counterpart, keeps its row in loadUri; lst->rec declares
+        // itself in mInsts.lsts() with no inverse.
     }
 
     private void loadCode() {
@@ -282,10 +156,10 @@ public final class mInstSetLawTable extends LawTable {
         entry(BRANCH_INST_TID.dom(CODE_TID).rng(CODE_TID), null, commutative, monoidic, pure);
         // the additive inverse (coeff −1): self-inverse
         entry(NEG_INST_TID.dom(CODE_TID).rng(CODE_TID), null, involution, pure);
-        // zero = end/noobj: the additive identity, absorbing in compose
         entry(END_INST_TID.dom(CODE_TID).rng(CODE_TID), null, unit, absorbing, pure);
-        // one = id: the multiplicative identity
         entry(ID_INST_TID.dom(CODE_TID).rng(CODE_TID), null, unit, idempotent, pure);
+        // zero = end/noobj: the additive identity, absorbing in compose
+        // one = id: the multiplicative identity
     }
 
     /**

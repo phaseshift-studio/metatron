@@ -18,38 +18,31 @@
 
 package studio.phaseshift.metatron.isa.m;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Law;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -70,10 +63,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * ({@code ?lawq}, staged and persisted by the set's drain). A type's algebra is declared at the type
  * ({@link mTypes}); this class declares what its OPERATIONS do.
  *
- * <p>THE MIGRATION RULE: an instruction moves here when its law-table row carried LAWS only. A row survives while
- * it carries something the builder cannot express yet — a declared {@code inverse} (int's {@code mult}→{@code div}
- * retraction, the {@code as} pairs) or a {@code derivation} (int's {@code minus}, {@code order}). Those retire when
- * {@code InstBuilder} grows {@code inverse}/{@code derivation}; the rows then delete with them.
+ * <p>THE MIGRATION RULE: an instruction moves here when its law-table row carried LAWS only — or, now that the
+ * builder states them, an {@code inverse} (int's {@code mult}→{@code div} retraction) or a {@code derivation}
+ * (int's {@code minus}, real's {@code minus}/{@code div}). A row survives while it carries a claim the builder
+ * cannot express: the {@code as} pairs, whose direction IS the claim, and a body that needs a helper its slice
+ * cannot import. Those retire as {@code InstBuilder} grows the remaining facets; the rows then delete with them.
+ * <p>BECAUSE A DECLARATION IS KEYED BY THE INSTRUCTION'S N-TID ({@code tid.dom(A).rng(B)}), a migrated entry must
+ * sit at the ROW'S OWN address ({@code tid(op).dom(A).rng(B)}): that is how the declaration is served in place of
+ * the row, and how {@link studio.phaseshift.metatron.isa.m.math.cat.LawTable#derivations()} dedupes the two
+ * forms into one rule.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -82,7 +80,9 @@ public final class mInsts {
     private mInsts() {
     }
 
-    /** {@code int::T}'s operations: the ring's own, the comparisons, and the folds. */
+    /**
+     * {@code int::T}'s operations: the ring's own, the comparisons, and the folds.
+     */
     public static Set<Inst> ints() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the int ring")
@@ -149,6 +149,13 @@ public final class mInsts {
                         .body((lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() <= inst.arg(0).intValue()).isPresent()))
                         .law(Law.poset, Law.pure)
                         .create(),
+                InstBuilder.build().tid(PROD_INST_TID, "multiply the lhs int stream into a single int")
+                        .dom(INT_TID.maybeSome(), "zero or more ints").rng(INT_TID, "a single product reduced int")
+                        .argLst().seed(jnt(1))
+                        .body((lhs, inst) -> inst.seed().jvm(lhs.stream().map(l -> l.c().isOne() ? l.intValue() : Math.powExact(l.intValue(), l.c().max().intValue())).reduce(inst.seed().intValue(), (a, b) -> a * b)))
+                        .examples("{1,2,3,4}.prod() [-- 24 --]")
+                        .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
+                        .create(),
                 InstBuilder.build().tid(ORDER_INST_TID, "order the lhs int stream in ascending order")
                         .dom(INT_TID.maybeSome(), "a stream of ints")
                         .rng(LST_TID.poly(INT_TID.maybeSome()), "the sorted lst of ints").argLst()
@@ -160,11 +167,42 @@ public final class mInsts {
                         .body((lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((studio.phaseshift.metatron.isa.m.type.Int) a).plus((studio.phaseshift.metatron.isa.m.type.Int) b)).intValue()))
                         .examples("{1,2,3,4}.sum() [-- 10 --]")
                         .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
+                        .create(),
+                // MULT AND MINUS DECLARE THE TWO RELATIONS A ROW STILL CARRIED: mult's one-way retraction to div
+                // (int models a mult_monoid, not a group — 5.div(2).mult(2) is 4) and minus's defining equation
+                // (minus ≡ plus ∘ neg), which is what lets int's add_group derive the pair instead of declaring it
+                InstBuilder.build().tid(MULT_INST_TID, "multiply the lhs int by the argument int")
+                        .dom(INT_TID, "the lhs int").rng(INT_TID, "the result of the multiplication")
+                        .argLst(INT_TYPE, "the int to multiply the lhs by")
+                        .body((lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue()))
+                        .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
+                        .inverse(DIV_INST_TID.dom(INT_TID).rng(INT_TID))
+                        .create(),
+                InstBuilder.build().tid(MINUS_INST_TID, "subtract the argument int from the lhs int")
+                        .dom(INT_TID, "the lhs int").rng(INT_TID, "the result of the subtraction")
+                        .argLst(INT_TYPE, "the int to subtract from the lhs")
+                        .body((lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue()))
+                        .derivation(new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())))
+                        .law(Law.action, Law.pure)
+                        .create(),
+                // THE as PAIR, DECLARED BESIDE ITS INSTRUCTIONS (the human's ruling): int->str is the SOUND
+                // direction -- print an int, read the printed str back, and the value returns (42 -> "42" -> 42) --
+                // so it declares the opposing edge. str->int is LOSSY: every int renders, but only SOME strs read
+                // back ("007" -> 7 -> "7"), so it declares NO inverse. The pair's law-table rows are deleted; the
+                // one claim that survives is the sound one, stated here.
+                InstBuilder.build().tid(AS_INST_TID, "print the lhs int into a str")
+                        .dom(INT_TID, "the int to convert").rng(STR_TID, "the lhs int as a str")
+                        .argLst(STR_TYPE, "the str type that receives the value")
+                        .body((lhs, inst) -> str(lhs.intValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
+                        .inverse(AS_INST_TID.dom(STR_TID).rng(INT_TID))
                         .create()
         ));
     }
 
-    /** {@code real::T}'s operations: the field's own, the comparisons, and the folds. */
+    /**
+     * {@code real::T}'s operations: the field's own, the comparisons, and the folds.
+     */
     public static Set<Inst> reals() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(GT_INST_TID, "check whether the lhs real is greater than the argument real")
@@ -251,11 +289,40 @@ public final class mInsts {
                         .argLst(T(REAL_TID), "the exponent real")
                         .body((lhs, inst) -> real(Math.pow(lhs.realValue(), inst.arg(0).realValue())))
                         .law(Law.pure)
+                        .create(),
+                // DIV AND MINUS DECLARE THEIR DEFINING EQUATIONS, which is what lets real's field (and its
+                // add_group) derive the inverse pairs instead of a row declaring them: div ≡ mult ∘ inv,
+                // minus ≡ plus ∘ neg. The carrier states the group; the equation states which instruction it is.
+                InstBuilder.build().tid(DIV_INST_TID, "a quotient function \\(f(x, y) \\nearrow x/y\\): the lhs real divided by the rhs real")
+                        .dom(REAL_TID, "a real").rng(REAL_TID, "the quotient")
+                        .argLst(T(REAL_TID), "the rhs real")
+                        .body((lhs, inst) -> lhs.asReal().div(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
+                        .derivation(new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())))
+                        .law(Law.right_distributive, Law.action, Law.pure)
+                        .create(),
+                InstBuilder.build().tid(MINUS_INST_TID, "a difference function \\(f(x, y) \\nearrow x - y\\): the rhs real subtracted from the lhs real")
+                        .dom(REAL_TID, "a real").rng(REAL_TID, "the difference")
+                        .argLst(T(REAL_TID), "the rhs real")
+                        .body((lhs, inst) -> lhs.asReal().minus(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
+                        .derivation(new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())))
+                        .law(Law.action, Law.pure)
+                        .create(),
+                // real->str is SOUND (the printed decimal reads back to the same double), so it declares the
+                // opposing edge; str->real is LOSSY (real's printing is not injective over every str it accepts,
+                // and only some strs are reals at all), so it declares none.
+                InstBuilder.build().tid(AS_INST_TID, "print the lhs real into a str")
+                        .dom(REAL_TID, "the real to convert").rng(STR_TID, "the lhs real as a str")
+                        .argLst(STR_TYPE, "the str type that receives the value")
+                        .body((lhs, inst) -> str(String.valueOf(lhs.realValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
+                        .inverse(AS_INST_TID.dom(STR_TID).rng(REAL_TID))
                         .create()
         ));
     }
 
-    /** {@code bool::T}'s operations: the Boolean algebra's join, meet and complement. */
+    /**
+     * {@code bool::T}'s operations: the Boolean algebra's join, meet and complement.
+     */
     public static Set<Inst> bools() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(PLUS_INST_TID, "the disjunction (or) of the lhs bool and the argument bool")
@@ -275,11 +342,23 @@ public final class mInsts {
                         .argLst()
                         .body((lhs, inst) -> lhs.jvm(!lhs.boolValue()))
                         .law(Law.involution, Law.pure)
+                        .create(),
+                // bool->str is SOUND ("true"/"false" reads back to the same bool), so it declares the opposing
+                // edge; str->bool is LOSSY (it answers false for every str that does not spell true), so it
+                // declares none.
+                InstBuilder.build().tid(AS_INST_TID, "print the lhs bool into a str")
+                        .dom(BOOL_TID, "the bool to convert").rng(STR_TID, "the lhs bool as a str")
+                        .argLst(STR_TYPE, "the str type that receives the value")
+                        .body((lhs, inst) -> str(lhs.boolValue() ? "true" : "false", inst.arg(0).vidOrTid(), lhs.vid()))
+                        .law(Law.pure)
+                        .inverse(AS_INST_TID.dom(STR_TID).rng(BOOL_TID))
                         .create()
         ));
     }
 
-    /** {@code bytes::T}'s operations: the monoid's identity and its append. */
+    /**
+     * {@code bytes::T}'s operations: the monoid's identity and its append.
+     */
     public static Set<Inst> bytess() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the bytes monoid — the empty byte sequence")
@@ -292,11 +371,22 @@ public final class mInsts {
                         .argLst(T(BYTES_TID), "the bytes to append to the lhs")
                         .body((lhs, inst) -> lhs.<studio.phaseshift.metatron.isa.m.type.Bytes>as().plus(inst.arg(0).as()))
                         .law(Law.monoidic, Law.pure)
+                        .create(),
+                // str->bytes is SOUND (the bytes of a str are a str again: the UTF-8 round trip holds for every
+                // str), so str's side of the pair declares the opposing edge; bytes->str is LOSSY (arbitrary
+                // bytes need not be UTF-8 text), so this side declares none.
+                InstBuilder.build().tid(AS_INST_TID, "read the lhs bytes as a utf-8 str")
+                        .dom(BYTES_TID, "the bytes to convert").rng(STR_TID, "the lhs bytes as a str")
+                        .argLst(STR_TYPE, "the str type that receives the value")
+                        .body((lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
                         .create()
         ));
     }
 
-    /** {@code str::T}'s operations: the monoid's identity and concatenation, the lexicographic comparisons, reverse, and case. */
+    /**
+     * {@code str::T}'s operations: the monoid's identity and concatenation, the lexicographic comparisons, reverse, and case.
+     */
     public static Set<Inst> strs() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the characters of the lhs str")
@@ -355,11 +445,71 @@ public final class mInsts {
                         .dom(STR_TID, "the lhs str").rng(STR_TID, "the lower-cased str").argLst()
                         .body((lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase()))
                         .law(Law.idempotent, Law.pure)
+                        .create(),
+                // THE FIVE as PAIRS STR IS ON, DECLARED BESIDE THEIR INSTRUCTIONS (the human's ruling). str is the
+                // SOUND side of exactly one: str->bytes, whose bytes read back as the same str -- that direction
+                // declares the opposing edge. Its other four are LOSSY (a str is not the type it names: only SOME
+                // strs parse as an int/real, only the two spellings read back as a bool, and only a legal uri is a
+                // uri), so they declare no inverse at all. Every row that used to claim otherwise is deleted.
+                InstBuilder.build().tid(AS_INST_TID, "read the bytes of the lhs str")
+                        .dom(STR_TID, "the str to convert").rng(BYTES_TID, "the lhs str as bytes")
+                        .argLst(BYTES_TYPE, "the bytes type that receives the value")
+                        .body((lhs, inst) -> bytes(ByteBuffer.wrap(lhs.strValue().getBytes()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
+                        .inverse(AS_INST_TID.dom(BYTES_TID).rng(STR_TID))
+                        .create(),
+                InstBuilder.build().tid(AS_INST_TID, "read the lhs str as a bool — true when it spells true")
+                        .dom(STR_TID, "the str to convert").rng(BOOL_TID, "the lhs str as a bool")
+                        .argLst(BOOL_TYPE, "the bool type that receives the value")
+                        .body((lhs, inst) -> bool(lhs.strValue().equalsIgnoreCase("true"), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(AS_INST_TID, "read the lhs str as an int")
+                        .dom(STR_TID, "the str to convert").rng(INT_TID, "the lhs str as an int")
+                        .argLst(INT_TYPE, "the int type that receives the value")
+                        .body((lhs, inst) -> {
+                            final String lhsString = lhs.toCleanString().trim();
+                            try {
+                                return jnt(Long.parseLong(lhsString), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid());
+                            } catch (final NumberFormatException e) {
+                                return ObjmtronSerializer.parse(lhsString);
+                            }
+                        })
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(AS_INST_TID, "read the lhs str as a real")
+                        .dom(STR_TID, "the str to convert").rng(REAL_TID, "the lhs str as a real")
+                        .argLst(REAL_TYPE, "the real type that receives the value")
+                        .body((lhs, inst) -> real(Double.parseDouble(lhs.strValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(AS_INST_TID, "read the lhs str as a uri")
+                        .dom(STR_TID, "the str to convert").rng(URI_TID, "the lhs str as a uri")
+                        .argLst(URI_TYPE, "the uri type that receives the value")
+                        .body((lhs, inst) -> uri(f(lhs.strValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
+                        .create(),
+                // SPLIT AND MERGE ARE NOT PRESERVING IN EITHER DIRECTION -- an empty segment (a trailing token, an
+                // empty field) does not survive the round trip -- so neither direction declares an inverse. Their
+                // laws are the ones their rows carried: split is pure, merge is the monoid's own op and pure.
+                InstBuilder.build().tid(SPLIT_INST_TID, "split the lhs string according to the token arg and insert components into an ordered lst")
+                        .dom(STR_TID, "a str to split").rng(LST_TID, "lst encoded components of the split lhs str")
+                        .argLst(STR_TYPE, "a token to split on")
+                        .body((lhs, inst) -> Arrays.stream(CommonUtil.splitSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.strValue())).map(MStr::str).collect(new CommonUtil.LstCollector()))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(MERGE_INST_TID, "join the barrier given the str arg")
+                        .dom(STR_TID.maybeSome(), "an str barrier").rng(STR_TID, "the join of the str barrier")
+                        .argLst(STR_TYPE, "the join token")
+                        .body((lhs, inst) -> str(lhs.stream().map(Obj::<String>jvmAs).reduce((a, b) -> a + inst.arg(0).strValue() + b).orElse("")))
+                        .law(Law.monoidic, Law.pure)
                         .create()
         ));
     }
 
-    /** {@code uri::T}'s operations: the path ring, the component accessors, and the folds. */
+    /**
+     * {@code uri::T}'s operations: the path ring, the component accessors, and the folds.
+     */
     public static Set<Inst> uris() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the path of the lhs uri")
@@ -506,11 +656,23 @@ public final class mInsts {
                             ), lhs.tid(), lhs.vid());
                         })
                         .law(Law.pure)
+                        .create(),
+                // uri->str is SOUND (a uri prints and the same uri parses back), so it declares the opposing edge;
+                // str->uri is LOSSY (only a legal uri is one; any other str is merely a str), so str's side
+                // declares none.
+                InstBuilder.build().tid(AS_INST_TID, "print the lhs uri into a str")
+                        .dom(URI_TID, "the uri to convert").rng(STR_TID, "the lhs uri as a str")
+                        .argLst(STR_TYPE, "the str type that receives the value")
+                        .body((lhs, inst) -> str(lhs.uriValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                        .law(Law.pure)
+                        .inverse(AS_INST_TID.dom(STR_TID).rng(URI_TID))
                         .create()
         ));
     }
 
-    /** {@code lst::T}'s operations: the slot monoid, the selectors, and the folds. */
+    /**
+     * {@code lst::T}'s operations: the slot monoid, the selectors, and the folds.
+     */
     public static Set<Inst> lsts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the slots of the lhs lst")
@@ -636,11 +798,22 @@ public final class mInsts {
                             return lhs.jvm(l);
                         })
                         .law(Law.pure)
+                        .create(),
+                // lst<->rec IS NOT PRESERVING IN EITHER DIRECTION -- a pair maps to a rel and a lst of rels maps to
+                // a rec, but the round trip reorders and re-keys what it carries -- so neither direction declares
+                // an inverse. The lossy claim its row made is deleted with the row.
+                InstBuilder.build().tid(AS_INST_TID, "convert the lhs lst into the rec the argument rec type constructs")
+                        .dom(LST_TID, "the lst to convert").rng(REC_TID, "the lhs lst as the argument's rec type")
+                        .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")
+                        .body((lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), null))
+                        .law(Law.pure)
                         .create()
         ));
     }
 
-    /** {@code rec::T}'s operations: the record's merge, its entries, the reads, and the folds. */
+    /**
+     * {@code rec::T}'s operations: the record's merge, its entries, the reads, and the folds.
+     */
     public static Set<Inst> recs() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(AS_INST_TID, "convert an inst into the rec the argument rec type constructs")
@@ -659,6 +832,40 @@ public final class mInsts {
                         .dom(STR_TID, "the str to convert").rng(REC_TID, "the lhs str as the argument's rec type")
                         .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")
                         .body((lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid()))
+                        .law(Law.pure)
+                        .create(),
+                // rec<->lst IS NOT PRESERVING IN EITHER DIRECTION (the round trip re-keys and reorders), and
+                // rec->uri is LOSSY TOO (only the component entries a uri can hold survive; any other rec does not
+                // read back). Both declare NO inverse. uri->rec, the sound side of the uri pair, keeps its row
+                // until its body can leave Uri.UriType (it calls Uri.Helper.parseQ, package-private there).
+                InstBuilder.build().tid(AS_INST_TID, "convert the lhs rec into the lst the argument lst type constructs")
+                        .dom(REC_TID, "the rec to convert").rng(LST_TID, "the lhs rec as the argument's lst type")
+                        .argLst(LST_TYPE, "the lst type whose constructor is applied to the lhs")
+                        .body((lhs, inst) -> Poly.Helper.transformRecToLst(lhs.asRec(), inst.arg(0).vidOrTid(), null))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(AS_INST_TID, "convert the lhs rec into the uri its component entries describe")
+                        .dom(REC_TID, "the rec to convert").rng(URI_TID, "the lhs rec as a uri")
+                        .argLst(URI_TYPE, "the uri type that receives the value")
+                        .body((lhs, inst) -> {
+                            final Rec lhsRec = lhs.asRec();
+                            fURI furi = fURI.Singleton.empty();
+                            if (lhsRec.has(SCHEME))
+                                furi = furi.scheme(lhsRec.at(SCHEME).asUri().uriValue().toString());
+                            if (lhsRec.has(f(SUB)))
+                                return uri(lhsRec.at(SUB).uriValue().subdomain());
+                            if (lhsRec.has(HOST))
+                                furi = furi.host(lhsRec.at(HOST).asUri().uriValue().toString());
+                            if (lhsRec.has(PORT))
+                                furi = furi.port(lhsRec.at(PORT).asInt().intValue().intValue());
+                            if (lhsRec.has(PATH))
+                                furi = furi.path(lhsRec.at(PATH).asLst().elements().map(Obj::uriValue).map(fURI::toString).filter(s -> !s.isEmpty()).collect(Collectors.joining("/")));
+                            if (lhsRec.has(COEFF))
+                                furi = furi.c(cInt.of(cInt.of(lhsRec.at("c/min").asInt().intValue(), lhsRec.at("c/max").asInt().intValue()).toString()));
+                            if (lhsRec.has(QPROC))
+                                furi = furi.q(lhsRec.at(QPROC).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().isNothing() ? "" : e.second().toCleanString())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
+                            return uri(furi, inst.arg(0).vidOrTid(), null);
+                        })
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the rec monoid")
@@ -771,7 +978,9 @@ public final class mInsts {
         ));
     }
 
-    /** {@code code::T}'s operations: composition, the branch, and the two conversions. */
+    /**
+     * {@code code::T}'s operations: composition, the branch, and the two conversions.
+     */
     public static Set<Inst> codes() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(AS_INST_TID, "convert a code into the lst of its insts")
@@ -796,6 +1005,30 @@ public final class mInsts {
                             return MCode.code(insts);
                         })
                         .law(Law.monoidic, Law.pure)
+                        .create(),
+                InstBuilder.build().tid(END_INST_TID, "the terminal instruction yielding noobj")
+                        .dom(CODE_TID, "the lhs code").rng(CODE_TID.zero())
+                        .body((lhs, inst) -> {
+                            final List<Inst> insts = new ArrayList<>(lhs.codeValue());
+                            insts.add(end_().tryToInst().asInst());
+                            return lhs.jvm(insts);
+
+                        })
+                        .law(Law.absorbing, Law.pure, Law.unit)
+                        .create(),
+                InstBuilder.build().tid(ID_INST_TID, "the identity instruction")
+                        .dom(CODE_TID, "the lhs code").rng(CODE_TID)
+                        .body((lhs, inst) -> {
+                            final List<Inst> insts = new ArrayList<>(lhs.codeValue());
+                            insts.add(id_().tryToInst().asInst());
+                            return lhs.jvm(insts);
+                        })
+                        .law(Law.idempotent, Law.pure, Law.unit)
+                        .create(),
+                InstBuilder.build().tid(NEG_INST_TID, "the negation of code inverts its coefficient")
+                        .dom(CODE_TID, "the lhs code").rng(CODE_TID)
+                        .body((lhs, _) -> lhs.c(cInt::neg))
+                        .law(Law.involution, Law.pure, Law.unit)
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "branch two codes in parallel, the results as their coefficient sum")
                         .dom(CODE_TID, "the lhs code").rng(CODE_TID, "the branch of the two codes")

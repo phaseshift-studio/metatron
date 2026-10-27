@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -338,6 +339,124 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
+     * AN INVERSE IS A ROW OF ITS OWN — the declared opposing edge is a relation beside the process laws, not a law,
+     * so an instruction stating only an inverse must still be staged and drained (the builder used to drop a
+     * declaration whose law list was empty). The carrier's algebra states no inverse of this instruction, so the
+     * declared edge is the one served.
+     */
+    @Test
+    void testInstBuilderDeclaresInverse() {
+        final fURI opposing = DIV_INST_TID.dom(INT_TID).rng(INT_TID);
+        final Inst built = InstBuilder.build()
+                .tid(f("/m/inst/built_inverse_test"))
+                .dom(INT_TID).rng(INT_TID)
+                .argLst(jnt(1))
+                .body((lhs, inst) -> lhs)
+                .inverse(opposing)
+                .create();
+        InstBuilder.drain(built);
+        final LawTable.Entry served = LawTable.lawsOf(built.tid());
+        assertNotNull(served, "an inst declaring only an inverse is served without a table row");
+        assertEquals(opposing, served.inverse(), "the declared inverse answers the lookup");
+        assertEquals(0, served.laws().count(), "no law was declared, so the served list is empty");
+        // the address is stored AS an address, and a facet that was never declared is omitted
+        final Rec declaration = QCollection.lawOf(built).asRec();
+        assertEquals(opposing, declaration.atDirect(uri(INVERSE)).uriValue(), "the inverse is stored as an address");
+        assertTrue(declaration.atDirect(uri(LAW)).isNoObj(), "an undeclared law list is omitted, not written empty");
+    }
+
+    /**
+     * A DEFINITION IS A ROW OF ITS OWN — the defining equation is likewise a relation beside the process laws, so an
+     * instruction stating only a derivation must be staged, drained and served. The pair here defines a FOLD
+     * ({@code count ↦ map(1)·sum}), which is the harmless case: no group operation of the carrier appears in it, so
+     * the carrier's algebra states nothing over the equation and the served derivation is exactly the one written.
+     */
+    @Test
+    void testInstBuilderDeclaresDerivation() {
+        final Code lhs = ObjmtronSerializer.parse("start(A).count()");
+        final Code rhs = ObjmtronSerializer.parse("start(A).map(1).sum()");
+        final Inst built = InstBuilder.build()
+                .tid(f("/m/inst/built_derivation_test"))
+                .dom(INT_TID.maybeSome()).rng(INT_TID)
+                .argLst()
+                .body((lhsObj, inst) -> lhsObj)
+                .derivation(new Derivation(lhs, rhs))
+                .create();
+        InstBuilder.drain(built);
+        final LawTable.Entry served = LawTable.lawsOf(built.tid());
+        assertNotNull(served, "an inst declaring only a derivation is served without a table row");
+        assertNotNull(served.derivation(), "the declared derivation answers the lookup");
+        assertEquals(lhs.toString(), served.derivation().lhs().toString(), "the lhs round-trips through ?lawq");
+        assertEquals(rhs.toString(), served.derivation().rhs().toString(), "the rhs round-trips through ?lawq");
+        // only the declared facets are written: the equation is a rec of code::T values, and no inverse key exists
+        final Rec declaration = QCollection.lawOf(built).asRec();
+        assertEquals(rhs.toString(), declaration.atDirect(uri(DERIVATION)).asRec().atDirect(uri(RHS)).toString(),
+                "the equation is stored as its lhs/rhs code values");
+        assertTrue(declaration.atDirect(uri(INVERSE)).isNoObj(), "an undeclared facet is omitted, not written");
+        // an EXISTING fold's combiner is untouched by this declaration: count still recombines through sum
+        final Call count = ObjmtronSerializer.parse("count?int<=#{*}()");
+        final Call combiner = LawTable.combiner(count.tryToInst().asInst());
+        assertNotNull(combiner, "an existing fold still has a combiner");
+        assertEquals(SUM_INST_TID, combiner.asInst().tid().basePath(), "count still recombines through sum");
+    }
+
+    /**
+     * A DECLARED DEFINITION IS A REWRITE RULE — {@link LawTable#derivations()} (the list {@code derivation_contraction}
+     * applies) must union the in-code rows with the equations instructions declare beside themselves, or a row
+     * migrated to the builder would silently stop contracting. The definition declared here is deliberately INERT:
+     * its rhs names instructions no chain contains, so the rule can never fire on another test's code and this test
+     * is about the list, not the rewrite.
+     * <p>
+     * The second half is the migration window — the same equation written in a row AND beside the instruction. That
+     * is one rule, not two, which is why the identity is the address the definition is declared at.
+     */
+    @Test
+    void testDeclaredDerivationReachesTheDerivationsList() {
+        // a synthetic declaration DUPLICATES THE WHOLE SERVED ENTRY, not only the facet under test: the ?lawq rec
+        // it writes REPLACES the inst's real declaration, so a partial copy would silently change the served row —
+        // and the migrated rows (mod, int's minus) now get their laws from ?lawq alone, with no row restating them
+        final Code lhs = ObjmtronSerializer.parse("start(A).mod(B)");
+        final Code rhs = ObjmtronSerializer.parse("start(A).siftveil(B).quarrymark()");
+        final fURI mod = MOD_INST_TID.dom(INT_TID).rng(INT_TID);
+        final Law[] modLaws = LawTable.lawsOf(mod).laws().lstValue().stream()
+                .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
+        final Inst built = InstBuilder.build()
+                .tid(MOD_INST_TID)
+                .dom(INT_TID).rng(INT_TID)
+                .argLst(INT_TYPE)
+                .body((lhsObj, inst) -> lhsObj)
+                .law(modLaws)
+                .derivation(new Derivation(lhs, rhs))
+                .create();
+        InstBuilder.drain(built);
+        assertTrue(QCollection.lawOf(built).asRec().atDirect(uri(DERIVATION)).isRec(),
+                "the definition reaches ?lawq beside the registered inst");
+        assertTrue(LawTable.derivations().stream().anyMatch(d -> d.lhs().toString().equals(lhs.toString())),
+                "a declared definition feeds the rewrite list, got " + LawTable.derivations());
+        // the SAME equation lives in a row (int's minus) and now also beside the instruction: it must count once
+        final fURI minus = MINUS_INST_TID.dom(INT_TID).rng(INT_TID);
+        final LawTable.Entry minusEntry = LawTable.lawsOf(minus);
+        assertNotNull(minusEntry, "int's minus carries its declaration");
+        final Derivation rowed = minusEntry.derivation();
+        assertNotNull(rowed, "int's minus carries its defining equation");
+        final Law[] minusLaws = minusEntry.laws().lstValue().stream()
+                .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
+        final long before = LawTable.derivations().stream()
+                .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count();
+        InstBuilder.drain(InstBuilder.build()
+                .tid(MINUS_INST_TID)
+                .dom(INT_TID).rng(INT_TID)
+                .argLst(INT_TYPE)
+                .body((lhsObj, inst) -> lhsObj)
+                .law(minusLaws)
+                .derivation(rowed)
+                .create());
+        assertEquals(before, LawTable.derivations().stream()
+                        .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count(),
+                "the declared copy of a row's equation is deduped, not added");
+    }
+
+    /**
      * THE TYPE BUILDER DECLARES THE ALGEBRA — {@code Type.Builder.law(...)} stages the theory instances and the
      * instset persists them to {@code ?lawq} as soon as its space is mounted (a type is built before that, which
      * is why the write cannot happen at {@code create()} time). Read back through {@code lawOf}.
@@ -455,6 +574,49 @@ public class catInstSetTest extends AbstractInstSetTest {
                 "imperial declares no algebra, so its plus has no row and licenses nothing");
         assertTrue(LawTable.typeLawsOf(T(f("imperial"))).jvm().isEmpty(), "imperial models no theory");
         assertFalse(LawTable.typeLawsOf(nat).jvm().isEmpty(), "nat models a rig (it declares one)");
+    }
+
+    /**
+     * EVERY CARRIER SHIPS ITS ALGEBRA — the guard that a carrier cannot quietly lose it.
+     * <p>
+     * The base carriers declare their theory instances at the TYPE ({@code mTypes.declareAlgebras()}), staged
+     * through {@code Type.Builder.declare} and persisted to {@code ?lawq} by the drain that runs when {@code /m}
+     * mounts; {@link LawTable#typeLawsOf(Type)} serves the declaration. The table's in-code branches were the old
+     * source and are gone ({@code mInstSetLawTable#typeLawsUncached} answers {@code rec0()}), so a declaration that
+     * stops being staged, or stops being drained, leaves the carrier with NO algebra — which is exactly what these
+     * assertions read. The instance keys are the ones the moved declarations write; asserting a name per carrier is
+     * what makes a field renamed or an {@code auto_from_} pointer that no longer resolves a failure here rather
+     * than a silently weaker rewrite policy elsewhere.
+     * <p>
+     * {@code lst::T} and {@code rec::T} declare no algebra — neither ever had a branch — so neither is asserted:
+     * a type with no declaration gets none.
+     */
+    @Test
+    void testEveryCarrierShipsItsAlgebra() {
+        assertCarrierDeclares(INT_TYPE, "ring", "add_group", "add_monoid", "mult_monoid");
+        assertCarrierDeclares(REAL_TYPE, "field", "ring", "add_group", "mult_group", "add_monoid", "mult_monoid");
+        assertCarrierDeclares(BOOL_TYPE, "boolean", "rig", "lattice");
+        assertCarrierDeclares(STR_TYPE, "concat_monoid");
+        assertCarrierDeclares(URI_TYPE, "mult_monoid");
+        assertCarrierDeclares(BYTES_TYPE, "concat_monoid");
+        assertCarrierDeclares(CODE_TYPE, "ring", "add_group", "mult_monoid");
+        // the machine's algebra is declared with the /m carriers although its type is mach's (machInstSet builds it)
+        assertCarrierDeclares(T(f("/m/mach/machine")), "free_groupoid", "mult_monoid");
+    }
+
+    /**
+     * A carrier declares the given theory instances — and the /m table no longer restates any of them.
+     */
+    private static void assertCarrierDeclares(final Type carrier, final String... instanceNames) {
+        final Rec laws = LawTable.typeLawsOf(carrier);
+        assertFalse(laws.jvm().isEmpty(), carrier.vid() + " declares its algebra, got the empty rec");
+        final Set<String> declared = laws.jvm().keySet().stream()
+                .map(key -> key.uriValue().name()).collect(Collectors.toSet());
+        for (final String instanceName : instanceNames)
+            assertTrue(declared.contains(instanceName),
+                    carrier.vid() + " models " + instanceName + ", declared: " + declared);
+        assertTrue(mInstSetLawTable.INSTANCE.typeLawsUncached(carrier).jvm().isEmpty(),
+                carrier.vid() + " is served by its ?lawq declaration, not restated by the table");
     }
 
     /**
