@@ -43,6 +43,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -1603,4 +1604,24 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
     }
 
+
+    /**
+     * A SPACE ROUTES A VID THROUGH ITS {@code route} TABLE — a server's {@code [/ => <fs:/home/user>, /mcp =>
+     * mcp_mtron]}, a space's scheme mapping. The table is read in rec order, and several keys can match one vid:
+     * {@code /} matches everything, {@code /mcp} matches {@code /mcp/…}.
+     * <p>
+     * THE MOST SPECIFIC MATCH MUST WIN: routing is a longest-key match, not "whichever the rec happened to iterate
+     * first", or a catch-all registered before a specific route silently swallows it.
+     */
+    @Test
+    void testTheMostSpecificRouteWinsRegardlessOfInsertionOrder() {
+        final Map<Uri, Obj> routes = new LinkedHashMap<>();
+        routes.put(uri("/"), uri("/srv/root"));     // the catch-all, registered FIRST -- the usual layout
+        routes.put(uri("/mcp"), uri("/srv/mcp"));
+
+        assertEquals(uri("/srv/mcp/q").uriValue(), Space.Helper.routeFromSpace(f("/mcp/q"), routes),
+                "/mcp is more specific than / and must win over insertion order");
+        assertEquals(uri("/srv/root/x/y").uriValue(), Space.Helper.routeFromSpace(f("/x/y"), routes),
+                "the catch-all still serves what only it matches");
+    }
 }
