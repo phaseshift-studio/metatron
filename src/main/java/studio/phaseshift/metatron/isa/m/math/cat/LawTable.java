@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -38,9 +39,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static studio.phaseshift.metatron.Tokens.DERIVATION;
 import static studio.phaseshift.metatron.Tokens.INV;
+import static studio.phaseshift.metatron.Tokens.INVERSE;
 import static studio.phaseshift.metatron.Tokens.LAW;
+import static studio.phaseshift.metatron.Tokens.LHS;
 import static studio.phaseshift.metatron.Tokens.OP;
+import static studio.phaseshift.metatron.Tokens.RHS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
@@ -162,13 +167,11 @@ public abstract class LawTable {
     public final Entry lookup(final fURI instTid) {
         final Entry declared = this.row(instTid);
         if (null == declared) {
-            // NO ROW: the instruction may DECLARE its laws itself (InstBuilder -> ?lawq). Declared at the inst,
-            // stored beside it, and answered here -- the table is the fallback, not the source.
-            final Obj fromLawq = lawOf(instTid);
-            if (fromLawq.isRec() && fromLawq.asRec().has(uri(LAW)))
-                // the LAWS are declared at the instruction; the INVERSE is still the contract carrier's algebra
-                return this.computed(instTid, new Entry(fromLawq.asRec().at(uri(LAW)).asLst(), null, null));
-            return null;
+            // NO ROW: the instruction may DECLARE its law row itself (InstBuilder -> ?lawq). Declared at the inst,
+            // stored beside it, and answered here -- the table is the fallback, not the source. The declared LAWS
+            // are the instruction's; the INVERSE is still one the carrier's algebra may derive (see computed).
+            final Entry fromLawq = declaredEntry(lawOf(instTid));
+            return null == fromLawq ? null : this.computed(instTid, fromLawq);
         }
         // a derivation is reading the carrier's law block, which may itself consult this table: answer the
         // declaration while that read is in flight (never cache it), so the read cannot re-enter here
@@ -195,6 +198,41 @@ public abstract class LawTable {
             if (e.getKey().basePath().equals(instTid.basePath()) && isUniversal(e.getKey().dom()))
                 return e.getValue();
         return null;
+    }
+
+    /**
+     * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF ({@code ?lawq}, written by {@code InstBuilder.drain}): its
+     * process laws, its inverse and its defining equation, each read only when the rec carries it. An undeclared
+     * facet is null (an absent laws list is the empty list, since a row with no laws still declares its
+     * relations), and a rec declaring nothing is null rather than an empty claim — the table's row is then the
+     * only source.
+     */
+    private static Entry declaredEntry(final Obj fromLawq) {
+        if (!fromLawq.isRec())
+            return null;
+        final Rec declaration = fromLawq.asRec();
+        // read as an ADDRESS, never as a value: at(...) auto-resolves and would follow the inverse edge into the
+        // instruction it names instead of answering which instruction it is
+        final fURI inverse = TheoryHelper.roleAddress(declaration, INVERSE);
+        final Derivation derivation = declaredDerivation(declaration);
+        final Obj lawLst = declaration.atDirect(uri(LAW));
+        if (!lawLst.isLst() && null == inverse && null == derivation)
+            return null;
+        return new Entry(lawLst.isLst() ? lawLst.asLst() : lst(), inverse, derivation);
+    }
+
+    /**
+     * The defining equation a declaration carries — the lhs and rhs stored as {@code code::T} — or null when the
+     * rec holds none. A half-written derivation answers no derivation: it states no equation, and a rewrite run
+     * off half of one would be a guess.
+     */
+    private static Derivation declaredDerivation(final Rec declaration) {
+        final Obj derivation = declaration.atDirect(uri(DERIVATION));
+        if (!derivation.isRec())
+            return null;
+        final Obj lhs = derivation.asRec().atDirect(uri(LHS));
+        final Obj rhs = derivation.asRec().atDirect(uri(RHS));
+        return lhs.isCode() && rhs.isCode() ? new Derivation(lhs.asCode(), rhs.asCode()) : null;
     }
 
     /**
@@ -322,11 +360,17 @@ public abstract class LawTable {
 
     /**
      * The instruction over {@code tid}'s carrier that is DEFINED as {@code op} applied to its inverted argument —
-     * the instruction whose inverse is {@code op}. Null when the table declares none.
+     * the instruction whose inverse is {@code op}. Null when nothing declares one.
+     * <p>
+     * BOTH PLACES A DEFINITION CAN LIVE ARE READ — the in-code rows and the equations instructions declare beside
+     * themselves ({@link #declaredDerivations}). A sibling that migrated to {@code ?lawq} is still the SAME claim
+     * about the same instruction, so a carrier that names the defining composition must find it there too: without
+     * this, migrating {@code div}'s row would silently strip {@code mult}'s inverse ({@code mult}→{@code div} is a
+     * consequence of {@code mult_group} plus {@code div ≡ mult ∘ inv}, and the equation is the half that migrated).
      */
     private fURI inverseForm(final fURI tid, final fURI op, final fURI inv) {
-        for (final Map.Entry<fURI, Entry> entry : this.table.entrySet())
-            if (sameCarrier(entry.getKey(), tid) && defined(entry.getValue().derivation(), op, inv))
+        for (final Map.Entry<fURI, Derivation> entry : declaredDerivations().entrySet())
+            if (sameCarrier(entry.getKey(), tid) && defined(entry.getValue(), op, inv))
                 return entry.getKey();
         return null;
     }
@@ -424,12 +468,11 @@ public abstract class LawTable {
             final Entry row = table.row(contract.tid());
             if (null != row)
                 return new Declared(contract.tid(), table.algebraic(contract.tid(), row, operand));
-            // NO ROW: the instruction declares its own laws beside it (?lawq, via InstBuilder). The LAWS are the
+            // NO ROW: the instruction declares its own law row beside it (?lawq, via InstBuilder). The LAWS are the
             // instruction's, the INVERSE is still the operand's algebra -- so the pair is derived, not declared.
-            final Obj fromLawq = lawOf(contract.tid());
-            if (fromLawq.isRec() && fromLawq.asRec().has(uri(LAW)))
-                return new Declared(contract.tid(), table.algebraic(contract.tid(),
-                        new Entry(fromLawq.asRec().at(uri(LAW)).asLst(), null, null), operand));
+            final Entry fromLawq = declaredEntry(lawOf(contract.tid()));
+            if (null != fromLawq)
+                return new Declared(contract.tid(), table.algebraic(contract.tid(), fromLawq, operand));
         }
         return owner.exact(base, operand);             // the op is not in the registry: the exact row, unchanged
     }
@@ -750,14 +793,48 @@ public abstract class LawTable {
     }
 
     /**
-     * All registered derivations across every table — the composition rules (lhs ↦ rhs) a rewrite can apply.
+     * ALL DERIVATIONS A REWRITE CAN APPLY — the values of {@link #declaredDerivations}, in declaration order (the
+     * in-code rows first, then the equations instructions declare beside themselves).
      */
     public static List<Derivation> derivations() {
-        final List<Derivation> out = new ArrayList<>();
+        return new ArrayList<>(declaredDerivations().values());
+    }
+
+    /**
+     * EVERY defining equation, keyed by the ADDRESS it is declared at — the in-code rows of every registered table
+     * united with the equations instructions declare beside themselves ({@code ?lawq}, written by {@code InstBuilder}),
+     * because a definition is the instruction's claim and a row is only where it has lived so far. Without the second
+     * half a migrated row would leave the language: {@code derivation_contraction} reads {@link #derivations}, and
+     * {@link #inverseForm} reads it to find the sibling a carrier's group names — so a rule no row restates would
+     * silently stop contracting, and an inverse no row restates would stop being served.
+     * <p>
+     * A definition stated BOTH ways is ONE rule, and the migration window is exactly that state. The identity is the
+     * ADDRESS the definition is declared at — the row's key, or the instruction's n-tid — since that is the same
+     * address in both forms; text would be a proxy, and the derived op's base path alone would collapse
+     * {@code minus?int} and {@code minus?real} into one rule, which the rows keep distinct because they are
+     * distinct equations over distinct carriers.
+     * <p>
+     * Read per rewrite pass, so both halves are plain reads and no cache: a cache would have to be invalidated by
+     * a declaration written at this very moment, which is how a rule goes missing.
+     */
+    private static Map<fURI, Derivation> declaredDerivations() {
+        final Map<fURI, Derivation> out = new LinkedHashMap<>();
         for (final LawTable table : TABLES.values())
-            for (final Entry entry : table.table.values())
-                if (null != entry.derivation())
-                    out.add(entry.derivation());
+            for (final Map.Entry<fURI, Entry> row : table.table.entrySet())
+                if (null != row.getValue().derivation())
+                    out.putIfAbsent(row.getKey(), row.getValue().derivation());
+        // DECLARED BESIDE THE INSTRUCTION (?lawq) -- the address is the instruction's n-tid, which is the row key
+        // the declaration replaces, so a rule written in both places lands on one entry
+        final InstSet instset = Machine.loaded() ? Machine.current().instset() : null;
+        if (null != instset)
+            for (final Inst inst : instset.insts()) {
+                if (null == inst.tid())
+                    continue;
+                final Obj fromLawq = lawOf(inst.tid());
+                final Derivation declared = fromLawq.isRec() ? declaredDerivation(fromLawq.asRec()) : null;
+                if (null != declared)
+                    out.putIfAbsent(inst.tid(), declared);
+            }
         return out;
     }
 

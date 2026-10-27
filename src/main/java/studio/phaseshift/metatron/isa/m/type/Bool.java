@@ -77,9 +77,12 @@ public interface Bool extends Mono {
     }
 
     /*
-     * WHAT REMAINS HERE, and why: the `as` conversions, each declaring one side of an opposing edge (a pair, and the
-     * direction is the claim) -- a relation the builder cannot express until InstBuilder grows `inverse`. The rows
-     * they do carry stay in mInstSetLawTable; everything the builder CAN say lives in mInsts.bools().
+     * WHAT REMAINS HERE, and why: the ROW-LESS `as` conversions (bool->bool/bytes/int/real). None of them carries
+     * a law-table row, so none carries a claim or an inverse -- nothing retires here, and they move to
+     * mInsts.bools() when their bodies' imports travel with them. THE ROWED PAIR IS GONE: bool->str is the SOUND
+     * direction ("true"/"false" reads back to the same bool) and is declared WITH its inverse beside the Boolean
+     * algebra's operations in mInsts.bools(); str->bool is LOSSY (it answers false for every str that does not
+     * spell true) and declares no inverse anywhere.
      */
     final class BoolType {
 
@@ -88,8 +91,7 @@ public interface Bool extends Mono {
                     instC(AS_INST_TID.dom(Tokens.BOOL_TID).rng(Tokens.BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())),
                     instC(AS_INST_TID.dom(Tokens.BOOL_TID).rng(Tokens.BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(lhs.boolValue() ? ByteBuffer.wrap(new byte[]{1}) : ByteBuffer.wrap(new byte[]{0}), inst.arg(0).vidOrTid(), lhs.vid())),
                     instC(AS_INST_TID.dom(Tokens.BOOL_TID).rng(Tokens.INT_TID), lst(T(Tokens.INT_TID)), (lhs, inst) -> jnt(lhs.boolValue() ? 1 : 0, inst.arg(0).vidOrTid(), lhs.vid())),
-                    instC(AS_INST_TID.dom(Tokens.BOOL_TID).rng(Tokens.REAL_TID), lst(T(Tokens.REAL_TID)), (lhs, inst) -> real(lhs.boolValue() ? 1.0d : 0.0d, inst.arg(0).vidOrTid(), lhs.vid())),
-                    instC(AS_INST_TID.dom(Tokens.BOOL_TID).rng(Tokens.STR_TID), lst(T(Tokens.STR_TID)), (lhs, inst) -> str(lhs.boolValue() ? "true" : "false", inst.arg(0).vidOrTid(), lhs.vid()))
+                    instC(AS_INST_TID.dom(Tokens.BOOL_TID).rng(Tokens.REAL_TID), lst(T(Tokens.REAL_TID)), (lhs, inst) -> real(lhs.boolValue() ? 1.0d : 0.0d, inst.arg(0).vidOrTid(), lhs.vid()))
             ));
         }
     }

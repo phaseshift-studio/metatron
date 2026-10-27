@@ -19,18 +19,24 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
+import static studio.phaseshift.metatron.Tokens.DERIVATION;
+import static studio.phaseshift.metatron.Tokens.INVERSE;
 import static studio.phaseshift.metatron.Tokens.LAW;
+import static studio.phaseshift.metatron.Tokens.LHS;
+import static studio.phaseshift.metatron.Tokens.RHS;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.furi.q.QCollection.lawWrap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -40,8 +46,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * BUILD AN INSTRUCTION IN ONE CHAIN — the friendly surface over {@code instC}. A single declaration states the
  * contract ({@code tid/dom/rng/argLst}), the implementation ({@code body}), its DOCS ({@code ?docq}) and its
- * process LAWS ({@code ?lawq}), instead of scattering the four across an {@code instC} call, a {@code docWrap}
- * call and a law-table row:
+ * process LAWS with the two relations a row still carries — its INVERSE and its DERIVATION ({@code ?lawq}),
+ * instead of scattering the four across an {@code instC} call, a {@code docWrap} call and a law-table row:
  *
  * <pre>{@code
  * InstBuilder.build().tid(PLUS_INST_TID)
@@ -54,18 +60,27 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *         .create();
  * }</pre>
  *
- * <p>The laws are STAGED, not written: an instruction is built before its instset is mounted (the same reason
- * {@code docWrap} soft-fails during an ISA's own setup), so the set persists them with {@link #drain} once its
- * space exists. Docq and lawq remain the stores of record — this builder is the authoring surface over them.
+ * <p>The declaration is STAGED, not written: an instruction is built before its instset is mounted (the same
+ * reason {@code docWrap} soft-fails during an ISA's own setup), so the set persists it with {@link #drain} once
+ * its space exists. Docq and lawq remain the stores of record — this builder is the authoring surface over them.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class InstBuilder {
 
     /**
-     * staged process laws, keyed by the inst's declared n-tid — drained by the instset, never read for serving.
+     * staged declarations (laws, inverse, derivation), keyed by the inst's declared n-tid — drained by the instset,
+     * never read for serving.
      */
-    private static final Map<fURI, List<Law>> LAWS = new ConcurrentHashMap<>();
+    private static final Map<fURI, Declaration> DECLARATIONS = new ConcurrentHashMap<>();
+
+    /**
+     * What an instruction declares BESIDE its docs: the process laws it obeys, the opposing edge it declares, and
+     * its defining equation. Staged as one unit because a law row is one claim — a declaration carrying only an
+     * inverse or only a derivation is as complete as one carrying only laws.
+     */
+    private record Declaration(List<Law> laws, fURI inverse, Derivation derivation) {
+    }
 
     private fURI tid;
     private fURI dom;
@@ -78,6 +93,8 @@ public final class InstBuilder {
     private Map<Obj, String> argDocs = Map.of();
     private String[] examples = {};
     private Obj seed;
+    private fURI inverse;
+    private Derivation derivation;
     private final List<Law> laws = new ArrayList<>();
 
     private InstBuilder() {
@@ -154,6 +171,25 @@ public final class InstBuilder {
         return this;
     }
 
+    /**
+     * the DECLARED opposing edge ({@code inverse(f) = g} claims {@code f·g = ε} only — f a section, g its
+     * retraction, never {@code g·f = ε}). Pass null for none, which is what an instruction whose carrier declares
+     * no algebra states — a retraction is a fact about the implementation, not the structure.
+     */
+    public InstBuilder inverse(final fURI inverse) {
+        this.inverse = inverse;
+        return this;
+    }
+
+    /**
+     * the DEFINING equation ({@code minus ≡ plus ∘ neg}) — what lets the carrier's algebra derive the inverse
+     * instead of the row declaring one, and what a fold's combiner is read off.
+     */
+    public InstBuilder derivation(final Derivation derivation) {
+        this.derivation = derivation;
+        return this;
+    }
+
     public InstBuilder docDesc(final String description) {
         this.description = description;
         return this;
@@ -181,7 +217,7 @@ public final class InstBuilder {
     
     /**
      * The instruction. Its docs are written straight to {@code ?docq} (the space is already known when a set
-     * constructs its insts) and its laws are staged for {@link #drain}.
+     * constructs its insts) and its declaration is staged for {@link #drain}.
      */
     public Inst create() {
         if (null == this.tid)
@@ -195,21 +231,31 @@ public final class InstBuilder {
                     null == this.domDesc ? this.dom.toString() : this.domDesc,
                     null == this.rngDesc ? this.rng.toString() : this.rngDesc,
                     this.argDocs, this.description, this.examples);
-        if (!this.laws.isEmpty())
-            LAWS.put(inst.tid(), List.copyOf(this.laws));
+        // any facet is a declaration: an instruction may state only its inverse or only its defining equation
+        if (!this.laws.isEmpty() || null != this.inverse || null != this.derivation)
+            DECLARATIONS.put(inst.tid(), new Declaration(List.copyOf(this.laws), this.inverse, this.derivation));
         return inst;
     }
 
     /**
-     * PERSIST an inst's staged laws to {@code ?lawq} — the call an instset makes once its space is mounted.
-     * An inst that declared none is untouched.
+     * PERSIST an inst's staged declaration to {@code ?lawq} — the call an instset makes once its space is mounted.
+     * An inst that declared none is untouched, and a facet that was never declared is omitted rather than written
+     * as a null or an empty list, so the rec carries exactly the claims the instruction made.
      */
     public static void drain(final Inst inst) {
         if (null == inst || null == inst.tid())
             return;
-        final List<Law> laws = LAWS.get(inst.tid());   // a DECLARATION, not a one-shot: each VM boot repersists it
-        if (null == laws || laws.isEmpty())
+        final Declaration declared = DECLARATIONS.get(inst.tid());   // a DECLARATION, not a one-shot: each VM boot repersists it
+        if (null == declared)
             return;
-        lawWrap(inst, rec(uri(LAW), lst(laws.stream().map(l -> (Obj) uri(l.name())).toList())));
+        final Map<Obj, Obj> facets = new LinkedHashMap<>();
+        if (!declared.laws().isEmpty())
+            facets.put(uri(LAW), lst(declared.laws().stream().map(l -> (Obj) uri(l.name())).toList()));
+        if (null != declared.inverse())
+            facets.put(uri(INVERSE), uri(declared.inverse()));
+        if (null != declared.derivation())
+            facets.put(uri(DERIVATION),
+                    rec(uri(LHS), declared.derivation().lhs(), uri(RHS), declared.derivation().rhs()));
+        lawWrap(inst, rec(facets));
     }
 }

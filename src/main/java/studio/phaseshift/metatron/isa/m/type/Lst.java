@@ -207,15 +207,15 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     public static final class LstType {
 
         /*
-         * WHAT REMAINS HERE, and why: the `as` conversions declare an opposing edge (a pair, and the direction is the
-         * claim), which the builder cannot express yet. Their law rows stay in mInstSetLawTable; everything the
-         * builder CAN say lives in mInsts.lsts() -- and these retire when InstBuilder grows `inverse`.
+         * WHAT REMAINS HERE, and why: the ROW-LESS `as` conversions (lst->uri/lst/code). None of them carries a
+         * law-table row, so none carries a claim or an inverse -- nothing retires here. THE ROWED PAIR IS GONE:
+         * lst<->rec preserves nothing in EITHER direction (the round trip re-keys and reorders what it carries), so
+         * both directions declare NO inverse, and lst->rec moved to mInsts.lsts() beside the lst operations.
          */
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(LST_TID).rng(URI_TID), lst(T(LST_TID.poly(URI_TID))), (lhs, inst) -> lhs.lstValue().stream().reduce(uri(""), (a, b) -> uri(a.uriValue().extend(b.uriValue())))),
                     instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid()).c(c -> c.mult(lhs.c()))),
-                    instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), null)),
                     instC(AS_INST_TID.dom(LST_TID).rng(CODE_TID), lst(T(CODE_TID)), (lhs, inst) -> code(lhs.asLst().jvm().stream().flatMap(o -> o.isCall() ? o.asCall().insts().stream() : map_(o).tryToInst().insts().stream()).toList()).c(c -> c.mult(lhs.c())))
             ));
         }

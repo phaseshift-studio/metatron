@@ -383,39 +383,17 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     }
 
     /*
-     * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet.
-     * The two `as` conversions below each declare one side of an opposing edge -- rec/lst and uri/rec -- and the
-     * direction is the claim, so their rows stay in mInstSetLawTable. Everything the builder CAN say lives in
-     * mInsts.recs() -- and these retire as InstBuilder grows `inverse`.
+     * WHAT REMAINS HERE, and why: NOTHING. Both `as` conversions this class registered are gone -- rec->lst and
+     * rec->uri are the LOSSY directions of their pairs (a rec of pairs re-keys and reorders through a lst, and only
+     * a rec of uri components reads back as a uri), so they declare NO inverse anywhere and live in mInsts.recs()
+     * beside the rec operations. The SOUND uri->rec direction, whose inverse is rec->uri, still cannot leave
+     * Uri.UriType because its body calls Uri.Helper.parseQ (package-private there), so it keeps its own law row;
+     * no row declares rec->uri any more. The class stays as the carrier's registration hook.
      */
     final class RecType {
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(REC_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.transformRecToLst(lhs.asRec(), inst.arg(0).vidOrTid(), null)),
-                    instC(AS_INST_TID.dom(REC_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> {
-                        final Rec lhsRec = lhs.asRec();
-                        fURI furi = fURI.Singleton.empty();
-                        if (lhsRec.has(SCHEME))
-                            furi = furi.scheme(lhsRec.at(SCHEME).asUri().uriValue().toString());
-                        if (lhsRec.has(f(SUB)))
-                            return uri(lhsRec.at(SUB).uriValue().subdomain());
-                        //  else if (k.equals(f(AUTHORITY)))
-                        // return uri(f(this.uriValue().host()).port(this.uriValue().port()));
-                        if (lhsRec.has(HOST))
-                            furi = furi.host(lhsRec.at(HOST).asUri().uriValue().toString());
-
-                        if (lhsRec.has(PORT))
-                            furi = furi.port(lhsRec.at(PORT).asInt().intValue().intValue());
-                        if (lhsRec.has(PATH))
-                            furi = furi.path(lhsRec.at(PATH).asLst().elements().map(Obj::uriValue).map(fURI::toString).filter(s -> !s.isEmpty()).collect(Collectors.joining("/")));
-                        if (lhsRec.has(COEFF))
-                            furi = furi.c(cInt.of(cInt.of(lhsRec.at("c/min").asInt().intValue(), lhsRec.at("c/max").asInt().intValue()).toString()));
-                        if (lhsRec.has(QPROC))
-                            furi = furi.q(lhsRec.at(QPROC).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().isNothing() ? "" : e.second().toCleanString())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
-                        return uri(furi, inst.arg(0).vidOrTid(), null);
-                    })
-            ));
+            return new LinkedHashSet<>(List.<Inst>of());
         }
     }
 }

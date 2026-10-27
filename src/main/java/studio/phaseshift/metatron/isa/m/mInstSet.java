@@ -1341,48 +1341,11 @@ public class mInstSet extends AbstractInstSet {
     }
 
     static {
-        // INT'S ALGEBRA IS DECLARED AT ITS TYPE — the theory instances it models, with !* pointers to the live
-        // operations. Declared in a static block because the initializer needs the inst tids above; staged here
-        // and persisted to ?lawq by the drain that runs when this set is mounted. The table no longer restates it.
-        Type.Builder.declare(INT_TYPE, studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
-                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
-                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("ring"),
-                        studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
-                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ADD),
-                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.MUL),
-                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ZERO),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ONE),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(1)),
-                                RING_THEORY_TID, null),
-                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("add_group"),
-                        studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
-                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.OP),
-                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ID),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.INV),
-                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(NEG_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
-                                GROUP_THEORY_TID, null),
-                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("add_monoid"),
-                        studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
-                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.OP),
-                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ID),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0)),
-                                MONOID_THEORY_TID, null),
-                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("mult_monoid"),
-                        studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
-                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.OP),
-                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ID),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(1)),
-                                MONOID_THEORY_TID, null))));
+        // EVERY CARRIER'S ALGEBRA IS DECLARED AT ITS TYPE (mTypes.declareAlgebras) — the theory instances it
+        // models, with !* pointers to the live operations. Invoked from this static block, not from a field
+        // initializer in mTypes, because the recs name the inst tids above and the theory tids below: a field
+        // there would close a class-initialisation cycle. Staged here and persisted to ?lawq by the drain that
+        // runs when this set is mounted. The law table no longer restates any carrier's algebra.
+        mTypes.declareAlgebras();
     }
 }
