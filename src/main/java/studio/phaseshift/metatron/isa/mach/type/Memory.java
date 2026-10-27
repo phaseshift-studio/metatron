@@ -125,6 +125,19 @@ public interface Memory extends Space, Machine.Component, Closeable {
     }
 
     /**
+     * REWRITE A NAME — the deliberate, slow write behind the exposed name index. Everything that resolves a short name
+     * reads this table, so a rewrite changes what the name MEANS for every reader: it prunes the name's old reverse
+     * rows, remaps it, and bumps the table version so the projection follows. Callers should expect to feel it.
+     *
+     * @param name the short name to retarget
+     * @param path its new home ({@code null} to unbind the name)
+     * @return the exposed index, after the swap
+     */
+    default Obj redirect(final fURI name, final fURI path) {
+        throw MTronException.of("%s does not expose a rewritable name index", this.vid());
+    }
+
+    /**
      * The per-instruction <b>arg stack</b>, one per thread: the args of the instruction currently being applied,
      * as the inner frame of the evaluator.
      * <p>

@@ -35,13 +35,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static studio.phaseshift.metatron.Tokens.INV;
+import static studio.phaseshift.metatron.Tokens.OP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.GROUP_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.sum_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -52,7 +56,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <li><b>process laws</b> — the {@code law::T} labels a <em>morphism</em> obeys, keyed by the inst
  *       ({@link #lookup(fURI)}). These are proved once and registered per family; they cannot be derived.
  *       The operation's inverse is a relation, not a law, so it is a paired field on {@link Entry} rather
- *       than mixed into the law list.</li>
+ *       than mixed into the law list — but it is <em>computed</em> wherever the carrier's algebra states it
+ *       ({@link #derivedInverse}), the declared field being the source only where the algebra says nothing
+ *       (a one-way retraction such as int's {@code div}).</li>
  *   <li><b>structural laws</b> — the algebraic theories an <em>object</em> models, keyed by the type
  *       ({@link #typeLaws(Type)}). These are the theory types ({@code ring_theory::T}, {@code group_theory::T},
  *       …) on {@code object::T}, not process laws.</li>
@@ -78,6 +84,7 @@ public abstract class LawTable {
     }
 
     private final Map<fURI, Entry> table = new HashMap<>();
+    private final Map<fURI, Entry> resolved = new ConcurrentHashMap<>();
     private final Map<fURI, Rec> typeLawsCache = new ConcurrentHashMap<>();
 
     /**
@@ -110,9 +117,130 @@ public abstract class LawTable {
 
     /**
      * The declared process laws and inverse of the inst, or null when the inst is not in the table.
+     * <p>
+     * The inverse is not a fact re-declared per instruction: it is read off the carrier's declared algebra
+     * ({@link #derivedInverse}) whenever that algebra states one, the stored field being the source only for a
+     * carrier that states none. So {@code real}'s {@code mult}/{@code div} pair follows from the {@code field}'s
+     * {@code mult_group} together with {@code div}'s own definition, while {@code int}'s {@code mult}→{@code div}
+     * stays declared, int modeling a {@code mult_monoid} and no group — a truncating one-way retraction.
      */
     public final Entry lookup(final fURI instTid) {
-        return this.table.get(instTid);
+        final Entry declared = this.table.get(instTid);
+        return null == declared ? null : this.resolved.computeIfAbsent(instTid, tid -> this.computed(tid, declared));
+    }
+
+    /**
+     * The entry as the algebra answers it: the declared row, its inverse replaced when the carrier derives one.
+     * The declared row is returned unchanged when the two agree, so today's declarations cost nothing.
+     */
+    private Entry computed(final fURI tid, final Entry declared) {
+        final fURI inverse = this.derivedInverse(tid, declared);
+        return null == inverse || inverse.equals(declared.inverse()) ?
+                declared : new Entry(declared.laws(), inverse, declared.derivation());
+    }
+
+    /**
+     * THE INVERSE of an operation, read off the carrier's declared algebra — a consequence, never a new fact.
+     * <ul>
+     *   <li>an operation declared {@link Law#involution} is its own inverse ({@code f·f = 1} is the law);</li>
+     *   <li>a carrier declaring a <b>group</b> instance {@code (op, id, inv)} states the cancellation both ways:
+     *       {@code op}'s inverse is the instruction DEFINED as {@code op} applied to its inverted argument —
+     *       {@code div ≡ mult ∘ inv}, {@code minus ≡ plus ∘ neg} — and that instruction's inverse is {@code op};</li>
+     *   <li>otherwise null: the carrier's algebra says nothing about an inverse, and the declaration is the
+     *       source ({@code int}'s {@code mult}→{@code div}: truncating division is a retraction of multiplication,
+     *       sound in that direction only, and no algebra states it).</li>
+     * </ul>
+     * Only a group is read: a {@code field} names {@code mul}/{@code inv} too, but {@code 0} has no {@code 1/0}, so a
+     * field's multiplicative side is no group and licenses no cancellation of its own.
+     */
+    private fURI derivedInverse(final fURI tid, final Entry entry) {
+        if (null == tid || null == tid.dom() || null == tid.rng())
+            return null;
+        if (has(entry, Law.involution))
+            return tid;
+        for (final Obj block : TheoryHelper.instances(T(tid.dom())).jvm().values()) {
+            if (!block.isRec() || !GROUP_THEORY_TID.equals(block.asRec().tid().basePath()))
+                continue;
+            final fURI op = TheoryHelper.roleAddress(block.asRec(), OP);
+            final fURI inv = TheoryHelper.roleAddress(block.asRec(), INV);
+            if (null == op || null == inv)
+                continue;
+            if (op.basePath().equals(tid.basePath())) {
+                // the group's own operation: its inverse is the instruction DEFINED as it, argument inverted
+                final fURI form = this.inverseForm(tid, op, inv);
+                if (null != form)
+                    return form;
+            } else if (defined(entry.derivation(), op, inv)) {
+                // this instruction IS that definition: its inverse is the group's operation
+                return this.sibling(tid, op);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Whether a derivation defines its instruction as {@code op} applied to its inverted argument — the defining
+     * equation {@code div ≡ mult ∘ inv}. Read structurally, so the argument may be nested however the chain builder
+     * wrote it; a derivation ending anywhere else says nothing about cancelling {@code op}.
+     */
+    private static boolean defined(final Derivation derivation, final fURI op, final fURI inv) {
+        if (null == derivation)
+            return false;
+        final List<Inst> steps = derivation.rhs().insts();
+        for (int i = 1; i < steps.size(); i++) {              // index 0 is the seed, never the definition
+            final Inst step = steps.get(i);
+            if (step.tid().basePath().equals(op.basePath()) && step.args().elements().anyMatch(arg -> holds(arg, inv.basePath())))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Whether an instruction holds the given op, in its arguments (nested code included).
+     */
+    private static boolean holds(final Obj arg, final fURI op) {
+        if (arg.isCode())
+            return arg.asCode().insts().stream().anyMatch(inst -> holds(inst, op));
+        if (!arg.isInst())
+            return false;
+        return arg.asInst().tid().basePath().equals(op) || arg.asInst().args().elements().anyMatch(inner -> holds(inner, op));
+    }
+
+    /**
+     * The op over the same carrier as {@code tid} — {@code mult} for {@code div}, {@code plus} for {@code minus} —
+     * read as the table key that names it (its dom/rng are part of the address, so the carrier is the guard).
+     */
+    private fURI sibling(final fURI tid, final fURI op) {
+        for (final fURI key : this.table.keySet())
+            if (sameCarrier(key, tid) && key.basePath().equals(op.basePath()))
+                return key;
+        return null;
+    }
+
+    /**
+     * The instruction over {@code tid}'s carrier that is DEFINED as {@code op} applied to its inverted argument —
+     * the instruction whose inverse is {@code op}. Null when the table declares none.
+     */
+    private fURI inverseForm(final fURI tid, final fURI op, final fURI inv) {
+        for (final Map.Entry<fURI, Entry> entry : this.table.entrySet())
+            if (sameCarrier(entry.getKey(), tid) && defined(entry.getValue().derivation(), op, inv))
+                return entry.getKey();
+        return null;
+    }
+
+    /**
+     * Whether two n-tids address an operation over the same carrier.
+     */
+    private static boolean sameCarrier(final fURI a, final fURI b) {
+        return null != a && null != b && null != a.dom() && null != b.dom() && null != a.rng() && null != b.rng()
+                && a.dom().basePath().equals(b.dom().basePath()) && a.rng().basePath().equals(b.rng().basePath());
+    }
+
+    /**
+     * Whether an entry declares the given process law.
+     */
+    private static boolean has(final Entry entry, final Law law) {
+        return entry.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(law.name()));
     }
 
     /**
@@ -163,7 +291,10 @@ public abstract class LawTable {
         for (final Map.Entry<fURI, Entry> e : owner.table.entrySet()) {
             if (!e.getKey().basePath().toString().equals(base))
                 continue;
-            final Declared declared = new Declared(e.getKey(), e.getValue());
+            final Entry entry = owner.lookup(e.getKey());
+            if (null == entry)
+                continue;
+            final Declared declared = new Declared(e.getKey(), entry);
             if (null == first)
                 first = declared;
             if (null == universal && isUniversal(e.getKey().dom()))
