@@ -182,7 +182,7 @@ are computed; proper (non-split) mono/epi classification requires composition, w
 |--------------|-------------------------------------------------------------------------------------------|
 | `endo`       | self-mapping — $\mathrm{dom}(f) = \mathrm{rng}(f)$                                        |
 | `auto`       | an invertible endomorphism — `endo` and `iso`                                             |
-| `iso`        | invertible — currently a self-inverse (involution)                                        |
+| `iso`        | invertible — the **computed** inverse is the edge itself (an `involution`), so `class` reads `analysis.inverse` rather than testing the law a second time |
 | `mono`       | left-cancellable — $f \cdot g = f \cdot h \Rightarrow g = h$ (here: a split monomorphism) |
 | `epi`        | right-cancellable — $g \cdot f = h \cdot f \Rightarrow g = h$ (here: a split epimorphism) |
 | `section`    | split mono — $f$ has a left inverse                                                       |
@@ -202,6 +202,7 @@ laws):
 | `commutative`        | $a \cdot b = b \cdot a$                                                      |
 | `left_distributive`  | $a \cdot (b + c) = a \cdot b + a \cdot c$                                    |
 | `right_distributive` | $(a + b) \cdot c = a \cdot c + b \cdot c$                                    |
+| `semi_right_distributive` | $(a + b) \cdot c = (a \cdot c + b \cdot c) \cdot c$ — the reducer's distributivity: the two branches reduce to one object, so the law carries the re-application (Thm 19), which is what makes a shard sound rather than merely partitioned; a reducer does **not** obey `right_distributive` (Lemma 1 — $\langle\mathcal{F}_r, +, \cdot\rangle$ is a near-ring, left distributive only) |
 | `monoidic`           | an associative binary op with an identity                                    |
 | `magmadic`           | a bare binary op — a magma, as `monoidic` is a monoid — no identity demanded |
 | `unit`               | an identity element — $e \cdot x = x \cdot e = x$                            |

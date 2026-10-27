@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -36,9 +35,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PATH_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carriers;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.contracts;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.maybeNotIdentity;
+import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -116,14 +113,14 @@ public class catTypes {
                                     final Lst clazz = classOf(shapes);
                                     if (0 < clazz.count())
                                         block.put(uri(CLASS), clazz);
-                                    block.put(uri(SRC), auto_(instLambda(o -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst()));
-                                    block.put(uri(TRGT), auto_(instLambda(o -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst()));
-                                    block.put(uri(ANALYSIS), auto_(instLambda(ALL, ALL, o -> {
+                                    block.put(uri(SRC), auto_(instLambda(inst.dom().vid().name(), (_, _) -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst()));
+                                    block.put(uri(TRGT), auto_(instLambda(inst.rng().vid().name(), (_, _) -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst()));
+                                    block.put(uri(ANALYSIS), auto_(instLambda((_, _) -> {
                                         final Map<Obj, Obj> analysis = new LinkedHashMap<>();
-                                        analysis.put(uri(FAMILY), instLambda(inst.tid(), ALL, o2 -> catGraph.family(inst)).tryToInst());
-                                        analysis.put(uri(CONTESTED), instLambda(inst.tid(), ALL, o2 -> catGraph.contested(inst)).tryToInst());
-                                        analysis.put(uri(ORBIT), instLambda(inst.tid(), ALL, o2 -> catGraph.orbit(inst)).tryToInst());
-                                        analysis.put(uri(POSITION), instLambda(inst.tid(), ALL, o2 -> catGraph.position(inst)).tryToInst());
+                                        analysis.put(uri(FAMILY), auto_(instLambda((_, _) -> catGraph.family(inst))).tryToInst());
+                                        analysis.put(uri(CONTESTED), auto_(instLambda((_, _) -> catGraph.contested(inst))).tryToInst());
+                                        analysis.put(uri(ORBIT), auto_(instLambda((_, _) -> catGraph.orbit(inst))).tryToInst());
+                                        analysis.put(uri(POSITION), auto_(instLambda((_, _) -> catGraph.position(inst))).tryToInst());
                                         if (null != entry && null != entry.inverse())
                                             analysis.put(uri(INVERSE), uri(entry.inverse()));
                                         // the edge the partials recombine through -- computed off the laws and the

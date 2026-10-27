@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.DIV_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MULT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NEG_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
@@ -106,7 +107,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         checkCodeParseApply(LOG, "*/m/inst/sum?int<=int{*}>>form", "reducer");
         checkCodeParseApply(LOG, "*/m/inst/sum?int<=int{*}>>law", "[monoidic,commutative,right_distributive,pure]");
         checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int>>form", "mapper");
-        checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int>>law", "[right_distributive,poset,pure]");
+        checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int>>law", "[poset,pure]");   // right_distributive commented out in the table
         checkCodeParseApply(LOG, "*/m/inst/minus?int<=int>>analysis>>inverse", "/m/inst/plus?rng=/m/int&dom=/m/int");
         checkCodeParseApply(LOG, "*/m/inst/neg?int<=int>>law", "[involution,pure]");
         checkCodeParseApply(LOG, "*/m/inst/neg?int<=int>>analysis>>inverse", "/m/inst/neg?rng=/m/int&dom=/m/int");
@@ -294,9 +295,37 @@ public class catInstSetTest extends AbstractInstSetTest {
             "|mult?int<=int(int::T).as(morphism::T)>>analysis>>inverse      % /m/inst/div?rng=/m/int&dom=/m/int",
             // ... and truncating division is nobody's inverse
             "|div?int<=int(int::T).as(morphism::T)>>analysis>>inverse       % noobj",
+            // an INVOLUTION is its own inverse, by its own declared law -- no `inverse` field is declared for any
+            // of these, so the rows below can only pass if that rule answers
+            "|neg?int<=int(int::T).as(morphism::T)>>analysis>>inverse       % /m/inst/neg?rng=/m/int&dom=/m/int",
+            "|neg?real<=real(real::T).as(morphism::T)>>analysis>>inverse     % /m/inst/neg?rng=/m/real&dom=/m/real",
+            "|inv?real<=real(real::T).as(morphism::T)>>analysis>>inverse     % /m/inst/inv?rng=/m/real&dom=/m/real",
+            "|not?bool<=bool(bool::T).as(morphism::T)>>analysis>>inverse     % /m/inst/not?rng=/m/bool&dom=/m/bool",
+            "|reverse?str<=str(str::T).as(morphism::T)>>analysis>>inverse    % /m/inst/reverse?rng=/m/str&dom=/m/str",
+            "|reverse?lst<=lst(lst::T).as(morphism::T)>>analysis>>inverse    % /m/inst/reverse?rng=/m/lst&dom=/m/lst",
+            "|reverse?uri<=uri(uri::T).as(morphism::T)>>analysis>>inverse    % /m/inst/reverse?rng=/m/uri&dom=/m/uri",
+            "|reverse?rec<=rec(rec::T).as(morphism::T)>>analysis>>inverse    % /m/inst/reverse?rng=/m/rec&dom=/m/rec",
+            "|neg?code<=code(code::T).as(morphism::T)>>analysis>>inverse     % /m/inst/neg?rng=/m/code&dom=/m/code",
     }, delimiter = '%')
     void testInverse(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
+    }
+
+    /**
+     * THE CLASS READS THE COMPUTED INVERSE — an involution is its own inverse, so {@code iso} (and with it
+     * {@code auto}, {@code section}, {@code retraction}) follows from the law table, stated once in
+     * {@code LawTable#derivedInverse} and read here; a group operation like {@code plus} is not self-inverse and
+     * stays a bare {@code endo}.
+     */
+    @Test
+    void testClassFollowsTheComputedInverse() {
+        final List<String> negClass = catGraph.clazz(instB(NEG_INST_TID.dom(INT_TID).rng(INT_TID), lst()))
+                .lstValue().stream().map(l -> l.uriValue().name()).toList();
+        assertTrue(negClass.contains("iso"), "neg is an involution: its computed inverse is itself, got " + negClass);
+        assertTrue(negClass.contains("auto"), "an iso endomorphism is an auto, got " + negClass);
+        assertFalse(catGraph.clazz(instB(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), lst()))
+                        .lstValue().stream().map(l -> l.uriValue().name()).toList().contains("iso"),
+                "plus is no involution, so it is no iso");
     }
 
     /**
@@ -389,10 +418,12 @@ public class catInstSetTest extends AbstractInstSetTest {
             // "*plus?int<=int.take(1).as(morphism::T)>>law   % [commutative,right_distributive,action,pure]",
             //"|mult?int<=int(int::T).as(morphism::T)>>law     % [commutative,right_distributive,action,pure]",
             "|minus?int<=int(int::T).as(morphism::T)>>law    % [action,pure]",
-            "|gt?bool<=int(int::T).as(morphism::T)>>law      % [right_distributive,poset,pure]",
+            // right_distributive on a filter is TRUE in the stream ring (a filter applies pointwise) but is
+            // commented out in the table pending a theory that licenses it -- so the served list loses it
+            "|gt?bool<=int(int::T).as(morphism::T)>>law      % [poset,pure]",
             "|div?int<=int(int::T).as(morphism::T)>>law      % [action,pure]",
-            "|sum?int<=int{*}().as(morphism::T)>>law         % [monoidic,commutative,right_distributive,pure]",
-            "|prod?int<=int{*}().as(morphism::T)>>law        % [monoidic,commutative,right_distributive,pure]",
+            "|sum?int<=int{*}().as(morphism::T)>>law         % [monoidic,commutative,semi_right_distributive,pure]",
+            "|prod?int<=int{*}().as(morphism::T)>>law        % [monoidic,commutative,semi_right_distributive,pure]",
     }, delimiter = '%')
     void testMorphismLaws(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);

@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -473,6 +473,74 @@ mtron&gt; 0x0F        [-- bytes (hex literal) --]
 ==&gt;0x0f
 mtron&gt; noobj       [-- &quot;no obj&quot; (empty, none) --]
 </code></pre>
+<h4>the four ways a spelling becomes an address</h4>
+<p>They are distinct, and knowing which is which is most of the uri grammar:</p>
+<table>
+<thead>
+<tr><th>spelling</th><th>resolved by</th><th>declared by</th></tr>
+</thead>
+<tbody>
+<tr><td><code>math:cos</code></td><td>an <strong>isa prefix</strong> — a scheme with no host names a vocabulary</td><td><code>import(/m/math, math)</code>; the table is <code>*&lt;/instset/prefix&gt;</code></td></tr>
+<tr><td><code>//ginger/a</code></td><td>a <strong>network name</strong> — a host with no scheme and no port names a peer</td><td><code>&lt;/network/prefix/ginger&gt; -&gt; &lt;ws://ginger.local:8555&gt;</code></td></tr>
+<tr><td><code>cos</code></td><td>a <strong>redirect</strong> — the short name an address already has</td><td>derived from what is mounted; <code>*&lt;/memory/redirect&gt;</code></td></tr>
+<tr><td><code>/mcp</code></td><td>a <strong>route</strong> — a path prefix a space serves</td><td>the space's own <code>route</code> field, e.g. <code>http_server::[route=&gt;[/mcp =&gt; mcp_mtron]]</code></td></tr>
+</tbody>
+</table>
+<p><code>big()</code> / <code>small()</code> covers the first three: a primordial uri helper at metatron's own level, for humans. A space's
+<code>route</code> is <strong>not</strong> part of it — a space routes the addresses it serves, on its own behalf.</p>
+<p>And a <strong>rewrite</strong> is none of these: it is the compiler's code-transform rule (<code>instSet.rewrites()</code>), a different word for
+a different thing. When in doubt: a rewrite changes <em>code</em>, a redirect changes <em>what a name means</em>.</p>
+<h4>the words, one line each</h4>
+<p>The vocabulary above is small and every term is load-bearing, so the confusions are specific. These are the ones that
+have actually cost someone an afternoon.</p>
+<p><strong>addresses</strong></p>
+<table>
+<thead>
+<tr><th>term</th><th>means</th></tr>
+</thead>
+<tbody>
+<tr><td><code>vid</code></td><td>where a value lives (<code>nat::29@/usr/marko/age</code> → the vid is <code>/usr/marko/age</code>)</td></tr>
+<tr><td><code>tid</code></td><td>the type constraining it (the same value's tid is <code>int</code>)</td></tr>
+<tr><td><code>origin</code></td><td>a service's full address: <code>scheme://host:port</code>. The unit peers are keyed by and dialed at</td></tr>
+<tr><td><code>authority</code></td><td><code>host:port</code> — an origin without the scheme. <code>hasAuthority()</code> demands <strong>both</strong> host and port</td></tr>
+<tr><td><code>host</code></td><td>the host alone. The wire's gate: an address with a host is <em>someone else's to answer</em> (<code>Network.read</code>)</td></tr>
+<tr><td><code>isPrefixed()</code></td><td>scheme, no host — the vocabulary's slot (<code>math:cos</code>)</td></tr>
+<tr><td><code>isAddressed()</code></td><td>just <code>hasHost()</code> — says nothing about ports or schemes</td></tr>
+<tr><td><code>isHosted()</code></td><td>host, <strong>no scheme, no port</strong> — the network name slot (<code>//ginger/a</code>)</td></tr>
+<tr><td><code>noobj</code></td><td>the empty answer. A read that matches nothing returns it; a write of it is the universal close</td></tr>
+</tbody>
+</table>
+<p><strong>reach and knowledge</strong></p>
+<table>
+<thead>
+<tr><th>term</th><th>means</th></tr>
+</thead>
+<tbody>
+<tr><td><code>roster</code></td><td>what the system <strong>knows</strong>: <code>&lt;host&gt; =&gt; uri{+}</code>, connectionless. Shared at the root</td></tr>
+<tr><td><code>peer</code></td><td>what this machine has <strong>dialed</strong>: one member per surface, keyed by the dial's path</td></tr>
+<tr><td><code>listener</code></td><td>what it <strong>answers on</strong>: the sockets it serves, and therefore what mDNS announces</td></tr>
+<tr><td><code>prefix</code> (network)</td><td>what you <strong>call</strong> it: <code>&lt;label&gt; =&gt; origin</code>, one listing at the root</td></tr>
+<tr><td>reach</td><td>dialed peers — per frame, retractable, <strong>not</strong> inherited</td></tr>
+<tr><td>denotation</td><td>what a spelling means — machine-global, inherited, never scoped</td></tr>
+</tbody>
+</table>
+<p><strong>structure and process</strong></p>
+<table>
+<thead>
+<tr><th>term</th><th>means</th></tr>
+</thead>
+<tbody>
+<tr><td><code>space</code></td><td>a subset of the graph one address pattern serves (<code>memspace::[pattern=&gt;/usr/#]</code>)</td></tr>
+<tr><td><code>route</code></td><td>a space's own path→target table, applied when <strong>it</strong> serves a read or write</td></tr>
+<tr><td><code>mount</code> / <code>import</code></td><td>making a space or an instruction set available (<code>InstSet.mount</code>, <code>@vid</code> writes)</td></tr>
+<tr><td><code>frame</code></td><td>a child machine: <code>push</code>/<code>pop</code> are the call stack, <code>move</code> chooses a machine without closing one</td></tr>
+<tr><td><code>redirect</code></td><td>a short name's home, <code>big()</code>/<code>small()</code>. Exposed at <code>*&lt;/memory/redirect&gt;</code>, rewritable deliberately</td></tr>
+<tr><td><code>prefix</code> (isa)</td><td>a vocabulary's short scheme, bound by the import that mounted it</td></tr>
+<tr><td><code>rewrite</code></td><td>a <strong>compiler</strong> rule over code. Not a name, not an address — it transforms programs</td></tr>
+</tbody>
+</table>
+<p>The rule of thumb: an address is <em>declared</em> (a prefix, a name, a route's key), a redirect is <em>derived</em> from what was
+mounted, and a rewrite is <em>code</em>.</p>
 <hr />
 <h3>2. poly types</h3>
 <h4>lst::T (<code>[,]</code> — ordered, indexable)</h4>
@@ -588,15 +656,14 @@ mtron&gt; {1,2,3}.map(_).plus(2)      [-- {3,4,5} --]
 ==&gt;5
 </code></pre>
 <p><strong>compound ops:</strong> <code>inst?rng&lt;=dom(args){body}</code> for inline insts (lambdas):</p>
-<pre><code class="language-mtron">mtron&gt; {1,2,3}.inst?int&lt;=int(a=&gt;plus(2)){ plus(*a) }     [-- {4,8,18} --]
+<pre><code class="language-mtron">mtron&gt; {1,2,3}.inst?int&lt;=int(a=&gt;plus(2)){ plus(*a) }      [-- {4,8,18} --]
 ==&gt;4
 ==&gt;6
 ==&gt;8
-mtron&gt; {1,2,3}.(a=&gt;+2{ +*a }                             [-- sugar syntax for the above --]
-==&gt;fail::[parse error at line 1, col 15:
-     {1,2,3}.(a=&gt;+2{ +*a }                             [-- ...
-                   ^
-     unexpected '{']@/sys/fail/278657
+mtron&gt; {1,2,3}.(a=&gt;+2){ +*a }                             [-- sugar syntax for the above --]
+==&gt;4
+==&gt;6
+==&gt;8
 </code></pre>
 <h4>Boolean logic</h4>
 <pre><code class="language-mtron">mtron&gt; 3.is(gt(2))                        [-- 3  (filters: passes lhs through if true, noobj if false) --]
@@ -706,7 +773,7 @@ mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate l
 ==&gt;posint::2
 mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==&gt;fail::[parse error at line 1, col 1: -1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/355618
+   	while parsing: posint::-1]@/sys/fail/478146
 </code></pre>
 <hr />
 <h3>8. mapping &amp; filtering</h3>

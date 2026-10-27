@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -824,18 +824,20 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/13
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/15
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/14
+==&gt;[body=&gt;'another one']@tbledoc:note/16
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;11
+==&gt;15
 ==&gt;2
 ==&gt;4
 ==&gt;6
 ==&gt;8
 ==&gt;1
 ==&gt;13
+==&gt;16
 ==&gt;3
 ==&gt;10
 ==&gt;14
