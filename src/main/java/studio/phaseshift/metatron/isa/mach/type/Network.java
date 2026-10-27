@@ -114,6 +114,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      */
     fURI ROOT_SOURCE = f("/network/source");
 
+    /**
+     * THE NAMES a caller uses for an origin: {@code <label> => <full origin>}. Read at the ROOT, like the roster,
+     * because a name is DENOTATION — scoping decides which peers a frame can reach, never what {@code //ginger} means.
+     */
+    fURI ROOT_PREFIX = f("/network/prefix");
+
     default Optional<String> name() {
         return Optional.ofNullable(this.at(NAME).isNoObj() ? null : this.at(NAME).strValue());
     }
@@ -236,6 +242,88 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     default Rec machines() {
         final Obj field = this.roster().at(uri(MACHINE));
         return field.isRec() ? field.asRec() : rec();
+    }
+
+    /**
+     * THE NAMES this machine answers to for its peers: {@code <label> => <full origin>} — {@code ginger =>
+     * ws://ginger.local:8555}. One listing at the ROOT, for the same reason the roster is: a name is denotation, so
+     * pushing a frame must not change what {@code //ginger} denotes.
+     * <p>
+     * The fourth question this component answers, beside the three it already did: {@code roster} is what the system
+     * KNOWS, {@code peer} is what this machine has DIALED, {@code listener} is what it ANSWERS ON, and {@code prefix}
+     * is what you CALL it.
+     */
+    default Rec prefixes() {
+        final Machine root = Machine.root();
+        final Network network = null == root ? this : root.network();
+        if (null == network)
+            return rec();
+        final Obj field = network.at(PREFIX);
+        return field.isRec() ? field.asRec() : rec();
+    }
+
+    /**
+     * RESOLVE AN AUTHORITY NAME: {@code //ginger/a} → {@code ws://ginger.local:8555/a}.
+     * <p>
+     * The trigger is precise rather than a guess: an address carrying a HOST BUT NO PORT names no service, and a bound
+     * name is exactly what supplies the missing one. An explicit port is taken literally, so {@code //ginger:8555/a}
+     * always means that host and port — <b>explicit always beats named</b>.
+     * <p>
+     * An UNBOUND name is answered as written and fails closed downstream. It must never fall back to a discovered peer
+     * that happens to answer, which is the component's standing rule: membership is declared, never emergent.
+     */
+    default fURI alignPrefix(final fURI vid) {
+        // EXACTLY THE ADDRESSED SLOT: an authority with NO scheme and NO port. A real scheme means the author already
+        // named the protocol (`loop://self` is the identity client, not a name for it), and an explicit port means the
+        // address names a service already -- neither may be rewritten by a binding.
+        if (vid.hasScheme() || !vid.hasHost() || vid.hasPort())
+            return vid;
+        final Obj origin = this.prefixes().at(uri(vid.host()));
+        if (!origin.isUri())
+            return vid;
+        final fURI full = origin.uriValue();
+        // THE VALUE MUST BE A FULL ORIGIN, or the wire dispatch will never claim what this expands to. A half-binding
+        // is ignored rather than half-applied, so the spelling keeps its fail-closed meaning. A PORT IS NOT REQUIRED:
+        // the wire's own gate is the HOST (Network.read), and `loop:` has none besides.
+        if (!full.hasScheme() || !full.hasHost())
+            return vid;
+        return full.extend(vid.pathString()).c(vid.c()).q(vid.qMap());
+    }
+
+    /**
+     * BIND A NAME to an origin — the declaration side of {@link #alignPrefix(fURI)}, and the reason a peer can be
+     * spelled {@code //ginger} instead of {@code ws://ginger.local:8555}.
+     * <p>
+     * <b>THE DIAL IS NOT THE DECLARATION.</b> A connection is REACH — per frame, retractable, one member per surface —
+     * while a name is DENOTATION: one listing, at the root, and a {@code pop} must not change what {@code //ginger}
+     * means. So this binds the name and nothing else; dial with a client, as always:
+     * <pre>
+     *   network().registerPrefix(&lt;ginger&gt;, &lt;ws://ginger.local:8555&gt;);      [-- the name --]
+     *   ws_client::[pattern= &gt;&lt;ws://ginger.local:8555/mtron&gt;];                [-- the reach --]
+     * </pre>
+     */
+    default Obj registerPrefix(final fURI name, final fURI origin) {
+        if (!origin.hasScheme() || !origin.hasHost())
+            throw MTronException.of("a network prefix names a full origin (scheme://host[:port]): %s => %s", name, origin);
+        if (name.hasScheme() || name.hasHost() || name.segmentLength() != 1 || name.toString().contains("."))
+            throw MTronException.of("a network prefix is a single, dot-free label: %s", name);
+        // THE FIELD IS REWRITTEN WHOLE, never addressed entry by entry -- the roster's own rule, and for the same
+        // reason: a nested write leaves the component rec in a shape its type has to re-admit on every write.
+        final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
+        rows.put(uri(name.toString()), uri(origin.origin().toString()));
+        return Machine.write(ROOT_PREFIX, rec(rows));
+    }
+
+    /**
+     * UNBIND a name: the universal close, at the same address a peer is hung up at and by the same act — a deleted
+     * binding denotes nothing rather than denoting somewhere else.
+     */
+    default Obj unregisterPrefix(final fURI name) {
+        final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
+        // matched by TEXT, never by Obj identity: a uri that has round-tripped through a rec does not equal a freshly
+        // minted one even when the two print the same address
+        rows.keySet().removeIf(key -> key.isUri() && key.uriValue().toString().equals(name.toString()));
+        return Machine.write(ROOT_PREFIX, rows.isEmpty() ? noobj() : rec(rows));
     }
 
     /**
@@ -1054,13 +1142,19 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             final boolean submit = EVAL_INST_TID.equals(base);
             if (!read && !submit && !TO_INST_TID.equals(base))
                 return resolved;
-            final Obj address = resolved.arg(0);
-            if (!address.isUri() || null == address.uriValue().host())
-                return resolved;
             final Machine machine = Machine.current();
             if (null == machine || null == machine.network())
                 return resolved;
-            final fURI origin = address.uriValue().path(List.of());
+            // A SPELLING IS CANONICALIZED BEFORE IT IS BOUND. `from(<self:/x>)` and `from(<//self/x>)` name a peer as
+            // surely as the spelled-out origin does, and binding the RAW spelling would miss every one of them --
+            // leaving explain() showing a native call for a call that actually runs over the wire.
+            final Obj spelled = resolved.arg(0);
+            if (!spelled.isUri())
+                return resolved;
+            final fURI address = Machine.Helper.align(machine, spelled.uriValue());
+            if (null == address.host())
+                return resolved;
+            final fURI origin = address.path(List.of());
             final Obj override = machine.network().overrideOf(origin, base);
             if (!override.isObjInst())
                 return resolved;

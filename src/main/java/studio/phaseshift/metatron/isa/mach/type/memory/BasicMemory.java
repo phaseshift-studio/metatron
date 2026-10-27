@@ -33,13 +33,14 @@ import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MEMORY_TID;
@@ -47,7 +48,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * BasicMemory — one level of a machine's memory: its own relative bindings, the spaces it holds,
- * and the namespace (short-name route table + prefix table).
+ * and the namespace's short-name route table (prefix alignment belongs to the instruction set).
  * <p>
  * It is a {@link MRec} and holds <b>no state in Java fields</b> apart from the namespace tables, for the
  * same reason {@link BasicMachine} does not: everything has to be reachable from mtron. The relative
@@ -61,11 +62,41 @@ public class BasicMemory extends MRec implements Memory {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
 
-    // ======================== the namespace ========================
-    private final ObjectMap<fURI, Set<fURI>> smallToBigRoutes = new ObjectMap<>();
-    private final ObjectMap<fURI, fURI> bigToSmallRoutes = new ObjectMap<>();
-    private final ObjectMap<fURI, fURI> prefixToVID = new ObjectMap<>();
+    // ======================== the name index ========================
+    /**
+     * THE TABLE behind {@code big()}: {@code short name => the paths it denotes}, in RAW fURI keys.
+     * <p>
+     * Raw, because {@code big()} is asked from inside {@link studio.phaseshift.metatron.isa.m.type.impl.MObj}'s
+     * constructor ({@code tid.big()}): a table keyed by {@code Obj} builds an {@code MUri} to look itself up, that
+     * constructor asks {@code big()} again, and the lookup overflows the stack in the shape of a recursion. Neither
+     * this table nor the reverse below may construct an {@code Obj}.
+     */
+    private final ObjectMap<fURI, Set<fURI>> smallToBigRoutes;
+
+    /**
+     * THE REVERSE, raw as well: {@code path => the short name it is spelled by} — what {@code small()} answers.
+     */
+    private final ObjectMap<fURI, fURI> bigToSmallRoutes;
+
+    /**
+     * the vocabulary a short name is preferred from when it denotes several paths ({@code /m}): the primary
+     * vocabulary wins, then the shortest path
+     */
     private fURI primary = M_ISA_TID;
+
+    /**
+     * THE PROJECTION — never the resolver's source. {@code *</memory/redirect>} is how the language reads the table,
+     * so the {@code Obj}-keyed rows exist only for that cold read: the rec is built on the first dereference (with NO
+     * vid — a vid-bearing rec is saved back to the address it names, and memory's rows live in the machine's rec) and
+     * the hot path reads the raw maps above.
+     */
+    private volatile NameIndexRec index = null;
+
+    /**
+     * THE TABLE'S VERSION, bumped by every registration: the projection rebuilds when it changes and does nothing on a
+     * read that would see the same rows.
+     */
+    private final AtomicLong redirectVersion = new AtomicLong();
 
     /**
      * The absolute index — one stable rec for the lifetime of this memory. It is a Java field, never re-derived
@@ -108,14 +139,32 @@ public class BasicMemory extends MRec implements Memory {
      */
     public BasicMemory(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, MACH_MEMORY_TID, vid);
-        // The index rec is reflected into the bindings too (`>>space` reads it), so register it once here.
+        this.smallToBigRoutes = new ObjectMap<>();
+        this.bigToSmallRoutes = new ObjectMap<>();
+        // The space index is reflected into the bindings (`>>space` reads it), so register it once here.
         this.jvm().put(uri(SPACE), this.spaces);
+    }
+
+    /**
+     * THE PROJECTION, built on first dereference: {@code *</memory/redirect>} is a cold read of a hot table, so the
+     * rec that exposes it is not constructed until something asks for it (see {@link NameIndexRec}).
+     */
+    private NameIndexRec index() {
+        NameIndexRec lazy = this.index;
+        if (null == lazy) {
+            synchronized (this) {
+                lazy = this.index;
+                if (null == lazy)
+                    this.index = lazy = new NameIndexRec(this.smallToBigRoutes, this.redirectVersion::get);
+            }
+        }
+        return lazy;
     }
 
     // ======================== hot slot read ========================
 
     /**
-     * The index is consulted on every address resolution, so it is read from the raw jvm map rather than through
+     * The space index is consulted on every address resolution, so it is read from the raw jvm map rather than through
      * {@code Rec.at}, skipping the rec recursion {@code at} does for uri keys. Same shape as {@link BasicMachine}'s
      * processor and compiler short-circuits, and for the same reason: this is the hottest lookup in the machine.
      */
@@ -123,6 +172,10 @@ public class BasicMemory extends MRec implements Memory {
     public <OBJ extends Obj> OBJ at(final Obj key) {
         if (key.equals(uri(SPACE)))
             return (OBJ) this.jvm().getOrDefault(uri(SPACE), noobj());
+        // THE PROJECTION ANSWERS AT ITS ADDRESS WITHOUT BEING A ROW: nothing was written into this rec at construction,
+        // so reading /memory/redirect is what mints the index -- cold, and only then.
+        if (key.equals(uri(REDIRECT)))
+            return (OBJ) this.index();
         return super.at(key);
     }
 
@@ -277,6 +330,7 @@ public class BasicMemory extends MRec implements Memory {
             return null;
         });
         this.bigToSmallRoutes.remove(uri(big));
+        this.redirectVersion.incrementAndGet();
     }
 
     @Override
@@ -285,32 +339,35 @@ public class BasicMemory extends MRec implements Memory {
             return;
         this.smallToBigRoutes.computeRaw(small, (k, v) -> {
             if (null == v) {
-                // ORDERED SHORTEST-FIRST, DISTINCT BY PATH. the comparator must not stop at pathLength: a
-                // TreeSet treats compare==0 as "already present", so a length-only comparator silently DROPS
-                // every same-length route for the name -- which route survived depended on registration order,
-                // and the contains() guard below (same comparator) suppressed even the warning. the toString
-                // tiebreak keeps shortest-first iteration (redirect() prefers the primary prefix, then the
-                // first = shortest) while letting same-length routes coexist, loudly.
+                // ORDERED SHORTEST-FIRST, DISTINCT BY PATH. The comparator must not stop at pathLength: a TreeSet
+                // treats compare==0 as "already present", so a length-only comparator silently DROPS every same-length
+                // route for the name -- which route survived depended on registration order, and the contains() guard
+                // below (same comparator) suppressed even the warning. The toString tiebreak keeps shortest-first
+                // iteration (redirect() prefers the primary prefix, then the first = shortest) while letting
+                // same-length routes coexist, loudly.
                 final Set<fURI> set = Collections.synchronizedSet(new TreeSet<>(
                         Comparator.comparingInt(fURI::pathLength).thenComparing(fURI::toString)));
                 set.add(big.basePath());
                 return set;
             } else {
                 if (!v.contains(big.basePath()) && !this.hasRegisteredPrefix(big) && v.stream().noneMatch(this::hasRegisteredPrefix))
-                    LOG.warn("multiple redirects for {{b}}%s{{X}}: {{b}}%s {{g}}+ {{b}}%s{{X}} (consider prefixing import)", small, big, v.toString().replace("[", "").replaceAll("]", ""));
+                    LOG.warn("multiple redirects for {{b}}%s{{X}}: {{b}}%s {{g}}+ {{b}}%s{{X}} (consider prefixing import)",
+                            small, big, v.toString().replace("[", "").replaceAll("]", ""));
                 v.add(big.basePath());
                 return v;
             }
         });
         this.bigToSmallRoutes.putRaw(big, small);
+        this.redirectVersion.incrementAndGet();
     }
 
+    /**
+     * WHETHER A BOUND PREFIX already denotes an ancestor of {@code target} — the case in which a name gaining a second
+     * home is the import's business rather than a collision worth reporting.
+     */
     private boolean hasRegisteredPrefix(final fURI target) {
-        for (final Obj value : this.prefixToVID.values()) {
-            if (target.hasPrefix((fURI) value.jvm()))
-                return true;
-        }
-        return false;
+        final Machine machine = Machine.current();
+        return null != machine && machine.instset().hasPrefixFor(target);
     }
 
     @Override
@@ -319,15 +376,20 @@ public class BasicMemory extends MRec implements Memory {
             return furi;
         fURI temp;
         if (external) {
+            // NO ROUTE MEANS THE SPELLING STANDS: the default is the spelling itself, so every address the table does
+            // not name (an absolute path, a wildcard, a relative one) answers as written. This is also what keeps the
+            // resolver off the spaces: a space's redirect reads its route table, that rec read builds a uri, and a
+            // uri asks big() for its home -- which is this line again.
             final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
-            if (set.isEmpty()) {
+            if (set.isEmpty())
                 temp = this.getSpaceFor(furi).redirect(furi, true);
-            } else if (set.size() > 1) {
-                final Optional<fURI> preferred = set.stream().filter(f -> f.hasPrefix(this.primary.toString())).findFirst();
+            else if (set.size() > 1) {
+                // A NAME MAY DENOTE SEVERAL PATHS (`stdout` lives in /sys/io and /m/sys/inst): the primary
+                // vocabulary's home wins, then the shortest -- the set is kept shortest-first
+                final Optional<fURI> preferred = set.stream().filter(b -> b.hasPrefix(this.primary.toString())).findFirst();
                 temp = preferred.orElse(set.iterator().next());
-            } else {
+            } else
                 temp = set.iterator().next();
-            }
         } else {
             temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
         }
@@ -338,33 +400,13 @@ public class BasicMemory extends MRec implements Memory {
         return temp;
     }
 
+    /**
+     * THE CANDIDATE PATHS a short name may denote — the set {@link #redirect} picks a winner from. A prefix resolver
+     * already knows the root its name must stay under, so it asks this rather than taking the winner.
+     */
     @Override
-    public void registerPrefix(final fURI prefix, final fURI vid) {
-        final fURI existing = this.prefixToVID.getRaw(prefix);
-        if (existing != null && !Objects.equals(vid, existing))
-            throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
-        this.prefixToVID.putRaw(prefix, vid);
-        this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
-        LOG.info("prefix {{b}}%s {{g}}=> {{b}}%s{{X}} registered", prefix, vid);
-    }
-
-    @Override
-    public fURI alignPrefix(final fURI vid) {
-        final fURI readableVID = vid.one();
-        if (readableVID.hasScheme()) {
-            final fURI prefixed = this.prefixToVID.getRaw(f(readableVID.scheme()));
-            if (null != prefixed) {
-                final fURI suffix = readableVID.scheme(null);
-                final Set<fURI> routes = this.smallToBigRoutes.getOrDefaultRaw(suffix.basePath(), Set.of());
-                final Optional<fURI> target = routes.stream()
-                        .filter(r -> r.hasPrefix(prefixed.toString()))
-                        .findFirst();
-                if (target.isPresent())
-                    return target.get().c(suffix.c()).q(suffix.qMap());
-                return prefixed.extend(suffix);
-            }
-        }
-        return readableVID;
+    public Set<fURI> redirects(final fURI small) {
+        return null == small ? Set.of() : this.smallToBigRoutes.getOrDefaultRaw(small.basePath(), Set.of());
     }
 
     public Obj read(final fURI vid) {
@@ -379,7 +421,10 @@ public class BasicMemory extends MRec implements Memory {
             return this.read(vid.equals(f("~")) ? home : home.extend(vid.pretract(1)).resolve());
         }
 
-        final fURI readableVID = this.alignPrefix(vid);
+        // the gatekeeper aligned the spelling once (Machine.Helper.align), so what reaches here is already canonical
+        // and only the coefficient is normalized -- a prefixed spelling can no longer match an ISA's tables by a
+        // second, private alignment that the instruction-memory fallback never got
+        final fURI readableVID = vid.one();
         /// ///////////////////
         if (readableVID.isGeneric())
             return T(readableVID);

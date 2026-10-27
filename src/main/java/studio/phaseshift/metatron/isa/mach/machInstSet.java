@@ -616,6 +616,11 @@ public class machInstSet extends AbstractInstSet {
                                                 uri(LISTENER).maybe().asUri(), rec(URI_TYPE, T(LISTENER_TID)),
                                                 uri(SUPERVISOR).maybe().asUri(), T(NETWORK_SUPERVISOR_TID),
                                                 uri(SOURCE).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
+                                                // THE FOURTH QUESTION, beside known/reached/served: what you CALL a
+                                                // peer. <label> => <full origin> -- a name is denotation, so this is
+                                                // the one field of the four whose key is a LABEL rather than an
+                                                // address, and it is read at the root for exactly that reason.
+                                                uri(PREFIX).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
                                                 // the AUTO STATUS INST BasicNetwork installs at construction --
                                                 // a method-shaped field, not a map: the component rec is
                                                 // re-typechecked on every peer write, so this slot must say what
@@ -854,15 +859,28 @@ public class machInstSet extends AbstractInstSet {
          * The split's lst holds the localized move, the identity (the lhs flows through here), and the tail; casting it
          * to {@code code::T} rebuilds the chain, and the peer re-compiles the shipped code, so a nested remote move is
          * extracted where it lands. A local move (no authority) is left alone.
+         * <p>
+         * A PREFIXED TARGET IS ALIGNED BEFORE THE DECISION, and the aligned form is what ships. {@code move(<self:/a>)}
+         * denotes a real authority, so the tail must be cut — and the cut must carry the RESOLVED address, because the
+         * far side has never heard of this machine's names. The alignment goes through {@link Machine.Helper#align}, the
+         * same door the runtime uses, so a spelling cannot resolve one way at compile time and another when it runs.
          */
         static Code extractMove(final Code code) {
             final List<Inst> insts = code.insts();
             for (int i = 0; i < insts.size(); i++) {
                 final Inst inst = insts.get(i);
-                if (!MOVE_INST_TID.equals(inst.tid().basePath()) || inst.arg(0).isNoObj() || inst.arg(0).uriValue().isLocal())
+                if (!MOVE_INST_TID.equals(inst.tid().basePath()) || inst.arg(0).isNoObj())
                     continue;
+                final fURI target = Machine.Helper.align(Machine.current(), inst.arg(0).uriValue());
+                // A MOVE CROSSES ONLY TO A WIRE AUTHORITY. A local target is not remote, and a SCHEME WITH NO HOST is
+                // not remote either -- it is a spelling no table resolved, and cutting for it would ship the tail to
+                // an origin that names no service (measured: a scheme-only target crashed the origin arithmetic
+                // instead of failing the move). Both stay local, where the read fails by address, by name.
+                if (target.isLocal() || !target.isAddressed())
+                    continue;
+                final Obj authority = target.equals(inst.arg(0).uriValue()) ? inst.arg(0) : uri(target);
                 final List<Inst> newCode = new ArrayList<>(insts.subList(0, i));
-                newCode.add(instB(CUT_INST_TID, lst(inst.arg(0), code(new ArrayList<>(insts.subList(i + 1, insts.size()))))));
+                newCode.add(instB(CUT_INST_TID, lst(authority, code(new ArrayList<>(insts.subList(i + 1, insts.size()))))));
                 return code(newCode);
             }
             return code;

@@ -72,7 +72,11 @@ public interface InstSet extends Space, Machine.Component {
                     // the union's MEMBERSHIP: the imported ISAs, by vid, IN IMPORT ORDER (earlier = higher
                     // precedence). Declared here because it is what makes the union reflective — this is the field
                     // that answers "what are my insts, rewrites, sugars and types" without walking the mounts.
-                    uri(REFERENCE).maybe().asUri(), lst(URI_TYPE).maybe()))
+                    uri(REFERENCE).maybe().asUri(), lst(URI_TYPE).maybe(),
+                    // THE NAMES: <short scheme> => <the vid it denotes> — what `import(/m/math, math)` binds, and the
+                    // reason `math:cos` names /m/math/inst/cos. It lives HERE because a MOUNT is what gave the name: an
+                    // ISA owns its own shorthand the way it owns its consts and insts, and memory holds no part of it.
+                    uri(PREFIX).maybe().asUri(), rec(URI_TYPE, URI_TYPE)))
             .constructor(arg -> {
                 final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
                 };
@@ -137,6 +141,52 @@ public interface InstSet extends Space, Machine.Component {
     Set<Inst> insts();
 
     Set<Inst> rewrites();
+
+    /**
+     * BIND A SHORT NAME to a vid — the one act behind {@code import(/m/math, math)}, and the reason a prefixed
+     * spelling ({@code math:cos}) denotes the same resource as its aligned form ({@code /m/math/cos}).
+     * <p>
+     * Bound once, on purpose: an import name that silently retargeted would make every existing {@code math:…}
+     * spelling mean something else, so a rebind to a DIFFERENT vid is refused rather than obeyed. Unbinding is
+     * {@link #unregisterPrefix(fURI)}, the deletion side of the same relation.
+     *
+     * @param prefix the short name, without the colon ({@code math} for {@code math:cos})
+     * @param vid    the address the name denotes
+     */
+    void registerPrefix(final fURI prefix, final fURI vid);
+
+    /**
+     * UNBIND a short name — the deletion side of {@link #registerPrefix(fURI, fURI)}, and the universal close applied
+     * to a name: after it the spelling denotes nothing rather than denoting somewhere else.
+     *
+     * @param prefix the short name to remove
+     */
+    void unregisterPrefix(final fURI prefix);
+
+    /**
+     * RESOLVE a prefixed spelling against this level's table, then the enclosing level's: {@code math:cos} becomes
+     * {@code /m/math/cos}. A vid with no scheme, or one whose scheme names no bound prefix, is answered as its
+     * coefficient-one form — the caller decides whether that is "unchanged" (see {@code Machine.Helper.align}).
+     * <p>
+     * The prefix supplies the ROOT only: the short name inside it ({@code cos} in {@code math:cos}) is memory's
+     * redirect to place, which is why the two tables compose rather than compete.
+     *
+     * @param vid the address as spelled
+     * @return the aligned address, or {@code vid}'s coefficient-one form when no prefix holds its scheme
+     */
+    fURI alignPrefix(final fURI vid);
+
+    /**
+     * Whether any bound prefix DENOTES AN ANCESTOR of this address — the reason a redirect collision is expected
+     * rather than reported: {@code math:cos} and {@code /m/math/cos} are one resource under two spellings, so the
+     * routes that serve both are not a mistake. Only the diagnostic path reads this.
+     *
+     * @param target an address a redirect registered
+     * @return whether some prefix's vid is a prefix of {@code target}
+     */
+    default boolean hasPrefixFor(final fURI target) {
+        return false;
+    }
 
     default Set<Sugar> sugars() {
         return Set.of();
@@ -215,7 +265,9 @@ public interface InstSet extends Space, Machine.Component {
 
     static Stream<InstSet> importInstSetStream(final fURI vid, final fURI prefix) {
         if (null != prefix)
-            Machine.current().memory().registerPrefix(prefix, vid);
+            // THE NAME LANDS WITH THE VOCABULARY IT NAMES. an import is the act that gives the shorthand, so the
+            // instset keeps the table -- not memory, which mounts nothing and names nothing.
+            Machine.current().instset().registerPrefix(prefix, vid);
         // IMPORT IS "ENSURE MOUNTED" -- AN OPTIMIZATION, NEVER A PROTECTION. a provider whose
         // instruction set is already mounted in scope is skipped BEFORE it is instantiated (the
         // service annotation carries the vid), so re-running an import is observationally identical

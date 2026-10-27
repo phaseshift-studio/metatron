@@ -108,6 +108,25 @@ public final class noobjSpace implements Space, InstSet {
         return obj;
     }
 
+    /**
+     * THE NULL SPACE BINDS NO NAMES: a name bound here could never be reached by a read, so it is refused rather than
+     * accepted into a table with no vocabulary behind it.
+     */
+    @Override
+    public void registerPrefix(final fURI prefix, final fURI vid) {
+        throw studio.phaseshift.metatron.util.MTronException.of("the null space binds no names: %s => %s", prefix, vid);
+    }
+
+    @Override
+    public void unregisterPrefix(final fURI prefix) {
+        // nothing was ever bound here, so nothing is unbound
+    }
+
+    @Override
+    public fURI alignPrefix(final fURI vid) {
+        return vid.one();
+    }
+
     @Override
     public fURI redirect(fURI furi, boolean big) {
         return NOOBJ_TID;

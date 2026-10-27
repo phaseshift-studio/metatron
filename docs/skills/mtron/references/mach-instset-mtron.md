@@ -306,6 +306,40 @@ the member `localhost` already holds.
 One type, **two honest states**: an `origin` alone is *known, not reachable from here* — the form a peer reference
 takes after crossing a wire; an origin with a `transport` is reachable.
 
+### prefix — what you call a peer
+
+A fourth field, and the only one that is a **name** rather than an address: `prefix` is
+`<label> => <full origin>` (`ginger => ws://ginger.local:8555`). It answers a different question from the other three —
+`roster` is what the system *knows*, `peer` is what this machine has *dialed*, `listener` is what it *answers on*, and
+`prefix` is what you *call* it.
+
+```mtron
+</network/prefix/ginger> -> <ws://ginger.local:8555>;   [-- bind: the name --]
+//ginger/mtron?name=marko                               [-- = ws://ginger.local:8555/mtron?name=marko --]
+</network/prefix> -> noobj                              [-- unbind every name at once --]
+```
+
+**The spelling is the addressed slot**: `//name/a` — a host with **no port and no scheme**. An explicit port is taken
+literally (`//ginger:8555/a` always means that host and port), because *explicit always beats named*, and a real scheme
+is never rewritten (`loop://self` already says which transport it means). The binding is read at the **root**, so no
+frame can change what `//ginger` denotes; an unbound name is answered as written and fails closed, so no name resolves
+to a discovered peer merely because one happens to answer.
+
+**The dial is not the declaration.** A connection is *reach* — per frame, retractable, one member per surface — while a
+name is *denotation*: one listing, at the root, and a `pop` must not change it. So a name is bound by a write and the
+peer is dialed by a client, one act each:
+
+```mtron
+</network/prefix/ginger> -> <ws://ginger.local:8555>;
+ws_client::[pattern=><ws://ginger.local:8555/mtron?name=marko>];
+```
+
+**Alignment happens once, at the gatekeeper**, in `Machine.Helper.align`, which asks each component for the slot it
+owns: the instruction set for **scheme** prefixes (`math:cos` → `/m/math/inst/cos`) and the network for **authority**
+prefixes (`//ginger/a` → the origin above). The two slots cannot collide, so the order is unobservable and no precedence
+rule exists. The same door is what the compiler's move-extractor uses, which is why `move(<//ginger/a>)` ships the tail
+to the *resolved* origin rather than to a name the far side has never heard of.
+
 **Construction is connection.** There is no connect inst, as there is no add-space inst: constructing a protocol
 client *is* the dial, and indexing is a background behavior of a valid construction —
 

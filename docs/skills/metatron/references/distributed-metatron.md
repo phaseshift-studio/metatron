@@ -49,7 +49,10 @@ One function decides local vs remote; everything else is a transport it can call
 | `Network.Helper.isLoopbackHost`                | `0.0.0.0`/`127.0.0.1`/`localhost`/`::1` are one service                      | `Network.java:1112`        |
 | `Network.Helper.sameService`                   | origin equality, loopback-aliased                                            | `Network.java:909`         |
 | `~/network/peer`                               | dialed peers: origin → peer::T (the connection)                              | `Network.java:333`         |
-| `~/network/listener`                           | bound sockets: origin → listener::T (a machine's presence)                   | `Network.java:199`         |
+| `~/network/listener`                           | bound sockets: origin → listener::T (a machine's presence)                    | `Network.java:199`         |
+| `~/network/prefix`                             | the NAMES a peer goes by: label → full origin (scheme-less, port-less slot)   | `Network.java` (`alignPrefix`) |
+| `~/instset/prefix`                             | the NAMES a vocabulary goes by: scheme → vid (`import(/m/math, math)`)        | `AbstractInstSet.java`     |
+| `Machine.Helper.align`                         | the ONE canonicalization door: read, write and the move-extractor all ask it  | `Machine.java`             |
 | `Network.Helper.authorities()`                 | the origins this VM answers on (its listeners)                               | `Network.java:695`         |
 | `fURI.origin()` / `authority()` / `localize()` | `scheme://host:port`; `host:port`; strip scheme+origin, keep path            | `fURI.java:215`, `:319`, `:353` |
 
@@ -120,6 +123,11 @@ Concurrent, not remote — but the same monad is the work unit in both cases.
 - **A space is not a wire payload.** Asking a peer for a space itself yields no response at all — ask for `.vid()`.
 - **A remote dereference returns a value whose tid carries coefficient `*`** (renders `{*}1`), because the reply is
   typed by the transport inst's rng. The value is correct; only the coefficient differs.
+- **A NAME IS RESOLVED ONCE, BEFORE ANY DISPATCH, AND TRAVELS RESOLVED.** `math:cos` and `//ginger/a` are
+  canonicalized at the gatekeeper (`Machine.Helper.align`), each component answering for the slot it owns — the ISA for
+  a scheme, the network for an authority — so the slots cannot collide and no dispatch below ever sees a spelling. The
+  compiler's move-extractor asks the same door, so the tail shipped to a peer carries the resolved origin: a name is
+  the caller's, and the far side has never heard of it.
 - **A multiplicity of dereferences is a program, not data.** `{*A,*B}` holds unapplied `from` insts (`.explain()`
   reports `rng=>from`), so arithmetic applies element-wise to instructions. Chaining works: `*A.plus(*B)`.
 - **Evaluating one has a lasting side effect**: it re-types the dereferenced vids to `*`, so later reads of those

@@ -268,14 +268,22 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * The structural laws (the theory recs: ring/group/monoid) — not wired yet, {@code mInstSetLawTable.typeLaws} /
-     * {@code catWrap(Type, …)} is still a no-op.
+     * int's multiplicative side at the object-law level — a monoid ({@code op/mult, id/1}), but NO {@code mult_group}
+     * (no 1/x — int division truncates). Mirrors the process-law asymmetry where int's {@code div} declares no
+     * inverse but {@code mult}'s inverse is {@code div} ({@link mInstSetLawTable:239-240}). This was a stale
+     * duplicate of testNatVsInt's int-ring row; retargeted to the one int object-law fact testNatVsInt does not pin.
+     *
+     * <p>The parallel real row — {@code real::T.as(object::T) >> law >> mult_group} = {@code group_theory[op/id/inv]} —
+     * is intentionally held back: the real↔int {@code as} dispatch in catInstSet mis-resolves (the noobj()
+     * tie-break between the generic {@code AS?A<=>B} cast and the category {@code AS?ALL=>object}), so it passes
+     * live in the console but fails under the suite harness. Known stain, not chased here; the int side pins the
+     * same object-law fact where the carrier is unambiguous.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "|int::T.as(object::T)>>law>>ring_theory % [add=>plus?int<=int,mul=>mult?int<=int,zero=>zero?int<=int,one=>one?int<=int]",
+            "int::T.as(object::T)>>law>>mult_group   % noobj",
+            "int::T.as(object::T)>>law>>mult_monoid % monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,id=>1]",
     }, delimiter = '%')
-    @Disabled
     void testObjectLaws(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
     }
