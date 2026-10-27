@@ -261,7 +261,7 @@ public class TheoryHelper extends MRec {
      * arrives as a {@code !*} auto pointer naming its target in its own argument, so the address is read
      * without resolving — the target may be an as-yet-unresolved registration.
      */
-    private static fURI roleAddress(final Rec block, final String role) {
+    static fURI roleAddress(final Rec block, final String role) {
         final Obj holder = block.atDirect(uri(role));
         if (holder.isNoObj())
             return null;

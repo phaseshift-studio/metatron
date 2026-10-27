@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.REDIRECT;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -99,5 +100,32 @@ public class RedirectTableTest extends AbstractMetatronTest {
             assertTrue(homes.contains(name.big()), "the row for " + name + " holds what big() picked: " + homes + " vs " + name.big());
         }
         assertTrue(rows > 100, "the vocabulary is in the table: " + rows + " rows");
+    }
+
+    /**
+     * THE DELIBERATE WRITE, through the address: {@code </memory/redirect/count> -> <new/home>} retargets what the name
+     * means, and {@code -> noobj} unbinds it. The projection follows because the write bumps the table version; the
+     * reverse is pruned so the name's OLD home keeps no stale alias.
+     */
+    @Test
+    void testARewriteThroughTheAddressRetargetsTheName() {
+        final fURI name = f("count");
+        final fURI home = f("/m/inst/count");
+        final fURI moved = f("/m/inst/sum");
+        assertEquals(home, name.big(), "count starts at " + home);
+
+        Machine.write(f("/memory/redirect/count"), uri(moved.toString()));
+        try {
+            assertEquals(moved, name.big(), "the rewrite is what the name means now");
+            assertTrue(Machine.read(f("/memory/redirect")).asRec().at(uri("count")).stream()
+                            .anyMatch(o -> o.isUri() && o.uriValue().equals(moved)),
+                    "the exposed projection follows the version bump");
+            assertEquals(home, home.small(), "the old home keeps no stale alias");
+        } finally {
+            Machine.write(f("/memory/redirect/count"), noobj());
+            assertEquals(name, name.big(), "an unbound name denotes nothing, so big() answers the spelling");
+            // RESTORE THE VOCABULARY: this row unbinds `count` on purpose, and every other row in the class reads it
+            Machine.write(f("/memory/redirect/count"), uri(home.toString()));
+        }
     }
 }

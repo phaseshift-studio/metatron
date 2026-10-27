@@ -31,6 +31,7 @@ import java.util.Set;
 import static studio.phaseshift.metatron.Tokens.COMPILER;
 import static studio.phaseshift.metatron.Tokens.INSTSET;
 import static studio.phaseshift.metatron.Tokens.MEMORY;
+import static studio.phaseshift.metatron.Tokens.REDIRECT;
 import static studio.phaseshift.metatron.Tokens.NETWORK;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.PROCESSOR;
@@ -191,7 +192,17 @@ public final class MachineSpace extends memSpace {
         if (null == this.owner || !this.covers(vid))
             return false;
         final String part = this.part(vid);
-        return NETWORK.equals(part) || (SYS.equals(part) && !this.yields(vid));
+        return NETWORK.equals(part) || (MEMORY.equals(part) && this.isNameIndex(vid))
+                || (SYS.equals(part) && !this.yields(vid));
+    }
+
+    /**
+     * THE NAME INDEX'S OWN ROWS, and nothing else under {@code /memory}: {@code <...>/memory/redirect/<name>} is a
+     * write the sphere owns so it is final -- memory's ordinary write path only writes keys that already exist, which
+     * is why this address was a silent no-op before.
+     */
+    private boolean isNameIndex(final fURI vid) {
+        return vid.segmentLength() >= 2 && !vid.hasQ() && REDIRECT.equals(vid.retract(1).name());
     }
 
     @Override
@@ -201,6 +212,8 @@ public final class MachineSpace extends memSpace {
         // ~/sys into this space's own store, through its q-processors (a fail's ?incrq mints its key here)
         if (SYS.equals(this.part(vid)))
             return super.write(vid, obj);
+        if (MEMORY.equals(this.part(vid)))
+            return this.owner.memory().write(vid, obj);
         // the network writes its own branch: a field in place, a member's deletion its retraction, a value refused
         return this.owner.network().write(vid, obj);
     }

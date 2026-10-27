@@ -98,6 +98,9 @@ public class BasicMemory extends MRec implements Memory {
      */
     private final AtomicLong redirectVersion = new AtomicLong();
 
+    /** a rewrite is serialized: it changes what every reader of the table resolves */
+    private final Object redirectWrite = new Object();
+
     /**
      * The absolute index — one stable rec for the lifetime of this memory. It is a Java field, never re-derived
      * from the rec's own bindings: {@code Rec.at(key, value, MUTABLE)} (the relative write path) rebuilds the
@@ -407,6 +410,46 @@ public class BasicMemory extends MRec implements Memory {
     @Override
     public Set<fURI> redirects(final fURI small) {
         return null == small ? Set.of() : this.smallToBigRoutes.getOrDefaultRaw(small.basePath(), Set.of());
+    }
+
+    /**
+     * THE DELIBERATE REWRITE: one name, one new home, the old reverse rows pruned, the version bumped so the projection
+     * rebuilds. Everything that resolves a short name reads this table, so the write is serialized and visible -- a
+     * rewrite changes what the name means for every reader, which is not something a field assignment should be able
+     * to do quietly.
+     */
+    @Override
+    public Obj redirect(final fURI name, final fURI path) {
+        synchronized (this.redirectWrite) {
+            // PRUNE FIRST: a retargeted name must not leave its previous homes answering small()
+            this.smallToBigRoutes.getOrDefaultRaw(name, Set.of())
+                    .forEach(old -> this.bigToSmallRoutes.remove(uri(old)));
+            this.smallToBigRoutes.computeRaw(name, (k, v) -> null);
+            if (null != path && !path.isRelative())
+                this.registerRedirect(name, path);   // ordered set, reverse row and version bump
+            this.redirectVersion.incrementAndGet();
+        }
+        return this.index();
+    }
+
+    /**
+     * WRITING A ROW IS THE SAME ACT AS THE VERB, so the address is an address and not a second implementation:
+     * {@code <...>/memory/redirect/<name> -> <home>} retargets, {@code -> noobj} unbinds.
+     */
+    @Override
+    public Obj write(final fURI vid, final Obj obj) {
+        if (null != vid && !vid.hasScheme() && !vid.hasHost() && vid.segmentLength() >= 2
+                && REDIRECT.equals(vid.retract(1).name())) {
+            // A NAME DENOTES AN ADDRESS. noobj unbinds it; anything else is refused, because the alternative is
+            // reading a typo as a delete -- and a silent delete of a vocabulary name is exactly the kind of quiet
+            // structural damage this table must not be able to suffer.
+            if (!obj.isUri() && !obj.isNoObj())
+                throw studio.phaseshift.metatron.util.MTronException.of(
+                        "the name index maps %s to an address, not to %s (write noobj to unbind)", vid.name(), obj);
+            this.redirect(f(vid.name()), obj.isUri() ? obj.uriValue() : null);
+            return obj;
+        }
+        return Memory.super.write(vid, obj);
     }
 
     public Obj read(final fURI vid) {
