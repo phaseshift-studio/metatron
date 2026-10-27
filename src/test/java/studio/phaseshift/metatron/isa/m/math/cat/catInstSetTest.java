@@ -27,8 +27,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.Law;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
@@ -43,23 +47,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.INT_TID;
-import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.Tokens.CLASS;
-import static studio.phaseshift.metatron.Tokens.FORM;
-import static studio.phaseshift.metatron.Tokens.OBJ;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.DIV_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MULT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NEG_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.CMPLX_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -95,7 +93,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     private static Inst asUriInt() {
         return Machine.read(f("/m/inst/as").rng(f("/m/uri")).dom(f("/m/int"))).as();
     }
-    
+
     @Test
     @Disabled
     public void testIntFamilyShipsItsAlgebra() {
@@ -206,7 +204,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .map(v -> v.kind().name().toUpperCase())
                 .distinct()
                 .toList();
-        LOG.warn("sibling pair %s / %s => %s", siblingA, siblingB, labels);
+        LOG.debug("sibling pair %s / %s => %s", siblingA, siblingB, labels);
         assertTrue(labels.contains(label), siblingA + " / " + siblingB + " should be labelled " + label
                 + " but was labelled " + labels);
     }
@@ -312,6 +310,95 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
+     * THE INST BUILDER — one chain states the contract, the body, the docs ({@code ?docq}) and the process laws
+     * ({@code ?lawq}), replacing the separate {@code instC} + {@code docWrap} + law-table-row declarations. The
+     * laws are staged and persisted by the instset's drain once its space exists.
+     */
+    @Test
+    void testInstBuilder() {
+        final Inst built = InstBuilder.build()
+                .tid(f("/m/inst/built_test"))
+                .dom(INT_TID).rng(INT_TID)
+                .argLst(jnt(1))
+                .body((lhs, inst) -> lhs)
+                .law(Law.commutative, Law.pure)
+                .docDesc("a built instruction").docDom("the lhs").docRng("the result")
+                .create();
+        assertEquals(f("/m/inst/built_test").dom(INT_TID).rng(INT_TID), built.tid(),
+                "the builder stamps the declared contract");
+        InstBuilder.drain(built);
+        final Obj laws = QCollection.lawOf(built);
+        assertTrue(laws.isRec() && laws.asRec().at(uri(LAW)).isLst(),
+                "the builder's laws reach ?lawq, got " + laws);
+        assertEquals(2, laws.asRec().at(uri(LAW)).asLst().count(), "both laws are declared");
+        final LawTable.Entry served = LawTable.lawsOf(built.tid());
+        assertNotNull(served, "an inst that declares its own laws is served without a table row");
+        assertTrue(served.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(Law.pure.name())),
+                "the declared laws answer the lookup, got " + served.laws());
+    }
+
+    /**
+     * THE TYPE BUILDER DECLARES THE ALGEBRA — {@code Type.Builder.law(...)} stages the theory instances and the
+     * instset persists them to {@code ?lawq} as soon as its space is mounted (a type is built before that, which
+     * is why the write cannot happen at {@code create()} time). Read back through {@code lawOf}.
+     */
+    @Test
+    void testTypeBuilderDeclaresItsAlgebra() {
+        final Type lawful = Type.Builder.build()
+                .tid(INT_TID)
+                .vid(f("/m/lawful_test"))
+                .law(rec(uri("ring"), rec(uri("zero"), jnt(0))))
+                .create();
+        Type.Builder.drain(lawful);
+        final Obj read = QCollection.lawOf(lawful);
+        assertTrue(read.isRec() && read.asRec().has(uri("ring")),
+                "the builder's declaration must reach ?lawq, got " + read);
+    }
+
+    /**
+     * A ROW BELONGS TO ITS CARRIER'S INTSET, not to the instset that registers the op: {@code neg?dom=cmplx} lives
+     * in {@code /m/math}'s table although {@code neg} itself is an {@code /m/inst} instruction, so the op's own
+     * longest-prefix owner can never find it. Before the carrier dispatch these cmplx rows were served to nobody.
+     */
+    @Test
+    void testProcessRowIsOwnedByItsCarrier() {
+        final LawTable.Entry cmplxNeg = LawTable.lawsOf(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID));
+        assertNotNull(cmplxNeg, "a cmplx row belongs to the /m/math table although neg lives under /m/inst");
+        assertTrue(cmplxNeg.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(Law.involution.name())),
+                "cmplx's neg is declared involution, got " + cmplxNeg.laws());
+    }
+
+    /**
+     * A UNIVERSAL ROW ANSWERS FOR EVERY CARRIER — {@code order?dom=A{*}} is one declaration for all types, and the
+     * lookup must consult it when the queried address has no row of its own. Without that fallback the row existed
+     * and the lift served no law for {@code order} at all.
+     */
+    @Test
+    void testUniversalRowReachesEveryCarrier() {
+        final LawTable.Entry order = LawTable.lawsOf(ORDER_INST_TID.dom(INT_TID));
+        assertNotNull(order, "order?dom=A{*} must answer for an int carrier");
+        assertTrue(order.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(Law.pure.name())),
+                "the universal fold is declared pure, got " + order.laws());
+    }
+
+    /**
+     * ?LAWQ — a type's algebra declaration lives BESIDE the type, in the owning space's lawq region (the docq
+     * pattern): written as data, read back by address, with no side table and no dependency on the category
+     * being mounted. This is the storage the type/inst builders write through; {@code typeLaws} will read it
+     * before its in-code fallback.
+     */
+    @Test
+    void testLawQLivesBesideItsType() {
+        final Rec ring = rec(uri("ring"), rec(uri("zero"), jnt(0), uri("one"), jnt(1)));
+        QCollection.lawWrap(mInstSet.INT_TYPE, ring);
+        final Obj read = Machine.read(mInstSet.INT_TYPE.vid().addQ(QCollection.LAWQ));
+        assertEquals(read, QCollection.lawOf(mInstSet.INT_TYPE), "the reader and the ?lawq read agree");
+        assertTrue(read.isRec(), "int::T's algebra must be readable through ?lawq, got " + read);
+        assertTrue(read.asRec().has(uri("ring")), "the ring instance survives the round trip, got " + read);
+        assertEquals(jnt(0), read.asRec().at(uri("ring")).asRec().at(uri("zero")), "the block is stored verbatim");
+    }
+
+    /**
      * THE CLASS READS THE COMPUTED INVERSE — an involution is its own inverse, so {@code iso} (and with it
      * {@code auto}, {@code section}, {@code retraction}) follows from the law table, stated once in
      * {@code LawTable#derivedInverse} and read here; a group operation like {@code plus} is not self-inverse and
@@ -385,7 +472,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "int::T.as(object::T)>>law>>mult_group   % noobj",
-            "int::T.as(object::T)>>law>>mult_monoid % monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,id=>1]",
+            "int::T.as(object::T)>>law>>mult_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,id=>1]",
     }, delimiter = '%')
     void testObjectLaws(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
@@ -399,12 +486,12 @@ public class catInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             // the theory roles hold !* (auto_from) pointers to the live operations — the graph is the refs, not a copy
-            "nat::T.as(object::T)>>law>>rig         % rig_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
-            "nat::T.as(object::T)>>law>>add_monoid  % monoid_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0]",
+            "nat::T.as(object::T)>>law>>rig         % /m/theory/rig_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
+            "nat::T.as(object::T)>>law>>add_monoid  % /m/theory/monoid_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0]",
             // "nat::T.as(object::T)>>law>>add_group   % noobj",
             //  "nat::T.as(object::T)>>law>>ring        % noobj",
-            "int::T.as(object::T)>>law>>ring        % ring_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
-            "int::T.as(object::T)>>law>>add_group   % group_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0,inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int]",
+            "int::T.as(object::T)>>law>>ring        % /m/theory/ring_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
+            "int::T.as(object::T)>>law>>add_group   % /m/theory/group_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0,inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int]",
     }, delimiter = '%')
     void testNatVsInt(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
@@ -463,7 +550,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                     .flatMap(isa -> isa.rewrites().stream())
                     .forEach(r -> {
                         final Obj rewritten = r.apply(rewrittenCode.get());
-                        STATIC_LOG.warn(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));
+                        STATIC_LOG.debug(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));
                         if (rewritten.isCode())
                             rewrittenCode.set(rewritten.asCode());
                     });
@@ -732,7 +819,9 @@ public class catInstSetTest extends AbstractInstSetTest {
         checkEquality(LOG, str(clazz), str(classLabels(morphism)), true);
     }
 
-    /** A morphism's class labels, comma-joined, or {@code -} when it carries none. */
+    /**
+     * A morphism's class labels, comma-joined, or {@code -} when it carries none.
+     */
     private static String classLabels(final Rec morphism) {
         return morphism.has(uri(CLASS))
                 ? morphism.at(CLASS).asLst().lstValue().stream().map(l -> l.uriValue().name()).collect(Collectors.joining(","))

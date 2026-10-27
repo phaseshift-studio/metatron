@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.Law;
+
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
@@ -60,16 +63,7 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI ABSTRACTION_TID = CATEGORY_TID.extend("abstraction");
     public static final fURI PLAN_TID = CATEGORY_TID.extend("plan");
     public static final fURI PLACE_TID = CATEGORY_TID.extend("place");
-    public static final fURI THEORY_TID = CAT_ISA_TID.extend("theory");
-    public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
-    public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
-    public static final fURI MONOID_THEORY_TID = THEORY_TID.extend("monoid_theory");
-    public static final fURI FIELD_THEORY_TID = THEORY_TID.extend("field_theory");
-    public static final fURI RIG_THEORY_TID = THEORY_TID.extend("rig_theory");
-    public static final fURI BOOLEAN_THEORY_TID = THEORY_TID.extend("boolean_theory");
-    public static final fURI LATTICE_THEORY_TID = THEORY_TID.extend("lattice_theory");
-    public static final fURI SEMILATTICE_THEORY_TID = THEORY_TID.extend("semilattice_theory");
-    public static final fURI NEAR_RING_THEORY_TID = THEORY_TID.extend("near_ring_theory");
+    // the algebra vocabulary lives with the instruction set (mInstSet.THEORY_TID ...): the category RENDERS it
     public static final fURI LAW_TID = CAT_ISA_TID.extend("law");
     public static final fURI CLASS_TID = CAT_ISA_TID.extend("class");
 

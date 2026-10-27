@@ -338,20 +338,21 @@ the default values are `#{?}` and `#{*}`, respectively.
 
 ```mtron
 mtron> *plus?docq
-==>docs::[obj=>plus?int<=int(int::T){<j>},
-          dom=>'the lhs int',
-          rng=>'the result of the addition',
-          args=>[int::T=>'the int to add to the lhs'],
-          desc=>'[mapper] add the argument int to t...',
-          example=>['1.plus(2)          [-- 3          ...',
-                    "1+2                [-- 3 sugar'd f...",
-                    '1.plus(plus(1))    [-- 3 nested ap...',
-                    '1+(+1)             [-- 3 sugar nes...']]
 ==>docs::[obj=>plus?real<=real(real::T){<j>},
           dom=>'a real',
           rng=>'the sum',
-          args=>[0=>'the rhs real'],
+          args=>[real::T=>'the rhs real'],
           desc=>'[mapper] a sum function \(f(x, y) ...']
+==>docs::[obj=>plus?bool<=bool(bool::T){<j>},
+          dom=>'the lhs bool',
+          rng=>'whether either bool is true',
+          args=>[bool::T=>'the bool to or with the lhs'],
+          desc=>'[mapper] the disjunction (or) of t...']
+==>docs::[obj=>plus?bytes<=bytes(bytes::T){<j>},
+          dom=>'the lhs bytes',
+          rng=>'the concatenated bytes',
+          args=>[bytes::T=>'the bytes to append to the lhs'],
+          desc=>'[mapper] append the argument bytes...']
 ==>docs::[obj=>plus?str<=str(str::T){<j>},
           dom=>'a prefix str',
           rng=>'the concatenated str',
@@ -361,8 +362,33 @@ mtron> *plus?docq
 ==>docs::[obj=>plus?uri{?}<=uri(uri{?}::T){<j>},
           dom=>'a uri',
           rng=>'the branch union',
-          args=>[0=>'the rhs uri'],
+          args=>[uri::T=>'the rhs uri'],
           desc=>'[filter] a branch function \(f(x, ...']
+==>docs::[obj=>plus?lst<=lst(lst::T){<j>},
+          dom=>'the lhs lst',
+          rng=>'the concatenated lst',
+          args=>[lst::T=>'the lst to append'],
+          desc=>'[mapper] append the slots of the a...']
+==>docs::[obj=>plus?rec<=rec(rec{??}::T){<j>},
+          dom=>'the lhs rec',
+          rng=>'the deep merge of the two recs',
+          args=>[rec::T=>'the rec to merge into the lhs'],
+          desc=>'[mapper] deep merge the argument r...']
+==>docs::[obj=>plus?code<=code(code::T){<j>},
+          dom=>'the lhs code',
+          rng=>'the branch of the two codes',
+          args=>[code::T=>'the code branched alongside the lhs'],
+          desc=>'[mapper] branch two codes in paral...']
+==>docs::[obj=>plus?int<=int(int::T){<j>},
+          dom=>'the lhs int',
+          rng=>'the result of the addition',
+          args=>[int::T=>'the int to add to the lhs'],
+          desc=>'[mapper] add the argument int to t...',
+          example=>[
+           '1.plus(2)          [-- 3          ...',
+           "1+2                [-- 3 sugar'd f...",
+           '1.plus(plus(1))    [-- 3 nested ap...',
+           '1+(+1)             [-- 3 sugar nes...']]
 ==>docs::[obj=>plus?time<=time(time::T){<j>},
           dom=>'/m/math/time',
           rng=>'/m/math/time',
@@ -406,9 +432,10 @@ mtron> *select?<=str&docq
           rng=>'the regex capture groups (or full ...',
           args=>[0=>'regex'],
           desc=>'[mapper] split the lhs str by rege...',
-          example=>["'abc.cde'.regex('[^.]+') [-- ['abc...",
-                    "'abc.cde'.regex('.\..') [-- ['c.c'...",
-                    "'241G'.regex('(\d+)([KMGT])') [-- ..."]]
+          example=>[
+           "'abc.cde'.regex('[^.]+') [-- ['abc...",
+           "'abc.cde'.regex('.\..') [-- ['c.c'...",
+           "'241G'.regex('(\d+)([KMGT])') [-- ..."]]
 ```
 ## references
 

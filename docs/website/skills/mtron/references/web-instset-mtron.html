@@ -465,13 +465,15 @@ mtron&gt; http_server::[origin =&gt; http://localhost:8777,
 mtron&gt; [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron&gt; http_client::[host =&gt; &lt;http://#&gt;]
 ==&gt;http_client::[host=&gt;http://#,
-                 inst=&gt;[/m/inst/from=&gt;*uri::T,
-                        /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+                 inst=&gt;[
+                  /m/inst/from=&gt;*uri::T,
+                  /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
                  status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; http_client::[host =&gt; &lt;https://#&gt;]
 ==&gt;http_client::[host=&gt;https://#,
-                 inst=&gt;[/m/inst/from=&gt;*uri::T,
-                        /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+                 inst=&gt;[
+                  /m/inst/from=&gt;*uri::T,
+                  /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
                  status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 mtron&gt; [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
@@ -509,15 +511,15 @@ mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-ins
    ...
 mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md&gt;.as(html::T).as(rec::T)
 ==&gt;[html=&gt;[head=&gt;[=&gt;],
-           body=&gt;[out=&gt;[[tag=&gt;h1,
+           body=&gt;[out=&gt;[[
+                         tag=&gt;h1,
                          out=&gt;[[tag=&gt;code,text=&gt;'/m/web']],
                          text=&gt;'web instruction set ()'],
-                        [tag=&gt;p,
-                         out=&gt;[[tag=&gt;code,text=&gt;'/m/web'],
-                               [tag=&gt;em,text=&gt;'transport protocol'],
-                               [tag=&gt;em,text=&gt;'MIME'],
-                               [tag=&gt;em,text=&gt;'endpoint'],
-                               [tag=&gt;code,text=&gt;'/m/web'],
+                        [
+                         tag=&gt;p,
+                         out=&gt;[
+                          [tag=&gt;code,text=&gt;'/m/web'],
+                          [tag=&gt;em,text=&gt;'transport protocol'],
    ...
 </code></pre>
 <h3>the space these examples use</h3>

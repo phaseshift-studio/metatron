@@ -67,25 +67,39 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @InstSet.JREService(vid = "/m")
 public class mInstSet extends AbstractInstSet {
 
-    public static final Type BOOL_TYPE = Type.Builder.build().tid(BOOL_TID).vid(BOOL_TID).create();
+    // the TYPE DECLARATIONS live in mTypes (the sibling of mInsts, mirroring catTypes); re-exported by name
+    public static final Type BOOL_TYPE = mTypes.BOOL_TYPE;
 
-    public static final Type BYTES_TYPE = Type.Builder.build().tid(BYTES_TID).vid(BYTES_TID).create();
+    public static final Type BYTES_TYPE = mTypes.BYTES_TYPE;
 
-    public static final Type INT_TYPE = Type.Builder.build().tid(INT_TID).vid(INT_TID).create();
+    // ---------- the FOUNDATIONAL ALGEBRA VOCABULARY: the theories a type models ----------
+    // These live with the instruction set, not with the category: the category is OPTIONAL (mounted only by
+    // importing /m/math/cat), while a type's algebra is a fact about the type. The category renders them
+    // (object::T>>law, morphism::T.law); it does not own them.
+    public static final fURI THEORY_TID = M_ISA_TID.extend("theory");
+    public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
+    public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
+    public static final fURI MONOID_THEORY_TID = THEORY_TID.extend("monoid_theory");
+    public static final fURI FIELD_THEORY_TID = THEORY_TID.extend("field_theory");
+    public static final fURI RIG_THEORY_TID = THEORY_TID.extend("rig_theory");
+    public static final fURI BOOLEAN_THEORY_TID = THEORY_TID.extend("boolean_theory");
+    public static final fURI LATTICE_THEORY_TID = THEORY_TID.extend("lattice_theory");
+    public static final fURI SEMILATTICE_THEORY_TID = THEORY_TID.extend("semilattice_theory");
+    public static final fURI NEAR_RING_THEORY_TID = THEORY_TID.extend("near_ring_theory");
 
-    public static final Type REAL_TYPE = Type.Builder.build().tid(REAL_TID).vid(REAL_TID).create();
+    public static final Type INT_TYPE = mTypes.INT_TYPE;
 
-    public static final Type STR_TYPE = Type.Builder.build().tid(STR_TID).vid(STR_TID).create();
+    public static final Type REAL_TYPE = mTypes.REAL_TYPE;
 
-    public static final Type URI_TYPE = Type.Builder.build().tid(URI_TID).vid(URI_TID).create();
+    public static final Type STR_TYPE = mTypes.STR_TYPE;
 
-    public static final Type REL_TYPE = Type.Builder.build().tid(REL_TID).vid(REL_TID).create();
+    public static final Type URI_TYPE = mTypes.URI_TYPE;
 
-    public static final Type LST_TYPE = Type.Builder.build()
-            .tid(LST_TID)
-            .vid(LST_TID).create();
+    public static final Type REL_TYPE = mTypes.REL_TYPE;
 
-    public static final Type REC_TYPE = Type.Builder.build().tid(REC_TID).vid(REC_TID).create();
+    public static final Type LST_TYPE = mTypes.LST_TYPE;
+
+    public static final Type REC_TYPE = mTypes.REC_TYPE;
 
 
     /**
@@ -98,10 +112,10 @@ public class mInstSet extends AbstractInstSet {
     // ThreadLocal<Boolean> REWRITE_MODE = ThreadLocal.withInitial(() -> false);
 
     // Uri ARGS_URI = uri(ARGS_FURI);
-    public static final Type INST_TYPE = Type.Builder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
+    public static final Type INST_TYPE = mTypes.INST_TYPE;
 
-    public static final Type CODE_TYPE = Type.Builder.build().tid(CODE_TID).vid(CODE_TID).create();
-    public static final Type NOOBJ_TYPE = Type.Builder.build().tid(NOOBJ_TID.zero()).vid(NOOBJ_TID.zero()).predicate((lhs, inst) -> noobj()).create();
+    public static final Type CODE_TYPE = mTypes.CODE_TYPE;
+    public static final Type NOOBJ_TYPE = mTypes.NOOBJ_TYPE;
 
     public static final fURI LIKE_INST_TID = M_ISA_INST_TID.extend("like");
     public static final fURI CAUSE_INST_TID = M_ISA_INST_TID.extend("cause");
@@ -620,6 +634,15 @@ public class mInstSet extends AbstractInstSet {
                 uri(INST), lst(Stream.of(
                         Bool.BoolType.insts().stream(),
                         Bytes.BytesType.insts().stream(),
+                        mInsts.ints().stream(),
+                        mInsts.reals().stream(),
+                        mInsts.bools().stream(),
+                        mInsts.bytess().stream(),
+                        mInsts.strs().stream(),
+                        mInsts.uris().stream(),
+                        mInsts.lsts().stream(),
+                        mInsts.recs().stream(),
+                        mInsts.codes().stream(),
                         Int.IntType.insts().stream(),
                         Real.RealType.insts().stream(),
                         Str.StrType.insts().stream(),
@@ -1315,5 +1338,51 @@ public class mInstSet extends AbstractInstSet {
                 // Sugar.prefix("~", List.of(THREAD_INST_TID), 1),
                 Sugar.infix(" & ", List.of(AND_INST_TID)),
                 Sugar.infix(" | ", List.of(OR_INST_TID))));
+    }
+
+    static {
+        // INT'S ALGEBRA IS DECLARED AT ITS TYPE — the theory instances it models, with !* pointers to the live
+        // operations. Declared in a static block because the initializer needs the inst tids above; staged here
+        // and persisted to ?lawq by the drain that runs when this set is mounted. The table no longer restates it.
+        Type.Builder.declare(INT_TYPE, studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
+                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
+                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("ring"),
+                        studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
+                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ADD),
+                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.MUL),
+                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ZERO),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ONE),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(1)),
+                                RING_THEORY_TID, null),
+                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("add_group"),
+                        studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
+                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.OP),
+                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ID),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.INV),
+                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(NEG_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst()),
+                                GROUP_THEORY_TID, null),
+                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("add_monoid"),
+                        studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
+                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.OP),
+                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ID),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(0)),
+                                MONOID_THEORY_TID, null),
+                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("mult_monoid"),
+                        studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
+                                studio.phaseshift.metatron.util.CommonUtil.mutableMap(
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.OP),
+                                        studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(Tokens.ID),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(1)),
+                                MONOID_THEORY_TID, null))));
     }
 }

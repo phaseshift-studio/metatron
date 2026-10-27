@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.math.cat;
+package studio.phaseshift.metatron.isa.m;
 
 /**
  * The law axis: the process laws a morphism obeys — a property of the operation itself, never the whole
@@ -27,7 +27,7 @@ package studio.phaseshift.metatron.isa.m.math.cat;
  * ({@code monoid_theory::T}, {@code group_theory::T}, {@code ring_theory::T}, {@code field_theory::T},
  * {@code rig_theory::T}, {@code boolean_theory::T}, {@code lattice_theory::T},
  * {@code semilattice_theory::T}, {@code near_ring_theory::T}). The former provenance axis
- * (syntactic/declared/semantic) is dropped too: {@link mInstSetLawTable} serves the declared process laws; the
+ * (syntactic/declared/semantic) is dropped too: an instruction set serves the declared process laws; the
  * rest are derived (syntactic) or computed (semantic) when wired.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)

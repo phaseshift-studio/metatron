@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
@@ -38,13 +39,12 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? extends Obj>>> implements InstSet {
@@ -182,12 +182,15 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         if (jvm.containsKey(uri(QPROC))) {
             Obj qprocs = jvm.get(uri(QPROC));
             if (qprocs.isFail() || qprocs.isNoObj())
-                jvm.put(uri(QPROC), lst(QCollection.docQ()));
-            else if (qprocs.lstValue().stream().noneMatch(q -> q.tid().equals(QCollection.DOCQ_TID))) {
-                qprocs.lstValue().add(QCollection.docQ());
+                jvm.put(uri(QPROC), lst(QCollection.docQ(), QCollection.lawQ()));
+            else {
+                if (qprocs.lstValue().stream().noneMatch(q -> q.tid().equals(QCollection.DOCQ_TID)))
+                    qprocs.lstValue().add(QCollection.docQ());
+                if (qprocs.lstValue().stream().noneMatch(q -> q.tid().equals(QCollection.LAWQ_TID)))
+                    qprocs.lstValue().add(QCollection.lawQ());
             }
         } else {
-            jvm.put(uri(QPROC), lst(QCollection.docQ()));
+            jvm.put(uri(QPROC), lst(QCollection.docQ(), QCollection.lawQ()));
         }
         return jvm;
     }
@@ -249,6 +252,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             }
         });
         Machine.current().memory().write(this.vid(), this);
+        // the space is mounted: persist any algebra its types declared in their builder (?lawq)
+        this.types().forEach(Type.Builder::drain);
+        this.insts().forEach(InstBuilder::drain);
     }
 
     @Override

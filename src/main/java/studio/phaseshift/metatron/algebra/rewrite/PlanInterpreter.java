@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.math.cat.Derivation;
-import studio.phaseshift.metatron.isa.m.math.cat.Law;
+import studio.phaseshift.metatron.isa.m.Derivation;
+import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.math.cat.Signatures;

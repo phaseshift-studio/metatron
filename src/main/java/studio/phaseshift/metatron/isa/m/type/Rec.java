@@ -382,18 +382,17 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         }
     }
 
+    /*
+     * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet.
+     * The two `as` conversions below each declare one side of an opposing edge -- rec/lst and uri/rec -- and the
+     * direction is the claim, so their rows stay in mInstSetLawTable. Everything the builder CAN say lives in
+     * mInsts.recs() -- and these retire as InstBuilder grows `inverse`.
+     */
     final class RecType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(INST_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid())),
-                    instC(AS_INST_TID.dom(INT_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid())),
-                    instC(AS_INST_TID.dom(STR_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid())),
-                    //instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())),
-
                     instC(AS_INST_TID.dom(REC_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.transformRecToLst(lhs.asRec(), inst.arg(0).vidOrTid(), null)),
-                    //    Map.of(uri(INVERSE), uri(AS_INST_TID.dom(LST_TID).rng(REC_TID)))),
-                    // instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> Optional.of(lhs).filter(o ->o.matches(inst.arg(0))).map(o-> o.tid(inst.arg(0).tid())).orElseThrow(() -> MTronException.of("unable to resolve %s to %s", lhs, inst.arg(0)))),
                     instC(AS_INST_TID.dom(REC_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> {
                         final Rec lhsRec = lhs.asRec();
                         fURI furi = fURI.Singleton.empty();
@@ -415,60 +414,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         if (lhsRec.has(QPROC))
                             furi = furi.q(lhsRec.at(QPROC).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().isNothing() ? "" : e.second().toCleanString())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
                         return uri(furi, inst.arg(0).vidOrTid(), null);
-                    }),
-                    //Map.of(uri(INVERSE), uri(AS_INST_TID.dom(URI_TID).rng(REC_TID)))),
-                    instC(ZERO_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> lhs.asRec().zero()),
-                    //    Map.of(uri(LAW), laws(Category.Law.unit, Category.Law.idempotent))),
-                    instC(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> new ArrayList<Rel>(lhs.asRec().elements().toList()).reversed().stream().collect(new CommonUtil.RecCollector(lhs.tid(), lhs.vid()))),
-                    //   Map.of(uri(LAW), laws(Category.Law.involution), uri(INVERSE), uri(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID)))),
-                    instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL), T(ALL)), (lhs, inst) -> {
-                        final Obj result = inst.arg(1).apply(lhs.asRec().at(inst.arg(0)));
-                        return result.isFail() ? result : (result.booleanCheck() ? lhs : noobj());
-                    }),
-                    //Map.of(uri(LAW), laws(Category.Law.boolean_))),
-                    instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
-                            (lhs.<Rec>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()) :
-                            (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj())),
-                    //        Map.of(uri(LAW), laws(Category.Law.boolean_))),
-                    instC(GET_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> objs(lhs.stream().map(r -> r.<Rec>as().at(inst.arg(0))))),
-                    instC(SPLIT_INST_TID.dom(A).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).asRec().elements().map(e -> rel(e.first().apply(lhs), e.second().apply(lhs))).collect(new CommonUtil.RecCollector(inst.arg(0).tid(), inst.arg(0).vid()))),
-                    instC(MERGE_INST_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
-                    //instC(MERGE_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),
-                    instC(DOM_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.asRec().elements().map(Rel::first))),
-                    instC(RNG_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.asRec().elements().map(Rel::second))),
-                    // instC(RSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asRec().at(k)))),
-                    instC(LSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs.parent()),
-                    instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.asRec().plus(inst.arg(0).asRec())),
-                    //      Map.of(uri(LAW), laws(Category.Law.monoidic))),
-                    instC(MINUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> {
-                        final Map<Obj, Obj> values = lhs.recValue();
-                        inst.arg(0).asRec().elements().forEach(rkv -> {
-                            final Set<Obj> keys = lhs.asRec().elements().filter(lkv -> lkv.first().test(rkv.first()) && lkv.second().test(rkv.second())).map(Rel::first).collect(Collectors.toSet());
-                            keys.forEach(values::remove);
-                        });
-                        return lhs.jvm(values);
-                    }),
-                    instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
-                    //     Map.of(uri(LAW), laws(Category.Law.monoidic))),
-                    //instC(MAP_INST_TID.dom(REC_TID).rng(REC_TID), rec(ALL_TYPE, ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().map(e -> rel(inst.args().asRec().elements().findFirst().get().first().apply(e.first()), inst.args().asRec().elements().findFirst().get().second().apply(e.second()))).collect(new CommonUtil.RecCollector(lhs.tid(), lhs.vid()))),
-                    //instC(FILTER_INST_TID.dom(REC_TID).rng(REC_TID), rec(ALL_TYPE, ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().filter(e -> inst.args().asRec().elements().findFirst().get().first().apply(e.first()).booleanCheck() && inst.args().asRec().elements().findFirst().get().second().apply(e.second()).booleanCheck()).collect(new CommonUtil.RecCollector(lhs.tid(), lhs.vid()))),
-
-
-                    //instC(MAPP_INST_TID.addQ(BLOCK).dom(REC_TID).rng(REC_TID), rec(uri(KEY), ALL_TYPE, uri(VALUE), ALL_TYPE), (lhs, inst) -> lhs.asRec().elements().map(r -> rel(inst.arg(KEY, 0).apply(r.first()), inst.arg(VALUE, 1).apply(r.second()))).collect(new CommonUtil.RecCollector())),
-                    //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> rec(Rec.Helper.project(lhs.asRec(), inst.arg(0).asRec(), false), inst.arg(0).tid(), inst.arg(0).vid())),
-                    //instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(URI_TYPE), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
-                    //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(URI_TYPE.c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
-                    //instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID.c(cInt.of(2, null)))), (lhs, inst) -> inst.arg(0).stream().map(u -> rel(u, lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
-                    //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), inst.arg(0).asRec(), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
-                    //instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REL_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), rec(inst.arg(0).asRel().jvm().get0(), inst.arg(1).asRel().jvm().get1()), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asRec().at(s)))),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.selectPolyRecursion(lhs.asRec(), inst.arg(0).asRec(), false)),
-                    instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()))),
-                    instC(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), lst(), (lhs, inst) -> lhs.stream().map(Obj::asRec).reduce(rec(), Rec::plus))
-                    //         Map.of(uri(LAW), laws(Category.Law.monoidic)))
+                    })
             ));
-
-
         }
     }
 }

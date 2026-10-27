@@ -47,20 +47,22 @@ rules a vertex may take are read from exactly these declarations (see *the decla
 ```mtron
 mtron> int::T.as(object::T)
 ==>object[int]::[obj=>int::T,
-                 law=>[ring=>ring_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
-                                           mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
-                                           zero=>0,
-                                           one=>1],
-                       add_group=>group_theory::[
-                        op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
-                        id=>0,
-                        inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int],
-                       add_monoid=>monoid_theory::[
-                        op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
-                        id=>0],
-                       mult_monoid=>monoid_theory::[
-                        op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
-                        id=>1]],
+                 law=>[
+                  ring=>/m/theory/ring_theory::[
+                   add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                   mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
+                   zero=>0,
+                   one=>1],
+                  add_group=>/m/theory/group_theory::[
+                   op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                   id=>0,
+                   inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int],
+                  add_monoid=>/m/theory/monoid_theory::[
+                   op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,
+                   id=>0],
+                  mult_monoid=>/m/theory/monoid_theory::[
+                   op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,
+                   id=>1]],
                  morphed_to=>!λ(){<j>},
                  morphed_from=>!λ(){<j>}]
 ```
@@ -78,6 +80,13 @@ mtron> int::T.as(object::T).morphed_to()
 ==>morphism::[name=>as,
               form=>mapper,
               src=>!λint(){<j>},
+              trgt=>!λrec(){<j>},
+              analysis=>!λ(){<j>},
+              obj=>as?rec<=int(rec::T){<j>},
+              law=>[pure]]
+==>morphism::[name=>as,
+              form=>mapper,
+              src=>!λint(){<j>},
               trgt=>!λbool(){<j>},
               analysis=>!λ(){<j>},
               obj=>as?bool<=int(bool::T){<j>}]
@@ -88,13 +97,6 @@ mtron> int::T.as(object::T).morphed_to()
               analysis=>!λ(){<j>},
               obj=>as?bytes<=int(bytes::T){<j>}]
 ==>morphism::[name=>as,
-              form=>mapper,
-              src=>!λint(){<j>},
-              trgt=>!λreal(){<j>},
-              analysis=>!λ(){<j>},
-              obj=>as?real<=int(real::T){<j>}]
-==>morphism::[name=>as,
-              form=>mapper,
    ...
 ```
 ### the algebraic theories
@@ -226,7 +228,7 @@ are computed; proper (non-split) mono/epi classification requires composition, w
 |--------------|-------------------------------------------------------------------------------------------|
 | `endo`       | self-mapping — $\mathrm{dom}(f) = \mathrm{rng}(f)$                                        |
 | `auto`       | an invertible endomorphism — `endo` and `iso`                                             |
-| `iso`        | invertible — currently a self-inverse (involution)                                        |
+| `iso`        | invertible — the **computed** inverse is the edge itself (an `involution`), so `class` reads `analysis.inverse` rather than testing the law a second time |
 | `mono`       | left-cancellable — $f \cdot g = f \cdot h \Rightarrow g = h$ (here: a split monomorphism) |
 | `epi`        | right-cancellable — $g \cdot f = h \cdot f \Rightarrow g = h$ (here: a split epimorphism) |
 | `section`    | split mono — $f$ has a left inverse                                                       |
@@ -414,8 +416,9 @@ places visited.
 
 ```mtron
 mtron> /usr/walk/sat -> [mama=>[km=>[ridge=>12,lake=>5],visited=>[arroyo]],puppy=>[km=>[ridge=>12]],chelsea=>[km=>[lake=>5]]]
-==>[mama=>[km=>[ridge=>12,lake=>5],
-           visited=>[arroyo]],
+==>[mama=>[
+     km=>[ridge=>12,lake=>5],
+     visited=>[arroyo]],
     puppy=>[km=>[ridge=>12]],
     chelsea=>[km=>[lake=>5]]]
 mtron> /usr/walk/sun -> [mama=>[km=>[ridge=>9],visited=>[acequia,mesa]],puppy=>[km=>[lake=>5]],chelsea=>[km=>[lake=>5]]]
@@ -423,8 +426,9 @@ mtron> /usr/walk/sun -> [mama=>[km=>[ridge=>9],visited=>[acequia,mesa]],puppy=>[
     puppy=>[km=>[lake=>5]],
     chelsea=>[km=>[lake=>5]]]
 mtron> */usr/walk/sat + */usr/walk/sun
-==>[mama=>[km=>[ridge=>{12,9},lake=>5],
-           visited=>{[arroyo],[acequia,mesa]}],
+==>[mama=>[
+     km=>[ridge=>{12,9},lake=>5],
+     visited=>{[arroyo],[acequia,mesa]}],
     puppy=>[km=>[ridge=>12,lake=>5]],
     chelsea=>[km=>[lake=>{2}5]]]
 ```
@@ -448,8 +452,9 @@ $12 + 9$ and `{2}5` as $5 + 5$, while `visited=>_` keeps the stream of lists as 
 
 ```mtron
 mtron> */usr/walk/sat.plus(*/usr/walk/sun)==[_=>[km=>[_=>sum()],visited=>_]]
-==>[mama=>[km=>[ridge=>21,lake=>5],
-           visited=>{[arroyo],[acequia,mesa]}],
+==>[mama=>[
+     km=>[ridge=>21,lake=>5],
+     visited=>{[arroyo],[acequia,mesa]}],
     puppy=>[km=>[ridge=>12,lake=>5]],
     chelsea=>[km=>[lake=>10]]]
 ```
@@ -509,23 +514,28 @@ three steps below are the same vertex after each application — the path shrink
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==>[path::[obj=>start(5).plus(0).neg().neg(),
-           theory_unit_removal=>plan::[name=>theory_unit_removal,
-                                       cut=>[role=>id],
-                                       where=>[[shape=>none,span=>[[span=>at]]]]],
-           theory_involution=>plan::[name=>theory_involution,
-                                     cut=>[law=>[involution]],
-                                     where=>[[shape=>local,span=>[[span=>at]]]]],
-           derivation_contraction=>plan::[name=>derivation_contraction,
-                                          cut=>[role=>derivation],
-                                          where=>[[shape=>local,span=>[[span=>at]]]]]]]
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           theory_involution=>plan::[
+            name=>theory_involution,
+            cut=>[law=>[involution]],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]
 ==>[path::[obj=>start(5).plus(0),
-           theory_unit_removal=>plan::[name=>theory_unit_removal,
-                                       cut=>[role=>id],
-                                       where=>[[shape=>none,span=>[[span=>at]]]]],
-           derivation_contraction=>plan::[name=>derivation_contraction,
-                                          cut=>[role=>derivation],
-                                          where=>[[shape=>local,span=>[[span=>at]]]]]]]
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
 ==>[path::[obj=>start(5)]]
 ```
@@ -552,46 +562,46 @@ and computes its cut/span/where without consulting the code below; the descent (
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==>[abstraction::[obj=>[morphism[start]::[name=>start,
-                                          form=>initial,
-                                          src=>!λ#(){<j>},
-                                          trgt=>!λ#(){<j>},
-                                          analysis=>!λ(){<j>},
-                                          obj=>start(5)],
-                        morphism[plus?rng=int&dom=int]::[
-                         name=>plus,
-                         form=>mapper,
-                         class=>[endo],
-                         src=>!λint(){<j>},
-                         trgt=>!λint(){<j>},
-                         analysis=>!λ(){<j>},
-                         obj=>plus(0),
-                         ...(1 more)],
-                        morphism[neg?rng=int&dom=int]::[
-                         name=>neg,
-                         form=>mapper,
-                         class=>[endo,
-                                 iso,
-                                 auto,
-                                 section,
-                                 retraction,
-                                 mono,
-                                 epi],
-                         src=>!λint(){<j>},
-                         trgt=>!λint(){<j>},
-                         analysis=>!λ(){<j>},
-                         obj=>neg(),
-                         ...(1 more)],
-                        morphism[neg?rng=int&dom=int]::[
-                         name=>neg,
-                         form=>mapper,
-                         class=>[endo,
-                                 iso,
-                                 auto,
-                                 section,
-                                 retraction,
-                                 mono,
-                                 epi],
+==>[abstraction::[obj=>[
+                   morphism[start]::[
+                    name=>start,
+                    form=>initial,
+                    src=>!λ#(){<j>},
+                    trgt=>!λ#(){<j>},
+                    analysis=>!λ(){<j>},
+                    obj=>start(5)],
+                   morphism[plus?rng=int&dom=int]::[
+                    name=>plus,
+                    form=>mapper,
+                    class=>[endo],
+                    src=>!λint(){<j>},
+                    trgt=>!λint(){<j>},
+                    analysis=>!λ(){<j>},
+                    obj=>plus(0),
+                    ...(1 more)],
+                   morphism[neg?rng=int&dom=int]::[
+                    name=>neg,
+                    form=>mapper,
+                    class=>[
+                     endo,
+                     iso,
+                     auto,
+                     section,
+                     retraction,
+                     mono,
+                     epi],
+                    src=>!λint(){<j>},
+                    trgt=>!λint(){<j>},
+                    analysis=>!λ(){<j>},
+                    obj=>neg(),
+                    ...(1 more)],
+                   morphism[neg?rng=int&dom=int]::[
+                    name=>neg,
+                    form=>mapper,
+                    class=>[
+                     endo,
+                     iso,
+                     auto,
    ...
 ```
 ### `plan::T` — a rewrite rule as a value
@@ -649,9 +659,10 @@ mtron> ws_client::[host=>ws://localhost:8555/mtron]
 ==>[host=>ws://localhost:8555/mtron,
     send=>λ(){<j>},
     send_recv=>λ(){<j>},
-    inst=>[/m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-           /m/inst/from=>*uri::T,
-           /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+    inst=>[
+     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+     /m/inst/from=>*uri::T,
+     /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
     status=>!λstatus?bool<=(){<j>},
     close=>λ(){<j>},
     on_message=>print('received ${_}')]
@@ -664,24 +675,31 @@ now holding that `peer::T`, the `path::T` lists the distribution plan among its 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
 ==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
-           theory_unit_removal=>plan::[name=>theory_unit_removal,
-                                       cut=>[role=>id],
-                                       where=>[[shape=>none,span=>[[span=>at]]]]],
-           derivation_contraction=>plan::[name=>derivation_contraction,
-                                          cut=>[role=>derivation],
-                                          where=>[[shape=>local,span=>[[span=>at]]]]],
-           law_shard=>plan::[name=>law_shard,
-                             cut=>[form=>reducer,
-                                   law=>[monoidic,commutative]],
-                             where=>[[shape=>local,
-                                      span=>[[span=>at],[span=>post]]],
-                                     [shape=>tree,
-                                      hops=>1,
-                                      span=>[
-                                       [span=>seed,flags=>[partition]],
-                                       [span=>pre,flags=>[floatable,no_seed]],
-                                       [span=>at]],
-                                      inst=>[/m/inst/eval]]]]]]
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           law_shard=>plan::[
+            name=>law_shard,
+            cut=>[
+             form=>reducer,
+             law=>[monoidic,commutative]],
+            where=>[
+             [
+              shape=>local,
+              span=>[[span=>at],[span=>post]]],
+             [
+              shape=>tree,
+              hops=>1,
+              span=>[
+               [span=>seed,flags=>[partition]],
+               [span=>pre,flags=>[floatable,no_seed]],
+               [span=>at]],
+              inst=>[/m/inst/eval]]]]]]
 ```
 `law_shard` is Theorem 19 of the stream-ring algebra ([Stream Ring Theory](../../../articles/stream-ring-theory.html)):
 monoidic reducers are **semi-right distributive**,
@@ -704,24 +722,31 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
 ==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
-           theory_unit_removal=>plan::[name=>theory_unit_removal,
-                                       cut=>[role=>id],
-                                       where=>[[shape=>none,span=>[[span=>at]]]]],
-           derivation_contraction=>plan::[name=>derivation_contraction,
-                                          cut=>[role=>derivation],
-                                          where=>[[shape=>local,span=>[[span=>at]]]]],
-           law_shard=>plan::[name=>law_shard,
-                             cut=>[form=>reducer,
-                                   law=>[monoidic,commutative]],
-                             where=>[[shape=>local,
-                                      span=>[[span=>at],[span=>post]]],
-                                     [shape=>tree,
-                                      hops=>1,
-                                      span=>[
-                                       [span=>seed,flags=>[partition]],
-                                       [span=>pre,flags=>[floatable,no_seed]],
-                                       [span=>at]],
-                                      inst=>[/m/inst/eval]]]]]]
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           law_shard=>plan::[
+            name=>law_shard,
+            cut=>[
+             form=>reducer,
+             law=>[monoidic,commutative]],
+            where=>[
+             [
+              shape=>local,
+              span=>[[span=>at],[span=>post]]],
+             [
+              shape=>tree,
+              hops=>1,
+              span=>[
+               [span=>seed,flags=>[partition]],
+               [span=>pre,flags=>[floatable,no_seed]],
+               [span=>at]],
+              inst=>[/m/inst/eval]]]]]]
 ```
 A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
 `select([_=>sum()])` folds each key (see *the deep merge*).
@@ -729,18 +754,23 @@ A keyed fold lowers the same way, its master recombining pointwise: `merge().sum
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
 ==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()]),
-           law_shard=>plan::[name=>law_shard,
-                             cut=>[form=>reducer,
-                                   law=>[monoidic,commutative]],
-                             where=>[[shape=>local,
-                                      span=>[[span=>at],[span=>post]]],
-                                     [shape=>tree,
-                                      hops=>1,
-                                      span=>[
-                                       [span=>seed,flags=>[partition]],
-                                       [span=>pre,flags=>[floatable,no_seed]],
-                                       [span=>at]],
-                                      inst=>[/m/inst/eval]]]]]]
+           law_shard=>plan::[
+            name=>law_shard,
+            cut=>[
+             form=>reducer,
+             law=>[monoidic,commutative]],
+            where=>[
+             [
+              shape=>local,
+              span=>[[span=>at],[span=>post]]],
+             [
+              shape=>tree,
+              hops=>1,
+              span=>[
+               [span=>seed,flags=>[partition]],
+               [span=>pre,flags=>[floatable,no_seed]],
+               [span=>at]],
+              inst=>[/m/inst/eval]]]]]]
 ```
 ### may / must — the fiber modality
 

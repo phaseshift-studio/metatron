@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -463,44 +463,54 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/sys/#,
-          q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace,
-                 space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace,
-                 rec::T[?[level=&gt;union(info,trace,warn,error,debug),
-                          source=&gt;&lt;#&gt;::T,
-                          message=&gt;str::T]]@/m/sys/log_entry,
-                 uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir,
-                 uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file,
-                 file::T@/m/dckr/image],
-          inst=&gt;[as?bytes&lt;=uri(bytes::T){&lt;j&gt;},
-                 as?image&lt;=bytes(image::T,
-                                 else(1.0)){&lt;j&gt;},
-                 close?noobj{0}&lt;=(){&lt;j&gt;},
-                 redirect?rec[short=&gt;uri,long=&gt;uri]&lt;=(uri::T){&lt;j&gt;},
-                 sys_stat?rec&lt;=(){&lt;j&gt;},
-                 find_file?lst&lt;=(name=&gt;str::T,
-                                 {?}root=&gt;uri::T,
-                                 pattern=&gt;bool::T,
-                                 {?}max=&gt;int::T,
-                                 {?}depth=&gt;int::T){&lt;j&gt;},
-                 read_file?lst&lt;=(file=&gt;uri::T,
-                                 {?}min=&gt;int::T,
-                                 {?}max=&gt;int::T){&lt;j&gt;},
-                 edit_file?rec&lt;=(file=&gt;uri::T,
-                                 text=&gt;str::T,
-                                 min=&gt;int::T,
-                                 {?}max=&gt;int::T){&lt;j&gt;},
-                 bash?lst[str]&lt;=(cmd=&gt;str::T,
-                                 {?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
-                 sleep?A{?}&lt;=A{?}(time::T){&lt;j&gt;},
-                 stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;},
-                 stdin?str&lt;=(){&lt;j&gt;}],
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/lawq::[
+            pattern=&gt;lawq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+          inst=&gt;[
+           as?bytes&lt;=uri(bytes::T){&lt;j&gt;},
+           as?image&lt;=bytes(image::T,
+                           else(1.0)){&lt;j&gt;},
+           close?noobj{0}&lt;=(){&lt;j&gt;},
+           redirect?rec[short=&gt;uri,long=&gt;uri]&lt;=(uri::T){&lt;j&gt;},
+           sys_stat?rec&lt;=(){&lt;j&gt;},
+           find_file?lst&lt;=(name=&gt;str::T,
+                           {?}root=&gt;uri::T,
+                           pattern=&gt;bool::T,
+                           {?}max=&gt;int::T,
+                           {?}depth=&gt;int::T){&lt;j&gt;},
+           read_file?lst&lt;=(file=&gt;uri::T,
+                           {?}min=&gt;int::T,
+                           {?}max=&gt;int::T){&lt;j&gt;},
+           edit_file?rec&lt;=(file=&gt;uri::T,
+                           text=&gt;str::T,
+                           min=&gt;int::T,
+                           {?}max=&gt;int::T){&lt;j&gt;},
+           bash?lst[str]&lt;=(cmd=&gt;str::T,
+                           {?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
+           sleep?A{?}&lt;=A{?}(time::T){&lt;j&gt;},
+           stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;},
+           stdin?str&lt;=(){&lt;j&gt;}],
           const=&gt;[thread_executor::[stop=&gt;[,],
-                                    run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre>
+                                    run=&gt;[!*/sys/thread/main]]@/sys/thread/executor],
+          type=&gt;[
+           space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace,
+           space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace,
+           rec::T[?[
+            level=&gt;union(info,trace,warn,error,debug),
+            source=&gt;&lt;#&gt;::T,
+            message=&gt;str::T]]@/m/sys/log_entry,
+           uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir,
+           uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file,
+           file::T@/m/dckr/image]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -739,10 +749,10 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
-  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
   <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
+  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=#{?}">
@@ -764,11 +774,11 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a lst of all files whose path matches str regex" class="text-success">a lst of all files whose path matches str regex</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
-  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
   <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
   <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
+  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=#{?}">
@@ -791,9 +801,9 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
-  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__redirect?rng=__m__rec[short=>uri,long=>uri]&dom=#{?}">

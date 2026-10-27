@@ -382,7 +382,17 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         }
     }
 
+    /*
+     * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet,
+     * or that declares no law at all. The five `as` conversions declare opposing edges (pairs, and the direction is
+     * the claim), `split`/`merge` declare each other's inverse, and the rest are row-less: `select` and `has` would
+     * each need extra imports in `mInsts` (CommonUtil, Str.Helper.REGEX_CACHE, MStr), `has`'s rec form and `update`
+     * run arbitrary rule mtron, and `within` applies an arbitrary argument inst. Their rows stay in
+     * mInstSetLawTable; everything the builder CAN say lives in mInsts.strs() -- and these retire as InstBuilder
+     * grows `inverse`/`derivation`.
+     */
     class StrType {
+
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     //instC(AS_INST_TID.dom(STR_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())))),
@@ -403,10 +413,6 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                     //  Map.of(uri(INVERSE), uri(AS_INST_TID.dom(Tokens.REAL_TID).rng(STR_TID)))),
                     instC(AS_INST_TID.dom(STR_TID).rng(Tokens.URI_TID), lst(URI_TYPE), (lhs, inst) -> uri(f(lhs.strValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     //   Map.of(uri(INVERSE), uri(AS_INST_TID.dom(Tokens.URI_TID).rng(STR_TID)))),
-                    instC(REVERSE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(new StringBuilder(lhs.strValue()).reverse().toString())),
-                    //   Map.of(uri(LAW), laws(Category.Law.involution), uri(INVERSE), uri(REVERSE_INST_TID.dom(STR_TID).rng(STR_TID)))),
-                    instC(ZERO_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.asStr().zero()),
-                    //    Map.of(uri(LAW), laws(Category.Law.unit, Category.Law.idempotent))),
                     docWrap(instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.strValue()) ? lhs : noobj()),
                             "an str to check", "whether the domain matches arg", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
                     //    Map.of(uri(LAW), laws(Category.Law.boolean_))),
@@ -445,25 +451,6 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                             "'abc.cde'.regex('.\\..') [-- ['c.c'] --]",
                             "'241G'.regex('(\\d+)([KMGT])') [-- [['241G','241','G']] --]"),
 
-                    instC(GT_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) > 0).isPresent())),
-                    //   Map.of(uri(LAW), laws(Category.Law.poset))),
-                    instC(GTE_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) >= 0).isPresent())),
-                    //   Map.of(uri(LAW), laws(Category.Law.poset))),
-                    instC(LT_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) < 0).isPresent())),
-                    //    Map.of(uri(LAW), laws(Category.Law.poset))),
-                    instC(LTE_INST_TID.dom(STR_TID).rng(Tokens.BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.strValue().compareTo(inst.arg(0).strValue()) <= 0).isPresent())),
-                    //   Map.of(uri(LAW), laws(Category.Law.poset))),
-                    docWrap(instC(PLUS_INST_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue() + inst.arg(0).strValue())),
-                            "a prefix str", "the concatenated str",
-                            Map.of(jnt(0), "a postfix str"),
-                            "concatenate two str::T values together", "\"a\" + \"b\" [-- \"ab\" --]"),
-                    //    Map.of(uri(LAW), laws(Category.Law.monoidic))),
-                    instC(SUM_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID.maybe())), (lhs, inst) -> str(lhs.stream().map(Obj::strValue).reduce(inst.arg(0).orElse(str("")).strValue(), (a, b) -> a + b))),
-                    //     Map.of(uri(LAW), laws(Category.Law.monoidic))),
-                    instC(UCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
-                    //     Map.of(uri(LAW), laws(Category.Law.idempotent))),
-                    instC(LCASE_INST_TID.dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
-                    //         Map.of(uri(LAW), laws(Category.Law.idempotent))),
                     instC(UPDATE_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)), lhs.tid(), lhs.vid())),
                     instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Str.Helper.project(lhs.strValue(), inst.arg(0).asRec()))),
                     //      Map.of(uri(LAW), laws(Category.Law.boolean_))),
@@ -472,8 +459,8 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                             map(o -> (PlusMonoid.O) o).
                             reduce((a, b) -> (PlusMonoid.O) a.plus(b)).
                             map(Obj::<Obj>as).
-                            orElse(noobj()))));
-
+                            orElse(noobj()))
+            ));
         }
     }
 

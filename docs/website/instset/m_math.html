@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -463,90 +463,100 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/math/#,
-          q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent,
-                 int::T[is(gt(0))]@/m/math/nat,
-                 lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
-                 real::T@/m/math/datasize,
-                 uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/math/datetime,
-                 datasize::T[][ctor?bB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB,
-                 datasize::T[][ctor?kB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB,
-                 datasize::T[][ctor?mB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB,
-                 datasize::T[][ctor?gB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB,
-                 datasize::T[][ctor?tB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB,
-                 datasize::T[][ctor?pB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB,
-                 real::T@/m/math/currency,
-                 currency::T@/m/math/currency/usd,
-                 currency::T@/m/math/currency/euro,
-                 real::T@/m/math/time,
-                 time::T[][ctor?nanos&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos,
-                 time::T[][ctor?micros&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/micros,
-                 time::T[][ctor?millis&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/millis,
-                 time::T[][ctor?second&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/second,
-                 time::T[][ctor?minute&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/minute,
-                 time::T[][ctor?hour&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/hour,
-                 time::T[][ctor?day&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/day,
-                 real::T@/m/math/metric,
-                 metric::T[][ctor?mm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm,
-                 metric::T[][ctor?cm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm,
-                 metric::T[][ctor?dm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm,
-                 metric::T[][ctor?meter&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter,
-                 metric::T[][ctor?km&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/km,
-                 real::T@/m/math/imperial,
-                 imperial::T[][ctor?inch&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch,
-                 imperial::T[][ctor?foot&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot,
-                 imperial::T[][ctor?yard&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard,
-                 imperial::T[][ctor?mile&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile],
-          inst=&gt;[datetime_now?datetime&lt;=(){&lt;j&gt;},
-                 plus?time&lt;=time(time::T){&lt;j&gt;},
-                 plus?metric&lt;=metric(metric::T){&lt;j&gt;},
-                 plus?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
-                 as?time&lt;=time(time::T){&lt;j&gt;},
-                 plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-                 mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-                 minus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-                 conjugate?cmplx&lt;=cmplx(){&lt;j&gt;},
-                 div?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-                 neg?cmplx&lt;=cmplx(){&lt;j&gt;},
-                 inv?cmplx&lt;=cmplx(){&lt;j&gt;},
-                 zero?cmplx&lt;=cmplx(){&lt;j&gt;},
-                 one?cmplx&lt;=cmplx(){&lt;j&gt;},
-                 abs?real&lt;=cmplx(){&lt;j&gt;},
-                 arg?real&lt;=cmplx(){&lt;j&gt;},
-                 plus?datetime&lt;=datetime(time::T){&lt;j&gt;},
-                 minus?datetime&lt;=datetime(time::T){&lt;j&gt;},
-                 minus?time&lt;=datetime(datetime::T){&lt;j&gt;},
-                 as?datetime&lt;=uri(uri::T){&lt;j&gt;},
-                 as?int&lt;=datetime(int::T){&lt;j&gt;},
-                 as?str&lt;=datetime(str::T){&lt;j&gt;},
-                 as?datetime&lt;=str(datetime::T){&lt;j&gt;},
-                 normalize?time&lt;=time(){&lt;j&gt;},
-                 normalize?datasize&lt;=datasize(){&lt;j&gt;},
-                 normalize?metric&lt;=metric(){&lt;j&gt;},
-                 normalize?imperial&lt;=imperial(){&lt;j&gt;},
-                 as?metric&lt;=metric(metric::T){&lt;j&gt;},
-                 as?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
-                 as?imperial&lt;=metric(imperial::T){&lt;j&gt;},
-                 as?metric&lt;=imperial(metric::T){&lt;j&gt;},
-                 cos?real&lt;=(as(real::T)){&lt;j&gt;},
-                 sin?real&lt;=(real::T){&lt;j&gt;},
-                 tan?real&lt;=(real::T){&lt;j&gt;},
-                 sqrt?real&lt;=(real::T){&lt;j&gt;},
-                 atan?real&lt;=(real::T){&lt;j&gt;},
-                 atan2?real&lt;=(real::T){&lt;j&gt;},
-                 log?real&lt;=(real::T){&lt;j&gt;},
-                 log10?real&lt;=(real::T){&lt;j&gt;},
-                 exp?real&lt;=(real::T){&lt;j&gt;},
-                 abs?real&lt;=(real::T){&lt;j&gt;},
-                 ceil?real&lt;=(real::T){&lt;j&gt;},
-                 floor?real&lt;=(real::T){&lt;j&gt;},
-                 round?int&lt;=(real::T){&lt;j&gt;}],
-          const=&gt;[2.7182@/m/math/e?constq,
-                  3.1415@/m/math/pi?constq]]@/m/math</code></pre>
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/lawq::[
+            pattern=&gt;lawq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+          type=&gt;[
+           int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent,
+           int::T[is(gt(0))]@/m/math/nat,
+           lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
+           real::T@/m/math/datasize,
+           uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/math/datetime,
+           datasize::T[][ctor?bB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB,
+           datasize::T[][ctor?kB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB,
+           datasize::T[][ctor?mB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB,
+           datasize::T[][ctor?gB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB,
+           datasize::T[][ctor?tB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB,
+           datasize::T[][ctor?pB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB,
+           real::T@/m/math/currency,
+           currency::T@/m/math/currency/usd,
+           currency::T@/m/math/currency/euro,
+           real::T@/m/math/time,
+           time::T[][ctor?nanos&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos,
+           time::T[][ctor?micros&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/micros,
+           time::T[][ctor?millis&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/millis,
+           time::T[][ctor?second&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/second,
+           time::T[][ctor?minute&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/minute,
+           time::T[][ctor?hour&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/hour,
+           time::T[][ctor?day&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/day,
+           real::T@/m/math/metric,
+           metric::T[][ctor?mm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm,
+           metric::T[][ctor?cm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm,
+           metric::T[][ctor?dm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm,
+           metric::T[][ctor?meter&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter,
+           metric::T[][ctor?km&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/km,
+           real::T@/m/math/imperial,
+           imperial::T[][ctor?inch&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch,
+           imperial::T[][ctor?foot&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot,
+           imperial::T[][ctor?yard&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard,
+           imperial::T[][ctor?mile&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile],
+          inst=&gt;[
+           datetime_now?datetime&lt;=(){&lt;j&gt;},
+           plus?time&lt;=time(time::T){&lt;j&gt;},
+           plus?metric&lt;=metric(metric::T){&lt;j&gt;},
+           plus?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
+           as?time&lt;=time(time::T){&lt;j&gt;},
+           plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
+           mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
+           minus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
+           conjugate?cmplx&lt;=cmplx(){&lt;j&gt;},
+           div?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
+           neg?cmplx&lt;=cmplx(){&lt;j&gt;},
+           inv?cmplx&lt;=cmplx(){&lt;j&gt;},
+           zero?cmplx&lt;=cmplx(){&lt;j&gt;},
+           one?cmplx&lt;=cmplx(){&lt;j&gt;},
+           abs?real&lt;=cmplx(){&lt;j&gt;},
+           arg?real&lt;=cmplx(){&lt;j&gt;},
+           plus?datetime&lt;=datetime(time::T){&lt;j&gt;},
+           minus?datetime&lt;=datetime(time::T){&lt;j&gt;},
+           minus?time&lt;=datetime(datetime::T){&lt;j&gt;},
+           as?datetime&lt;=uri(uri::T){&lt;j&gt;},
+           as?int&lt;=datetime(int::T){&lt;j&gt;},
+           as?str&lt;=datetime(str::T){&lt;j&gt;},
+           as?datetime&lt;=str(datetime::T){&lt;j&gt;},
+           normalize?time&lt;=time(){&lt;j&gt;},
+           normalize?datasize&lt;=datasize(){&lt;j&gt;},
+           normalize?metric&lt;=metric(){&lt;j&gt;},
+           normalize?imperial&lt;=imperial(){&lt;j&gt;},
+           as?metric&lt;=metric(metric::T){&lt;j&gt;},
+           as?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
+           as?imperial&lt;=metric(imperial::T){&lt;j&gt;},
+           as?metric&lt;=imperial(metric::T){&lt;j&gt;},
+           cos?real&lt;=(as(real::T)){&lt;j&gt;},
+           sin?real&lt;=(real::T){&lt;j&gt;},
+           tan?real&lt;=(real::T){&lt;j&gt;},
+           sqrt?real&lt;=(real::T){&lt;j&gt;},
+           atan?real&lt;=(real::T){&lt;j&gt;},
+           atan2?real&lt;=(real::T){&lt;j&gt;},
+           log?real&lt;=(real::T){&lt;j&gt;},
+           log10?real&lt;=(real::T){&lt;j&gt;},
+           exp?real&lt;=(real::T){&lt;j&gt;},
+           abs?real&lt;=(real::T){&lt;j&gt;},
+           ceil?real&lt;=(real::T){&lt;j&gt;},
+           floor?real&lt;=(real::T){&lt;j&gt;},
+           round?int&lt;=(real::T){&lt;j&gt;}],
+          const=&gt;[
+           2.7182@/m/math/e?constq,
+           3.1415@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
             </div>
@@ -1100,7 +1110,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">percent::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = plus, id = 0</span></span></span><span class="theory-chip theory-rig">rig<span class="chip-tip"><span class="chip-tip-name">rig</span><span class="chip-tip-desc">the theory of rigs (semirings) \(\langle S, +, \cdot, 0, 1 \rangle\): an additive and a multiplicative monoid with \(\cdot\) distributive over \(+\), and no additive inverses</span><span class="chip-tip-roles">add = plus, mul = mult, zero = 0, one = 1</span></span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__int" class="instset-doc-small-code text-info code">/m/int::T</a></span>
         </span>
         <small class="text-muted code">/m/math/percent</small>
     </div>

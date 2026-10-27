@@ -18,13 +18,18 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.isa.m.type.impl.MInt;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.Law;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
+import studio.phaseshift.metatron.isa.m.type.impl.MInt;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -110,6 +115,13 @@ public interface Int extends Mono, Ring.O<Int> {
 
     Int self(final Long jvm, final fURI tid, final fURI vid);
 
+    /*
+     * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet.
+     * The `as` conversions declare an opposing edge (a pair, and the direction is the claim), `mult` declares the
+     * one-way retraction to `div`, `minus` declares its defining equation (a Derivation), and `prod`'s body needs a
+     * helper this slice cannot import yet. Their law rows stay in mInstSetLawTable; everything the builder CAN say
+     * lives in mInsts.ints() -- and these retire as InstBuilder grows `inverse`/`derivation`.
+     */
     final class IntType {
 
         public static Set<Inst> insts() {
@@ -119,49 +131,22 @@ public interface Int extends Mono, Ring.O<Int> {
                     instC(AS_INST_TID.dom(INT_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.intValue().doubleValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.intValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.intValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    instC(ZERO_INST_TID.dom(INT_TID).rng(INT_TID), lst(), (lhs, inst) -> lhs.asInt().zero()),
-                    //   Map.of(uri(LAW), laws(Category.Law.absorbing, Category.Law.idempotent))),
-                    instC(ONE_INST_TID.dom(INT_TID).rng(INT_TID), lst(), (lhs, inst) -> lhs.asInt().one()),
-                    //  Map.of(uri(LAW), laws(Category.Law.idempotent))),
-                    instC(NEG_INST_TID.dom(INT_TID).rng(INT_TID), lst(), (lhs, inst) -> lhs.asInt().neg()),
-                    //    Map.of(uri(LAW), laws(Category.Law.involution),       uri(INVERSE), uri(NEG_INST_TID.dom(INT_TID).rng(INT_TID)))),
-                    instC(DIV_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(Double.valueOf(lhs.intValue().doubleValue() / inst.arg(0).intValue().doubleValue()).longValue(), lhs.tid(), lhs.vid())),
-                    //     Map.of(uri(INVERSE), uri(MULT_INST_TID.dom(INT_TID).rng(INT_TID)))),
                     docWrap(instC(MULT_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue())), "the lhs int", "the result of the multiplication", Map.of(INT_TYPE, "the int to multiply the lhs by"), "multiply the lhs int by the argument int"),
-                    //  Map.of(uri(LAW), laws(Category.Law.commutative, Category.Law.right_distributive, Category.Law.action),uri(INVERSE), uri(DIV_INST_TID.dom(INT_TID).rng(INT_TID)))),
                     docWrap(instC(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())), "the lhs int", "the result of the subtraction", Map.of(INT_TYPE, "the int to subtract from the lhs"), "subtract the argument int from the lhs int"),
-                    //  Map.of(uri(LAW), laws(Category.Law.action),    uri(INVERSE), uri(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)))),
-                    docWrap(instC(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue())),
-                            "the lhs int",
-                            "the result of the addition",
-                            Map.of(INT_TYPE, "the int to add to the lhs"),
-                            "add the argument int to the lhs int",
-                            "1.plus(2)          [-- 3                    --]",
-                            "1+2                [-- 3 sugar'd form       --]",
-                            "1.plus(plus(1))    [-- 3 nested application --]",
-                            "1+(+1)             [-- 3 sugar nested form  --]"),
-                    //    Map.of(uri(LAW), laws(Category.Law.commutative, Category.Law.right_distributive, Category.Law.action),      uri(INVERSE), uri(MINUS_INST_TID.dom(INT_TID).rng(INT_TID)))),
-                    //docWrap(instC(PLUS_INST_TID.dom(INT_TID.some()).rng(INT_TID.some()), lst(T(INT_TID)), (lhs, inst) -> objs(lhs.elements().map(i -> i.jvm(i.intValue() + inst.arg(0).intValue())))), "the lhs int list", "the result of the addition", Map.of(INT_TYPE, "the int to add to each element of the lhs list"), "add the argument int to each element of the lhs int list"),
-                    docWrap(instC(MEAN_INST_TID.dom(INT_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> real(lhs.stream().mapToLong(Obj::intValue).average().orElse(0L))),  // TODO: don't we need c involved?
-                            "a stream of reals",
-                            "the mean of the lhs real stream",
-                            Map.of(), "the mean of a stream of reals", "{1.0,2.0,3.0}.mean() [-- 2.0 --]"),
-
-                    docWrap(instC(GT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() > inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is greater than the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is greater than the argument int"),
-                    //  Map.of(uri(LAW), laws(Category.Law.right_distributive))),
-                    docWrap(instC(GTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() >= inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is greater than or equal to the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is greater than or equal to the argument int"),
-                    //       Map.of(uri(LAW), laws(Category.Law.right_distributive))),
-                    docWrap(instC(LT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() < inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is less than the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is less than the argument int"),
-                    //        Map.of(uri(LAW), laws(Category.Law.right_distributive))),
-                    docWrap(instC(LTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() <= inst.arg(0).intValue()).isPresent())), "the lhs int", "whether the lhs is less than or equal to the rhs", Map.of(INT_TYPE, "the int to compare against the lhs"), "check whether the lhs int is less than or equal to the argument int"),
-                    //    Map.of(uri(LAW), laws(Category.Law.right_distributive))),
-                    docWrap(instC(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Int) a).plus((Int) b)).intValue()), jnt(0)), "zero or more ints", "a single plus reduced int", Map.of(), "adds the lhs int stream into a single int", "{1,2,3,4}.sum() [-- 10 --]"),
-                    //     Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.right_distributive))),
                     instC(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().map(l -> l.c().isOne() ? l.intValue() : Math.powExact(l.intValue(), l.c().max().intValue())).reduce(inst.seed().intValue(), (a, b) -> a * b)), jnt(1)),
-                    //    Map.of(uri(LAW), laws(Category.Law.monoidic, Category.Law.commutative, Category.Law.right_distributive))),
-                    instC(POW_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt((long) Math.pow(lhs.intValue(), inst.arg(0).intValue()))),
-                    instC(MOD_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(lhs.intValue() % inst.arg(0).intValue())),
-                    instC(ORDER_INST_TID.dom(INT_TID.maybeSome()).rng(LST_TID.poly(INT_TID.maybeSome())), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
+                    InstBuilder.build().tid(PLUS_INST_TID).dom(INT_TID).rng(INT_TID)
+                            .argLst(INT_TYPE)
+                            .body((lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue()))
+                            .docDom("the lhs int")
+                            .docRng("the result of the addition")
+                            .argDocs(Map.of(INT_TYPE, "the int to add to the lhs"))
+                            .docDesc("add the argument int to the lhs int")
+                            .examples("1.plus(2)          [-- 3                    --]",
+                                    "1+2                [-- 3 sugar'd form       --]",
+                                    "1.plus(plus(1))    [-- 3 nested application --]",
+                                    "1+(+1)             [-- 3 sugar nested form  --]")
+                            .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
+                            .create()
             ));
         }
     }

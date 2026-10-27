@@ -654,16 +654,21 @@ mtron&gt; *tbledoc:person/+.==[name=&gt;_]           [-- SELECT name FROM person
 ==&gt;[name=&gt;'grant']
 ==&gt;[name=&gt;'vela']
 mtron&gt; *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
-==&gt;[[name=&gt;'grant',
+==&gt;[[
+     name=&gt;'grant',
      age=&gt;25]@tbledoc:person/noobj,
-    [name=&gt;'marko',
+    [
+     name=&gt;'marko',
      age=&gt;29]@tbledoc:person/noobj,
-    [name=&gt;'xilo',
+    [
+     name=&gt;'xilo',
      age=&gt;33,
      skill=&gt;'graph']@tbledoc:person/noobj,
-    [name=&gt;'metis',
+    [
+     name=&gt;'metis',
      age=&gt;41]@tbledoc:person/noobj,
-    [name=&gt;'vela',
+    [
+     name=&gt;'vela',
      age=&gt;53]@tbledoc:person/noobj]
 mtron&gt; *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
 ==&gt;'marko'
@@ -714,23 +719,32 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
 </table>
 <p>The instset prints that list itself, and each rewrite documents its own before/after code:</p>
 <pre><code class="language-mtron">mtron&gt; */m/tble?docq
-==&gt;docs::[obj=&gt;instset::[pattern=&gt;/m/tble/#,
-                         q=&gt;[docq::[pattern=&gt;docq,
-                                    pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                                    pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                                    obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                                    inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-                         const=&gt;[[llm_chat_schema=&gt;inst?&lt;=#{*}(){&lt;j&gt;}]@/m/tble/helper],
-                         type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
-                         inst=&gt;[sql?rec{*}&lt;=tblespace(str::T){&lt;j&gt;}],
-                         rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(){&lt;j&gt;},
-                                   /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(){&lt;j&gt;},
-                                   /m/tble/inst/rewrite/sql_sum_column?code{?}&lt;=code(){&lt;j&gt;},
-                                   /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(){&lt;j&gt;},
-                                   /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(){&lt;j&gt;},
-                                   /m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(){&lt;j&gt;},
-                                   /m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(){&lt;j&gt;},
-                                   ...(12 more)]]@/m/tble,
+==&gt;docs::[obj=&gt;instset::[
+           pattern=&gt;/m/tble/#,
+           q=&gt;[
+            docq::[
+             pattern=&gt;docq,
+             pre_read=&gt;inst(uri::T){&lt;j&gt;},
+             pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+             obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+             inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+            /m/qproc/lawq::[
+             pattern=&gt;lawq,
+             pre_read=&gt;inst(uri::T){&lt;j&gt;},
+             pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+             obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+           const=&gt;[[llm_chat_schema=&gt;inst?&lt;=#{*}(){&lt;j&gt;}]@/m/tble/helper],
+           type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
+           inst=&gt;[sql?rec{*}&lt;=tblespace(str::T){&lt;j&gt;}],
+           rewrite=&gt;[
+            /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(){&lt;j&gt;},
+            /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(){&lt;j&gt;},
+            /m/tble/inst/rewrite/sql_sum_column?code{?}&lt;=code(){&lt;j&gt;},
+            /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(){&lt;j&gt;},
+            /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(){&lt;j&gt;},
+            /m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(){&lt;j&gt;},
+            /m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(){&lt;j&gt;},
+            ...(12 more)]]@/m/tble,
           desc=&gt;'relational tables, typed rows, and...',
           example=&gt;['*acme:customer.where[person=&gt;[name...']]
 </code></pre>
@@ -824,11 +838,12 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/15
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/17
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/16
+==&gt;[body=&gt;'another one']@tbledoc:note/18
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
+==&gt;17
 ==&gt;11
 ==&gt;15
 ==&gt;2
@@ -841,6 +856,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;3
 ==&gt;10
 ==&gt;14
+==&gt;18
 ==&gt;5
 ==&gt;7
 ==&gt;9

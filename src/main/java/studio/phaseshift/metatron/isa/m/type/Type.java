@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -788,6 +789,14 @@ public interface Type extends Obj {
         public Inst mult = null;
         public Inst neg = null;
         public Set<Inst> insts = new LinkedHashSet<>();
+        /**
+         * THE ALGEBRA AWAITING ITS TYPE'S SPACE — the theory instances declared through {@link #law}, keyed by the
+         * type's vid. A type is built before its instset is mounted, so the declaration cannot be persisted at
+         * {@code create()} time (the same reason {@code docWrap} soft-fails during an ISA's own setup); the
+         * instset persists it through {@link #drain} as soon as its space exists. Staging only — {@code ?lawq} is
+         * the store of record, and nothing reads this map.
+         */
+        private static final Map<fURI, Rec> LAWS = new ConcurrentHashMap<>();
 
         public static Builder build() {
             return new Builder();
@@ -854,6 +863,44 @@ public interface Type extends Obj {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
             return this.constructor(instC(Tokens.INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(Tokens.ALL_STAR)), (lhs, inst) -> function.apply(inst.arg(0))));
+        }
+
+        /**
+         * DECLARE the type's algebra in the builder — the theory instances it models, e.g.
+         * {@code law(mutableMap(uri("ring"), rec(...)))}. Composes with the rest of the builder and is persisted
+         * to {@code ?lawq} by the instset that registers the type (see {@link #drain}).
+         */
+        public Builder law(final Map<Obj, Obj> theories) {
+            return this.law(rec(studio.phaseshift.metatron.util.CommonUtil.mutableMap(theories)));
+        }
+
+        public Builder law(final Rec law) {
+            if (null == this.vid)
+                throw MTronException.of("vid must be set prior to declaring its algebra");
+            LAWS.put(this.vid.basePath(), law);
+            return this;
+        }
+
+        /**
+         * DECLARE a type's algebra after the type was built — the form for a type whose declaration must sit below
+         * the instruction addresses it points at (a field initializer may not read a field declared later).
+         */
+        public static void declare(final Type type, final Rec law) {
+            if (null == type || null == type.vid() || null == law)
+                return;
+            LAWS.put(type.vid().basePath(), law);
+        }
+
+        /**
+         * PERSIST a type's declared algebra — the call an instset makes once its space is mounted, which is what
+         * makes a declaration written at build time reach {@code ?lawq}. A type that declared none is untouched.
+         */
+        public static void drain(final Type type) {
+            if (null == type || null == type.vid())
+                return;
+            final Rec law = LAWS.get(type.vid().basePath());   // a DECLARATION, not a one-shot: each VM boot repersists it
+            if (null != law)
+                studio.phaseshift.metatron.furi.q.QCollection.lawWrap(type, law);
         }
 
         public Builder constructor(final Supplier<Obj> supplier) {
