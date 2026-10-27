@@ -442,7 +442,7 @@ public class webInstSet extends AbstractInstSet {
                                 "mcp_stdio::[server => !*</sys/space/mcp/basic_server>]@/sys/io/mcp/stdio"),
                         docWrap(WEB_HTTP_HANDLER_TYPE, "a http handler serving web content from a router-backed space"),
                         /// //////////////////////////////
-                        docWrap(MCP_MTRON_SERVER_TYPE, "a transport-agnostic mcp server exposing metatron-native tools (eval_mtron, list_space, router_info, find_inst)"),
+                        docWrap(MCP_MTRON_SERVER_TYPE, "a transport-agnostic mcp server exposing metatron-native tools (eval_mtron, list_space, machine_info, find_inst)"),
                         docWrap(MCP_SERVER_TYPE = Type.Builder.build()
                                         .tid(MCP_TID)
                                         .vid(MCP_SERVER_TID)

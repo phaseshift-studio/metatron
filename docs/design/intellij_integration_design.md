@@ -42,7 +42,7 @@ This option uses existing protocols on both sides to wire the systems together.
 
 *   **IntelliJ $\rightarrow$ metatron:**
     IntelliJ connects to metatron's `mcp_mtron_wsHandler` WebSocket endpoint (defaulting to `ws://localhost:8555/mcp`).
-    *   This gives the IDE's AI assistant or any tool client inside IntelliJ access to metatron's `eval_mtron`, `list_space`, and `router_info` tools.
+    *   This gives the IDE's AI assistant or any tool client inside IntelliJ access to metatron's `eval_mtron`, `list_space`, and `machine_info` tools.
 *   **metatron $\rightarrow$ IntelliJ:**
     Metatron agents are configured to connect to the IntelliJ companion's TCP port (`39079` or `64342`) as an `mcp_client` in `agent.mtron`.
     *   This gives metatron agents access to IDE-specific tools like `ide_get_active_editor`, `ide_open_file`, and `ide_get_diagnostics`.

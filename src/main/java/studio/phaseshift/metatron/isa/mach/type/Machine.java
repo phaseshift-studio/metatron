@@ -886,14 +886,17 @@ public interface Machine extends Rec, AutoCloseable {
             if (null == machine || null == vid || (!vid.hasScheme() && !vid.hasHost()))
                 return vid;
             fURI name = vid;
-            if (vid.hasScheme()) {
+            // isPrefixed() IS the scheme slot's predicate: a scheme with NO host names a vocabulary (math:cos), while a
+            // scheme WITH a host already names a transport (loop://self) and can never be a prefix.
+            if (vid.isPrefixed()) {
                 final fURI aligned = machine.instset().alignPrefix(vid);
                 // alignPrefix answers the coefficient-one form for an UNPREFIXED spelling too; the original must be
                 // kept then, so a caller's coefficient survives an alignment that had nothing to align
                 if (!aligned.equals(vid.one()))
                     name = aligned;
             }
-            // ... AND THE AUTHORITY SLOT, after the scheme slot. The two cannot fire on the same spelling (one needs a
+            // ... AND THE AUTHORITY SLOT, after the scheme slot. The network's own guard narrows it to a name-shaped
+            // authority -- no scheme, a host, no port -- because isAddressed() alone would also claim ws://host:8555. The two cannot fire on the same spelling (one needs a
             // scheme and no host, the other a host and no port), so the order is unobservable and no precedence rule
             // exists to get wrong -- which is what makes this a canonicalization and not a ladder.
             return name.hasHost() ? machine.network().alignPrefix(name) : name;

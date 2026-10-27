@@ -43,13 +43,18 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.INT_TID;
 import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.Tokens.CLASS;
 import static studio.phaseshift.metatron.Tokens.FORM;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.DIV_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MULT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -265,6 +270,75 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     void testCombiner(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
+    }
+
+    /**
+     * The INVERSE — the opposing edge {@code f⁻¹} with {@code f·f⁻¹ = 1} — computed from the carrier's declared
+     * algebra wherever the algebra states one, and declared only where it states none ({@link LawTable#lookup}).
+     * A group states cancellation: its operation's inverse is the instruction DEFINED as it applied to the inverted
+     * argument ({@code div ≡ mult ∘ inv}, {@code minus ≡ plus ∘ neg}), and that instruction's inverse is the operation.
+     * A monoid states nothing of the sort, so int's {@code mult}→{@code div} is declared — a truncating retraction,
+     * sound in one direction only — and int's {@code div} has no inverse. Each row: a morphism lift read through
+     * {@code >>analysis>>inverse} % the opposing edge's address, {@code noobj} when there is none.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // real is a field: the mult/div pair is a consequence of mult_group (op=mult, inv=inv) + div's definition
+            "|mult?real<=real(real::T).as(morphism::T)>>analysis>>inverse   % /m/inst/div?rng=/m/real&dom=/m/real",
+            "|div?real<=real(real::T).as(morphism::T)>>analysis>>inverse    % /m/inst/mult?rng=/m/real&dom=/m/real",
+            // its additive side is a group too, so plus/minus derives the same way on both carriers
+            "|plus?real<=real(real::T).as(morphism::T)>>analysis>>inverse   % /m/inst/minus?rng=/m/real&dom=/m/real",
+            "|plus?int<=int(int::T).as(morphism::T)>>analysis>>inverse      % /m/inst/minus?rng=/m/int&dom=/m/int",
+            "|minus?int<=int(int::T).as(morphism::T)>>analysis>>inverse     % /m/inst/plus?rng=/m/int&dom=/m/int",
+            // int's multiplicative side is only a monoid, so the pair is the DECLARED one-way retraction ...
+            "|mult?int<=int(int::T).as(morphism::T)>>analysis>>inverse      % /m/inst/div?rng=/m/int&dom=/m/int",
+            // ... and truncating division is nobody's inverse
+            "|div?int<=int(int::T).as(morphism::T)>>analysis>>inverse       % noobj",
+    }, delimiter = '%')
+    void testInverse(final String expr, final String expected) {
+        checkCodeParseApply(LOG, expr, expected);
+    }
+
+    /**
+     * STRICT LAW RESOLUTION — an instruction's ROW follows the type path, a type's ALGEBRA does not.
+     * {@code nat} runs int's {@code plus} (so the row, its process laws and its derivation are inherited), but nat
+     * declares a {@code rig}, so no additive inverse is derived there and nothing may cancel; the one-way retraction
+     * ({@code mult}→{@code div}) travels with the IMPLEMENTATION instead, because it is a fact about truncating
+     * division rather than about the algebra. A type that declares no algebra ({@code imperial}) gets no law row at
+     * all — it computes through its implementation and licenses no rewrite. This is the switch
+     * {@link LawTable#declared(fURI, Type)} makes, and what lets this table shrink to declarations.
+     * <p>
+     * THIS TEST PINS THE STRICT POLICY. {@code LawTable.algebraFor} keeps the inheriting body commented beside the
+     * strict one; if you flip that switch, flip these assertions with it (nat's plus then inherits int's inverse,
+     * and imperial's plus inherits real's) — the failure is the signal that the policy changed, not a bug.
+     */
+    @Test
+    void testStrictLawResolution() {
+        final Type nat = T(NAT_TID);
+
+        final LawTable.Declared plusOnNat = LawTable.declared(PLUS_INST_TID.basePath(), nat);
+        assertNotNull(plusOnNat, "nat runs int's plus, so its row is found along the path (nat -> int -> #)");
+        assertNull(plusOnNat.entry().inverse(), "nat declares a rig: plus has no additive inverse, so nothing cancels");
+        assertTrue(plusOnNat.entry().laws().lstValue().stream()
+                        .anyMatch(l -> l.uriValue().name().equals(Law.commutative.name())),
+                "the implementation's process laws ARE inherited with its row");
+
+        final LawTable.Declared plusOnInt = LawTable.declared(PLUS_INST_TID.basePath(), T(INT_TID));
+        assertNotNull(plusOnInt, "int implements plus itself");
+        assertNotNull(plusOnInt.entry().inverse(), "int is a ring: plus cancels with minus");
+
+        final LawTable.Declared multOnNat = LawTable.declared(MULT_INST_TID.basePath(), nat);
+        assertNotNull(multOnNat, "nat's mult lands on the int contract");
+        assertNotNull(multOnNat.entry().inverse(), "the retraction travels with the implementation: mult -> div");
+        final LawTable.Declared divOnNat = LawTable.declared(DIV_INST_TID.basePath(), nat);
+        assertNotNull(divOnNat, "nat's div lands on the int contract");
+        assertNull(divOnNat.entry().inverse(), "truncating division is nobody's inverse");
+
+        // no algebra declared, no row to license a rewrite: imperial has its own plus contract but no law declaration
+        assertNull(LawTable.declared(PLUS_INST_TID.basePath(), T(f("imperial"))),
+                "imperial declares no algebra, so its plus has no row and licenses nothing");
+        assertTrue(LawTable.typeLawsOf(T(f("imperial"))).jvm().isEmpty(), "imperial models no theory");
+        assertFalse(LawTable.typeLawsOf(nat).jvm().isEmpty(), "nat models a rig (it declares one)");
     }
 
     /**
@@ -721,6 +795,21 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     public void testInverseCancellation(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * THE ALGEBRA AT THE RULE'S SITE DECIDES — a nat's first operation widens to int (int's plus answers an int),
+     * so by the time the plus/minus pair is adjacent the carrier IS int and the ring's group law rightly cancels.
+     * Strictness cannot show here: a nat is never the carrier of an adjacent pair, having no plus of its own. It
+     * shows where the carrier survives — {@link #testStrictLawResolution}, which reads the resolution directly.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "nat::5.plus(nat::3).minus(nat::3)   % start(nat::5)",
+    }, delimiter = '%')
+    void testAlgebraAtTheRuleSite(final String code, final String expected) {
+        final Call secondStage = ObjmtronSerializer.parse(expected);
+        checkEquality(LOG, secondStage, catRewrite(ObjmtronSerializer.parse(code)).tryToInst(), true);
     }
 
     /**

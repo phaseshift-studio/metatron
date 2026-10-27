@@ -74,7 +74,7 @@ public final class mcpMetatronBuilder {
 
     /**
      * The single transport-agnostic MCP server type exposing the metatron-native
-     * tools ({@code eval_mtron}, {@code list_space}, {@code router_info}, …).
+     * tools ({@code eval_mtron}, {@code list_space}, {@code machine_info}, …).
      * Both {@code http_server} and {@code ws_server} wrap this {@link mcpServer} in
      * their respective transport handler ({@code mcp_httpHandler} /
      * {@code mcp_wsHandler}).
@@ -182,18 +182,42 @@ public final class mcpMetatronBuilder {
                             }), "noobj lhs", "a rec index of currently accessible spaces",
                     Map.of(), "returns a rec identifying all active metatron spaces"), MUTABLE);
 
-            // router_info — router vid, tid, and space count
-            tools.at(uri(mTool.toolName(toolTid("router_info"))), docWrap(instC(
-                    toolTid("router_info").dom(ALL.maybe()).rng(ALL.maybe()),
+            // machine_info — THE ORIENTATION TOOL: what VM am I in, and what does it call things?
+            tools.at(uri(mTool.toolName(toolTid("machine_info"))), docWrap(instC(
+                    toolTid("machine_info").dom(ALL.maybe()).rng(ALL.maybe()),
                     lst(), (lhs, inst) -> {
-                        if (!Machine.loaded()) return str("router not loaded");
-                        final Machine router = Machine.current();
+                        if (!Machine.loaded()) return str("no machine loaded");
+                        final Machine machine = Machine.current();
+                        // COUNTS AND NAMES, NEVER THE TABLES. 500+ redirect rows in a tool result would burn an
+                        // agent's whole budget; the actionable facts are the spellings it may write and the short
+                        // names that are AMBIGUOUS, because those are the ones that bite.
+                        final Obj isaPrefix = Machine.read(f("/instset/prefix"));
+                        final Obj redirect = Machine.read(f("/memory/redirect"));
                         return rec(
-                                uri("router_vid"), uri(router.vid()),
-                                uri("router_tid"), uri(router.tid()),
-                                uri("space_count"), jnt(router.memory().spaces().jvm().size()),
-                                uri("io_stats"), router.memory().stats().ioStats());
-                    }), "noobj lhs", "router vid, tid, and space count", Map.of(), "returns router vid, tid, and space count"), MUTABLE);
+                                uri(MACHINE), rec(uri(VID), uri(machine.vid()), uri(TID), uri(machine.tid())),
+                                uri("spaces"), jnt(machine.memory().spaces().jvm().size()),
+                                // the spellings the vocabulary answers to (math:cos, web:…), and their homes
+                                uri(PREFIX), isaPrefix.isRec() ? isaPrefix : rec(),
+                                // the peers this machine can NAME instead of dial (//ginger/a)
+                                uri(PEER), machine.network().prefixes(),
+                                // the name index: how big, and which names denote more than one home
+                                uri(REDIRECT), rec(
+                                        uri("rows"), jnt(redirect.isRec() ? redirect.asRec().jvm().size() : 0),
+                                        uri("ambiguous"), lst(redirect.isRec()
+                                                ? redirect.asRec().jvm().entrySet().stream()
+                                                .filter(e -> e.getValue().stream().count() > 1)
+                                                .map(e -> str(e.getKey().uriValue().name()))
+                                                .toList().toArray(Obj[]::new)
+                                                : new Obj[0])),
+                                uri("io_stats"), machine.memory().stats().ioStats());
+                    }), "noobj lhs", "the machine's vid and tid, its spaces, and the three naming tables it answers to",
+                    Map.of(uri(MACHINE), "the frame you are standing in: vid and tid",
+                            uri("spaces"), "how many spaces are mounted",
+                            uri(PREFIX), "the instruction sets' short names: <name> => the vid it denotes",
+                            uri(PEER), "the network's names for peers: <label> => the origin, usable as //label/path",
+                            uri(REDIRECT), "the name index: row count, and the short names that denote more than one home",
+                            uri("io_stats"), "read and write byte counters"),
+                    "returns what the running machine is, what it is called, and what it calls things"), MUTABLE);
 
             // find_inst — gets lst of loaded /m instructions and documentation
             tools.at(uri(mTool.toolName(toolTid("find_inst"))), docWrap(instC(

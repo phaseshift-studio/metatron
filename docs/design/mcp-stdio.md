@@ -17,7 +17,7 @@ carrier and every layer below it already exists.
 | the design needs | what already is | where |
 |---|---|---|
 | JSON-RPC dispatch, transport-agnostic | `mcpServer` — `handleMessage(Obj)`, plus the schema-aware `handleMessage(String rawJson)` two-phase parse | `isa/web/type/mcpServer.java` |
-| the metatron tool set | `mcpMetatronBuilder.build()` — `eval_mtron`, `write_memory`, `read_memory`, `list_space`, `router_info`, `find_inst`, `spawn_wsclient`, `spawn_wshandler` + skill resources | `isa/web/type/mcpMetatronBuilder.java` |
+| the metatron tool set | `mcpMetatronBuilder.build()` — `eval_mtron`, `write_memory`, `read_memory`, `list_space`, `machine_info`, `find_inst`, `spawn_wsclient`, `spawn_wshandler` + skill resources | `isa/web/type/mcpMetatronBuilder.java` |
 | a server from any skill | `mcpServer.of(skill)` and the `as?mcp_server<=skill` row | `mcpServer.java`, `webInstSet.java` |
 | two carriers to imitate | `mcp_wsHandler` (per connection) and `mcp_httpHandler` (Streamable HTTP + SSE) — both *compose* `mcpServer`, neither subclasses the other | `isa/web/space/{ws,http}/handler/` |
 | out-of-band delivery, already proven | `mcp_httpHandler.doGet` opens an `SseStream` and pushes from a `?subq` outbox | `mcp_httpHandler.java`, `SseStream.java` |
@@ -592,7 +592,7 @@ Two findings from building it that the design did not anticipate:
   advertises a positional argument and inherits `auto_from`'s noise in the schema, which is the argument for
   the pulled-out `eval_mtron` (named `code::T` argument) once the rest of the tools move.
 
-Still open: the **full tool pull-out** (registering `read_memory`/`write_memory`/`list_space`/`router_info`/
+Still open: the **full tool pull-out** (registering `read_memory`/`write_memory`/`list_space`/`machine_info`/
 `find_inst`/`spawn_*` as instructions so a profile can name them, which renames them to
 `m_web_mcp_inst_*`), per-request dispatch, notification push, and the `as?mcp_stdio<=json` config row.
 

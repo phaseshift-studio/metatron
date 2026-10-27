@@ -102,14 +102,14 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
     }
 
     @Test
-    public void testToolsListContainsRouterInfo() {
+    public void testToolsListContainsMachineInfo() {
         final Rec res = mcpRequest(rec(
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(3),
                 uri("method"), uri("tools/list")));
         final boolean has = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
-                .stream().anyMatch(t -> t.isRec() && str("m_web_mcp_mcp_mtron_router_info").equals(t.asRec().at(uri(NAME))));
-        assertTrue(has, "tools/list should include 'router_info'");
+                .stream().anyMatch(t -> t.isRec() && str("m_web_mcp_mcp_mtron_machine_info").equals(t.asRec().at(uri(NAME))));
+        assertTrue(has, "tools/list should include 'machine_info'");
     }
 
     @Test
@@ -140,18 +140,18 @@ public abstract class AbstractMcpMtronHandlerTest extends AbstractMcpHandlerTest
     }
 
     @Test
-    public void testCallRouterInfo() {
+    public void testCallMachineInfo() {
         final Rec res = mcpRequest(rec(
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(11),
                 uri("method"), uri("tools/call"),
-                uri("params"), rec(uri(NAME), str("m_web_mcp_mcp_mtron_router_info"), uri("arguments"), rec())));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "router_info should return a result");
+                uri("params"), rec(uri(NAME), str("m_web_mcp_mcp_mtron_machine_info"), uri("arguments"), rec())));
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "machine_info should return a result");
         final Obj contentList = res.at(uri(RESULT)).asRec().at(uri(CONTENT));
         assertFalse(contentList.isNoObj(), "result should have a content field");
         final String text = contentList.asLst().at(0).asRec().at(uri(TEXT)).toCleanString();
-        assertTrue(text.contains("router_vid"), "router_info text should include router_vid");
-        assertTrue(text.contains("space_count"), "router_info text should include space_count");
+        assertTrue(text.contains("vid"), "machine_info text should include vid");
+        assertTrue(text.contains("spaces"), "machine_info text should include spaces");
     }
 
     @Test

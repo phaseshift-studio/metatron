@@ -419,6 +419,14 @@ public class fURITest extends AbstractMetatronTest {
             "mtron:lang/obj          | false | false | true",
             "loop:/sys/tmp           | false | false | true",
             "mtron:                  | false | false | true",
+            // THE SLOTS THE RESOLVER DISPATCHES ON. a name-shaped authority (//ginger) is ADDRESSED -- it names a
+            // service through a table -- and a scheme-only spelling (boo:) is PREFIXED, i.e. the vocabulary's slot,
+            // never the network's. An explicit port makes the authority literal.
+            "//ginger                | false | true  | false",
+            "//ginger/a              | false | true  | false",
+            "//ginger:8555/a         | false | true  | false",
+            "boo:                    | false | false | true",
+            "boo:/a                  | false | false | true",
     }, delimiter = '|')
     void testLocalAddressedPrefixed(final String furi, final boolean local, final boolean addressed, final boolean prefixed) {
         final fURI f = f(furi);
@@ -1813,5 +1821,27 @@ public class fURITest extends AbstractMetatronTest {
     void testBranchedPathParsing(final String furi, final String segments) {
         assertEquals(f(furi), idem(furi));
         assertEquals(Arrays.asList(segments.split("\\|")), idem(furi).path());
+    }
+
+    /**
+     * THE HOSTED SLOT — no scheme, a host, no port — is the one the network's name table owns. It is {@code isAddressed}
+     * NARROWED, and the cases below are the difference: a spelled transport or an explicit port already names the
+     * service, so a binding must not touch them.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "//ginger          | true",
+            "//ginger/a        | true",
+            "//ginger:#{*}     | true",
+            "//ginger:8555/a   | false",   // a port means the service is already named
+            "ws://ginger:8555/a| false",   // a scheme means the transport is already named
+            "loop://self       | false",   // ... even the identity client
+            "boo:              | false",   // a scheme with no host is the VOCABULARY slot
+            "/a/b              | false",   // no host at all
+            "a/b               | false",
+            "http://fhatos.org/a | false",
+    }, delimiter = '|')
+    void testHosted(final String furi, final boolean hosted) {
+        assertEquals(hosted, f(furi).isHosted(), furi + " isHosted");
     }
 }

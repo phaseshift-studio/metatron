@@ -212,6 +212,21 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     /**
+     * A HOSTED furi names a service rather than being one: <b>no scheme, a host, no port</b> — the path is free, since
+     * the name is the host and everything after it is the address the far side serves ({@code //ginger/mtron}).
+     * <p>
+     * It is {@link #isAddressed()} NARROWED, and the difference is the whole point: {@code ws://host:8555/a} is
+     * addressed (it says which transport and which port, so it IS the service), while {@code //ginger/a} is only a
+     * name — the port, and therefore the service, is supplied by a table that may answer nothing at all. A scheme is
+     * likewise already a transport, so a spelled scheme can never be a name.
+     *
+     * @return whether this is a host with no scheme and no port
+     */
+    default boolean isHosted() {
+        return !this.hasScheme() && this.hasHost() && !this.hasPort();
+    }
+
+    /**
      * A prefixed furi has a scheme but no host: an alias or prefix spelling ({@code ide:command}, {@code loop:/x})
      * rather than a machine address. It is neither local (it names a scheme) nor addressed (it names no host).
      *

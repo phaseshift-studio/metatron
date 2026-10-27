@@ -1624,4 +1624,27 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         assertEquals(uri("/srv/root/x/y").uriValue(), Space.Helper.routeFromSpace(f("/x/y"), routes),
                 "the catch-all still serves what only it matches");
     }
+
+    /**
+     * THE WAY BACK: {@code routeToSpace} maps a vid that already lives under a route's TARGET back to the space-relative
+     * address, so a write through a routed space lands where the route says it should. Two things must hold.
+     */
+    @Test
+    void testTheMostSpecificTargetWinsForWrites() {
+        final Map<Uri, Obj> routes = new LinkedHashMap<>();
+        routes.put(uri("/a"), uri("/srv"));       // the general target, registered FIRST
+        routes.put(uri("/b"), uri("/srv/mcp"));   // the specific one, which owns /srv/mcp/...
+        assertEquals(uri("/b/q").uriValue(), Space.Helper.routeToSpace(f("/srv/mcp/q"), routes),
+                "/srv/mcp is the longer target and must own /srv/mcp/q, whatever the rec order");
+    }
+
+    @Test
+    void testATargetMatchesBySegmentNotByText() {
+        final Map<Uri, Obj> routes = new LinkedHashMap<>();
+        routes.put(uri("/mcp"), uri("/srv/mcp"));     // the text-prefix match, registered FIRST
+        routes.put(uri("/files"), uri("/srv"));
+        // /srv/mcp-api STARTS WITH /srv/mcp as text but is not UNDER it as an address
+        assertEquals(uri("/files/mcp-api/x").uriValue(), Space.Helper.routeToSpace(f("/srv/mcp-api/x"), routes),
+                "a target is an address, not a text prefix");
+    }
 }

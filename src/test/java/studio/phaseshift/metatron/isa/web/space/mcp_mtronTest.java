@@ -294,7 +294,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         assertEquals(200, resp.statusCode(), "tools/list should return 200");
         assertTrue(resp.body().contains("\"result\""), "should have a result");
         assertTrue(resp.body().contains("m_web_mcp_mcp_mtron_list_space") &&
-                        resp.body().contains("m_web_mcp_mcp_mtron_router_info") &&
+                        resp.body().contains("m_web_mcp_mcp_mtron_machine_info") &&
                         resp.body().contains("m_web_mcp_mcp_mtron_find_inst"),
                 "tools/list should include the metatron-native tools");
     }
@@ -309,12 +309,12 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     }
 
     @Test
-    public void testHttpPostCallRouterInfo() throws Exception {
+    public void testHttpPostCallMachineInfo() throws Exception {
         final var resp = httpPost("/mcp",
                 "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\"," +
-                        "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_router_info\",\"arguments\":{}}}", null);
+                        "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_machine_info\",\"arguments\":{}}}", null);
         assertEquals(200, resp.statusCode());
-        assertFalse(resp.body().contains("\"error\""), "router_info should not error");
+        assertFalse(resp.body().contains("\"error\""), "machine_info should not error");
     }
 
     @Test
@@ -423,7 +423,7 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
         assertNotNull(resp, "tools/list should return a response");
         assertTrue(resp.contains("\"result\""), "tools/list should have a result");
         assertTrue(
-                resp.contains("m_web_mcp_mcp_mtron_list_space") && resp.contains("m_web_mcp_mcp_mtron_router_info") && resp.contains("m_web_mcp_mcp_mtron_find_inst"),
+                resp.contains("m_web_mcp_mcp_mtron_list_space") && resp.contains("m_web_mcp_mcp_mtron_machine_info") && resp.contains("m_web_mcp_mcp_mtron_find_inst"),
                 "tools/list should include the metatron-native tools");
     }
 
@@ -439,14 +439,14 @@ public class mcp_mtronTest extends AbstractMcpMtronHandlerTest {
     }
 
     @Test
-    public void testCallRouterInfoRoundTrip() throws Exception {
+    public void testCallMachineInfoRoundTrip() throws Exception {
         connectToServer("/mcp-mtron");
         final String req = "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\","
-                + "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_router_info\",\"arguments\":{}}}";
+                + "\"params\":{\"name\":\"m_web_mcp_mcp_mtron_machine_info\",\"arguments\":{}}}";
         final String resp = sendAndReceive(req);
-        assertNotNull(resp, "router_info call should return a response");
-        assertFalse(resp.contains("\"error\""), "router_info should not error: " + resp);
-        assertTrue(resp.contains("\"result\""), "router_info should return a result");
+        assertNotNull(resp, "machine_info call should return a response");
+        assertFalse(resp.contains("\"error\""), "machine_info should not error: " + resp);
+        assertTrue(resp.contains("\"result\""), "machine_info should return a result");
     }
 
     @Test
