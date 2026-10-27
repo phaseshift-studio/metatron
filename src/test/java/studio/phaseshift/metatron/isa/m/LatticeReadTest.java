@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
 
 import java.util.List;
 
@@ -35,9 +36,12 @@ import static studio.phaseshift.metatron.Tokens.INT_TID;
 import static studio.phaseshift.metatron.Tokens.REAL_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gt_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /**
@@ -186,6 +190,58 @@ public class LatticeReadTest extends AbstractInstSetTest {
         assertTrue(admitted.stream().anyMatch(i -> domEquals(i, "real")), "*plus?<=imperial must admit the real contract (imperial -> real -> #); admitted=" + admitted);
         assertTrue(T(f("imperial")).pathIncludes(T(f("#"))), "# (root) is on every type's path to # -- a # dom, if registered, would be admitted");
         assertFalse(admitted.stream().anyMatch(i -> domEquals(i, "metric")), "metric is imperial's sibling under real -- its plus converts cm/mm/km and must NEVER be admitted for imperial; admitted=" + admitted);
+    }
+
+    /**
+     * THE DEDUCTION — which instruction implementation a type reaches. A type with no implementation of its own
+     * continues up its path to the root until it lands on one: {@code nat::T}'s {@code plus} is the {@code int}-dom
+     * contract ({@code nat -> int -> #}), while {@code imperial}'s is its own (its path is
+     * {@code imperial -> real -> #}, {@code real}'s the next admission, and never the sibling). The rule lives on
+     * {@link Typer.Helper}; this pins it, since the law table reads the same answer to decide what can cancel.
+     */
+    @Test
+    public void deduceTypeInstLandsOnThePathContract() {
+        final Inst plus = instB(PLUS_INST_TID, lst());
+
+        final Inst forNat = Typer.Helper.deduceTypeInst(T(f(NAT_TID.name())), plus);
+        assertNotNull(forNat, "nat::T must land on the int-dom plus contract (nat -> int -> #)");
+        assertTrue(domEquals(forNat, INT_TID.name()), "nat has no plus of its own -- it lands on int's, got " + forNat);
+
+        final Inst forImperial = Typer.Helper.deduceTypeInst(T(f("imperial")), plus);
+        assertNotNull(forImperial, "imperial::T must land on a plus contract");
+        assertTrue(domEquals(forImperial, "imperial"), "imperial's own contract is closest to the token, got " + forImperial);
+
+        final Inst forReal = Typer.Helper.deduceTypeInst(T(f(REAL_TID.name())), plus);
+        assertNotNull(forReal, "real::T must land on the real plus contract");
+        assertTrue(domEquals(forReal, REAL_TID.name()), "real lands on its own contract, got " + forReal);
+    }
+
+    /**
+     * A SIBLING IS NEVER DEDUCED — {@code metric} and {@code imperial} both refine {@code real}, and neither lies
+     * on the other's path, so each deduces only its own contract. A mis-deduction here would convert centimetres
+     * into miles silently.
+     */
+    @Test
+    public void deduceTypeInstNeverLandsOnASibling() {
+        final Inst plus = instB(PLUS_INST_TID, lst());
+        final Inst forMetric = Typer.Helper.deduceTypeInst(T(f("metric")), plus);
+        assertNotNull(forMetric, "metric::T must land on its own plus contract");
+        assertTrue(domEquals(forMetric, "metric"), "metric lands on its own contract, got " + forMetric);
+        final Inst forImperial = Typer.Helper.deduceTypeInst(T(f("imperial")), plus);
+        assertFalse(domEquals(forImperial, "metric"), "imperial must not deduce metric's contract, got " + forImperial);
+    }
+
+    /**
+     * FAIL CLOSED — an unregistered family, or no type to deduce from, answers null. A family read and a resolver
+     * must both decline rather than guess: a law-driven rewrite fires on what the deduction says, so a guess would
+     * fire the wrong rule on a type that never declared it.
+     */
+    @Test
+    public void deduceTypeInstFailsClosed() {
+        assertNull(Typer.Helper.deduceTypeInst(T(f(NAT_TID.name())), instB(f("no_such_op_for_a_type"), lst())),
+                "an unregistered family admits nothing");
+        assertNull(Typer.Helper.deduceTypeInst(null, instB(PLUS_INST_TID, lst())),
+                "a bare op with no type to deduce from is not a guess");
     }
 
     @Test

@@ -221,13 +221,18 @@ public interface Space extends Addressable, Rec, Closeable {
             if (null == vid)
                 return null;
             final Uri vidURI = uri(vid);
+            // THE WAY BACK, matched the same way as the way in: a target is an ADDRESS, not a text prefix, and when two
+            // targets both contain the vid the LONGER one owns it. String surgery got both wrong -- /srv/mcp captured
+            // /srv/mcp-api and stripped it to "-api", and an earlier, shorter target swallowed a later, more specific
+            // one purely because the rec listed it first.
             return routes.entrySet().stream()
-                    //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
-                    .filter(e -> vid.toString().startsWith(e.getValue().apply(vidURI).uriValue().toString()))
-                    .map(e -> e.getKey().apply(vidURI).uriValue().extend(
-                                    vid.toString().replaceFirst(e.getValue().apply(vidURI).uriValue().toString(), ""))
-                            .qLess().q(vid.qMap()))
-                    .findFirst()
+                    .map(e -> Map.entry(e.getValue().apply(vidURI).uriValue(), e.getKey()))
+                    .filter(route -> vid.hasPrefix(route.getKey()))
+                    .max(java.util.Comparator
+                            .comparingInt((Map.Entry<fURI, Uri> route) -> route.getKey().pathLength())
+                            .thenComparing(route -> route.getKey().toString()))
+                    .map(route -> route.getValue().apply(vidURI).uriValue()
+                            .extend(vid.removePrefix(route.getKey()).qLess()).q(vid.qMap()))
                     .orElse(vid);
         }
 

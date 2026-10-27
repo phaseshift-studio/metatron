@@ -27,6 +27,68 @@ a           [-- uri (bare name — no angle brackets if alphanumeric) --]
 noobj       [-- "no obj" (empty, none) --]
 ```
 
+### the four ways a spelling becomes an address
+
+They are distinct, and knowing which is which is most of the uri grammar:
+
+| spelling | resolved by | declared by |
+|---|---|---|
+| `math:cos` | an **isa prefix** — a scheme with no host names a vocabulary | `import(/m/math, math)`; the table is `*</instset/prefix>` |
+| `//ginger/a` | a **network name** — a host with no scheme and no port names a peer | `</network/prefix/ginger> -> <ws://ginger.local:8555>` |
+| `cos` | a **redirect** — the short name an address already has | derived from what is mounted; `*</memory/redirect>` |
+| `/mcp` | a **route** — a path prefix a space serves | the space's own `route` field, e.g. `http_server::[route=>[/mcp => mcp_mtron]]` |
+
+`big()` / `small()` covers the first three: a primordial uri helper at metatron's own level, for humans. A space's
+`route` is **not** part of it — a space routes the addresses it serves, on its own behalf.
+
+And a **rewrite** is none of these: it is the compiler's code-transform rule (`instSet.rewrites()`), a different word for
+a different thing. When in doubt: a rewrite changes *code*, a redirect changes *what a name means*.
+
+### the words, one line each
+
+The vocabulary above is small and every term is load-bearing, so the confusions are specific. These are the ones that
+have actually cost someone an afternoon.
+
+**addresses**
+
+| term | means |
+|---|---|
+| `vid` | where a value lives (`nat::29@/usr/marko/age` → the vid is `/usr/marko/age`) |
+| `tid` | the type constraining it (the same value's tid is `int`) |
+| `origin` | a service's full address: `scheme://host:port`. The unit peers are keyed by and dialed at |
+| `authority` | `host:port` — an origin without the scheme. `hasAuthority()` demands **both** host and port |
+| `host` | the host alone. The wire's gate: an address with a host is *someone else's to answer* (`Network.read`) |
+| `isPrefixed()` | scheme, no host — the vocabulary's slot (`math:cos`) |
+| `isAddressed()` | just `hasHost()` — says nothing about ports or schemes |
+| `isHosted()` | host, **no scheme, no port** — the network name slot (`//ginger/a`) |
+| `noobj` | the empty answer. A read that matches nothing returns it; a write of it is the universal close |
+
+**reach and knowledge**
+
+| term | means |
+|---|---|
+| `roster` | what the system **knows**: `<host> => uri{+}`, connectionless. Shared at the root |
+| `peer` | what this machine has **dialed**: one member per surface, keyed by the dial's path |
+| `listener` | what it **answers on**: the sockets it serves, and therefore what mDNS announces |
+| `prefix` (network) | what you **call** it: `<label> => origin`, one listing at the root |
+| reach | dialed peers — per frame, retractable, **not** inherited |
+| denotation | what a spelling means — machine-global, inherited, never scoped |
+
+**structure and process**
+
+| term | means |
+|---|---|
+| `space` | a subset of the graph one address pattern serves (`memspace::[pattern=>/usr/#]`) |
+| `route` | a space's own path→target table, applied when **it** serves a read or write |
+| `mount` / `import` | making a space or an instruction set available (`InstSet.mount`, `@vid` writes) |
+| `frame` | a child machine: `push`/`pop` are the call stack, `move` chooses a machine without closing one |
+| `redirect` | a short name's home, `big()`/`small()`. Exposed at `*</memory/redirect>`, rewritable deliberately |
+| `prefix` (isa) | a vocabulary's short scheme, bound by the import that mounted it |
+| `rewrite` | a **compiler** rule over code. Not a name, not an address — it transforms programs |
+
+The rule of thumb: an address is *declared* (a prefix, a name, a route's key), a redirect is *derived* from what was
+mounted, and a rewrite is *code*.
+
 ---
 
 ## 2. poly types

@@ -273,10 +273,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * that happens to answer, which is the component's standing rule: membership is declared, never emergent.
      */
     default fURI alignPrefix(final fURI vid) {
-        // EXACTLY THE ADDRESSED SLOT: an authority with NO scheme and NO port. A real scheme means the author already
-        // named the protocol (`loop://self` is the identity client, not a name for it), and an explicit port means the
-        // address names a service already -- neither may be rewritten by a binding.
-        if (vid.hasScheme() || !vid.hasHost() || vid.hasPort())
+        // EXACTLY THE HOSTED SLOT: a host with no scheme and no port -- a NAME for a service rather than a service. A
+        // real scheme means the author already named the protocol (`loop://self` is the identity client, not a name for
+        // it), and an explicit port means the address names a service already; neither may be rewritten by a binding.
+        if (!vid.isHosted())
             return vid;
         final Obj origin = this.prefixes().at(uri(vid.host()));
         if (!origin.isUri())

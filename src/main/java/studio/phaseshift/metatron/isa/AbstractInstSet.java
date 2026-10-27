@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -369,31 +370,27 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     /**
      * the insts of this set matching the pattern's family, admitted on the
      * dom axis per {@link Type#pathIncludes(Type)}, ranked closest-to-the-token
-     * first (a no-dom pattern returns them all, unranked).
+     * first (a no-dom pattern returns them all, unranked). The rule itself lives on
+     * {@link Typer.Helper#admitted} — one implementation, shared with the deduction the law table reads — and this
+     * method supplies only the family, looked up in this set's own index.
      */
     private Stream<Obj> admitted(final fURI pattern, final Type queriedDom, final Type queriedRng) {
-        final Stream<Obj> insts = INST_TABLE.entrySet()
+        // dom admission is a PATH relation, not a name match: a contract on nat's path
+        // (nat -> int -> #) is admitted for a nat query, which is what makes ?dom=nat resolve
+        // to the int contract. A dom .test(pattern.dom()) here defeats that -- only exact-name
+        // doms survive, so nat admits nothing and imperial admits only itself.
+        return Typer.Helper.admitted(this.family(pattern), pattern, queriedDom, queriedRng).map(i -> (Obj) i);
+    }
+
+    /**
+     * this set's registrations of one family — the table is keyed by the inst's base path, so the index answers
+     * {@link Typer.Helper#family} without a scan.
+     */
+    private Stream<Inst> family(final fURI pattern) {
+        return INST_TABLE.entrySet()
                 .stream()
                 .filter(kv -> kv.getKey().bimatches(pattern.basePath().asNode()))
-                .flatMap(kv -> kv.getValue().stream())
-                .<Obj>map(i -> i)
-                // dom admission is a PATH relation, not a name match: a contract on nat's path
-                // (nat -> int -> #) is admitted for a nat query, which is what makes ?dom=nat resolve
-                // to the int contract. A dom .test(pattern.dom()) here defeats that -- only exact-name
-                // doms survive, so nat admits nothing and imperial admits only itself.
-                .filter(i -> null == queriedDom || queriedDom.pathIncludes(i.dom()))
-                .filter(i -> null == queriedRng ?
-                        (!pattern.hasRng() || i.rng().vidOrTid().test(pattern.rng())) :
-                        (queriedRng.pathIncludes(i.rng()) && !i.rng().isRootType() && !i.rng().isGeneric()));
-        // ranking runs when a dom is queried: an exact rng match first, then closest-to-the-token on each axis;
-        // the rng key is guarded because a query may name a dom without an rng.
-        return null == queriedDom ?
-                insts :
-                insts.sorted(Comparator
-                        .comparingInt((Obj i) -> pattern.hasRng() && i.rng().vidOrTid().test(pattern.rng()) ? 0 : 1)
-                        .thenComparingInt(i -> queriedDom.pathTo(i.dom()))
-                        .thenComparingInt(i -> null == queriedRng ? 0 : queriedRng.pathTo(i.rng())));
-
+                .flatMap(kv -> kv.getValue().stream());
     }
 
     /**

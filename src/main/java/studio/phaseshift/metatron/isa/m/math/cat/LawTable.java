@@ -46,6 +46,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -85,7 +87,13 @@ public abstract class LawTable {
 
     private final Map<fURI, Entry> table = new HashMap<>();
     private final Map<fURI, Entry> resolved = new ConcurrentHashMap<>();
+
     private final Map<fURI, Rec> typeLawsCache = new ConcurrentHashMap<>();
+
+    /**
+     * Whether a derivation is in flight on this thread — the guard {@link #lookup} answers the declared row under.
+     */
+    private static final ThreadLocal<Boolean> DERIVING = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     /**
      * The registered tables, keyed by their instset tid — {@link #typeLawsOf(Type)} dispatches a type to the
@@ -118,7 +126,12 @@ public abstract class LawTable {
     /**
      * The declared process laws and inverse of the inst, or null when the inst is not in the table.
      * <p>
-     * The inverse is not a fact re-declared per instruction: it is read off the carrier's declared algebra
+     * CONTRACT-LEVEL — the algebra read here is the one the contract was registered over ({@code tid.dom()}), which
+     * is what a lift of that exact instruction means ({@code |mult?real<=real>>analysis>>inverse} is {@code div}).
+     * An OPERAND may model less: {@link #declared(fURI, Type)} is the operand-aware read, and it is the one every
+     * rewrite consults, so a nat never inherits int's additive inverse.
+     * <p>
+     * The inverse is not a fact re-declared per instruction: it is read off the carrier's algebra
      * ({@link #derivedInverse}) whenever that algebra states one, the stored field being the source only for a
      * carrier that states none. So {@code real}'s {@code mult}/{@code div} pair follows from the {@code field}'s
      * {@code mult_group} together with {@code div}'s own definition, while {@code int}'s {@code mult}→{@code div}
@@ -126,7 +139,13 @@ public abstract class LawTable {
      */
     public final Entry lookup(final fURI instTid) {
         final Entry declared = this.table.get(instTid);
-        return null == declared ? null : this.resolved.computeIfAbsent(instTid, tid -> this.computed(tid, declared));
+        if (null == declared)
+            return null;
+        // a derivation is reading the carrier's law block, which may itself consult this table: answer the
+        // declaration while that read is in flight (never cache it), so the read cannot re-enter here
+        if (DERIVING.get())
+            return declared;
+        return this.resolved.computeIfAbsent(instTid, tid -> this.computed(tid, declared));
     }
 
     /**
@@ -134,13 +153,20 @@ public abstract class LawTable {
      * The declared row is returned unchanged when the two agree, so today's declarations cost nothing.
      */
     private Entry computed(final fURI tid, final Entry declared) {
-        final fURI inverse = this.derivedInverse(tid, declared);
-        return null == inverse || inverse.equals(declared.inverse()) ?
-                declared : new Entry(declared.laws(), inverse, declared.derivation());
+        DERIVING.set(Boolean.TRUE);
+        try {
+            final Type carrier = algebraOf(null == tid ? null : tid.dom());
+            final fURI inverse = this.derivedInverse(tid, declared, null == carrier ? null : algebraFor(carrier, tid));
+            return null == inverse || inverse.equals(declared.inverse()) ?
+                    declared : new Entry(declared.laws(), inverse, declared.derivation());
+        } finally {
+            DERIVING.set(Boolean.FALSE);
+        }
     }
 
     /**
-     * THE INVERSE of an operation, read off the carrier's declared algebra — a consequence, never a new fact.
+     * THE INVERSE of an operation, read off THE OPERAND'S declared algebra ({@link #algebraFor} decides which type
+     * that is) — a consequence, never a new fact.
      * <ul>
      *   <li>an operation declared {@link Law#involution} is its own inverse ({@code f·f = 1} is the law);</li>
      *   <li>a carrier declaring a <b>group</b> instance {@code (op, id, inv)} states the cancellation both ways:
@@ -153,12 +179,19 @@ public abstract class LawTable {
      * Only a group is read: a {@code field} names {@code mul}/{@code inv} too, but {@code 0} has no {@code 1/0}, so a
      * field's multiplicative side is no group and licenses no cancellation of its own.
      */
-    private fURI derivedInverse(final fURI tid, final Entry entry) {
-        if (null == tid || null == tid.dom() || null == tid.rng())
+    private fURI derivedInverse(final fURI tid, final Entry entry, final Type algebra) {
+        if (null == tid)
             return null;
         if (has(entry, Law.involution))
             return tid;
-        for (final Obj block : TheoryHelper.instances(T(tid.dom())).jvm().values()) {
+        // THE ALGEBRA IS THE OPERAND'S, NEVER THE CONTRACT'S: a type models exactly what it declares, so an
+        // operand that declares none (or a rig where int declares a ring) derives no inverse here
+        if (null == algebra || null == algebra.vid())
+            return null;
+        final fURI carrier = algebra.vid().basePath();
+        if (null == carrier || carrier.equals(ALL.basePath()) || carrier.isGeneric())
+            return null;
+        for (final Obj block : TheoryHelper.instances(algebra).jvm().values()) {
             if (!block.isRec() || !GROUP_THEORY_TID.equals(block.asRec().tid().basePath()))
                 continue;
             final fURI op = TheoryHelper.roleAddress(block.asRec(), OP);
@@ -270,39 +303,187 @@ public abstract class LawTable {
     }
 
     /**
-     * The declared entry of an op address, disambiguated by the operand type. The rewriter sees code
-     * <em>before</em> resolution, so a chain instruction carries only its op address ({@code /m/inst/plus},
-     * no dom/rng) and the law table's keys carry the endpoints. When several entries share the op address
-     * ({@code plus} over int, real, str, bool, …) the operand's type picks the right one; when nothing
-     * matches, null rather than a guess — a law-driven rewrite must never fire on the wrong type.
+     * ALL LAW RESOLUTION IS STRICT: AN INSTRUCTION'S ROW FOLLOWS THE TYPE PATH, BUT A TYPE'S ALGEBRA IS ONLY WHAT
+     * THAT TYPE DECLARES — SO A TYPE THAT DECLARES NO ALGEBRA TAKES PART IN NO ALGEBRAIC REWRITE.
      * <p>
-     * A declaration over EVERY carrier — its dom is {@code #} or a generic ({@code A}) — is not a guess: it holds for
-     * this operand too ({@code count} over a stream of anything). A carrier-specific declaration still wins, so an op
-     * with typed overloads resolves to its own.
+     * THE ROW IS THE IMPLEMENTATION'S, AND IMPLEMENTATIONS INHERIT. Which contract runs is
+     * {@link Typer.Helper#deduceTypeInst}'s answer, read off the operand's single path to the root
+     * ({@code nat -> int -> #}): a {@code nat} operand gets {@code int}'s {@code plus} row — its process laws
+     * ({@code commutative}, {@code monoidic}, {@code poset}, …) and its derivation. A type that implements the op
+     * itself shadows its ancestor's, a sibling is never admitted, and nothing is ever guessed: no admitted contract
+     * or no row for it answers null, so no law-driven rewrite can fire on the wrong type.
+     * <p>
+     * THE INVERSE IS THE ALGEBRA'S, AND ALGEBRAS DO NOT INHERIT. {@link #derivedInverse} reads the law block of the
+     * type being operated on, never the contract's carrier — and that is the decision the whole table rests on, not
+     * a convenience to relax. The policy is applied in one place, {@link #algebraFor}; its non-inheriting body is
+     * active and the inheriting one is kept beside it, commented, so flipping the requirement is a comment change. {@code nat::T} exists precisely to SUBTRACT {@code int}'s {@code add_group}: same
+     * {@code plus}, same representation, no additive inverse, so {@code x.plus(3).minus(3)} must not cancel on a nat
+     * while it must on an int. A single {@code inv} role could not even express that subtraction, which is why
+     * heredity here is not a lattice but a declaration.
+     * <p>
+     * THE UX CONSEQUENCE, PLAINLY: A TYPE DEFINITION IS AN ALGEBRAIC SPECIFICATION. To get cancellation, folding and
+     * distribution a type must declare the theory instances it models ({@code add_group}, {@code mult_group},
+     * {@code ring}, {@code field}, …) or delegate them to another type ({@code law => int} — a pointer, and still a
+     * written act). A type that declares nothing is neither broken nor refused: it computes through its base type's
+     * implementations, it simply licenses no law-driven rewrite — and the typer is where that becomes legible
+     * ("age::T declares no algebra"). Throwaway types therefore pay nothing until they want the algebra, and a type's
+     * algebra is exactly what is written on it, which is what lets this table shrink to declarations instead of
+     * restating every operation's consequences.
+     * <p>
+     * The declared {@code inverse} is the one fact that travels with the ROW rather than the algebra: a retraction is
+     * a fact about the implementation, not the structure — {@code int}'s {@code mult}→{@code div} is sound in one
+     * direction because truncating division retracts multiplication, and it holds for anything running that division,
+     * nat included. It answers only when the operand's algebra states no inverse of its own.
      */
     public static Declared declared(final fURI op, final Type operand) {
         final LawTable owner = ownerOf(op);
         if (null == owner || null == op.basePath())
             return null;
-        final String base = op.basePath().toString();
-        final String type = (null == operand || null == operand.vid()) ? null : operand.vid().basePath().toString();
-        Declared first = null;
+        final fURI base = op.basePath();
+        if (null == operand || null == operand.vid())
+            return owner.first(base);                  // no type to resolve against: the family's first row
+        if (DERIVING.get())                            // a derivation is reading the very block we would read here
+            return owner.exact(base, operand);         // (the legacy exact read, never cached, cannot re-enter)
+        final Inst contract = deduce(base, operand);   // which implementation this type lands on
+        if (null != contract) {
+            final Entry row = owner.table.get(contract.tid());
+            if (null != row)
+                return new Declared(contract.tid(), owner.algebraic(contract.tid(), row, operand));
+        }
+        return owner.exact(base, operand);             // the op is not in the registry: the exact row, unchanged
+    }
+
+    /**
+     * The registered contract this type lands on, or null when the machine registers none (an unbooted machine
+     * included) — see {@link Typer.Helper#deduceTypeInst}.
+     */
+    private static Inst deduce(final fURI base, final Type operand) {
+        return Machine.loaded() ? Typer.Helper.deduceTypeInst(Machine.current().instset(), operand, base) : null;
+    }
+
+    /**
+     * The row of the op over this exact carrier (or a universal {@code #}/generic row), as the table was written —
+     * the read used where no contract can be deduced, and while a derivation is in flight.
+     */
+    private Declared exact(final fURI base, final Type operand) {
+        final String type = operand.vid().basePath().toString();
         Declared universal = null;
-        for (final Map.Entry<fURI, Entry> e : owner.table.entrySet()) {
-            if (!e.getKey().basePath().toString().equals(base))
+        for (final Map.Entry<fURI, Entry> e : this.table.entrySet()) {
+            if (!e.getKey().basePath().toString().equals(base.toString()))
                 continue;
-            final Entry entry = owner.lookup(e.getKey());
+            final Entry entry = this.lookup(e.getKey());
             if (null == entry)
                 continue;
-            final Declared declared = new Declared(e.getKey(), entry);
-            if (null == first)
-                first = declared;
             if (null == universal && isUniversal(e.getKey().dom()))
-                universal = declared;
-            if (null != type && (e.getKey().dom().basePath().toString().equals(type) || e.getKey().rng().basePath().toString().equals(type)))
-                return declared;
+                universal = new Declared(e.getKey(), entry);
+            if (e.getKey().dom().basePath().toString().equals(type) || e.getKey().rng().basePath().toString().equals(type))
+                return new Declared(e.getKey(), entry);
         }
-        return null == type ? first : universal;
+        return universal;
+    }
+
+    /**
+     * The first row of a family — the answer when there is no operand type to resolve against.
+     */
+    private Declared first(final fURI base) {
+        for (final Map.Entry<fURI, Entry> e : this.table.entrySet())
+            if (e.getKey().basePath().toString().equals(base.toString())) {
+                final Entry entry = this.lookup(e.getKey());
+                if (null != entry)
+                    return new Declared(e.getKey(), entry);
+            }
+        return null;
+    }
+
+    /**
+     * The row as the OPERAND's algebra answers it: its inverse replaced when that algebra derives one, the declared
+     * retraction kept when it does not. Strictly the operand's — see {@link #declared(fURI, Type)}.
+     */
+    private Entry algebraic(final fURI tid, final Entry declared, final Type operand) {
+        DERIVING.set(Boolean.TRUE);
+        try {
+            final fURI inverse = this.derivedInverse(tid, declared, algebraFor(operand, tid));
+            return null == inverse || inverse.equals(declared.inverse()) ?
+                    declared : new Entry(declared.laws(), inverse, declared.derivation());
+        } finally {
+            DERIVING.set(Boolean.FALSE);
+        }
+    }
+
+    /**
+     * The type whose law block an inverse is read from — the plain (coefficient-free, non-generic) carrier named by
+     * an n-tid, or null when there is none to read.
+     */
+    private static Type algebraOf(final fURI carrier) {
+        return null == carrier || null == carrier.basePath() || carrier.basePath().equals(ALL.basePath())
+                || carrier.basePath().isGeneric() ? null : T(carrier.basePath());
+    }
+
+    /**
+     * WHICH TYPE'S ALGEBRA ANSWERS FOR AN OPERAND — THE ONE POLICY SWITCH. The policy is the single call on the last
+     * line of the body: {@link #strict} (active), {@link #inherit}, or {@link #byContract}. All three are real,
+     * compiled methods rather than commented-out bodies on purpose — a comment block holding a method is one
+     * unbalanced fence away from a broken build (flipping it by hand did break this file), while a compiled
+     * alternative is type-checked on every build no matter which one the switch selects.
+     * <p>
+     * WHAT THE CHOICE MOVES, measured 2026-10-27 with the suite under both live bodies: the observable answers of
+     * {@code strict} and {@code inherit} are identical on today's table (162 tests green either way), because a
+     * type that declares a block ({@code nat}'s {@code rig}) is answered by its own block in both policies, and a
+     * type that declares none ({@code imperial}) is stopped earlier, at the ROW — its {@code plus?imperial} contract
+     * has no row in any law table, so {@link #declared(fURI, Type)} answers null before an algebra is ever read. The
+     * policy becomes load-bearing when a type has rows but no block: once delegation ({@code law => int}) lands, or
+     * the row read learns to fall back to an ancestor's row. {@link #byContract} is the loosest body and the only one
+     * that differs today: it hands {@code nat} int's ring, which {@code catInstSetTest#testStrictLawResolution} flags.
+     *
+     * @param operand  the type being operated on
+     * @param contract the n-tid of the row being answered, whose dom is the implementation's carrier
+     * @return the type whose law block answers for it
+     */
+    private static Type algebraFor(final Type operand, final fURI contract) {
+        return strict(operand);
+    }
+
+    /**
+     * STRICT — the operand's own declaration, and nothing else. A type models exactly what it declares, so
+     * {@code nat}'s {@code rig} <em>subtracts</em> {@code int}'s {@code add_group}, and a type that declares no
+     * algebra licenses no rewrite. This is the policy {@link #declared(fURI, Type)} documents.
+     */
+    private static Type strict(final Type operand) {
+        return operand;
+    }
+
+    /**
+     * INHERIT — the non-strict policy: the nearest ancestor that DECLARES a block answers, so a type that says
+     * nothing borrows its base's algebra ({@code age} would get int's ring, a bare refinement of real would get
+     * real's field). Convenient for throwaway types, and unsound wherever a refinement <em>narrows</em> the
+     * structure: {@code nat} must subtract {@code int}'s {@code add_group}, and no walk can express a subtraction.
+     * A type that does declare (nat's rig) is unaffected — the walk stops at the operand itself.
+     * <p>
+     * The walk has the shape of {@link Type#pathIncludes(Type)}: a base type ends it, the root is never asked, and
+     * when no ancestor declares anything the operand answers (which declares nothing either, so the policies agree).
+     */
+    private static Type inherit(final Type operand) {
+        if (null == operand || null == operand.vid())
+            return operand;
+        Type type = operand;
+        int hops = 0;
+        while (null != type && hops++ < 256) {
+            if (!typeLawsOf(type).jvm().isEmpty())
+                return type;
+            if (type.isBaseType() || type.isRootType())
+                break;
+            type = type.parentType();
+        }
+        return operand;
+    }
+
+    /**
+     * PRE-SWITCH (non-strict) — exactly the read this table made before the strict switch: the CONTRACT's own
+     * carrier answers, so {@code plus?dom=/m/int} is read out of int's algebra whatever the operand is and a nat
+     * operand inherits int's ring. Kept for comparison; it is the one body that changes today's answers.
+     */
+    private static Type byContract(final fURI contract) {
+        return null == contract ? null : algebraOf(contract.dom());
     }
 
     /**
@@ -463,7 +644,10 @@ public abstract class LawTable {
      * The structural theories the type models, keyed by each theory instance's name.
      */
     public final Rec typeLaws(final Type type) {
-        return this.typeLawsCache.computeIfAbsent(type.tid().basePath(), k -> this.typeLawsUncached(type));
+        // keyed by the VID: the block is about the type, and two refinements of one base (nat, or a pair of
+        // int-refinements) share a tid, so a tid-keyed cache would answer one's algebra for the other
+        return null == type.vid() ? rec0() :
+                this.typeLawsCache.computeIfAbsent(type.vid().basePath(), k -> this.typeLawsUncached(type));
     }
 
     /**

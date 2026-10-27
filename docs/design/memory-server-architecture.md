@@ -71,7 +71,7 @@ State of play (2026):
       (`isa/web/space/http/handler/mcp_httpHandler.java`) — exactly the transport Claude Code / Codex configure as
       `type: http`.
     - `mcp_mtron_wsHandler` + `mcpMetatronBuilder` — native tools already exposed:
-      `write_memory`, `read_memory`, `eval_mtron`, `list_space`, `router_info`,
+      `write_memory`, `read_memory`, `eval_mtron`, `list_space`, `machine_info`,
       `find_inst`, `spawn_wsclient`, `spawn_wshandler` — and resources built from skill packs.
     - `type/mcpClient.java` — a metatron-side MCP *client* (needed to drive sampling out to the harness).
     - **Docker image already published**

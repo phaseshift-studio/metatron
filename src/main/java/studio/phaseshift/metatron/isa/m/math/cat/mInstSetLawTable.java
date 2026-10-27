@@ -231,9 +231,12 @@ public final class mInstSetLawTable extends LawTable {
 
     private void loadInt() {
         entry(AS_INST_TID.dom(INT_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(INT_TID), pure);
-        entry(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), MINUS_INST_TID.dom(INT_TID).rng(INT_TID), commutative, right_distributive, action, pure);
+        // the plus/minus pair is DERIVED: int models an add_group (op=plus, inv=neg) and minus is DEFINED as
+        // plus applied to its inverted argument, so neither side's inverse is declared
+        entry(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), null, commutative, right_distributive, action, pure);
+        // the ONE inverse no algebra states: int models a mult_monoid, not a group (5.div(2).mult(2) is 4)
         entry(MULT_INST_TID.dom(INT_TID).rng(INT_TID), DIV_INST_TID.dom(INT_TID).rng(INT_TID), commutative, right_distributive, action, pure);
-        entry(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), PLUS_INST_TID.dom(INT_TID).rng(INT_TID),
+        entry(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), null,
                 new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())),
                 action, pure);
         // no inverse: int div truncates, so x.div(a).mult(a) is not x (5.div(2).mult(2) is 4); mult's inverse is div
@@ -252,12 +255,14 @@ public final class mInstSetLawTable extends LawTable {
 
     private void loadReal() {
         entry(AS_INST_TID.dom(REAL_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(REAL_TID), pure);
-        entry(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID), MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), commutative, right_distributive, action, pure);
-        entry(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID), DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), commutative, right_distributive, action, pure);
-        entry(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID),
+        // real is a field, so both its group sides DERIVE their inverse pairs: plus/minus from add_group, and
+        // mult/div from mult_group (op=mult, inv=inv) together with div's definition div ≡ mult ∘ inv
+        entry(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID), null, commutative, right_distributive, action, pure);
+        entry(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID), null, commutative, right_distributive, action, pure);
+        entry(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), null,
                 new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())),
                 action, pure);
-        entry(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), MULT_INST_TID.dom(REAL_TID).rng(REAL_TID),
+        entry(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), null,
                 new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())),
                 right_distributive, action, pure);
         entry(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID), NEG_INST_TID.dom(REAL_TID).rng(REAL_TID), involution, pure);
