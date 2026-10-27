@@ -29,6 +29,8 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.Set;
+
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MEMORY_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -180,14 +182,17 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
     }
 
     @Override
-    public fURI alignPrefix(final fURI vid) {
-        // prefix table is inherited: current's prefixes win, then the enclosing level's.
-        if (null != this.current) {
-            final fURI aligned = this.current.alignPrefix(vid);
-            if (!aligned.equals(vid))
-                return aligned;
-        }
-        return this.previous.alignPrefix(vid);
+    public Set<fURI> redirects(final fURI small) {
+        // A NAME MAY BE REGISTERED AT MORE THAN ONE LEVEL, so the candidates are the union, the nearer level's first
+        // -- the same current-then-previous walk redirect() makes, but answering with every candidate rather than
+        // the one winner, because the asker supplies the root the winner has to suit.
+        final Set<fURI> own = this.current.redirects(small);
+        final Set<fURI> outer = this.previous.redirects(small);
+        if (own.isEmpty() || outer.isEmpty())
+            return own.isEmpty() ? outer : own;
+        final Set<fURI> merged = new java.util.LinkedHashSet<>(own);
+        merged.addAll(outer);
+        return merged;
     }
 
     @Override
@@ -215,11 +220,6 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
     @Override
     public void unregisterRedirect(final fURI small, final fURI big) {
         this.own().unregisterRedirect(small, big);
-    }
-
-    @Override
-    public void registerPrefix(final fURI prefix, final fURI vid) {
-        this.own().registerPrefix(prefix, vid);
     }
 
     @Override

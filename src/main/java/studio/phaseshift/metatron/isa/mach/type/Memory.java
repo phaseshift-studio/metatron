@@ -32,6 +32,7 @@ import java.io.Closeable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
@@ -108,12 +109,20 @@ public interface Memory extends Space, Machine.Component, Closeable {
 
     void unregisterRedirect(final fURI small, final fURI big);
 
-    void registerPrefix(final fURI prefix, final fURI vid);
-
     /**
-     * Resolve a short name against the prefix + redirect tables before routing.
+     * THE CANDIDATE PATHS a short name may denote, in the order {@link #redirect} prefers them — the whole set the
+     * winner is chosen from.
+     * <p>
+     * A prefix resolver knows the ROOT its name must land under ({@code math:cos} must stay under {@code /m/math}), so
+     * "which of these home names lives there" is the question it asks; {@code redirect}'s winner is the wrong answer
+     * to that question, because the winner may belong to another vocabulary entirely.
+     *
+     * @param small the short name as spelled
+     * @return the full paths that name may denote; empty when it denotes none
      */
-    fURI alignPrefix(final fURI vid);
+    default Set<fURI> redirects(final fURI small) {
+        return Set.of();
+    }
 
     /**
      * The per-instruction <b>arg stack</b>, one per thread: the args of the instruction currently being applied,

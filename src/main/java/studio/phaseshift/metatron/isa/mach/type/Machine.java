@@ -168,13 +168,14 @@ public interface Machine extends Rec, AutoCloseable {
         // THE ROUTER OF ROUTERS ALIGNS THE NAME ONCE. a prefixed spelling (ide:command) names the same
         // resource as its aligned form (/m/ide/inst/command), and each component keys by the canonical
         // form -- network authority, memory's index, the instset tables -- so the gatekeeper aligns HERE,
-        // once, and every dispatch below sees one name. memory also aligns internally (it owns the
-        // tables, for now), which is idempotent; the fallback to instruction memory does not, and a raw
-        // spelling can never match tables keyed by full identity. a scheme-less vid passes through
-        // untouched: alignPrefix normalizes to coefficient one, which must not be imposed on an ordinary
-        // read, and a RELATIVE name stays relative -- "in the machine" is memory's contract to interpret.
-        final fURI aligned = vid.hasScheme() ? machine.memory().alignPrefix(vid) : vid;
-        final fURI name = aligned.equals(vid.one()) ? vid : aligned;
+        // once, and every dispatch below sees one name. ONE DOOR: Helper.align IS that alignment, which is
+        // why the compiler's move-extractor can canonicalize a spelling exactly as the runtime does -- a
+        // name resolved one way at compile time and another at run time would ship a tail nowhere.
+        // The fallback to instruction memory does not align on its own, and a raw spelling can never match
+        // tables keyed by full identity. a scheme-less vid passes through untouched: alignPrefix normalizes
+        // to coefficient one, which must not be imposed on an ordinary read, and a RELATIVE name stays
+        // relative -- "in the machine" is memory's contract to interpret.
+        final fURI name = Helper.align(machine, vid);
         // THE NETWORK'S Q-PROCS APPLY HERE, not inside Network: the layer is the one place a vid is handed to a
         // source, so a `?subq` on a peer address registers in THIS VM (the layer's pre_write consumes the write)
         // instead of riding the wire and registering on the peer.
@@ -235,8 +236,7 @@ public interface Machine extends Rec, AutoCloseable {
             return owned.get();
         // aligned once at the gatekeeper, exactly as read -- a prefixed spelling must land where its
         // aligned form lands, on the wire and in the index alike.
-        final fURI alignedW = vid.hasScheme() ? machine.memory().alignPrefix(vid) : vid;
-        final fURI name = alignedW.equals(vid.one()) ? vid : alignedW;
+        final fURI name = Helper.align(machine, vid);
         // the same layer as read, under the same host gate: a write the network's q-procs answer (a `?subq`
         // registration) never reaches the wire, and the write's own answer is the network's reply
         final Network network = machine.network();
@@ -864,6 +864,42 @@ public interface Machine extends Rec, AutoCloseable {
         }
 
         /**
+         * CANONICALIZE A SPELLING — the ONE door a short name is turned into the address it denotes, and the reason
+         * it is a method rather than three inline expressions is that it has three callers with no other way to
+         * agree: {@link Machine#read}, {@link Machine#write}, and the compiler's move-extractor.
+         * <p>
+         * Each component owns the slot it can match, and only that slot: the ISA keeps the <b>scheme</b> prefixes
+         * ({@code math:cos} → {@code /m/math/cos}) because an import is what gave the name, and the network keeps
+         * the <b>authority</b> prefixes ({@code //ginger/a} → {@code ws://ginger.local:8555/a}) because a peer is
+         * what the name reaches. The two slots cannot collide, so the order they are asked in never matters — which
+         * is what keeps this a canonicalization rather than a precedence ladder.
+         * <p>
+         * A scheme-less vid passes through untouched: {@code alignPrefix} normalizes to coefficient one, which must
+         * not be imposed on an ordinary read, and a RELATIVE name stays relative — "in the machine" is memory's
+         * contract to interpret, not this door's.
+         *
+         * @param machine the machine whose components hold the tables ({@code null} passes the vid through)
+         * @param vid     the address as spelled
+         * @return the address the spelling denotes, or {@code vid} itself when no table holds it
+         */
+        public static fURI align(final Machine machine, final fURI vid) {
+            if (null == machine || null == vid || (!vid.hasScheme() && !vid.hasHost()))
+                return vid;
+            fURI name = vid;
+            if (vid.hasScheme()) {
+                final fURI aligned = machine.instset().alignPrefix(vid);
+                // alignPrefix answers the coefficient-one form for an UNPREFIXED spelling too; the original must be
+                // kept then, so a caller's coefficient survives an alignment that had nothing to align
+                if (!aligned.equals(vid.one()))
+                    name = aligned;
+            }
+            // ... AND THE AUTHORITY SLOT, after the scheme slot. The two cannot fire on the same spelling (one needs a
+            // scheme and no host, the other a host and no port), so the order is unobservable and no precedence rule
+            // exists to get wrong -- which is what makes this a canonicalization and not a ladder.
+            return name.hasHost() ? machine.network().alignPrefix(name) : name;
+        }
+
+        /**
          * Resolve a machine ADDRESS against the machine it is written in — the ONE definition of what {@code .},
          * {@code ..} and {@code ~} mean to a machine instruction, shared by {@link Machine#push(fURI) push},
          * {@code move} and {@code pop} so the three cannot drift apart.
@@ -891,19 +927,23 @@ public interface Machine extends Rec, AutoCloseable {
         public static fURI machineAddress(final Machine here, final fURI target) {
             if (null == target)
                 return null == here ? null : here.vid();
+            // A SPELLING MAY BE A NAME, so canonicalize BEFORE the arithmetic: `push(<//worker/a>)` and
+            // `move(<//worker/a>)` must mean the same place, and push/pop have no compile-time extractor to lean on
+            // the way move does. One door (align), so a name resolves the same way wherever a frame is addressed.
+            final fURI address = align(here, target);
             // a wire address names a peer across a process boundary, not a place in this tree: taken as written
-            if (target.hasScheme() || target.hasHost())
-                return target;
+            if (address.hasScheme() || address.hasHost())
+                return address;
             final fURI home = null == here ? null : here.vid();
-            final boolean fromHome = target.hasPrefix(f("~"));
-            if (fromHome && target.equals(f("~")))
+            final boolean fromHome = address.hasPrefix(f("~"));
+            if (fromHome && address.equals(f("~")))
                 return null == home ? f("/") : home.resolve();
-            if (!fromHome && target.isAbsolute())
-                return target.resolve();
+            if (!fromHome && address.isAbsolute())
+                return address.resolve();
             if (null == home)
-                return target.resolve(); // no address to descend from: the extension IS the address
+                return address.resolve(); // no address to descend from: the extension IS the address
             final fURI base = home.resolve();
-            final fURI composed = base.extend(fromHome ? target.pretract(1) : target).resolve();
+            final fURI composed = base.extend(fromHome ? address.pretract(1) : address).resolve();
             // saturation: an absolute base popped past the root is the root, never a displacement
             if (base.isAbsolute() && (composed.isEmpty() || composed.isRelative()))
                 return f("/");

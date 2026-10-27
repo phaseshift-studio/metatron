@@ -500,9 +500,17 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     // ── String cleaning ──────────────────────────────────────────
 
     protected StringBuilder cleanEnding(final StringBuilder sb) {
+        // EMPTY IS THE NORMAL END OF THE LADDER, not an error. An argument that renders to nothing (a uri whose path
+        // begins with a segment the writer declines to print, an instruction with no printable body) reaches here as
+        // an empty builder, and `charAt(-1)` turned every such rendering into "Index -1 out of bounds" -- an opaque
+        // crash in the PRINTER that masked the real diagnostic, in the compiler, on a path that only ever prints.
+        if (sb.isEmpty())
+            return sb;
         char last = sb.charAt(sb.length() - 1);
-        while (last == ' ' || last == ',' || last == '\n') {
+        while (sb.length() > 0 && (last == ' ' || last == ',' || last == '\n')) {
             sb.deleteCharAt(sb.length() - 1);
+            if (sb.isEmpty())
+                break;
             last = sb.charAt(sb.length() - 1);
         }
         return sb;

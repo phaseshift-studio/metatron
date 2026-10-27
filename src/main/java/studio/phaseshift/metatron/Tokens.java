@@ -368,6 +368,12 @@ public final class Tokens {
     public static final String LOOP = "loop";
     public static final String GRAPH = "graph";
     public static final String PREFIX = "prefix";
+
+    /**
+     * the NAME INDEX — {@code <short name> => <the paths it denotes>}, the table {@code fURI.big()/small()} read.
+     * Distinct from {@link #ROUTE}, which is a space's path→handler routing: this is a name→address index.
+     */
+    public static final String REDIRECT = "redirect";
     public static final String USER_HOME = "user.home";
     public static final String PREPEND = "prepend";
     public static final String LOAD = "load";

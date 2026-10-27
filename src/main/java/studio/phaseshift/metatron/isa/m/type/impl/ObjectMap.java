@@ -73,6 +73,15 @@ public class ObjectMap<K, V> extends AbstractMap<Obj, Obj> implements Map<Obj, O
         return this.map.getOrDefault(key, defaultValue);
     }
 
+    /**
+     * THE RAW VIEW — the backing map, keyed by the domain type instead of by {@code Obj}. An index whose keys must
+     * never become objs (the redirect tables: {@code big()} is asked from inside {@code MObj}'s constructor) can only
+     * be enumerated this way, and a cold projection over it is the one reader that needs to.
+     */
+    public Map<K, V> rawMap() {
+        return this.map;
+    }
+
     public Obj get(final Obj key) {
         return MObjFactory.of().toObj(this.map.get((K) key.jvm()));
     }

@@ -37,6 +37,13 @@ public class MoveRemoteTest extends AbstractMetatronTest {
 
     @BeforeEach
     void connect() {
+        // A PREFIX IS HOW A LONG AUTHORITY IS SPELLED, so every prefixed row below is the same scatter as its
+        // spelled-out twin: `self:` denotes loop://self. What the row pins is the REWRITE -- that the tail is cut
+        // and that the cut carries the RESOLVED address, never the name, which the far side has never heard of.
+        Machine.current().instset().registerPrefix(f("self"), f("loop://self"));
+        // ... AND THE OTHER SLOT: `//self/a` is the same place in the authority position, and it must ship ALIGNED
+        // just as `self:/a` does -- two spellings of one peer, resolved by the two tables they belong to.
+        Machine.current().network().registerPrefix(f("self"), f("loop://self"));
         Machine.current().network().connect(f("loop://self"));
     }
 
@@ -57,6 +64,13 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             "{1,2,3}.move(<loop://self/a>).mult(2).plus(1).sum()                                                                      % start({1,2,3}).cut(<loop://self/a>,mult(2).plus(1).sum())                                                                      % 15",
             "{1,2,3}.move(<loop://self/a>).mult(2).plus(1).sum().move(<loop://self/b>).plus(7).plus(1)                                % start({1,2,3}).cut(<loop://self/a>,mult(2).plus(1).sum().move(<loop://self/b>).plus(7).plus(1))                                % 23",
             "{1,2,3}.move(<loop://self/a>).branch(move(<loop://self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod() % start({1,2,3}).cut(<loop://self/a>,branch(move(<loop://self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod()) % 9767520",
+            // a PREFIXED target is aligned first and SHIPPED ALIGNED: the cut names loop://self/a, not self:/a
+            "5.move(<self:/a>).plus(1).mult(2)                                                                                        % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",
+            // ... and the ADDRESSED slot ships the same way: //self/a is a name for loop://self/a
+            "5.move(<//self/a>).plus(1).mult(2)                                                                                        % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",
+            // ... and a LOCAL move is still left alone: no authority, no cut, no shipped tail. `..` because the loop
+            // peer IS this machine, so an earlier row has already moved the frame -- a relative target would race it
+            "5.move(<..>).plus(1)                                                                                                     % 5.move(<..>).plus(1)                                                                                                     % 6",
     }, delimiter = '%')
     void testMoveRewrite(final String code, final String expected, final String expectedResult) {
         checkCodeRewrite(LOG, code, expected, expectedResult, false);

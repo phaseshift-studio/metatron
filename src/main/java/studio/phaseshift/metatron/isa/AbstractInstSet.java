@@ -27,7 +27,9 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -40,6 +42,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? extends Obj>>> implements InstSet {
@@ -52,6 +56,91 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     protected final Map<fURI, Type> TYPE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
     protected final Map<fURI, Obj> CONST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
     protected final Map<fURI, Inst> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
+
+    // ======================== the names ========================
+
+    /**
+     * THE NAMES this vocabulary answers to: {@code <short scheme> => <vid>} — what {@code import(/m/math, math)}
+     * binds, and the reason {@code math:cos} denotes {@code /m/math/inst/cos}.
+     * <p>
+     * It lives with the ISA because a MOUNT is what gave the name: an instruction set owns the shorthand it was
+     * imported under the way it owns its consts and insts, and memory mounts nothing and names nothing.
+     * <p>
+     * A Java field, with the rec's {@code prefix} entry as its MIRROR, written on every change so
+     * {@code *</instset/prefix>} answers the relation the resolver actually uses. The mirror is a write, never the
+     * source: the read path consults this map, exactly as memory's redirect tables are consulted rather than their
+     * (absent) recs.
+     */
+    protected final ObjectMap<fURI, fURI> PREFIX_TABLE = new ObjectMap<>();
+
+    /**
+     * BIND a short name to a vid. Bound once, on purpose — a rebind to a DIFFERENT vid is refused, because every
+     * existing spelling of that name would silently come to mean something else.
+     */
+    @Override
+    public void registerPrefix(final fURI prefix, final fURI vid) {
+        final fURI existing = this.PREFIX_TABLE.getRaw(prefix);
+        if (null != existing && !Objects.equals(vid, existing))
+            throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
+        this.PREFIX_TABLE.putRaw(prefix, vid);
+        this.at(uri(PREFIX), this.PREFIX_TABLE.toRec(), MUTABLE);
+        LOG.info("prefix {{b}}%s {{g}}=> {{b}}%s{{X}} registered", prefix, vid);
+    }
+
+    /**
+     * UNBIND a short name — the deletion side of {@link #registerPrefix}, and the universal close applied to a name:
+     * after it the spelling denotes nothing rather than denoting somewhere else.
+     */
+    @Override
+    public void unregisterPrefix(final fURI prefix) {
+        this.PREFIX_TABLE.computeRaw(prefix, (k, v) -> null);
+        // THE FIELD GOES WHEN THE LAST NAME DOES, rather than standing as an empty rec that says "names were here"
+        this.at(uri(PREFIX), this.PREFIX_TABLE.isEmpty() ? noobj() : this.PREFIX_TABLE.toRec(), MUTABLE);
+        LOG.info("prefix {{b}}%s{{X}} unregistered", prefix);
+    }
+
+    /**
+     * RESOLVE a prefixed spelling: {@code math:cos} becomes {@code /m/math/inst/cos}.
+     * <p>
+     * The prefix supplies the ROOT and the short name supplies the rest, but the rest is not simply appended: the
+     * name {@code cos} has its own home inside the vocabulary ({@code /m/math/inst/cos}, not {@code /m/math/cos}), and
+     * only memory's redirect table knows where. So the candidates are asked for and filtered to those lying UNDER the
+     * prefix's root — a candidate from another vocabulary is not this prefix's to place — and only when none lies
+     * there does the name extend naively under the root.
+     */
+    @Override
+    public fURI alignPrefix(final fURI vid) {
+        final fURI readableVID = vid.one();
+        if (!readableVID.hasScheme())
+            return readableVID;
+        final fURI prefixed = this.PREFIX_TABLE.getRaw(f(readableVID.scheme()));
+        if (null == prefixed)
+            return readableVID;
+        final fURI suffix = readableVID.scheme(null);
+        // THE REDIRECT TABLE IS MEMORY'S, and this is a question for it rather than a copy of it: the winner
+        // redirect() would return answers "where does this name live", which is the wrong question when the asker
+        // already knows the root it must live under.
+        final Machine current = Machine.current();
+        final Set<fURI> routes = null == current ? Set.of() : current.memory().redirects(suffix);
+        final java.util.Optional<fURI> target = routes.stream()
+                .filter(r -> r.hasPrefix(prefixed.toString()))
+                .findFirst();
+        if (target.isPresent())
+            return target.get().c(suffix.c()).q(suffix.qMap());
+        return prefixed.extend(suffix);
+    }
+
+    /**
+     * Whether some bound prefix denotes an ancestor of {@code target} — see {@code InstSet#hasPrefixFor}.
+     */
+    @Override
+    public boolean hasPrefixFor(final fURI target) {
+        for (final Obj value : this.PREFIX_TABLE.values()) {
+            if (value.isUri() && target.hasPrefix(value.uriValue()))
+                return true;
+        }
+        return false;
+    }
 
     @Override
     public boolean isResolved(boolean nested) {

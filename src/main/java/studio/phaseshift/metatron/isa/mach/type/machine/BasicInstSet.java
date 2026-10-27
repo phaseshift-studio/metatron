@@ -127,6 +127,19 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
     }
 
     /**
+     * RESOLVE a name: this level's table first, then the enclosing machine's — the frame law applied to names, so a
+     * child that imports its own shorthand shadows the parent's and every miss still walks outward. A name is
+     * knowledge, not reach: nothing is retracted from the level above, and a popped frame takes only its own names.
+     */
+    @Override
+    public fURI alignPrefix(final fURI vid) {
+        final fURI aligned = super.alignPrefix(vid);
+        if (!aligned.equals(vid.one()))
+            return aligned;
+        return null == this.previous ? aligned : this.previous.alignPrefix(vid);
+    }
+
+    /**
      * Refer to an instset out in space — an import, held by reference and never copied. Records the vid in the rec's
      * ordered {@code reference}, so import order IS the rec's order.
      * <p>
