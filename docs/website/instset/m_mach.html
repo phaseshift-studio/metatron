@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -463,143 +463,163 @@ the machine instruction set for nesting machines and their components instset, c
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/mach/#,
-          q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[rec::T[?[pattern=&gt;uri::T,
-                          {?}q=&gt;[rec::T[?[
-                           pattern=&gt;uri::T,
-                           {?}pre_write=&gt;inst::T,
-                           {?}post_write=&gt;inst::T,
-                           {?}qless_write=&gt;inst::T,
-                           {?}pre_read=&gt;inst::T,
-                           {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
-                          {?}route=&gt;[uri::T=&gt;uri::T],
-                          {?}schema=&gt;instset::T,
-                          {?}on_close=&gt;&lt;#&gt;::T]]@/m/space,
-                 rec::T@/m/mach/factory,
-                 factory::T[][ctor?mfactory&lt;=(){&lt;j&gt;}]@/m/mach/mfactory,
-                 rec::T[?[{?}machine=&gt;machine::T]]@/m/mach/component,
-                 component::T[?[{?}state=&gt;union(stop,run,pause),
-                                {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor,
-                 processor::T@/m/mach/component/processor/monad,
-                 processor::T[][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/monad/swarm,
-                 component::T[?[{?}parser=&gt;parser::T,
-                                {?}rewriter=&gt;rewriter::T,
-                                {?}resolver=&gt;resolver::T,
-                                {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
-                 component::T@/m/mach/component/parser,
-                 parser::T[][ctor?mtron_parser&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/parser/mtron_parser,
-                 component::T@/m/mach/component/rewriter,
-                 rewriter::T[][ctor?identity_rewriter&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/rewriter/identity_rewriter,
-                 rewriter::T[?[{?}max=&gt;isa(int::T).else(2)]][ctor?fixpoint_rewriter&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/rewriter/fixpoint_rewriter,
-                 component::T[?[{?}selector=&gt;selector::T,
-                                {?}binder=&gt;binder::T]]@/m/mach/component/resolver,
-                 resolver::T[][ctor?identity_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/identity_resolver,
-                 resolver::T[][ctor?scoring_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/scoring_resolver,
-                 resolver::T[][ctor?firstfind_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/firstfind_resolver,
-                 component::T@/m/mach/component/binder,
-                 binder::T[][ctor?generic_binder&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/binder/generic_binder,
-                 component::T@/m/mach/component/selector,
-                 selector::T[][ctor?specificity_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/specificity_selector,
-                 selector::T[][ctor?firstfind_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/firstfind_selector,
-                 component::T[][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/typer,
-                 component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
-                 rec::T[?[{?}host=&gt;uri::T,
-                          {?}inst=&gt;rec::T,
-                          {?}status=&gt;bool::T,
-                          {?}close=&gt;inst::T]][ctor?id_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/id_client,
-                 rec::T[?[origin=&gt;uri::T,
-                          {?}host=&gt;uri::T,
-                          {?}handler=&gt;uri::T,
-                          {?}name=&gt;str::T,
-                          {?}status=&gt;rec::T,
-                          {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer,
-                 rec::T[?[origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
-                          {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-                          {?}server=&gt;&lt;#&gt;::T,
-                          {?}status=&gt;bool::T]]@/m/mach/listener,
-                 rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
-                 rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-                 component::T[?[{?}pattern=&gt;uri::T,
-                                {?}name=&gt;str::T,
-                                {?}host=&gt;uri::T,
-                                {?}roster=&gt;[
-                                 {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-                                 {?}machine=&gt;[uri::T=&gt;uri::T]],
-                                {?}peer=&gt;[uri::T=&gt;rec::T[?[
-                                 origin=&gt;uri::T,
-                                 {?}host=&gt;uri::T,
-                                 {?}handler=&gt;uri::T,
-                                 {?}name=&gt;str::T,
-                                 {?}status=&gt;rec::T,
-                                 {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
-                                {?}listener=&gt;[uri::T=&gt;rec::T[?[
-                                 origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
-                                 {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-                                 {?}server=&gt;&lt;#&gt;::T,
-                                 {?}status=&gt;bool::T]]@/m/mach/listener],
-                                {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
-                                {?}source=&gt;[uri::T=&gt;uri::T],
-                                {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
-                 rec::T[?[{?}instset=&gt;rec::T[?[
-                  {?}pattern=&gt;uri::T,
-                  {?}const=&gt;[&lt;#&gt;::T],
-                  {?}type=&gt;{?}[&lt;#&gt;::T],
-                  {?}inst=&gt;{?}[inst::T],
-                  {?}rewrite=&gt;{?}[inst::T],
-                  {?}sugar=&gt;{?}[lst::T],
-                  {?}reference=&gt;{?}[uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
-                          {?}compiler=&gt;component::T[?[
-                           {?}parser=&gt;parser::T,
-                           {?}rewriter=&gt;rewriter::T,
-                           {?}resolver=&gt;resolver::T,
-                           {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
-                          {?}memory=&gt;component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
-                          {?}network=&gt;component::T[?[
-                           {?}pattern=&gt;uri::T,
-                           {?}name=&gt;str::T,
-                           {?}host=&gt;uri::T,
-                           {?}roster=&gt;[{?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-                                       {?}machine=&gt;[uri::T=&gt;uri::T]],
-                           {?}peer=&gt;[uri::T=&gt;rec::T[?[
-                            origin=&gt;uri::T,
-                            {?}host=&gt;uri::T,
-                            {?}handler=&gt;uri::T,
-                            {?}name=&gt;str::T,
-                            {?}status=&gt;rec::T,
-                            {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
-                           {?}listener=&gt;[uri::T=&gt;rec::T[?[
-                            origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
-                            {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-                            {?}server=&gt;&lt;#&gt;::T,
-                            {?}status=&gt;bool::T]]@/m/mach/listener],
-                           {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
-                           {?}source=&gt;[uri::T=&gt;uri::T],
-                           {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
-                          {?}processor=&gt;component::T[?[
-                           {?}state=&gt;union(stop,run,pause),
-                           {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
-                 rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor,
-                 rec::T[?[code=&gt;&lt;#&gt;::T,
-                          {?}source=&gt;uri::T,
-                          {?}runtime=&gt;real::T@/m/math/time,
-                          {?}yield=&gt;thread::T,
-                          {?}loop=&gt;real::T@/m/math/time,
-                          {?}state=&gt;union(stop,run,pause),
-                          {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread,
-                 thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core,
-                 thread::T[][ctor?virtual&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/virtual],
-          inst=&gt;[push?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;},
-                 pop?A{*}&lt;=A{?}(#{?}::T){&lt;j&gt;},
-                 move?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;},
-                 stay?A{*}&lt;=A{?}(){&lt;j&gt;},
-                 stop?thread&lt;=thread(){&lt;j&gt;},
-                 pause?thread&lt;=thread(){&lt;j&gt;},
-                 resume?thread&lt;=thread(){&lt;j&gt;},
-                 cut?&lt;=#{*}(uri::T,#::T){&lt;j&gt;}],
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/lawq::[
+            pattern=&gt;lawq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+          type=&gt;[
+           rec::T[?[
+            pattern=&gt;uri::T,
+            {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
+                            {?}pre_write=&gt;inst::T,
+                            {?}post_write=&gt;inst::T,
+                            {?}qless_write=&gt;inst::T,
+                            {?}pre_read=&gt;inst::T,
+                            {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
+            {?}route=&gt;[uri::T=&gt;uri::T],
+            {?}schema=&gt;instset::T,
+            {?}on_close=&gt;&lt;#&gt;::T]]@/m/space,
+           rec::T@/m/mach/factory,
+           factory::T[][ctor?mfactory&lt;=(){&lt;j&gt;}]@/m/mach/mfactory,
+           rec::T[?[{?}machine=&gt;machine::T]]@/m/mach/component,
+           component::T[?[
+            {?}state=&gt;union(stop,run,pause),
+            {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor,
+           processor::T@/m/mach/component/processor/monad,
+           processor::T[][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/monad/swarm,
+           component::T[?[
+            {?}parser=&gt;parser::T,
+            {?}rewriter=&gt;rewriter::T,
+            {?}resolver=&gt;resolver::T,
+            {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+           component::T@/m/mach/component/parser,
+           parser::T[][ctor?mtron_parser&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/parser/mtron_parser,
+           component::T@/m/mach/component/rewriter,
+           rewriter::T[][ctor?identity_rewriter&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/rewriter/identity_rewriter,
+           rewriter::T[?[{?}max=&gt;isa(int::T).else(2)]][ctor?fixpoint_rewriter&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/rewriter/fixpoint_rewriter,
+           component::T[?[
+            {?}selector=&gt;selector::T,
+            {?}binder=&gt;binder::T]]@/m/mach/component/resolver,
+           resolver::T[][ctor?identity_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/identity_resolver,
+           resolver::T[][ctor?scoring_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/scoring_resolver,
+           resolver::T[][ctor?firstfind_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/firstfind_resolver,
+           component::T@/m/mach/component/binder,
+           binder::T[][ctor?generic_binder&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/binder/generic_binder,
+           component::T@/m/mach/component/selector,
+           selector::T[][ctor?specificity_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/specificity_selector,
+           selector::T[][ctor?firstfind_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/firstfind_selector,
+           component::T[][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/typer,
+           component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
+           rec::T[?[
+            {?}host=&gt;uri::T,
+            {?}inst=&gt;rec::T,
+            {?}status=&gt;bool::T,
+            {?}close=&gt;inst::T]][ctor?id_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/id_client,
+           rec::T[?[
+            origin=&gt;uri::T,
+            {?}host=&gt;uri::T,
+            {?}handler=&gt;uri::T,
+            {?}name=&gt;str::T,
+            {?}status=&gt;rec::T,
+            {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer,
+           rec::T[?[
+            origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+            {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+            {?}server=&gt;&lt;#&gt;::T,
+            {?}status=&gt;bool::T]]@/m/mach/listener,
+           rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+           rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+           component::T[?[
+            {?}pattern=&gt;uri::T,
+            {?}name=&gt;str::T,
+            {?}host=&gt;uri::T,
+            {?}roster=&gt;[
+             {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+             {?}machine=&gt;[uri::T=&gt;uri::T]],
+            {?}peer=&gt;[uri::T=&gt;rec::T[?[origin=&gt;uri::T,
+                                       {?}host=&gt;uri::T,
+                                       {?}handler=&gt;uri::T,
+                                       {?}name=&gt;str::T,
+                                       {?}status=&gt;rec::T,
+                                       {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+            {?}listener=&gt;[uri::T=&gt;rec::T[?[
+             origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+             {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+             {?}server=&gt;&lt;#&gt;::T,
+             {?}status=&gt;bool::T]]@/m/mach/listener],
+            {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+            {?}source=&gt;[uri::T=&gt;uri::T],
+            {?}prefix=&gt;[uri::T=&gt;uri::T],
+            {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+           rec::T[?[
+            {?}instset=&gt;rec::T[?[
+             {?}pattern=&gt;uri::T,
+             {?}const=&gt;[&lt;#&gt;::T],
+             {?}type=&gt;{?}[&lt;#&gt;::T],
+             {?}inst=&gt;{?}[inst::T],
+             {?}rewrite=&gt;{?}[inst::T],
+             {?}sugar=&gt;{?}[lst::T],
+             {?}reference=&gt;{?}[uri::T],
+             {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
+            {?}compiler=&gt;component::T[?[
+             {?}parser=&gt;parser::T,
+             {?}rewriter=&gt;rewriter::T,
+             {?}resolver=&gt;resolver::T,
+             {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+            {?}memory=&gt;component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
+            {?}network=&gt;component::T[?[
+             {?}pattern=&gt;uri::T,
+             {?}name=&gt;str::T,
+             {?}host=&gt;uri::T,
+             {?}roster=&gt;[
+              {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+              {?}machine=&gt;[uri::T=&gt;uri::T]],
+             {?}peer=&gt;[uri::T=&gt;rec::T[?[origin=&gt;uri::T,
+                                        {?}host=&gt;uri::T,
+                                        {?}handler=&gt;uri::T,
+                                        {?}name=&gt;str::T,
+                                        {?}status=&gt;rec::T,
+                                        {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+             {?}listener=&gt;[uri::T=&gt;rec::T[?[
+              origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+              {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+              {?}server=&gt;&lt;#&gt;::T,
+              {?}status=&gt;bool::T]]@/m/mach/listener],
+             {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+             {?}source=&gt;[uri::T=&gt;uri::T],
+             {?}prefix=&gt;[uri::T=&gt;uri::T],
+             {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+            {?}processor=&gt;component::T[?[
+             {?}state=&gt;union(stop,run,pause),
+             {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
+           rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor,
+           rec::T[?[
+            code=&gt;&lt;#&gt;::T,
+            {?}source=&gt;uri::T,
+            {?}runtime=&gt;real::T@/m/math/time,
+            {?}yield=&gt;thread::T,
+            {?}loop=&gt;real::T@/m/math/time,
+            {?}state=&gt;union(stop,run,pause),
+            {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread,
+           thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core,
+           thread::T[][ctor?virtual&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/virtual],
+          inst=&gt;[
+           push?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;},
+           pop?A{*}&lt;=A{?}(#{?}::T){&lt;j&gt;},
+           move?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;},
+           stay?A{*}&lt;=A{?}(){&lt;j&gt;},
+           stop?thread&lt;=thread(){&lt;j&gt;},
+           pause?thread&lt;=thread(){&lt;j&gt;},
+           resume?thread&lt;=thread(){&lt;j&gt;},
+           cut?&lt;=#{*}(uri::T,#::T){&lt;j&gt;}],
           rewrite=&gt;[/m/mach/inst/rewrite/move_extract?code{?}&lt;=code(){&lt;j&gt;}]]@/m/mach</code></pre>
                     </div>
                 </div>
@@ -1028,41 +1048,46 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
         </span>
         <small class="text-muted code">/m/mach/machine</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}instset=&gt;rec::T[?[{?}pattern=&gt;uri::T,
-                              {?}const=&gt;[&lt;#&gt;::T],
-                              {?}type=&gt;{?}[&lt;#&gt;::T],
-                              {?}inst=&gt;{?}[inst::T],
-                              {?}rewrite=&gt;{?}[inst::T],
-                              {?}sugar=&gt;{?}[lst::T],
-                              {?}reference=&gt;{?}[uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
-         {?}compiler=&gt;component::T[?[{?}parser=&gt;parser::T,
-                                     {?}rewriter=&gt;rewriter::T,
-                                     {?}resolver=&gt;resolver::T,
-                                     {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}instset=&gt;rec::T[?[
+  {?}pattern=&gt;uri::T,
+  {?}const=&gt;[&lt;#&gt;::T],
+  {?}type=&gt;{?}[&lt;#&gt;::T],
+  {?}inst=&gt;{?}[inst::T],
+  {?}rewrite=&gt;{?}[inst::T],
+  {?}sugar=&gt;{?}[lst::T],
+  {?}reference=&gt;{?}[uri::T],
+  {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
+         {?}compiler=&gt;component::T[?[
+          {?}parser=&gt;parser::T,
+          {?}rewriter=&gt;rewriter::T,
+          {?}resolver=&gt;resolver::T,
+          {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
          {?}memory=&gt;component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
-         {?}network=&gt;component::T[?[{?}pattern=&gt;uri::T,
-                                    {?}name=&gt;str::T,
-                                    {?}host=&gt;uri::T,
-                                    {?}roster=&gt;[
-                                     {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-                                     {?}machine=&gt;[uri::T=&gt;uri::T]],
-                                    {?}peer=&gt;[uri::T=&gt;rec::T[?[
-                                     origin=&gt;uri::T,
+         {?}network=&gt;component::T[?[
+          {?}pattern=&gt;uri::T,
+          {?}name=&gt;str::T,
+          {?}host=&gt;uri::T,
+          {?}roster=&gt;[
+           {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+           {?}machine=&gt;[uri::T=&gt;uri::T]],
+          {?}peer=&gt;[uri::T=&gt;rec::T[?[origin=&gt;uri::T,
                                      {?}host=&gt;uri::T,
                                      {?}handler=&gt;uri::T,
                                      {?}name=&gt;str::T,
                                      {?}status=&gt;rec::T,
                                      {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
-                                    {?}listener=&gt;[uri::T=&gt;rec::T[?[
-                                     origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
-                                     {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-                                     {?}server=&gt;&lt;#&gt;::T,
-                                     {?}status=&gt;bool::T]]@/m/mach/listener],
-                                    {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
-                                    {?}source=&gt;[uri::T=&gt;uri::T],
-                                    {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
-         {?}processor=&gt;component::T[?[{?}state=&gt;union(stop,run,pause),
-                                      {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
+          {?}listener=&gt;[uri::T=&gt;rec::T[?[
+           origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+           {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+           {?}server=&gt;&lt;#&gt;::T,
+           {?}status=&gt;bool::T]]@/m/mach/listener],
+          {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+          {?}source=&gt;[uri::T=&gt;uri::T],
+          {?}prefix=&gt;[uri::T=&gt;uri::T],
+          {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+         {?}processor=&gt;component::T[?[
+          {?}state=&gt;union(stop,run,pause),
+          {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a machine integrates language, structure, and process into one context for action
@@ -1075,11 +1100,11 @@ machine is popped off the parent stack. the absolute root of the metatron graph
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#"the machine's instruction set architecture"" class="text-info">&quot;the machine&#39;s instruction set architecture&quot;</a>
-  <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#"the known machines and this machine's peers"" class="text-info">&quot;the known machines and this machine&#39;s peers&quot;</a>
-  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'the execution axis: threads and computational state'" class="text-info">&#39;the execution axis: threads and computational state&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'the execution axis: threads and computational state'" class="text-info">&#39;the execution axis: threads and computational state&#39;</a>
   <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'the lowering axis: parser, rewriter, resolver, and typer'" class="text-info">&#39;the lowering axis: parser, rewriter, resolver, and typer&#39;</a>
   <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#"the machine's address space, bounded by the parent machine"" class="text-info">&quot;the machine&#39;s address space, bounded by the parent machine&quot;</a>
+  <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#"the machine's instruction set architecture"" class="text-info">&quot;the machine&#39;s instruction set architecture&quot;</a>
+  <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#"the known machines and this machine's peers"" class="text-info">&quot;the known machines and this machine&#39;s peers&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__memory">
@@ -1143,8 +1168,9 @@ machine is popped off the parent stack. the absolute root of the metatron graph
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}pattern=&gt;uri::T,
                {?}name=&gt;str::T,
                {?}host=&gt;uri::T,
-               {?}roster=&gt;[{?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-                           {?}machine=&gt;[uri::T=&gt;uri::T]],
+               {?}roster=&gt;[
+                {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+                {?}machine=&gt;[uri::T=&gt;uri::T]],
                {?}peer=&gt;[uri::T=&gt;rec::T[?[
                 origin=&gt;uri::T,
                 {?}host=&gt;uri::T,
@@ -1159,6 +1185,7 @@ machine is popped off the parent stack. the absolute root of the metatron graph
                 {?}status=&gt;bool::T]]@/m/mach/listener],
                {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
                {?}source=&gt;[uri::T=&gt;uri::T],
+               {?}prefix=&gt;[uri::T=&gt;uri::T],
                {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     <div class="card-body border-top py-2">
@@ -1172,13 +1199,13 @@ declares.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism'" class="text-info">&#39;the roster generation mechanism: &lt;mechanism&gt; =&gt; &lt;handler tid as a uri&gt;, one entry per mechanism&#39;</a>
-  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method — an auto inst closing over this network, one peer::T report per declared peer'" class="text-info">&#39;the health method — an auto inst closing over this network, one peer::T report per declared peer&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method — an auto inst closing over this network, one peer::T report per declared peer'" class="text-info">&#39;the health method — an auto inst closing over this network, one peer::T report per declared peer&#39;</a>
   <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#"machine's own connections, one per surface: <dial as a path> => peer::T (ws__localhost__8555__mtron), each addressable at ~__network__peer__<key> and hung up by writing noobj there"" class="text-info">&lt;key&gt; and hung up by writing noobj there&quot;</a>
   <a href="#{?}roster" class="text-light">{?}roster</a> <span class="text-light">=&gt;</span> <a href="#'known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme:____host:port); knowledge, not reach — a machine is reached by dialing one of them'" class="text-info">host:port); knowledge, not reach — a machine is reached by dialing one of them&#39;</a>
   <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#"the branch this network answers as a space: <vid>__network__#, every field at its own address and every member at its key's path"" class="text-info">#, every field at its own address and every member at its key&#39;s path&quot;</a>
   <a href="#{?}name" class="text-light">{?}name</a> <span class="text-light">=&gt;</span> <a href="#'a human friendly name for the nested network'" class="text-info">&#39;a human friendly name for the nested network&#39;</a>
   <a href="#{?}listener" class="text-light">{?}listener</a> <span class="text-light">=&gt;</span> <a href="#"the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws__localhost__8555) carrying this machine's own routes — a socket it opened, or one inherited from above"" class="text-info">8555) carrying this machine&#39;s own routes — a socket it opened, or one inherited from above&quot;</a>
+  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism'" class="text-info">&#39;the roster generation mechanism: &lt;mechanism&gt; =&gt; &lt;handler tid as a uri&gt;, one entry per mechanism&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1244,12 +1271,12 @@ reference that crossed a wire, known here and not reachable from here.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the machine's name in the distributed expression that means it — a bare name, never an address"" class="text-info">&quot;the machine&#39;s name in the distributed expression that means it — a bare name, never an address&quot;</a>
-  <a href="#handler" class="text-light">handler</a> <span class="text-light">=&gt;</span> <a href="#'the protocol surface at that endpoint, named as a uri: <__m__web__ws__mtron_ws>, <__m__web__http__mtron_http>, <__m__web__mcp__mcp_ws>'" class="text-info">mcp_ws&gt;&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#handler" class="text-light">handler</a> <span class="text-light">=&gt;</span> <a href="#'the protocol surface at that endpoint, named as a uri: <__m__web__ws__mtron_ws>, <__m__web__http__mtron_http>, <__m__web__mcp__mcp_ws>'" class="text-info">mcp_ws&gt;&#39;</a>
   <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health report computed for this peer — computed on call, never stored'" class="text-info">&#39;the health report computed for this peer — computed on call, never stored&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
   <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so disconnect can hang up'" class="text-info">&#39;the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so disconnect can hang up&#39;</a>
   <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the peer's service uri, scheme:____host:port — the connection key, and the one field a peer cannot do without"" class="text-info">host:port — the connection key, and the one field a peer cannot do without&quot;</a>
+  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the machine's name in the distributed expression that means it — a bare name, never an address"" class="text-info">&quot;the machine&#39;s name in the distributed expression that means it — a bare name, never an address&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1283,8 +1310,8 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;,name=&gt;&#39;builder-2&#39;] [
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the resolution contract of compiler::T — the stage that turns a generic instruction chain into a typed one, and the compiler&#39;s widest-reaching stage: it threads each inst&#39;s range into the next inst&#39;s domain and, per inst, delegates to a selector (fetch and order the candidates) and a binder (make the chosen candidate concrete, or reject it), so which concrete inst a call becomes — and with it whether the inst is a filter, a gather/barrier, or an initial — is settled here, per element type. What it settles is what the processor then runs (a filter&#39;s {0,1} wing dropped for compile-time typing, an initial inst seeding the element type from its own argument, a cast&#39;s range rebound to the named type), and an inst it cannot resolve is left in place for runtime resolution — a semi-resolved code, not a failed one. Structural, not nominal: its two collaborators are rec fields, both optional and both defaulting, so a resolver is its walk plus whichever strategies it names. Its members are scoring_resolver::T (the default pair), firstfind_resolver::T (first match, no scoring) and identity_resolver::T (the no-op)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}selector" class="text-light">{?}selector</a> <span class="text-light">=&gt;</span> <a href="#'the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)'" class="text-info">&#39;the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)&#39;</a>
-  <a href="#{?}binder" class="text-light">{?}binder</a> <span class="text-light">=&gt;</span> <a href="#"the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"" class="text-info">&quot;the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call&#39;s arguments)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}binder" class="text-light">{?}binder</a> <span class="text-light">=&gt;</span> <a href="#"the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"" class="text-info">&quot;the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call&#39;s arguments)&quot;</a>
+  <a href="#{?}selector" class="text-light">{?}selector</a> <span class="text-light">=&gt;</span> <a href="#'the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)'" class="text-info">&#39;the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1388,12 +1415,12 @@ scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
-  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
-  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
   <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
   <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">

@@ -511,31 +511,33 @@ asserted in the acceptance test).</p>
 an <code>as()</code>-mapping from <code>uri::T</code> to <code>project::T</code>. The resultant <code>project::T</code> is saved to the user home graph. Finally.
 maven build commands are attached to the <code>project::T</code> for each of access.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;mfs:src/test/resources/scratch&gt;@&lt;/dev/scratch&gt;.as(project::T).to(/dev/scratch)
-==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]]@/sys/fail/4458
+==&gt;fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project&lt;84&gt;]][unable to convert mcode to rec::T [Project&lt;84&gt;]]@/sys/fail/6016
 </code></pre>
 <p>Now that the project is stored in space, build commands can be added and the project can be built.</p>
 <pre><code class="language-mtron">mtron&gt; @/dev/scratch &gt;&gt;= +[command =&gt; [mvn_build =&gt; !ide:command('mvn -f src/test/resources/scratch compile'),
                                        mvn_clean =&gt; !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  =&gt; !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==&gt;[root=&gt;mfs:src/test/resources/scratch,
-    src=&gt;[Operation=&gt;λ(){&lt;j&gt;},
-          Echo=&gt;λ(){&lt;j&gt;},
-          Calculator=&gt;λ(){&lt;j&gt;},
-          EchoTest=&gt;λ(){&lt;j&gt;}],
+    src=&gt;[
+     Operation=&gt;λ(){&lt;j&gt;},
+     Echo=&gt;λ(){&lt;j&gt;},
+     Calculator=&gt;λ(){&lt;j&gt;},
+     EchoTest=&gt;λ(){&lt;j&gt;}],
     code=&gt;[,],
     idx=&gt;[=&gt;],
-    command=&gt;[read_file=&gt;/dev/scratch/command/read_file(file=&gt;uri::T,
-                                                        min=&gt;isa(int::T).else(0),
-                                                        max=&gt;isa(int::T).else(9223372036854775807)){*file.split(&quot;&quot;&quot;
+    command=&gt;[
+     read_file=&gt;/dev/scratch/command/read_file(file=&gt;uri::T,
+                                               min=&gt;isa(int::T).else(0),
+                                               max=&gt;isa(int::T).else(9223372036854775807)){*file.split(&quot;&quot;&quot;
    &quot;&quot;&quot;).as(rec::T).select([is(gte(*min))=&gt;id()]).select([is(lt(*max))=&gt;id()])},
-              mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
-              mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
-              mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
+     mvn_build=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
+     mvn_clean=&gt;!ide:command('mvn -f src/test/resources/scratch ...'),
+     mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;second::4.085,
+            runtime=&gt;second::3.213,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/d65adde5]
+            output=&gt;!*/sys/tmp/991387ef]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -566,12 +568,14 @@ In this way, edits to the subscription code entries will automatically take hold
 <p>The file name serves as the key and a lambda <code>inst</code> serves as a lazy constructor of an <code>ide:java::T</code>. Calling the file
 name pulls the raw <code>src</code> into both <code>code</code> and <code>idx</code>.</p>
 <pre><code class="language-mtron">mtron&gt; /dev/scratch/src/Echo()
-==&gt;[Echo=&gt;[field=&gt;[PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
-                   name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+==&gt;[Echo=&gt;[field=&gt;[
+            PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+            name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
            constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
            comment=&gt;[=&gt;],
-           method=&gt;[speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
-                    name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
+           method=&gt;[
+            speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+            name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
 mtron&gt; */dev/scratch/code/0
 ==&gt;java::[package=&gt;'package com.example.scratch;',
           preamble=&gt;&quot;&quot;&quot;package com.example.scratch;
@@ -581,31 +585,33 @@ mtron&gt; */dev/scratch/code/0
           classes=&gt;[Echo=&gt;[[kind=&gt;class_declaration,
                             name=&gt;'Echo',
                             header=&gt;'public class Echo {',
-                            members=&gt;[[PREFIX=&gt;[
-                             kind=&gt;field,
-                             text=&gt;&quot;&quot;&quot;
-   
-       public static final String P...&quot;&quot;&quot;,
-                             name=&gt;'PREFIX']],
-                                      [name=&gt;[
-                                       kind=&gt;field,
+                            members=&gt;[
+                             [PREFIX=&gt;[kind=&gt;field,
                                        text=&gt;&quot;&quot;&quot;
    
+       public static final String P...&quot;&quot;&quot;,
+                                       name=&gt;'PREFIX']],
+                             [name=&gt;[kind=&gt;field,
+                                     text=&gt;&quot;&quot;&quot;
+   
        private final String name;&quot;&quot;&quot;,
-                                       name=&gt;'name']],
-                                      [Echo=&gt;[
-                                       kind=&gt;constructor,
-                                       name=&gt;'Echo',
-                                       signature=&gt;'Echo(String name)',
-                                       header=&gt;&quot;&quot;&quot;
+                                     name=&gt;'name']],
+                             [Echo=&gt;[kind=&gt;constructor,
+                                     name=&gt;'Echo',
+                                     signature=&gt;'Echo(String name)',
+                                     header=&gt;&quot;&quot;&quot;
+   
+       public Echo(String name) &quot;&quot;&quot;,
    ...
 mtron&gt; */dev/scratch/idx/Echo
-==&gt;[field=&gt;[PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
-            name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+==&gt;[field=&gt;[
+     PREFIX=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
     constructor=&gt;[Echo=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
     comment=&gt;[=&gt;],
-    method=&gt;[speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
-             name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]
+    method=&gt;[
+     speak=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+     name=&gt;!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]
 mtron&gt; tree_widget::[root=&gt;/dev/scratch, max=&gt;4, xref=&gt;[=&gt;]].as?str&lt;=widget(str::T)
 ==&gt;&quot;&quot;&quot;
    scratch
@@ -768,41 +774,48 @@ with it, then save (<code>code/N.to</code>).</p>
          &gt;-?str&lt;=str{*}('
 ')].explain()
 ==&gt;explanation::[format=&gt;!λ?str&lt;=(){&lt;j&gt;},
-                 desc=&gt;[rng=&gt;&lt;#&gt;,
-                        insts=&gt;2,
-                        rewrite=&gt;explanation::[
-                         format=&gt;!λ?str&lt;=(){&lt;j&gt;},
-                         desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],
-                         per_inst=&gt;[[op=&gt;at,
-                                     args=&gt;[/dev/scratch/idx/Echo/method/speak],
-                                     f=&gt;'&lt;j&gt;',
-                                     form=&gt;standard,
-                                     c_dom=&gt;0,
-                                     c_rng=&gt;0],
-                                    [op=&gt;update,
-                                     dom=&gt;&lt;#&gt;,
-                                     rng=&gt;&lt;#&gt;,
-                                     args=&gt;[[body=&gt;split('
+                 desc=&gt;[
+                  rng=&gt;&lt;#&gt;,
+                  insts=&gt;2,
+                  rewrite=&gt;explanation::[
+                   format=&gt;!λ?str&lt;=(){&lt;j&gt;},
+                   desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],
+                   per_inst=&gt;[
+                    [
+                     op=&gt;at,
+                     args=&gt;[/dev/scratch/idx/Echo/method/speak],
+                     f=&gt;'&lt;j&gt;',
+                     form=&gt;standard,
+                     c_dom=&gt;0,
+                     c_rng=&gt;0],
+                    [
+                     op=&gt;update,
+                     dom=&gt;&lt;#&gt;,
+                     rng=&gt;&lt;#&gt;,
+                     args=&gt;[[body=&gt;split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?str&lt;=str{*}('
    ')]],
-                                     form=&gt;mapper,
-                                     c_dom=&gt;1,
-                                     c_rng=&gt;1]]]],
-                 per_inst=&gt;[[op=&gt;at,
-                             args=&gt;[/dev/scratch/idx/Echo/method/speak],
-                             f=&gt;'&lt;j&gt;',
-                             form=&gt;standard,
-                             c_dom=&gt;0,
-                             c_rng=&gt;0],
-                            [op=&gt;update,
-                             dom=&gt;&lt;#&gt;,
-                             rng=&gt;&lt;#&gt;,
-                             args=&gt;[[body=&gt;split('
+                     form=&gt;mapper,
+                     c_dom=&gt;1,
+                     c_rng=&gt;1]]]],
+                 per_inst=&gt;[
+                  [
+                   op=&gt;at,
+                   args=&gt;[/dev/scratch/idx/Echo/method/speak],
+                   f=&gt;'&lt;j&gt;',
+                   form=&gt;standard,
+                   c_dom=&gt;0,
+                   c_rng=&gt;0],
+                  [
+                   op=&gt;update,
+                   dom=&gt;&lt;#&gt;,
+                   rng=&gt;&lt;#&gt;,
+                   args=&gt;[[body=&gt;split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=&gt;'return &quot;marko&quot;;']).rshift().merge?str&lt;=str{*}('
    ')]],
-                             form=&gt;mapper,
-                             c_dom=&gt;1,
-                             c_rng=&gt;1]]]
+                   form=&gt;mapper,
+                   c_dom=&gt;1,
+                   c_rng=&gt;1]]]
 </code></pre>
 <p><strong>NOTE</strong>: when working in the <code>console::T</code>, the the interactive <code>explain_tool::T</code> provides a much richer analysis of an
 expression with pre- and post- compilation switching, drill down into nested code structures, and access reified

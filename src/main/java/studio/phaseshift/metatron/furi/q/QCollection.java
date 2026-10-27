@@ -547,6 +547,102 @@ public final class QCollection {
         return docq;
     }
 
+    // ===================== ?lawq — the algebra a type/inst DECLARES =====================
+    // The docq pattern, applied to algebra: the declaration is DATA, written beside the thing it describes
+    // (in the OWNING space's ?lawq region) and read back through that space's own q-proc. That is what makes
+    // an algebra user-declarable and inspectable: nothing is held in a side table, and the declaring instset
+    // need not be the one that analyzes it (the category lift merely READS).
+
+    /** the q name a law declaration is written under ({@code int::T?lawq}). */
+    public static final String LAWQ = "lawq";
+    public static final fURI LAWQ_PATTERN = f(LAWQ);
+    public static final fURI LAWQ_TID = QPROC_TID.extend(LAWQ_PATTERN);
+    /** the sub-space KEY the declarations live under, inside the q-proc (docq's {@code inst}/{@code obj}). */
+    public static final fURI LAWS = f("laws");
+
+    public static QProc lawQ() {
+        return lawQ(noobj());
+    }
+
+    /**
+     * The {@code ?lawq} query processor — one unregistered sub-space holding {@code address => algebra rec},
+     * routed by {@label LAWQ} on write and read. Mirror of {@link #docQ()}: {@code preWrite} strips the q and
+     * stores the block under the plain address; {@code preRead} strips it again and answers the block.
+     */
+    public static QProc lawQ(final Obj initialLaws) {
+        final memSpace laws = memSpace.unregistered(ALL, null);
+        final QProc lawq = QProc.Helper.build(LAWQ_TID, LAWQ_PATTERN)
+                .obj(f(OBJ), laws)
+                .preWrite((vid, obj) -> {
+                    final fURI vidBig = vid.big();
+                    if (!vidBig.equals(vid))
+                        return Machine.write(vidBig, obj);
+                    laws.write(vidBig.removeQ(LAWQ), obj);
+                    return obj;
+                })
+                .preRead((vid) -> {
+                    final fURI vidBig = vid.big();
+                    return vidBig.equals(vid) ? laws.read(vidBig.removeQ(LAWQ)) : Machine.read(vidBig);
+                })
+                .create();
+        if (!initialLaws.isNoObj())
+            initialLaws.asRec().elements().forEach(kv ->
+                    lawq.onWrite().get().preWrite(kv.first().uriValue().big().addQ(LAWQ), kv.second()));
+        return lawq;
+    }
+
+    /**
+     * DECLARE the algebra of a type or inst, in the owning space's {@code ?lawq} region — the docq pattern:
+     * {@code lawWrap(INT_TYPE, rec(uri("ring"), rec(...)))} stores the block beside {@code int::T} and
+     * {@code *int::T?lawq} reads it back, whether or not the category is mounted.
+     * <p>
+     * Soft-fails, like {@link #docWrap}: an id with no owning space (a type built during an ISA's own setup,
+     * before its instset is mounted) stores nothing and returns the obj — so the declaration must be written
+     * again once the set is mounted, which is what the builder's setup does.
+     */
+    /**
+     * READ the algebra declared beside a type or inst — the reader half of {@link #lawWrap}: the owning space's
+     * {@code ?lawq} region, looked up by the obj's own id. {@code noobj} when nothing was declared, which is what
+     * lets a caller fall back to its in-code declaration.
+     */
+    public static Obj lawOf(final Obj obj) {
+        return lawOf(obj.isInst() ? obj.tid() : obj.vid());
+    }
+
+    /**
+     * {@link #lawOf(Obj)} by address — what a law lookup has in hand ({@code plus?dom=/m/int&rng=/m/int}).
+     */
+    public static Obj lawOf(final fURI objID) {
+        if (null == objID)
+            return noobj();
+        final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?
+                Machine.current().memory().getSpaceFor(objID) : null;
+        if (null == objSpace)
+            return noobj();
+        return objSpace.qs().jvm().stream()
+                .filter(q -> q.tid().basePath().equals(LAWQ_TID))
+                .map(Obj::<QProc>as)
+                .findAny()
+                .map(lawq -> lawq.at(f(OBJ)).<Space>as().read(objID))
+                .orElse(noobj());
+    }
+
+    public static <OBJ extends Obj> OBJ lawWrap(final OBJ obj, final Rec law) {
+        final fURI objID = obj.isInst() ? obj.tid() : obj.vid();
+        if (null == objID || null == law)
+            return obj;
+        final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?
+                Machine.current().memory().getSpaceFor(objID) : null;
+        if (null == objSpace)
+            return obj;
+        objSpace.qs().jvm().stream()
+                .filter(q -> q.tid().basePath().equals(LAWQ_TID))
+                .map(Obj::<QProc>as)
+                .findAny()
+                .ifPresent(lawq -> lawq.at(f(OBJ)).<Space>as().write(objID, law));
+        return obj;
+    }
+
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////

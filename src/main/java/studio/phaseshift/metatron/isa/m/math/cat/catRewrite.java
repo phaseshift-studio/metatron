@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.isa.m.Law;
+
 import studio.phaseshift.metatron.algebra.rewrite.Cut;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanBuilder;

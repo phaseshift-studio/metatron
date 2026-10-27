@@ -79,7 +79,7 @@ maven build commands are attached to the `project::T` for each of access.
 
 ```mtron
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
-==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/4458
+==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/6016
 ```
 Now that the project is stored in space, build commands can be added and the project can be built.
 
@@ -88,24 +88,26 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
                                        mvn_clean => !ide:command('mvn -f src/test/resources/scratch clean'),
                                        mvn_exec  => !ide:command('mvn -f src/test/resources/scratch compile exec:java')]]
 ==>[root=>mfs:src/test/resources/scratch,
-    src=>[Operation=>λ(){<j>},
-          Echo=>λ(){<j>},
-          Calculator=>λ(){<j>},
-          EchoTest=>λ(){<j>}],
+    src=>[
+     Operation=>λ(){<j>},
+     Echo=>λ(){<j>},
+     Calculator=>λ(){<j>},
+     EchoTest=>λ(){<j>}],
     code=>[,],
     idx=>[=>],
-    command=>[read_file=>/dev/scratch/command/read_file(file=>uri::T,
-                                                        min=>isa(int::T).else(0),
-                                                        max=>isa(int::T).else(9223372036854775807)){*file.split("""
+    command=>[
+     read_file=>/dev/scratch/command/read_file(file=>uri::T,
+                                               min=>isa(int::T).else(0),
+                                               max=>isa(int::T).else(9223372036854775807)){*file.split("""
    """).as(rec::T).select([is(gte(*min))=>id()]).select([is(lt(*max))=>id()])},
-              mvn_build=>!ide:command('mvn -f src/test/resources/scratch ...'),
-              mvn_clean=>!ide:command('mvn -f src/test/resources/scratch ...'),
-              mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
+     mvn_build=>!ide:command('mvn -f src/test/resources/scratch ...'),
+     mvn_clean=>!ide:command('mvn -f src/test/resources/scratch ...'),
+     mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>second::4.085,
+            runtime=>second::3.213,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/d65adde5]
+            output=>!*/sys/tmp/991387ef]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -144,12 +146,14 @@ name pulls the raw `src` into both `code` and `idx`.
 
 ```mtron
 mtron> /dev/scratch/src/Echo()
-==>[Echo=>[field=>[PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
-                   name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+==>[Echo=>[field=>[
+            PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+            name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
            constructor=>[Echo=>!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
            comment=>[=>],
-           method=>[speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
-                    name=>!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
+           method=>[
+            speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+            name=>!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]]
 mtron> */dev/scratch/code/0
 ==>java::[package=>'package com.example.scratch;',
           preamble=>"""package com.example.scratch;
@@ -159,31 +163,33 @@ mtron> */dev/scratch/code/0
           classes=>[Echo=>[[kind=>class_declaration,
                             name=>'Echo',
                             header=>'public class Echo {',
-                            members=>[[PREFIX=>[
-                             kind=>field,
-                             text=>"""
-   
-       public static final String P...""",
-                             name=>'PREFIX']],
-                                      [name=>[
-                                       kind=>field,
+                            members=>[
+                             [PREFIX=>[kind=>field,
                                        text=>"""
    
+       public static final String P...""",
+                                       name=>'PREFIX']],
+                             [name=>[kind=>field,
+                                     text=>"""
+   
        private final String name;""",
-                                       name=>'name']],
-                                      [Echo=>[
-                                       kind=>constructor,
-                                       name=>'Echo',
-                                       signature=>'Echo(String name)',
-                                       header=>"""
+                                     name=>'name']],
+                             [Echo=>[kind=>constructor,
+                                     name=>'Echo',
+                                     signature=>'Echo(String name)',
+                                     header=>"""
+   
+       public Echo(String name) """,
    ...
 mtron> */dev/scratch/idx/Echo
-==>[field=>[PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
-            name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
+==>[field=>[
+     PREFIX=>!@/dev/scratch/code/0/classes/Echo/0/members/0/PREFIX,
+     name=>!@/dev/scratch/code/0/classes/Echo/0/members/1/name],
     constructor=>[Echo=>!@/dev/scratch/code/0/classes/Echo/0/members/2/Echo],
     comment=>[=>],
-    method=>[speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
-             name=>!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]
+    method=>[
+     speak=>!@/dev/scratch/code/0/classes/Echo/0/members/4/speak,
+     name=>!@/dev/scratch/code/0/classes/Echo/0/members/6/name]]
 mtron> tree_widget::[root=>/dev/scratch, max=>4, xref=>[=>]].as?str<=widget(str::T)
 ==>"""
    scratch
@@ -359,41 +365,48 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
          >-?str<=str{*}('
 ')].explain()
 ==>explanation::[format=>!λ?str<=(){<j>},
-                 desc=>[rng=><#>,
-                        insts=>2,
-                        rewrite=>explanation::[
-                         format=>!λ?str<=(){<j>},
-                         desc=>[rng=><#>,insts=>2],
-                         per_inst=>[[op=>at,
-                                     args=>[/dev/scratch/idx/Echo/method/speak],
-                                     f=>'<j>',
-                                     form=>standard,
-                                     c_dom=>0,
-                                     c_rng=>0],
-                                    [op=>update,
-                                     dom=><#>,
-                                     rng=><#>,
-                                     args=>[[body=>split('
+                 desc=>[
+                  rng=><#>,
+                  insts=>2,
+                  rewrite=>explanation::[
+                   format=>!λ?str<=(){<j>},
+                   desc=>[rng=><#>,insts=>2],
+                   per_inst=>[
+                    [
+                     op=>at,
+                     args=>[/dev/scratch/idx/Echo/method/speak],
+                     f=>'<j>',
+                     form=>standard,
+                     c_dom=>0,
+                     c_rng=>0],
+                    [
+                     op=>update,
+                     dom=><#>,
+                     rng=><#>,
+                     args=>[[body=>split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?str<=str{*}('
    ')]],
-                                     form=>mapper,
-                                     c_dom=>1,
-                                     c_rng=>1]]]],
-                 per_inst=>[[op=>at,
-                             args=>[/dev/scratch/idx/Echo/method/speak],
-                             f=>'<j>',
-                             form=>standard,
-                             c_dom=>0,
-                             c_rng=>0],
-                            [op=>update,
-                             dom=><#>,
-                             rng=><#>,
-                             args=>[[body=>split('
+                     form=>mapper,
+                     c_dom=>1,
+                     c_rng=>1]]]],
+                 per_inst=>[
+                  [
+                   op=>at,
+                   args=>[/dev/scratch/idx/Echo/method/speak],
+                   f=>'<j>',
+                   form=>standard,
+                   c_dom=>0,
+                   c_rng=>0],
+                  [
+                   op=>update,
+                   dom=><#>,
+                   rng=><#>,
+                   args=>[[body=>split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?str<=str{*}('
    ')]],
-                             form=>mapper,
-                             c_dom=>1,
-                             c_rng=>1]]]
+                   form=>mapper,
+                   c_dom=>1,
+                   c_rng=>1]]]
 ```
 **NOTE**: when working in the `console::T`, the the interactive `explain_tool::T` provides a much richer analysis of an
 expression with pre- and post- compilation switching, drill down into nested code structures, and access reified

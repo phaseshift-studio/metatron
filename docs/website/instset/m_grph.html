@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -463,49 +463,61 @@ from vertex to vertex, the edge of the metatron is traversed</p>
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/grph/#,
-          q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/lawq::[
+            pattern=&gt;lawq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
           constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
-          type=&gt;[space::T[?[{?}schema=&gt;rec::T[?[
-           {?}pattern=&gt;uri::T,
-           {?}const=&gt;[&lt;#&gt;::T],
-           {?}type=&gt;{?}[&lt;#&gt;::T],
-           {?}inst=&gt;{?}[inst::T],
-           {?}rewrite=&gt;{?}[inst::T],
-           {?}sugar=&gt;{?}[lst::T],
-           {?}reference=&gt;{?}[uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
-                            {?}config=&gt;rec::T]][ctor?grphspace&lt;=(rec::T){&lt;j&gt;}]@/m/grph/space/grphspace,
-                 modern::T],
-          inst=&gt;[gremlin?&lt;=grphspace(str::T){&lt;j&gt;},
-                 label?uri&lt;=rec(){&lt;j&gt;},
-                 values?&lt;=rec(uri{*}::T){&lt;j&gt;},
-                 inV?rec&lt;=rec(){&lt;j&gt;},
-                 outV?rec&lt;=rec(){&lt;j&gt;},
-                 bothV?rec{2}&lt;=rec(){&lt;j&gt;},
-                 out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
-                 in?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
-                 both?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
-                 outE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
-                 inE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
-                 bothE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
-                 addE?rec&lt;=rec(uri::T,
-                               rec{+}::T,
-                               rec{?}::T){&lt;j&gt;}],
-          rewrite=&gt;[/m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_sum?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_skip?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_skip_limit?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_order?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_dedup?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;}]]@/m/grph</code></pre>
+          type=&gt;[
+           space::T[?[
+            {?}schema=&gt;rec::T[?[
+             {?}pattern=&gt;uri::T,
+             {?}const=&gt;[&lt;#&gt;::T],
+             {?}type=&gt;{?}[&lt;#&gt;::T],
+             {?}inst=&gt;{?}[inst::T],
+             {?}rewrite=&gt;{?}[inst::T],
+             {?}sugar=&gt;{?}[lst::T],
+             {?}reference=&gt;{?}[uri::T],
+             {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
+            {?}config=&gt;rec::T]][ctor?grphspace&lt;=(rec::T){&lt;j&gt;}]@/m/grph/space/grphspace,
+           modern::T],
+          inst=&gt;[
+           gremlin?&lt;=grphspace(str::T){&lt;j&gt;},
+           label?uri&lt;=rec(){&lt;j&gt;},
+           values?&lt;=rec(uri{*}::T){&lt;j&gt;},
+           inV?rec&lt;=rec(){&lt;j&gt;},
+           outV?rec&lt;=rec(){&lt;j&gt;},
+           bothV?rec{2}&lt;=rec(){&lt;j&gt;},
+           out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+           in?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+           both?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+           outE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+           inE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+           bothE?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+           addE?rec&lt;=rec(uri::T,
+                         rec{+}::T,
+                         rec{?}::T){&lt;j&gt;}],
+          rewrite=&gt;[
+           /m/grph/inst/rewrite/gremlin_count?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_sum?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_skip?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_skip_limit?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_order?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_dedup?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_limit?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;},
+           /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;}]]@/m/grph</code></pre>
                     </div>
                 </div>
             </div>
@@ -692,7 +704,7 @@ from vertex to vertex, the edge of the metatron is traversed</p>
         <a href="m_grph_space_grphspace.html" class="code text-primary fw-bold text-decoration-none">grphspace</a>
         <small class="text-muted code">/m/grph/space/grphspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T],{?}reference=&gt;{?}[uri::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T)]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T)]@grphspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}schema=&gt;rec::T[?[{?}pattern=&gt;uri::T,{?}const=&gt;[&lt;#{?}&gt;::T],{?}type=&gt;{?}[&lt;#{*}&gt;::T],{?}inst=&gt;{?}[inst::T],{?}rewrite=&gt;{?}[inst::T],{?}sugar=&gt;{?}[lst::T],{?}reference=&gt;{?}[uri::T],{?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?rng=instset&amp;dom=#{?}(&lt;#{*}&gt;::T)]@instset,{?}config=&gt;rec::T]][ctor?rng=grphspace&amp;dom=#{?}(rec::T)]@grphspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,

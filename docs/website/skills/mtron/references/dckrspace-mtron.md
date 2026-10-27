@@ -40,9 +40,10 @@ mtron> dckrspace::T
 mtron> !*dckrspace?docq
 ==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?dckrspace<=(dckrspace::T){<j>}]@/m/dckr/space/dckrspace,
           desc=>'[structural] a docker daemon space',
-          example=>['docker:compose/my-stack -> [servic...',
-                    '*docker:container/+',
-                    '*docker:image/nginx/<nginx:latest>']]
+          example=>[
+           'docker:compose/my-stack -> [servic...',
+           '*docker:container/+',
+           '*docker:image/nginx/<nginx:latest>']]
 ```
 ```mtron
 dckrspace::[pattern   => docker:#,
@@ -411,66 +412,78 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer 
 ==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]
 ==>explanation::[format=>!λ?str<=(){<j>},
-                 desc=>[rng=><#>,
-                        insts=>2,
-                        rewrite=>explanation::[
-                         format=>!λ?str<=(){<j>},
-                         desc=>[rng=><#>,insts=>3],
-                         per_inst=>[[op=>from,
-                                     args=>[mydb:people/+],
-                                     f=>'<j>',
-                                     form=>standard,
-                                     c_dom=>0,
-                                     c_rng=>0],
-                                    [op=>isa,
-                                     dom=><#>,
-                                     rng=><#>,
-                                     args=>[[role=>developer]],
-                                     form=>mapper,
-                                     c_dom=>1,
-                                     c_rng=>1],
-                                    [op=>select,
-                                     dom=><#>,
-                                     rng=><#>,
-                                     args=>[[name=>id()]],
-                                     form=>mapper,
-                                     c_dom=>1,
-                                     c_rng=>1]]]],
-                 per_inst=>[[op=>sql_where,
-                             args=>[people/+,"role = 'developer'"],
-                             f=>'<j>',
-                             form=>standard,
-                             c_dom=>0,
-                             c_rng=>0],
-                            [op=>select,
-                             dom=><#>,
-                             rng=><#>,
-                             args=>[[name=>id()]],
-                             form=>mapper,
-                             c_dom=>1,
-                             c_rng=>1]]]
+                 desc=>[
+                  rng=><#>,
+                  insts=>2,
+                  rewrite=>explanation::[
+                   format=>!λ?str<=(){<j>},
+                   desc=>[rng=><#>,insts=>3],
+                   per_inst=>[
+                    [
+                     op=>from,
+                     args=>[mydb:people/+],
+                     f=>'<j>',
+                     form=>standard,
+                     c_dom=>0,
+                     c_rng=>0],
+                    [
+                     op=>isa,
+                     dom=><#>,
+                     rng=><#>,
+                     args=>[[role=>developer]],
+                     form=>mapper,
+                     c_dom=>1,
+                     c_rng=>1],
+                    [
+                     op=>select,
+                     dom=><#>,
+                     rng=><#>,
+                     args=>[[name=>id()]],
+                     form=>mapper,
+                     c_dom=>1,
+                     c_rng=>1]]]],
+                 per_inst=>[
+                  [
+                   op=>sql_where,
+                   args=>[people/+,"role = 'developer'"],
+                   f=>'<j>',
+                   form=>standard,
+                   c_dom=>0,
+                   c_rng=>0],
+                  [
+                   op=>select,
+                   dom=><#>,
+                   rng=><#>,
+                   args=>[[name=>id()]],
+                   form=>mapper,
+                   c_dom=>1,
+                   c_rng=>1]]]
 mtron> *mydb:people/+.count()                                   [-- number of rows        --]
 ==>3
 mtron> *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
 ==>explanation::[format=>!λ?str<=(){<j>},
-                 desc=>[rng=>int,
-                        insts=>1,
-                        rewrite=>explanation::[
-                         format=>!λ?str<=(){<j>},
-                         desc=>[rng=>int,insts=>2],
-                         per_inst=>[[op=>from,
-                                     args=>[mydb:people/+],
-                                     f=>'<j>',
-                                     form=>standard,
-                                     c_dom=>0,
-                                     c_rng=>0],
-                                    [op=>count,
-                                     rng=>int,
-                                     args=>[,],
-                                     f=>'<j>',
-                                     form=>reducer,
-                                     c_dom=>0,
-                                     c_rng=>1]]]],
+                 desc=>[
+                  rng=>int,
+                  insts=>1,
+                  rewrite=>explanation::[
+                   format=>!λ?str<=(){<j>},
+                   desc=>[rng=>int,insts=>2],
+                   per_inst=>[
+                    [
+                     op=>from,
+                     args=>[mydb:people/+],
+                     f=>'<j>',
+                     form=>standard,
+                     c_dom=>0,
+                     c_rng=>0],
+                    [
+                     op=>count,
+                     rng=>int,
+                     args=>[,],
+                     f=>'<j>',
+                     form=>reducer,
+                     c_dom=>0,
+                     c_rng=>1]]]],
                  per_inst=>[[op=>sql_count,
                              rng=>int,
                              args=>[people/+],

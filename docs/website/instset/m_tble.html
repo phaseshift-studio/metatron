@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -463,33 +463,41 @@ relational tables, typed rows, and SQL rewrites within the metatron</p>
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/tble/#,
-          q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/lawq::[
+            pattern=&gt;lawq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
           const=&gt;[[llm_chat_schema=&gt;inst?&lt;=#{*}(){&lt;j&gt;}]@/m/tble/helper],
           type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace],
           inst=&gt;[sql?rec{*}&lt;=tblespace(str::T){&lt;j&gt;}],
-          rewrite=&gt;[/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_sum_column?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_where_offset?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_where_offset_limit?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_select?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_order?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_distinct?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_kv_count?code{?}&lt;=code(){&lt;j&gt;},
-                    /m/tble/inst/rewrite/sql_kv_limit?code{?}&lt;=code(){&lt;j&gt;}]]@/m/tble</code></pre>
+          rewrite=&gt;[
+           /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_sum_column?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_offset?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_offset_limit?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_where_order?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_where_order_offset?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_where_limit?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_where_offset?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_where_offset_limit?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_select?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_order?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_distinct?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_kv_count?code{?}&lt;=code(){&lt;j&gt;},
+           /m/tble/inst/rewrite/sql_kv_limit?code{?}&lt;=code(){&lt;j&gt;}]]@/m/tble</code></pre>
                     </div>
                 </div>
             </div>

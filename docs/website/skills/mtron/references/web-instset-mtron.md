@@ -32,13 +32,15 @@ mtron> http_server::[origin => http://localhost:8777,
 mtron> [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron> http_client::[host => <http://#>]
 ==>http_client::[host=>http://#,
-                 inst=>[/m/inst/from=>*uri::T,
-                        /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+                 inst=>[
+                  /m/inst/from=>*uri::T,
+                  /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
                  status=>!λstatus?bool<=(){<j>}]
 mtron> http_client::[host => <https://#>]
 ==>http_client::[host=>https://#,
-                 inst=>[/m/inst/from=>*uri::T,
-                        /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+                 inst=>[
+                  /m/inst/from=>*uri::T,
+                  /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
                  status=>!λstatus?bool<=(){<j>}]
 mtron> [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 mtron> [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
@@ -78,15 +80,15 @@ mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-m
    ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
 ==>[html=>[head=>[=>],
-           body=>[out=>[[tag=>h1,
+           body=>[out=>[[
+                         tag=>h1,
                          out=>[[tag=>code,text=>'/m/web']],
                          text=>'web instruction set ()'],
-                        [tag=>p,
-                         out=>[[tag=>code,text=>'/m/web'],
-                               [tag=>em,text=>'transport protocol'],
-                               [tag=>em,text=>'MIME'],
-                               [tag=>em,text=>'endpoint'],
-                               [tag=>code,text=>'/m/web'],
+                        [
+                         tag=>p,
+                         out=>[
+                          [tag=>code,text=>'/m/web'],
+                          [tag=>em,text=>'transport protocol'],
    ...
 ```
 ## the space these examples use

@@ -206,54 +206,17 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
     public static final class LstType {
 
+        /*
+         * WHAT REMAINS HERE, and why: the `as` conversions declare an opposing edge (a pair, and the direction is the
+         * claim), which the builder cannot express yet. Their law rows stay in mInstSetLawTable; everything the
+         * builder CAN say lives in mInsts.lsts() -- and these retire when InstBuilder grows `inverse`.
+         */
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(LST_TID).rng(URI_TID), lst(T(LST_TID.poly(URI_TID))), (lhs, inst) -> lhs.lstValue().stream().reduce(uri(""), (a, b) -> uri(a.uriValue().extend(b.uriValue())))),
                     instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid()).c(c -> c.mult(lhs.c()))),
                     instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), null)),
-                    instC(AS_INST_TID.dom(LST_TID).rng(CODE_TID), lst(T(CODE_TID)), (lhs, inst) -> code(lhs.asLst().jvm().stream().flatMap(o -> o.isCall() ? o.asCall().insts().stream() : map_(o).tryToInst().insts().stream()).toList()).c(c -> c.mult(lhs.c()))),
-                    instC(REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed())),
-                    instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).map(o -> ((Obj) o).clone().as()).toList())),
-                    instC(MINUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> {
-                        final List<Obj> values = lhs.lstValue();
-                        values.removeAll(inst.arg(0).lstValue());
-                        return lhs.jvm(values);
-                    }),
-                    instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
-                    //  instC(RSHIFT_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(Singleton.WILD_ONE.toString())).stream().map(k -> lhs.asLst().at(k)))),
-                    // instC(LSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> lhs.parent()),
-                    //instC(MAP_INST_TID.dom(LST_TID.poly(A)).rng(LST_TID.poly(B)), lst(T(B)), (lhs, inst) -> lhs.elements().map(e -> inst.arg(0).apply(e)).collect(new CommonUtil.LstCollector(lhs.tid(), lhs.vid()))),
-                    //instC(FILTER_INST_TID.dom(LST_TID.poly(A)).rng(LST_TID.poly(A)), lst(T(A)), (lhs, inst) -> lhs.elements().filter(e -> inst.arg(0).apply(e).booleanCheck()).collect(new CommonUtil.LstCollector(lhs.tid(), lhs.vid()))),
-                    instC(ZERO_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.asLst().zero()),
-                    instC(SPLIT_INST_TID.dom(A).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).jvm(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
-                    instC(MERGE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
-                    instC(MERGE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(URI_TYPE), (lhs, inst) -> uri(lhs.elements().map(e -> e.uriValue().toString()).reduce("", (a, b) -> a + inst.arg(0).uriValue().toString() + b).substring(1))),
-                    instC(MERGE_INST_TID.dom(LST_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(lhs.elements().map(Obj::strValue).reduce("", (a, b) -> a + inst.arg(0).strValue() + b).substring(1))),
-                    instC(HAS_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL), T(ALL).maybe(), T(ALL).maybe()), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.test(inst.arg(0)) || r.test(inst.arg(1)) || r.test(inst.arg(2))) ? lhs : noobj()),
-                    instC(WITHIN_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.elements().flatMap(Obj::elements))).stream().toList())),
-                    instC(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
-                    instC(SELECT_INST_TID.dom(LST_TID).rng(B.maybeSome()), lst(T(A.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(s -> lhs.asLst().at(s)))),
-                    instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.selectLstLstRecursion(lhs.asLst(), inst.arg(0).asLst(), false)),
-                    instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.selectLstRecRecursion(lhs.asLst(), inst.arg(0).asRec(), false)),
-                    // instC(UPDATE_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.updateLstRecursion(lhs.asLst(), inst.arg(0).asLst(), MUTABLE)),
-
-                    instC(REMOVE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> {
-                        if (lhs.isLst() && inst.arg(0).intValue() < lhs.lstValue().size()) {
-                            final List<Obj> newList = new ArrayList<>(lhs.lstValue());
-                            final Obj result = newList.remove(inst.arg(0).intValue().intValue());
-                            lhs.jvm(newList);
-                            return result;
-                        }
-                        return noobj();
-                    }),
-                    instC(POW_INST_TID.dom(LST_TID).rng(LST_TID), lst(INT_TYPE), (lhs, inst) -> {
-                        int pow = inst.arg(0).intValue().intValue();
-                        Lst l = lhs.clone(lhs.jvm(), lhs.tid(), null);
-                        for (int i = 0; i < pow; i++) {
-                            l = l.jvm(l.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList());
-                        }
-                        return lhs.jvm(l);
-                    })
+                    instC(AS_INST_TID.dom(LST_TID).rng(CODE_TID), lst(T(CODE_TID)), (lhs, inst) -> code(lhs.asLst().jvm().stream().flatMap(o -> o.isCall() ? o.asCall().insts().stream() : map_(o).tryToInst().insts().stream()).toList()).c(c -> c.mult(lhs.c())))
             ));
         }
     }

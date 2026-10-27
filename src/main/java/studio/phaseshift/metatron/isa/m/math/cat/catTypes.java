@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
@@ -78,7 +79,7 @@ public class catTypes {
                                 uri(ORBIT).maybe(), "the reversible-core component: \\(\\mathrm{orbit}(X) = \\{Y : X \\sim^{*} Y\\}\\), where \\(X \\sim Y \\iff X \\to Y \\wedge Y \\to X\\)"),
                         "a categorical structure to be refined into an object or morphism"),
                 docWrap(LAW_TYPE = Type.Builder.build()
-                        .tid(REC_TID)
+                        .tid(URI_TID)
                         .vid(LAW_TID)
                         .isaPredicate(union_(Arrays.stream(Law.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst())
                         .create(), "the process laws a morphism obeys — the union of the process-law labels"),
@@ -328,13 +329,13 @@ public class catTypes {
                                         uri(STATUS).maybe().asUri(), URI_TYPE))
                                 .constructor(Places::place)
                                 .create(), mutableMap(
-                                uri(OBJ), "the machine address \\(//host[/path]\\) — who evaluates: \\(host()\\) is the roster key, \\(path()\\) the frame vid (empty = the root machine)",
-                                uri(AUTHORITY), "the transports that reach the machine \\(scheme://host:port\\); two aliases of one machine are values, never two places",
+                                uri(OBJ), "the machine address //host[/path] — who evaluates: \\(host()\\) is the roster key, \\(path()\\) the frame vid (empty = the root machine)",
+                                uri(AUTHORITY), "the transports that reach the machine scheme://host:port; two aliases of one machine are values, never two places",
                                 uri(INSTSET).maybe(), "ISAs resolvable here (the vocabulary coordinate)",
                                 uri(SOURCE).maybe(), "who declared it (mdns, boot profile, a dial)",
                                 uri(LINKED_TO).maybe(), "outbound peers whose service is this place",
                                 uri(LINKED_FROM).maybe(), "inbound peers from this place",
-                                uri(STATUS).maybe(), "up / down / known, derived over the dials"),
+                                uri(STATUS).maybe(), "up/down/known, derived over the dials"),
                         "a machine as the location coordinate — where code runs, the vertex beside path::T"),
                 docWrap(THEORY_TYPE = Type.Builder.build()
                         .tid(REC_TID)

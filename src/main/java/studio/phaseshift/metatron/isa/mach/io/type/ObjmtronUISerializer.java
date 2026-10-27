@@ -65,13 +65,22 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       it prints — its message and the levels of its stack block (see
  *       {@link #writeFail(Fail)});</li>
  *   <li><b>indentation</b> — a poly whose mtron text reads wider than
- *       {@link #NESTED_STRING_THRESHOLD} columns breaks across lines: the first entry rides
- *       the opening bracket and every entry after it starts a line of its own at the column
- *       the first one begins, so the entries line up under the first.  A collection that
- *       fits the threshold stays on one line — a short rec has nothing to gain from a stack
- *       of newlines.  When the opening line has already run wide — a type name that is a path
+ *       {@link #NESTED_STRING_THRESHOLD} columns breaks across lines, in one of two shapes.
+ *       A collection that BEGINS a line — the top-level render, a value rendered into a
+ *       buffer at depth zero — carries its first entry on the opening bracket and hangs
+ *       every entry after it at the column the first one begins, so the entries line up
+ *       under the first.  A collection NESTED inside one that already broke takes the block
+ *       shape instead: every entry, the first included, gets a line of its own one level in
+ *       from the column its parent's entries occupy.  Hanging a nested collection under its
+ *       own first entry is what put a nested rec's entries far right of its siblings' — the
+ *       entries of {@code ring=>/m/theory/ring_theory::[…]} began after the 23 columns of
+ *       the type name, drifting away from the {@code add_group} rows beneath them — so the
+ *       anchor for a nested collection is its PARENT's entry column, threaded down, and
+ *       nesting reads as one column per level.  A collection that fits the threshold stays
+ *       on one line — a short rec has nothing to gain from a stack of newlines.  When the
+ *       opening line has already run wide — a type name that is a path
  *       ({@code /m/mach/ui/console/command_palette::[…]}) or an entry column past
- *       {@link #MAX_ENTRY_COLUMN} — the first entry is not carried on it at all: the entries
+ *       {@link #MAX_ENTRY_COLUMN} — the first entry is not carried on it either: the entries
  *       take their own lines, one level in from the line's own indent;</li>
  *   <li><b>{@code {{link}}} handling</b> — every uri the serializer writes is tagged as a
  *       link, which is how a renderer that can draw links (graphitty turns the rule into
@@ -110,10 +119,13 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     public static final int NESTED_STRING_THRESHOLD = 40;
 
     /**
-     * The column past which a collection no longer carries its first entry on the opening
-     * line.  A poly whose {@code [} lands further right than this — deep nesting, a run of
-     * long entry keys — starts its entries on lines of their own, one level in from the
-     * line's own indent, instead of dragging them out to a column no reader can follow.
+     * The column past which a collection that begins a line no longer carries its first entry
+     * on the opening line.  A poly whose {@code [} lands further right than this — deep
+     * nesting, a run of long entry keys — starts its entries on lines of their own, one level
+     * in from the line's own indent, instead of dragging them out to a column no reader can
+     * follow.  A collection nested inside one that already broke does not carry at all — it
+     * takes the block shape — so this guard is for the depth-zero renders: a collection handed
+     * to {@link #writeClip} at whatever column its caller reached.
      */
     public static final int MAX_ENTRY_COLUMN = 40;
 
@@ -555,7 +567,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                 final int index = counter.getAndIncrement();
                 if (nested && index > 0)
                     sb.append("\n").append(" ".repeat(indent));
-                this.renderInstArg(sb, depth + 1, o);
+                // the column the argument itself begins at: the arg column for every argument
+                // after the first, and the position just past the '(' for the first — which a
+                // rec argument breaks one level in from
+                this.renderInstArg(sb, depth + 1, this.lineWidth(sb), o);
                 if (index < count - 1)
                     sb.append(",");
             });
@@ -727,35 +742,53 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     /**
+     * Whether a broken collection carries its first entry on the opening bracket — the hanging
+     * shape, where every later entry lines up under that first one.
+     * <p>
+     * Only a collection that begins the line's content takes it ({@code depth == 0}).  A
+     * collection nested inside one that already broke is anchored on its PARENT's entry column
+     * (the block shape, see {@link #entryIndent}); hanging it under its own first entry instead
+     * measured that column off whatever the value's key and type name happened to cost, so
+     * {@code ring=>/m/theory/ring_theory::[…]} began its entries 23 columns further right than
+     * the {@code add_group} rows beneath it — the same rec, laid out two different ways.
+     * <p>
+     * The two column guards survive for the shapes depth cannot see: a collection rendered into
+     * a buffer at depth zero still sits at whatever column its callers reached (an instruction
+     * argument, a type predicate), and a wide opening line there leaves no room for an entry.
+     */
+    private boolean carriesFirstEntry(final int depth, final int prefixFrom, final int entryColumn) {
+        return depth == 0
+                && entryColumn - prefixFrom <= MAX_TYPE_PREFIX
+                && entryColumn <= MAX_ENTRY_COLUMN;
+    }
+
+    /**
      * The column a broken collection's entries begin at.  With the first entry carried on the
      * opening line, they line up under it — at the column it begins at.  With the first entry
-     * dropped to a line of its own, they sit one level in from the line's own indent.  Either
-     * way never less than one nesting level in: where a poly is rendered into a buffer of its
-     * own (an instruction argument, a type predicate), that buffer cannot know the column it
-     * will finally land in, and the depth is then the only measure of how deep the collection
-     * really sits.
+     * dropped to a line of its own, they sit one level in from {@code anchor}: the column the
+     * parent's own entries occupy, threaded down from the caller, so the block shape is
+     * independent of the physical line the collection happens to land on.  A run of same-level
+     * siblings therefore lines up instead of swaying right one column per sibling.
+     * <p>
+     * Never less than one nesting level in: where a poly is rendered into a buffer whose final
+     * column the caller alone knows (a type predicate reached through the base serializer),
+     * the anchor falls back to the line's own indent, and the depth is then the only honest
+     * measure of how deep the collection sits.
      */
-    private int entryIndent(final StringBuilder sb, final int depth, final boolean carried) {
-        // KNOWN LIMITATION (accepted, not a defect): the not-carried column is measured off the CURRENT
-        // physical line. When a sibling's broken block leaves the cursor on a line IT indented, the next
-        // sibling reads that indent and adds INDENT_SIZE -- so a run of same-level broken siblings sways
-        // right by one column each (INDENT_SIZE is 1, hence the 1,2,3... staircase). It reads as the
-        // structure drifting right because it is the structure: nesting that deep is the user's shape,
-        // not a rendering bug. If it ever misaligns something that should line up, the fix is here:
-        // thread the parent's entry column down and return anchor + INDENT_SIZE instead of
-        // lineIndent(sb) + INDENT_SIZE, which makes the indent independent of preceding siblings.
-        return Math.max(carried ? this.lineWidth(sb) : this.lineIndent(sb) + INDENT_SIZE,
-                (depth + 1) * INDENT_SIZE);
+    private int entryIndent(final StringBuilder sb, final int depth, final int anchor, final boolean carried) {
+        return carried
+                ? this.lineWidth(sb)
+                : Math.max(anchor + INDENT_SIZE, (depth + 1) * INDENT_SIZE);
     }
 
 // ── List generation (clipped, nested) ────────────────────────
 
     @Override
     public String writeLst(final Lst lst) {
-        return this.postWrite(this.generateLst(new StringBuilder(), lst, 0).toString());
+        return this.postWrite(this.generateLst(new StringBuilder(), lst, 0, 0).toString());
     }
 
-    private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
+    private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth, final int anchor) {
         final int prefixFrom = this.lineWidth(sb);
         this.handleTID(sb, lst, true);
         if (lst.isEmpty()) {
@@ -765,20 +798,22 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final boolean nested = this.isNested(lst);
             sb.append("[");
             // the first entry rides the opening bracket and the rest line up under it — unless
-            // that line has already run too wide to carry it, in which case the entries all take
-            // their own lines one level in from the line's own indent
+            // that line has already run too wide to carry it (or the collection is itself nested
+            // inside a broken one), in which case the entries all take their own lines
             final int entryColumn = this.lineWidth(sb);
-            final boolean carried = nested
-                    && entryColumn - prefixFrom <= MAX_TYPE_PREFIX
-                    && entryColumn <= MAX_ENTRY_COLUMN;
-            final int indent = nested ? this.entryIndent(sb, depth, carried) : 0;
+            final boolean carried = nested && this.carriesFirstEntry(depth, prefixFrom, entryColumn);
+            final int indent = nested ? this.entryIndent(sb, depth, anchor, carried) : 0;
+            // a member of a broken lst sits at that lst's own entry column; a member on an
+            // unbroken line sits on the line itself, which is the column it will break against
+            final int childDepth = nested ? depth + 1 : 0;
+            final int childAnchor = nested ? indent : this.lineIndent(sb);
             if (lst.count() > lstClip) {
                 if (nested && !carried)
                     sb.append("\n");
                 for (int i = 0; i < lstClip; i++) {
                     if (nested && (i > 0 || !carried))
                         sb.append(" ".repeat(indent));
-                    this.renderValue(sb, depth, lst.lstValue().get(i));
+                    this.renderValue(sb, childDepth, childAnchor, lst.lstValue().get(i));
                     sb.append(",");
                     if (nested) sb.append("\n");
                 }
@@ -792,7 +827,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                 lst.jvm().forEach(v -> {
                     if (nested && (counter.getAndIncrement() > 0 || !carried))
                         sb.append(" ".repeat(indent));
-                    this.renderValue(sb, nested ? depth + 1 : 0, v);
+                    this.renderValue(sb, childDepth, childAnchor, v);
                     sb.append(",");
                     if (nested) sb.append("\n");
                 });
@@ -817,10 +852,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      */
     @Override
     public String writeObjs(final Objs objs) {
-        return this.postWrite(this.generateObjs(new StringBuilder(), objs, 0).toString());
+        return this.postWrite(this.generateObjs(new StringBuilder(), objs, 0, 0).toString());
     }
 
-    private StringBuilder generateObjs(final StringBuilder sb, final Objs objs, final int depth) {
+    private StringBuilder generateObjs(final StringBuilder sb, final Objs objs, final int depth, final int anchor) {
         // ZERO MEMBERS IS NOOBJ, not an empty bracket pair: MObjs.isNoObj() is jvm.isEmpty(), and
         // the plain writer's stream arm draws that value as noobj — so must this one
         if (objs.isNoObj())
@@ -830,7 +865,9 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         objs.stream().forEach(v -> {
             if (counter.getAndIncrement() > 0)
                 sb.append(",");
-            this.renderValue(sb, depth, v);
+            // a stream draws on one line, so its members share the stream's own anchor: a member
+            // that breaks sees the column the stream sits at, not a level of its own
+            this.renderValue(sb, depth, anchor, v);
         });
         return sb.append("}");
     }
@@ -842,10 +879,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         /* if (rec.has(FORMAT)) {
             return rec.at(FORMAT).apply(rec).toCleanString();
         }*/
-        return this.postWrite(this.generateRec(new StringBuilder(), rec, 0).toString());
+        return this.postWrite(this.generateRec(new StringBuilder(), rec, 0, 0).toString());
     }
 
-    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
+    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth, final int anchor) {
         final int prefixFrom = this.lineWidth(sb);
         this.handleTID(sb, rec, true);
         if (rec.isEmpty()) {
@@ -855,13 +892,15 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             final boolean nested = this.isNested(rec);
             sb.append("[");
             // the first entry rides the opening bracket and the rest line up under it — unless
-            // that line has already run too wide to carry it, in which case the entries all take
-            // their own lines one level in from the line's own indent
+            // that line has already run too wide to carry it (or the rec is itself nested inside
+            // a broken one), in which case the entries all take their own lines
             final int entryColumn = this.lineWidth(sb);
-            final boolean carried = nested
-                    && entryColumn - prefixFrom <= MAX_TYPE_PREFIX
-                    && entryColumn <= MAX_ENTRY_COLUMN;
-            final int indent = nested ? this.entryIndent(sb, depth, carried) : 0;
+            final boolean carried = nested && this.carriesFirstEntry(depth, prefixFrom, entryColumn);
+            final int indent = nested ? this.entryIndent(sb, depth, anchor, carried) : 0;
+            // a value of a broken rec sits at that rec's own entry column; a value on an unbroken
+            // line sits on the line itself, which is the column it will break against
+            final int childDepth = nested ? depth + 1 : 0;
+            final int childAnchor = nested ? indent : this.lineIndent(sb);
             if (rec.count() > recClip) {
                 if (nested && !carried)
                     sb.append("\n");
@@ -874,7 +913,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                         sb.append(this.write(kv.jvm().get0())).append("=>");
                         if (kv.jvm().get1() == rec)
                             throw MTronException.of("prevented infinite recursion on nested rec: key %s", kv.jvm().get0());
-                        this.renderValue(sb, nested ? depth + 1 : 0, kv.jvm().get1());
+                        this.renderValue(sb, childDepth, childAnchor, kv.jvm().get1());
                         sb.append(",");
                         if (nested) sb.append("\n");
                     }
@@ -892,7 +931,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                     sb.append(this.write(k)).append("=>");
                     if (v == rec)
                         throw MTronException.of("prevented infinite recursion on nested rec: key %s", k);
-                    this.renderValue(sb, nested ? depth + 1 : 0, v);
+                    this.renderValue(sb, childDepth, childAnchor, v);
                     sb.append(",");
                     if (nested) sb.append("\n");
                 });
@@ -905,7 +944,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
 // ── Value rendering (the nested path) ────────────────────────
 
-    private void renderValue(final StringBuilder sb, final int depth, final Obj v) {
+    private void renderValue(final StringBuilder sb, final int depth, final int anchor, final Obj v) {
         if (null == v) {
             this.writeClip(sb, noobj());
         } else if (v.isStr()) {
@@ -918,11 +957,11 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             if (NanorcUtil.supportedLanguages().contains(language))
                 sb.append("\n{{/syntax:").append(language).append("}}\n");
         } else if (v.isRec()) {
-            this.generateRec(sb, v.as(), depth);
+            this.generateRec(sb, v.as(), depth, anchor);
         } else if (v.isLst()) {
-            this.generateLst(sb, v.as(), depth);
+            this.generateLst(sb, v.as(), depth, anchor);
         } else if (v.isObjs()) {
-            this.generateObjs(sb, v.as(), depth);
+            this.generateObjs(sb, v.as(), depth, anchor);
         } else if (v.isType()) {
             this.generateType(sb, v.asType(), depth);
         } else {
@@ -930,12 +969,27 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         }
     }
 
+    /**
+     * {@inheritDoc}  The anchor is the column the enclosing collection's entries occupy, so a
+     * rec rendered as a value breaks one level in from its SIBLINGS' column rather than hanging
+     * out under its own first entry.
+     */
     @Override
     protected StringBuilder renderInstArg(final StringBuilder sb, final int depth, final Obj arg) {
+        return this.renderInstArg(sb, depth, this.lineIndent(sb), arg);
+    }
+
+    /**
+     * Render one instruction argument, anchored at the column the argument begins at — the same
+     * shaped break a value of a rec or lst gets.  A rec argument of a broken instruction is a
+     * nested collection like any other: without the depth it indented against column zero, and
+     * without the anchor off its own opening bracket.
+     */
+    protected StringBuilder renderInstArg(final StringBuilder sb, final int depth, final int anchor, final Obj arg) {
         if (arg.isRec()) {
-            this.generateRec(sb, arg.asRec(), depth);
+            this.generateRec(sb, arg.asRec(), depth, anchor);
         } else if (arg.isLst()) {
-            this.generateLst(sb, arg.asLst(), depth);
+            this.generateLst(sb, arg.asLst(), depth, anchor);
         } else if (arg.isType()) {
             sb.append(arg.vid().small()).append("::T");
             //this.generateType(sb, arg.asType(), depth);
@@ -986,14 +1040,14 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             // the same nested, clipped shape any other rec gets — this is what a type's
             // predicate rec goes through, and without it a type rendered flat while a
             // rec value of the same shape on its knees indented its entries
-            this.generateRec(sb, obj.asRec(), 0);
+            this.generateRec(sb, obj.asRec(), 0, this.lineIndent(sb));
         } else if (obj.isLst()) {
-            this.generateLst(sb, obj.asLst(), 0);
+            this.generateLst(sb, obj.asLst(), 0, this.lineIndent(sb));
         } else if (obj.isObjs()) {
             // a stream is drawn the way it is written at the top level, not handed to the plain
             // serializer's toString(): that text carries no link tags and its members measure
             // themselves from column zero
-            this.generateObjs(sb, obj.asObjs(), 0);
+            this.generateObjs(sb, obj.asObjs(), 0, this.lineIndent(sb));
         } else if (obj.isUri()) {
             final int max = this.clipUri();
             final String uriStr = obj.uriValue().toString();

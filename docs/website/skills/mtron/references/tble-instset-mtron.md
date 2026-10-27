@@ -235,16 +235,21 @@ mtron> *tbledoc:person/+.==[name=>_]           [-- SELECT name FROM person --]
 ==>[name=>'grant']
 ==>[name=>'vela']
 mtron> *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
-==>[[name=>'grant',
+==>[[
+     name=>'grant',
      age=>25]@tbledoc:person/noobj,
-    [name=>'marko',
+    [
+     name=>'marko',
      age=>29]@tbledoc:person/noobj,
-    [name=>'xilo',
+    [
+     name=>'xilo',
      age=>33,
      skill=>'graph']@tbledoc:person/noobj,
-    [name=>'metis',
+    [
+     name=>'metis',
      age=>41]@tbledoc:person/noobj,
-    [name=>'vela',
+    [
+     name=>'vela',
      age=>53]@tbledoc:person/noobj]
 mtron> *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
 ==>'marko'
@@ -293,23 +298,32 @@ The instset prints that list itself, and each rewrite documents its own before/a
 
 ```mtron
 mtron> */m/tble?docq
-==>docs::[obj=>instset::[pattern=>/m/tble/#,
-                         q=>[docq::[pattern=>docq,
-                                    pre_read=>inst(uri::T){<j>},
-                                    pre_write=>inst(uri::T,#::T){<j>},
-                                    obj=>memspace::[pattern=><#>],
-                                    inst=>instset::[pattern=><#>]]],
-                         const=>[[llm_chat_schema=>inst?<=#{*}(){<j>}]@/m/tble/helper],
-                         type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/tble/space/tblespace],
-                         inst=>[sql?rec{*}<=tblespace(str::T){<j>}],
-                         rewrite=>[/m/tble/inst/rewrite/sql_count?code{?}<=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_sum?code{?}<=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_sum_column?code{?}<=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_mean?code{?}<=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_limit?code{?}<=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_offset?code{?}<=code(){<j>},
-                                   /m/tble/inst/rewrite/sql_offset_limit?code{?}<=code(){<j>},
-                                   ...(12 more)]]@/m/tble,
+==>docs::[obj=>instset::[
+           pattern=>/m/tble/#,
+           q=>[
+            docq::[
+             pattern=>docq,
+             pre_read=>inst(uri::T){<j>},
+             pre_write=>inst(uri::T,#::T){<j>},
+             obj=>memspace::[pattern=><#>],
+             inst=>instset::[pattern=><#>]],
+            /m/qproc/lawq::[
+             pattern=>lawq,
+             pre_read=>inst(uri::T){<j>},
+             pre_write=>inst(uri::T,#::T){<j>},
+             obj=>memspace::[pattern=><#>]]],
+           const=>[[llm_chat_schema=>inst?<=#{*}(){<j>}]@/m/tble/helper],
+           type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/tble/space/tblespace],
+           inst=>[sql?rec{*}<=tblespace(str::T){<j>}],
+           rewrite=>[
+            /m/tble/inst/rewrite/sql_count?code{?}<=code(){<j>},
+            /m/tble/inst/rewrite/sql_sum?code{?}<=code(){<j>},
+            /m/tble/inst/rewrite/sql_sum_column?code{?}<=code(){<j>},
+            /m/tble/inst/rewrite/sql_mean?code{?}<=code(){<j>},
+            /m/tble/inst/rewrite/sql_limit?code{?}<=code(){<j>},
+            /m/tble/inst/rewrite/sql_offset?code{?}<=code(){<j>},
+            /m/tble/inst/rewrite/sql_offset_limit?code{?}<=code(){<j>},
+            ...(12 more)]]@/m/tble,
           desc=>'relational tables, typed rows, and...',
           example=>['*acme:customer.where[person=>[name...']]
 ```
@@ -426,11 +440,12 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/15
+==>[body=>'a note with a database-assigned key']@tbledoc:note/17
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/16
+==>[body=>'another one']@tbledoc:note/18
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==>12
+==>17
 ==>11
 ==>15
 ==>2
@@ -443,6 +458,7 @@ mtron> *tbledoc:note/+/id                                    [-- the keys the ba
 ==>3
 ==>10
 ==>14
+==>18
 ==>5
 ==>7
 ==>9

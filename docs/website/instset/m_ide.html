@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -463,43 +463,55 @@ the agent ide — project::T definition, build result::T and the links between t
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/ide/#,
-          q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[/m/ide/serializer::T[][ctor?obj_ide_java&lt;=(#{*}::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java,
-                 rec::T[?[classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
-                          {?}package=&gt;str::T,
-                          {?}imports=&gt;lst::T,
-                          {?}preamble=&gt;str::T,
-                          {?}postscript=&gt;str::T]]@/m/ide/java,
-                 rec::T[?[status=&gt;union(success,error,halted),
-                          runtime=&gt;!*/m/math/time,
-                          {?}command=&gt;str::T,
-                          {?}project=&gt;project::T,
-                          {?}result=&gt;str::T,
-                          {?}error=&gt;{?}[fail::T]]]@/m/ide/result,
-                 rec::T[?[root=&gt;uri::T,
-                          {?}name=&gt;str::T,
-                          {?}desc=&gt;str::T,
-                          {?}command=&gt;[uri::T=&gt;rec::T[?[
-                           status=&gt;union(success,error,halted),
-                           runtime=&gt;!*/m/math/time,
-                           {?}command=&gt;str::T,
-                           {?}project=&gt;project::T,
-                           {?}result=&gt;str::T,
-                           {?}error=&gt;{?}[fail::T]]]@/m/ide/result],
-                          {?}code=&gt;&lt;#&gt;::T]]@/m/ide/project],
-          inst=&gt;[as?project&lt;=uri(project::T){&lt;j&gt;},
-                 as?skill&lt;=project(#::T){&lt;j&gt;},
-                 as?java&lt;=java(java::T){&lt;j&gt;},
-                 as?java&lt;=java(java::T){&lt;j&gt;},
-                 find?uri{*}&lt;=uri(class=&gt;uri::T,
-                                  member=&gt;str{?}::T,
-                                  text=&gt;str{?}::T){&lt;j&gt;},
-                 search?uri{*}&lt;=uri(str::T){&lt;j&gt;},
-                 command?inst&lt;=(command=&gt;str::T){&lt;j&gt;}]]@/m/ide</code></pre>
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/lawq::[
+            pattern=&gt;lawq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+          type=&gt;[
+           /m/ide/serializer::T[][ctor?obj_ide_java&lt;=(#{*}::T){&lt;j&gt;}]@/m/ide/serializer/obj_ide_java,
+           rec::T[?[
+            classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
+            {?}package=&gt;str::T,
+            {?}imports=&gt;lst::T,
+            {?}preamble=&gt;str::T,
+            {?}postscript=&gt;str::T]]@/m/ide/java,
+           rec::T[?[
+            status=&gt;union(success,error,halted),
+            runtime=&gt;!*/m/math/time,
+            {?}command=&gt;str::T,
+            {?}project=&gt;project::T,
+            {?}result=&gt;str::T,
+            {?}error=&gt;{?}[fail::T]]]@/m/ide/result,
+           rec::T[?[
+            root=&gt;uri::T,
+            {?}name=&gt;str::T,
+            {?}desc=&gt;str::T,
+            {?}command=&gt;[uri::T=&gt;rec::T[?[
+             status=&gt;union(success,error,halted),
+             runtime=&gt;!*/m/math/time,
+             {?}command=&gt;str::T,
+             {?}project=&gt;project::T,
+             {?}result=&gt;str::T,
+             {?}error=&gt;{?}[fail::T]]]@/m/ide/result],
+            {?}code=&gt;&lt;#&gt;::T]]@/m/ide/project],
+          inst=&gt;[
+           as?project&lt;=uri(project::T){&lt;j&gt;},
+           as?skill&lt;=project(#::T){&lt;j&gt;},
+           as?java&lt;=java(java::T){&lt;j&gt;},
+           as?java&lt;=java(java::T){&lt;j&gt;},
+           find?uri{*}&lt;=uri(class=&gt;uri::T,
+                            member=&gt;str{?}::T,
+                            text=&gt;str{?}::T){&lt;j&gt;},
+           search?uri{*}&lt;=uri(str::T){&lt;j&gt;},
+           command?inst&lt;=(command=&gt;str::T){&lt;j&gt;}]]@/m/ide</code></pre>
                     </div>
                 </div>
             </div>

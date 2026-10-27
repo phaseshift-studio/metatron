@@ -396,10 +396,11 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
     }
 
     @Test
-    public void testNestedTypePredicateMaintainsDepth() {
+    public void testNestedTypePredicateIndentsOneLevelInFromItsParent() {
         // the *mach shape: a rec whose value is a type whose own predicate is a multi-entry rec
-        // wide enough to break.  the predicate's entries line up under their first entry — which
-        // sits deeper than the outer rec's own entries — instead of resetting to the outer's indent
+        // wide enough to break.  the predicate is a nested collection like any other, so its
+        // entries break one level in from the OUTER rec's entries — not out at the column its own
+        // first entry happens to land on, which is what put a rec's rows at two different indents
         final Type inner = Type.Builder.build()
                 .tid(REC_TID)
                 .isaPredicate(rec(
@@ -413,13 +414,12 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         final String written = ObjmtronUISerializer.prettyPrint().write(outer);
         LOG.debug("nested type rec => %s", written);
         assertTrue(written.startsWith("[child=>"), String.format("the outer entry rides the opening bracket: %s", written));
-        // the outer rec's own entry sits at depth 1; the nested predicate's entries line up under
-        // their first entry, deeper than the outer's
+        // the outer rec's own entries sit at depth 1; the nested predicate's entries one level in
+        // from them, all at the same column
         assertTrue(written.contains("\n other=>"), String.format("the outer's later entry sits at depth 1: %s", written));
-        assertEquals(written.indexOf("p0=>"),
-                written.indexOf("p1=>") - written.lastIndexOf("\n", written.indexOf("p1=>")) - 1,
-                String.format("the nested type's predicate entries line up under their first: %s", written));
-        assertFalse(written.contains("\n p1=>"), String.format("the nested predicate must not reset to depth 1: %s", written));
+        assertTrue(written.contains("\n  p0=>"), String.format("the predicate breaks one level in: %s", written));
+        assertTrue(written.contains("\n  p4=>"), String.format("and every one of its entries joins it there: %s", written));
+        assertFalse(written.contains("\n p1=>"), String.format("the predicate must not reset to the parent's column: %s", written));
     }
 
     @Test
@@ -442,10 +442,43 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         LOG.debug("diagnostic nested type rec => %s", written);
         assertTrue(written.startsWith("[child=>"), String.format("the outer entry rides the opening bracket: %s", written));
         assertTrue(written.contains("\n other=>"), String.format("a diagnostic nests like any nested poly: %s", written));
-        assertEquals(written.indexOf("p0=>"),
-                written.indexOf("p1=>") - written.lastIndexOf("\n", written.indexOf("p1=>")) - 1,
-                String.format("its nested predicate entries line up under their first: %s", written));
+        assertTrue(written.contains("\n  p0=>"), String.format("its nested predicate breaks one level in: %s", written));
+        assertTrue(written.contains("\n  p4=>"), String.format("and every one of its entries joins it there: %s", written));
+        assertFalse(written.contains("\n p1=>"), String.format("the predicate must not reset to the parent's column: %s", written));
         assertFalse(written.contains("{{"), String.format("a diagnostic carries no renderer markup: %s", written));
+    }
+
+    /**
+     * A NESTED COLLECTION BREAKS ONE LEVEL IN FROM ITS PARENT, not under its own first entry.
+     * The reported shape is the law rec of the int space: {@code ring} holds the ring theory's
+     * laws as a rec whose opening line runs {@code /m/theory/ring_theory::[} before an entry
+     * appears. Hanging that rec's entries under its own first entry measured the column off the
+     * type name, so the first row of the rec began 23 columns right of the {@code add_group} row
+     * beneath it — the same rec laid out two different ways. The block shape anchors a nested
+     * rec on its PARENT's entry column instead, so every law lays out at the same indent and
+     * nesting reads as one column per level.
+     */
+    @Test
+    public void testNestedRecsBreakOneLevelInFromTheEnclosingRec() {
+        final Obj obj = ObjmtronSerializer.parse("[ring=>/m/theory/ring_theory::[add=>/m/inst/plus,mul=>/m/inst/mult,zero=>0,one=>1],"
+                + "add_group=>/m/theory/group_theory::[op=>/m/inst/plus,id=>0,inv=>/m/inst/neg],"
+                + "add_monoid=>/m/theory/monoid_theory::[op=>/m/inst/plus,id=>0]]").apply();
+        final String written = ObjmtronUISerializer.blackWhite().write(obj);
+        LOG.debug("law rec => %s", written);
+        // the enclosing rec keeps the hanging shape: its first entry rides the opening bracket and
+        // every row after it lines up under that first one
+        assertTrue(written.startsWith("[ring=>/m/theory/ring_theory::["),
+                String.format("the enclosing rec carries its first entry: %s", written));
+        assertTrue(written.contains("\n add_group=>/m/theory/group_theory::["),
+                String.format("and its rows line up under it: %s", written));
+        assertTrue(written.contains("\n add_monoid=>/m/theory/monoid_theory::["),
+                String.format("every one of them, not just the second: %s", written));
+        // every nested rec takes the block shape instead, one level in from those rows — which is
+        // the same column for all three, so no law drifts right of another
+        assertTrue(written.contains("\n  add=>"), String.format("the nested rec breaks one level in: %s", written));
+        assertTrue(written.contains("\n  op=>"), String.format("so does the next one: %s", written));
+        assertFalse(written.contains("\n   "), String.format("no entry sits three columns in: %s", written));
+        assertFalse(written.contains("::[add=>"), String.format("no nested rec trails its first entry after its opening bracket: %s", written));
     }
 
     @Test

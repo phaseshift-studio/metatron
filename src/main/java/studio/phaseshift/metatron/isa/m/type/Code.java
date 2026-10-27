@@ -165,6 +165,12 @@ public interface Code extends Call {
         return MCode.of(insts);
     }
 
+    /*
+     * WHAT REMAINS HERE, and why: NOTHING. Every code::T operation carries a LAWS-ONLY row (plus, compose) or
+     * attributes no row at all (the two `as` conversions), so all four moved to mInsts.codes(), docs and laws
+     * colocated with the bodies they describe. The class stays only because mInstSet streams it
+     * (`Code.CodeType.insts()`); dropping that stream and this class is a follow-up.
+     */
     public static class CodeType {
 
         private CodeType() {
@@ -172,31 +178,8 @@ public interface Code extends Call {
         }
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(CODE_TID).rng(Tokens.LST_TID), lst(LST_TYPE), (lhs, _) -> lst(lhs.asCode().codeValue().stream().map(Obj::<Obj>as).toList()).c(c -> c.mult(lhs.c()))),
-                    instC(AS_INST_TID.dom(CODE_TID).rng(Tokens.INST_TID), lst(INST_TYPE), (lhs, _) -> lhs.asCode().codeValue().size() == 1 ? lhs.asCode().codeValue().getFirst() : instC(M_ISA_INST_TID.dom(lhs.asCode().insts().getFirst().dom().tid()).rng(lhs.asCode().insts().getLast().rng().tid()), lst(), lhs.asCode()).c(lhs.c())),
-                    // the ring's "·" — serial composition: lhs ∘ rhs = lhs's insts followed by rhs's insts (a then b)
-                    instC(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID), lst(CODE_TYPE), (lhs, inst) -> {
-                        final List<Inst> insts = new ArrayList<>();
-                        insts.addAll(lhs.asCode().codeValue());
-                        insts.addAll(inst.arg(0).asCode().codeValue());
-                        return MCode.code(insts);
-                    }),
-                    instC(PLUS_INST_TID.dom(CODE_TID).rng(CODE_TID), lst(CODE_TYPE), (lhs, inst) -> {
-                        if (lhs.equals(inst.arg(0)))
-                            return lhs.c(c -> c.plus(inst.arg(0).c()));
-                        else {
-                            List<Obj> branches = new ArrayList<>();
-                            if (lhs.asCode().insts().size() == 1 && lhs.asCode().insts().getFirst().tid().basePath().equals(BRANCH_INST_TID)) {
-                                branches.addAll(lhs.asCode().insts().getFirst().args().elements().toList());
-                            }
-                            if (inst.arg(0).asCode().insts().size() == 1 && inst.arg(0).asCode().insts().getFirst().tid().basePath().equals(BRANCH_INST_TID)) {
-                                branches.addAll(inst.arg(0).asCode().insts().getFirst().args().elements().toList());
-                            }
-                            return branch_(branches.toArray(new Obj[0])).as();
-                        }
-                    })));
-
+            // every code::T operation now lives in mInsts.codes(): nothing is left to declare here
+            return new LinkedHashSet<>();
         }
 
     }

@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -461,23 +461,34 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
                         <pre><code>instset::[pattern=&gt;/m/vec/#,
-          q=&gt;[docq::[pattern=&gt;docq,
-                     pre_read=&gt;inst(uri::T){&lt;j&gt;},
-                     pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/lawq::[
+            pattern=&gt;lawq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
           const=&gt;[imaginary::NaN@/m/vec/imaginary],
-          inst=&gt;[sqrt?real&lt;=real(){&lt;j&gt;},
-                 dot?#&lt;=vec(vec::T){&lt;j&gt;}],
-          type=&gt;[rec::T[?[obj=&gt;&lt;#&gt;::T,
-                          embed=&gt;lst::T,
-                          {?}meta=&gt;rec::T]]@/m/vec/embedding,
-                 lst::T@/m/vec/vec,
-                 lst::T[?[real::T,real::T]]@/m/math/cmplx,
-                 lst::T@/m/vec/mtrx,
-                 space::T[?[host=&gt;uri::T,
-                            driver=&gt;uri::T,
-                            config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/vec/space/vecspace]]@/m/vec</code></pre>
+          inst=&gt;[
+           sqrt?real&lt;=real(){&lt;j&gt;},
+           dot?#&lt;=vec(vec::T){&lt;j&gt;}],
+          type=&gt;[
+           rec::T[?[
+            obj=&gt;&lt;#&gt;::T,
+            embed=&gt;lst::T,
+            {?}meta=&gt;rec::T]]@/m/vec/embedding,
+           lst::T@/m/vec/vec,
+           lst::T[?[real::T,real::T]]@/m/math/cmplx,
+           lst::T@/m/vec/mtrx,
+           space::T[?[
+            host=&gt;uri::T,
+            driver=&gt;uri::T,
+            config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/vec/space/vecspace]]@/m/vec</code></pre>
                     </div>
                 </div>
             </div>

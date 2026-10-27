@@ -348,9 +348,16 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
     final class UriType {
         private final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
+        /*
+         * WHAT REMAINS HERE, and why: an entry whose law-table row carries a RELATION the builder cannot express yet,
+         * or whose body reads a member only this class has. The `as` conversions declare an opposing edge (a pair,
+         * and the direction is the claim) -- their law rows stay in mInstSetLawTable -- and the has/split bodies read
+         * this type's private REGEX_CACHE, a field of UriType that cannot travel to mInsts. Everything the builder
+         * CAN say lives in mInsts.uris(); these retire as InstBuilder grows `inverse` and the cache moves to a
+         * shared helper.
+         */
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    //instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                     instC(AS_INST_TID.dom(URI_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Integer.parseInt(lhs.uriValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)),
                     instC(AS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(URI_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.uriValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
@@ -364,105 +371,13 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
                                 AUTHORITY, lhsUri.authority() == null ? noobj() : uri(lhsUri.authority()),
                                 PATH, lhsUri.path().isEmpty() ? noobj() : lst(lhsUri.path().stream().map(MUri::uri)),
                                 COEFF, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
-                                QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), Helper.parseQ(kv.getValue()))))).c(c -> c.mult(lhs.c()));
+                                QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), Helper.parseQ(kv.getValue())))).c(c -> c.mult(lhs.c())));
                     }),
-                    instC(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.uriValue().path(lhs.asUri().uriValue().path().reversed()))),
                     docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.uriValue().toString()) ? lhs : noobj()),
                             "a uri to check", "whether the domain matches arg regex", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
                     docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> (lhs.uriValue().test(inst.arg(0).uriValue()) || CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).uriValue().toString(), CommonUtil::guardPattern), lhs.uriValue().toString())) ? lhs : noobj()),
                             "a uri to check", "whether the domain matches arg regex", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
-                    instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(CommonUtil.splitSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).uriValue().toString(), CommonUtil::guardPattern), lhs.uriValue().toString())).map(MUri::uri))),
-                    instC(MERGE_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj")))),
-                   /* instC(RSHIFT_INST_TID.dom(URI_TID).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) ->
-                            objs(inst.arg(0).stream().map(u -> {
-                                if (u.isInt()) {
-                                    return lhs.uriValue().segmentLength() > u.intValue().intValue() ? uri(lhs.uriValue().asRelativeNode().segments().get(u.intValue().intValue())) : noobj();
-                                } else {
-                                    final String component = u.uriValue().toString();
-                                    final Object result = switch (component) {
-                                        case SCHEME -> lhs.uriValue().scheme();
-                                        case HOST -> lhs.uriValue().host();
-                                        case PORT -> lhs.uriValue().port();
-                                        case AUTHORITY -> lhs.uriValue().authority();
-                                        case PATH -> lhs.uriValue().pathString();
-                                        case C -> lst(jnt(lhs.uriValue().c().min()), jnt(lhs.uriValue().c().max()));
-                                        case QSTRING -> lhs.uriValue().qMap().entrySet().stream()
-                                                .map(kv -> rel(MObjFactory.single().toObjFromString(kv.getKey()), MObjFactory.single().toObjFromString(kv.getValue())))
-                                                .collect(new CommonUtil.RecCollector());
-                                        default -> noobj();
-                                    };
-                                    return result instanceof Obj ? (Obj) result :
-                                            (null == result || Integer.valueOf(-1) == result ? noobj() :
-                                                    (result instanceof Integer ? jnt((Integer) result) :
-                                                            uri(result.toString())));
-                                }
-                            }))),*/
-                    //  instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().pretract(inst.arg(0).intValue().intValue()))),
-                    instC(NAME_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> uri(lhs.uriValue().name())),
-                    instC(MINUS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().toString().replace(inst.arg(0).uriValue().toString(), ""))),
-                    docWrap(instC(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.asUri().plus(inst.arg(0).asUri())), "a uri", "the branch union", Map.of(jnt(0), "the rhs uri"), "a branch function \\(f(x, y) \\nearrow x \\sqcup y\\): the union of the lhs and rhs uri paths"),
-                    docWrap(instC(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.asUri().mult(inst.arg(0).asUri())), "a uri", "the path extension", Map.of(jnt(0), "the rhs uri"), "a product function \\(f(x, y) \\nearrow xy\\): concatenates the rhs uri path onto the lhs uri path"),
-                    docWrap(instC(ONE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asUri().one()), "a uri", "the uri one", Map.of(), "a one function: the uri one (<>)"),
-                    instC(SUM_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()), uri(NOOBJ)),
-                    instC(PROD_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))), uri("")),
-                  /*  instC(URI_SCHEME_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().scheme())),
-                    instC(URI_HOST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().host())),*/
-                    instC(PATH_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().pathString())),
-                    /*   instC(URI_PORT_TID.dom(URI_TID).rng(INT_TID), lst(T(URI_TID)), (lhs, inst) -> jnt(lhs.uriValue().port())),*/
-                    // instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().qValue(inst.arg(0).uriValue().toString(), fURI.class))),
-                    instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> lhs.jvm(lhs.uriValue().q((Map<String, String>) inst.arg(0).asRec().elements().collect(Collectors.toMap(kv -> kv.first().uriValue().toString(), kv -> "" + kv.second().jvm(), (a, b) -> b, LinkedHashMap::new))))),
-                    //instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> uri(lhs.uriValue().q((Map<String, String>) inst.arg(0).asRec().elements().collect(Collectors.toMap(kv -> kv.first().uriValue().toString(), kv -> "" + kv.second().jvm(), (a, b) -> b, LinkedHashMap::new))))),
-                    // instC(Q_INST_TID.dom(URI_TID).rng(REC_TID), lst(), (lhs, inst) -> rec(lhs.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
-                    // TODO  instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(lhs.uriValue().qMap(inst.arg(0).recValue().entrySet().stream().collect(Collectors.toMap(kv -> kv.getKey().uriValue().toString(), kv -> kv.getValue().uriValue().toString(), (a, b) -> b, LinkedHashMap::new))))),
-                    instC(URI_C_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt((Long) lhs.uriValue().c().min()), jnt((Long) lhs.uriValue().c().max()))),
-                    instC(POW_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID)), (lhs, inst) -> {
-                        final int pow = inst.arg(0).intValue().intValue();
-                        if (0 == pow) return lhs.jvm(f(""));
-                        fURI u = null;
-                        for (int i = 0; i < pow; i++) {
-                            u = null == u ? lhs.uriValue() : u.mult(lhs.uriValue());
-                        }
-                        return lhs.jvm(u);
-                    }),
-                    instC(SCHEME_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(), (lhs, inst) -> lhs.uriValue().hasScheme() ? uri(lhs.uriValue().scheme()) : noobj()),
-                    instC(SCHEME_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().scheme(inst.arg(0).uriValue().toString().isEmpty() ? null : inst.arg(0).uriValue().toString()))),
-                    // instC(AUTHORITY_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(), (lhs, inst) -> lhs.uriValue().hasAuthority() ? uri(lhs.uriValue().authority()) : noobj()),
-                    instC(HOST_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(), (lhs, inst) -> lhs.uriValue().hasHost() ? uri(lhs.uriValue().host()) : noobj()),
-                    instC(HOST_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().host(inst.arg(0).uriValue().toString().isEmpty() ? null : inst.arg(0).uriValue().toString()))),
-                    instC(PORT_INST_TID.dom(URI_TID).rng(INT_TID.maybe()), lst(), (lhs, inst) -> lhs.uriValue().hasPort() ? jnt(lhs.uriValue().port()) : noobj()),
-                    instC(PORT_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID).predicate(is_(gte_(jnt(-1))).tryToInst())), (lhs, inst) -> uri(lhs.uriValue().port(inst.arg(0).intValue().intValue()))),
-                    instC(SELECT_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> {
-                        final Uri.Helper.UriProjected projected = Uri.Helper.project(lhs.uriValue(), inst.arg(0).orElse(rec0()));
-                        return uri(fURI.of(
-                                projected.scheme(),
-                                projected.host(),
-                                projected.port(),
-                                projected.path(),
-                                lhs.uriValue().c(),
-                                lhs.uriValue().poly(),
-                                projected.query(),
-                                List.of()
-                        ), lhs.tid(), lhs.vid());
-                    })
-                    /*instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> {
-                        try {
-                            Uri.Helper.UriProjected projected = Uri.Helper.project(lhs.uriValue(), inst.arg(0).orElse(rec0()));
-                            final fURI original = lhs.uriValue();
-                            // STRICT CHECK: For where(), if the projection result differs from origin
-                            // (e.g., something was replaced by 'none' and removed), it means the
-                            // target does not match this specific projected profile exactly.
-                            if (!Objects.equals(original.scheme(), projected.scheme()) ||
-                                    !Objects.equals(original.host(), projected.host()) ||
-                                    original.port() != projected.port() ||
-                                    !Objects.equals(original.path(), projected.path()) ||
-                                    !Objects.equals(original.qMap(), projected.query())) {
-                                return noobj();
-                            }
-                            return lhs;
-                        } catch (ProjectionFailureException e) {
-                            return noobj();
-                        }
-                    })*/
+                    instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(CommonUtil.splitSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).uriValue().toString(), CommonUtil::guardPattern), lhs.uriValue().toString())).map(MUri::uri)))
             ));
         }
 

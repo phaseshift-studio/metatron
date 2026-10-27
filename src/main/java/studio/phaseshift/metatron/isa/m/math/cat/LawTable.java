@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.isa.m.Law;
+import studio.phaseshift.metatron.isa.m.Derivation;
+
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -36,15 +39,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.INV;
+import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.Tokens.OP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.GROUP_THEORY_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.sum_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.furi.q.QCollection.lawOf;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
@@ -155,14 +160,55 @@ public abstract class LawTable {
      * stays declared, int modeling a {@code mult_monoid} and no group — a truncating one-way retraction.
      */
     public final Entry lookup(final fURI instTid) {
-        final Entry declared = this.table.get(instTid);
-        if (null == declared)
+        final Entry declared = this.row(instTid);
+        if (null == declared) {
+            // NO ROW: the instruction may DECLARE its laws itself (InstBuilder -> ?lawq). Declared at the inst,
+            // stored beside it, and answered here -- the table is the fallback, not the source.
+            final Obj fromLawq = lawOf(instTid);
+            if (fromLawq.isRec() && fromLawq.asRec().has(uri(LAW)))
+                // the LAWS are declared at the instruction; the INVERSE is still the contract carrier's algebra
+                return this.computed(instTid, new Entry(fromLawq.asRec().at(uri(LAW)).asLst(), null, null));
             return null;
+        }
         // a derivation is reading the carrier's law block, which may itself consult this table: answer the
         // declaration while that read is in flight (never cache it), so the read cannot re-enter here
         if (DERIVING.get())
             return declared;
         return this.resolved.computeIfAbsent(instTid, tid -> this.computed(tid, declared));
+    }
+
+    /**
+     * THE ROW OF AN ADDRESS — its own when the table declares one, else the family's UNIVERSAL row ({@code #} or a
+     * generic dom) when it declares that: {@code order?dom=A{*}} answers for every carrier, which is what a fold
+     * over everything must do. Without this the lift served no law for {@code order} at all -- the universal row
+     * existed and was never consulted.
+     */
+    private Entry row(final fURI instTid) {
+        if (null == instTid)
+            return null;
+        final Entry exact = this.table.get(instTid);
+        if (null != exact)
+            return exact;
+        if (null == instTid.basePath())
+            return null;
+        for (final Map.Entry<fURI, Entry> e : this.table.entrySet())
+            if (e.getKey().basePath().equals(instTid.basePath()) && isUniversal(e.getKey().dom()))
+                return e.getValue();
+        return null;
+    }
+
+    /**
+     * The owner of a PROCESS row: the table of the instset that owns the row's CARRIER (the n-tid's dom), because
+     * a row's key is an op address but its subject is a type — {@code plus?dom=/m/math/cmplx} belongs to the math
+     * table although {@code plus} lives under {@code /m/inst}. The op's own longest-prefix owner can never find it,
+     * which is why the math table's cmplx rows were unreachable. Falls back to the op's owner when the carrier
+     * names no instset (a universal row's {@code #}/generic dom).
+     */
+    private static LawTable ownerOfRow(final fURI instTid) {
+        if (null == instTid)
+            return null;
+        final LawTable carrier = null == instTid.dom() ? null : ownerOf(instTid.dom().basePath());
+        return null != carrier ? carrier : ownerOf(instTid);
     }
 
     /**
@@ -268,7 +314,10 @@ public abstract class LawTable {
         for (final fURI key : this.table.keySet())
             if (sameCarrier(key, tid) && key.basePath().equals(op.basePath()))
                 return key;
-        return null;
+        // the sibling may declare its laws at its own registration (?lawq) and have no row here: name its address
+        // from the op with this row's endpoints, which is the address the declaration was stored under
+        return null == tid.dom() || null == tid.rng() || null == op.basePath() ?
+                null : op.basePath().dom(tid.dom()).rng(tid.rng());
     }
 
     /**
@@ -357,7 +406,8 @@ public abstract class LawTable {
      * nat included. It answers only when the operand's algebra states no inverse of its own.
      */
     public static Declared declared(final fURI op, final Type operand) {
-        final LawTable owner = ownerOf(op);
+        final LawTable carrierOwner = null == operand || null == operand.vid() ? null : ownerOf(operand.vid());
+        final LawTable owner = null != carrierOwner ? carrierOwner : ownerOf(op);
         if (null == owner || null == op.basePath())
             return null;
         final fURI base = op.basePath();
@@ -367,9 +417,19 @@ public abstract class LawTable {
             return owner.exact(base, operand);         // (the legacy exact read, never cached, cannot re-enter)
         final Inst contract = deduce(base, operand);   // which implementation this type lands on
         if (null != contract) {
-            final Entry row = owner.table.get(contract.tid());
+            // A ROW IS OWNED BY THE INTSET OF ITS CARRIER, not of the queried type: nat borrows int's plus, and the
+            // row `plus?dom=/m/int` lives in int's table even though the operands are nats
+            final LawTable rowOwner = null == contract.tid().dom() ? null : ownerOf(contract.tid().dom().basePath());
+            final LawTable table = null != rowOwner ? rowOwner : owner;
+            final Entry row = table.row(contract.tid());
             if (null != row)
-                return new Declared(contract.tid(), owner.algebraic(contract.tid(), row, operand));
+                return new Declared(contract.tid(), table.algebraic(contract.tid(), row, operand));
+            // NO ROW: the instruction declares its own laws beside it (?lawq, via InstBuilder). The LAWS are the
+            // instruction's, the INVERSE is still the operand's algebra -- so the pair is derived, not declared.
+            final Obj fromLawq = lawOf(contract.tid());
+            if (fromLawq.isRec() && fromLawq.asRec().has(uri(LAW)))
+                return new Declared(contract.tid(), table.algebraic(contract.tid(),
+                        new Entry(fromLawq.asRec().at(uri(LAW)).asLst(), null, null), operand));
         }
         return owner.exact(base, operand);             // the op is not in the registry: the exact row, unchanged
     }
@@ -639,16 +699,7 @@ public abstract class LawTable {
     public static Entry lawsOf(final fURI instTid) {
         if (null == instTid)
             return null;
-        final String vid = instTid.basePath().toString();
-        LawTable owner = null;
-        int best = -1;
-        for (final Map.Entry<fURI, LawTable> e : TABLES.entrySet()) {
-            final String prefix = e.getKey().toString();
-            if ((vid.equals(prefix) || vid.startsWith(prefix + "/")) && prefix.length() > best) {
-                owner = e.getValue();
-                best = prefix.length();
-            }
-        }
+        final LawTable owner = ownerOfRow(instTid);
         return null == owner ? null : owner.lookup(instTid);
     }
 
@@ -667,8 +718,15 @@ public abstract class LawTable {
     public final Rec typeLaws(final Type type) {
         // keyed by the VID: the block is about the type, and two refinements of one base (nat, or a pair of
         // int-refinements) share a tid, so a tid-keyed cache would answer one's algebra for the other
-        return null == type.vid() ? rec0() :
-                this.typeLawsCache.computeIfAbsent(type.vid().basePath(), k -> this.typeLawsUncached(type));
+        if (null == type.vid())
+            return rec0();
+        return this.typeLawsCache.computeIfAbsent(type.vid().basePath(), k -> {
+            // THE DECLARATION BESIDE THE TYPE WINS: an algebra written through `?lawq` (the builder's job, at
+            // registration, before any lift) is the source; the in-code table is the fallback until every type
+            // declares its own. Read on cache miss only -- a declaration is written before the first lift.
+            final Obj declared = lawOf(type);
+            return declared.isRec() && !declared.asRec().isEmpty() ? declared.asRec() : this.typeLawsUncached(type);
+        });
     }
 
     /**
