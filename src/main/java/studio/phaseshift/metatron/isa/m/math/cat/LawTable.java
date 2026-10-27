@@ -81,6 +81,23 @@ public abstract class LawTable {
     /**
      * A process-law row: the declared laws, the operation's inverse (null when none), and its derivation
      * (null when primitive — not definable as a composition of other instructions).
+     * <p>
+     * THE INVERSE IS DIRECTIONAL, AND IT HAS THREE SOURCES in this order:
+     * <ol>
+     *   <li><b>the carrier's algebra</b> — a group instance plus the operation's defining equation
+     *       ({@code div ≡ mult ∘ inv}) gives {@code mult↔div}, and an {@link Law#involution} is its own inverse.
+     *       This is the only source that can answer for an ENDOMORPHISM, where the category graph has no partner
+     *       to offer: {@code position} short-circuits every endo to {@code retract}, and reads {@code coupling}
+     *       only when dom and rng differ — so two endos over one carrier are indistinguishable to it;</li>
+     *   <li><b>the graph's {@code coupling}</b> — an edge running back over the same two objects. A CANDIDATE pair,
+     *       never a decision: the relation is symmetric, so the graph can propose a partner but cannot choose the
+     *       direction, and the direction is the whole content of the claim ({@code int→str→int} holds,
+     *       {@code str→int→str} does not: "007" becomes 7 becomes "7");</li>
+     *   <li><b>the declared field</b> — the residue neither of the above answers, e.g. int's one-way
+     *       {@code mult→div} (truncating division retracts multiplication, sound in one direction only).</li>
+     * </ol>
+     * {@code inverse(f) = g} claims {@code f·g = ε} only — f a section, g its retraction — and never
+     * {@code g·f = ε}, which is why a lossy conversion may declare one direction and answer null for the other.
      */
     public record Entry(Lst laws, fURI inverse, Derivation derivation) {
     }
@@ -178,6 +195,10 @@ public abstract class LawTable {
      * </ul>
      * Only a group is read: a {@code field} names {@code mul}/{@code inv} too, but {@code 0} has no {@code 1/0}, so a
      * field's multiplicative side is no group and licenses no cancellation of its own.
+     * <p>
+     * This is SOURCE 1 of the three {@link Entry} names — the algebra, and the only one that can answer for an
+     * endomorphism. Source 2 (the graph's symmetric {@code coupling}, which proposes a partner but not a direction)
+     * and source 3 (the declared field) are noted there.
      */
     private fURI derivedInverse(final fURI tid, final Entry entry, final Type algebra) {
         if (null == tid)

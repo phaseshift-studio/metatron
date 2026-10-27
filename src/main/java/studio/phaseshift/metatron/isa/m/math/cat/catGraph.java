@@ -297,9 +297,10 @@ public class catGraph {
         if (inst.isNoObj())
             return lst();
         final boolean endo = object(inst.dom()).equals(object(inst.rng()));
-        final LawTable.Entry entry = mInstSetLawTable.INSTANCE.lookup(inst.tid());
-        final boolean iso = null != entry && entry.laws().lstValue().stream()
-                .anyMatch(l -> l.uriValue().name().equals(Law.involution.name()));
+        // the invertible case is the COMPUTED inverse being the edge itself: the law table answers ("an involution
+        // is its own inverse"), the graph reads. Stated once, in LawTable#derivedInverse -- not twice.
+        final LawTable.Entry entry = LawTable.lawsOf(inst.tid());
+        final boolean iso = null != entry && null != entry.inverse() && entry.inverse().equals(inst.tid());
         final List<Obj> labels = new ArrayList<>();
         if (endo)
             labels.add(uri(MorphClass.endo.name()));

@@ -77,21 +77,21 @@ mtron> int::T.as(object::T)
 mtron> int::T.as(object::T).morphed_to()
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!λ(#{*}::T){<j>},
-              trgt=>!λ(#{*}::T){<j>},
-              analysis=>!λ?#<=#(#{*}::T){<j>},
+              src=>!λint(){<j>},
+              trgt=>!λbool(){<j>},
+              analysis=>!λ(){<j>},
               obj=>as?bool<=int(bool::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!λ(#{*}::T){<j>},
-              trgt=>!λ(#{*}::T){<j>},
-              analysis=>!λ?#<=#(#{*}::T){<j>},
+              src=>!λint(){<j>},
+              trgt=>!λbytes(){<j>},
+              analysis=>!λ(){<j>},
               obj=>as?bytes<=int(bytes::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
-              src=>!λ(#{*}::T){<j>},
-              trgt=>!λ(#{*}::T){<j>},
-              analysis=>!λ?#<=#(#{*}::T){<j>},
+              src=>!λint(){<j>},
+              trgt=>!λreal(){<j>},
+              analysis=>!λ(){<j>},
               obj=>as?real<=int(real::T){<j>}]
 ==>morphism::[name=>as,
               form=>mapper,
@@ -125,9 +125,9 @@ mtron> |plus?int<=int(int::T).as(morphism::T)
     name=>plus,
     form=>mapper,
     class=>[endo],
-    src=>!λ(#{*}::T){<j>},
-    trgt=>!λ(#{*}::T){<j>},
-    analysis=>!λ?#<=#(#{*}::T){<j>},
+    src=>!λint(){<j>},
+    trgt=>!λint(){<j>},
+    analysis=>!λ(){<j>},
     obj=>plus?int<=int(int::T),
     ...(1 more)]
 ```
@@ -194,7 +194,7 @@ Composing them round-trips — from an object to its edges and back, or from an 
 | `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                                                                                                                                                                                                                                                                                                                                                                                |
 | `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions                                                                                                                                                                                                                                                                                                                                         |
 | `position`  | the edge's place among its siblings (a subset of the six kinds below)                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ (only when a declared inverse exists)                                                                                                                                                                                                                                                                                                                                                                               |
+| `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ — computed, never declared wherever the carrier's algebra states it: an `involution` is its own inverse, and a **group** `(op, id, inv)` makes `op`'s inverse the instruction *defined* as `op` applied to its inverted argument (`div ≡ mult ∘ inv`, so real's `mult`/`div` pair follows from its `mult_group`). A carrier whose algebra states none falls back to the declaration — int's `mult`→`div`, a truncating one-way retraction (int models a `mult_monoid`, no group), and int's `div` then has no inverse at all |
 | `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`); a keyed fold (`group`) recombines pointwise through a chain — `sum`, then a per-key fold — that no single edge names, so it has none here |
 
 ### the six edge kinds
@@ -249,6 +249,7 @@ mtron> |plus?int<=int(int::T).as(morphism::T)>>law
 | `commutative`        | $a \cdot b = b \cdot a$                                                      |
 | `left_distributive`  | $a \cdot (b + c) = a \cdot b + a \cdot c$                                    |
 | `right_distributive` | $(a + b) \cdot c = a \cdot c + b \cdot c$                                    |
+| `semi_right_distributive` | $(a + b) \cdot c = (a \cdot c + b \cdot c) \cdot c$ — the reducer's distributivity: the two branches reduce to one object, so the law carries the re-application (Thm 19), which is what makes a shard sound rather than merely partitioned; a reducer does **not** obey `right_distributive` (Lemma 1 — $\langle\mathcal{F}_r, +, \cdot\rangle$ is a near-ring, left distributive only) |
 | `monoidic`           | an associative binary op with an identity                                    |
 | `magmadic`           | a bare binary op — a magma, as `monoidic` is a monoid — no identity demanded |
 | `unit`               | an identity element — $e \cdot x = x \cdot e = x$                            |
@@ -553,17 +554,17 @@ and computes its cut/span/where without consulting the code below; the descent (
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
 ==>[abstraction::[obj=>[morphism[start]::[name=>start,
                                           form=>initial,
-                                          src=>!λ(#{*}::T){<j>},
-                                          trgt=>!λ(#{*}::T){<j>},
-                                          analysis=>!λ?#<=#(#{*}::T){<j>},
+                                          src=>!λ#(){<j>},
+                                          trgt=>!λ#(){<j>},
+                                          analysis=>!λ(){<j>},
                                           obj=>start(5)],
                         morphism[plus?rng=int&dom=int]::[
                          name=>plus,
                          form=>mapper,
                          class=>[endo],
-                         src=>!λ(#{*}::T){<j>},
-                         trgt=>!λ(#{*}::T){<j>},
-                         analysis=>!λ?#<=#(#{*}::T){<j>},
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
                          obj=>plus(0),
                          ...(1 more)],
                         morphism[neg?rng=int&dom=int]::[
@@ -576,9 +577,9 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
                                  retraction,
                                  mono,
                                  epi],
-                         src=>!λ(#{*}::T){<j>},
-                         trgt=>!λ(#{*}::T){<j>},
-                         analysis=>!λ?#<=#(#{*}::T){<j>},
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
                          obj=>neg(),
                          ...(1 more)],
                         morphism[neg?rng=int&dom=int]::[

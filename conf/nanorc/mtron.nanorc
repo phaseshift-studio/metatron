@@ -80,7 +80,7 @@ color magenta "noobj"
 ### type
 color magenta "::T"
 ### @vid
-color yellow "@<(/|[a-zA-Z0-9]|\.|#|\+| |:|-|_|~|\?|\^)+>" "@(/|[a-zA-Z0-9]|:|#|\+|-|_|~|\?|\^)+"
+color yellow "@<(/|[a-zA-Z0-9]|\.|#|\+| |:|-|_|~|\?|\^)+>" "@(/|[a-zA-Z0-9]|:|#|\+|-|_|~|\?|\^)+" "λ"
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"

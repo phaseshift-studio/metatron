@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -503,7 +503,7 @@ mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.7M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  552G ...',
+    '/dev/nvme1n1p2         916G  551G ...',
     'tmpfs                   31G   35M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
@@ -511,15 +511,15 @@ mtron&gt; bash('df -h')
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
-==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/1061472
+==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]@/sys/fail/1378390
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 25ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 16ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 25ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 16ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder&lt;228&gt;]]@/sys/fail/1063962
+    [ProcBuilder&lt;228&gt;]]@/sys/fail/1381734
 </code></pre>
 <h4>batch</h4>
 <p>A rec of commands maps to a rec of results, indexed by command; a lst of commands takes
@@ -629,9 +629,9 @@ first.</p>
 <p>Each guard fails before the process spawns, and the failure names the pattern that
 fired:</p>
 <pre><code class="language-mtron">mtron&gt; bash?reject=['\brm\b'](&quot;rm -rf /tmp/never-created-here&quot;)  [-- the policy, not the file system, stops it --]
-==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/1225106
+==&gt;fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/1573836
 mtron&gt; bash?allow=['ls'](&quot;whoami&quot;)                                [-- allow is whole-command: `whoami` is not `ls` --]
-==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/1227937
+==&gt;fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/1578551
 </code></pre>
 <p>The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:</p>
@@ -656,13 +656,13 @@ no input to take, so it is shown rather than run:</p>
 mtron&gt; */sys/thread/+.count()
 ==&gt;57
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;gB::11.3671,
-    free_mem_jvm=&gt;gB::4.8638,
+==&gt;[total_mem_jvm=&gt;gB::15.1562,
+    free_mem_jvm=&gt;gB::3.9301,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;gB::6.5032,
+    used_mem_jvm=&gt;gB::11.2261,
     free_jvm=&gt;percent::0,
     free_mach=&gt;percent::0,
-    thread=&gt;[run=&gt;134,stop=&gt;241286]]
+    thread=&gt;[run=&gt;136,stop=&gt;274811]]
 </code></pre>
 <h2>file system space (<code>fsspace::T</code>)</h2>
 <p>An <code>fsspace::T</code> mounts a directory into the metatron graph. A file's uri is
@@ -712,13 +712,13 @@ tag <em>is</em> the predicate validation — and, for <code>application/x-mtron<
 into its structural form. Where in doubt, <code>?docq</code> and <code>.explain()</code> say what an inst
 is doing — the sugar is short precisely because it is legible once:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
-==&gt;fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]@/sys/fail/1272445
+==&gt;fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]@/sys/fail/1654359
 *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
 </code></pre>
 <h3>walking the tree</h3>
 <p>Wildcards are space-side. <code>+</code> is one segment, <code>#</code> is the recursion:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:src/main/java/+/&gt;                  [-- the child of src/main/java --]
-==&gt;mfs:/src/main/java/studio=&gt;mfs:/src/main/java/studio
+==&gt;mfs:src/main/java/studio=&gt;mfs:src/main/java/studio
 mtron&gt; *&lt;mfs:docs/skills/mtron/+/&gt;  [-- this doc's siblings, with their content --]
 ...
 </code></pre>

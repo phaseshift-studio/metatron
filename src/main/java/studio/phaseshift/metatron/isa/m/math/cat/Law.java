@@ -77,6 +77,15 @@ public enum Law {
      */
     right_distributive,
     /**
+     * distributes over {@code +} on the right, with a RE-APPLICATION — {@code (a+b)c = (ac+bc)c}: the reducer's
+     * distributivity, and the law a monoidic fold is allowed to declare. A reducer does NOT obey
+     * {@link #right_distributive}: {@code (a+b)c} merges the branches and reduces once, while {@code ac+bc} yields
+     * two reduced objects (Lemma 1, so {@code ⟨F_r, +, ·⟩} is a near-ring, left distributive only — Thm 18). The
+     * inner re-application is what makes a shard sound rather than merely partitioned: the partials recombine
+     * through the fold (Thm 19), which {@code law_shard} realizes via {@link LawTable#combiner}.
+     */
+    semi_right_distributive,
+    /**
      * a bare binary op — a magma: closure only, neither associativity nor an identity demanded (as {@link #monoidic}
      * is a monoid). {@code mean} is the witness: commutative, but neither associative nor unital
      */

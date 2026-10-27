@@ -241,16 +241,22 @@ public final class mInstSetLawTable extends LawTable {
                 action, pure);
         // no inverse: int div truncates, so x.div(a).mult(a) is not x (5.div(2).mult(2) is 4); mult's inverse is div
         entry(DIV_INST_TID.dom(INT_TID).rng(INT_TID), null, action, pure);
-        entry(NEG_INST_TID.dom(INT_TID).rng(INT_TID), NEG_INST_TID.dom(INT_TID).rng(INT_TID), involution, pure);
+        entry(NEG_INST_TID.dom(INT_TID).rng(INT_TID), null, involution, pure);
         entry(ZERO_INST_TID.dom(INT_TID).rng(INT_TID), null, absorbing, idempotent, pure);
         entry(ONE_INST_TID.dom(INT_TID).rng(INT_TID), null, idempotent, pure);
-        entry(GT_INST_TID.dom(INT_TID).rng(BOOL_TID), null, right_distributive, poset, pure);
-        entry(GTE_INST_TID.dom(INT_TID).rng(BOOL_TID), null, right_distributive, poset, pure);
-        entry(LT_INST_TID.dom(INT_TID).rng(BOOL_TID), null, right_distributive, poset, pure);
-        entry(LTE_INST_TID.dom(INT_TID).rng(BOOL_TID), null, right_distributive, poset, pure);
+        // THE COMPARISONS ARE FILTERS, and a filter applies pointwise: the split axiom plus the apply axiom give
+        // (a+b)c = ac + bc for it, so `right_distributive` here is TRUE in the stream ring -- not an error, and not
+        // a scalar claim ((a+b) > c is not a > c or b > c). It is commented out because no DECLARED theory licenses
+        // it yet, and an axiom-driven table would prune it as unlicensed; do not delete it for that reason.
+        // Lemma 1 denies the law for REDUCERS, where Thm 19 gives the semi-right form (a+b)c = (ac+bc)c -- so the
+        // sum/prod rows below are the ones that need relabeling (semi_right_distributive), not these.
+        entry(GT_INST_TID.dom(INT_TID).rng(BOOL_TID), null, /* right_distributive, */ poset, pure);
+        entry(GTE_INST_TID.dom(INT_TID).rng(BOOL_TID), null, /* right_distributive, */ poset, pure);
+        entry(LT_INST_TID.dom(INT_TID).rng(BOOL_TID), null, /* right_distributive, */ poset, pure);
+        entry(LTE_INST_TID.dom(INT_TID).rng(BOOL_TID), null, /* right_distributive, */ poset, pure);
         entry(MEAN_INST_TID.dom(INT_TID.maybeSome()).rng(REAL_TID), null, magmadic, commutative, pure);
-        entry(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), null, monoidic, commutative, right_distributive, pure);
-        entry(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), null, monoidic, commutative, right_distributive, pure);
+        entry(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), null, monoidic, commutative, semi_right_distributive, pure);
+        entry(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), null, monoidic, commutative, semi_right_distributive, pure);
     }
 
     private void loadReal() {
@@ -265,15 +271,15 @@ public final class mInstSetLawTable extends LawTable {
         entry(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), null,
                 new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())),
                 right_distributive, action, pure);
-        entry(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID), NEG_INST_TID.dom(REAL_TID).rng(REAL_TID), involution, pure);
-        entry(INV_INST_TID.dom(REAL_TID).rng(REAL_TID), INV_INST_TID.dom(REAL_TID).rng(REAL_TID), involution, pure);
-        entry(GT_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, right_distributive, poset, pure);
-        entry(GTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, right_distributive, poset, pure);
-        entry(LT_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, right_distributive, poset, pure);
-        entry(LTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, right_distributive, poset, pure);
+        entry(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID), null, involution, pure);
+        entry(INV_INST_TID.dom(REAL_TID).rng(REAL_TID), null, involution, pure);
+        entry(GT_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, /* right_distributive, */ poset, pure);
+        entry(GTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, /* right_distributive, */ poset, pure);
+        entry(LT_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, /* right_distributive, */ poset, pure);
+        entry(LTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), null, /* right_distributive, */ poset, pure);
         entry(MEAN_INST_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), null, magmadic, commutative, pure);
-        entry(SUM_INST_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), null, monoidic, commutative, right_distributive, pure);
-        entry(PROD_INST_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), null, monoidic, commutative, right_distributive, pure);
+        entry(SUM_INST_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), null, monoidic, commutative, semi_right_distributive, pure);
+        entry(PROD_INST_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), null, monoidic, commutative, semi_right_distributive, pure);
     }
 
     private void loadStr() {
@@ -282,7 +288,7 @@ public final class mInstSetLawTable extends LawTable {
         entry(AS_INST_TID.dom(STR_TID).rng(INT_TID), AS_INST_TID.dom(INT_TID).rng(STR_TID), pure);
         entry(AS_INST_TID.dom(STR_TID).rng(REAL_TID), AS_INST_TID.dom(REAL_TID).rng(STR_TID), pure);
         entry(AS_INST_TID.dom(STR_TID).rng(URI_TID), AS_INST_TID.dom(URI_TID).rng(STR_TID), pure);
-        entry(REVERSE_INST_TID.dom(STR_TID).rng(STR_TID), REVERSE_INST_TID.dom(STR_TID).rng(STR_TID), involution, pure);
+        entry(REVERSE_INST_TID.dom(STR_TID).rng(STR_TID), null, involution, pure);
         entry(ZERO_INST_TID.dom(STR_TID).rng(STR_TID), null, unit, idempotent, pure);
         entry(SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), pure);
         entry(MERGE_INST_TID.dom(STR_TID.maybeSome()).rng(STR_TID), SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), monoidic, pure);
@@ -300,7 +306,7 @@ public final class mInstSetLawTable extends LawTable {
         entry(AS_INST_TID.dom(BOOL_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(BOOL_TID), pure);
         entry(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID), null, commutative, monoidic, idempotent, pure);
         entry(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID), null, commutative, monoidic, idempotent, pure);
-        entry(NOT_INST_TID.dom(BOOL_TID).rng(BOOL_TID), NOT_INST_TID.dom(BOOL_TID).rng(BOOL_TID), involution, pure);
+        entry(NOT_INST_TID.dom(BOOL_TID).rng(BOOL_TID), null, involution, pure);
     }
 
     private void loadBytes() {
@@ -312,7 +318,7 @@ public final class mInstSetLawTable extends LawTable {
     private void loadUri() {
         entry(AS_INST_TID.dom(URI_TID).rng(STR_TID), AS_INST_TID.dom(STR_TID).rng(URI_TID), pure);
         entry(AS_INST_TID.dom(URI_TID).rng(REC_TID), AS_INST_TID.dom(REC_TID).rng(URI_TID), pure);
-        entry(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), involution, pure);
+        entry(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), null, involution, pure);
         entry(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), null, commutative, pure);
         entry(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), null, monoidic, pure);
         entry(SUM_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), null, monoidic, pure);
@@ -321,7 +327,7 @@ public final class mInstSetLawTable extends LawTable {
 
     private void loadLst() {
         entry(AS_INST_TID.dom(LST_TID).rng(REC_TID), AS_INST_TID.dom(REC_TID).rng(LST_TID), pure);
-        entry(REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), involution, pure);
+        entry(REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), null, involution, pure);
         entry(ZERO_INST_TID.dom(LST_TID).rng(LST_TID), null, unit, idempotent, pure);
         entry(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), null, monoidic, pure);
         entry(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), null, monoidic, pure);
@@ -334,7 +340,7 @@ public final class mInstSetLawTable extends LawTable {
         entry(AS_INST_TID.dom(REC_TID).rng(LST_TID), AS_INST_TID.dom(LST_TID).rng(REC_TID), pure);
         entry(AS_INST_TID.dom(REC_TID).rng(URI_TID), AS_INST_TID.dom(URI_TID).rng(REC_TID), pure);
         entry(ZERO_INST_TID.dom(REC_TID).rng(REC_TID), null, unit, idempotent, pure);
-        entry(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), involution, pure);
+        entry(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), null, involution, pure);
         entry(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), null, monoidic, pure);
         entry(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), null, monoidic, pure);
         // the deep merge's fold: commutative because a lst is an atom of the merge -- colliding values, lsts included,
@@ -350,7 +356,7 @@ public final class mInstSetLawTable extends LawTable {
         // the additive normal form (n-ary branch): commutative, associative
         entry(BRANCH_INST_TID.dom(CODE_TID).rng(CODE_TID), null, commutative, monoidic, pure);
         // the additive inverse (coeff −1): self-inverse
-        entry(NEG_INST_TID.dom(CODE_TID).rng(CODE_TID), NEG_INST_TID.dom(CODE_TID).rng(CODE_TID), involution, pure);
+        entry(NEG_INST_TID.dom(CODE_TID).rng(CODE_TID), null, involution, pure);
         // zero = end/noobj: the additive identity, absorbing in compose
         entry(END_INST_TID.dom(CODE_TID).rng(CODE_TID), null, unit, absorbing, pure);
         // one = id: the multiplicative identity

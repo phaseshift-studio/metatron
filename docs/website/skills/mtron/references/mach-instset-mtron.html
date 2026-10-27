@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -726,6 +726,31 @@ the member <code>localhost</code> already holds.</p>
 </table>
 <p>One type, <strong>two honest states</strong>: an <code>origin</code> alone is <em>known, not reachable from here</em> — the form a peer reference
 takes after crossing a wire; an origin with a <code>transport</code> is reachable.</p>
+<h4>prefix — what you call a peer</h4>
+<p>A fourth field, and the only one that is a <strong>name</strong> rather than an address: <code>prefix</code> is
+<code>&lt;label&gt; =&gt; &lt;full origin&gt;</code> (<code>ginger =&gt; ws://ginger.local:8555</code>). It answers a different question from the other three —
+<code>roster</code> is what the system <em>knows</em>, <code>peer</code> is what this machine has <em>dialed</em>, <code>listener</code> is what it <em>answers on</em>, and
+<code>prefix</code> is what you <em>call</em> it.</p>
+<pre><code class="language-mtron">&lt;/network/prefix/ginger&gt; -&gt; &lt;ws://ginger.local:8555&gt;;   [-- bind: the name --]
+//ginger/mtron?name=marko                               [-- = ws://ginger.local:8555/mtron?name=marko --]
+&lt;/network/prefix&gt; -&gt; noobj                              [-- unbind every name at once --]
+</code></pre>
+<p><strong>The spelling is the addressed slot</strong>: <code>//name/a</code> — a host with <strong>no port and no scheme</strong>. An explicit port is taken
+literally (<code>//ginger:8555/a</code> always means that host and port), because <em>explicit always beats named</em>, and a real scheme
+is never rewritten (<code>loop://self</code> already says which transport it means). The binding is read at the <strong>root</strong>, so no
+frame can change what <code>//ginger</code> denotes; an unbound name is answered as written and fails closed, so no name resolves
+to a discovered peer merely because one happens to answer.</p>
+<p><strong>The dial is not the declaration.</strong> A connection is <em>reach</em> — per frame, retractable, one member per surface — while a
+name is <em>denotation</em>: one listing, at the root, and a <code>pop</code> must not change it. So a name is bound by a write and the
+peer is dialed by a client, one act each:</p>
+<pre><code class="language-mtron">&lt;/network/prefix/ginger&gt; -&gt; &lt;ws://ginger.local:8555&gt;;
+ws_client::[pattern=&gt;&lt;ws://ginger.local:8555/mtron?name=marko&gt;];
+</code></pre>
+<p><strong>Alignment happens once, at the gatekeeper</strong>, in <code>Machine.Helper.align</code>, which asks each component for the slot it
+owns: the instruction set for <strong>scheme</strong> prefixes (<code>math:cos</code> → <code>/m/math/inst/cos</code>) and the network for <strong>authority</strong>
+prefixes (<code>//ginger/a</code> → the origin above). The two slots cannot collide, so the order is unobservable and no precedence
+rule exists. The same door is what the compiler's move-extractor uses, which is why <code>move(&lt;//ginger/a&gt;)</code> ships the tail
+to the <em>resolved</em> origin rather than to a name the far side has never heard of.</p>
 <p><strong>Construction is connection.</strong> There is no connect inst, as there is no add-space inst: constructing a protocol
 client <em>is</em> the dial, and indexing is a background behavior of a valid construction —</p>
 <pre><code class="language-mtron">ws_client::[pattern=&gt;&lt;ws://localhost:8555/mtron?name=marko&gt;]

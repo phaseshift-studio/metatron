@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -495,7 +495,7 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 </thead>
 <tbody>
 <tr><td>Memory</td><td><code>Space, Machine.Component, Closeable</code></td><td>relative bindings (names) + absolute index of DATA spaces (no ISAs; its lookup weighs the instset's libraries)</td><td>accumulates (<code>MemoryUnion</code>)</td></tr>
-<tr><td>Network</td><td><code>Addressable, Machine.Component, Closeable</code></td><td>this frame's peers <code>service → peer::T</code> + the root-shared roster, <code>own</code>/<code>isPeer</code>, supervision of links</td><td>a level of its own (<code>NetworkUnion</code>): knowledge (the roster at <code>/network/roster</code>) is shared, reach (<code>peer</code>) is never inherited, and a pop hangs up the frame's dials</td></tr>
+<tr><td>Network</td><td><code>Addressable, Machine.Component, Closeable</code></td><td>this frame's peers <code>service → peer::T</code> + the root-shared roster and names (<code>~/network/prefix</code>), <code>own</code>/<code>isPeer</code>, supervision of links</td><td>a level of its own (<code>NetworkUnion</code>): knowledge (the roster at <code>/network/roster</code>) is shared, reach (<code>peer</code>) is never inherited, and a pop hangs up the frame's dials</td></tr>
 <tr><td>InstSet</td><td><code>Space</code> (via <code>AbstractInstSet</code>)</td><td>the vocabulary: types/insts/rewrites/sugars; <code>import</code> lands here</td><td>accumulates — <code>BasicInstSet</code> is own structure over its imports over the enclosing machine's ISA; membership in the rec under <code>reference</code></td></tr>
 <tr><td>Compiler</td><td><code>Machine.Component, Rec</code></td><td><code>code::T → code::T</code> in three stages</td><td>constructive (inherited/replaced)</td></tr>
 <tr><td>Processor</td><td><code>mThread, Machine.Component</code></td><td><code>code::T → obj</code>; the monadic execution engine</td><td>constructive</td></tr>

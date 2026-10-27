@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -517,8 +517,8 @@ the same declarations the type checker uses:</p>
           accordion_widget=&gt;docs::[obj=&gt;widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?accordion_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/accordion_widget,
                                    dom=&gt;'maybe an obj',
                                    rng=&gt;'an accordion obj',
-                                   args=&gt;[{?}title=&gt;'the title of the accordion',
-                                          {?}body=&gt;'the body content of the accordion'],
+                                   args=&gt;[{?}body=&gt;'the body content of the accordion',
+                                          {?}title=&gt;'the title of the accordion'],
                                    desc=&gt;'[structural] an expandable/collaps...'],
           progress_table_widget=&gt;docs::[obj=&gt;widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/progress_table_widget,
                                         desc=&gt;'[structural] a table of progress b...',
@@ -529,9 +529,9 @@ the same declarations the type checker uses:</p>
            {?}metadata=&gt;lst::T]][ctor?table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/table_widget,
                                dom=&gt;'maybe an obj',
                                rng=&gt;'a table widget',
-                               args=&gt;[{?}metadata=&gt;'a lst of rows of data behind the d...',
+                               args=&gt;[{?}header=&gt;'a lst of obj table headers',
                                       {?}row=&gt;'a lst of poly table rows',
-                                      {?}header=&gt;'a lst of obj table headers'],
+                                      {?}metadata=&gt;'a lst of rows of data behind the d...'],
                                desc=&gt;'[structural] a tabular data widget'],
           tree_widget=&gt;docs::[obj=&gt;widget::T[?[
            root=&gt;uri::T,
@@ -542,11 +542,11 @@ the same declarations the type checker uses:</p>
            {?}expand=&gt;uri::T]][ctor?tree_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/ui/widget/tree_widget,
                               dom=&gt;'maybe an obj',
                               rng=&gt;'a tree widget',
-                              args=&gt;[{?}expand=&gt;'branch uris whose children are rea...',
-                                     {?}code=&gt;'transform obj prior to insertion i...',
-                                     root=&gt;'the root uri to traverse from',
+                              args=&gt;[max=&gt;'the max depth to traverse',
                                      {?}flatten=&gt;'fold single-folder chains into one...',
-                                     max=&gt;'the max depth to traverse',
+                                     root=&gt;'the root uri to traverse from',
+                                     {?}code=&gt;'transform obj prior to insertion i...',
+                                     {?}expand=&gt;'branch uris whose children are rea...',
                                      {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...'],
                               desc=&gt;'[structural] the root uri space is...'],
           ...(11 more)]
@@ -763,10 +763,10 @@ mtron&gt; board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anch
      [grid=&gt;(==&gt;{?}grid)=&gt;[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=&gt;==&gt;lst::T,
       noobj=&gt;(==&gt;{?}title)=&gt;noobj=&gt;/=&gt;str::T,
       style=&gt;(/=&gt;{?}style)=&gt;[anchor=&gt;top_right,border=&gt;continuous]=&gt;X=&gt;style::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]@/sys/fail/1850166
-   	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]@/sys/fail/1850171
+     predicate apply failed on execution (at /m/inst/ctor)]@/sys/fail/2339356
+   	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]@/sys/fail/2339363
 mtron&gt; @/usr/uidoc/board.display()             [-- pin it once --]
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T)]@style]]@widget [display?rng=noobj{0}&amp;dom=widget()@&lt;1&gt;]]@/sys/fail/1853776
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T)]@style]]@widget [display?rng=noobj{0}&amp;dom=widget()@&lt;1&gt;]]@/sys/fail/2344813
 mtron&gt; @/usr/uidoc/g10/1/0 &gt;&gt;= '@'             [-- one cell of the REFERENT --]
 ==&gt;'@'
 mtron&gt; @/usr/uidoc/g10/+/0 &gt;&gt;= ''             [-- every row's column 0 --]

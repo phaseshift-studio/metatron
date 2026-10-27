@@ -92,18 +92,18 @@
         }
 
         /* click-to-copy download commands: the whole block is the copy target */
-        .terminal-box.click-to-copy {
+        .click-to-copy {
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        .terminal-box.click-to-copy:active {
+        .click-to-copy:active {
             background-color: var(--mred);
         }
 
         /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .terminal-box.click-to-copy .hljs-copy-button {
+        .click-to-copy .hljs-copy-button {
             display: none;
         }
     </style>
@@ -422,7 +422,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             document.body.removeChild(tmp);
         }
 
-        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
             box.addEventListener('click', function () {
                 var code = box.querySelector('code');
                 if (!code) return;
@@ -487,6 +487,9 @@ isa/mach/io/type/*Serializer.java             ← what actually goes on the wire
 <tr><td><code>Network.Helper.sameService</code></td><td>origin equality, loopback-aliased</td><td><code>Network.java:909</code></td></tr>
 <tr><td><code>~/network/peer</code></td><td>dialed peers: origin → peer::T (the connection)</td><td><code>Network.java:333</code></td></tr>
 <tr><td><code>~/network/listener</code></td><td>bound sockets: origin → listener::T (a machine's presence)</td><td><code>Network.java:199</code></td></tr>
+<tr><td><code>~/network/prefix</code></td><td>the NAMES a peer goes by: label → full origin (scheme-less, port-less slot)</td><td><code>Network.java</code> (<code>alignPrefix</code>)</td></tr>
+<tr><td><code>~/instset/prefix</code></td><td>the NAMES a vocabulary goes by: scheme → vid (<code>import(/m/math, math)</code>)</td><td><code>AbstractInstSet.java</code></td></tr>
+<tr><td><code>Machine.Helper.align</code></td><td>the ONE canonicalization door: read, write and the move-extractor all ask it</td><td><code>Machine.java</code></td></tr>
 <tr><td><code>Network.Helper.authorities()</code></td><td>the origins this VM answers on (its listeners)</td><td><code>Network.java:695</code></td></tr>
 <tr><td><code>fURI.origin()</code> / <code>authority()</code> / <code>localize()</code></td><td><code>scheme://host:port</code>; <code>host:port</code>; strip scheme+origin, keep path</td><td><code>fURI.java:215</code>, <code>:319</code>, <code>:353</code></td></tr>
 </tbody>
@@ -567,6 +570,11 @@ through the peer it mints, and an http handler is held by its server. The litera
 <li><strong>A space is not a wire payload.</strong> Asking a peer for a space itself yields no response at all — ask for <code>.vid()</code>.</li>
 <li><strong>A remote dereference returns a value whose tid carries coefficient <code>*</code></strong> (renders <code>{*}1</code>), because the reply is
 typed by the transport inst's rng. The value is correct; only the coefficient differs.</li>
+<li><strong>A NAME IS RESOLVED ONCE, BEFORE ANY DISPATCH, AND TRAVELS RESOLVED.</strong> <code>math:cos</code> and <code>//ginger/a</code> are
+canonicalized at the gatekeeper (<code>Machine.Helper.align</code>), each component answering for the slot it owns — the ISA for
+a scheme, the network for an authority — so the slots cannot collide and no dispatch below ever sees a spelling. The
+compiler's move-extractor asks the same door, so the tail shipped to a peer carries the resolved origin: a name is
+the caller's, and the far side has never heard of it.</li>
 <li><strong>A multiplicity of dereferences is a program, not data.</strong> <code>{*A,*B}</code> holds unapplied <code>from</code> insts (<code>.explain()</code>
 reports <code>rng=&gt;from</code>), so arithmetic applies element-wise to instructions. Chaining works: <code>*A.plus(*B)</code>.</li>
 <li><strong>Evaluating one has a lasting side effect</strong>: it re-types the dereferenced vids to <code>*</code>, so later reads of those
