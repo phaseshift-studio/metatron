@@ -235,19 +235,24 @@ public interface Space extends Addressable, Rec, Closeable {
             if (null == vid)
                 return null;
             final Uri vidURI = uri(vid);
+            // MOST SPECIFIC WINS: several keys can match one vid (`/` matches everything, `/mcp` matches /mcp/...), so
+            // routing is a LONGEST-KEY match. findFirst() over the rec's iteration order made the outcome of a read depend
+            // on which route the rec happened to list first: a catch-all registered before a specific route swallowed it,
+            // and the same table could route differently after a rewrite reordered the rec. The key is resolved ONCE (its
+            // apply may compute), the longest wins, and ties break by text so every run answers the same.
             return routes.entrySet().stream()
-                    //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
-                    .filter(e -> vid.hasPrefix(e.getKey().apply(vidURI).uriValue()))
-                    .map(e -> {
-                        fURI remainder = vid.removePrefix(e.getKey().apply(vidURI).uriValue());
-                        // When the scheme prefix is stripped (e.g. "db:" → "") the
-                        // remainder often starts with "/" ("/people/+").  fURI.extend()
-                        // on an empty base preserves that leading slash as an empty
-                        // first path segment, which breaks isTablePath() and hasPattern().
-                        // if (remainder.startsWith("/")) remainder = remainder.substring(1);
-                        return e.getValue().apply(vidURI).uriValue().extend(remainder.qLess()).q(vid.qMap());
+                    .map(e -> Map.entry(e.getKey().apply(vidURI).uriValue(), e.getValue()))
+                    .filter(route -> vid.hasPrefix(route.getKey()))
+                    .max(java.util.Comparator
+                            .comparingInt((Map.Entry<fURI, Obj> route) -> route.getKey().pathLength())
+                            .thenComparing(route -> route.getKey().toString()))
+                    .map(route -> {
+                        // When the scheme prefix is stripped (e.g. "db:" -> "") the remainder often starts with "/"
+                        // ("/people/+"); extend() on an empty base preserves that leading slash as an empty first
+                        // segment, which breaks isTablePath() and hasPattern().
+                        final fURI remainder = vid.removePrefix(route.getKey());
+                        return route.getValue().apply(vidURI).uriValue().extend(remainder.qLess()).q(vid.qMap());
                     })
-                    .findFirst()
                     .orElse(vid);
         }
 
