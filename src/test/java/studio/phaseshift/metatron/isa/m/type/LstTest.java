@@ -30,12 +30,8 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-
 import java.util.Optional;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -43,12 +39,19 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
 
 
-public class LstTest extends AbstractAlgebraTest<Lst> {
+public class LstTest extends AbstractAlgebraTest {
 
-    public LstTest() {
-        super(lst(jnt(1), jnt(2), jnt(3)), Set.of(PLUS_MONOID));
+    @Override
+    protected Type carrier() {
+        return LST_TYPE;
+    }
+
+    @Override
+    protected Obj sample() {
+        return lst(jnt(1), jnt(2), jnt(3));
     }
 
     @ParameterizedTest

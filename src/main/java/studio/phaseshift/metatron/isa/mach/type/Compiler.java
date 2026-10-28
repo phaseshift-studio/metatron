@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.parser.Parser;
 import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Rewriter;
-import studio.phaseshift.metatron.isa.mach.type.compiler.TypeTyper;
 import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.mach.type.compiler.typer.TypeTyper;
 
 import static studio.phaseshift.metatron.Tokens.*;
 

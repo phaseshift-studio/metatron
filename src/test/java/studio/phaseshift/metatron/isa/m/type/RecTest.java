@@ -31,13 +31,9 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-
 import java.util.Map;
-import java.util.Set;
-
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
@@ -51,11 +47,18 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 
-public class RecTest extends AbstractAlgebraTest<Rec> {
+public class RecTest extends AbstractAlgebraTest {
 
-    public RecTest() {
-        super(rec(uri("a"), jnt(1), uri("b"), jnt(2), uri("c"), jnt(3)), Set.of(PLUS_MONOID));
+    @Override
+    protected Type carrier() {
+        return REC_TYPE;
+    }
+
+    @Override
+    protected Obj sample() {
+        return rec(uri("a"), jnt(1), uri("b"), jnt(2), uri("c"), jnt(3));
     }
 
 

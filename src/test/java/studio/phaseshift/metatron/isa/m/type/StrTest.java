@@ -24,20 +24,25 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StrTest extends AbstractAlgebraTest<Str> {
+public class StrTest extends AbstractAlgebraTest {
 
-    public StrTest() {
-        super(str("abc"), Set.of(PLUS_MONOID));
+    @Override
+    protected Type carrier() {
+        return STR_TYPE;
+    }
+
+    @Override
+    protected Obj sample() {
+        return str("abc");
     }
 
     @ParameterizedTest

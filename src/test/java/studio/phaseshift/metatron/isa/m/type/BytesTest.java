@@ -20,14 +20,19 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
+
 import java.nio.ByteBuffer;
-import java.util.Set;
-
-import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BYTES_TYPE;
 
-public class BytesTest extends AbstractAlgebraTest<Bytes> {
-    public BytesTest() {
-        super(bytes(ByteBuffer.wrap(new byte[]{1, 2, 3})), Set.of(PLUS_MONOID));
+public class BytesTest extends AbstractAlgebraTest {
+    @Override
+    protected Type carrier() {
+        return BYTES_TYPE;
+    }
+
+    @Override
+    protected Obj sample() {
+        return bytes(ByteBuffer.wrap(new byte[]{1, 2, 3}));
     }
 }

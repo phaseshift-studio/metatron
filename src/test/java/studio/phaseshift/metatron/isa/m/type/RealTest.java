@@ -24,18 +24,23 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
-import java.util.Set;
 
-import static studio.phaseshift.metatron.algebra.Form.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class RealTest extends AbstractAlgebraTest<Real> {
+public class RealTest extends AbstractAlgebraTest {
 
-    public RealTest() {
-        super(real(23.5), Set.of(PLUS_MONOID, MULT_MONOID, PLUS_GROUP, MULT_GROUP, RING, RIG));
+    @Override
+    protected Type carrier() {
+        return REAL_TYPE;
+    }
+
+    @Override
+    protected Obj sample() {
+        return real(23.5);
     }
 
     @ParameterizedTest

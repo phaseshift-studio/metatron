@@ -21,12 +21,31 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+
+import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BoolTest extends AbstractObjTest {
+public class BoolTest extends AbstractAlgebraTest {
+
+    /**
+     * THE CARRIER — {@code bool::T}. Its declared algebra is a Boolean algebra (or/and/not, bottom/top), a rig and
+     * a lattice, so the derived test validates all three batteries: involution on {@code not}, complement on
+     * {@code and}/{@code or}, the idempotent commutative monoid laws, and both distributivity laws.
+     */
+    @Override
+    protected Type carrier() {
+        return BOOL_TYPE;
+    }
+
+    /** THE PROBE — a real element of the carrier: the tool checks {@code not} and complement on {@code true}. */
+    @Override
+    protected Obj sample() {
+        return bool(true);
+    }
 
     @ParameterizedTest
     @CsvSource(value = {

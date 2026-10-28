@@ -892,6 +892,18 @@ public interface Type extends Obj {
         }
 
         /**
+         * DECLARE an algebra at an ADDRESS — the form for a type this class does not hold as a {@link Type} object,
+         * e.g. a THEORY type, whose only fact a declaration keys on is its vid (the same key
+         * {@link #declare(Type, Rec)} writes). The drain that persists {@code ?lawq} reads this map by the vid's base
+         * path, so a declaration staged here is persisted by the instset that registers that address.
+         */
+        public static void declare(final fURI vid, final Rec law) {
+            if (null == vid || null == law)
+                return;
+            LAWS.put(null == vid.basePath() ? vid : vid.basePath(), law);
+        }
+
+        /**
          * PERSIST a type's declared algebra — the call an instset makes once its space is mounted, which is what
          * makes a declaration written at build time reach {@code ?lawq}. A type that declared none is untouched.
          */

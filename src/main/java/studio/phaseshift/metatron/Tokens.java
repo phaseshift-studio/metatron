@@ -420,6 +420,20 @@ public final class Tokens {
     public static final String CONTESTED = "contested";
     public static final String ORBIT = "orbit";
     public static final String LAW = "law";
+    /**
+     * THE ALGEBRA REPORT KEYS — the counters an {@code AlgebraTool.Report} carries and {@code Report.toRec()}
+     * renders ({@code {type, inst, claimed, holds, failed, unchecked, uncheckable, ok}}). They are {@code fURI} (not
+     * {@code String}) because a report is read key-by-key ({@code rec.atDirect(uri(CLAIMED))}), so the constant is
+     * the key itself. Declared beside the verdict vocabulary every law rec shares — {@link #LAW}, {@link #REASON},
+     * {@link #LHS}, {@link #RHS}, {@link #ROLE}.
+     */
+    public static final fURI CLAIMED = f("claimed");
+    public static final fURI HOLDS = f("holds");
+    public static final fURI FAILED = f("failed");
+    public static final fURI UNCHECKED = f("unchecked");
+    public static final fURI UNCHECKABLE = f("uncheckable");
+    public static final fURI OK = f("ok");
+    public static final fURI GOT = f("got");
     public static final String INVERSE = "inverse";
     public static final String COMBINER = "combiner";
     public static final String DERIVATION = "derivation";
