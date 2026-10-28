@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.ARGS;
 import static studio.phaseshift.metatron.Tokens.COEFFICIENT;
 import static studio.phaseshift.metatron.Tokens.CONSTQ;
 import static studio.phaseshift.metatron.Tokens.DOM;
@@ -706,6 +707,70 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI rng(final fURI rng);
 
+    /**
+     * The argument TYPES an instruction signature declares, in order — the {@code args} query component read as
+     * types, the peer of {@link #dom()} / {@link #rng()} ({@code inst?dom=int&rng=int&args=[int,rec]}).
+     * <p>
+     * An ABSENT component reads as an empty list, and so does one whose body is empty ({@code args=[]}): argument
+     * order is semantic, but a signature with no arguments is one signature however it is spelled, so callers
+     * cannot tell the two apart here. The canonical spelling omits the key entirely (see {@link #args(List)}), which
+     * is what keeps every uri that carries no arguments rendering byte-identically.
+     * <p>
+     * The component is a SINGLE lst-valued query key: one uri text per element, comma separated inside {@code [ ]}
+     * ({@code [int,rec]}, {@code [/m/int,A]}). It is parsed here, in this lower layer, straight from the query
+     * string — no {@code isa.m} type is built — and the rendering is stable: {@code parse(toString()).toString()}
+     * equals {@code toString()}.
+     *
+     * @return the argument types in declaration order, empty when the component is absent
+     */
+    default List<fURI> args() {
+        return Helper.args(this.q(ARGS));
+    }
+
+    /**
+     * Whether this uri carries at least one argument type. An absent component and an empty list answer alike
+     * ({@code false}), following {@link #args()}'s contract rather than {@link #hasQ(String)}'s key presence.
+     *
+     * @return whether {@link #args()} is non-empty
+     */
+    default boolean hasArgs() {
+        return !this.args().isEmpty();
+    }
+
+    /**
+     * This uri with its argument TYPES set — the peer of {@link #dom(fURI)} / {@link #rng(fURI)}. The arguments
+     * render as one lst-valued {@code args} query component ({@code inst?dom=int&rng=int&args=[int,rec]}), one uri
+     * text per element and in order.
+     * <p>
+     * An empty (or null) list REMOVES the component: the canonical form carries no {@code args} key at all, which
+     * is a hard requirement — every pre-existing tid must render byte-identically, so an empty argument list can
+     * never add a {@code ?args=[]} to the query.
+     *
+     * @param args the argument types in order; empty (or null) omits the component
+     * @return a new fURI carrying the component, or this uri when there is nothing to remove
+     */
+    default fURI args(final List<fURI> args) {
+        if (null == args || args.isEmpty())
+            return this.hasQ(ARGS) ? this.removeQ(ARGS) : this;
+        // a LinkedHashMap, not q(key, value)'s HashMap: the component has to sit AFTER the existing keys (dom, rng)
+        // so the rendering stays stable across a set-then-parse round trip
+        final Map<String, String> query = new LinkedHashMap<>(this.qMap());
+        query.put(ARGS, Helper.argsString(args));
+        return this.q(query);
+    }
+
+    /**
+     * {@link #args(List)} for a fixed, hand-written signature: {@code inst.args(int, rec)}. Call {@link #args()}
+     * with no arguments for the READER — the no-arg call is the getter, not an empty varargs array.
+     *
+     * @param arg0 the first argument type
+     * @param more the remaining argument types in order
+     * @return a new fURI carrying the component
+     */
+    default fURI args(final fURI arg0, final fURI... more) {
+        return this.args(Stream.concat(Stream.of(arg0), Stream.of(more)).toList());
+    }
+
     String qString();
 
     Map<String, String> qMap();
@@ -948,6 +1013,49 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
      */
     final class Helper {
         private Helper() {
+        }
+
+        /**
+         * Renders argument types as the lst-valued query text the {@code args} component stores: one uri text per
+         * element, comma separated inside the brackets lst notation uses ({@code [int,rec]}). Never called with an
+         * empty list — the component is omitted rather than written empty — but an empty list would render
+         * {@code []}, which {@link #args(String)} reads back as no arguments either.
+         */
+        static String argsString(final List<fURI> args) {
+            return args.stream().map(fURI::toString).collect(Collectors.joining(",", "[", "]"));
+        }
+
+        /**
+         * Reads the {@code args} query value back into argument types. Absent (null), empty and {@code []} all
+         * answer an empty list, so they are indistinguishable to a caller. The body splits on TOP-LEVEL commas
+         * only: a coefficient ({@code A{2,3}}) or a nested branch keeps its own commas, which is why this does not
+         * wait on a {@code isa.m} lst parse. An element is read by {@link Singleton#f(String)}, the same string
+         * route every other query component takes.
+         */
+        static List<fURI> args(final String value) {
+            if (null == value)
+                return List.of();
+            String body = value.trim();
+            if (body.startsWith("[") && body.endsWith("]"))
+                body = body.substring(1, body.length() - 1);
+            if (body.isBlank())
+                return List.of();
+            final List<fURI> args = new ArrayList<>();
+            int depth = 0;
+            int start = 0;
+            for (int i = 0; i < body.length(); i++) {
+                final char ch = body.charAt(i);
+                if ('{' == ch)
+                    depth++;
+                else if ('}' == ch)
+                    depth = Math.max(0, depth - 1);
+                else if (',' == ch && 0 == depth) {
+                    args.add(Singleton.f(body.substring(start, i).trim()));
+                    start = i + 1;
+                }
+            }
+            args.add(Singleton.f(body.substring(start).trim()));
+            return List.copyOf(args);
         }
 
         static List<List<String>> branchedPaths(final List<String> path) {

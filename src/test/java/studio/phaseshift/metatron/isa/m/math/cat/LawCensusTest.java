@@ -41,6 +41,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.lawOf;
 import static studio.phaseshift.metatron.isa.m.mTypes.BOOL_TYPE;
@@ -55,16 +56,18 @@ import static studio.phaseshift.metatron.isa.m.mTypes.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.mTypes.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * THE LAW CENSUS — three facts about the algebra declarations, machine-checked, because each has silently broken
+ * THE LAW CENSUS — four facts about the algebra declarations, machine-checked, because each has silently broken
  * this week: a row whose address stopped being an instruction ({@code order?int}), an algebra whose role pointers
- * name instructions that are no longer registered (code's {@code neg}/{@code end}/{@code id}), and identities that
- * stopped naming anything (bool's {@code zero}/{@code one}). None of them produced an error: a row nothing
- * consults and a role that resolves to {@code noobj} are both silent, so the failure mode is a law that quietly
- * stops holding. This class is the census that turns each into a checked fact.
+ * name instructions that are no longer registered (code's {@code neg}/{@code end}/{@code id}), identities that
+ * stopped naming anything (bool's {@code zero}/{@code one}), and a claim that was never about its instruction at all
+ * (a law whose subject SHAPE the instruction's contract does not have). None of them produced an error: a row
+ * nothing consults, a role that resolves to {@code noobj}, and a category error are all silent, so the failure mode
+ * is a law that quietly stops holding. This class is the census that turns each into a checked fact.
  *
- * <p>THE THREE FACTS
+ * <p>THE FOUR FACTS
  * <ol>
  *   <li><b>every law-table row is reachable</b> — the row's address is either a registered instruction
  *       ({@code live}), or an operation the lift still admits over that carrier ({@code view}: the implementation
@@ -77,7 +80,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  *   <li><b>every role points at something real</b> — each role value that is an address or a pointer must name a
  *       registered instruction, or one a registration of the same operation covers over a carrier on the role's own
  *       path, or one the lift admits. This is the assertion that catches code's {@code neg}/{@code end}/{@code id},
- *       bool's {@code zero}/{@code one} and an {@code order?int} that lost its registration.</li>
+ *       bool's {@code zero}/{@code one} and an {@code order?int} that lost its registration;</li>
+ *   <li><b>every declared law matches its instruction's contract</b> — an instruction that declares a process law
+ *       in {@code ?lawq} (or through its served law-table row) must be the KIND of thing the law is about:
+ *       {@link AlgebraTool#matches(Law, Inst)} compares {@link Law#wrt()} with the instruction's own dom/rng and,
+ *       only when the signature carries {@code args}, its arity. A law about a binary relation declared on an endo
+ *       op is a category error, and the census names it as one — it never silently stops applying.</li>
  * </ol>
  *
  * <p>NOTHING IS FIXED HERE, AND NOTHING IS WEAKENED: a census that fails must be answered by restoring the lost
@@ -91,8 +99,8 @@ public class LawCensusTest extends AbstractMetatronTest {
      * KNOWN EXCEPTIONS — EACH ONE NAMES AN ADDRESS AND THE ISSUE THAT JUSTIFIES TOLERATING IT, written as
      * {@code "<address> — <issue>"}. An entry is a public apology, not a switch: it stays visible in this source
      * file, so every reader sees why the algebra, the row or the role is exempt, and removing an entry is the day
-     * the underlying issue got fixed. The two entries below are the ones today's census produced; both are
-     * ANALYZER limits rather than lost registrations, and neither may be "fixed" by renaming a declaration —
+     * the underlying issue got fixed. The first two entries are ANALYZER limits rather than lost registrations,
+     * and neither may be "fixed" by renaming a declaration —
      * naming the registered addresses for code's additive group instead breaks 48 cases of
      * {@code catInstSetTest} (measured), because those addresses are deliberate declaration-level aliases
      * ({@code branch} has only a generic registration, {@code end}'s rng is the zero coefficient {@code {0}}).
@@ -106,7 +114,19 @@ public class LawCensusTest extends AbstractMetatronTest {
             // the machine declares a groupoid of address morphisms: its operation is uri's mult, and no operation
             // whose dom is uri lies on the machine type's own path, so analyzeType binds no role-bearing operation
             "/m/mach/machine — its free_groupoid binds mult over /m/uri, which the machine type's path never "
-                    + "includes, so analyzeType binds no operation and every claim comes back unchecked");
+                    + "includes, so analyzeType binds no operation and every claim comes back unchecked",
+            // mean is a REDUCTION, not an endo or a binary operation: it maps a stream of ints to a real, so no
+            // signature in the six names its map, and its commutativity/magmadic claims are about the reduction
+            // (order-independence of the fold) rather than about an operation of the carrier. Removing this entry
+            // needs a shape for a carrier-changing fold, not a looser match.
+            // the addresses render rng before dom (the pre-existing HashMap spelling of the dom/rng setters, pinned
+            // by catInstSetTest's inverse rows), so the entry must begin with that exact text
+            "/m/inst/mean?rng=/m/real&dom=/m/int{*} — mean reduces a stream of ints to a real, so neither the "
+                    + "arity-agnostic endo shape (rng != dom) nor the binary shape (zero arguments) is its contract; "
+                    + "the commutative/magmadic claims are about the reduction, and no signature names that yet",
+            // mean over reals is at least an endo, so only its magmadic claim (spelled binary) has no subject
+            "/m/inst/mean?rng=/m/real&dom=/m/real{*} — mean is a zero-argument reduction, so the binary magmadic "
+                    + "shape does not name it (its commutative claim matches the arity-agnostic endo shape)");
 
     /**
      * The category is the set that populates {@link LawTable#rows()} — its {@code setup()} self-registers the
@@ -262,6 +282,51 @@ public class LawCensusTest extends AbstractMetatronTest {
                   %s""".formatted(String.join("\n  ", dangling)));
     }
 
+    /**
+     * ASSERTION 4 — EVERY DECLARED LAW IS ABOUT ITS INSTRUCTION'S CONTRACT. An instruction's declared process laws
+     * ({@code ?lawq}, plus the served law-table row) are claims about the KIND of operation it is, so every one of
+     * them must pass the same signature match the analyzer applies before it renders an equation:
+     * {@link AlgebraTool#matches(Law, Inst)} compares {@link Law#wrt()} with the instruction's {@code dom}/{@code rng}
+     * — one poly variable {@code A}, so every occurrence must land on the same carrier — and its arity, but ONLY
+     * when the signature declares an {@code args} component (no {@code args} is the arity-agnostic spelling and
+     * matches any arity).
+     * <p>
+     * THE FAILURE IS THE POINT: a claim that does not match is a CATEGORY ERROR, not a counterexample, so the message
+     * prints every offending pair as {@code law @ inst_address — the law is about <shape>}. That is what makes a law
+     * quietly written on the wrong kind of operation a checked fact instead of a claim nothing ever consults. Known
+     * exceptions live in {@link #ALLOWLIST} with the issue that justifies them, never in a looser match.
+     */
+    @Test
+    public void testEveryDeclaredLawMatchesItsInstruction() {
+        final List<Inst> insts = List.copyOf(Machine.current().instset().insts());
+        final List<String> mismatched = new ArrayList<>();
+        final List<String> exempt = new ArrayList<>();
+        int checked = 0;
+        for (final Inst inst : insts) {
+            if (null == inst || null == inst.tid())
+                continue;
+            final String address = inst.tid().toString();
+            for (final Law law : declaredLaws(inst)) {
+                checked++;
+                if (AlgebraTool.matches(law, inst))
+                    continue;
+                final String row = law.name() + " @ " + inst.tid() + " — the law is about " + law.wrt();
+                if (allowed(address))
+                    exempt.add(row);
+                else
+                    mismatched.add(row);
+            }
+        }
+        LOG.warn("law census: %d declared law(s) checked, %d exempted by the ALLOWLIST", checked, exempt.size());
+        LOG.warn("law census: declared laws exempted (issue named in the ALLOWLIST): %s", exempt);
+        assertTrue(0 < checked,
+                "the census found no declared law at all: ?lawq and the law tables answered nothing, "
+                        + "so the assertion would be vacuous");
+        assertTrue(mismatched.isEmpty(), () -> """
+                instructions whose declared law is about a different shape than their contract:
+                  %s""".formatted(String.join("\n  ", mismatched)));
+    }
+
     /// ------------------------------------------------------------------ the census reads
 
     /**
@@ -339,6 +404,44 @@ public class LawCensusTest extends AbstractMetatronTest {
         } catch (final Throwable e) {
             return false;                                       // an unparseable address answers no instruction
         }
+    }
+
+    /**
+     * THE LAWS AN INSTRUCTION DECLARES — its {@code ?lawq} rec (where {@code InstBuilder.drain} persists the claims
+     * an instruction makes about itself) and the law-table row the table serves for it, unioned in declaration order
+     * and deduplicated. Both are reads of a DECLARATION, never of a tentative claim: a row and a {@code ?lawq} rec may
+     * state the same law, and the census must report each claim once.
+     */
+    private static List<Law> declaredLaws(final Inst inst) {
+        final List<Law> laws = new ArrayList<>();
+        final Obj fromLawq = lawOf(inst.tid());
+        if (fromLawq.isRec())
+            addLaws(laws, fromLawq.asRec().atDirect(uri(LAW)));
+        final LawTable.Entry served = LawTable.lawsOf(inst.tid());
+        if (null != served)
+            addLaws(laws, served.laws());
+        return laws;
+    }
+
+    /** Add the law names a declared {@code law => [..]} lst holds, ignoring names outside the vocabulary. */
+    private static void addLaws(final List<Law> laws, final Obj declared) {
+        if (null == declared || !declared.isLst())
+            return;
+        for (final Obj obj : declared.lstValue()) {
+            if (!obj.isUri())
+                continue;
+            final Law law = lawNamed(obj.uriValue().name());
+            if (null != law && !laws.contains(law))
+                laws.add(law);
+        }
+    }
+
+    /** The {@link Law} a declared name denotes, or null when the claim names something outside the vocabulary. */
+    private static Law lawNamed(final String name) {
+        for (final Law law : Law.values())
+            if (law.name().equals(name))
+                return law;
+        return null;
     }
 
     /** Is this address (or carrier) written down as a known exception? An entry must begin with its address. */

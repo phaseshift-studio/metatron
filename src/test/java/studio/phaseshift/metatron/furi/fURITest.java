@@ -36,6 +36,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.ARGS;
 import static studio.phaseshift.metatron.Tokens.DOM;
 import static studio.phaseshift.metatron.Tokens.RNG;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -1593,6 +1594,92 @@ public class fURITest extends AbstractMetatronTest {
             assertEquals(meta, furiObj.hasPort());
             assertEquals(meta, furiObj.hasScheme());
         }
+    }
+
+
+    /**
+     * The {@code args} component: the argument TYPES an instruction signature carries — one uri text per element
+     * inside a SINGLE lst-valued query key. An absent component answers an empty list, as does an empty body, and
+     * neither renders as a component ({@code ?args=[]} is not the canonical spelling).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/m/inst?dom=int&rng=str                    | -",          // absent: unchanged, byte for byte
+            "/m/inst?dom=int&rng=str&args=[]            | -",          // empty body: indistinguishable from absent
+            "/m/inst?dom=int&rng=int&args=[int]         | int",        // one argument
+            "/m/inst?dom=int&rng=rec&args=[int,rec]     | int,rec",    // two arguments, in order
+            "/m/inst?dom=A{*}&rng=B{*}&args=[B]         | B",          // a generic (poly) argument type
+            "/m/inst?args=[/m/int,A]                    | /m/int,A",   // a path type beside a generic
+            "/m/inst?args=[A{2,3}]                      | A{2,3}",     // a coefficient's comma is not a separator
+    }, delimiter = '|')
+    void testArgs(final String furi, final String expected) {
+        final fURI signature = f(furi);
+        final List<fURI> args = signature.args();
+        assertEquals("-".equals(expected) ? "" : expected, String.join(",", args.stream().map(fURI::toString).toList()));
+        assertEquals(!expected.equals("-"), signature.hasArgs());
+        assertTrue(signature.qMap().keySet().stream().filter(ARGS::equals).count() <= 1, "one args key, never repeated");
+        // rendering is stable: parse(toString()).toString() equals toString()
+        final fURI reparsed = f(signature.toString());
+        assertEquals(signature.toString(), reparsed.toString());
+        assertEquals(signature, reparsed);
+        assertEquals(signature.hashCode(), reparsed.hashCode());
+        assertEquals(args, reparsed.args());
+    }
+
+    /**
+     * A poly argument is a TYPE, not a string: {@code A} stays generic through the component, and the coefficient
+     * spelling of a generic ({@code A{*}}) survives beside it.
+     */
+    @Test
+    void testArgsPoly() {
+        final fURI signature = f("/m/inst?dom=A{*}&rng=B{*}&args=[B]");
+        assertEquals(1, signature.args().size());
+        assertTrue(signature.args().getFirst().isGeneric());
+        assertEquals(f("B"), signature.args().getFirst());
+        assertEquals("/m/inst?dom=A{*}&rng=B{*}&args=[B]", signature.toString());
+        // dom/rng order in the query is not semantic, so a uri spelling them the other way is the SAME signature
+        assertEquals(signature, f("/m/inst?rng=B{*}&dom=A{*}").args(f("B")));
+    }
+
+    /**
+     * An empty argument list is OMITTED — never {@code ?args=[]} — so a uri carrying no arguments renders and
+     * hashes exactly as it did before the component existed, no matter which route built it.
+     */
+    @Test
+    void testArgsOmittedWhenEmpty() {
+        final fURI signature = f("/m/inst?dom=int&rng=int");
+        assertEquals("/m/inst?dom=int&rng=int", signature.toString());
+        final fURI emptied = signature.args(List.of());
+        assertEquals(signature, emptied);
+        assertEquals(signature.hashCode(), emptied.hashCode());
+        assertEquals("/m/inst?dom=int&rng=int", emptied.toString());
+        assertFalse(emptied.hasQ(ARGS));
+        assertFalse(emptied.hasArgs());
+        assertEquals(List.of(), emptied.args());
+        // setting arguments and then clearing them returns to the very same component set
+        final fURI set = signature.args(List.of(f("int"), f("rec")));
+        assertEquals(f("/m/inst?dom=int&rng=int&args=[int,rec]"), set);
+        assertEquals(signature, set.args(List.of()));
+        assertEquals("/m/inst?dom=int&rng=int", set.args(List.of()).toString());
+    }
+
+    /**
+     * {@code equals} stays structural: the SAME arguments reached by parsing a uri, by the list setter and by the
+     * varargs setter are one signature (equal and equally hashed), while argument ORDER is semantic.
+     */
+    @Test
+    void testArgsEqualsAcrossRoutes() {
+        final fURI parsed = f("/m/inst?dom=int&rng=int&args=[int,rec]");
+        final fURI builtList = f("/m/inst?dom=int&rng=int").args(List.of(f("int"), f("rec")));
+        final fURI builtVarargs = f("/m/inst?dom=int&rng=int").args(f("int"), f("rec"));
+        assertEquals(parsed, builtList);
+        assertEquals(parsed, builtVarargs);
+        assertEquals(parsed.hashCode(), builtList.hashCode());
+        assertEquals(parsed.hashCode(), builtVarargs.hashCode());
+        assertEquals(parsed.toString(), builtList.toString());
+        assertEquals(parsed.args(), builtVarargs.args());
+        assertNotEquals(parsed, f("/m/inst?dom=int&rng=int&args=[rec,int]"));
+        assertNotEquals(parsed, f("/m/inst?dom=int&rng=int&args=[int]"));
     }
 
 
