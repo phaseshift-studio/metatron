@@ -31,10 +31,13 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+
 import java.util.Map;
+
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -47,7 +50,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 
 public class RecTest extends AbstractAlgebraTest {
 
@@ -697,6 +699,30 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
+     * THE REC POLY CONFERS SUPERTYPES AT THE VALUE LEVEL TOO. A value typed {@code person[ninja]} carries the
+     * {@code ninja} trait, so it is acceptable wherever {@code ninja::T} (a poly member) or {@code person::T} (its
+     * vid's base) is expected — and nowhere else ({@code guru::T} rejects it). Same rule, same acceptance site as the
+     * type-level check {@code TypeTest.testRecPolyConfersSupertypes}.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec::T[?[name=>?str::T,age=>?int::T]]@person",
+            "ninja -> rec::T@ninja",
+    })
+    @CsvSource(value = {
+            "person[ninja]::[name=>'marko',age=>29]   % ninja::T    % true",
+            "person[ninja]::[name=>'marko',age=>29]   % person::T   % true",
+            "person[ninja]::[name=>'marko',age=>29]   % guru::T     % false",
+    }, delimiter = '%')
+    public void testRecPolyValueConformsToItsTraits(final String value, final String type, final boolean matches) {
+        final Obj v = ObjmtronSerializer.parse(value);
+        final Type t = ObjmtronSerializer.parse(type);
+        assertEquals(matches, v.test(t),
+                "value %s (tid=%s, type tid=%s) tested against %s (vid=%s, tid=%s) should be %s"
+                        .formatted(v, v.tid(), v.type().tid(), t, t.vid(), t.tid(), matches));
+    }
+
+    /**
      * THE REC POLY NAMES ITS DECLARED SLOTS. {@code rec[k1,k2]} declares the keys {@code k1} and {@code k2}, so a
      * literal carrying only {@code k1} fails conformance while one carrying both passes. A missing key still READS
      * as {@code noobj} — the last row is that read, not conformance — which is exactly why a declared slot cannot
@@ -1121,5 +1147,366 @@ public class RecTest extends AbstractAlgebraTest {
         final Rec deep = rec(uri("m"), lst(lst(jnt(9), jnt(8)), jnt(7)));
         assertTrue(deep.at(uri("m/0/1")).stream().anyMatch(o -> o.equals(jnt(8))),
                 "at(m/0/1) should reach the nested lst element, got: " + deep.at(uri("m/0/1")));
+    }
+
+    /**
+     * DELEGATION — applying an instruction to a wrapper is applying it to a stream of two objects:
+     * <pre>
+     * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
+     * </pre>
+     * A WRAPPER is a rec whose type INSTANTIATES a declaration that names the fields the wrapper exposes:
+     * {@code rec[role]::T[?[…,role=>rec::T]]@person} names {@code role} (the declaration's tid poly is the FIELD
+     * NAMES) and {@code person[ninja]} names its type (the instance's vid poly is the COMPONENT TYPES). So
+     * {@code person[ninja]::[role=>ninja::[…]]} is two objects to an instruction — the person-typed wrapper and the
+     * ninja-typed component it exposes — and {@code Processor.Helper.apply} fans an instruction out over both,
+     * summing the results as a multiplicity. {@code noobj} is the identity ({@code {noobj,29} = 29}), so an untyped
+     * read sees BOTH levels while a field only one level carries still answers alone:
+     * <pre>
+     * *marko>>name       [-- {'marko','dark_assassin'}     --]
+     * *marko>>weapon     [-- 'bulldozer' (no weapon above) --]
+     * </pre>
+     * A call whose DOMAIN NAMES a type ({@code fight?dom=ninja}) reaches only the candidate whose OWN type is
+     * that name — the ninja component, not the wrapper. There is no selection step: each candidate is resolved
+     * and invoked on its own, and the type system says which one the domain is about. The wrapper is a
+     * {@code ninja} only by covariance ({@link Type.Helper#recPolySupertype}: a poly entry is a supertype), which
+     * is type acceptance, not dispatch identity; the ninja is the object the definition was written for, so a body
+     * reading {@code >>weapon} sees the ninja's. A domain naming no component type ({@code ponder?dom=person})
+     * answers on the wrapper, as before.
+     * <p>
+     * A {@code typer} ({@code as}, {@code type}, {@code vid}, {@code tid}) is OPAQUE: it decides what the value IS,
+     * so it cannot be distributed over the old basis and applies to the wrapper alone — one result, poly erased.
+     * <p>
+     * One level only, and only for a wrapper: a candidate's own components do not join
+     * ({@link #testDelegationIsOneLevelDeep}), and a {@code rec[k1,k2]} SLOT declaration is not a wrapper
+     * ({@link #testSlotDeclarationIsNotAWrapper}).
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec[role]::T[?[role=>rec::T,name=>?str::T]]@person",
+            "ninja -> rec::T@ninja",
+            "marko -> person[ninja]::[role=>ninja::[name=>'dark_assassin',weapon=>'bulldozer'],name=>'marko']@marko",
+            "fight -> |inst?<=ninja(){ \"${>>name} is your name and ${>>weapon} is your weapon\" }",
+            "inst?<=ninja(){ \"${>>weapon} fun\" }@love",
+            "ponder -> |inst?<=person(){ 'a person ponders' }",
+    })
+    @CsvSource(value = {
+            // the human's case: the call's domain is ninja, so it reaches the ninja COMPONENT -- the body's
+            // >>weapon reads the ninja's weapon, not the wrapper's absent one
+            "*marko.fight()            % 'dark_assassin is your name and bulldozer is your weapon'",
+            // ... and the same call spelled with its type explicitly reaches the same candidate
+            "*marko.fight?<=ninja()    % 'dark_assassin is your name and bulldozer is your weapon'",
+            // a domain that names no component type answers on the wrapper, unchanged
+            "*marko.ponder()           % 'a person ponders'",
+            // untyped: both levels answer, summed as a multiplicity
+            "*marko>>name              % {'marko','dark_assassin'}",
+            // ... and noobj is the identity, so the one level that has a weapon answers alone
+            "*marko>>weapon            % 'bulldozer'",
+            //
+            "*marko.love()             % 'bulldozer fun'",
+            // a typer is opaque: one result, the instantiation erased
+            "*marko.as(person::T)      % person::[role=>ninja::[name=>'dark_assassin',weapon=>'bulldozer'],name=>'marko']",
+            "*marko.type()             % rec[role]::T[?[role=>rec::T,name=>?str::T]]@person[ninja]",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testWrapperDelegation(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * ONE LEVEL DEEP: the candidates are the wrapper and the components its DECLARATION names — nothing else. A
+     * component that is itself a wrapper is applied to as the object it is, so its own {@code role} does not join
+     * the stream and {@code 'deep'} (the inner wrapper's component) never answers.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec[role]::T[?[role=>rec::T,name=>?str::T,age=>int::T]]@person",
+            "ninja -> rec::T@ninja",
+            "nested -> person[ninja]::[role=>person[ninja]::[role=>ninja::[name=>'deep'],name=>'middle',age=>32],name=>'outer',age=>29]@nested",
+    })
+    @CsvSource(value = {
+            "*nested>>name                         % {'outer','middle'}",
+            "*nested>>age                          % {32,29}",
+    }, delimiter = '%')
+    public void testDelegationIsOneLevelDeep(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A SLOT DECLARATION IS NOT A WRAPPER. {@code rec[k1,k2]} names the keys a literal carries — its bracket is a
+     * slot list, not an instantiation — so it exposes no components and {@code k1}'s rec is not a candidate. The
+     * narrowing matters: fanning out here would apply the instruction to {@code [a=>1]} under a domain of
+     * {@code rec[k1,k2]}, which the component does not satisfy, and the read would fail instead of answering.
+     */
+    @Test
+    public void testSlotDeclarationIsNotAWrapper() {
+        AbstractMetatronTest.checkCodeParseApply(LOG, "rec[k1,k2]::[k1=>[a=>1],k2=>2]>>k1", "[a=>1]");
+    }
+
+    /**
+     * THE SUM IS A MULTIPLICITY, AND A FAIL IS NOT THE IDENTITY. The wrapper exposes two components of the same
+     * type, so a call whose domain is that type reaches both and their answers are summed ({@code {11,3}}). When one
+     * of them genuinely
+     * errors — the sidekick's {@code power} is a str where the instruction's range demands an int — the fail
+     * PROPAGATES: the other candidate's {@code 11} must not be returned in its place, or a broken delegation would
+     * read as a successful one.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec[role,sidekick]::T[?[role=>rec::T,sidekick=>rec::T,name=>?str::T]]@person",
+            "ninja -> rec::T@ninja",
+            "twin -> person[ninja,ninja]::[role=>ninja::[name=>'kunoichi',power=>11],sidekick=>ninja::[name=>'apprentice',power=>3],name=>'marko']@twin",
+            "lame -> person[ninja,ninja]::[role=>ninja::[name=>'kunoichi',power=>11],sidekick=>ninja::[name=>'apprentice',power=>'feeble'],name=>'marko']@lame",
+            "rank -> |inst?rng=int&dom=ninja(){ >>power }",
+    })
+    @CsvSource(value = {
+            "*twin.rank()    % {11,3}",
+            "*lame.rank()    % <ERROR>",
+    }, delimiter = '%')
+    public void testDelegationSumsCandidatesAndPropagatesFail(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A WRAPPER MAY EXPOSE TWO COMPONENTS. {@code duo_person} declares {@code rec[role,position]} — two slots — and
+     * an instance names a type for each ({@code duo_person[duo_ninja,duo_position]}), so the wrapper is a stream of
+     * three objects to an instruction: itself, its {@code role} (a {@code duo_ninja}) and its {@code position} (a
+     * {@code duo_position}). This test pins the DECLARATION and the VALUE:
+     * <pre>
+     * *marko                         round-trips, both components carried
+     * *marko.type()                  the instantiation keeps both type arguments
+     * *marko>>role, >>position       each component reads out as the type the instantiation named for it
+     * </pre>
+     * A declared slot at coefficient one is REQUIRED ({@code Type.Helper.recSlotsCarried}): the same literal with
+     * {@code position} omitted does not conform to {@code duo_person[duo_ninja,duo_position]::T} and fails at parse
+     * time. Absence would be legal only for {@code rec[role,position{?}]}.
+     * <p>
+     * The component traits are declared BARE ({@code rec::T@duo_position}), mirroring {@code ninja} in
+     * {@link #testWrapperDelegation}. A trait declared WITH a refinement ({@code position :: rec::T[?[title=>str::T,
+     * rank=>int::T]]@position}, the target snippet's spelling) was not conferred on its wrapper at all when these
+     * tests were written — reported as a finding, and under repair in {@code Type.Helper.recPolyConformance} — so no
+     * assertion here depends on which way the refined form resolves.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "duo_position -> rec::T@duo_position",
+            "duo_person -> rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@duo_person",
+            "duo_ninja -> rec::T@duo_ninja",
+            "marko -> duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]]@marko",
+    })
+    @CsvSource(value = {
+            // the value round-trips: the same rec under the same instantiated type
+            "*marko               % duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]]",
+            // ... and its type round-trips its DECLARATION and both type arguments
+            "*marko.type()        % rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@duo_person[duo_ninja,duo_position]",
+            // each component is carried intact, under the type the instantiation named for its slot
+            "*marko>>role         % duo_ninja::[name=>'dark_assassin']",
+            "*marko>>position     % duo_position::[title=>'sniper',rank=>5]",
+            // a declared slot at coefficient one is required: position is declared and absent
+            "duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin']] % <ERROR>",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTwoComponentWrapperConstruction(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * COVARIANCE REACHES BOTH MEMBERS. A rec's poly names the traits the value implements ({@link
+     * Type.Helper#recPolySupertype}), and a two-member poly answers EACH member: a {@code duo_person[ninja,position]}
+     * value is acceptable where {@code duo_ninja::T}, where {@code duo_position::T} and where its own {@code
+     * duo_person::T} is expected — and nowhere else ({@code duo_baker::T}, an unrelated declared trait, rejects it).
+     * <p>
+     * A row here carries the expected boolean, so a two-column {@code code % expected} row cannot express it: the
+     * assertion is the same Java one {@code testRecPolyValueConformsToItsTraits} makes (parse value, parse type,
+     * {@code value.test(type)}), not {@code checkCodeParseApply}.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "duo_position -> rec::T@duo_position",
+            "duo_person -> rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@duo_person",
+            "duo_ninja -> rec::T@duo_ninja",
+            "duo_baker -> rec::T@duo_baker",
+    })
+    @CsvSource(value = {
+            // value                                                    % type           % matches
+            "duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]] % duo_ninja::T     % true",
+            "duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]] % duo_position::T  % true",
+            "duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]] % duo_person::T    % true",
+            "duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]] % duo_baker::T     % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTwoComponentWrapperConformsToBothTraits(final String value, final String type, final boolean matches) {
+        final Obj v = ObjmtronSerializer.parse(value);
+        final Type t = ObjmtronSerializer.parse(type);
+        assertEquals(matches, v.test(t),
+                "value %s (tid=%s, type vid=%s) tested against %s (vid=%s, tid=%s) should be %s"
+                        .formatted(v, v.tid(), v.type().vid(), t, t.vid(), t.tid(), matches));
+    }
+
+    /**
+     * THE FAN-OUT IS DISJOINT PER KEY. Delegation hands the SAME read to every candidate, and {@code noobj} is the
+     * identity, so a key only one level carries answers ALONE while a key two levels carry is summed:
+     * <pre>
+     * *marko>>title   [-- 'sniper'                   --]   the position component alone
+     * *marko>>rank    [-- 5                          --]   the position component alone
+     * *marko>>age     [-- 29                         --]   the wrapper alone (no component has an age)
+     * *marko>>name    [-- {'marko','dark_assassin'} --]  the wrapper AND the role component
+     * </pre>
+     * A single-valued expectation is also a multiplicity claim: {@code >>title} answering {@code 'sniper'} rather
+     * than {@code {'sniper','sniper'}} is the statement that the read reached ONE component.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "duo_position -> rec::T@duo_position",
+            "duo_person -> rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@duo_person",
+            "duo_ninja -> rec::T@duo_ninja",
+            "marko -> duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]]@marko",
+    })
+    @CsvSource(value = {
+            "*marko>>title     % 'sniper'",
+            "*marko>>rank      % 5",
+            "*marko>>age       % 29",
+            "*marko>>name      % {'marko','dark_assassin'}",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTwoComponentFanOutIsDisjointPerKey(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A NAMED DOMAIN REACHES THE COMPONENT THAT IS THAT TYPE. There is no selection step: each candidate is
+     * resolved and invoked on its own, and the type system says which candidate the domain is about (see
+     * {@code Processor.Helper#applicable}). {@code duo_aim} is declared {@code dom=duo_position}, so its body's
+     * {@code >>title} reads the position component's title, 'sniper' — the wrapper is not a position by identity,
+     * it only borrows the trait by covariance.
+     * <p>
+     * The same shape declared {@code dom=duo_ninja} does NOT fire on the position component: it reaches the {@code
+     * role} component, whose own {@code >>title} is absent — hence the fail, not 'sniper'. {@code duo_shadow}
+     * is the positive control for that half: a {@code dom=duo_ninja} body reading {@code >>name} answers with the
+     * role component's name, 'dark_assassin'.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "duo_position -> rec::T@duo_position",
+            "duo_person -> rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@duo_person",
+            "duo_ninja -> rec::T@duo_ninja",
+            "marko -> duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]]@marko",
+            "duo_aim -> |inst?<=duo_position(){ >>title }",
+            "duo_strike -> |inst?<=duo_ninja(){ >>title }",
+            "duo_shadow -> |inst?<=duo_ninja(){ >>name }",
+    })
+    @CsvSource(value = {
+            // dom=position reaches the position component, and its body sees the position's title
+            "*marko.duo_aim()                   % 'sniper'",
+            // ... the same call spelled with its type explicitly reaches the same candidate
+            "*marko.duo_aim?<=duo_position()    % 'sniper'",
+            // dom=ninja reaches the ROLE component; its own >>title is absent, so the body fails rather than
+            // answering the position component's 'sniper'
+            "*marko.duo_strike()                % <ERROR>",
+            // ... and the positive control: the same domain reads the role component's own name
+            "*marko.duo_shadow()                % 'dark_assassin'",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTwoComponentTypedSelection(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * AN INSTRUCTION BOTH COMPONENTS DECLARE ANSWERS BOTH, PER CANDIDATE. {@code ninja} and {@code position} each
+     * define {@code describe} ({@code describe?dom=duo_ninja} and {@code describe?dom=duo_position}), so an untyped
+     * {@code *marko.describe()} answers BOTH components (multiplicity two), and
+     * {@code *marko.describe?<=duo_position()} answers one:
+     * <pre>
+     * *marko>>role.describe()            [-- 'a shadow'                     --]
+     * *marko>>position.describe()        [-- 'sniper report'               --]
+     * *marko.describe()                  [-- {'a shadow','sniper report'}  --]
+     * *marko.describe?<=duo_position()   [-- 'sniper report'               --]
+     * </pre>
+     * This used to fail with {@code unable to determine inst function}: the selector's identity gate dropped both
+     * overloads for the wrapper, and the single-candidate fallback then handed the processor an unresolved inst
+     * whose failure propagated before any component was tried. Per-candidate resolution fixes it — the wrapper's
+     * unresolved inst is not applicable and contributes the identity, while each component resolves its own
+     * overload. {@link #testTwoComponentTypedSelection} is the same rule with only one overload in play.
+     * <p>
+     * A bare {@code describe -> ...} write would not declare a second overload at all (the address is the same, so
+     * the second write REPLACES the first); the query-bearing address used here is what keeps both.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "duo_position -> rec::T@duo_position",
+            "duo_person -> rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@duo_person",
+            "duo_ninja -> rec::T@duo_ninja",
+            "marko -> duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]]@marko",
+            "describe?dom=duo_ninja -> |inst?<=duo_ninja(){ 'a shadow' }",
+            "describe?dom=duo_position -> |inst?<=duo_position(){ 'sniper report' }",
+    })
+    @CsvSource(value = {
+            // each component answers its own overload when the call is addressed to it
+            "*marko>>role.describe()                  % 'a shadow'",
+            "*marko>>position.describe()              % 'sniper report'",
+            // on the WRAPPER each call reaches the component(s) that declare a body -- the named domain reaches
+            // exactly the component it names
+            "*marko.describe()                        % {'a shadow','sniper report'}",
+            "*marko.describe?<=duo_position()         % 'sniper report'",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTwoComponentSharedInstructionName(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * ONE LEVEL DEEP, WITH TWO PARTS. The candidates are the wrapper and the components its DECLARATION names —
+     * nothing else. Here the {@code role} slot itself holds a wrapper, so the role candidate is applied to AS THE
+     * OBJECT IT IS: its own fields join the read ({@code 'middle'}, {@code 32}) and its components' fields do not
+     * ({@code 'deep'} never answers, and neither does the inner wrapper's position title {@code 'inner_title'}):
+     * <pre>
+     * *nested>>name    [-- {'outer','middle'}  --]   not 'deep'
+     * *nested>>age     [-- {29,32}             --]
+     * *nested>>title   [-- 'outer_title'       --]   not 'inner_title'
+     * *nested>>rank    [-- 5                   --]   not {5,7}
+     * </pre>
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "duo_position -> rec::T@duo_position",
+            "duo_person -> rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@duo_person",
+            "duo_ninja -> rec::T@duo_ninja",
+            "nested -> duo_person[duo_ninja,duo_position]::[name=>'outer',age=>29,role=>duo_person[duo_ninja,duo_position]::[name=>'middle',age=>32,role=>duo_ninja::[name=>'deep'],position=>duo_position::[title=>'inner_title',rank=>7]],position=>duo_position::[title=>'outer_title',rank=>5]]@nested",
+    })
+    @CsvSource(value = {
+            "*nested>>name     % {'outer','middle'}",
+            "*nested>>age      % {29,32}",
+            "*nested>>title    % 'outer_title'",
+            "*nested>>rank     % 5",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTwoComponentDelegationIsOneLevelDeep(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * DISPATCH IS "GO TO THE FIELD, GET THE VALUE, APPLY THE INSTRUCTION" — the instantiation's poly is NOT the
+     * boundary. {@code loaf} is a {@code person[baker]}, so its poly names {@code baker}, but its {@code role} field
+     * actually holds a {@code ninja}. A call whose domain is {@code ninja} resolves against that FIELD'S VALUE and
+     * runs on it; nothing about the declared instantiation enters the decision. The old name-level selection
+     * ({@code namesTrait}) refused this call because {@code ninja} was not one of {@code person[baker]}'s entries —
+     * per-candidate resolution plus the identity question is the whole rule now.
+     * <p>
+     * A single-valued expectation is also a multiplicity claim: {@code *loaf.fight()} answering ONE string says the
+     * wrapper did not take the call (it would have contributed a second answer), while {@code ponder?dom=person}
+     * shows the wrapper still answers its own type.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec[role]::T[?[role=>rec::T,name=>?str::T]]@person",
+            "ninja -> rec::T@ninja",
+            "baker -> rec::T@baker",
+            "loaf -> person[baker]::[role=>ninja::[name=>'dark_assassin',weapon=>'bulldozer'],name=>'loaf']@loaf",
+            "fight -> |inst?<=ninja(){ \"${>>name} is your name and ${>>weapon} is your weapon\" }",
+            "ponder -> |inst?<=person(){ 'a person ponders' }",
+    })
+    @CsvSource(value = {
+            // the ROLE holds a ninja: resolution runs on the field's value and the instruction fires there
+            "*loaf.fight()            % 'dark_assassin is your name and bulldozer is your weapon'",
+            "*loaf.fight?<=ninja()    % 'dark_assassin is your name and bulldozer is your weapon'",
+            // ... and the wrapper answers the domain that names ITS type
+            "*loaf.ponder()           % 'a person ponders'",
+            // the untyped read still sums the levels the wrapper exposes
+            "*loaf>>name              % {'loaf','dark_assassin'}",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testDelegationReachesTheFieldValueNotTheInstantiation(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

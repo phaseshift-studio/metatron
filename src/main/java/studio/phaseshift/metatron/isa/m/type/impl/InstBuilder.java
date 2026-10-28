@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.Tokens.DERIVATION;
+import static studio.phaseshift.metatron.Tokens.FORM;
 import static studio.phaseshift.metatron.Tokens.INVERSE;
 import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.Tokens.LHS;
@@ -103,6 +104,15 @@ public final class InstBuilder {
     public record Declaration(List<Law> laws, fURI inverse, Derivation derivation) {
     }
 
+    /**
+     * THE DECLARED FORMS, IN MEMORY, keyed by the OPERATION's base path. A form is a fact about the operation, not
+     * about one registration: every dom/rng specialization of {@code as} is the same typer, and a rewrite reads a
+     * form off an instruction whose tid has been RETYPED to its declared contract, so a map keyed by the full n-tid
+     * would miss exactly the reads that matter. {@link #drain} records the facet beside the instruction in
+     * {@code ?lawq}, as it does the laws, inverse and derivation.
+     */
+    private static final Map<fURI, Inst.Form> DECLARED_FORMS = new ConcurrentHashMap<>();
+
     private fURI tid;
     private fURI dom;
     private fURI rng;
@@ -116,6 +126,7 @@ public final class InstBuilder {
     private Obj seed;
     private fURI inverse;
     private Derivation derivation;
+    private Inst.Form form;
     private final List<Law> laws = new ArrayList<>();
 
     private InstBuilder() {
@@ -211,6 +222,48 @@ public final class InstBuilder {
         return this;
     }
 
+    /**
+     * Declare the instruction's {@link Inst.Form FORM} — the one facet an n-tid coefficient shape cannot derive.
+     * Today the declarable form is {@code typer}: an instruction whose subject is the OBJECT'S TYPE/IDENTITY rather
+     * than its value ({@code as}, {@code ::}, {@code type()}, {@code vid()}, {@code tid()}). Such an instruction is
+     * opaque to a wrapper's {@code {self} ∪ components} fan-out — {@code as} decides what the value IS, so it
+     * cannot be distributed over the old basis — and the rewriter neither floats it across a coefficient change nor
+     * merges two of them ({@link Inst.Form#isFloatable()} and {@link Inst.Form#isBlocked()} are both false).
+     * Staged with the other declaration facets and persisted to {@code ?lawq} by {@link #drain}.
+     */
+    public InstBuilder form(final Inst.Form form) {
+        this.form = form;
+        return this;
+    }
+
+    /**
+     * shorthand for {@code form(Inst.Form.typer)} — the declared facet of an instruction that retypes the one obj.
+     */
+    public InstBuilder typer() {
+        return this.form(Inst.Form.typer);
+    }
+
+    /**
+     * Declare an ALREADY-REGISTERED operation's form by its base path — the call a registration site makes when its
+     * instructions are built by {@code instC(...)} + {@code docWrap(...)} rather than through this builder (which is
+     * how the obj/inst area registers {@code as}, {@code type()}, {@code vid()} and {@code tid()}). The declaration
+     * is per OPERATION, so every dom/rng specialization of it is covered and a RETAINED instruction still answers
+     * {@link Inst.Form#of} after a rewrite retypes its tid.
+     */
+    public static void declareForm(final Inst.Form form, final fURI... opTids) {
+        for (final fURI opTid : opTids)
+            if (null != opTid && null != opTid.basePath())
+                DECLARED_FORMS.put(opTid.basePath(), form);
+    }
+
+    /**
+     * The form an operation DECLARED, or null when it left its form to the n-tid shape — the hash read
+     * {@link Inst.Form#of} makes before it falls back to the structural derivations.
+     */
+    public static Inst.Form declaredForm(final fURI instTid) {
+        return null == instTid ? null : DECLARED_FORMS.get(instTid.basePath());
+    }
+
     public InstBuilder docDesc(final String description) {
         this.description = description;
         return this;
@@ -257,6 +310,9 @@ public final class InstBuilder {
             DECLARATIONS.put(inst.tid(), new Declaration(List.copyOf(this.laws), this.inverse, this.derivation));
             DECLARATION_ORDER.add(inst.tid());
         }
+        // a FORM is a declaration too, but one made per OPERATION: every specialization of the op is the same typer
+        if (null != this.form)
+            DECLARED_FORMS.put(keyed.basePath(), this.form);
         return inst;
     }
 
@@ -292,22 +348,28 @@ public final class InstBuilder {
     /**
      * PERSIST an inst's staged declaration to {@code ?lawq} — the call an instset makes once its space is mounted.
      * An inst that declared none is untouched, and a facet that was never declared is omitted rather than written
-     * as a null or an empty list, so the rec carries exactly the claims the instruction made.
+     * as a null or an empty list, so the rec carries exactly the claims the instruction made. The declared FORM is
+     * staged per operation ({@link #declareForm}), so it is read back by the inst's base path.
      */
     public static void drain(final Inst inst) {
         if (null == inst || null == inst.tid())
             return;
         final Declaration declared = DECLARATIONS.get(inst.tid());   // a DECLARATION, not a one-shot: each VM boot repersists it
-        if (null == declared)
+        final Inst.Form form = DECLARED_FORMS.get(inst.tid().basePath());
+        if (null == declared && null == form)
             return;
         final Map<Obj, Obj> facets = new LinkedHashMap<>();
-        if (!declared.laws().isEmpty())
-            facets.put(uri(LAW), lst(declared.laws().stream().map(l -> (Obj) uri(l.name())).toList()));
-        if (null != declared.inverse())
-            facets.put(uri(INVERSE), uri(declared.inverse()));
-        if (null != declared.derivation())
-            facets.put(uri(DERIVATION),
-                    rec(uri(LHS), declared.derivation().lhs(), uri(RHS), declared.derivation().rhs()));
+        if (null != declared) {
+            if (!declared.laws().isEmpty())
+                facets.put(uri(LAW), lst(declared.laws().stream().map(l -> (Obj) uri(l.name())).toList()));
+            if (null != declared.inverse())
+                facets.put(uri(INVERSE), uri(declared.inverse()));
+            if (null != declared.derivation())
+                facets.put(uri(DERIVATION),
+                        rec(uri(LHS), declared.derivation().lhs(), uri(RHS), declared.derivation().rhs()));
+        }
+        if (null != form)
+            facets.put(uri(FORM), uri(form.name()));
         lawWrap(inst, rec(facets));
     }
 }

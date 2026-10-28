@@ -281,6 +281,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         final Type rhsType = Obj.Helper.specificType(rhs);
         if (lhsType.isGeneric() || rhsType.isGeneric())
             return lhsType.tid().basePath().equals(rhsType.tid().basePath()) && lhsType.c().within(rhsType.c());
+        // A REC'S POLY ENTRIES ARE ITS TRAITS, hence SUPERTYPES of the instance (person[ninja] is a ninja), so they
+        // are accepted here alongside the vid's own name -- a trait is not on that name's parent chain, so the walk
+        // below would never reach it. Scoped to rec (its tid is rec) and one level deep: see recPolySupertype.
+        if (Type.Helper.recPolySupertype(lhsType, rhsType))
+            return Type.Helper.polysCompatible(this, rhsType);
         // A base type is nominally compatible with any base-or-nominal type of the same base form
         // (rec ⇝ bad_person::T is a re-tag), but NOT with a constructed/predicated subtype
         // (uri ⇝ file::T is a parse). testNominally strips coefficients.
@@ -1409,6 +1414,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     final class ObjType {
         public static Set<Inst> insts() {
+            // THE TYPERS — as, type(), vid() and tid() have the OBJECT'S TYPE/IDENTITY as their subject, not its
+            // value: each retypes the ONE obj, so they are opaque to a wrapper's {self} ∪ components fan-out, and the
+            // rewriter neither floats one across a coefficient change nor merges two of them (Inst.Form.typer).
+            // Declared here, beside the registrations below, because these insts are built with instC + docWrap and
+            // never pass through InstBuilder. The facet is per OPERATION, so every specialization of `as` carries it
+            // (the `::` construction included) — a form is a fact about the op, not about one dom/rng registration.
+            InstBuilder.declareForm(Inst.Form.typer, AS_INST_TID, TYPE_INST_TID, VID_INST_TID, TID_INST_TID);
             return new LinkedHashSet<>(List.of(
                     docWrap(instC(NATIVE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                                 final Str command = inst.arg(0).asStr();

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.isa.m.type.resolver.Selector;
@@ -72,6 +73,7 @@ public interface Inst extends Call {
         filter("conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})"),
         mapper("one-to-one obj transformation (dom_c = rng_c = 1)"),
         flatmapper("one-to-many obj transformation (dom_c = 1, rng_c > 1)"),
+        typer("retypes the obj's type/identity, not its value"),
         standard("an instruction with no well-defined classification");
 
         public final String description;
@@ -81,6 +83,12 @@ public interface Inst extends Call {
         }
 
         public static Form of(final Inst inst) {
+            // A DECLARED FORM WINS OVER THE STRUCTURAL ONE. A typer's subject is the OBJECT'S TYPE/IDENTITY, not its
+            // value, and no coefficient shape tells it apart from an ordinary type-changing instruction
+            // (as?dom=A&rng=B is shaped like any mapper), so it is DECLARED through InstBuilder, never derived.
+            final Form declared = InstBuilder.declaredForm(inst.tid());
+            if (null != declared)
+                return declared;
             if (inst.isInitial())
                 return initial;
             if (inst.isTerminal())
@@ -117,7 +125,10 @@ public interface Inst extends Call {
          * <p>{@code fork} stays its own image: it is the structural fan-out of {@code +} into parallel streams,
          * not a data-transforming flatmap, so a coefficient does not float through it. {@code gather} is the
          * code's name for the barrier near-ring {@code F_b} ({@code X* → Y*}), so {@code join} and
-         * {@code gather} share one image — no separate {@code barrier} form is needed.
+         * {@code gather} share one image — no separate {@code barrier} form is needed. {@code typer} too is its
+         * own image and lies outside {@code F}: it retypes the ONE obj, so it is neither a leg of the replicable
+         * run nor a cut that drains one — the rewriter must not hoist it across a coefficient change or merge two
+         * of them.
          */
         public Form subring() {
             return switch (this) {
@@ -130,6 +141,7 @@ public interface Inst extends Call {
         /**
          * Thm 6 — the universal functional commutativity of coefficients holds across this form: the
          * coefficient floats through it ({@code ca = a·c}). The replicable run, {@code F_m ∪ F_f ∪ F_fm}.
+         * {@code typer} is excluded: {@code ca.as(B) ≠ a.as(B)·c}, since {@code as} decides what the value IS.
          */
         public boolean isFloatable() {
             return switch (this.subring()) {
@@ -141,6 +153,7 @@ public interface Inst extends Call {
         /**
          * Thm 17 — the coefficient cannot commute past this form: a reduce/gather drains the stream and
          * anchors the coefficient in place ({@code c1·1a ≠ 1a·c1}). The cut, {@code F_r ∪ F_b}.
+         * {@code typer} is excluded: it neither floats nor drains, and two typers never merge.
          */
         public boolean isBlocked() {
             return switch (this.subring()) {
@@ -477,6 +490,14 @@ public interface Inst extends Call {
 
     default boolean isJoining() {
         return this.tid().basePath().equals(MERGE_INST_TID);
+    }
+
+    /**
+     * The instruction's {@link Form} — the declared facet when the operation declared one (a {@code typer}),
+     * otherwise the form its n-tid coefficient shape derives.
+     */
+    default Form form() {
+        return Form.of(this);
     }
 
     @Override

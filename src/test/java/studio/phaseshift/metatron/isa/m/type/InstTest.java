@@ -26,8 +26,10 @@ import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.Tuple;
@@ -531,5 +533,78 @@ public class InstTest extends AbstractObjTest {
     }, delimiter = '%')
     public void testDefaultArgs(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * THE DECLARED TYPER FACET — an instruction whose subject is the OBJECT'S TYPE/IDENTITY rather than its value
+     * reports {@link Inst.Form#typer}. It is neither floatable nor blocked: a coefficient cannot float through a
+     * retyping ({@code ca.as(B) ≠ a.as(B)·c}, because {@code as} decides what the value IS), and a typer neither
+     * drains a stream into one value nor anchors a coefficient where it sits. The membership cannot be derived from
+     * the n-tid coefficient shape — {@code as?dom=A&rng=B} is shaped like any mapper — so it is DECLARED through
+     * {@link InstBuilder#declareForm} at the very registration site that builds these ops.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "as     % as(str::T)",
+            "type   % type()",
+            "vid    % vid()",
+            "tid    % tid()",
+    }, delimiter = '%')
+    public void testTyperForm(final String member, final String code) {
+        final Inst inst = ObjmtronSerializer.parse(code.trim());
+        assertEquals(Inst.Form.typer, inst.form(), member + " must report the typer form, not " + inst.form());
+        assertEquals(Inst.Form.typer, Inst.Form.of(inst), "form() and Form.of() must agree for " + member);
+        assertFalse(inst.form().isFloatable(), member + " must not float a coefficient");
+        assertFalse(inst.form().isBlocked(), member + " must not be the coefficient cut");
+        assertEquals(Inst.Form.typer, inst.form().subring(), "a typer is its own subring image — it lies outside F");
+    }
+
+    /**
+     * REGRESSION GUARDS — declaring the typer facet must not swallow the structural derivations: a coefficient-one
+     * one-to-one transformation is still a floatable mapper, and a fold (dom {@code {*}}, rng {@code 1}) is still a
+     * blocked reducer.
+     */
+    @Test
+    public void testStructuralFormsStillDerive() {
+        final Inst mapper = ObjmtronSerializer.parse("plus?int<=int()");
+        assertEquals(Inst.Form.mapper, mapper.form());
+        assertTrue(mapper.form().isFloatable(), "a mapper is the replicable run");
+        assertFalse(mapper.form().isBlocked(), "a mapper is not the cut");
+        final Inst reducer = ObjmtronSerializer.parse("sum?int<=int{*}()");
+        assertEquals(Inst.Form.reducer, reducer.form());
+        assertTrue(reducer.form().isBlocked(), "a reducer anchors the coefficient");
+        assertFalse(reducer.form().isFloatable(), "a reducer is not the replicable run");
+    }
+
+    /**
+     * THE FACET IS STAGED AND DRAINED — a builder declaration is answerable the moment the instruction is created
+     * (before any store write), and {@link InstBuilder#drain} persists it to {@code ?lawq} beside the other
+     * declaration facets, so the durable record carries the form as well as the laws and relations. An instruction
+     * that declares no form still derives its shape.
+     */
+    @Test
+    public void testTyperFacetIsStagedAndDrained() {
+        final Inst built = InstBuilder.build()
+                .tid(f("/m/inst/built_typer_test"))
+                .dom(f("/m/int")).rng(f("/m/int"))
+                .argLst()
+                .body((lhs, inst) -> lhs)
+                .typer()
+                .create();
+        assertEquals(Inst.Form.typer, built.form(), "a declared typer answers before drain");
+        assertFalse(built.form().isFloatable());
+        assertFalse(built.form().isBlocked());
+        InstBuilder.drain(built);
+        final Obj declaration = QCollection.lawOf(built);
+        assertTrue(declaration.isRec(), "the drained declaration is a ?lawq rec, got " + declaration);
+        assertEquals("typer", declaration.asRec().atDirect(uri(Tokens.FORM)).uriValue().name(),
+                "the form is persisted beside the laws, got " + declaration);
+        final Inst plain = InstBuilder.build()
+                .tid(f("/m/inst/built_plain_test"))
+                .dom(f("/m/int")).rng(f("/m/int"))
+                .argLst()
+                .body((lhs, inst) -> lhs)
+                .create();
+        assertEquals(Inst.Form.mapper, plain.form(), "an undeclared form is still derived from the n-tid shape");
     }
 }
