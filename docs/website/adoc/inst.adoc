@@ -44,7 +44,7 @@ When fully parsed to a legal URI, the instruction signature is denoted:
 
 [source,mtron,role="center-code"]
 ----
-inst?dom=a&rng=b&c=x,y
+inst?rng=b&dom=a&c=x,y
 ----
 
 Instruction query parameters are similar in function to https://en.wikipedia.org/wiki/Java_annotation[method annotations]. Query parameters encode metadata which can

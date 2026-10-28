@@ -190,12 +190,12 @@ public enum Law {
      * <p>
      * The spellings are canonical: {@code A} (never {@code #}, which would flip {@link fURI#hasPattern()} for a query
      * value), no {@code args} key at all when there are no arguments, and one {@code args=[...]} key carrying the
-     * element types in order otherwise ({@code inst?dom=A&rng=A&args=[A]}).
+     * element types in order otherwise ({@code inst?rng=A&dom=A&args=[A]}).
      * <p>
      * THE {@code args} COMPONENT IS ARITY, AND ITS ABSENCE IS A CLAIM: {@code args=[A]} says the operation takes
      * exactly one argument beyond its lhs, while no {@code args} at all says the law is arity-agnostic — an element
      * law, or one an operation may obey at any arity. That is why a law whose declarations span an idempotent
-     * {@code zero} and an idempotent {@code or} must be spelled {@code inst?dom=A&rng=A}: the binary spelling would
+     * {@code zero} and an idempotent {@code or} must be spelled {@code inst?rng=A&dom=A}: the binary spelling would
      * make the nullary claim a category error.
      *
      * @return the fURI signature of the law's subject

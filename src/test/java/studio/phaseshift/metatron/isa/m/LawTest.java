@@ -50,33 +50,35 @@ public class LawTest {
 
     /**
      * The whole table, one row per constant — the audit list. Each expectation is the signature verbatim, so a
-     * reclassification is a deliberate edit to a readable line rather than a silent change of behavior.
+     * reclassification is a deliberate edit to a readable line rather than a silent change of behavior. The
+     * components are in the canonical query order ({@code rng}, then {@code dom}, then {@code args}) because that is
+     * the order {@link fURI#qString()} renders — the one the shorthand {@code inst?rng<=dom(args)} reads in.
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             // a binary operation on the carrier — A × A → A: the laws that read an operand equation
-            "action                 % inst?dom=A&rng=A&args=[A]",
-            "complement             % inst?dom=A&rng=A&args=[A]",
-            "cyclic                 % inst?dom=A&rng=A&args=[A]",
-            "left_distributive      % inst?dom=A&rng=A&args=[A]",
-            "magmadic               % inst?dom=A&rng=A&args=[A]",
-            "nilpotent              % inst?dom=A&rng=A&args=[A]",
-            "right_distributive     % inst?dom=A&rng=A&args=[A]",
-            "zero_divisor           % inst?dom=A&rng=A&args=[A]",
+            "action                 % inst?rng=A&dom=A&args=[A]",
+            "complement             % inst?rng=A&dom=A&args=[A]",
+            "cyclic                 % inst?rng=A&dom=A&args=[A]",
+            "left_distributive      % inst?rng=A&dom=A&args=[A]",
+            "magmadic               % inst?rng=A&dom=A&args=[A]",
+            "nilpotent              % inst?rng=A&dom=A&args=[A]",
+            "right_distributive     % inst?rng=A&dom=A&args=[A]",
+            "zero_divisor           % inst?rng=A&dom=A&args=[A]",
             // the carrier to itself, the arity stated only by `args` — an ELEMENT law, or a law whose claims
             // span arities: no `args` key at all is the arity-agnostic spelling
-            "absorbing              % inst?dom=A&rng=A",
-            "commutative            % inst?dom=A&rng=A",
-            "idempotent             % inst?dom=A&rng=A",
-            "involution             % inst?dom=A&rng=A",
-            "monoidic               % inst?dom=A&rng=A",
-            "prime                  % inst?dom=A&rng=A",
-            "unit                   % inst?dom=A&rng=A",
+            "absorbing              % inst?rng=A&dom=A",
+            "commutative            % inst?rng=A&dom=A",
+            "idempotent             % inst?rng=A&dom=A",
+            "involution             % inst?rng=A&dom=A",
+            "monoidic               % inst?rng=A&dom=A",
+            "prime                  % inst?rng=A&dom=A",
+            "unit                   % inst?rng=A&dom=A",
             // a relation on the carrier — A × A → bool
-            "poset                  % inst?dom=A&rng=bool&args=[A]",
+            "poset                  % inst?rng=bool&dom=A&args=[A]",
             // a fold — A{*} → A: the reducer's distributivity, and the closure it iterates
-            "semi_right_distributive% inst?dom=A{*}&rng=A",
-            "kleene                 % inst?dom=A{*}&rng=A",
+            "semi_right_distributive% inst?rng=A&dom=A{*}",
+            "kleene                 % inst?rng=A&dom=A{*}",
             // a form law — about an instruction's form, not an operation on a carrier
             "floatable              % inst",
             "blocked                % inst",
