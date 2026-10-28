@@ -21,12 +21,14 @@ package studio.phaseshift.metatron.isa.mach.type;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -170,12 +172,72 @@ public interface Processor extends mThread, Machine.Component {
 
         /**
          * The machine's single entry for applying one inst against a runtime lhs: resolve (the
-         * code_resolve-gated dynamic escape) then the runtime (guards, computeArgs, f().apply,
-         * checks, coefficient). {@code Inst.apply} and the monad loop both hand off here.
+         * code_resolve-gated dynamic escape), then {@link #delegate} (a wrapper fans out to its components),
+         * then the runtime (guards, computeArgs, f().apply, checks, coefficient). {@code Inst.apply} and the
+         * monad loop both hand off here, which is why the wrapper's fan-out lives here and not in resolution.
+         * <p>
+         * WHAT fans out over IS NOT DECIDED HERE: {@link Typer.Helper#candidates} derives the candidate set
+         * (the wrapper plus its exposed components, or the wrapper alone for a {@code Inst.Form.typer}) and
+         * {@link Typer.Helper#applicable} decides which candidates the resolved instruction is about. This
+         * class only resolves against each candidate and invokes it.
          */
         public static Obj apply(final Obj lhs, final Inst inst) {
-            final Inst cinst = inst.hasf() ? inst : resolveRuntime(lhs, inst);
-            return invoke(lhs, cinst, inst);
+            final List<Obj> candidates = Typer.Helper.candidates(lhs, inst);
+            return candidates.size() == 1 ?
+                    invoke(lhs, resolve(lhs, inst), inst) :
+                    delegate(lhs, candidates, inst);
+        }
+
+        /**
+         * RESOLVE, OR PASS. An inst that already carries its function needs no resolution; anything else is
+         * resolved against the given obj. In a fan-out this runs once per CANDIDATE, which is the whole point of
+         * the delegation rule below.
+         */
+        private static Inst resolve(final Obj lhs, final Inst inst) {
+            return inst.hasf() ? inst : resolveRuntime(lhs, inst);
+        }
+
+        /**
+         * DELEGATION — applying an instruction to a wrapper is applying it to a stream of two objects.
+         * <pre>
+         * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
+         * </pre>
+         * WHAT the stream holds and WHETHER the resolved instruction is about each candidate are TYPE-SYSTEM
+         * decisions: {@link Typer.Helper#candidates} derives the candidate set (the wrapper plus the values of
+         * the fields its type declaration exposes, one level deep) and {@link Typer.Helper#applicable} decides
+         * which candidates the resolved instruction is about. This class keeps only the loop — resolve against
+         * THAT candidate, ask the typer, invoke.
+         * <p>
+         * EACH CANDIDATE GOES THROUGH THE WHOLE NORMAL PATH — resolve against THAT candidate, then invoke. There
+         * is nothing special about a poly type here: the resolver and the type checker do exactly what they do
+         * for any value, only on the value of the field keyed by the poly name.
+         * <p>
+         * The results are SUMMED as a multiplicity — the stream the rule promises — with {@code noobj} as the
+         * identity ({@code {noobj, 29} = 29}). A candidate the instruction does NOT resolve against, or one
+         * whose own type does not name the resolved domain, is not applicable and contributes nothing: that is
+         * the identity, NOT a failure. A {@code fail::} from a candidate the instruction DID apply to is not the
+         * identity and propagates, or an instruction that genuinely broke on one part of the wrapper would read
+         * as a success.
+         */
+        private static Obj delegate(final Obj lhs, final List<Obj> candidates, final Inst inst) {
+            final List<Obj> results = new ArrayList<>(candidates.size());
+            for (final Obj candidate : candidates) {
+                final Inst cinst = resolve(candidate, inst);
+                // NOT APPLICABLE IS THE IDENTITY, NOT A FAIL: a resolution miss, a resolution that could not
+                // produce a callable instruction, or a domain about another subject contributes noobj.
+                if (!Typer.Helper.applicable(candidate == lhs, candidate, cinst, inst))
+                    continue;
+                // invoke, not apply: the fan-out is ONE level, so a candidate that is itself a wrapper is applied
+                // to as the object it is, never re-expanded into its own components
+                final Obj rhs = invoke(candidate, cinst, inst);
+                if (rhs.isUncaughtFail())
+                    return rhs;
+                if (!rhs.isNoObj())
+                    results.add(rhs);
+            }
+            // objs() IS the multiplicity sum: empty is noobj (the identity), one is itself, and equal results
+            // collapse into a coefficient (a bulked wrapper's parts count like any other stream)
+            return objs(results.iterator());
         }
 
         /**

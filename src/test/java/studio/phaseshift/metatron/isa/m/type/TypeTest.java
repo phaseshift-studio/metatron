@@ -1723,6 +1723,117 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE REC POLY CONFERS SUPERTYPES. A rec's bracket names the TRAITS the rec implements, so {@code person[ninja]}
+     * is a person that implements {@code ninja} and is acceptable wherever {@code ninja::T} — one of its poly
+     * members — or {@code person::T} — its vid's base — is expected. A name the poly does not carry is not a
+     * supertype, and a two-member poly answers each of its members.
+     * <p>
+     * SCOPE: rec ONLY. The bracket of a non-rec poly type is a SLOT/PARAMETER list, never a trait list, so
+     * {@code lst[int]} is a list of ints (never an int), {@code object[int]} is an object built from an int (never
+     * an int), and their members confer no supertype. One level deep: a member's own poly members do not propagate.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec::T[?[name=>?str::T,age=>?int::T]]@person",
+            "ninja -> rec::T@ninja",
+            "skill -> rec::T@skill",
+            "baker -> rec::T@baker",
+            // a rec-DERIVED but non-rec declaration: its tid is a nominal type (trinket), not rec, so its bracket
+            // is an instantiation PARAMETER -- the object[int] shape, spelled without the category vocabulary
+            "trinket -> rec::T@trinket",
+            "gizmo -> trinket::T@gizmo",
+    })
+    @CsvSource(value = {
+            // instance                | expected       | matches
+            // ---- a rec poly member is a supertype of the instance ----
+            "person[ninja]            | ninja          | true",
+            // ---- ...and the vid's base stays a supertype (unchanged) ----
+            "person[ninja]            | person         | true",
+            // ---- a name the poly does not carry is not a supertype, whether declared or unknown ----
+            "person[ninja]            | baker          | false",
+            "person[ninja]            | guru           | false",
+            "person[ninja]            | skill          | false",
+            // ---- a two-member poly answers either member ----
+            "person[ninja,skill]      | ninja          | true",
+            "person[ninja,skill]      | skill          | true",
+            "person[ninja,skill]      | person         | true",
+            "person[ninja,skill]      | baker          | false",
+            "person[ninja,skill]      | guru           | false",
+            // ---- SCOPE GUARD: a non-rec poly's bracket is a slot/parameter list, not a trait list ----
+            "lst[int]                 | int            | false",
+            "/m/lst[/m/int]           | int            | false",
+            "object[int]              | int            | false",
+            // ...and the same shape spelled structurally: gizmo's declaration tid is trinket, not rec
+            "gizmo[int]               | int            | false",
+    }, delimiter = '|')
+    public void testRecPolyConfersSupertypes(final String instance, final String expected, final boolean matches) {
+        final Type instanceType = T(f(instance.trim()));
+        final Type expectedType = T(f(expected.trim()));
+        assertEquals(matches, instanceType.test(expectedType),
+                "%s (vid=%s, tid=%s, supertype=%s) tested against %s (vid=%s, tid=%s) should be %s"
+                        .formatted(instanceType, instanceType.vid(), instanceType.tid(),
+                                Type.Helper.recPolySupertype(instanceType, expectedType),
+                                expectedType, expectedType.vid(), expectedType.tid(), matches));
+    }
+
+    /**
+     * A PREDICATED TRAIT IS A SUPERTYPE BY CONFORMANCE, NOT BY PREDICATE EQUALITY. {@code person[ninja]} is a
+     * {@code ninja} by name ({@link Type.Helper#recPolySupertype}), and a trait that declares a shape
+     * ({@code ninja::T[?[name=>str::T]]}) then asks the instance's DECLARATION to satisfy that shape, not to
+     * reproduce it: the declared slots ({@code name=>str::T, role=>rec::T}) conform to the trait's
+     * ({@code name=>str::T}) although the two predicate recs are not equal (the comparison that used to veto the
+     * acceptance the name walk just made). A trait whose slot type the declaration CONTRADICTS
+     * ({@code name=>int::T}) is not a supertype, however the poly names it — the conformance check is what makes
+     * "implements the trait" a claim rather than a spelling.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec[role]::T[?[name=>str::T, role=>rec::T]]@person",
+            "ninja -> rec::T[?[name=>str::T]]@ninja",
+            "baker -> rec::T[?[name=>int::T]]@baker",
+    })
+    @CsvSource(value = {
+            // instance            | expected   | matches
+            // ---- a predicated trait is satisfied by conformance, not by an equal predicate ----
+            "person[ninja]         | ninja      | true",
+            // ---- ...and the vid's base stays a supertype (unchanged) ----
+            "person[ninja]         | person     | true",
+            // ---- ...while a trait the instance's declaration contradicts is not a supertype ----
+            "person[baker]         | baker      | false",
+            "person[ninja]         | baker      | false",
+    }, delimiter = '|')
+    public void testPredicatedRecPolyMemberIsASupertypeByConformance(final String instance, final String expected, final boolean matches) {
+        final Type instanceType = T(f(instance.trim()));
+        final Type expectedType = T(f(expected.trim()));
+        assertEquals(matches, instanceType.test(expectedType),
+                "%s (vid=%s, tid=%s, predicate=%s) tested against %s (vid=%s, tid=%s, predicate=%s) should be %s"
+                        .formatted(instanceType, instanceType.vid(), instanceType.tid(), instanceType.predicate(),
+                                expectedType, expectedType.vid(), expectedType.tid(), expectedType.predicate(), matches));
+    }
+
+    /**
+     * THE SAME CONFORMANCE AT THE VALUE LEVEL, on the same predicated traits. A value typed {@code person[ninja]}
+     * conforms to {@code ninja::T[?[name=>str::T]]} because the VALUE satisfies the trait's predicate
+     * ({@code typeCheck}'s predicate stack, which already did this before the type-level fix), and it fails a
+     * trait its value cannot satisfy — the value-level half of the same rule.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec[role]::T[?[name=>str::T, role=>rec::T]]@person",
+            "ninja -> rec::T[?[name=>str::T]]@ninja",
+            "baker -> rec::T[?[name=>int::T]]@baker",
+    })
+    @CsvSource(value = {
+            // value                                                         | type        | matches
+            "person[ninja]::[name=>'marko',role=>ninja::[name=>'dark_assassin']]  % ninja::T   % true",
+            "person[ninja]::[name=>'marko',role=>ninja::[name=>'dark_assassin']]  % person::T  % true",
+            "person[baker]::[name=>'marko',role=>baker::[name=>'crusty']]         % baker::T   % false",
+    }, delimiter = '%')
+    public void testPredicatedRecPolyValueConformsToItsTrait(final String value, final String type, final boolean matches) {
+        checkMatches(LOG, value, type, matches);
+    }
+
+    /**
      * INSTANTIATING A TYPE KEEPS THE ARGUMENTS IT WAS GIVEN. Resolving a type reads its registered declaration, and
      * the request's bracket must survive that read: the declaration's bracket is its PARAMETER list, so the request
      * substitutes it positionally ({@code person[role]} + {@code [ninja]} -> {@code person[ninja]}), an unclaimed

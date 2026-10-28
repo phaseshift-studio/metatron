@@ -23,13 +23,18 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /**
@@ -167,6 +172,127 @@ public interface Typer extends Machine.Component {
             return insts
                     .filter(i -> null != i && null != i.tid() && null != i.tid().basePath())
                     .filter(i -> i.tid().basePath().bimatches(pattern.basePath().asNode()));
+        }
+
+        // ======================== delegation decisions ========================
+
+        /**
+         * THE CANDIDATE SET of a delegation — the wrapper itself plus the values of the fields its type
+         * declaration exposes; this is what an instruction fans out over.
+         * <pre>
+         * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
+         * </pre>
+         * A wrapper is a {@code rec} whose type INSTANTIATES a declaration whose tid poly names the
+         * exposed fields ({@code rec[role]::T[?[…,role=>rec::T]]@person}), and an instantiation
+         * ({@code person[ninja]}) names their types. The candidate set is the wrapper PLUS every declared
+         * slot that is PRESENT and holds a {@code rec} — one level deep, so a candidate's own slots never
+         * join and the walk never recurses. Every other value (a mono, a plain rec with no such
+         * declaration, a slot holding a {@code str}) has nothing to fan out over and yields the wrapper
+         * alone.
+         * <p>
+         * A {@code Inst.Form.typer} instruction retypes its subject, so it is OPAQUE: it applies to the
+         * wrapper alone and never distributes over the components.
+         *
+         * @param lhs  the value the instruction applies to
+         * @param inst the instruction about to be applied
+         * @return the wrapper first, then the exposed component values; a one-element list when there is
+         *         nothing to fan out over
+         */
+        public static List<Obj> candidates(final Obj lhs, final Inst inst) {
+            if (Inst.Form.of(inst) == Inst.Form.typer)
+                return List.of(lhs);
+            final List<Obj> parts = delegationParts(lhs);
+            if (parts.isEmpty())
+                return List.of(lhs);
+            final List<Obj> candidates = new ArrayList<>(parts.size() + 1);
+            candidates.add(lhs);
+            candidates.addAll(parts);
+            return candidates;
+        }
+
+        /**
+         * The components a wrapper exposes, as declared by its type's tid poly and carried by the value.
+         * Empty unless the value is a {@code rec} whose type is an INSTANTIATION (its tid carries the
+         * arguments) of a DECLARATION whose tid poly names the exposed fields — and only a slot that is
+         * present AND holds a {@code rec} is a part. Every other value (a mono, a plain rec with no such
+         * declaration, a slot holding a {@code str}) has nothing to delegate to and takes the ordinary
+         * single-application path.
+         */
+        private static List<Obj> delegationParts(final Obj lhs) {
+            if (!lhs.isRec())
+                return List.of();
+            final fURI tid = lhs.tid();
+            // the value's OWN tid carries the type arguments (person[ninja]), the declaration's carries the fields
+            if (null == tid || !tid.hasPoly())
+                return List.of();
+            final Type type = lhs.type();
+            final fURI declared = null == type ? null : type.tid();
+            if (null == declared || !declared.hasPoly())
+                return List.of();
+            // AN INSTANTIATION, NOT A SLOT DECLARATION. {@code person[ninja]} instantiates a declaration whose own
+            // tid is {@code rec[role]}, so the value's type family (person) differs from its base (rec). A plain
+            // {@code rec[k1,k2]} literal carries the same base, and its bracket is a slot list, not a set of
+            // traits to delegate to -- it is not a wrapper.
+            if (null == type.vid() || type.vid().basePath().equals(declared.basePath()))
+                return List.of();
+            final Rec rec = lhs.asRec();
+            final List<Obj> parts = new ArrayList<>(declared.poly().size());
+            for (final String slot : declared.poly()) {
+                final Obj part = rec.at(f(slot.trim()));
+                if (part.isRec())
+                    parts.add(part);
+            }
+            return parts;
+        }
+
+        /**
+         * IS THE RESOLVED INSTRUCTION ABOUT THIS CANDIDATE? The fan-out is not "apply it to everything": each
+         * candidate is offered the instruction, and the type system says whether it is that candidate's.
+         * <ol>
+         *   <li>The instruction did not resolve to a callable instruction (noobj, or an unresolved fallback with
+         *       no function) — the candidate simply does not receive it. This is the resolution miss that
+         *       replaced the old name-level selection: nothing has to know which components implement a trait,
+         *       the resolver already refuses the ones that do not.</li>
+         *   <li>A {@code typer} retypes its subject, so it is opaque and never distributed.</li>
+         *   <li>A GENERIC/PATTERN domain ("any obj") is about every candidate — the multiplicity reads.</li>
+         *   <li>A BASE-typed domain ({@code rec}, {@code str}, ...) is about the wrapper AS that form: its
+         *       components are not a different subject for it. This is what keeps a type predicate, a rec-typed
+         *       instruction, or {@code count()} from summing over the parts.</li>
+         *   <li>Any other domain NAMES a type, and it reaches the candidate whose own type identity is that name:
+         *       the field's value for a typed call ({@code fight?<=ninja()}), the wrapper for its own type
+         *       ({@code ponder?<=person()}). The wrapper only BORROWS a component's type by covariance, which is
+         *       TYPE ACCEPTANCE (passing a wrapper where a trait is expected, {@link Type.Helper#recPolySupertype}),
+         *       NOT dispatch identity — and dispatch is the identity question, so that rule is not consulted here.</li>
+         * </ol>
+         * WHEN THE CALLER NAMES A DOMAIN ({@code ?<=ninja()}), that name is the subject, not the overload the
+         * resolver happened to bind: {@code describe?<=duo_position()} addresses positions even though
+         * {@code describe} also has a {@code duo_ninja} body. An untyped call has nothing but the resolved
+         * instruction's own domain to go on.
+         *
+         * @param wrapper  whether {@code candidate} is the wrapper itself (not one of its components)
+         * @param candidate the value the instruction was resolved against
+         * @param cinst    the instruction resolved against {@code candidate}
+         * @param original the instruction before resolution (its named domain, when any, is the subject)
+         * @return true when the resolved instruction is about this candidate, so it must be invoked
+         */
+        public static boolean applicable(final boolean wrapper, final Obj candidate, final Inst cinst, final Inst original) {
+            if (cinst.isNoObj())
+                return false;
+            // an as() inst is completed by the runtime when it carries no function: every other instance of the
+            // no-function fallback is a resolution that could not determine a body
+            if (!cinst.hasf() && !cinst.tid().basePath().equals(AS_INST_TID))
+                return false;
+            if (cinst.form() == Inst.Form.typer)
+                return wrapper;
+            final fURI requestedID = original.hasDom() ? Obj.Helper.specificTypeId(original.dom()) : null;
+            final Type dom = null != requestedID && !requestedID.isGeneric() && !requestedID.hasPattern()
+                    ? original.dom() : cinst.dom();
+            final fURI domID = Obj.Helper.specificTypeId(dom);
+            if (domID.isGeneric() || domID.hasPattern())
+                return true;
+            if (dom.isBaseType())
+                return wrapper;
+            return candidate.testByID(dom);
         }
     }
 }

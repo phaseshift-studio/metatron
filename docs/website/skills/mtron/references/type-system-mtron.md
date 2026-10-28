@@ -1,6 +1,6 @@
 ---
 name: type-system-mtron
-description: mtron type system fundamentals — vid/tid, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types
+description: mtron type system fundamentals — vid/tid, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types, poly types and their three readings (tensor, fibered, path), lifting and covariance
 ---
 
 # mtron type system
@@ -146,7 +146,7 @@ mtron> hundreds::150                [-- 150  (passes both levels) --]
 ==>hundreds::150
 mtron> hundreds::50         [-- dies at posint's level — the ancestor stack is enforced, not just the top --]
 ==>fail::[parse error at line 1, col 1: 50 is not a posint::T[is(gt(100))]@hundreds
-   	while parsing: hundreds::50]@/sys/fail/1861979
+   	while parsing: hundreds::50]@/sys/fail/109
 ```
 ### non-isa predicates (nominal)
 
@@ -213,7 +213,7 @@ mtron> -2.isa(intabs::T)                [-- noobj  (the filter drops it: the ver
 mtron> 2.as(intabs::T)                  [-- intabs::2  (admitted; the id branch of the ctor leaves it as-is) --]
 ==>intabs::2
 mtron> -2.as(intabs::T)         [-- refused: the predicate tests before the constructor could run --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/1921544
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/110
 ```
 A converting constructor is visible the same way — it runs on the admitted value, and on nothing else:
 
@@ -224,7 +224,7 @@ mtron> int2x::2                         [-- int2x::20  (the constructor mult(10)
 mtron> 2.as(int2x::T)                   [-- int2x::20  (admitted at the gate, then converted) --]
 ==>int2x::20
 mtron> -2.as(int2x::T)          [-- refused for the same reason — the gate runs first --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]@/sys/fail/1937747
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]@/sys/fail/111
 ```
 A type with no constructor is a pure constraint — values must already satisfy the predicate to be members; there is
 nothing to run them through.
@@ -233,11 +233,11 @@ nothing to run them through.
 
 The distinction depends solely on the existence of a **predicate**:
 
-| Kind                       | Has predicate? | Has vid?         | Example                                           |
-|----------------------------|----------------|------------------|---------------------------------------------------|
+| Kind                       | Has predicate? | Has vid?         | Example                                              |
+|----------------------------|----------------|------------------|------------------------------------------------------|
 | **structural**             | yes            | optional         | `int::T[?>0]@posint` — constraint defines membership |
-| **nominal**                | no             | yes (tid ≠ vid)  | `int::T@age` — label defines membership           |
-| **base type** (structural) | no             | yes (tid == vid) | `int::T` (= `int::T@int`) — primitive             |
+| **nominal**                | no             | yes (tid ≠ vid)  | `int::T@age` — label defines membership              |
+| **base type** (structural) | no             | yes (tid == vid) | `int::T` (= `int::T@int`) — primitive                |
 
 - **structural** = any type with a predicate. The predicate specifies the structural requirements a value must satisfy.
   Isa predicates (`?[...]`) constrain record fields; non-isa predicates (`is(gt(0))`) constrain by computation.
@@ -261,7 +261,7 @@ mtron> being::T@human                 [-- nominal siblings under being --]
 mtron> being::T@chicken
 mtron> [-- A human is NOT a chicken, despite identical structure --]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)
-==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/1954828
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/114
 ```
 This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
 knowledge** (nominal — what has been declared).
@@ -315,6 +315,201 @@ mtron> int::T.isa(#{*}::T)              [-- noobj  (the `isa` rows admit values,
 Note the direction: values test against `#{*}::T` and pass, while type-vs-type — "is `posint` a refinement of
 `int`?" — is asked of the type *hierarchy* (see *type hierarchy and refinement* above), not of a value.
 
+## poly types: three readings of the bracket
+
+A type's bracket — the `[...]` after its name — has exactly one meaning per base type. The general category is **poly
+types**; `lst`, `rec` and `rel` are its *readings*, not three words for the same construct.
+
+### the three readings
+
+| construct     | name                     | poly denotes                                                                                   | verb     |
+|---------------|--------------------------|------------------------------------------------------------------------------------------------|----------|
+| `lst[A,B]`    | TENSOR TYPE              | the slot types — the coordinates of an A × B (rank = bracket length, extent = the coefficient) | CONTAINS |
+| `rec[F1,F2]`  | FIBERED TYPE             | the FIBERS (named, distinct objects)                                                           | EXPOSES  |
+| `rel[A,B,C]`  | PATH TYPE                | the vertices of the right-nested chain `A => (B => C)`                                         | CHAINS   |
+| `object[int]` | degenerate rank-1 tensor | the instantiation parameter                                                                    | —        |
+
+**graded** says something about rank × extent — how many coordinates, and how far each one runs. It is a property of a
+tensor, never a synonym for *poly*.
+
+### content vs object: why the readings do not collapse
+
+The reading decides what the bracket's entries *are*, and that decides what a call does to the value.
+
+**A tensor's slots are the object's content.** `lst[int]` is a list whose slots hold ints — it is not an `int`.
+Position is the coordinate, so the type speaks about the value's own contents, one slot per position, and its entries
+are not separate objects a call can reach: `[29,'94103']` satisfies `lst[age,zipcode]::T` (slot 0 is an age, slot 1 a
+zipcode) and fails `lst[zipcode,age]::T`, where the coordinates are swapped.
+Two consequences, and they are the same consequence twice: there is no lifting *into* a tensor's slots (`lst[int]`
+hands a call no second candidate), and a tensor confers no supertype (`lst[int]` is never an `int` — a list of ints is
+not an int). The coefficient is where extent lives, not another coordinate: `lst[int{4}]` is ONE slot holding four
+ints, while `lst[int,int,int,int]` is four slots.
+
+**A fibered type's entries are distinct objects.** `person[ninja]` is a person *and* a ninja; the ninja is not the
+wrapper's content but an object the wrapper exposes. So a value of that type is acceptable where `ninja::T` is
+expected (its base or any fiber — see *conformance and covariance*), and an instruction declared on `ninja` applies to
+the fiber's value as if it had been declared top-level.
+
+### declaring a fibered type vs instantiating one
+
+A fibered type is spelled twice, and the two brackets say different things:
+
+```
+rec[role,position]::T[?[name=>str::T, role=>rec::T, position=>rec::T]]@person
+    ^^^^^^^^^^^^^^ the DECLARATION's poly NAMES the fibers (field names)
+
+person[ninja,position]::[...]
+       ^^^^^^^^^^^^^^^ the INSTANCE's poly gives their TYPES (their contents)
+```
+
+- the DECLARATION's poly is a list of **field names** — the fibers this wrapper exposes;
+- the INSTANCE's poly is a list of **type arguments** — what each fiber's value is.
+
+The declaration's entries are parameters and the instance's are arguments, so resolution substitutes one for the
+other positionally: `person[role]` + `[ninja]` → `person[ninja]`, an unclaimed parameter keeps its declared entry, and
+a request that names nothing leaves the declaration as it stands (`Type.Helper.instantiate`).
+
+This asymmetry is why `fURI.test` — which compares **names**, never types — answers `person[ninja].test(person[role])`
+as false: the lhs is a specialization and `role` is not the name `ninja`. The two are still related, at the type
+layer, by that bound substitution rather than by the bracket claim.
+
+### lifting (dispatch into a fiber)
+
+An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level: `fight?<=ninja()` on a
+`person[ninja]` wrapper reaches the `ninja` object inside it, not the wrapper.
+
+Mechanically there is nothing trait-aware anywhere in the processor. The candidate set is the wrapper **plus the
+values of the fields the declaration's poly names**, and each candidate is resolved and invoked on its own — so the
+"selection" is ordinary resolution, not a lookup table keyed by the declaration:
+
+- an **untyped call lifts over all fibers**; `?<=T` selects one candidate, because a named domain is the subject the
+  call is about.
+- `noobj` is the multiplicity identity, so `{noobj, 29}` = `29`: a candidate the instruction is not about contributes
+  nothing. A `fail::` is not the identity — it PROPAGATES — or an instruction that broke on one part of the wrapper
+  would read as a success.
+- candidates are **one level deep**: a candidate that is itself a wrapper is applied to as the object it is, never
+  expanded again.
+- `Inst.Form.typer` — `as`, `::`, `type`, `vid`, `tid` — **never lifts**. A typer retypes the one object it is given,
+  so it is opaque: `as(person::T)` is both the narrowing escape from a fan-out and the exception to it (it changes the
+  basis, so it cannot be distributed over the old one).
+- ref-writes (`<uri> -> obj`) are address-precise and never lift. `update` (`>>=`) does fan out, since its domain is
+  any obj; `as(T)` first, or `?<=T` on the call, is what narrows it back to one basis.
+- a fan-out result is an **unordered multiplicity**. When order or provenance matters the user writes the keyed rec
+  explicitly — one key per fiber, each narrowing its own call (`[role => *marko.describe?<=ninja(), position =>
+  *marko.describe?<=position()]`). There is no keyed projection that does it for you.
+- a wrapper on which **no candidate** applies yields `noobj` — a miss is not a failure. The same miss on a non-wrapper
+  value is still a loud `unable to locate inst-f`, because there is nothing else to try.
+
+### conformance and covariance
+
+Two questions, and they must not be confused: *may I pass this value here* (acceptance) and *which object does this
+instruction run on* (dispatch).
+
+- **A declared fiber must be present.** A slot declared at coefficient one that the value does not carry fails
+  conformance. Absence is legal only where the fiber's coefficient admits zero — `rec[role,position{?}]` — and reading
+  a missing key still yields `noobj`. `noobj` is a value, not a hole.
+- **A predicated fiber type is satisfied by conformance.** When the trait declares a shape
+  (`ninja::T[?[name=>str::T]]`), the instance's declaration is tested against that shape rather than asked to
+  reproduce it: `person`'s declared `[name=>str::T, role=>rec::T]` conforms to `[name=>str::T]` although the two
+  predicate recs are not equal. A declaration the trait's shape CONTRADICTS (`name=>int::T` where the trait wants a
+  str) is not a supertype, however the poly names it.
+- **Covariance: a fibered value is acceptable where its base OR ANY fiber is expected.** `person[ninja]` is a
+  `person` and a `ninja`. The scope guard matters as much as the rule: this is `rec` only — `lst[int]` is not an
+  `int`, and `object[int]` is not an `int`.
+- **Covariance is type acceptance only, never dispatch.** A wrapper that merely *borrows* a fiber by covariance does
+  not thereby fire that fiber's instructions; the object the definition was written for is the object it runs on.
+- **Dispatch is an identity question**: a named domain selects the candidate that IS that type — the fiber whose own
+  type is that name, or the wrapper when the name is the wrapper's. Borrowed names are not identities.
+
+### where it lives in the code
+
+| symbol                                       | what it answers                                                                                                                                                               |
+|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Processor.Helper.apply`                     | the single runtime entry: resolve → delegate → invoke; a `Inst.Form.typer` short-circuits the fan-out                                                                         |
+| `Processor.Helper.applicable`                | is the resolved instruction about THIS candidate (generic/pattern dom → every candidate; base dom → the wrapper; a named dom → the candidate whose own identity is that name) |
+| `Processor.Helper.delegationParts`           | the candidate set: the wrapper plus the values of the fields the declaration's tid poly names, present and holding a rec, one level deep                                      |
+| `Type.Helper.recPolySupertype`               | covariance: the instance's poly entries are supertypes of the instance (rec only, one level)                                                                                  |
+| `Type.Helper.recPolyConformance`             | a predicated trait asks the instance's declaration to satisfy the trait's declared shape                                                                                      |
+| `Type.Helper.recSlotsCarried`                | presence: every declared slot is carried unless its coefficient (or its declared slot type) admits zero                                                                       |
+| `Type.Helper.instantiate`                    | the requested bracket survives resolution: declared parameters + requested arguments, substituted positionally                                                                |
+| `fURI.polyLess` / `AbstractfURI.basePath()`  | the erasure the identity sites use: `basePath()` is exactly `cLess().qLess().polyLess()`                                                                                      |
+| `Inst.Form.typer`, `InstBuilder.declareForm` | the typer facet is DECLARED, keyed per OPERATION by base path, so a retyped tid still answers `declaredForm`                                                                  |
+| `AbstractfURI.test`                          | the bracket claim rule: a bare lhs accepts a bracketed rhs, a bracketed lhs fails a bare acceptor, a generic rhs entry accepts within its coefficient                         |
+| `fURI.Helper.validatePoly`                   | a keyed map or a nested list inside a poly is a category error, rejected at construction                                                                                      |
+
+The claim rule is what keeps the declaration/instance asymmetry honest at the uri layer:
+
+| lhs             | rhs             | test  |
+|-----------------|-----------------|-------|
+| `person`        | `person[ninja]` | true  |
+| `person[ninja]` | `person`        | false |
+| `person[ninja]` | `person[A]`     | true  |
+| `person[ninja]` | `person[role]`  | false |
+
+### worked example: two fibers
+
+The declaration names both fibers; the instance types them. `position` is declared **bare** (`rec::T@position`) on
+purpose — a trait declared *with* a shape asks the wrapper's declaration to conform, and this wrapper declares
+`name`, `age`, `role` and `position`, not a position's `title`/`rank`:
+
+```mtron
+a fibered type: the declaration names the fibers, the instance types them
+mtron> person -> rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@person
+mtron> ninja -> rec::T@ninja
+mtron> position -> rec::T@position
+mtron> marko -> person[ninja,position]::[name=>'marko',age=>29,role=>ninja::[name=>'dark_assassin'],position=>position::[title=>'sniper',rank=>5]]@marko
+==>person[ninja,position]::[
+    name=>'marko',
+    age=>29,
+    role=>ninja::[name=>'dark_assassin'],
+    position=>position::[title=>'sniper',rank=>5]]@marko
+mtron> [-- untyped: both the wrapper and the role fiber carry a name --]
+mtron> *marko>>name
+==>'marko'
+==>'dark_assassin'
+mtron> [-- only the position fiber carries a title; noobj is the identity --]
+mtron> *marko>>title
+==>'sniper'
+mtron> [-- a wrapper's own field reads alone --]
+mtron> *marko>>age
+==>29
+```
+The instantiation is carried by the value's own type, so `*marko.type()` reports the DECLARATION instantiated with
+both arguments — `rec[role,position]::T[?[…]]@person[ninja,position]` — while `*marko` still prints the value under
+that type.
+
+A named domain picks the candidate that IS that type — the role fiber, or the position fiber, never the wrapper that
+merely borrows them. A body that reads a key its own fiber does not carry has nothing to answer:
+
+```mtron
+dispatch is identity: a named domain reaches the fiber whose own type is that name
+mtron> aim -> |inst?<=position(){ >>title }
+mtron> shadow -> |inst?<=ninja(){ >>name }
+mtron> *marko.aim()                    [-- dom=position: the position fiber's title --]
+==>'sniper'
+mtron> *marko.aim?<=position()         [-- the same call with its type named at the call site --]
+==>'sniper'
+mtron> *marko.shadow()                 [-- dom=ninja: the role fiber's own name, never the position's title --]
+==>'dark_assassin'
+```
+An untyped call is about every candidate, so an instruction both fibers declare answers twice; `?<=T` narrows it, and
+a typer stays on the wrapper alone:
+
+```mtron
+untyped fans out, ?<=T selects, a typer does not lift
+mtron> describe?dom=ninja -> |inst?<=ninja(){ 'a shadow' }
+mtron> describe?dom=position -> |inst?<=position(){ 'sniper report' }
+mtron> *marko.describe()               [-- both fibers declare a body: an unordered multiplicity --]
+==>'a shadow'
+==>'sniper report'
+mtron> *marko.describe?<=position()    [-- one fiber, one answer --]
+==>'sniper report'
+mtron> *marko.as(person::T)            [-- a typer is opaque: the wrapper alone, the instantiation erased --]
+==>person::[name=>'marko',
+            age=>29,
+            role=>ninja::[name=>'dark_assassin'],
+            position=>position::[title=>'sniper',rank=>5]]
+```
 ## type checking and casting
 
 ### `.test()` — predicate membership
@@ -343,10 +538,10 @@ mtron> [-- intabs has a constructor (absolute value), but the gate still runs fi
 mtron> 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
 ==>intabs::2
 mtron> -2.as(intabs::T) [-- refused: -2 is not an intabs — construction (intabs::-2) is the door that coerces --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/1991153
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=>mult(-1),id()=>id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/117
 mtron> [-- Without a constructor the cast is a pure test --]
 mtron> -2.as(int::T[?>0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
-==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/1999384
+==>fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/118
 ```
 `.as()` is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
 and the stamp records the fit:
@@ -355,7 +550,7 @@ and the stamp records the fit:
 mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- chicken::[name=>'fuzzy feet',age=>2]  (nominally a being: the stamp goes on) --]
 ==>chicken::[name=>'fuzzy feet',age=>2]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
-==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/2010552
+==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/121
 ```
 Note the asymmetry: an anonymous rec has no lineage to contradict it, so its fields alone decide the fit — the
 `chicken` demands `age=>int::T`, and the rec supplies it. A stamped `human`, though, carries a lineage — `human`

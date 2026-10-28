@@ -368,6 +368,14 @@ public interface Type extends Obj {
             return false;
         if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
+        // CONFORMANCE, NOT PREDICATE EQUALITY, WHEN THE ACCEPTANCE CAME FROM A POLY MEMBER. A trait is a supertype
+        // of the instance by NAME (recPolySupertype), so a PREDICATED trait asks the instance's declaration to
+        // SATISFY its predicate -- the same conformance a value makes -- rather than to reproduce it. Without this
+        // the exact comparison below re-vetoed person[ninja]::T against ninja::T[?[name=>str::T]]: the name walk
+        // accepted it and the tail then demanded the two predicates be equal. A same-name claim still needs that
+        // equality, so only a poly-member acceptance takes the conformance branch.
+        if (Helper.recPolySupertype(this, rhs.asType()))
+            return Helper.recPolyConformance(this, rhs.asType());
         return !rhs.asType().hasPredicate() || Objects.equals(this.asType().predicate(), rhs.asType().predicate());
     }
 
@@ -717,6 +725,86 @@ public interface Type extends Obj {
                         if (!slot.isNoObj())
                             return slot;
                     }
+                }
+                final Type parent = level.parentType();
+                if (parent.equals(level))
+                    break;
+                level = parent;
+            }
+            return null;
+        }
+
+        /**
+         * THE REC POLY CONFERS SUPERTYPES. A rec's bracket names the TRAITS the rec implements, so each entry is a
+         * SUPERTYPE of the instance: a value of type {@code person[ninja]} is acceptable wherever {@code ninja::T}
+         * (one of its entries) or {@code person::T} (its vid's base) is expected. This is what makes a
+         * {@code dom=ninja} instruction legal on a {@code person[ninja]} wrapper; the vid's base is already covered
+         * by the ordinary nominal walk, the entries are not, because a trait is not on the vid's parent chain.
+         * <p>
+         * REC ONLY, AND ONE LEVEL DEEP. The guard is the DECLARATION's base form, its tid: a rec instantiation
+         * keeps {@code rec} as its tid ({@code person[ninja]::T} has tid {@code rec}), so its bracket is a trait
+         * list. Every other poly type spells something else there and its bracket is a SLOT/PARAMETER list, which
+         * confers no supertype: {@code lst[int]} has tid {@code lst} (a list of ints is not an int),
+         * {@code object[int]} has tid {@code category} (an object built from an int is not an int) and
+         * {@code rel[...]} has tid {@code rel}. Only THIS vid's entries are supertypes -- a member's own bracket
+         * says nothing about its component.
+         *
+         * @param instance the tested type (the value's type, carrying the poly)
+         * @param expected the expected type (its vid is the name asked for)
+         * @return true when {@code expected}'s vid names one of {@code instance}'s vid poly entries
+         */
+        public static boolean recPolySupertype(final Type instance, final Type expected) {
+            if (null == instance || null == expected)
+                return false;
+            final fURI id = instance.vid();
+            if (null == id || !id.hasPoly() || !Tokens.REC_TID.basePath().equals(instance.tid().basePath()))
+                return false;
+            for (final String entry : id.poly())
+                if (testByIdentity(f(entry.trim()), expected.vid()))
+                    return true;
+            return false;
+        }
+
+        /**
+         * A POLY MEMBER IS A SUPERTYPE BY CONFORMANCE, NOT BY NAME ALONE. {@link #recPolySupertype} makes the
+         * instance's poly entry a supertype of the instance ({@code person[ninja]} is a {@code ninja}), and a
+         * PREDICATED trait additionally constrains the shape ({@code ninja::T[?[name=>str::T]]}). The instance
+         * then has to SATISFY that shape rather than reproduce it: its own declared shape (the rec of declared
+         * slot types, {@link #typePredicateObj}) is tested against the trait's with the same structural test a
+         * value makes ({@link Rec#test}). A declaration that contradicts the trait -- {@code name=>?int::T} where
+         * the trait requires {@code name=>str::T} -- is not a supertype, however the poly names it.
+         * <p>
+         * This is the type-vs-type half of the conformance a value gets from {@link #typeCheck(Obj, Obj)}'s
+         * predicate stack; it is what lets {@code Type#test}'s tail answer conformance instead of re-vetoing the
+         * acceptance the name walk just made.
+         *
+         * @param instance the instance type (its vid's poly names the trait)
+         * @param expected the trait type the instance is tested against
+         * @return true when the instance's declaration satisfies the trait's predicate
+         */
+        public static boolean recPolyConformance(final Type instance, final Type expected) {
+            if (null == expected || !expected.hasPredicate())
+                return true; // the trait asks nothing of the shape: the name walk is the whole acceptance
+            final Obj traitShape = typePredicateObj(expected);
+            if (null == traitShape || !traitShape.isRec())
+                return true; // a non-structural predicate is checked on the value, not on the declaration
+            final Obj declaredShape = declarationShape(instance);
+            // NOTHING DECLARED IS NOTHING CONTRADICTED: a bare person[ninja]::T carries no predicate of its own,
+            // and value-vs-type conformance is where a value is held to the trait's shape
+            return null == declaredShape || declaredShape.test(traitShape);
+        }
+
+        /**
+         * The rec shape a type DECLARES: the first predicate rec on its chain to the root, leaf-first (the mirror
+         * of {@link #recDeclaredSlot}'s walk). Null when no level of the declaration types a shape.
+         */
+        private static Obj declarationShape(final Type type) {
+            Type level = type;
+            for (int hops = 0; null != level && !level.isRootType() && hops < 256; hops++) {
+                if (level.hasPredicate()) {
+                    final Obj shape = typePredicateObj(level);
+                    if (shape.isRec())
+                        return shape;
                 }
                 final Type parent = level.parentType();
                 if (parent.equals(level))
