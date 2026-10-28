@@ -119,8 +119,8 @@ public class LawCensusTest extends AbstractMetatronTest {
             // signature in the six names its map, and its commutativity/magmadic claims are about the reduction
             // (order-independence of the fold) rather than about an operation of the carrier. Removing this entry
             // needs a shape for a carrier-changing fold, not a looser match.
-            // the addresses render rng before dom (the pre-existing HashMap spelling of the dom/rng setters, pinned
-            // by catInstSetTest's inverse rows), so the entry must begin with that exact text
+            // the addresses render rng before dom — the canonical query order (inst?rng<=dom(args)), pinned by
+            // catInstSetTest's inverse rows — so the entry must begin with that exact text
             "/m/inst/mean?rng=/m/real&dom=/m/int{*} — mean reduces a stream of ints to a real, so neither the "
                     + "arity-agnostic endo shape (rng != dom) nor the binary shape (zero arguments) is its contract; "
                     + "the commutative/magmadic claims are about the reduction, and no signature names that yet",
@@ -242,7 +242,7 @@ public class LawCensusTest extends AbstractMetatronTest {
      * ({@code deduceTypeInst} admits it over the address's own carrier — a role names the operation's contract, so
      * the address's dom is the carrier the lift is asked over, not the enclosing algebra's), or covered by a
      * registration of the same operation over a carrier on that address's path ({@link #covered} — the family read a
-     * role pointer takes, which is why code's {@code end} role is answered by {@code end?dom=/m/code&rng=/m/code{0}}
+     * role pointer takes, which is why code's {@code end} role is answered by {@code end?rng=/m/code{0}&dom=/m/code}
      * and its {@code branch} role by the generic {@code branch?dom=A}). A role that binds a
      * literal element ({@code zero => 0}, {@code id => ""}) or a type address ({@code objects => /m/mach/machine})
      * is not an instruction pointer and is skipped. This is the assertion that catches code's
@@ -376,7 +376,7 @@ public class LawCensusTest extends AbstractMetatronTest {
      * pointer takes, with the admission rule a family read applies: the same op family, over a carrier on the
      * address's path to the root. It is deliberately NOT a bare operation-name match — a lost {@code zero?bool} is
      * not answered by {@code zero?int}, because {@code bool}'s path never includes {@code int}, while code's
-     * {@code end} role IS answered by the registered {@code end?dom=/m/code&rng=/m/code{0}} (same carrier,
+     * {@code end} role IS answered by the registered {@code end?rng=/m/code{0}&dom=/m/code} (same carrier,
      * coefficient-only difference) and its {@code branch} role by the generic {@code branch?dom=A} (a generic dom
      * is on every path).
      */

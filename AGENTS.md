@@ -221,7 +221,8 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
 - wildcards: `+` = single segment, `#` = multi-segment (MQTT-style)
 - q procs: `?incq` (auto-increment), `?subq` (pubsub), `?docq` (documentation associated with uri), etc.
 - dom/rng: `inst?a<=b()` is an instruction that maps objs of type `b` to objs of type `a` (note reverse arrow `<=`).
-  ultimately compiles to the URI `inst?dom=b&rng=a`.
+  ultimately compiles to the URI `inst?rng=a&dom=b`: query components render in the canonical order `rng`, `dom`,
+  `args`, then the remaining keys in reverse alphabetical order, so one fURI has exactly one spelling.
 
 **mtron language**
 

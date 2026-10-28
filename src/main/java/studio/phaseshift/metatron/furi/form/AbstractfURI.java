@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.Tokens.ARGS;
 import static studio.phaseshift.metatron.Tokens.DOM;
 import static studio.phaseshift.metatron.Tokens.RNG;
 import static studio.phaseshift.metatron.furi.fURI.Component.*;
@@ -43,6 +44,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class AbstractfURI implements fURI {
+
+    /**
+     * The keys that lead the canonical query, in the order the instruction signature names them:
+     * {@code inst?rng<=dom(args)} reads rng before dom, and {@code args} is the parenthesized tail.
+     */
+    private static final List<String> Q_LEAD = List.of(RNG, DOM, ARGS);
 
     @Override
     public List<String> segments() {
@@ -822,9 +829,52 @@ public abstract class AbstractfURI implements fURI {
     }
 
 
+    /**
+     * The query components in CANONICAL order, so that a uri has one spelling and not as many as there are ways to
+     * fill its map.
+     * <p>
+     * THE ORDER IS THE SIGNATURE'S. A query is read as an instruction's signature — {@code inst?rng<=dom(args)}, the
+     * shorthand for {@code inst?dom=…&rng=…&args=[…]} written as an arrow — and it is rendered in that same order:
+     * {@code rng}, then {@code dom}, then {@code args}, then every remaining key in REVERSE ALPHABETICAL (descending
+     * natural string) order. {@code rng} precedes {@code dom} because the arrow reads rng-FROM-dom: the result type
+     * is named first, the input type after, exactly as {@code a<=b} names its output on the left. Everything else is
+     * sorted descending rather than ascending so the fixed trio leads and the tail is a stable, obviously-not-insertion
+     * order — the point is one authority, not a pretty tail.
+     * <p>
+     * WHY CANONICAL AT ALL: {@code equals} compares the query MAP, so two uris that differ only in the order their
+     * keys were inserted are the same uri — but they used to render as different text, and {@link
+     * studio.phaseshift.metatron.furi.fURICache} interns by TEXT. Two spellings of one fURI were therefore two cache
+     * entries (and two instances, two {@code toString} results, two hash maps on the way to one answer). Sorting here
+     * is what makes equal uris render identically, and identical text is what lets them intern as one key.
+     * <p>
+     * Note this is a RENDER-time order only: {@link #qMap()} keeps whatever map the parser or a setter built, so a
+     * {@code dom(fURI)}/{@code rng(fURI)} copy that reorders the map (it goes through a {@code HashMap}) changes
+     * nothing observable — its text is canonical anyway.
+     */
     @Override
     public String qString() {
-        return String.join("&", this.qMap().entrySet().stream().map(e -> e.getKey() + (e.getValue().isEmpty() ? "" : ("=" + e.getValue()))).toList());
+        return String.join("&", this.qMap().entrySet().stream()
+                .sorted(Map.Entry.comparingByKey(AbstractfURI::compareQKeys))
+                .map(e -> e.getKey() + (e.getValue().isEmpty() ? "" : ("=" + e.getValue())))
+                .toList());
+    }
+
+    /**
+     * THE ordering authority for query components — {@link #qString()} and nothing else decides how a query is
+     * spelled. A key in {@link #Q_LEAD} sorts by its position there, before every other key; every remaining key
+     * sorts in descending natural string order, so the order is total and never depends on map iteration order.
+     */
+    private static int compareQKeys(final String lhs, final String rhs) {
+        final int lhsRank = Q_LEAD.indexOf(lhs);
+        final int rhsRank = Q_LEAD.indexOf(rhs);
+        if (lhsRank >= 0 || rhsRank >= 0) {
+            if (lhsRank < 0)
+                return 1;                       // a lead key precedes everything else
+            if (rhsRank < 0)
+                return -1;
+            return Integer.compare(lhsRank, rhsRank);
+        }
+        return rhs.compareTo(lhs);              // descending: reverse alphabetical
     }
 
     @Override

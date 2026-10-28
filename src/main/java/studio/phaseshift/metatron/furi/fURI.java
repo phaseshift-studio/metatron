@@ -709,7 +709,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     /**
      * The argument TYPES an instruction signature declares, in order — the {@code args} query component read as
-     * types, the peer of {@link #dom()} / {@link #rng()} ({@code inst?dom=int&rng=int&args=[int,rec]}).
+     * types, the peer of {@link #dom()} / {@link #rng()} ({@code inst?rng=int&dom=int&args=[int,rec]}).
      * <p>
      * An ABSENT component reads as an empty list, and so does one whose body is empty ({@code args=[]}): argument
      * order is semantic, but a signature with no arguments is one signature however it is spelled, so callers
@@ -739,7 +739,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     /**
      * This uri with its argument TYPES set — the peer of {@link #dom(fURI)} / {@link #rng(fURI)}. The arguments
-     * render as one lst-valued {@code args} query component ({@code inst?dom=int&rng=int&args=[int,rec]}), one uri
+     * render as one lst-valued {@code args} query component ({@code inst?rng=int&dom=int&args=[int,rec]}), one uri
      * text per element and in order.
      * <p>
      * An empty (or null) list REMOVES the component: the canonical form carries no {@code args} key at all, which

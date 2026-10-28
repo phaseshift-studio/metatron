@@ -966,7 +966,7 @@ public class fURITest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "/test.com?a=1&a=2|a=1;2",
-            "/test.com?a=1&a=2&a=56&b=2|a=1;2;56&b=2"},
+            "/test.com?a=1&a=2&a=56&b=2|b=2&a=1;2;56"},
             delimiter = '|', nullValues = "null")
     public void testQueryParse(final String furi, final String expectedQuery) {
         assertEquals(expectedQuery, f(furi).qString());
@@ -1636,7 +1636,8 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(1, signature.args().size());
         assertTrue(signature.args().getFirst().isGeneric());
         assertEquals(f("B"), signature.args().getFirst());
-        assertEquals("/m/inst?dom=A{*}&rng=B{*}&args=[B]", signature.toString());
+        // parsed in dom-then-rng, rendered in the canonical order: rng, dom, then args
+        assertEquals("/m/inst?rng=B{*}&dom=A{*}&args=[B]", signature.toString());
         // dom/rng order in the query is not semantic, so a uri spelling them the other way is the SAME signature
         assertEquals(signature, f("/m/inst?rng=B{*}&dom=A{*}").args(f("B")));
     }
@@ -1648,19 +1649,19 @@ public class fURITest extends AbstractMetatronTest {
     @Test
     void testArgsOmittedWhenEmpty() {
         final fURI signature = f("/m/inst?dom=int&rng=int");
-        assertEquals("/m/inst?dom=int&rng=int", signature.toString());
+        assertEquals("/m/inst?rng=int&dom=int", signature.toString());
         final fURI emptied = signature.args(List.of());
         assertEquals(signature, emptied);
         assertEquals(signature.hashCode(), emptied.hashCode());
-        assertEquals("/m/inst?dom=int&rng=int", emptied.toString());
+        assertEquals("/m/inst?rng=int&dom=int", emptied.toString());
         assertFalse(emptied.hasQ(ARGS));
         assertFalse(emptied.hasArgs());
         assertEquals(List.of(), emptied.args());
         // setting arguments and then clearing them returns to the very same component set
         final fURI set = signature.args(List.of(f("int"), f("rec")));
-        assertEquals(f("/m/inst?dom=int&rng=int&args=[int,rec]"), set);
+        assertEquals(f("/m/inst?rng=int&dom=int&args=[int,rec]"), set);
         assertEquals(signature, set.args(List.of()));
-        assertEquals("/m/inst?dom=int&rng=int", set.args(List.of()).toString());
+        assertEquals("/m/inst?rng=int&dom=int", set.args(List.of()).toString());
     }
 
     /**

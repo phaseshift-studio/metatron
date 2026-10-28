@@ -610,7 +610,7 @@ public final class QCollection {
     }
 
     /**
-     * {@link #lawOf(Obj)} by address — what a law lookup has in hand ({@code plus?dom=/m/int&rng=/m/int}).
+     * {@link #lawOf(Obj)} by address — what a law lookup has in hand ({@code plus?rng=/m/int&dom=/m/int}).
      */
     public static Obj lawOf(final fURI objID) {
         if (null == objID)

@@ -1406,7 +1406,7 @@ public class mInstSet extends AbstractInstSet {
      * <p>APPLICABILITY IS A SIGNATURE MATCH, NEVER A LADDER — {@link #matches} compares {@link Law#wrt()} with the
      * operation's contract (dom/rng with the poly {@code A} standing for the carrier, and arity only when the
      * signature declares {@code args}). A refused claim is a category error, so it answers {@code uncheckable} with
-     * the law's shape named ({@code "the law is about inst?dom=A&rng=bool&args=[A]"}), and the same rule is the
+     * the law's shape named ({@code "the law is about inst?rng=bool&dom=A&args=[A]"}), and the same rule is the
      * census a declared law is held to.
      */
     public static final class AlgebraTool {
