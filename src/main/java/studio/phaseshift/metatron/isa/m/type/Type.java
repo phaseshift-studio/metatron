@@ -353,7 +353,8 @@ public interface Type extends Obj {
         if (rhs.isType() && rhs.asType().isRootType() && !rhs.asType().hasPredicate())
             return this.c().within(rhs.c());
         if (null != this.vid() &&
-                this.vid().test(rhs.vid()) &&
+                // identity, not a claim: erasure is explicit here
+                Helper.testByIdentity(this.vid(), rhs.vid()) &&
                 (!rhs.asType().hasPredicate() || (Objects.equals(this.predicate(), rhs.asType().predicate()))))
             return this.c().within(rhs.c());
         if (!this.isGeneric() && !rhs.asType().isGeneric() && !this.testNominally(rhs))
@@ -362,7 +363,8 @@ public interface Type extends Obj {
             return false;
         if (!rhs.asType().parentType().isRootType() && !this.test(rhs.asType().parentType()))
             return false;
-        if (rhs.asType().isBaseType() && !this.baseTypeID().test(rhs.tid()))
+        // identity, not a claim: erasure is explicit here
+        if (rhs.asType().isBaseType() && !Helper.testByIdentity(this.baseTypeID(), rhs.tid()))
             return false;
         if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
@@ -609,15 +611,18 @@ public interface Type extends Obj {
         public static boolean nominalTypeChecker(final Obj obj, final Type type) {
             Type objType = Obj.Helper.specificType(obj);
             final fURI nominalVID = type.vid();
-            if (!obj.baseTypeID().test(type.baseTypeID()))
+            // identity, not a claim: erasure is explicit here
+            if (!testByIdentity(obj.baseTypeID(), type.baseTypeID()))
                 return false;
-            if (objType.isBaseType() && objType.vid().test(type.baseTypeID()))
+            // identity, not a claim: erasure is explicit here
+            if (objType.isBaseType() && testByIdentity(objType.vid(), type.baseTypeID()))
                 return polysCompatible(obj, type); // NOMINAL-POLY
             while (true) {
                 // LOG.warn("checking %s is a %s",objType, type);
                 if (objType.isRootType())
                     return false;
-                if (objType.vid().test(nominalVID))
+                // identity, not a claim: erasure is explicit here
+                if (testByIdentity(objType.vid(), nominalVID))
                     return polysCompatible(obj, type); // NOMINAL-POLY
                 if (objType.isBaseType())
                     return false;
@@ -637,10 +642,134 @@ public interface Type extends Obj {
          * path does), since a base value's shape lives in its elements, not its tid.
          */
         public static boolean polysCompatible(final Obj value, final Type type) {
+            // a rec's bracket is its DECLARED SLOTS, not a positional poly: see recSlotsCarried
+            if (!recSlotsCarried(value, type))
+                return false;
+            if (isRecDeclaration(type))
+                return true;
             for (final Poly<?, ?> poly : type.refinesPolys())
                 if (!value.test(poly))
                     return false;
             return true;
+        }
+
+        /**
+         * Is {@code type}'s bracket a rec slot list? {@code rec[k1,k2]} names the keys a rec carries, so its
+         * poly has no positional reading (the tid's {@code polyParsed} would spell a lst of types that no rec
+         * value can match). A lst's bracket is its positional slot binding and an object's is its
+         * instantiation argument; both keep that reading.
+         */
+        private static boolean isRecDeclaration(final Type type) {
+            return null != type && null != type.tid() && type.tid().hasPoly()
+                    && Tokens.REC_TID.basePath().equals(type.tid().basePath());
+        }
+
+        /**
+         * THE REC POLY NAMES ITS DECLARED SLOTS. {@code rec[k1,k2]} declares the keys {@code k1} and {@code k2},
+         * and a parameterized rec declaration names its exposed field the same way
+         * ({@code rec[role]::T[?[…,role=>rec::T]]@person} — the poly entry {@code role} names the field
+         * {@code role}). Every declared slot must be carried by the value: a missing key READS as {@code noobj}
+         * (that stays — {@code >>weapon} on a rec without {@code weapon} is {@code noobj}, and the multiplicity
+         * identity depends on it), and {@code noobj} does not satisfy a slot declared at coefficient one, so the
+         * literal fails conformance.
+         * <p>
+         * ABSENCE IS LEGAL ONLY WHEN THE SLOT ADMITS ZERO, and that comes from the coefficient alone: an entry's
+         * own coefficient ({@code rec[k{?},j]}), or the slot type the declaration's predicate gives the key
+         * ({@code role=>?uri::T}). There is no "missing key" concept and no marker for one.
+         *
+         * @param value the value tested against {@code type}
+         * @param type  the declared type (its tid's bracket is the slot list)
+         * @return false when a slot that cannot be absent is not carried
+         */
+        public static boolean recSlotsCarried(final Obj value, final Type type) {
+            if (!value.isRec() || !isRecDeclaration(type))
+                return true;
+            for (final String slot : type.tid().poly()) {
+                final fURI key = f(slot.trim());
+                // the entry's own coefficient is the slot's optionality: rec[k{?},j]
+                if (key.c().isZeroable())
+                    continue;
+                if (!value.asRec().at(key.basePath()).isNoObj())
+                    continue;
+                // NOOBJ'S VERDICT AGAINST THE SLOT TYPE IS EXACTLY ZEROABILITY, so ask the value path rather
+                // than re-deriving the rule. A slot the declaration does not type is required (coefficient one).
+                final Obj declared = recDeclaredSlot(type, key.basePath());
+                if (noobj().test(null == declared ? ALL_TYPE : declared))
+                    continue;
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * The type a rec declaration gives one of its poly slots: the rec shape in the type's own predicates,
+         * leaf-first ({@code rec[role]::T[?[…,role=>?uri::T]]@person} answers the slot {@code role} its declared
+         * type). Returns null when no predicate of the declaration types the slot — a bare {@code rec[k1,k2]} types
+         * nothing, and the slot then stands at coefficient one.
+         */
+        private static Obj recDeclaredSlot(final Type type, final fURI key) {
+            Type level = type;
+            for (int hops = 0; !level.isRootType() && hops < 256; hops++) {
+                if (level.hasPredicate()) {
+                    final Obj shape = typePredicateObj(level);
+                    if (shape.isRec()) {
+                        final Obj slot = shape.asRec().at(key);
+                        if (!slot.isNoObj())
+                            return slot;
+                    }
+                }
+                final Type parent = level.parentType();
+                if (parent.equals(level))
+                    break;
+                level = parent;
+            }
+            return null;
+        }
+
+        /**
+         * THE REQUESTED BRACKET SURVIVES RESOLUTION. A type's bracket is its TYPE ARGUMENT list, so a
+         * request that names arguments ({@code person[ninja]}, {@code lst[int]}, {@code object[int]})
+         * must keep them on the type it resolves to. Resolving reads the registered declaration, and the
+         * declaration's own bracket is its PARAMETER list ({@code person[role]::T}), so the request
+         * substitutes that bound positionally: {@code person[role]} + {@code [ninja]} -> {@code
+         * person[ninja]}. Any parameter the request leaves unclaimed keeps the declaration's entry, and a
+         * request naming no arguments leaves the declaration exactly as it stands.
+         *
+         * @param declaredID  the registered type's id (carrying the declaration's parameters, if any)
+         * @param requestedID the id the request spelled (carrying the arguments, if any)
+         * @return {@code declaredID} instantiated with the requested arguments
+         */
+        public static fURI instantiate(final fURI declaredID, final fURI requestedID) {
+            if (null == declaredID || null == requestedID)
+                return declaredID;
+            final List<String> requested = requestedID.poly();
+            if (requested.isEmpty())
+                return declaredID;
+            final List<String> declared = declaredID.poly();
+            final List<String> instantiated = new ArrayList<>(requested);
+            for (int i = requested.size(); i < declared.size(); i++)
+                instantiated.add(declared.get(i));
+            return declaredID.poly(instantiated);
+        }
+
+        /**
+         * IDENTITY, NOT A CLAIM: do these two ids name the same type FAMILY? A bracket on a type's id is
+         * an instantiation of its declaration ({@code object[/m/code]} instantiates {@code object}), so a
+         * bracketed id compared against its own ERASURE -- an rhs that carries no bracket, the
+         * uninstantiated name -- is compared erased. This is the only erasure in the system: {@link
+         * fURI#test} keeps the bracket rule's asymmetric CLAIM semantics untouched, so
+         * {@code person[ninja].test(person)} stays false. A bracketed rhs is still a claim position and is
+         * compared as one (a {@code lst[int]} value does not satisfy a {@code lst[str]} contract).
+         *
+         * @param lhs the id whose family membership is asked (may be an instantiation)
+         * @param rhs the id it is asked against (the erasure when the question is identity)
+         * @return true when lhs is rhs's family
+         */
+        public static boolean testByIdentity(final fURI lhs, final fURI rhs) {
+            if (null == lhs || null == rhs)
+                return false;
+            // identity, not a claim: erasure is explicit here
+            return (rhs.poly().isEmpty() ? lhs.polyLess() : lhs).test(rhs);
         }
 
         public static Obj typePredicateObj(final Type type) {
@@ -708,7 +837,8 @@ public interface Type extends Obj {
                 if (!lhs.test(rhs.asType().parentType()))
                     return false;
                 if (lhs.asType().isBaseType())
-                    return lhs.baseTypeID().test(rhs.tid()) &&
+                    // identity, not a claim: erasure is explicit here
+                    return testByIdentity(lhs.baseTypeID(), rhs.tid()) &&
                             (!rhs.asType().hasPredicate() || Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
                 if (rhs.tid().isGeneric())
                     return !lhs.tid().isGeneric() ||
@@ -725,7 +855,11 @@ public interface Type extends Obj {
                 }*/
                 if (rhs.vid().isGeneric() || rhs.isObjCall())
                     return true;
-                if (rhs.vid().hasPoly()) {
+                // A REC'S BRACKET IS ITS DECLARED SLOTS, every one of which the value must carry (see
+                // recSlotsCarried). It has no positional reading, so it never takes the poly test below.
+                if (!recSlotsCarried(lhs, rhs.asType()))
+                    return false;
+                if (rhs.vid().hasPoly() && !isRecDeclaration(rhs.asType())) {
                     if (!lhs.test(rhs.tid().polyParsed().orElse(null)))
                         return false;
                 }

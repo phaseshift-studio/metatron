@@ -1694,6 +1694,71 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE BRACKET RULE AT THE TYPE LEVEL, the counterpart of {@code fURITest#testPolyBracketRule}. A type's bracket
+     * is its TYPE ARGUMENT list, so the CLAIM position stays a claim — two different instantiations do not satisfy
+     * each other — while the IDENTITY question ("is this the same type FAMILY") is answered with the bracket
+     * erased: an instantiation IS an instance of its erasure, and {@code testByID} agrees with {@code test} on the
+     * same question. Nothing here relaxes {@code fURI.test}: only the type-level sites erase, and only against a
+     * bare rhs.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // instance          | type               | matches
+            // ---- the claim stays a claim: distinct instantiations do not satisfy each other ----
+            "/m/lst[/m/int]     | /m/lst[/m/str]     | false",
+            "/m/lst[/m/str]     | /m/lst[/m/int]     | false",
+            "/m/lst[/m/int]     | /m/lst[/m/int]     | true",
+            // ---- identity, not a claim: an instantiation is an instance of its erasure, and a bare type claims nothing ----
+            "/m/lst[/m/int]     | /m/lst             | true",
+            "/m/lst             | /m/lst[/m/int]     | true",
+    }, delimiter = '|')
+    public void testPolyBracketRuleAtTypeLevel(final String instance, final String type, final boolean matches) {
+        final Type instanceType = T(f(instance.trim()));
+        final Type rhsType = T(f(type.trim()));
+        assertEquals(matches, instanceType.test(rhsType), "%s::T.test(%s::T) should be %s".formatted(instanceType.vid(), rhsType.vid(), matches));
+        // testByID asks the same identity question the identity sites ask, so it answers an instantiation against
+        // its erasure the same way the claim-oriented test does
+        if (instanceType.vid().hasPoly() && !rhsType.vid().hasPoly())
+            assertTrue(instanceType.testByID(rhsType), "testByID is identity: %s is a %s".formatted(instanceType.vid(), rhsType.vid()));
+    }
+
+    /**
+     * INSTANTIATING A TYPE KEEPS THE ARGUMENTS IT WAS GIVEN. Resolving a type reads its registered declaration, and
+     * the request's bracket must survive that read: the declaration's bracket is its PARAMETER list, so the request
+     * substitutes it positionally ({@code person[role]} + {@code [ninja]} -> {@code person[ninja]}), an unclaimed
+     * parameter keeps the declaration's entry, and a request that names no arguments leaves the declaration as it
+     * stands.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // declared      | requested        | instantiated
+            "person[role]    | person[ninja]    | person[ninja]",
+            "person          | person[ninja]    | person[ninja]",
+            "person[role,no] | person[ninja]    | person[ninja,no]",
+            "person[role]    | person           | person[role]",
+            "person[role]    | person[ninja,no] | person[ninja,no]",
+    }, delimiter = '|')
+    public void testInstantiateSubstitutesTheDeclaredBound(final String declared, final String requested, final String instantiated) {
+        assertEquals(f(instantiated.trim()), Type.Helper.instantiate(f(declared.trim()), f(requested.trim())));
+    }
+
+    /**
+     * An instantiation survives resolution: {@code lst[int]} resolves to a type whose vid AND tid carry the
+     * requested arguments (a base type's name is its type), rather than collapsing to the bare {@code lst}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "lst[int]     | /m/lst[/m/int]",
+            "lst[int,str] | /m/lst[/m/int,/m/str]",
+    }, delimiter = '|')
+    public void testInstantiationPreservesItsPoly(final String request, final String expectedID) {
+        final Type instantiated = T(f(request.trim()));
+        assertEquals(f(expectedID.trim()), instantiated.vid());
+        assertEquals(f(expectedID.trim()), instantiated.tid());
+        assertTrue(instantiated.vid().hasPoly());
+    }
+
+    /**
      * AWAITING A FEATURE — disabled rather than deleted so the intent survives.
      * <p>
      * The container spelling {@code lst[{4}int]::T} ("the list is composed of four ints") was specified but never

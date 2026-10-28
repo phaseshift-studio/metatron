@@ -1534,6 +1534,102 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(parsed, f(parsed.toString()));
     }
 
+    /**
+     * THE BRACKET RULE: a uri's bracket is its TYPE ARGUMENT list — {@code person[role]::T} declares a type
+     * parameterized by {@code role}, {@code person[ninja]} instantiates it — so a test WALKS THE LHS: each of its
+     * entries is a CLAIM that the RHS entry at the same position must accept. The three cases:
+     * <ol>
+     *   <li>a bare lhs claims nothing, so it passes a bracketed rhs ({@code person.test(person[ninja])});</li>
+     *   <li>a bracketed lhs has no acceptor in a bare rhs ({@code person[ninja].test(person)} is FALSE);</li>
+     *   <li>a generic rhs entry accepts a named claim within its coefficient ({@code person[ninja].test(person[A])}).</li>
+     * </ol>
+     * The direction is ASYMMETRIC because an instantiation is a SPECIALIZATION: it passes where the parameter is
+     * expected, never the reverse. Names are compared, never types — {@code ninja} refining {@code role} is
+     * {@code Obj.test}'s covariance, not this method's. {@code #} accepts the rest, {@code +} accepts exactly one,
+     * and the positions are strict: a claim with no acceptor fails, as does an argument the lhs supplies no claim for.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // 1. a bare lhs passes a bracketed rhs
+            "person                   | person[ninja]         | true",
+            "person                   | person[A]             | true",
+            "person                   | person[ninja,dragon]  | true",
+            // 2. a bracketed lhs fails a bare rhs
+            "person[ninja]            | person                | false",
+            // 3. a generic rhs entry accepts a named claim (subject to its coefficient)
+            "person[ninja]            | person[A]             | true",
+            "person[role]             | person[A]             | true",
+            // names, not types: only the claim's own name is accepted by a named argument
+            "person[ninja]            | person[ninja]         | true",
+            "person[ninja]            | person[role]          | false",
+            // the wildcards: # accepts this and the rest, + accepts exactly one
+            "person[ninja]            | person[#]             | true",
+            "person[ninja,dragon]     | person[ninja,#]       | true",
+            // arity is positional: a claim with no acceptor, and an argument with no claim, both fail
+            "person[ninja,dragon]     | person[ninja]         | false",
+            "person[ninja]            | person[ninja,dragon]  | false",
+    }, delimiter = '|')
+    void testPolyBracketRule(final String lhs, final String rhs, final boolean matches) {
+        checkMatches(idem(lhs), idem(rhs), matches);
+    }
+
+    /**
+     * The wildcard ENTRIES, spelled through the setter because the poly grammar cannot capture a bare {@code +}
+     * element (the leading run of {@code POLY_PATTERN} excludes it): {@code +} accepts exactly one claim, {@code #}
+     * accepts this claim and the rest.
+     */
+    @Test
+    void testPolyWildcardEntries() {
+        final fURI claim = idem("person[ninja]");
+        assertTrue(claim.test(idem("person").poly(List.of("+"))), "+ accepts exactly one argument");
+        assertTrue(claim.test(idem("person").poly(List.of("#"))), "# accepts this argument and the rest");
+        assertTrue(idem("person[ninja,dragon]").test(idem("person").poly(List.of("+", "#"))),
+                "a + then a trailing # accepts every claim");
+        assertFalse(idem("person[ninja,dragon]").test(idem("person").poly(List.of("+"))),
+                "+ accepts exactly one, so a second claim has no acceptor");
+    }
+
+    /**
+     * {@code polyLess()} is the ERASURE lesser: it strips ONLY the bracket (the type argument list), keeping the
+     * coefficient, the path, the query and the templates. {@code person[ninja]?rng=person} erases to
+     * {@code person?rng=person}; a bracket-free uri is the identity.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "person[ninja]?rng=person       | person?rng=person",
+            "person[ninja]{2}?rng=person    | person{2}?rng=person",
+            "/m/lst[/m/int,/m/str]?a=b     | /m/lst?a=b",
+            "person[ninja]                  | person",
+            "person                         | person",
+    }, delimiter = '|')
+    void testPolyLess(final String furi, final String erased) {
+        final fURI less = idem(furi).polyLess();
+        assertEquals(idem(erased), less);
+        assertEquals(erased, less.toString());
+        assertFalse(less.hasPoly());
+    }
+
+    /**
+     * {@code basePath()} is EXACTLY the three lessers composed — {@code cLess + qLess + polyLess} — and nothing else:
+     * the coefficient, the query and the bracket erased, while scheme, host, port, path and templates survive. The
+     * assertion is the composition itself rather than a hand-written expected uri, so a lesser's contract change
+     * breaks it instead of the relationship quietly drifting.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "person[ninja]{2}?rng=person      | person",
+            "/m/lst[/m/int,/m/str]{3}?a=b     | /m/lst",
+            "a/b/c?x=y                         | a/b/c",
+            "person[ninja]                     | person",
+            "person{2}                         | person",
+    }, delimiter = '|')
+    void testBasePathIsTheThreeLessers(final String furi, final String base) {
+        final fURI furiA = idem(furi);
+        assertEquals(furiA.cLess().qLess().polyLess(), furiA.basePath(), "basePath must be exactly cLess + qLess + polyLess");
+        assertEquals(idem(base), furiA.basePath());
+        assertEquals(base, furiA.basePath().toString());
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             // "http://localhost:80/a/b/c       |[a,b,c]",

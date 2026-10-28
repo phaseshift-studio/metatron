@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
@@ -160,13 +161,30 @@ public class SpecificitySelector extends MRec implements Selector {
      */
     private Inst hintCompose(final Inst candidate, final Inst userInst) {
         final long t0 = System.nanoTime();
-        Inst hinted = userInst.hasDom() ? candidate.dom(candidate.dom().c(userInst.dom().c()).as()) : candidate;
+        Inst hinted = userInst.hasDom() ? candidate.dom(this.hintedDom(candidate.dom(), userInst.dom())) : candidate;
         hinted = userInst.hasRng() ? hinted.rng(userInst.rng()) : hinted;
         hinted = userInst.tid().basePath().equals(AS_INST_TID)
                 ? hinted.rng(userInst.arg(0).isNoObj() ? NOOBJ_TYPE : Obj.Helper.specificType(userInst.arg(0)))
                 : hinted;
         ScoringResolver.T_RESOLVE.addAndGet(System.nanoTime() - t0);
         return hinted;
+    }
+
+    /**
+     * Shape the declared domain with the call's dom hint. The API's declared type stays -- a hint stands in
+     * for a compatible declared domain, and only its coefficient is taken -- EXCEPT that a hint naming the
+     * same type family with explicit type arguments instantiates the declaration ({@code ?dom=lst[int]} on a
+     * declared {@code lst} is {@code lst[int]}, not bare {@code lst}). Dropping those arguments made every
+     * instantiation resolve to its erasure: {@code lst[int].sum()} compiled with {@code dom=/m/lst} where
+     * {@code lst[int]} was asked for. A hint naming another family still contributes only its coefficient, as
+     * before, and a bare hint contributes nothing new.
+     */
+    private Type hintedDom(final Type declared, final Type requested) {
+        final fURI requestedID = requested.vid();
+        if (requestedID.poly().isEmpty() || !requestedID.basePath().equals(declared.vid().basePath()))
+            return declared.c(requested.c()).as();
+        final fURI instantiated = Type.Helper.instantiate(declared.vid(), requestedID);
+        return T(instantiated.c(declared.tid().c())).c(requested.c()).as();
     }
 
     /**

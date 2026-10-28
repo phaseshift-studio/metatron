@@ -96,7 +96,18 @@ public class MType extends MObj implements Type {
     private static final Set<fURI> POLY_BASE_TYPES = Set.of(LST_TID, REC_TID, REL_TID);
 
     private static Type checkPolyPoly(final Type type) {
-        if (!type.vid().poly().isEmpty() && !POLY_BASE_TYPES.contains(type.baseTypeID().basePath()))
+        if (type.vid().poly().isEmpty())
+            return type;
+        // A LABEL CANNOT BE ASKED FOR ITS BASE. an ephemeral type (tid == vid: the label this method's caller builds
+        // for a name the registry did not answer) is a REFERENCE, not a definition. Walking its base type resolves
+        // the name it IS, which is the very resolution asking the question: T(person[ninja]) finds no declaration,
+        // builds this label, and baseTypeID() -> type() -> T(person[ninja]) starts over -- an unbounded regress that
+        // ends in a StackOverflowError (the parser reports it as recursive grammar, which it never was). The bracket
+        // is a type-argument request; the only place that can judge it is the declaration, so the registry branch
+        // of T0 validates it there, on the resolved (non-ephemeral) form.
+        if (type.asType().isEphemeral())
+            return type;
+        if (!POLY_BASE_TYPES.contains(type.baseTypeID().basePath()))
             throw MTronException.of("only poly types can have polynomials: %s X=> %s", type.vid().basePath(), type.vid().poly());
         return type;
     }
@@ -118,6 +129,14 @@ public class MType extends MObj implements Type {
                 && RESOLVING.get().add(checkID.toString())) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             try {
                 Obj obj = Machine.read(checkID);
+                // THE BRACKET IS AN ARGUMENT LIST, NOT AN ADDRESS. a declaration is registered under its NAME
+                // (person), while an instantiation spells its type arguments (person[ninja]). The address carries no
+                // bracket, so the read of the spelled form answers nothing for a name the registry does hold, and
+                // the branches below would never run: their whole job is to substitute the request's bracket into the
+                // declaration's ({@code Type.Helper.instantiate(registered.vid(), checkID)}). Ask again with the
+                // bracket erased -- exactly the erasure the bracket rule already defines for a type name.
+                if (!obj.isType() && checkID.hasPoly())
+                    obj = Machine.read(checkID.polyLess());
                 // clone before re-typing: self() mutates in place, and the obj just read is the SHARED
                 // registered type (often also referenced from another type's predicate). Re-typing it with
                 // this request's coefficient would rewrite that shared type -- e.g. resolving the two-being
@@ -128,7 +147,19 @@ public class MType extends MObj implements Type {
                     if (checkID.c().equals(obj.c()) &&
                             Objects.equals(obj.asType().predicate(), predicate) &&
                             Objects.equals(obj.asType().constructor(), constructor)) {
-                        return checkPolyPoly(obj.asType());
+                        // THE REQUESTED BRACKET SURVIVES THE REGISTERED FORM. The read answers with the
+                        // declaration; a request that named type arguments (person[ninja] against a
+                        // registered person[role]) must keep them on what it gets back, or the instantiation
+                        // it asked for silently becomes the bare declaration. A bare request (no bracket)
+                        // takes the registered form untouched and allocates nothing.
+                        final Type registered = obj.asType();
+                        if (checkID.poly().isEmpty())
+                            return checkPolyPoly(registered);
+                        final fURI instVID = Type.Helper.instantiate(registered.vid(), checkID);
+                        // a base type's name IS its type, so its tid carries the same arguments; a named
+                        // type keeps the base its declaration refined
+                        final fURI instTID = Objects.equals(registered.vid(), registered.tid()) ? instVID : registered.tid();
+                        return checkPolyPoly(new MType(registered.jvm(), instTID, instVID, false).as());
                     } else {
                         // A request that names BOTH a base type and a vid (X::T@name) wins over the
                         // registered form: a re-registration may rebase a name onto a different type
@@ -138,7 +169,8 @@ public class MType extends MObj implements Type {
                         // since there the "tid" argument is the name being looked up.
                         final boolean useRequested = null != tid && null != vid;
                         final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
-                        final fURI derivedVID = useRequested ? bigVID : obj.vid();
+                        // a name-only request that spelled type arguments keeps them on the derived vid
+                        final fURI derivedVID = useRequested ? bigVID : Type.Helper.instantiate(obj.vid(), checkID);
                         // A NAME-ONLY REQUEST IS A REFERENCE, NOT A DEFINITION: it never registers what it derives.
                         // The derived type carries the stored type's address, and registering it by construction
                         // (canonical coefficient, vid != tid) claimed an address the request never defined. A

@@ -264,7 +264,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return false;
         }
         while (!lhsType.isRootType()) {
-            if (lhsType.hasVID() && lhsType.vid().test(rhsType.vid()))
+            // identity, not a claim: erasure is explicit here
+            if (lhsType.hasVID() && Type.Helper.testByIdentity(lhsType.vid(), rhsType.vid()))
                 return true;
             if (rhsType.tid().isGeneric())
                 return lhsType.vid().c().within(rhsType.tid().c());
@@ -285,10 +286,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         // (uri ⇝ file::T is a parse). testNominally strips coefficients.
         if (lhsType.isBaseType())
             return (rhsType.isBaseType() || rhsType.isNominal())
-                    && lhsType.baseTypeID().test(rhsType.baseTypeID())
+                    // identity, not a claim: erasure is explicit here
+                    && Type.Helper.testByIdentity(lhsType.baseTypeID(), rhsType.baseTypeID())
                     && Type.Helper.polysCompatible(this, rhsType); // NOMINAL-POLY
         while (true) {
-            if (lhsType.vid().test(rhsType.vid()))
+            // identity, not a claim: erasure is explicit here
+            if (Type.Helper.testByIdentity(lhsType.vid(), rhsType.vid()))
                 return Type.Helper.polysCompatible(this, rhsType); // NOMINAL-POLY
             if (lhsType.isBaseType())
                 break;
@@ -1024,7 +1027,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 final Type rhsType = rhs.asType();
                 if (!lhs.isCall() && rhsType.isNominal()) {
                     return Type.Helper.nominalTypeChecker(lhs, rhsType);
-                } else if (!rhs.asType().isBaseType() && lhs.tid().test(rhs.vid())) {
+                } else if (!rhs.asType().isBaseType()
+                        && Type.Helper.testByIdentity(lhs.tid(), rhs.vid())) { // identity, not a claim: erasure is explicit here
                     return rhs.asType().isRootType()
                             ? lhs.c().within(rhs.c())
                             : (!rhs.asType().hasPredicate() ||

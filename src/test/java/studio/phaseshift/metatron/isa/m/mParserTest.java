@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.petitparser.context.Context;
 import org.petitparser.parser.Parser;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -100,6 +101,78 @@ public class mParserTest extends AbstractMetatronTest {
     @Test
     public void testRealParse() {
         assertEquals(real(1234.23), ObjmtronSerializer.parse("1234.23"));
+    }
+
+    // ========================================
+    // Bracketed type references and typed literals
+    // ========================================
+
+    /**
+     * A TYPE REFERENCE IS A NAME PLUS AT MOST ONE BRACKET, AND THE '::' AFTER IT ALWAYS STARTS THE LITERAL. A bracket
+     * on a type name is its TYPE-ARGUMENT list ({@code person[ninja]} instantiates {@code person}), so the literal
+     * that follows {@code ::} keeps its own bracket and the two are never read as one nested poly.
+     * <p>
+     * Resolving such a reference is where this used to die. {@code T(person[ninja])} asked the registry, the read
+     * answered nothing (the declaration is registered under its NAME, without the bracket), the fallback built the
+     * name's label, and asking that label for its base type began the very same resolution again — unbounded, so the
+     * stack overflowed and mParser's guard reported "infinite recursion in the parser — possible left recursion" for
+     * a grammar that was never recursive. These rows pin the reading, with or without a declaration behind the name.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "person[ninja]::[name=>'marko',age=>29,role=>ninja::[name=>'dark_assassin',weapon=>bulldozer]] % a bracketed reference, then a typed literal",
+            "person[ninja]::[name=>'marko',age=>29]@marko   % ...and one with a vid",
+            "person[ninja]::T                               % the reference alone is a type",
+            "person::[name=>'marko',age=>29]                % the bare reference, the control",
+            "lst[int,int]::[1,2]                            % a base type still takes its arguments",
+            "+[c=>3]                                        % plus on a rec is a VALUE",
+            "+[a=>+2]                                       % ...and so is a nested one",
+    }, delimiter = '%', quoteCharacter = '~')
+    void testBracketedTypeReferenceThenTypedLiteral(final String code, final String desc) {
+        final Obj parsed = mParser.parse(code);
+        assertFalse(parsed.isFail(), () -> desc + ": must parse, got: " + parsed);
+    }
+
+    /**
+     * The bracket belongs to the REFERENCE, not to the literal: the object is a rec typed {@code person[ninja]}, and
+     * the literal's own bracket opens the value — the exact expression the live console reported as recursive.
+     */
+    @Test
+    void testBracketedTypeReferenceKeepsItsArgumentsAndTheLiteralOpensTheValue() {
+        final Obj parsed = mParser.parse("person[ninja]::[name=>'marko',age=>29,role=>ninja::[name=>'dark_assassin',weapon=>bulldozer]]");
+        assertFalse(parsed.isFail(), () -> "the typed literal must parse, got: " + parsed);
+        assertTrue(parsed.isRec(), () -> "the literal is the value, got: " + parsed);
+        assertEquals(f("person[ninja]"), parsed.tid(), () -> "the reference keeps its ONE bracket: " + parsed);
+        assertNull(parsed.vid(), () -> "no vid was written: " + parsed);
+        assertEquals(3, parsed.recValue().size(), () -> "name, age and role are the literal's entries: " + parsed);
+        final Obj role = parsed.recValue().get(uri("role"));
+        assertNotNull(role, () -> "role is an entry: " + parsed);
+        assertEquals(f("ninja"), role.tid(), () -> "the nested literal is typed by its own reference: " + role);
+        // NOTHING ABOVE RELAXED THE POLY RULE: a poly that reads a KEYED MAP is still a category error
+        final Obj keyedMap = mParser.parse("rec[a=>1]");
+        assertTrue(keyedMap.isFail(), () -> "rec[a=>1] must stay a category error, got: " + keyedMap);
+    }
+
+    /**
+     * WITH A DECLARATION BEHIND THE NAME, the reference resolves TO THAT DECLARATION instantiated by its bracket, not
+     * to a bare label: the lookup asks for the name (a bracket is an argument list, never part of an address) and the
+     * request's arguments are substituted into the declaration's parameter list.
+     */
+    @ParameterizedTest
+    @TestData(value = {"wanderer -> rec[leg]::T[?[name=>str::T,age=>int::T]]@wanderer"})
+    @CsvSource(value = {
+            "wanderer[kyudo]::T                          % itsvid",
+            "wanderer[kyudo]::[name=>'musashi',age=>35]  % literal",
+    }, delimiter = '%')
+    void testBracketedTypeReferenceResolvesTheDeclaration(final String code, final String kind) {
+        final Obj parsed = mParser.parse(code);
+        assertFalse(parsed.isFail(), () -> kind + ": must parse, got: " + parsed);
+        if ("itsvid".equals(kind)) {
+            assertEquals(f("wanderer[kyudo]"), parsed.vid(), () -> "the instantiation carries the requested arguments");
+            assertTrue(parsed.asType().hasPredicate(), () -> "the DECLARATION answers, not a label: " + parsed);
+            assertFalse(parsed.asType().isEphemeral(), () -> "a declared name is not a label: " + parsed);
+        } else
+            assertEquals(f("wanderer[kyudo]"), parsed.tid(), () -> "the literal keeps the reference's arguments");
     }
 
     // ========================================
