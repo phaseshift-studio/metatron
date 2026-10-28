@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.net.InetAddress;
@@ -1474,6 +1475,63 @@ public class fURITest extends AbstractMetatronTest {
         final fURI furiA = idem(furi);
         assertEquals(c, furiA.c().toString());
         assertEquals(typeParams, furiA.poly().toString());
+    }
+
+    /**
+     * THE POLY RULE: a fURI's poly types PARAMETER POSITIONS — lst slots, rec traits, an object's instantiation
+     * parameter — never a keyed map. A {@code key=>value} pair inside {@code [ ]} is a category error, and so is a
+     * nested list there; both are rejected at construction with the rule, the offending element and the fURI named.
+     * The nested spellings are rejected by the grammar (which cannot capture a closed inner list) and still carry the
+     * same rule message rather than a generic parse failure.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "rec[a=>b]",
+            "rec[short=>uri,long=>uri]",
+            "lst[lst[str]]",
+            "lst[A[0],B]"
+    }, delimiter = '|')
+    void testPolyRejectsKeyedMapAndNestedList(final String furi) {
+        final MTronException e = assertThrows(MTronException.class, () -> f(furi),
+                () -> "poly must not read [ ] as a keyed map or a nested list: " + furi);
+        assertTrue(e.getMessage().contains("parameter positions"),
+                () -> "the message must name the rule: " + e.getMessage());
+        assertTrue(e.getMessage().contains("never a keyed map"),
+                () -> "the message must state the prohibition: " + e.getMessage());
+        assertTrue(e.getMessage().contains("lst slots, rec traits, object instantiation"),
+                () -> "the message must name the three legal readings: " + e.getMessage());
+        assertTrue(e.getMessage().contains(furi),
+                () -> "the message must name the offending fURI: " + e.getMessage());
+    }
+
+    /**
+     * The poly setter is a construction path too: a bracket in an element is the same category error even when no
+     * string was parsed, so the gate in {@code fURI.of} catches it.
+     */
+    @Test
+    void testPolySetterRejectsBracketElement() {
+        final MTronException e = assertThrows(MTronException.class,
+                () -> f("lst").poly(List.of("A", "lst[int]")));
+        assertTrue(e.getMessage().contains("never a keyed map"), e.getMessage());
+        assertTrue(e.getMessage().contains("lst[int]"), e.getMessage());
+        assertTrue(e.getMessage().contains("lst[A,lst[int]]"), e.getMessage());
+    }
+
+    /**
+     * The three legal readings survive: lst slots (including a pair of equal types), rec traits, and an object's
+     * instantiation parameter. Each round-trips through its rendered form and the mtron fURI parser.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "lst[A,A]     | A,A",
+            "rec[trait]   | trait",
+            "object[int]  | int",
+            "lst[int,str] | int,str"
+    }, delimiter = '|')
+    void testPolyParameterPositions(final String furi, final String elements) {
+        final fURI parsed = idem(furi);
+        assertEquals(Arrays.asList(elements.split(",")), parsed.poly());
+        assertEquals(parsed, f(parsed.toString()));
     }
 
     @ParameterizedTest

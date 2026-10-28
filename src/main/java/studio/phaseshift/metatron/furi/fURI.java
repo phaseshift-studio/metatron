@@ -556,10 +556,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     fURI pretract(final int steps);
 
     default fURI qprocLess() {
-        final Map<String, String> qs = this.qMap();
+        final SortedMap<String, String> qs = this.qMap();
         if (qs.isEmpty())
             return this;
-        return this.q((Map<String, String>) qs.entrySet().stream().filter(kv -> !kv.getKey().endsWith("q")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap<String, String>::new)));
+        return this.q(qs.entrySet().stream().filter(kv -> !kv.getKey().endsWith("q")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, _) -> a, AbstractfURI::sortedQ)));
     }
 
     /*default fURI removePrefix(final fURI prefix) {
@@ -752,9 +752,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     default fURI args(final List<fURI> args) {
         if (null == args || args.isEmpty())
             return this.hasQ(ARGS) ? this.removeQ(ARGS) : this;
-        // a LinkedHashMap, not q(key, value)'s HashMap: the component has to sit AFTER the existing keys (dom, rng)
-        // so the rendering stays stable across a set-then-parse round trip
-        final Map<String, String> query = new LinkedHashMap<>(this.qMap());
+        // the canonical map puts args in normal-form position (after rng/dom) whatever the insertion order
+        final SortedMap<String, String> query = AbstractfURI.mutableQ(this.qMap());
         query.put(ARGS, Helper.argsString(args));
         return this.q(query);
     }
@@ -773,14 +772,20 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     String qString();
 
-    Map<String, String> qMap();
+    /**
+     * The query components in NORMAL FORM — a {@link SortedMap} ordered by the canonical query comparator
+     * ({@code rng}, {@code dom}, {@code args}, then the remaining keys in reverse alphabetical order). The order is
+     * established when the uri is constructed ({@code AbstractfURI.canonicalQ}), never when it is read, so
+     * {@link #qString()} is a plain join.
+     */
+    SortedMap<String, String> qMap();
 
     fURI q(final Map<String, String> query);
 
     default fURI addQ(final Map<String, String> query) {
         if (query.isEmpty())
             return this;
-        final Map<String, String> map = new LinkedHashMap<>(this.qMap());
+        final SortedMap<String, String> map = AbstractfURI.mutableQ(this.qMap());
         map.putAll(query);
         return this.q(map);
     }
@@ -800,7 +805,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                 .entrySet()
                 .stream()
                 .filter(kv -> Stream.of(except).anyMatch(e -> e.equals(kv.getKey())))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, AbstractfURI::sortedQ)));
     }
 
     fURI removeQ(final String key);
@@ -871,11 +876,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     default fURI copyQ(final fURI furi) {
         if (!furi.hasQ())
             return this;
-        final Map<String, String> rhsQ = furi.qMap();
-        final Map<String, String> lhsQ = this.qMap();
-        final Map<String, String> newQ = new LinkedHashMap<>();
-        newQ.putAll(rhsQ);
-        newQ.putAll(lhsQ);
+        // a TreeMap accumulator: the lhs keys win (put second) and the order is canonical regardless of that order
+        final SortedMap<String, String> newQ = AbstractfURI.sortedQ();
+        newQ.putAll(furi.qMap());
+        newQ.putAll(this.qMap());
         return this.q(newQ);
 
     }
@@ -1013,6 +1017,152 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
      */
     final class Helper {
         private Helper() {
+        }
+
+        /**
+         * THE POLY RULE — the poly component of a fURI types PARAMETER POSITIONS, never a keyed map. The three legal
+         * readings, and why each is what it is:
+         * <ul>
+         *   <li>{@code lst[x,y,z]} — the SLOT types of the list, position by position, so {@code lst[A,A]} is a pair
+         *       of equal types (not a map from A to A);</li>
+         *   <li>{@code rec[x,y,z]} — the TRAITS the rec implements, composed as a fiber bundle: parallel morphisms
+         *       over one base, so the elements name the rec's behaviour, not its keys;</li>
+         *   <li>{@code object[int]} — the instantiation parameter ({@code int::T.as(object::T)} yields
+         *       {@code object[int]::[obj=>int::T, law=>…]}), the argument the object is built from.</li>
+         * </ul>
+         * A {@code key=>value} pair inside {@code [ ]} therefore mangles all three: it reads a position as a key and
+         * a type as a value. The per-key VALUE types of a rec belong in the rec's own structure (or in the
+         * instruction's {@code args}), and a {@code [ } inside a poly is a second list, not a poly element. Both are
+         * category errors, rejected here so every construction path — string parse, {@link #poly(List)}, a form's
+         * derived uri — gets the same diagnostic instead of silently round-tripping a shape that means nothing.
+         * <p>
+         * The check is on the element's OWN text — its path and poly, the part before a {@code ?}. An element that is
+         * itself a full type uri may carry a QUERY ({@code /m/inst/order?rng=/m/lst[/m/int{*}]&dom=/m/int{*}}): those
+         * brackets are a query VALUE (a type uri's poly, spelled inside a query string), not a second poly on this
+         * one, and a {@code =>} there is data. Only the pre-query text can nest a list or spell a keyed map.
+         */
+        static void validatePoly(final List<String> poly, final String scheme, final String host, final int port,
+                                 final List<String> path, final C<?, ?> coefficient, final Map<String, String> query) {
+            if (null == poly || poly.isEmpty())
+                return;
+            for (final String element : poly) {
+                if (null == element)
+                    continue;
+                final String polyElement = element.trim();
+                final int queryStart = polyElement.indexOf('?');
+                final String head = queryStart < 0 ? polyElement : polyElement.substring(0, queryStart);
+                if (head.contains("=>") || head.indexOf('[') >= 0 || head.indexOf(']') >= 0)
+                    throw polyTypeError(polyElement, polyFuri(scheme, host, port, path, poly, coefficient, query));
+            }
+        }
+
+        /**
+         * The diagnostic for a poly element that is not a type: names the rule, the offending element and the fURI it
+         * was found in. {@code element} is {@code "nested '['"} when the string grammar itself could not separate the
+         * element — a closed nested list never reaches {@link #validatePoly} (the pattern stops at the inner
+         * {@code ]}) — so the parse-failure path reports the same rule rather than a generic "unable to parse".
+         */
+        static MTronException polyTypeError(final String element, final String furi) {
+            return MTronException.of(
+                    "poly types parameter positions (lst slots, rec traits, object instantiation), never a keyed map: \"%s\" is a category error in %s — a poly element is a TYPE, not a key=>value pair and not a nested [ ... ]",
+                    element, furi);
+        }
+
+        /**
+         * Renders the fURI whose poly was rejected, so the diagnostic can name it even from the component-level
+         * construction funnel ({@link fURI#of(String, String, int, List, C, List, Map, List)}), which no longer holds
+         * the original text. Only called on the failure path.
+         */
+        private static String polyFuri(final String scheme, final String host, final int port, final List<String> path,
+                                       final List<String> poly, final C<?, ?> coefficient, final Map<String, String> query) {
+            final StringBuilder sb = new StringBuilder();
+            if (null != scheme)
+                sb.append(scheme).append(':');
+            if (null != host) {
+                sb.append("//").append(host);
+                if (port >= 0)
+                    sb.append(':').append(port);
+            }
+            final String pathText = null == path ? "" : String.join("/", path);
+            if (!pathText.isEmpty()) {
+                if ((null != host || null != scheme) && !pathText.startsWith("/"))
+                    sb.append('/');
+                sb.append(pathText);
+            }
+            if (null != poly && !poly.isEmpty())
+                sb.append('[').append(String.join(",", poly)).append(']');
+            if (null != coefficient && !coefficient.isOne())
+                sb.append('{').append(coefficient).append('}');
+            if (null != query && !query.isEmpty()) {
+                sb.append('?');
+                boolean first = true;
+                for (final Map.Entry<String, String> kv : query.entrySet()) {
+                    if (!first)
+                        sb.append('&');
+                    first = false;
+                    sb.append(kv.getKey()).append('=').append(kv.getValue());
+                }
+            }
+            return sb.toString();
+        }
+
+        /**
+         * Whether the poly region of an otherwise-unparseable fURI text nests a second {@code [ }. The strict grammar
+         * ({@code [^]]+} for the poly) cannot capture a closed nested list, so the only route to the same diagnostic
+         * is to look at the raw text when {@code FURI_PATTERN} has already failed. Query values ({@code ?args=[…]}),
+         * template bodies ({@code $&#123;…&#125;}) and an RFC 3986 IP-literal host ({@code //[::1]}) are not poly
+         * regions and are skipped; this runs only after the pattern failed, so it can never change a successful parse.
+         */
+        static boolean nestedPolyBracket(final String furi) {
+            final int query = topLevel(furi, '?');
+            final int limit = query < 0 ? furi.length() : query;
+            final int open = polyOpen(furi, limit);
+            if (open < 0)
+                return false;
+            int depth = 0;
+            for (int i = open; i < limit; i++) {
+                final char ch = furi.charAt(i);
+                if ('[' == ch) {
+                    if (++depth > 1)
+                        return true;
+                } else if (']' == ch && 0 == --depth)
+                    return false;
+            }
+            return false;
+        }
+
+        private static int topLevel(final String text, final char target) {
+            int template = 0;
+            for (int i = 0; i < text.length(); i++) {
+                final char ch = text.charAt(i);
+                if ('$' == ch && i + 1 < text.length() && '{' == text.charAt(i + 1)) {
+                    template++;
+                    i++;
+                } else if ('}' == ch && template > 0)
+                    template--;
+                else if (target == ch && 0 == template)
+                    return i;
+            }
+            return -1;
+        }
+
+        private static int polyOpen(final String text, final int limit) {
+            int template = 0;
+            for (int i = 0; i < limit; i++) {
+                final char ch = text.charAt(i);
+                if ('$' == ch && i + 1 < limit && '{' == text.charAt(i + 1)) {
+                    template++;
+                    i++;
+                } else if ('}' == ch && template > 0)
+                    template--;
+                else if ('[' == ch && 0 == template) {
+                    // an IP-literal host is `//[...]`, where no poly can stand
+                    if (i >= 2 && '/' == text.charAt(i - 1) && '/' == text.charAt(i - 2))
+                        continue;
+                    return i;
+                }
+            }
+            return -1;
         }
 
         /**
@@ -1162,8 +1312,11 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     class Singleton {
         public static final Pattern MERGE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+        // One poly element: the leading run stops at `,` so the separator is never swallowed, and the trailing run is
+        // optional so a ONE-CHARACTER element (`lst[A,A]`, `rec[#,#]`) is a slot/trait like any other — the old
+        // `[^,]` required a second character and silently dropped such elements.
         public static final Pattern POLY_PATTERN = Pattern.compile(
-                "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,])");
+                "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,]*)");
         // OLD FURI_PATTERN (pre-branch): the path excluded `{`, so a trailing `{...}` was always the coefficient.
         // Kept for reference; replaced below by the branch-aware pattern that admits `{c,d}` segments in the path.
         /*public static final Pattern FURI_PATTERN = Pattern.compile(
@@ -1265,8 +1418,13 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             final boolean hasTemplates = furiParse.contains("${");
             final Matcher matcher = hasTemplates ? Singleton.FURI_TEMPLATE_PATTERN.matcher(furiParse) : Singleton.FURI_PATTERN.matcher(furiParse);
 
-            if (!matcher.matches())
+            if (!matcher.matches()) {
+                // a closed nested list cannot be captured by the strict poly group, so report the poly rule rather
+                // than a generic parse failure when that is what the text is trying to spell
+                if (Helper.nestedPolyBracket(furiParse))
+                    throw Helper.polyTypeError("nested '['", furiParse);
                 throw MTronException.of("unable to parse %s to a furi: %s", furiParse, furiParse);
+            }
             final String scheme = matcher.group(SCHEME);
             final String host = matcher.group(HOST);
             final String portStr = matcher.group(PORT);
@@ -1297,13 +1455,16 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             final String rng = matcher.group(RNG);
             final Map<String, String> query;
             if (dom != null || rng != null || queryStr != null) {
-                query = new LinkedHashMap<>();
+                // the parser builds the canonical map directly: the shorthand's dom/rng land in normal-form position
+                // whatever order the grammar captured them in, and the explicit `&` tail is already sorted
+                final SortedMap<String, String> parsedQuery = AbstractfURI.sortedQ();
                 if (dom != null)
-                    query.put(DOM, dom);
+                    parsedQuery.put(DOM, dom);
                 if (rng != null)
-                    query.put(RNG, rng);
+                    parsedQuery.put(RNG, rng);
                 if (queryStr != null)
-                    query.putAll(parseQuery(queryStr));
+                    parsedQuery.putAll(parseQuery(queryStr));
+                query = parsedQuery;
             } else {
                 query = Map.of();
             }
@@ -1405,8 +1566,17 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             return elements;
         }
 
-        static Map<String, String> parseQuery(final String query) {
-            return query == null ? Map.of() : Arrays.stream(query.split("&")).map(s -> s.split("=", 2)).collect(Collectors.toMap(a -> a[0], a -> a.length > 1 ? a[1] : "", (v1, v2) -> v1 + ";" + v2, LinkedHashMap::new));
+        static SortedMap<String, String> parseQuery(final String query) {
+            if (null == query)
+                return AbstractfURI.canonicalQ(null);
+            // the canonical map IS the accumulator: a `k=v` pair lands in normal-form position, and a repeated key
+            // still merges in arrival order ("v1;v2") because the merge function, not the map, owns that rule
+            final SortedMap<String, String> parsed = AbstractfURI.sortedQ();
+            for (final String pair : query.split("&")) {
+                final String[] kv = pair.split("=", 2);
+                parsed.merge(kv[0], kv.length > 1 ? kv[1] : "", (v1, v2) -> v1 + ";" + v2);
+            }
+            return parsed;
         }
 
         /**
@@ -1509,6 +1679,9 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                    final List<String> poly,
                    final Map<String, String> query,
                    final List<Tuple.Pair<Component, String>> templates) {
+        // THE ONE POLY GATE: every poly-bearing fURI is built here — string parse, poly(List), and every form's
+        // derived uri — so the parameter-position rule is enforced once, on the way in.
+        Helper.validatePoly(poly, scheme, host, port, path, coefficient, query);
         if (null != templates && !templates.isEmpty())
             return new SAPPCQTfURI(scheme, host, port, path, poly, coefficient, query, templates);
         if (null != poly && !poly.isEmpty())

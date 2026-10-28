@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.isa.m.type.impl.MLst;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.MLst;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
@@ -35,7 +35,8 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
@@ -45,7 +46,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -215,9 +215,82 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(LST_TID).rng(URI_TID), lst(T(LST_TID.poly(URI_TID))), (lhs, inst) -> lhs.lstValue().stream().reduce(uri(""), (a, b) -> uri(a.uriValue().extend(b.uriValue())))),
-                    instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid()).c(c -> c.mult(lhs.c()))),
+                    instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(boundOrDeclared(lhs.asLst(), inst.arg(0).vidOrTid())).c(c -> c.mult(lhs.c()))),
                     instC(AS_INST_TID.dom(LST_TID).rng(CODE_TID), lst(T(CODE_TID)), (lhs, inst) -> code(lhs.asLst().jvm().stream().flatMap(o -> o.isCall() ? o.asCall().insts().stream() : map_(o).tryToInst().insts().stream()).toList()).c(c -> c.mult(lhs.c())))
             ));
+        }
+
+        /**
+         * A SLOT IS A VARIABLE WHEN IT IS SPELLED AS ONE: {@code A} — or {@code A{2}} — is a generic, which is
+         * exactly what {@link fURI#isGeneric()} recognizes (all-caps segments), while {@code int} and {@code /m/int}
+         * are concrete types. {@code A}..{@code G} are the constants on {@link InstSet}; reading them by spelling
+         * means a type reached through a scheme or a query is never mistaken for a variable.
+         */
+        public static boolean hasGenericSlot(final List<String> poly) {
+            for (final String slot : poly) {
+                // a cheap spelling guard first: only an all-caps NAME can be a variable, so the slot's own text is
+                // read before the furi parser is asked about it (a `,` or a `+` slot is not a name at all)
+                final String text = null == slot ? "" : slot.trim();
+                if (!text.isEmpty() && Character.isUpperCase(text.charAt(0)) && Singleton.f(text).isGeneric())
+                    return true;
+            }
+            return false;
+        }
+
+        /**
+         * BIND a list poly's generics against the slots of {@code value} — {@code lst[A,B]::[1,'x']} is
+         * {@code lst[int,str]::[1,'x']}. The poly IS the value's shape, position by position (see
+         * {@code fURI.Helper.validatePoly}), so slot {@code i} of the poly is determined by slot {@code i} of the
+         * value: a generic binds to that value's {@code tid()}, a variable occurring in several positions must bind to
+         * the SAME type (unified here), and a concrete slot must already accept its value (today's behavior).
+         * <p>
+         * NO GENERAL INFERENCE: only the declared poly's OWN variables bind, from the positions that determine them.
+         * Nothing is inferred from the value into the surrounding code, and {@code rec} polys are deliberately not
+         * bound (traits are nominal — a generic trait is either in scope or an error, a separate decision).
+         *
+         * @param value the lst being typed
+         * @param tid   the type id it was declared with
+         * @return the bound type id; {@code tid} itself when there is nothing to bind (no poly, or no generic slot);
+         * or {@code null} when the value contradicts the poly (arity, or one variable bound to two types) — the
+         * caller then fails it through the ordinary "does not match the poly" verdict
+         */
+        public static fURI boundTID(final Lst value, final fURI tid) {
+            if (null == tid || !tid.hasPoly() || !hasGenericSlot(tid.poly()))
+                return tid;
+            final List<String> poly = tid.poly();
+            final List<Obj> slots = value.lstValue();
+            if (poly.size() != slots.size())
+                return null; // arity: lst[A,B]::[1] has no second slot to bind B from
+            final Map<fURI, fURI> bindings = new LinkedHashMap<>();
+            final List<String> bound = new ArrayList<>(poly.size());
+            for (int i = 0; i < poly.size(); i++) {
+                final String declared = poly.get(i);
+                final fURI slot = Singleton.f(declared.trim());
+                final Obj slotValue = null == slots.get(i) ? noobj() : slots.get(i);
+                if (!slot.isGeneric()) {
+                    if (!slotValue.test(T(slot))) {
+                        return null;
+                    }
+                    bound.add(declared);
+                    continue;
+                }
+                final fURI type = slotValue.tid();
+                final fURI prior = bindings.putIfAbsent(slot.big(), type);
+                if (null != prior && !prior.equals(type))
+                    return null; // a contradiction: the one variable would be two types
+                bound.add((null == prior ? type : prior).toString());
+            }
+            return tid.poly(bound);
+        }
+
+        /**
+         * {@link #boundTID} for a construction site that must still SET a type: the bound id when the value binds,
+         * otherwise the id as declared — so a contradiction is reported by the type check that follows (one error for
+         * "the value does not match the poly", whether the poly was concrete or bound-from-generics), not here.
+         */
+        public static fURI boundOrDeclared(final Lst value, final fURI tid) {
+            final fURI bound = boundTID(value, tid);
+            return null == bound ? tid : bound;
         }
     }
 

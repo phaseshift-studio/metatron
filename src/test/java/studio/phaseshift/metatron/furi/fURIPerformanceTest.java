@@ -86,7 +86,7 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
                 "int",
                 "int{4}",
                 "lst[int,str]",
-                "rec[a=>b,c=>d]",
+                "rec[a,b,c,d]",
                 "inst?a<=b()",
                 "/m/inst?dom=b&rng=a",
                 "/m/type/rec?docq",

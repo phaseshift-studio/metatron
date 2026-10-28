@@ -51,6 +51,53 @@ public abstract class AbstractfURI implements fURI {
      */
     private static final List<String> Q_LEAD = List.of(RNG, DOM, ARGS);
 
+    /**
+     * THE query-order comparator, held as a constant so a map can be recognized as already being in normal form (a
+     * {@code TreeMap} answers the very comparator it was built with) — which is what keeps a write path that already
+     * produced a canonical map from sorting it a second time.
+     */
+    static final Comparator<String> Q_ORDER = AbstractfURI::compareQKeys;
+
+    /**
+     * An EMPTY query map in normal form — the map every query-bearing uri extends, and the answer for a uri that
+     * carries no query at all.
+     */
+    public static SortedMap<String, String> sortedQ() {
+        // TreeMap, not an immutable sorted copy: a TreeMap's iteration order is a function of the COMPARATOR, so no
+        // put/remove/putAll — by us or by anyone holding qMap() — can produce a differently ordered query. The order
+        // is enforced by the data structure, not by a convention every future construction path must remember.
+        return new TreeMap<>(Q_ORDER);
+    }
+
+    /**
+     * THE canonical query map: {@code query} in the normal form {@link #compareQKeys} defines. This is the one and
+     * only way a q map enters a uri (every form with a query is a {@code SAPXCQfURI}, whose constructor calls here),
+     * so the order is established ONCE, at write time, and every later read — {@link #qString()} above all — is a
+     * plain iteration with no comparator, sort or temporary list. {@code null} and empty are the shared empty sorted
+     * map; a map already ordered by {@link #Q_ORDER} is adopted as is.
+     */
+    public static SortedMap<String, String> canonicalQ(final Map<String, String> query) {
+        if (null == query || query.isEmpty())
+            return Collections.emptySortedMap();
+        if (query instanceof SortedMap<String, String> sorted && sorted.comparator() == Q_ORDER)
+            return sorted;
+        final SortedMap<String, String> canonical = sortedQ();
+        canonical.putAll(query);
+        return canonical;
+    }
+
+    /**
+     * A MUTABLE canonical map seeded with {@code query} — the accumulator for the write paths that add, remove or
+     * merge query components ({@code q}, {@code plus}, {@code mult}, {@code removeQ}, {@code extend}, {@code addQ},
+     * {@code copyQ}, {@code args}, {@link #qMap()}). The order is the map's own, so the mutation order cannot matter.
+     */
+    public static SortedMap<String, String> mutableQ(final Map<String, String> query) {
+        final SortedMap<String, String> canonical = sortedQ();
+        if (null != query)
+            canonical.putAll(query);
+        return canonical;
+    }
+
     @Override
     public List<String> segments() {
         if (this.isEmpty())
@@ -292,7 +339,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI q(final Map<String, String> query) {
-        final Map<String, String> newQ = null == query ? Map.of() : query;
+        // normal form on the way in: every caller (parser, setters, copyQ, algebra on the query) lands here
+        final SortedMap<String, String> newQ = canonicalQ(query);
         if (Objects.equals(this.qMap(), newQ))
             return this;
         return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
@@ -536,7 +584,7 @@ public abstract class AbstractfURI implements fURI {
             newPath.addFirst("");
         final fURI f;
         if (segment.contains("?")) {
-            final Map<String, String> qs = this.hasQ() ? new LinkedHashMap<>(this.qMap()) : new LinkedHashMap<>();
+            final SortedMap<String, String> qs = mutableQ(this.qMap());
             qs.putAll(f(segment).qMap());
             f = fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), qs, this.templates());
         } else
@@ -594,7 +642,7 @@ public abstract class AbstractfURI implements fURI {
                 newPath.removeLast();
             newPath.addAll(otherResolved.path().getFirst().isEmpty() ? otherResolved.path().subList(1, otherResolved.path().size()) : otherResolved.path());
         }
-        final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
+        final SortedMap<String, String> newQ = mutableQ(this.qMap());
         newQ.putAll(otherResolved.qMap());
         return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c().mult(otherResolved.c()), this.poly(), newQ, this.templates()).resolve();
     }
@@ -603,7 +651,7 @@ public abstract class AbstractfURI implements fURI {
     public fURI removeQ(final String key) {
         if (this.qMap().isEmpty() || !this.qMap().containsKey(key))
             return this;
-        final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
+        final SortedMap<String, String> newQ = mutableQ(this.qMap());
         newQ.remove(key);
         return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
     }
@@ -621,7 +669,7 @@ public abstract class AbstractfURI implements fURI {
         if (Objects.equals(this.scheme(), other.scheme()) &&
                 Objects.equals(this.host(), other.host()) &&
                 Objects.equals(this.port(), other.port())) {
-            final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
+            final SortedMap<String, String> newQ = mutableQ(this.qMap());
             newQ.putAll(other.qMap());
             final boolean samePath = Objects.equals(this.path(), other.path());
             final List<String> path = samePath ? this.path() : mergePaths(this.path(), other.path(), this.c(), other.c());
@@ -630,7 +678,7 @@ public abstract class AbstractfURI implements fURI {
             final cInt coefficient = samePath ? this.c().plus(other.c()) : cInt.ONE();
             return fURI.of(this.scheme(), this.host(), this.port(), path, coefficient, this.poly(), newQ, this.templates());
         } else {
-            final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
+            final SortedMap<String, String> newQ = mutableQ(this.qMap());
             newQ.putAll(other.qMap());
             return fURI.of(null, null, -1, List.of("#"), this.c().plus(other.c()), this.poly(), newQ, this.templates());
             // throw MTronException.of("unable to add %s to %s", other, this);
@@ -833,36 +881,44 @@ public abstract class AbstractfURI implements fURI {
      * The query components in CANONICAL order, so that a uri has one spelling and not as many as there are ways to
      * fill its map.
      * <p>
+     * THE STORAGE IS IN NORMAL FORM. {@link #qMap()} is a {@link SortedMap} ordered by {@link #compareQKeys}, built
+     * once by {@link #canonicalQ(Map)} when the uri is constructed — never re-derived here. This method is therefore
+     * a plain join over the map's iteration order: no comparator, no sort, no temporary list. Formatting is an O(n)
+     * read of a structure whose order was established at write time.
+     * <p>
      * THE ORDER IS THE SIGNATURE'S. A query is read as an instruction's signature — {@code inst?rng<=dom(args)}, the
-     * shorthand for {@code inst?dom=…&rng=…&args=[…]} written as an arrow — and it is rendered in that same order:
-     * {@code rng}, then {@code dom}, then {@code args}, then every remaining key in REVERSE ALPHABETICAL (descending
-     * natural string) order. {@code rng} precedes {@code dom} because the arrow reads rng-FROM-dom: the result type
-     * is named first, the input type after, exactly as {@code a<=b} names its output on the left. Everything else is
-     * sorted descending rather than ascending so the fixed trio leads and the tail is a stable, obviously-not-insertion
-     * order — the point is one authority, not a pretty tail.
+     * shorthand for {@code inst?dom=…&rng=…&args=[…]} written as an arrow — and it is stored, hence rendered, in
+     * that same order: {@code rng}, then {@code dom}, then {@code args}, then every remaining key in REVERSE
+     * ALPHABETICAL (descending natural string) order. {@code rng} precedes {@code dom} because the arrow reads
+     * rng-FROM-dom: the result type is named first, the input type after, exactly as {@code a<=b} names its output on
+     * the left. Everything else sorts descending rather than ascending so the fixed trio leads and the tail is a
+     * stable, obviously-not-insertion order — the point is one authority, not a pretty tail.
      * <p>
      * WHY CANONICAL AT ALL: {@code equals} compares the query MAP, so two uris that differ only in the order their
      * keys were inserted are the same uri — but they used to render as different text, and {@link
      * studio.phaseshift.metatron.furi.fURICache} interns by TEXT. Two spellings of one fURI were therefore two cache
-     * entries (and two instances, two {@code toString} results, two hash maps on the way to one answer). Sorting here
-     * is what makes equal uris render identically, and identical text is what lets them intern as one key.
-     * <p>
-     * Note this is a RENDER-time order only: {@link #qMap()} keeps whatever map the parser or a setter built, so a
-     * {@code dom(fURI)}/{@code rng(fURI)} copy that reorders the map (it goes through a {@code HashMap}) changes
-     * nothing observable — its text is canonical anyway.
+     * entries (and two instances, two {@code toString} results, two hash maps on the way to one answer). Storing the
+     * map in normal form is what makes equal uris render identically, and identical text is what lets them intern as
+     * one key.
      */
     @Override
     public String qString() {
-        return String.join("&", this.qMap().entrySet().stream()
-                .sorted(Map.Entry.comparingByKey(AbstractfURI::compareQKeys))
-                .map(e -> e.getKey() + (e.getValue().isEmpty() ? "" : ("=" + e.getValue())))
-                .toList());
+        final StringBuilder sb = new StringBuilder();
+        for (final Map.Entry<String, String> kv : this.qMap().entrySet()) {
+            if (!sb.isEmpty())
+                sb.append('&');
+            sb.append(kv.getKey());
+            if (!kv.getValue().isEmpty())
+                sb.append('=').append(kv.getValue());
+        }
+        return sb.toString();
     }
 
     /**
-     * THE ordering authority for query components — {@link #qString()} and nothing else decides how a query is
-     * spelled. A key in {@link #Q_LEAD} sorts by its position there, before every other key; every remaining key
-     * sorts in descending natural string order, so the order is total and never depends on map iteration order.
+     * THE ordering authority for query components — the comparator of the stored map, so the order is a property of
+     * the STORAGE rather than of the render. A key in {@link #Q_LEAD} sorts by its position there, before every other
+     * key; every remaining key sorts in descending natural string order. The order is total, and it is consistent
+     * with {@code equals} (it answers 0 only for equal keys), which a {@code Map} comparator must be.
      */
     private static int compareQKeys(final String lhs, final String rhs) {
         final int lhsRank = Q_LEAD.indexOf(lhs);
@@ -878,13 +934,14 @@ public abstract class AbstractfURI implements fURI {
     }
 
     @Override
-    public Map<String, String> qMap() {
-        return Map.of();
+    public SortedMap<String, String> qMap() {
+        return Collections.emptySortedMap();
     }
 
     @Override
     public fURI q(final String key, final Object value) {
-        final Map<String, String> newQ = new HashMap<>(this.qMap());
+        // the canonical map is the accumulator too: the key lands in normal-form position whatever its name
+        final SortedMap<String, String> newQ = mutableQ(this.qMap());
         newQ.put(key, null == value ? "" : value.toString());
         return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
     }
@@ -1071,9 +1128,11 @@ public abstract class AbstractfURI implements fURI {
                 && ((!thisResolved.hasPoly() && !thatResolved.hasPoly()) || Objects.equals(thisResolved.poly(), thatResolved.poly()))
                 && Objects.equals(thisResolved.c(), thatResolved.c())
                 && ((!thisResolved.hasTemplates() && !thatResolved.hasTemplates()) || Objects.equals(thisResolved.templates(), thatResolved.templates()))
-                // Map extends AbstractMap and defines equals by content across implementations (Map.of vs
-                // LinkedHashMap), so the defensive HashMap copies that used to sit here were pure allocation — two
-                // maps per comparison, on the equality that runs in the resolver's inner loop.
+                // Map.equals is defined by CONTENT across implementations, and TreeMap inherits it from AbstractMap
+                // (unlike compareTo, it does not consult the comparator), so a sorted q map compares equal to any
+                // Map with the same entries — the SAME semantics as before the order became part of the storage.
+                // The defensive copies that used to sit here were pure allocation: two maps per comparison, on the
+                // equality that runs in the resolver's inner loop.
                 && ((!thisResolved.hasQ() && !thatResolved.hasQ()) || thisResolved.qMap().equals(thatResolved.qMap()));
     }
 
