@@ -30,16 +30,18 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TYPE;
 
 
 public class LstTest extends AbstractAlgebraTest {
@@ -430,6 +432,43 @@ public class LstTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkMatches(LOG, list, type, matches);
     }
 
+    /**
+     * A GENERIC list poly BINDS at construction: the poly written with a value is that value's shape position by
+     * position, so {@code lst[A,B]::[1,'x']} binds {@code A=>int} and {@code B=>str} and the constructed value is
+     * typed {@code lst[int,str]}. A variable used twice must resolve to ONE type ({@code lst[A,A]::[1,2]} is a pair of
+     * ints) and two different types are a contradiction — failed by the same poly verdict, with the same message, as a
+     * concrete poly that does not match ({@code lst[int,int]::[1,'x']}). Arity is the same rule taken literally: a
+     * poly of length n is the type of an n-slot value, so {@code lst[A,B]::[1]} has nothing to bind {@code B} from.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "lst[A,B]::[1,'x']                                      % lst[int,str]::[1,'x']",
+            "lst[A,A]::[1,2]                                        % lst[int,int]::[1,2]",
+            "lst[A,A]::[1,'x']                                      % <ERROR>",
+            "lst[A,B]::[1]                                          % <ERROR>",
+            "lst[int,int]::[1,'x']                                  % <ERROR>",
+            "lst[int,int]::[1,2]                                    % lst[int,int]::[1,2]",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testGenericPolyBinding(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * The bound poly is the VALUE's type, not just a verdict: {@code lst[A,B]::[1,'x']} carries
+     * {@code lst[int,str]} as its tid, which is what {@code .type()} reports, while a concrete annotation keeps the
+     * meaning it was written with.
+     */
+    @org.junit.jupiter.api.Test
+    public void testGenericPolyBindingCarriesTheBoundPoly() {
+        final Obj bound = mParser.m_obj().parse("lst[A,B]::[1,'x']").get();
+        assertEquals(f("/m/lst[/m/int,/m/str]"), bound.tid());
+        assertEquals(bound.tid(), bound.type().vidOrTid());
+        final Obj concrete = mParser.m_obj().parse("lst[int,int]::[1,2]").get();
+        assertEquals(f("/m/lst[/m/int,/m/int]"), concrete.tid());
+        // .type() answers the same bound poly the tid carries
+        AbstractMetatronTest.checkCodeParseApply(LOG, "lst[A,B]::[1,'x'].type()", "lst[int,str]::T");
+    }
+    
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE set: should mutate original in-place

@@ -1059,10 +1059,10 @@ public class mParser {
         final Parser first = allowLeadingBranch ? m_furi_leading_coefficient_marked_atom().or(element) : element;
         final Parser contentParser = seq(first, element.star()).flatten();
         final Parser leadingBraceGuard = allowLeadingBranch ? of("") : of('{').not();
-        return seq(of('-').not(), leadingBraceGuard, contentParser,
+        return new FuriPolyRuleParser(seq(of('-').not(), leadingBraceGuard, contentParser,
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 2)).poly(pick(t, 3)).c(coefficientOrOne(pick(t, 4))).qString(pick(t, 5)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 2)).poly(pick(t, 3)).c(coefficientOrOne(pick(t, 4))).qString(pick(t, 5))));
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
@@ -1261,6 +1261,47 @@ public class mParser {
                 seq(of('{').trim(), of(',').trim(), of('}').trim()),
                 seq(of('{').trim(), m_call_prefix(MAP_INST_TID).separatedBy(of(',').trim()), of('}').trim()).pick(1))
                 .map(t -> objs(((List) t).stream().filter(x -> x instanceof Obj).toList()));
+    }
+
+    /**
+     * THE POLY RULE, AS A PARSE FAILURE. {@code fURI.of} rejects a poly that reads a keyed map or nests a list, and
+     * the mtron grammar probes alternatives by CONSTRUCTING candidate types first — {@code +[a=>+2]} is plus applied
+     * to a rec, but the type rule also tries to read {@code +[a=>+2]} as a typed uri and would build it before seeing
+     * that no {@code ::T} follows. A construction error there must fail THIS alternative (so the probe backtracks and
+     * the value reading wins), not abort the whole parse. A uri that really is malformed still surfaces the rule's
+     * message, as a positioned parse failure, because no alternative consumes it.
+     */
+    private static final class FuriPolyRuleParser extends Parser {
+
+        private final Parser inner;
+
+        private FuriPolyRuleParser(final Parser inner) {
+            this.inner = inner;
+        }
+
+        @Override
+        public Result parseOn(final Context ctx) {
+            try {
+                return this.inner.parseOn(ctx);
+            } catch (final MTronException e) {
+                return ctx.failure(e.getMessage(), ctx.getPosition());
+            }
+        }
+
+        @Override
+        public Parser copy() {
+            return new FuriPolyRuleParser(this.inner.copy());
+        }
+
+        @Override
+        public List<Parser> getChildren() {
+            return List.of(this.inner);
+        }
+
+        @Override
+        public void replace(final Parser source, final Parser target) {
+            // immutable: the inner parser is fixed at construction
+        }
     }
 
     /**

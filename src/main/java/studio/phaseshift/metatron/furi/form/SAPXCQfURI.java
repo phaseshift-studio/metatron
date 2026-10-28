@@ -22,20 +22,24 @@ import studio.phaseshift.metatron.furi.C;
 
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 /*
+ * The single STORAGE point for a query: every query-bearing form extends this class, so normalizing here (and only
+ * here) is what makes the canonical order a property of every fURI rather than of each construction path.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class SAPXCQfURI extends SAPXCXfURI {
-    protected final Map<String, String> query;
+    protected final SortedMap<String, String> query;
 
     public SAPXCQfURI(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient, final Map<String, String> query) {
         super(scheme, host, port, path, coefficient);
-        this.query = null == query ? Map.of() : query;
+        this.query = AbstractfURI.canonicalQ(query);
     }
-    
+
     @Override
-    public Map<String, String> qMap() {
+    public SortedMap<String, String> qMap() {
         return this.query;
     }
 }

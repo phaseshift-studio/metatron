@@ -1158,6 +1158,18 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (!obj.isType() && obj.tid().isGeneric())
                 throw new TypeMismatchException(obj, obj.type(), "%s value can not be typed generic %s::T", obj.jvm(), obj.tid());
             if (TypeCheck.type_pred.enabled()) {
+                // A GENERIC POLY BINDS AT CONSTRUCTION. A poly written WITH a value is a declaration, not a free
+                // signature: `lst[A,A]::[1,2]` is a pair of equal slot types, so the value's own slots decide that A
+                // is int and the value is then typed `lst[int,int]` (its tid, and so what .type() reports). This is
+                // the same path a concrete poly takes — a value that contradicts the declaration (`lst[A,A]::[1,'x']`)
+                // or does not fill every slot (`lst[A,B]::[1]`) keeps its declared tid and is failed by the verdict
+                // below, so there is ONE error for "the value does not match the poly", whether the poly was concrete
+                // or bound-from-generics. `rec` is deliberately not bound: traits are nominal.
+                final boolean genericPoly = Machine.loaded() && obj.isLst() && obj.tid().hasPoly() &&
+                        Lst.LstType.hasGenericSlot(obj.tid().poly());
+                final fURI boundTID = genericPoly ? Lst.LstType.boundTID(obj.asLst(), obj.tid()) : obj.tid();
+                if (null != boundTID && !boundTID.equals(obj.tid()))
+                    obj.selfTID(boundTID);
                 // ONE resolution serves the verdict AND the message. obj.type() is a live registry read, so a
                 // second call can answer a DIFFERENT type than the one the verdict was computed against -- the
                 // error then prints a type the verdict never saw, and its field diff shows no mismatch.
@@ -1168,7 +1180,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 // being declared, or a resolution racing the registration. testing a structural instance
                 // against the label rejects it for a reason no diff can show, so a label's verdict is
                 // "unverifiable", never "mismatch" -- the leniency the nominal fallthrough already gives these.
-                if (null != objType && !objType.isEphemeral() && !obj.test(objType)) {
+                if (null != objType && !objType.isEphemeral() && (null == boundTID || !obj.test(objType))) {
                     if (obj.isPoly()) {
                         // THE VERDICT EXECUTES, THE DIFF COMPARES. the test path runs the type's predicate call
                         // through the processor (Type.apply -> obj.test(predicate().apply(obj))), while the

@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -113,6 +114,17 @@ public abstract class LawTable {
     public record Entry(Lst laws, fURI inverse, Derivation derivation) {
     }
 
+    /**
+     * THE STORE'S RESIDUE of defining equations — the declarations {@code ?lawq} holds that the build-time registry
+     * ({@link InstBuilder#declarations}) does not, which is the cold-boot ordering and any writer that is not
+     * {@link InstBuilder}. Late-bound on purpose: the store cannot be walked until the machine is up, and the
+     * registry keeps growing while the sets mount — so the snapshot records the two facts that make it stale (was
+     * the machine up, and how many declarations had landed) and is retaken only when one of them changes.
+     */
+    private static volatile Map<fURI, Derivation> STORE_DERIVATIONS = Map.of();
+    private static volatile int STORE_DERIVATIONS_AT = -1;
+    private static volatile boolean STORE_DERIVATIONS_WAS_LOADED = false;
+
     private final Map<fURI, Entry> table = new HashMap<>();
     private final Map<fURI, Entry> resolved = new ConcurrentHashMap<>();
 
@@ -184,10 +196,10 @@ public abstract class LawTable {
         final Entry declared = this.row(instTid);
         if (null == declared) {
             // NO ROW: the instruction may DECLARE its law row itself (InstBuilder -> ?lawq). Declared at the inst,
-            // stored beside it, and answered here -- the table is the fallback, not the source. The declared LAWS
-            // are the instruction's; the INVERSE is still one the carrier's algebra may derive (see computed).
-            final Entry fromLawq = declaredEntry(lawOf(instTid));
-            return null == fromLawq ? null : this.computed(instTid, fromLawq);
+            // and answered from the build-time REGISTRY -- the in-memory index over the store. The declared LAWS are
+            // the instruction's; the INVERSE is still one the carrier's algebra may derive (see computed).
+            final Entry fromDeclaration = declaredRow(instTid);
+            return null == fromDeclaration ? null : this.computed(instTid, fromDeclaration);
         }
         // a derivation is reading the carrier's law block, which may itself consult this table: answer the
         // declaration while that read is in flight (never cache it), so the read cannot re-enter here
@@ -217,11 +229,40 @@ public abstract class LawTable {
     }
 
     /**
-     * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF ({@code ?lawq}, written by {@code InstBuilder.drain}): its
-     * process laws, its inverse and its defining equation, each read only when the rec carries it. An undeclared
-     * facet is null (an absent laws list is the empty list, since a row with no laws still declares its
-     * relations), and a rec declaring nothing is null rather than an empty claim — the table's row is then the
-     * only source.
+     * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF, answered from the BUILD-TIME REGISTRY
+     * ({@link InstBuilder#declaration}) — the in-memory index over what {@code InstBuilder.drain} persists to
+     * {@code ?lawq}. A declaration is in hand the moment the instruction is created, so this read costs a hash
+     * lookup: it never walks the registered instructions and never touches a space.
+     * <p>
+     * THE STORE IS THE FALLBACK, for the one answer memory cannot give: a declaration @lawq holds that the registry
+     * does not. That is the cold-boot ordering where a law table is consulted before the set that declares the inst
+     * is built, and any writer that is not {@link InstBuilder} (the store is the durable record, so it is also the
+     * foreign writer's). The fallback is ONE read of the QUERIED address — never a walk of every instruction, which
+     * is what made a lookup a per-evaluation cost.
+     */
+    private static Entry declaredRow(final fURI instTid) {
+        final InstBuilder.Declaration registered = InstBuilder.declaration(instTid);
+        if (null != registered)
+            return entry(registered);
+        return declaredEntry(lawOf(instTid));
+    }
+
+    /**
+     * The registry's declaration as a law-table row: its process laws, its declared inverse and its defining
+     * equation — the same claims {@link #declaredEntry(Obj)} reads back out of the store's rec, built from the
+     * builder's staged declaration instead of from a space.
+     */
+    private static Entry entry(final InstBuilder.Declaration registered) {
+        return new Entry(registered.laws().isEmpty() ? lst() : laws(registered.laws().toArray(Law[]::new)),
+                registered.inverse(), registered.derivation());
+    }
+
+    /**
+     * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF AS THE STORE HOLDS IT ({@code ?lawq}, written by
+     * {@code InstBuilder.drain}): its process laws, its inverse and its defining equation, each read only when the
+     * rec carries it. An undeclared facet is null (an absent laws list is the empty list, since a row with no laws
+     * still declares its relations), and a rec declaring nothing is null rather than an empty claim — the table's
+     * row is then the only source.
      */
     private static Entry declaredEntry(final Obj fromLawq) {
         if (!fromLawq.isRec())
@@ -484,11 +525,12 @@ public abstract class LawTable {
             final Entry row = table.row(contract.tid());
             if (null != row)
                 return new Declared(contract.tid(), table.algebraic(contract.tid(), row, operand));
-            // NO ROW: the instruction declares its own law row beside it (?lawq, via InstBuilder). The LAWS are the
-            // instruction's, the INVERSE is still the operand's algebra -- so the pair is derived, not declared.
-            final Entry fromLawq = declaredEntry(lawOf(contract.tid()));
-            if (null != fromLawq)
-                return new Declared(contract.tid(), table.algebraic(contract.tid(), fromLawq, operand));
+            // NO ROW: the instruction declares its own law row beside it (?lawq, via InstBuilder), answered from the
+            // registry. The LAWS are the instruction's, the INVERSE is still the operand's algebra -- so the pair is
+            // derived, not declared.
+            final Entry fromDeclaration = declaredRow(contract.tid());
+            if (null != fromDeclaration)
+                return new Declared(contract.tid(), table.algebraic(contract.tid(), fromDeclaration, operand));
         }
         return owner.exact(base, operand);             // the op is not in the registry: the exact row, unchanged
     }
@@ -830,8 +872,12 @@ public abstract class LawTable {
      * {@code minus?int} and {@code minus?real} into one rule, which the rows keep distinct because they are
      * distinct equations over distinct carriers.
      * <p>
-     * Read per rewrite pass, so both halves are plain reads and no cache: a cache would have to be invalidated by
-     * a declaration written at this very moment, which is how a rule goes missing.
+     * THE SECOND HALF IS READ FROM THE REGISTRY, NOT FROM THE STORE ({@link InstBuilder#declarations}): a rewrite
+     * pass asks this question per evaluation, and answering it by walking every registered instruction with a space
+     * read beside each made the pass cost milliseconds. The registry is the query index; the equations it holds are
+     * the same claims {@code drain} persists. The STORE is still consulted — {@link #storeDerivations()} — for the
+     * declarations memory cannot answer for (a foreign writer, or a table asked before the declaring set was built),
+     * and that snapshot is taken lazily and reused rather than rebuilt per call.
      */
     private static Map<fURI, Derivation> declaredDerivations() {
         final Map<fURI, Derivation> out = new LinkedHashMap<>();
@@ -839,18 +885,56 @@ public abstract class LawTable {
             for (final Map.Entry<fURI, Entry> row : table.table.entrySet())
                 if (null != row.getValue().derivation())
                     out.putIfAbsent(row.getKey(), row.getValue().derivation());
-        // DECLARED BESIDE THE INSTRUCTION (?lawq) -- the address is the instruction's n-tid, which is the row key
-        // the declaration replaces, so a rule written in both places lands on one entry
-        final InstSet instset = Machine.loaded() ? Machine.current().instset() : null;
-        if (null != instset)
+        // DECLARED BESIDE THE INSTRUCTION, read from the registry: the address is the instruction's n-tid, which is
+        // the row key the declaration replaces, so a rule written in both places lands on one entry
+        InstBuilder.declarations().forEach((tid, declared) -> {
+            if (null != declared.derivation())
+                out.putIfAbsent(tid, declared.derivation());
+        });
+        // THE STORE'S RESIDUE: the declarations the registry does not hold. One snapshot, retaken only when the
+        // registry grows or when it was taken before the machine was up, so a settled machine pays nothing.
+        if (!STORE_DERIVATIONS_WAS_LOADED || STORE_DERIVATIONS_AT != InstBuilder.declarations().size())
+            storeDerivations();
+        return union(out, STORE_DERIVATIONS);
+    }
+
+    /**
+     * The STORE's defining equations — {@code ?lawq}'s residue over the registry: every registered instruction the
+     * registry declares nothing for gets ONE space read, and the answer is kept. Retaken only when one of its two
+     * staleness facts changes ({@link #STORE_DERIVATIONS_AT}, {@link #STORE_DERIVATIONS_WAS_LOADED}): never a walk
+     * per rewrite pass, and never a walk at all on a machine whose boot has settled.
+     * <p>
+     * The walk is why this is a snapshot and not a read: {@code instset().insts()} materializes every registered
+     * instruction and each {@code lawOf} is a space lookup — 283 of each per call is the regression this file fixes.
+     */
+    private static void storeDerivations() {
+        final boolean loaded = Machine.loaded();
+        final InstSet instset = loaded ? Machine.current().instset() : null;
+        final Map<fURI, Derivation> snapshot = new LinkedHashMap<>();
+        if (null != instset) {
             for (final Inst inst : instset.insts()) {
-                if (null == inst.tid())
-                    continue;
+                if (null == inst.tid() || null != InstBuilder.declaration(inst.tid()))
+                    continue;                       // the registry already answers for this instruction
                 final Obj fromLawq = lawOf(inst.tid());
                 final Derivation declared = fromLawq.isRec() ? declaredDerivation(fromLawq.asRec()) : null;
                 if (null != declared)
-                    out.putIfAbsent(inst.tid(), declared);
+                    snapshot.put(inst.tid(), declared);
             }
+        }
+        STORE_DERIVATIONS = snapshot;
+        STORE_DERIVATIONS_AT = InstBuilder.declarations().size();
+        STORE_DERIVATIONS_WAS_LOADED = loaded;
+    }
+
+    /**
+     * The union of the in-code and declared rules with the store's residue, the first two in declaration order.
+     */
+    private static Map<fURI, Derivation> union(final Map<fURI, Derivation> declared,
+                                               final Map<fURI, Derivation> stored) {
+        if (stored.isEmpty())
+            return declared;
+        final Map<fURI, Derivation> out = new LinkedHashMap<>(declared);
+        stored.forEach(out::putIfAbsent);
         return out;
     }
 
