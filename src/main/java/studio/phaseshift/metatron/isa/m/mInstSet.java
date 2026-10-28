@@ -1397,12 +1397,17 @@ public class mInstSet extends AbstractInstSet {
      * {@code true ∧ false = false}) — so the law is judged over it, never refused.
      *
      * <p>VERDICTS — {@code holds} (both sides equal), {@code failed} (they differ), {@code unchecked} (a role the law
-     * needs is not declared for this operation — the over-claim case) and {@code uncheckable} (the law carries no
-     * runnable equation: {@code pure}, {@code poset}, …, or its probe pair is degenerate — see
-     * {@code AlgebraTool#degenerate}). {@code ok} is true iff no claim failed and none was unchecked: neither an
-     * uncheckable claim nor a degenerate probe is a failure. A judged claim records BOTH evaluated sides as
-     * {@code got=>[lhs-result, rhs-result]}, so a broken side is visible in the report instead of inferred from one
-     * rendered string.
+     * needs is not declared for this operation — the over-claim case) and {@code uncheckable} (the law is about a
+     * DIFFERENT SHAPE than this operation, or carries no runnable equation: {@code pure}, {@code poset}, …, or its
+     * probe pair is degenerate — see {@link #matches} and {@code AlgebraTool#degenerate}). {@code ok} is true iff no
+     * claim failed and none was unchecked: neither an uncheckable claim nor a degenerate probe is a failure. A judged
+     * claim records BOTH evaluated sides as {@code got=>[lhs-result, rhs-result]}, so a broken side is visible in the
+     * report instead of inferred from one rendered string.
+     * <p>APPLICABILITY IS A SIGNATURE MATCH, NEVER A LADDER — {@link #matches} compares {@link Law#wrt()} with the
+     * operation's contract (dom/rng with the poly {@code A} standing for the carrier, and arity only when the
+     * signature declares {@code args}). A refused claim is a category error, so it answers {@code uncheckable} with
+     * the law's shape named ({@code "the law is about inst?dom=A&rng=bool&args=[A]"}), and the same rule is the
+     * census a declared law is held to.
      */
     public static final class AlgebraTool {
 
@@ -1541,6 +1546,123 @@ public class mInstSet extends AbstractInstSet {
             if (null == operation || null == operation.basePath())
                 return false;
             return opsOf(type).stream().anyMatch(op -> op.address().basePath().equals(operation.basePath()));
+        }
+
+        /**
+         * WHETHER THE LAW IS ABOUT THIS INSTRUCTION AT ALL — the signature match, and the decision that used to be a
+         * ladder of {@code op.binary()} / "is this the group operation?" / "is this the multiplicative operation?"
+         * tests spread through the equations.
+         * <p>
+         * A law is a statement about a SHAPE ({@link Law#wrt()}), so it applies to an instruction only when the
+         * instruction's contract has that shape:
+         * <ol>
+         *   <li>an {@code obj}-shaped ({@code pure}) or bare-{@code inst}-shaped ({@code floatable},
+         *       {@code blocked}, {@code partial}) law is about the instruction itself, so it matches every
+         *       instruction — the equations then answer with their own reason, exactly as before;</li>
+         *   <li>a carrier law ({@code inst?dom=…&rng=…}) matches when the instruction's {@code dom} and {@code rng}
+         *       agree with the signature's, with the poly variable {@code A} standing for the carrier — one
+         *       variable, so every {@code A} in the signature must land on the SAME carrier type;</li>
+         *   <li>arity is read ONLY from the signature's {@code args} component: {@code args=[A]} demands exactly one
+         *       argument beyond the lhs (a binary operation), while a signature with no {@code args} is
+         *       ARITY-AGNOSTIC and matches any arity — an element law, a unary {@code neg}, or a fold. That is what
+         *       lets an idempotent {@code zero} and an idempotent {@code or} be the same law.</li>
+         * </ol>
+         * A mismatch is a CATEGORY ERROR, never a counterexample: the instruction is not the kind of thing the law
+         * is about, so the verdict is {@code uncheckable} with the law's shape named, and neither confirms nor
+         * refutes it.
+         */
+        public static boolean matches(final Law law, final Inst inst) {
+            return null == law || null == inst || null == signatureMismatch(law, inst);
+        }
+
+        /**
+         * THE SIGNATURE MATCH — null when the law's signature names this instruction's contract, else the one-line
+         * refusal that names the law's shape. The census reads this through {@link #matches}, so the rule that
+         * refuses a claim at analysis time is the same rule a declaration is held to.
+         */
+        private static String signatureMismatch(final Law law, final Inst inst) {
+            if (null == law || null == inst || null == inst.tid())
+                return null;
+            final fURI signature = law.wrt();
+            if (!signature.hasDom() && !signature.hasRng())
+                return null;                        // `inst` (form) and `obj` (effect): about the instruction itself
+            final fURI dom = inst.tid().dom();
+            final fURI rng = inst.tid().rng();
+            final List<fURI> args = signature.args();
+            // arity is a claim ONLY when the signature carries args: no args means "any arity"
+            if (!args.isEmpty() && args.size() != inst.args().count())
+                return about(law);
+            final String[] carrier = {null};
+            if (!agrees(dom, signature.dom(), carrier) || !agrees(rng, signature.rng(), carrier))
+                return about(law);
+            for (int i = 0; i < args.size(); i++)
+                if (!agrees(argType(inst, i), args.get(i), carrier))
+                    return about(law);
+            return null;
+        }
+
+        /**
+         * Match one signature component against the instruction's component of the same slot — {@code dom} to
+         * {@code dom}, {@code rng} to {@code rng}, one {@code args} element to one declared argument type.
+         * <p>
+         * An undeclared endpoint (the {@code #} a missing {@code dom}/{@code rng} reads as) and a GENERIC contract
+         * (the {@code A}/{@code B} of a generic registration) accept anything, because they state no concrete type
+         * to refuse. A signature's {@code A} BINDS the carrier through {@code carrier} and must agree with every
+         * other {@code A} in the signature; an {@code A} carrying a coefficient ({@code A{*}}) additionally demands
+         * an endpoint that can hold MANY copies — the fold shape is not the single-element one.
+         */
+        private static boolean agrees(final fURI actual, final fURI wanted, final String[] carrier) {
+            if (null == actual || null == wanted)
+                return true;
+            final String actualName = baseName(actual);
+            if (actual.isGeneric() || "#".equals(actualName) || "+".equals(actualName))
+                return true;
+            if (wanted.isGeneric()) {
+                if (null == carrier[0])
+                    carrier[0] = actualName;            // ONE poly variable: the carrier the law is written over
+                else if (!carrier[0].equals(actualName))
+                    return false;
+                return wanted.c().isOne() || admitsMany(actual);
+            }
+            return baseName(wanted).equals(actualName);
+        }
+
+        /**
+         * The type name a signature component is compared by. A law is written in the process vocabulary
+         * ({@code dom=A}, {@code rng=bool}), so its names are relative, while an instruction's contract is absolute
+         * ({@code /m/bool}); the base name is what both spellings share.
+         */
+        private static String baseName(final fURI uri) {
+            if (null == uri)
+                return "";
+            final fURI base = uri.basePath();
+            return null == base ? uri.toString() : base.name();
+        }
+
+        /**
+         * Whether an endpoint can carry more than one element — the {@code A{*}} of a fold demands it, and a
+         * single-element endpoint ({@code A}, {@code A{?}}) does not satisfy it.
+         */
+        private static boolean admitsMany(final fURI component) {
+            final cInt c = component.c();
+            return !c.isZero() && (null == c.max() || c.max() > 1);
+        }
+
+        /**
+         * The declared type of an instruction's argument slot, as the address the signature is compared against;
+         * null when the slot declares no type (which matches anything).
+         */
+        private static fURI argType(final Inst inst, final int index) {
+            final Obj arg = inst.arg(index);
+            return null == arg || arg.isNoObj() ? null : Obj.Helper.specificTypeId(arg);
+        }
+
+        /**
+         * The refusal a shape mismatch answers with — the law's own signature, so a reader can see which shape was
+         * expected instead of inferring it from a law name.
+         */
+        private static String about(final Law law) {
+            return "the law is about " + law.wrt();
         }
 
         /**
@@ -1825,11 +1947,22 @@ public class mInstSet extends AbstractInstSet {
         /* ------------------------------------------------------------------ the law tests */
 
         /**
-         * The equations a law is tested with, rendered over the probe slots — one pair (lhs, rhs) per law. A law
-         * whose required role does not resolve is {@code unchecked}; a law with no equation at all is
-         * {@code uncheckable}.
+         * The equations a law is tested with, rendered over the probe slots — one pair (lhs, rhs) per law. The
+         * SIGNATURE is consulted first ({@link #matches}): a law whose subject shape this operation does not have is
+         * {@code uncheckable} with the shape named, because it is a category error and not a counterexample. Past
+         * that gate a law whose required role does not resolve is {@code unchecked}; a law this version has no
+         * runnable equation for is {@code uncheckable} with its own reason.
+         * <p>
+         * THE BINARY GUARDS BELOW ARE NO LONGER CLASSIFICATION. A signature with no {@code args} is arity-agnostic
+         * on purpose (an idempotent {@code zero}, a commutative stream reduction), so an operation it matches may
+         * still not be binary; the templates below state these laws between OPERANDS, so such an operation answers
+         * the same {@code "the operation is not binary"} it always did — the law applies, the equation does not.
          */
         private static List<Result> test(final Type type, final Op op, final Roles roles, final Law law) {
+            // THE SUBJECT SHAPE DECIDES APPLICABILITY — a law about another shape is not this operation's law
+            final String mismatch = signatureMismatch(law, op.inst());
+            if (null != mismatch)
+                return List.of(Result.uncheckable(law, op.role(), mismatch));
             switch (law) {
                 case monoidic:
                     return op.binary()
@@ -1842,6 +1975,7 @@ public class mInstSet extends AbstractInstSet {
                             ? List.of(evaluate(law, op.role(), apply(op.name(), A, B), apply(op.name(), B, A)))
                             : List.of(notBinary(law, op));
                 case idempotent:
+                    // no args in the signature: the law is arity-agnostic, and the template below is its binary form
                     return op.binary()
                             ? List.of(evaluate(law, op.role(), apply(op.name(), A, A), A))
                             : List.of(notBinary(law, op));
@@ -1897,6 +2031,8 @@ public class mInstSet extends AbstractInstSet {
                 return List.of(evaluate(law, op.role(), call(op.name(), call(op.name(), A)), A));
             if (null == bound || !groupish(op.instance()))
                 return List.of(Result.uncheckable(law, op.role(), "the operation is not a group operation"));
+            if (!op.binary())
+                return List.of(notBinary(law, op));   // the group form is an OPERAND equation, so it needs two
             final Obj identity = identity(type, op);
             if (null == identity)
                 return List.of(Result.unchecked(law, ID, "the group operation declares no identity"));
