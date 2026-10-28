@@ -132,11 +132,12 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
 
         // the reduction reading: master (fold) + slaves (slice + reducer)
         final Reduction r = Reduction.of(c);
+        final DistributedSweep.Layout layout = DistributedSweep.layout(r.masterCode());
         assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
-                TransportRewriteHarness.ops(r.masterCode()), "the master runs start·select·select·merge·sum");
-        assertEquals(2, r.slaveCodes().size(), "two slaves");
-        assertSlice(TransportRewriteHarness.seedOf(r.slaveCodes().get(0)), 1, 3, 5);
-        assertSlice(TransportRewriteHarness.seedOf(r.slaveCodes().get(1)), 2, 4, 6);
+                layout.ops(), "the master runs start·select·select·merge·sum");
+        assertEquals(2, layout.lanes().size(), "two slaves");
+        assertEquals(List.of(1L, 3L, 5L), layout.lane(0).part().stream().map(Obj::intValue).toList(), "slave 1's slice");
+        assertEquals(List.of(2L, 4L, 6L), layout.lane(1).part().stream().map(Obj::intValue).toList(), "slave 2's slice");
         assertEquals(27, r.complete().asInt().intValue(), "the fold");
         assertEquals(12, r.partials().get(0).asInt().intValue(), "slave 1 partial");
         assertEquals(15, r.partials().get(1).asInt().intValue(), "slave 2 partial");
@@ -185,7 +186,7 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testCombinerShardsOverTransport(final String source, final String combiner, final String expected) {
         final DistributedComputation c = DistributedComputation.of(source);
-        final List<fURI> ops = TransportRewriteHarness.ops(Reduction.of(c).masterCode());
+        final List<fURI> ops = DistributedSweep.layout(Reduction.of(c).masterCode()).ops();
         assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, M_ISA_INST_TID.extend(combiner)),
                 ops.subList(0, Math.min(5, ops.size())), "the master recombines the partials through the combiner: " + ops);
         checkEquality(LOG, ObjmtronSerializer.parse(expected), c.result(), true);
@@ -208,11 +209,5 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
         final Code rewritten = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source).asCode()).asCode();
         checkEquality(LOG, bool(shipped), bool(TransportRewriteHarness.ops(rewritten).contains(SELECT_INST_TID)), true);
         checkEquality(LOG, ObjmtronSerializer.parse(expected), TransportRewriteHarness.single(TransportRewriteHarness.evaluate(rewritten)), true);
-    }
-
-    private static void assertSlice(final List<Obj> slice, final int... expected) {
-        assertEquals(expected.length, slice.size(), "slice size");
-        for (int i = 0; i < expected.length; i++)
-            assertEquals(expected[i], slice.get(i).asInt().intValue(), "slice element " + i);
     }
 }

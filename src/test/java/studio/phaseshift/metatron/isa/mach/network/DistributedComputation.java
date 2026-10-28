@@ -68,6 +68,12 @@ public final class DistributedComputation {
      * Compile the source through the distributed rewrite, run it, and capture every peer's code + result. The peel is
      * the reduction ({@code law_shard}) one for now; the captured shape is already topology-free, so other topologies
      * add their own peel without changing this value.
+     * <p>
+     * A CHAIN THE PLAN DECLINED IS ONE LOCAL PEER, NOT AN ERROR ({@link Reduction#slaves}/{@link Reduction#routes} answer
+     * empty for it): the fold ran whole at home, and the peers list simply holds the one local run. That is the shape of
+     * a silently undistributed run, so assert on the layout too — {@link #peers()} being a single entry, or a missing
+     * fan-out in the master's ops ({@link DistributedSweep}), is what notices it; the value alone cannot, because a
+     * declined shard computes the very same answer.
      */
     public static DistributedComputation of(final String source) {
         final Code original = ObjmtronSerializer.parse(source).asCode();

@@ -33,9 +33,9 @@ import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.web.space.ws.wsServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -79,16 +79,18 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
         CommonUtil.sleepThread(300);
         try {
             Machine.current().network().connect(service.extend("mtron"), WS_CLIENT_TID);
-            final List<fURI> across = this.planned();
-            assertEquals(true, across.contains(SELECT_INST_TID),
-                    "an online peer is a shard target, so the fold is planned across it: " + across);
+            final DistributedSweep.Layout across = this.planned();
+            assertFalse(across.lanes().isEmpty(),
+                    "an online peer is a shard target, so the fold is planned across it: " + across.emitted());
             CommonUtil.close(server);
             this.awaitOffline(service);
             assertEquals(1L, Machine.current().network().peers().elements().count(),
                     "the offline peer is still listed: it is being redialed");
-            final List<fURI> home = this.planned();
-            assertEquals(false, home.contains(SELECT_INST_TID),
-                    "an offline peer is no target, so the fold is planned at home: " + home);
+            final DistributedSweep.Layout home = this.planned();
+            // BOTH halves of "planned at home": no lane shipped AND no fan-out select in the chain. Zero lanes alone is
+            // weaker — a select over an empty route list also reads as zero lanes, and that is still a fan-out.
+            assertTrue(home.lanes().isEmpty() && !home.ops().contains(SELECT_INST_TID),
+                    "an offline peer is no target, so the fold is planned at home: " + home.emitted());
             checkCodeParseApply(LOG, FOLD, "14");
         } finally {
             Machine.current().network().disconnect(service);
@@ -97,11 +99,11 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
     }
 
     /**
-     * the master's top-level ops once the rewrite stage has planned the fold
+     * the master's layout once the rewrite stage has planned the fold
      */
-    private List<fURI> planned() {
+    private DistributedSweep.Layout planned() {
         final Code original = ObjmtronSerializer.parse(FOLD).asCode();
-        return TransportRewriteHarness.ops(Machine.current().compiler().rewriter().apply(original).asCode());
+        return DistributedSweep.layout(Machine.current().compiler().rewriter().apply(original).asCode());
     }
 
     private void awaitOffline(final fURI service) throws InterruptedException {

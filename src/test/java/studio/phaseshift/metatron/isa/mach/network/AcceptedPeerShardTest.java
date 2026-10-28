@@ -143,7 +143,7 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
         // routing is decided at compile time, so neither reach is ever asked
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,32,4,5,999,6}.plus(1).sum()")).asCode();
-        assertEquals(List.of(Network.Helper.serviceOf(DIALED)), Reduction.routes(compiled),
+        assertEquals(List.of(Network.Helper.serviceOf(DIALED)), DistributedSweep.layout(compiled).routes(),
                 "law_shard must fan out over the dialed peer alone, never the accepted twin " + TWIN);
     }
 }
