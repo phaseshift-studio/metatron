@@ -25,27 +25,34 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.algebra.Form.MULT_MONOID;
-import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REL_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class RelTest extends AbstractAlgebraTest<Rel> {
+public class RelTest extends AbstractAlgebraTest {
 
-    public RelTest() {
-        // NOTE: rel-arrow is a pair of monoids but not a rig — plus has the noobj sink as a live zero (0+a = a = a+0, green in testPlusMonoid) while mult composes over that sink only partially (0*a => noobj=>noobj), so the rig annihilator 0*a = 0 does not hold for arrows; union over full relations lives at the lst-of-arrows level.
-        super(rel(uri("a"), jnt(1)), Set.of(PLUS_MONOID, MULT_MONOID));
+    @Override
+    protected Type carrier() {
+        return REL_TYPE;
+    }
+
+    /// NOTE (kept from the interface-based guard this class used to carry): rel-arrow is a pair of monoids but not
+    /// a rig — plus has the noobj sink as a live zero (0+a = a = a+0) while mult composes over that sink only
+    /// partially (0*a => noobj=>noobj), so the rig annihilator 0*a = 0 does not hold for arrows; union over full
+    /// relations lives at the lst-of-arrows level. rel::T declares no theory instance of its own (yet), so the derived
+    /// test above skips it by name rather than going silently green.
+
+    @Override
+    protected Obj sample() {
+        return rel(uri("a"), jnt(1));
     }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -1105,7 +1105,7 @@
                         <printSummary>true</printSummary>
                         <parallel>classesAndMethods</parallel>
                         <threadCount>3</threadCount>
-                        <forkCount>3</forkCount>
+                        <forkCount>2</forkCount>
                         <reuseForks>true</reuseForks>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow

@@ -25,21 +25,24 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.furi.fURI;
-
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.algebra.Form.MULT_MONOID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class UriTest extends AbstractAlgebraTest<Uri> {
+public class UriTest extends AbstractAlgebraTest {
 
-    public UriTest() {
-        super(uri(f("/a/b")), Set.of(MULT_MONOID));
+    @Override
+    protected Type carrier() {
+        return URI_TYPE;
+    }
+
+    @Override
+    protected Obj sample() {
+        return uri(f("/a/b"));
     }
 
     @ParameterizedTest
@@ -366,7 +369,6 @@ public class UriTest extends AbstractAlgebraTest<Uri> {
     public void testIsA(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
-
 
 
    /* @ParameterizedTest

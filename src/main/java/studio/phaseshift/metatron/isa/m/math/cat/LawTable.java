@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -134,6 +135,21 @@ public abstract class LawTable {
      */
     protected LawTable(final fURI instsetTid) {
         TABLES.put(instsetTid, this);
+    }
+
+    /**
+     * EVERY ROW OF EVERY REGISTERED TABLE, in registration order — keyed first by the instset whose family the
+     * table belongs to, then by the row's address. This is the READ-ONLY census view, and it exists because
+     * nothing else asks the question a census asks: a row is a declaration about an address, and if the
+     * instruction at that address was renamed, unregistered or never registered, the row is dead weight the
+     * runtime silently never consults. The answer is a copy of the outer map and unmodifiable views of the rows,
+     * so a caller cannot reach in and write a declaration.
+     */
+    public static Map<fURI, Map<fURI, Entry>> rows() {
+        final Map<fURI, Map<fURI, Entry>> rows = new LinkedHashMap<>();
+        for (final Map.Entry<fURI, LawTable> table : TABLES.entrySet())
+            rows.put(table.getKey(), Collections.unmodifiableMap(table.getValue().table));
+        return rows;
     }
 
     /**

@@ -321,10 +321,21 @@ public final class mInsts {
     }
 
     /**
-     * {@code bool::T}'s operations: the Boolean algebra's join, meet and complement.
+     * {@code bool::T}'s operations: the Boolean algebra's join, meet and complement, with the two bounds as the
+     * monoid identities the type's algebra already states ({@code zero => false}, {@code one => true}).
      */
     public static Set<Inst> bools() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(ZERO_INST_TID, "the zero of the Boolean algebra — false, the join identity")
+                        .dom(BOOL_TID, "the lhs bool").rng(BOOL_TID, "false").argLst()
+                        .body((lhs, inst) -> lhs.asBool().zero())
+                        .law(Law.unit, Law.idempotent, Law.pure)
+                        .create(),
+                InstBuilder.build().tid(ONE_INST_TID, "the one of the Boolean algebra — true, the meet identity")
+                        .dom(BOOL_TID, "the lhs bool").rng(BOOL_TID, "true").argLst()
+                        .body((lhs, inst) -> lhs.asBool().one())
+                        .law(Law.unit, Law.idempotent, Law.pure)
+                        .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "the disjunction (or) of the lhs bool and the argument bool")
                         .dom(BOOL_TID, "the lhs bool").rng(BOOL_TID, "whether either bool is true")
                         .argLst(T(BOOL_TID), "the bool to or with the lhs")

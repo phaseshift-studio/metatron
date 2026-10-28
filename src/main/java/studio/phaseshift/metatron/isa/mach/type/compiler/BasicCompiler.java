@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
+import studio.phaseshift.metatron.isa.mach.type.compiler.typer.TypeTyper;
 
 import java.util.Map;
 

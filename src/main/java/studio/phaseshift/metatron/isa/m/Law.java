@@ -111,6 +111,13 @@ public enum Law {
      */
     involution,
     /**
+     * the complemented-lattice law — {@code a·inv(a) = inv(id)}: an element joined with its complement is the other
+     * bound of the lattice (for a Boolean algebra, {@code a∧¬a = ¬⊤ = ⊥} and {@code a∨¬a = ¬⊥ = ⊤}). It is written
+     * with the roles {@link #involution} already reads, so it needs no new role: the binary operation, its declared
+     * inverse, and the operation's bound identity.
+     */
+    complement,
+    /**
      * {@code f(f(x)) = f(x)}
      */
     idempotent,

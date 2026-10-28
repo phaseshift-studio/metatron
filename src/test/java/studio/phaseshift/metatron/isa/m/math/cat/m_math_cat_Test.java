@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.isa.m.mInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 
@@ -30,10 +29,10 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
  */
 public class m_math_cat_Test extends mInstSetTest {
 
-    @BeforeAll
-    public static void loadMathCatInstSets() {
+    public m_math_cat_Test() {
+        super();
         InstSet.importInstSet(MATH_ISA_TID);
         InstSet.importInstSet(CAT_ISA_TID);
     }
-
+    
 }
