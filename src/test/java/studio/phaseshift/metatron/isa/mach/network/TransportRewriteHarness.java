@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.network;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -56,7 +57,15 @@ public final class TransportRewriteHarness {
      * The seed a {@code start}-leading code runs from.
      */
     public static List<Obj> seedOf(final Code code) {
-        return code.insts().getFirst().arg(0).stream().toList();
+        return seedOf(code.insts().getFirst());
+    }
+
+    /**
+     * The seed ONE instruction runs from — the same reading as {@link #seedOf(Code)}, for a caller that already holds
+     * the code's head (a lane reads its part and its hop budget off that one instruction).
+     */
+    public static List<Obj> seedOf(final Inst head) {
+        return head.arg(0).stream().toList();
     }
 
     /**

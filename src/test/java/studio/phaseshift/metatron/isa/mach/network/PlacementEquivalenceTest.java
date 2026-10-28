@@ -78,7 +78,7 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
                 .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
         // the emitter fired the tree layout: the master leads start·select·select·merge·sum
         assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
-                TransportRewriteHarness.ops(compiled), "the master recombines through the combiner: " + compiled);
+                DistributedSweep.layout(compiled).ops(), "the master recombines through the combiner: " + compiled);
         checkEquality(LOG, jnt(expected),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
     }

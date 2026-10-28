@@ -26,7 +26,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.TypeCheck;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -118,12 +117,12 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     void testTreeOverTransport(final int hops, final int expected) {
         final Code master = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6,7,8}.plus(1).sum?hops=" + hops + "()")).asCode();
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID), TransportRewriteHarness.ops(master),
+        final DistributedSweep.Layout layout = DistributedSweep.layout(master);
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID), layout.ops(),
                 "the root recombines its child's partial: " + master);
-        final Code slave = Reduction.slaves(master).getFirst();
-        final fURI seed = slave.insts().getFirst().tid();
-        checkEquality(LOG, uri(String.valueOf(hops - 1)), uri(seed.qMap().get(HOPS)), true);
-        checkEquality(LOG, bool(false), bool(slave.insts().stream().skip(1).anyMatch(i -> i.tid().hasQ(HOPS))), true);
+        final DistributedSweep.Lane lane = layout.lane(0);
+        checkEquality(LOG, uri(String.valueOf(hops - 1)), uri(lane.budget()), true);
+        checkEquality(LOG, bool(false), bool(lane.code().insts().stream().skip(1).anyMatch(i -> i.tid().hasQ(HOPS))), true);
         checkEquality(LOG, ObjmtronSerializer.parse(String.valueOf(expected)),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(master)), true);
     }
@@ -142,10 +141,10 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testKeyedTreeOverTransport(final String source, final String expected) {
         final Code master = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source)).asCode();
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID, SELECT_INST_TID), TransportRewriteHarness.ops(master),
+        final DistributedSweep.Layout layout = DistributedSweep.layout(master);
+        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID, SELECT_INST_TID), layout.ops(),
                 "the root merges its child's partial rec by key, then folds each key: " + master);
-        final Code slave = Reduction.slaves(master).getFirst();
-        checkEquality(LOG, uri("1"), uri(slave.insts().getFirst().tid().qMap().get(HOPS)), true);
+        checkEquality(LOG, uri("1"), uri(layout.lane(0).budget()), true);
         checkEquality(LOG, ObjmtronSerializer.parse(expected),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(master)), true);
     }

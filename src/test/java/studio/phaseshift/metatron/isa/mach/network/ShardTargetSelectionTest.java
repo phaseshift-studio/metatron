@@ -37,7 +37,6 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,30 +90,6 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
         return rec(uri(HOST), uri(host), uri(INST), overrides, uri(STATUS), Network.Helper.statusOf(() -> true));
     }
 
-    /**
-     * The authorities the lowered layout ships to: its fan-out {@code select}'s routes, each
-     * {@code virtual::[code=>eval(<authority>)]}.
-     */
-    private static List<fURI> routes(final Code code) {
-        final List<fURI> routes = new ArrayList<>();
-        // the FAN-OUT select (the first) ships; the gather select (>>rhs) reads the threads' rhs and is not a route
-        for (final Inst inst : code.insts())
-            if (SELECT_INST_TID.equals(inst.tid().basePath())) {
-                inst.arg(0).asLst().elements().forEach(element -> routes.add(ship((Obj) element).arg(0).uriValue()));
-                break;
-            }
-        return routes;
-    }
-
-    /**
-     * A fan-out route is {@code virtual::[code=>eval(<target>)]} — the ship is the thread's code slot, peeled off the
-     * select member (a bare eval answers as itself, for a route that never wrapped).
-     */
-    private static Inst ship(final Obj route) {
-        final Obj eval = route.isRec() && !route.asRec().at(uri(CODE)).isNoObj() ? route.asRec().at(uri(CODE)) : route;
-        return eval.isObjCall() ? eval.asCall().insts().getFirst() : eval.asInst();
-    }
-
     @Test
     void testADistributingShapeRequiresEval() {
         // eval is the route: the target applies the program it is shipped and answers its value — eval alone suffices,
@@ -163,14 +138,14 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
         Network.Helper.index(client(EVALER, EVAL_INST_TID));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
-        assertEquals(List.of(SERVANT, EVALER), routes(compiled),
+        assertEquals(List.of(SERVANT, EVALER), DistributedSweep.layout(compiled).routes(),
                 "the shard fans out over the peers that serve eval, and only those: " + compiled);
         // and the route is BOUND in the compiled code — the target peer's own eval, not a bare eval(<target>) left for
         // select to resolve when it runs
         final Inst to = compiled.insts().stream()
                 .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
                 .map(select -> (Obj) select.arg(0).asLst().elements().findFirst().orElseThrow())
-                .map(ShardTargetSelectionTest::ship)
+                .map(Reduction::ship)
                 .findFirst().orElseThrow();
         assertTrue(to.hasf(), "the emitted route carries its function: " + to);
         assertTrue(to.functionClassName().endsWith("Network$AtPeer"), "the target peer's own eval: " + to.functionClassName());
@@ -181,7 +156,7 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
         Network.Helper.index(client(EVALER, TO_INST_TID));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
-        assertEquals(List.of(), routes(compiled), "an online peer that serves no eval is no target, so nothing ships: " + compiled);
+        assertEquals(List.of(), DistributedSweep.layout(compiled).routes(), "an online peer that serves no eval is no target, so nothing ships: " + compiled);
     }
 
     /**

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.network;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.List;
 import static studio.phaseshift.metatron.Tokens.CODE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BLOCK_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -72,11 +74,33 @@ public final class Reduction {
     }
 
     /**
+     * The shipped members of the fan-out {@code select}: one virtual route per lane, in lane order — or empty when the
+     * code carries no such {@code select}.
+     * <p>
+     * THE MARKER IS THE EMITTER'S OWN PREFIX, not "the first select anywhere". {@code PlanInterpreter.shard} emits
+     * exactly {@code start([…]).select(fan-out).select(>>rhs).merge.…}, so a shard-planned code has {@code start} at 0
+     * and the fan-out {@code select} at 1, and the gather select below ships nothing. A user {@code select} in a chain
+     * the plan declined must NOT read as a fan-out: its members are not routes, and {@link #slaves(Code)} would then
+     * walk the start seed and fail to answer a code. That is what tells {@code slaves}/{@code routes} to read no lanes
+     * rather than throw.
+     */
+    private static List<Obj> shipped(final Code master) {
+        final List<Inst> insts = master.insts();
+        if (2 > insts.size()
+                || !START_INST_TID.equals(insts.getFirst().tid().basePath())
+                || !SELECT_INST_TID.equals(insts.get(1).tid().basePath()))
+            return List.of();
+        return insts.get(1).arg(0).asLst().lstValue();
+    }
+
+    /**
      * Peel the slave codes out of a {@code law_shard} master: one per route, un-quoted from whatever
      * {@code block(...)} nesting there is (a law_shard slave ships bare, so usually none). The order matches
-     * {@link #routes(Code)}.
+     * {@link #routes(Code)}. Empty when the code was not shard-planned.
      */
     public static List<Code> slaves(final Code master) {
+        if (shipped(master).isEmpty())
+            return List.of();
         final List<Code> slaves = new ArrayList<>();
         for (final Obj summand : master.insts().getFirst().arg(0).asLst().lstValue()) {
             Obj inner = summand;
@@ -98,17 +122,24 @@ public final class Reduction {
     }
 
     /**
-     * Peel the routing targets in peer order out of a {@code law_shard} master's fan-out {@code select}. A fan-out
-     * route is {@code virtual::[code=>eval(<target>)]} — the ship is the thread's {@code code} slot, so the target is
-     * peeled off that, not off the select member itself.
+     * One shipped route's {@code eval}: a fan-out route is {@code virtual::[code=>eval(<target>)]}, so the ship is the
+     * thread's {@code code} slot, peeled off that rather than off the select member itself (a route that never wrapped
+     * is a bare inst, and answers as itself).
+     */
+    public static Inst ship(final Obj route) {
+        final Obj eval = route.isRec() && !route.asRec().at(uri(CODE)).isNoObj() ? route.asRec().at(uri(CODE)) : route;
+        return eval.isObjCall() ? eval.asCall().insts().getFirst() : eval.asInst();
+    }
+
+    /**
+     * Peel the routing targets in peer order out of a {@code law_shard} master's fan-out {@code select}. A target is
+     * the addressless {@code eval()}'s absent argument — {@code null} — which makes that lane the local place; every
+     * other lane answers at its target's authority. Empty when the code was not shard-planned.
      */
     public static List<fURI> routes(final Code master) {
-        return master.insts().stream()
-                .filter(i -> i.tid().basePath().equals(SELECT_INST_TID))
-                .findFirst()
-                .orElseThrow()
-                .arg(0).asLst().lstValue().stream()
-                .map(o -> o.asRec().at(uri(CODE)).asInst().arg(0).uriValue())
+        return shipped(master).stream()
+                .map(Reduction::ship)
+                .map(eval -> eval.args().isEmpty() ? null : eval.arg(0).uriValue())
                 .toList();
     }
 

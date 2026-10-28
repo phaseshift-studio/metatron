@@ -94,9 +94,10 @@ public class ParallelFanOutTest extends AbstractMetatronTest {
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
         // the fan-out is a virtual-threaded select, then a gather select of >>rhs, then merge + combiner
+        final DistributedSweep.Layout layout = DistributedSweep.layout(compiled);
         assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
-                TransportRewriteHarness.ops(compiled), "the master fans out then gathers: " + compiled);
-        assertEquals(List.of(SLOW_A, SLOW_B), Reduction.routes(compiled),
+                layout.ops(), "the master fans out then gathers: " + compiled);
+        assertEquals(List.of(SLOW_A, SLOW_B), layout.routes(),
                 "one route per peer, peeled off the virtual threads: " + compiled);
 
         checkEquality(LOG, jnt(27),
