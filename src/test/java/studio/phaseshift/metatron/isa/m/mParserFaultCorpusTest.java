@@ -57,7 +57,7 @@ public class mParserFaultCorpusTest extends AbstractMetatronTest {
             "\"a string\"                         % double-quoted string",
             "'a string'                           % single-quoted string",
             // ── structure ────────────────────────────────────────────
-            "rec[a=>1,b=>2]                       % record literal",
+            "[a=>1,b=>2]                          % record literal",
             "lst[1,2,3]                           % list literal",
             "[a=>1,b=>[c=>2]]                     % nested literal",
             "plus(1,2)                            % instruction call",

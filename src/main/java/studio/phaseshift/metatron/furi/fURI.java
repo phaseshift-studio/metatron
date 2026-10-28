@@ -687,6 +687,21 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return this.c((cInt) null);
     }
 
+    /**
+     * This uri with its TYPE ARGUMENT list (bracket) stripped, keeping the coefficient, path, query and templates —
+     * the third of the three lessers {@link #basePath()} is built from, beside {@link #cLess()} (coefficient) and
+     * {@link #qLess()} (query). {@code person[ninja]?rng=person} erases to {@code person?rng=person}.
+     * <p>
+     * This is the ERASURE the bracket rule in {@code test} needs: a bracket is a declaration's parameter list
+     * ({@code person[role]::T}) or an instantiation's type arguments ({@code person[ninja]}), so erasing it is
+     * exactly what "person[ninja] is a person::T" means at the type level.
+     *
+     * @return this uri without its bracket, or this uri when it has none
+     */
+    default fURI polyLess() {
+        return this.poly(List.of());
+    }
+
     default fURI c(final Function<cInt, cInt> func) {
         return this.c(func.apply(this.c()));
     }

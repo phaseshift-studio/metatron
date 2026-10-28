@@ -104,10 +104,17 @@ public interface Processor extends mThread, Machine.Component {
          * inst_dom/inst_rng dispatch check. Fast-out when the lhs's tid/vid label matches the
          * target type and the coefficient/poly are consistent — trust construction-time
          * validation. Otherwise fall back to the full structural test.
+         * <p>
+         * The label comparison is the INSTANTIATION MATCH: a value of {@code object[/m/code]} is an
+         * {@code object}, so a bracketed id is compared against its erasure (identity, not a claim — the
+         * bracket rule in {@link studio.phaseshift.metatron.furi.fURI#test} still refuses
+         * {@code object[/m/code].test(object)} at the claim position). A bracketed CONTRACT still fails
+         * this fast-out and falls through to the structural test, which is the claim.
          */
         public static boolean instDomRngMatch(final Obj lhs, final Type type) {
             if (type.tid().poly().isEmpty()
-                    && Obj.Helper.specificTypeId(lhs).test(Obj.Helper.specificTypeId(type))
+                    // identity, not a claim: erasure is explicit here
+                    && Type.Helper.testByIdentity(Obj.Helper.specificTypeId(lhs), Obj.Helper.specificTypeId(type))
                     && lhs.c().within(type.c()))
                 return true;
             return lhs.test(type);

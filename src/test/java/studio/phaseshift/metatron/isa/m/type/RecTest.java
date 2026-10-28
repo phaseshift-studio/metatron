@@ -688,12 +688,51 @@ public class RecTest extends AbstractAlgebraTest {
             //"[a=>1,b=>2,c=>3]                            % rec[uri=>int]::T             % true",
             //"[=>]                                        % rec[#{?}=>#{?}]::T           % true",
             //"[a=>1]                                      % rec[#{?}=>#{?}]::T           % true",
-            "[a=>1]                                      % rec[#=>#]::T                 % true",
-            "[a=>1]                                      % rec[int=>int]::T             % false",
-            "[a=>1]                                      % rec[#=>int]::T               % true",
             //"[a=>1]                                      % rec[uri=>#]::T               % true"
     }, delimiter = '%')
     public void testPoly(final String record, final String type, final boolean matches) {
+        final Type t = ObjmtronSerializer.parse(type);
+        LOG.debug("%s", t);
+        AbstractMetatronTest.checkMatches(LOG, record, type, matches);
+    }
+
+    /**
+     * THE REC POLY NAMES ITS DECLARED SLOTS. {@code rec[k1,k2]} declares the keys {@code k1} and {@code k2}, so a
+     * literal carrying only {@code k1} fails conformance while one carrying both passes. A missing key still READS
+     * as {@code noobj} — the last row is that read, not conformance — which is exactly why a declared slot cannot
+     * be silent. Absence is legal only where the slot's coefficient admits zero ({@code rec[k{?},j]}).
+     */
+    @Training(
+            instruction = "does {{{literal}}} conform to the rec poly it declares?",
+            output = "{{{result}}}")
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a declared slot at coefficient one is required: k2 is declared and absent
+            "rec[k1,k2]::[k1=>a]                                     % <ERROR>",
+            // ... carried, the literal conforms (unchanged)
+            "rec[k1,k2]::[k1=>a,k2=>b]                               % rec[k1,k2]::[k1=>a,k2=>b]",
+            // the failure is per slot: the middle of three is the absent one
+            "rec[k1,k2,k3]::[k1=>a,k3=>c]                            % <ERROR>",
+            // a slot whose own coefficient admits zero ({?}) may be absent
+            "rec[k1{?},k2,k3]::[k2=>b,k3=>c]                         % rec[k1{?},k2,k3]::[k2=>b,k3=>c]",
+            // an absent key still READS as noobj: the read is untouched, only conformance is judged
+            "[k1=>a]>>k2                                             % noobj",
+            // ... and that holds for a conforming literal reading a key its declaration never named
+            "rec[k1,k2]::[k1=>a,k2=>b]>>k3                           % noobj",
+    }, delimiter = '%')
+    public void testPolyDeclaredSlots(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Disabled("rec[#=>#] / rec[int=>int] / rec[#=>int] are keyed polys — a category error since the poly ruling (poly types parameter positions: lst slots, rec traits, object instantiation). Re-express against a declared trait once rec traits land: rec[person] where person declares the slot types.")
+    @ParameterizedTest
+    @Training(instruction = "does {{{record}}} match {{{type}}}?", output = "{{{matches}}}")
+    @CsvSource(value = {
+            "[a=>1]                                      % rec[#=>#]::T                 % true",
+            "[a=>1]                                      % rec[int=>int]::T             % false",
+            "[a=>1]                                      % rec[#=>int]::T               % true",
+    }, delimiter = '%')
+    public void testKeyedPolyTypeMatching(final String record, final String type, final boolean matches) {
         final Type t = ObjmtronSerializer.parse(type);
         LOG.debug("%s", t);
         AbstractMetatronTest.checkMatches(LOG, record, type, matches);

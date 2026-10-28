@@ -445,12 +445,17 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI basePath() {
+        // THE THREE LESSERS, composed: basePath is exactly cLess + qLess + polyLess -- the coefficient, the query
+        // and the bracket erased, and nothing else (scheme, host, port, path and templates survive). Spelling it as
+        // the composition is what ENFORCES that relationship instead of leaving it to a hand-built fURI.of(...) that
+        // happens to agree today: add a fourth lesser and basePath must take it, or a lesser's contract changes and
+        // basePath follows.
         // Pure in this instance's own fields, and hit twice per BasicMemory.redirect (once per routing table), so it
         // is derived once. The derived uri is a different object, so no recursion back into this slot.
         final fURI cached = this.base;
         if (null != cached)
             return cached;
-        final fURI computed = fURI.of(this.scheme(), this.host(), this.port(), this.path(), cInt.ONE(), List.of(), Map.of(), this.templates());
+        final fURI computed = this.cLess().qLess().polyLess();
         this.base = computed;
         return computed;
     }
@@ -482,30 +487,40 @@ public abstract class AbstractfURI implements fURI {
             if (!this.name().equals(rhs.name()))
                 return false;
         }
-        // TODO: the bracket (poly) rule designed for rec traits (person[role]), not yet implemented. Walk the LHS's
-        //  entries rather than the rhs's: each lhs entry is a claim that the rhs entry at its position must accept,
-        //  lp.test(rp), where rp may be + (any one), # (the rest), or a generic (A, B, ...) that accepts any entry
-        //  within its coefficient -- today ninja.test(A) compares names and fails, as a generic is isGeneric(), not
-        //  hasPattern(). Then a bare lhs claims nothing and passes (person.test(person[ninja])), a bracketed lhs fails
-        //  a bare rhs (person[ninja].test(person)), and person[ninja].test(person[A]) passes. Erasure ("person[ninja]
-        //  is a person::T") becomes explicit at the type level, vid().polyLess(), and covariance (ninja refines role)
-        //  stays Obj.test's -- this method compares names, never types.
-        if (!this.poly().isEmpty()) {
-            if (!Objects.equals(this.poly(), rhs.poly())) {
-                if (null != this.poly() && null != rhs.poly()) {
-                    for (int i = 0; i < rhs.poly().size(); i++) {
-                        final fURI rp = f(rhs.poly().get(i));
-                        if (rp.equals(ALL))
-                            break;
-                        if (i >= this.poly().size())
-                            return false;
-                        if (rp.equals(WILD_ONE))
-                            continue;
-                        final fURI lp = f(this.poly().get(i));
-                        if (!lp.test(rp))
-                            return false;
-                    }
-                }
+        /* THE BRACKET RULE. A uri's bracket is its TYPE ARGUMENT list: `person[role]::T` declares a type
+         * parameterized by `role`, and `person[ninja]` instantiates it, where `ninja` refines `role`. So the LHS's
+         * entries are CLAIMS that the RHS entry at the same position must ACCEPT, and `test` walks the LHS. The
+         * three cases:
+         *
+         *   1. a bare LHS claims nothing, so it passes a bracketed RHS       person.test(person[ninja])    -> true
+         *   2. a bracketed LHS tested against a bare RHS has no acceptor     person[ninja].test(person)    -> false
+         *   3. a generic RHS entry accepts any claim within its coefficient  person[ninja].test(person[A]) -> true
+         *
+         * The direction is ASYMMETRIC because an instantiation is a SPECIALIZATION: it passes where the parameter
+         * is expected, never the reverse. Erasure ("person[ninja] is a person::T") is therefore explicit at the type
+         * level -- vid().polyLess() -- while covariance (ninja refines role) stays Obj.test's: this method compares
+         * names, never types. # (ALL) accepts this and every remaining claim, + (WILD_ONE) accepts exactly one.
+         */
+        final List<String> lhsPoly = this.poly();
+        final List<String> rhsPoly = rhs.poly();
+        if (!lhsPoly.isEmpty()) { // case 1: a bare lhs claims nothing, so there is nothing to check
+            if (rhsPoly.isEmpty()) // case 2: a specialization tested where the erased parameter is expected
+                return false;
+            for (int i = 0, n = Math.max(lhsPoly.size(), rhsPoly.size()); i < n; i++) { // walk the CLAIMS
+                if (i >= rhsPoly.size()) // a claim with no acceptor at its position
+                    return false;
+                final fURI rp = f(rhsPoly.get(i));
+                if (rp.equals(ALL)) // # accepts this and every remaining claim
+                    break;
+                if (i >= lhsPoly.size()) // an argument the lhs supplies no claim for
+                    return false;
+                if (rp.equals(WILD_ONE)) // + accepts exactly one
+                    continue;
+                final fURI lp = f(lhsPoly.get(i));
+                // case 3: a generic rhs entry (A, B, ...) accepts any NAME within its coefficient; two generics
+                // still compare names, as a parameter claim is a specific variable, not any variable
+                if (!(rp.isGeneric() && !lp.isGeneric() ? lp.c().within(rp.c()) : lp.test(rp)))
+                    return false;
             }
         }
         if (Objects.equals(rhs.scheme(), "#"))
