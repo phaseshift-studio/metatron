@@ -76,8 +76,9 @@ Ask each of these of the code, in this order. For every "yes" that should be "no
      text *with a fail→str fallback*. So the question is not "is a reader needed" but **"what rule does the new
      reader add that `qValue` lacks, and does it reuse one of those two rather than becoming a third parser?"**
      The rules it must add, and the only ones: a `fail::T` projection means **malformed** (refuse); a coefficient
-     is legible on a number (`{2}4`, `4{2}`), which `qValue(key, Int.class)` throws on; a numeric value may arrive
-     as a numeric uri; a `;`-joined value (a repeated key) is refused. Anything beyond that list is scope creep,
+     is legible on a number — **only** in the leading form `{2}4`; a trailing `4{2}` is a parse error and must be
+     refused, not read as something; a counted *uri* is a place's shape, not a number's; a `;`-joined value (a
+     repeated key) is refused. Anything beyond that list is scope creep,
      and a reader that re-reads `qMap()` with its own splitting is a `MUST FIX` — there must be **one projection**,
      named in one place.
    - `Places` (cat) already has `place()`, `self()`, `reachable()`, `serves()`, `admissible()` — is a new

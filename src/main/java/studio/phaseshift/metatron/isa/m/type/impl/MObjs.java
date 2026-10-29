@@ -73,20 +73,36 @@ public class MObjs implements Objs {
         return this;
     }
 
+    /**
+     * FLATTEN THE NESTING, THEN COUNT WHAT THE BAG HOLDS. Accumulating the coefficient while DESCENDING the nest
+     * let a nested objs's total overwrite the enclosing one — the recursion shares this object's accumulator — so
+     * {@code {true,false,{1,0},{-100,12.35,-12.35}}} (seven objects) reported {@code c()} = 3, the size of its last
+     * nested group. The sum is taken over the FLATTENED members instead: that is what the bag contains, it is what
+     * {@code attemptBulk} and {@code take} preserve, and it is the multiplicity the bag's type must carry
+     * ({@code Obj.c()} IS {@code tid().c()}) or the type it derives from itself rejects it.
+     */
     private List<Obj> flatten(final List<Obj> list) {
         final List<Obj> flat = new ArrayList<>();
-        internalC = cInt.ZERO();
-        for (final Obj o : list) {
-            if (!o.isNoObj()) {
-                internalC = internalC.plus(o.c());
-                if (o.isObjs()) {
-                    flat.addAll(flatten((List<Obj>) o.objsValue()));
-                } else {
-                    flat.add(o);
-                }
-            }
-        }
+        collect(list, flat);
+        this.internalC = cInt.ZERO();
+        for (final Obj o : flat)
+            this.internalC = this.internalC.plus(o.c());
         return flat;
+    }
+
+    /**
+     * One level of the flattening walk: a member that is itself an objs contributes its own members, not its
+     * coefficient — the count is summed once, from the flattened result.
+     */
+    private static void collect(final List<Obj> list, final List<Obj> flat) {
+        for (final Obj o : list) {
+            if (o.isNoObj())
+                continue;
+            if (o.isObjs())
+                collect((List<Obj>) o.objsValue(), flat);
+            else
+                flat.add(o);
+        }
     }
 
    /* public Obj done() {
@@ -273,6 +289,17 @@ public class MObjs implements Objs {
         return this.jvm.iterator();
     }
 
+    /**
+     * A BAG'S TYPE IS THE UNION OF ITS MEMBERS' TYPES, AT THE BAG'S OWN MULTIPLICITY. The fold factors differing
+     * paths into a branch segment and — since a factored branch already encodes the union there — leaves the
+     * overall coefficient at ONE, while {@link #c()} is the count the bag itself holds (the sum of its members').
+     * Without it the objs can not satisfy the type it was just derived from: {@code {[a,b,c],a,b,c}} typed as
+     * {@code {lst,uri,uri,uri}} is four objects, and the range/domain and type-predicate assertions judge the value
+     * against exactly this type — nominally, by name, so an uncounted name loses to the counted one the seed carries
+     * ({4} within {1}) and the value is reported as "not a {lst,uri,uri,uri}{4}::T". A single-path fold is
+     * unaffected: it has already summed the count ({a,b,c} is {@code str{3}}), and {@code fURI.c} is the identity
+     * when the coefficient already matches.
+     */
     @Override
     public fURI tid() {
        /* if (null == this.tid || ALL_STAR == this.tid) {
@@ -285,12 +312,12 @@ public class MObjs implements Objs {
                     .stream()
                     .map(Obj::tid)
                     .reduce(fURI::plus)
-                    .orElse(fURI.Singleton.NOOBJ);
+                    .orElse(fURI.Singleton.NOOBJ).c(this.c());
         } catch (final Exception e) {
             return this.jvm
                     .stream()
                     .map(Obj::tid).reduce(fURI::plus)
-                    .orElse(fURI.Singleton.NOOBJ);
+                    .orElse(fURI.Singleton.NOOBJ).c(this.c());
         }
         //  return this.tid;
     }

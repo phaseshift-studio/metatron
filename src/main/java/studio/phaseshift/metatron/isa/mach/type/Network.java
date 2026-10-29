@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.isa.mach.type.network.Listener;
+import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -305,13 +306,18 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     default Obj registerPrefix(final fURI name, final fURI origin) {
         if (!origin.hasScheme() || !origin.hasHost())
             throw MTronException.of("a network prefix names a full origin (scheme://host[:port]): %s => %s", name, origin);
-        if (name.hasScheme() || name.hasHost() || name.segmentLength() != 1 || name.toString().contains("."))
-            throw MTronException.of("a network prefix is a single, dot-free label: %s", name);
+        // EITHER SPELLING, ONE ROW: the accessor takes the name a caller calls a peer by (`//ginger`) or the label the
+        // table is stored under (`ginger`), and binds exactly one row -- under the LABEL, which is the key resolution
+        // asks for. A spelling that is not a name at all is refused here rather than filed somewhere no read reaches.
+        final fURI label = Helper.label(name).orElseThrow(() ->
+                MTronException.of("a network prefix is a single, dot-free label (//name or name): %s", name));
         // THE FIELD IS REWRITTEN WHOLE, never addressed entry by entry -- the roster's own rule, and for the same
-        // reason: a nested write leaves the component rec in a shape its type has to re-admit on every write.
+        // reason: a nested write leaves the component rec in a shape its type has to re-admit on every write. It goes
+        // in through the DOOR, in the spelling the door validates, so the strip happens in exactly one place (and a
+        // legacy row the table still holds is repaired by the same pass).
         final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
-        rows.put(uri(name.toString()), uri(origin.origin().toString()));
-        return Machine.write(ROOT_PREFIX, rec(rows));
+        rows.put(uri(label), uri(origin.origin()));
+        return Machine.write(ROOT_PREFIX, Helper.markedTable(rec(rows)));
     }
 
     /**
@@ -319,11 +325,14 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * binding denotes nothing rather than denoting somewhere else.
      */
     default Obj unregisterPrefix(final fURI name) {
+        // the spelling a caller gave may be marked or not; the row it removes is the one filed under the label
+        final Optional<fURI> label = Helper.label(name);
         final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
-        // matched by TEXT, never by Obj identity: a uri that has round-tripped through a rec does not equal a freshly
-        // minted one even when the two print the same address
-        rows.keySet().removeIf(key -> key.isUri() && key.uriValue().toString().equals(name.toString()));
-        return Machine.write(ROOT_PREFIX, rows.isEmpty() ? noobj() : rec(rows));
+        // matched by LABEL, never by Obj identity: a uri that has round-tripped through a rec does not equal a freshly
+        // minted one even when the two name the same address
+        rows.keySet().removeIf(key -> key.isUri() && label.isPresent()
+                && Helper.label(key.uriValue()).filter(label.get()::equals).isPresent());
+        return Machine.write(ROOT_PREFIX, rows.isEmpty() ? noobj() : Helper.markedTable(rec(rows)));
     }
 
     /**
@@ -642,22 +651,13 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * the destination-relative write. Same local fall-through as {@link #read(fURI)}, and a write never dials either.
      */
     default Obj write(final fURI vid, final Obj obj) {
-        // host-gated, exactly as read -- see the note there
-        if (null == vid.host())
+        // host-gated, exactly as read -- see the note there; a fail is not shippable data, so it stays local
+        if (null == vid.host() || obj.isFail())
             return noobj();
-        // A FAIL IS NOT SHIPPABLE DATA. Its serialization is a diagnostic rendering (fail::[...]), not mtron
-        // source, so the value round trip below cannot rebuild it — and a fail stack belongs to the JVM that
-        // raised it besides. Answering noobj sends the write down the local path, which is where a fail belongs.
-        if (obj.isFail())
-            return noobj();
-        final fURI origin = vid.path(List.of());
-        // DISPATCH LADDER: the peer's native `to` override first (a write-only sink), then `eval` (the write message IS
-        // code). Each rung is the instruction's own call with the peer's f(): obj.to(<vid>) — the obj the lhs, the
-        // address the arg, exactly as the native to — on its to, eval(start(obj).to(<localized>)) on its eval. A client
-        // that declares neither is not written through: noobj, and the write stays local.
-        final Obj to = this.overrideOf(origin, TO_INST_TID);
-        if (to.isObjInst())
-            return Helper.dispatch(to.asInst(), instB(TO_INST_TID, lst(vid.toUri())), obj);
+        final fURI origin = vid.origin();
+        final Obj target = this.overrideOf(origin, TO_INST_TID);
+        if (target.isObjInst())
+            return Helper.dispatch(target.asInst(), instB(TO_INST_TID, lst(vid.toUri())), obj);
         final Obj eval = this.overrideOf(origin, EVAL_INST_TID);
         if (!eval.isObjInst())
             return noobj();
@@ -763,6 +763,84 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // static only
         }
 
+        /**
+         * THE DIALECT, IN ONE PLACE: a name is SPELLED {@code //name} and STORED {@code name}. The marked spelling is
+         * what a caller calls a peer by and what the door shows; the label is what the table is filed under — and the
+         * key resolution asks for, since {@link Network#alignPrefix(fURI)} looks the address's {@code host} up. A row
+         * stored in the other spelling is therefore a row no read ever asks for.
+         * <p>
+         * EITHER SPELLING IS ANSWERED AS THE LABEL. An empty answer means the spelling is not a name at all: a scheme
+         * (a transport, already named), a port (a service, already specified), a dotted host (a hostname a binding
+         * must not shadow), a path with more than one segment, or a pattern rather than a label.
+         */
+        public static Optional<fURI> label(final fURI spelling) {
+            if (null == spelling || !spelling.poly().isEmpty() || !spelling.qMap().isEmpty())
+                return Optional.empty();
+            final String tail = spelling.pathString();
+            if (spelling.hasHost()) // the MARKED spelling: //label, with nothing after it
+                return spelling.isHosted() && tail.isEmpty() && Helper.plainLabel(spelling.host())
+                        ? Optional.of(f(spelling.host())) : Optional.empty();
+            // the STORED spelling: one plain segment, and no scheme or port (a transport or a service is not a name)
+            return !spelling.hasScheme() && !spelling.hasPort() && Helper.plainLabel(tail)
+                    ? Optional.of(f(tail)) : Optional.empty();
+        }
+
+        /**
+         * A NAME IS ONE PLAIN LABEL: no dot (a dotted host is a hostname a binding must not shadow), no colon, no
+         * pattern and no path — the shapes resolution could never ask a table for.
+         */
+        private static boolean plainLabel(final String label) {
+            return !label.isBlank() && label.indexOf('.') < 0 && label.indexOf(':') < 0
+                    && label.indexOf('/') < 0 && label.indexOf('{') < 0
+                    && label.indexOf('+') < 0 && label.indexOf('#') < 0;
+        }
+
+        /**
+         * A label in the spelling a peer is CALLED by — {@code self} becomes {@code //self}, and a marked spelling is
+         * returned as it stands, so marking is idempotent and a legacy row shows the marker it already carries.
+         */
+        public static fURI markedName(final fURI label) {
+            return label.hasHost() ? label : f("//" + label);
+        }
+
+        /**
+         * THE TABLE AS THE DOOR SHOWS IT: every row keyed by the marked spelling, so what {@code *</network/prefix>}
+         * answers is exactly what may be written back to it — which is what makes a legacy row (a marked key stored
+         * beside the component, resolvable by nothing) repairable by writing back what the door shows.
+         */
+        public static Rec markedTable(final Rec stored) {
+            final Map<Obj, Obj> rows = new LinkedHashMap<>();
+            stored.jvm().forEach((key, value) -> rows.put(
+                    key.isUri() ? uri(Helper.markedName(Helper.label(key.uriValue()).orElse(key.uriValue()))) : key,
+                    value));
+            return rec(rows);
+        }
+
+        /**
+         * THE TABLE AS IT IS STORED, from the spelling a caller wrote — {@code //name => origin} becomes
+         * {@code name => origin}, once. Empty (a REFUSAL) when a key is not a marked name: a table written that way
+         * would be stored under spellings resolution never asks for, which is the silent, unresolvable table this
+         * dialect exists to prevent.
+         */
+        public static Optional<Rec> storedTable(final Obj written) {
+            if (!written.isRec())
+                return Optional.empty();
+            final Map<Obj, Obj> rows = new LinkedHashMap<>();
+            for (final Map.Entry<Obj, Obj> row : written.asRec().jvm().entrySet()) {
+                // THE DOOR TAKES THE SPELLING, NOT THE KEY: an unmarked `svc` asks for a relative path, not a name, so
+                // it is refused here rather than stripped into one -- the two spellings are one strip apart, never
+                // one guess apart.
+                final Optional<fURI> label = row.getKey().isUri() && row.getKey().uriValue().hasHost()
+                        ? Helper.label(row.getKey().uriValue()) : Optional.empty();
+                // A ROW IS A NAME AND THE ORIGIN IT DENOTES: a value that is not an address would poison the component
+                // rec, which is re-typechecked on every later write, so it is refused with the key rather than stored.
+                if (label.isEmpty() || !row.getValue().isUri())
+                    return Optional.empty();
+                rows.put(uri(label.get()), row.getValue());
+            }
+            return Optional.of(rec(rows));
+        }
+
         public static Set<fURI> peerAuthorities(final Network network) {
             return network.peers().values().map(Helper::originOf).filter(Objects::nonNull).collect(Collectors.toSet());
         }
@@ -820,7 +898,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          */
         public static void retract(final Obj client) {
             try {
-                studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor.retract(client);
+                NetworkSupervisor.retract(client);
             } catch (final Exception e) {
                 // the client is closed either way; the index just didn't observe it
             }
@@ -830,7 +908,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * Is this member REACHABLE right now? Its client says so: {@link #status} of the client it holds.
          */
         public static boolean online(final Obj peer) {
-            return peer.isRec() && Helper.status(peer.asRec().<Obj>atDirect(uri(CLIENT)));
+            return peer.isRec() && Helper.status(peer.asRec().at(uri(CLIENT)));
         }
 
         /**
@@ -843,16 +921,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         public static boolean status(final Obj clientOrServer) {
             if (!clientOrServer.isRec())
                 return false;
-            final Obj status = clientOrServer.asRec().atDirect(uri(STATUS));
-            if (status.isNoObj())
-                return clientOrServer instanceof Link link && link.connected();
             try {
-                // the auto wrapper is what makes a READ of the field evaluate it; here the body is applied directly
-                final Obj body = Obj.Helper.getAuto(status).orElse(status);
-                final Obj live = body.isObjInst() || body.isObjCall()
-                        ? FutureObj.resolveFuture(body.apply(clientOrServer))
-                        : body;
-                return live.isBool() && live.boolValue();
+                // the auto wrapper makes the read evaluate the field, so a status that cannot be computed is caught here
+                final Obj status = FutureObj.resolveFuture(clientOrServer.asRec().at(uri(STATUS)));
+                return status.isNoObj()
+                        ? clientOrServer instanceof Link link && link.connected()
+                        : status.isBool() && status.boolValue();
             } catch (final Exception e) {
                 return false;
             }
@@ -865,14 +939,14 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * applies it.
          */
         public static Obj statusOf(final BooleanSupplier live) {
-            return auto_(instLambda("status", ALL.maybe(), BOOL_TID, (_, _) -> bool(live.getAsBoolean()))).tryToInst();
+            return auto_(instLambda(STATUS, ALL.maybe(), BOOL_TID, (_, _) -> bool(live.getAsBoolean()))).tryToInst();
         }
 
         /**
          * Did this member's OWNER hang it up? The one explicit shutdown: such a member is dropped, never redialed.
          */
         public static boolean hungUp(final Obj peer) {
-            return peer.isRec() && peer.asRec().<Obj>atDirect(uri(CLIENT)) instanceof Link link && link.hungUp();
+            return peer.isRec() && peer.asRec().atDirect(uri(CLIENT)) instanceof Link link && link.hungUp();
         }
 
         /**
@@ -900,8 +974,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * {@code 127.0.0.1} and {@code [::1]} key the connection {@code localhost} already holds.
          */
         public static fURI keyOf(final fURI dial) {
-            final String host = dial.host();
-            return (null != host && isLoopbackHost(host) ? dial.host("localhost") : dial).toPath();
+            return (isLoopbackHost(dial.host()) ? dial.host("localhost") : dial).toPath();
         }
 
         /**

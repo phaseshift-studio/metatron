@@ -88,7 +88,7 @@ static Eval   eval(String expr, Env env);             // lower + layout + value:
 | block | class | hermetic? | what it proves |
 |---|---|---|---|
 | **S1 layout** | `PlaceSweepTest`, `HopSweepTest`, `SplitSweepTest` | yes | the emitted structure per axis value |
-| **S2 resolution** | `PlaceResolutionTest` | yes | specificity, exclusion, wildcard, reach-not-knowledge, offline/no-`eval` drops |
+| **S2 resolution** | `PlaceResolverTest` | yes | specificity, exclusion, wildcard, reach-not-knowledge, offline/no-`eval` drops |
 | **S3 law** | `SplitLegalityTest` | yes | the gate: `copy` × non-idempotent **declines**; `block` × stream declines; `key` × group emits |
 | **S4 value** | `PlacementEquivalenceTest` rows + a new `ChainShardTest` | loop peers | point/star/tree/**chain**/S all equal the local fold, with the partials |
 | **S5 identity** | `IdentityShardTest` | yes | `0`, `n{0}`, `0{0}`, `0{*}` are **byte-identical** to the original chain |
@@ -105,7 +105,7 @@ peer                % 2 % [1,3,5|2,4,6]     % 27
 [//a{2},//b{1}]     % 3 % a:2, b:1 parts    % 27     [-- weighted --]
 
 # S1: hop sweep (place=peer, split=stream) — the shape of the tree
-1{*} % star        4{2} % 4 fan levels     2{1} % chain
+1{*} % star        {2}4 % 4 fan levels     2{1} % chain
 2{*} % tree        2{2,4} % elastic        n{0} % point
 
 # S1: split sweep (place=peer, hop=1{*})
@@ -141,14 +141,36 @@ expectations one for one).
 **Commit:** `test(distributed): read an emitted layout as data, and pin the current layouts`
 
 ### C1 — the singular key convention *(behaviour-preserving)*
-**Files:** `Tokens` (`HOP = "hop"` replacing `HOPS`; `PLACE` added; `SPLIT` reused); `PlanInterpreter.hop(...)`
-reads `hop` then falls back to `hops` (deprecated alias, one cycle); `Placement.hops()` → `hop()`; the docs and
-tests that spell `?hops` re-spelled `?hop` (the reference's E section, the menu doc's §E, the javadoc in
-`catRewrite`/`PlanInterpreter`/`Placement`, `TreeShardTransportTest`, `catInstSetTest`, `ObligationsTest`).
-**Acceptance:** every existing test green with `?hops` and with `?hop`; the alias proven by one row each way; no
-behaviour change (C0's layout pins unchanged); a `grep -rn "hops"` in `src`/`docs/skills`/`docs/design` returns
-only the alias's own sites.
+**Files:** `Tokens` (`HOP = "hop"` replacing `HOPS`; `PLACE` added; `SPLIT` reused); `PlanInterpreter`
+(`hops(plan, code)` → `hop(plan, code)`, scanning the chain and answering `hop` first, else the deprecated `hops`
+at the same position — the earliest instruction still wins, the new spelling preferred; `withoutHops` → `withoutHop`
+stripping **both** keys from copied instructions; the emitted slave states `hop`); `Placement` (`hops()` → `hop()`;
+`of(rec)` migrates `hops` → `hop` beside the existing `shape/target` migration); `catTypes` (its one caller); and
+every test that spells the key.
+**Docs — sources only, `docs/website/**` is generated and must not be touched:** the reference's E section and route
+table, the menu doc's §E and §S, `cat-location.md`'s decision-rec field, and this design's "Today" paragraph.
+Every re-spelled example must pass `bin/metatron-docker build docs <file>` with no `fail::` line.
+**Acceptance:** every existing test green when the key is spelled `?hop` **and** when it is spelled `?hops` (one row
+each way, proving the alias); C0's layout pins unchanged (no behaviour change); `grep -rn "hops"` in `src`,
+`docs/skills` and `docs/design` returns only the alias's own sites and the docs that describe it.
 **Commit:** `refactor: singular distribution keys — ?hop (?hops aliased), ?place, ?split`
+
+### C1b — suite isolation: a law-table memo that outlives a boot *(done)*
+**The bug (verified, and not what the symptom suggested):** `LawTable.typeLawsCache` is a field of the
+**JVM-global** singleton tables (`LawTable.TABLES`), never cleared across a boot. `typeLaws` memoised an *empty*
+answer — "`/m/int` declares no algebra" — that had been read by a machine which could not resolve `/m/int`'s
+space (a boot/close window, or a test universe whose memory index holds only `/space`). Every later class in the
+fork then saw an algebra-less `int`, which empties `TheoryHelper.instances(int)` and silently disables
+`unitRemoval`'s `plus(0)` match and `declared`'s `plus↔minus` inverse. That is exactly the two
+`PlanBuilderTest` rows, and it had nothing to do with `TypeCheck` flags or the forked `PeerCluster`.
+**The fix:** `LawTable.typeLaws` memoises only what the read *observed* — a non-empty block, or an empty block
+the space actually answered for; a blind read is answered to its caller and never written to the table.
+**Commit:** `fix(cat): a type's law block is memoised only when the read could see its space`
+**Follow-up (recorded, not done):** a boot-scoped `LawTable.reset()` at the top of `BootLoader.load()` clearing
+every registered table's `typeLawsCache` and `resolved` and dropping `STORE_DERIVATIONS*` (and giving
+`catGraph.invalidate()` — documented "call on any inst-registration write", zero callers — its first caller), so
+no per-asker answer outlives the boot that produced it. C1b's guard stays the primary fix: a mid-boot blind read
+can poison a *single* boot, which a boot-boundary reset cannot see.
 
 ### C2 — the q-value read *(no behaviour change, and no new class)*
 **The read already exists: `fURI.qValue`.** `qValue(String, Class)` (`furi/form/AbstractfURI.java:965`) and its
@@ -160,12 +182,15 @@ parser, or anything that re-splits `qMap()`.**
 `PlanInterpreter`, or the `XXX.Helper` it belongs to — not a type):
 - *malformed?* — a `fail::T` from the projection (or a raw `str`, where a value was required) means the author's spec
   cannot be read ⇒ **refuse loudly**;
-- *demand* — the coefficient via `c()`; and the count, where a numeric value may arrive as an `int` **or** as a
-  numeric uri (`4{2}`), coerced through the declared `uri → int` row.
+- *demand* — the coefficient via `c()`; and the count, taken from the value's head (`stream()`), which for a
+  number is an `int` (a counted number is the **leading** form `{2}4`; a trailing `4{2}` is a parse error and is
+  refused — C2 measured this). A counted **uri** (`{2}//abc:45`) is the place read's shape, not this one's.
 Plus a test class (`QParamReadTest`, or rows on `PlanBuilderTest`) over the console-verified values.
-**Acceptance:** the console-verified rows (`4`, `4{2}`, `{2}4`, `[a,b,c]`, `{2}//xxz/dag/3`, `[local=>4,
-//abc:45=>2]`, a backslash value → refusal, a `;`-joined value → refusal); no new class in `src/main`; `grep -rn
-"qMap()" src/main/java/.../algebra/rewrite/` shows no new read site.
+**Acceptance:** the console-verified rows (`4`, `{2}4`, `[a,b,c]`, `{2}//xxz/dag/3`, `[local=>4,//abc:45=>2]`, a
+backslash value → refusal, `4{2}` → refusal, a `;`-joined value → refusal); no new class in `src/main`; `grep -rn
+"qMap()" src/main/java/.../algebra/rewrite/` shows no new read site. **Inherited from C1:** `PlanInterpreter.budget`
+still `Integer.parseInt`s the raw q text and answers `0`; its replacement is part of this chunk, so the
+`?hop=4{2} → 0` path cannot survive it.
 **Commit:** `feat(cat): read q parameters strictly — via fURI.qValue, refusing what cannot be read`
 
 ### C3 — the decision model, expressed in the axes *(no behaviour change)*
@@ -188,14 +213,14 @@ local, offline drop, no-`eval` drop, `//host:port` (port not a selector), `schem
 ### C5 — `?place` at the emitter *(S lands; opt-in only)*
 **Files:** `PlanInterpreter.shard` (resolve the place set; `k = Σ demands`; lane 0 = `local` with `eval()`;
 `k − keep < 1` ⇒ decline); `catInstSet.realizedWhere` (skip the addressless route, record `local`).
-**Acceptance:** S rows (`[local,peer]`, `[local{4}]`, `[local{0,4},peer{2}]`), the value equals the local fold,
+**Acceptance:** S rows (`[local,peer]`, `[{4}local]`, `[{4}local,peer{2}]`), the value equals the local fold,
 and the **default plan emits the identical layout to today** (C0's pins unchanged).
 **Commit:** `feat(cat): ?place — the place set, and the master as a place at distance zero`
 
 ### C6 — `?hop` as a tree shape *(default unchanged)*
 **Files:** `PlanInterpreter` (`hop()` → `(height, arity)`; the deterministic `w`-of-`m` window; restate the form
 on the slave; the depth marker moves to the **fold** of the emitted slave; `{0}`/`0` ⇒ identity).
-**Acceptance:** the hop family (`1{*}`, `n{*}`, `n{1}` chain, `n{2}`, `4{2}`, `n{2,4}`, `n{0}`), the identity
+**Acceptance:** the hop family (`1{*}`, `n{*}`, `n{1}` chain, `n{2}`, `{2}4`, `n{2,4}`, `n{0}`), the identity
 byte-equality block (S5), and the chain row as the milestone: **it is the shape that does not exist today.**
 **Commit:** `feat(cat): ?hop as a tree shape — height and arity`
 
@@ -206,10 +231,13 @@ decline-on-unsound + `SplitLegalityTest` (S3). **C7b** `block` (+ the `order` re
 **declines**; `stream{2}` over 4 demanded lanes produces replicas.
 **Commit:** `feat(cat): ?split — the partition seam, with its law gate`
 
-### C8 — introspection
-**Files:** `realizedWhere`/`realized` (the place set with realized demands; `local` recorded); `PlaceTest` rows.
-**Acceptance:** `<expr>.as(cat:path::T)>>where` shows `[//booger=>2, //ginger=>3]`, and a `{2,5}` band reports
-what it actually realized.
+### C8 — introspection ✅ *(done 2026-10-28)*
+**Files:** `catInstSet.realizedWhere` (the designators with their REALIZED lane counts; `local` recorded as the
+`local` designator), `catTypes.placeWord` (the span-keyed, demand-weighted rec lifts to the flat place word);
+`AbstractionGeometryTest` rows.
+**Acceptance (met):** `path.where` shows `[[span=>at]=>[//ginger=>2,//booger=>1]]` — the rec is the weighted
+`?place` spelling, so a realized `where` reads back as a place set — and the count is the realized lane count after
+the emitter's clamps, never the declared band.
 **Commit:** `feat(cat): record the realized place set on path::T`
 
 ### C9 — the plans speak the axes
@@ -226,10 +254,24 @@ route vocabulary table gains the place set), `docs/design/distributed-patterns-m
 "what exists today" rewritten). Run `bin/metatron-docker build docs` and fix every `fail::` line.
 **Commit:** `docs: the qparam axes`
 
-### C11 — deferred, in order of appetite
-`Shape` deletion and the `TARGET` compat removal; `key` / `owner` / `index` partitions; the bands-in-lists lexer
-rule; the visited set (so `n{w}` means *n machines*, not n roles); the `timeout(inst)` deadline fix for the local
-lane.
+### C11 — what is genuinely left, in order of appetite
+**`Shape`'s deletion** and the `TARGET` compat removal (the enum is the read-compat projection and nothing writes it
+any more; C9 landed), with the `plan::T` predicate dropping `shape`/`target` in the same pass.
+**`key` / `owner` / `index` partitions** — they decline to the identity today (`?split` lowers `stream` and, behind an
+`idempotent` combiner, `copy`); each needs its own premise (a key, an addressed seed, a generator) and its own route.
+**The bands-in-lists lexer rule** — `{}` is not in the bracketed-value charset, so a weighted designator list
+(`[//ginger:8555{2,5},//abc:45]`) has no spelling; the scalar and rec forms cover today's needs.
+**The visited set** (so `n{w}` means *n machines*, not n roles), the **local lane's `timeout(inst)` deadline** (the
+fold runs inside the gather's `FutureObj` deadline today), and the **boot-scoped `LawTable.reset()`** recorded under
+C1b.
+
+*Fixed this cycle (was listed here):* **`LawTable.keyed`'s keyed-`order` crash** — the throw was not in `keyed` but one
+level down, in `TheoryHelper.instances`: it read a `fail` lift as a `Rec` (`Object::orElse` returns its receiver), so a
+per-key `order(_)` combiner threw `ClassCastException: MFail → Rec` out of the law lookup. `instances` now answers "no
+instances" for a fail, `PlanInterpreter.shard` treats a null combiner as a decline (logged), and the three
+`DistributedRewriteTransportTest` `group(…order(_))` rows are green — the per-key `sum()==[_=>kmerge(_)]` combiner is
+reachable. **The repeated-designator question is settled by C5's resolver**: duplicates of the same form sum (a row
+pins `[//ginger,//ginger,//booger]` at 2:1).
 
 ---
 
@@ -259,7 +301,7 @@ lane.
 | the emitted-layout tests drift faster than the emitter changes | C0 exists exactly for this: one reader, one diff per chunk |
 | the `?hops` → `?hop` rename collides with stale docs, space tips, or test data | C1 reads both keys for one cycle and updates every site in the same commit; the `grep` is part of its acceptance |
 | `Shape` deletion breaks the law gate | C3 proves the derivation equals the enum's obligations *before* anything depends on it; deletion is C11 |
-| the `?hop` form's projection (`4{2}` vs `{2}4`) | C2's reader accepts both (numeric uri coercion); C6 emits the leading form |
+| the `?hop` counted form | **settled by C2's measurement**: `{2}4` is the only spelling that parses; `4{2}` is refused. C6 emits the leading form. |
 | hermetic sweeps diverge from the real rewriter path | the value block (S4) and the two forked-peer suites stay on the real path; the hermetic blocks only assert structure |
 | a chunk silently weakens a test to pass | the brief forbids touching an existing assertion except in C0, C9 (which pins byte-identity), and the migration named in the chunk |
 | the local lane's deadline (5 s) bites a slow local slice | named in C5's acceptance as a known risk; the fix is C11 |

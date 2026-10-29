@@ -272,32 +272,72 @@ public interface Type extends Obj {
     }
 
     /**
-     * NOMINAL-POLY — back out: remove this method (and {@link Type.Helper#polysCompatible(Obj, Type)} plus
-     * its four call sites) to revert to pure vid/base nominal checking, then mirror tid polys as a predicate
-     * instead.
-     * <p>
-     * The tid polys of this type and its ancestors, leaf-first — the structural refinements that are part
-     * of the name ({@code cmplx = lst[real,real]@cmplx}). Distinct from {@link #predicateStack()}: those are
-     * the jvm predicates, these are the tid's poly refinements. A poly is shared by a type and its parent
-     * (parentType() is T(tid())), so the same poly is collected once.
+     * The types on this type's chain whose tid carries a bracket, leaf-first: the poly readings a value of this type
+     * is held to ({@code cmplx = lst[real,real]@cmplx}), read by {@link Type.Helper#testTypePoly(Obj, Type)}.
+     * Distinct from {@link #predicateStack()}: those are the jvm predicates. A tid is shared by a type and its parent
+     * (parentType() is T(tid())), so each one is collected once.
      */
-    default List<Poly<?, ?>> refinesPolys() {
-        final List<Poly<?, ?>> result = new ArrayList<>();
+    default List<Type> refinesPolys() {
+        final List<Type> result = new ArrayList<>();
         final Set<String> seenType = new HashSet<>();
-        final Set<String> seenPoly = new HashSet<>();
         Type type = this;
         int hops = 0;
         while (!type.isRootType() && hops++ < 256) {
             if (!seenType.add(System.identityHashCode(type) + "@" + type.tid() + ":" + type.vid()))
                 break;
-            if (type.tid().hasPoly()) {
-                final String polyKey = type.tid().poly().toString();
-                if (seenPoly.add(polyKey))
-                    type.tid().polyParsed().ifPresent(result::add);
-            }
+            final fURI tid = type.tid();
+            if (tid.hasPoly() && result.stream().noneMatch(poly -> poly.tid().equals(tid)))
+                result.add(type);
             type = type.parentType();
         }
         return result;
+    }
+
+    /**
+     * The tid is a rec bracket: the fields a rec carries ({@code rec[k1,k2]}), which a declaration under a name of
+     * its own exposes as fibers ({@code rec[role]::T[…]@person}).
+     */
+    default boolean isFibered() {
+        return this.tid().hasPoly() && Tokens.REC_TID.equals(this.tid().basePath());
+    }
+
+    /**
+     * The tid is a lst bracket: the types at a list's indices ({@code lst[int,str]}).
+     */
+    default boolean isTensored() {
+        return this.tid().hasPoly() && Tokens.LST_TID.equals(this.tid().basePath());
+    }
+
+    /**
+     * The tid is a rel bracket: the vertices of a path ({@code rel[int,str]} is {@code int => str}).
+     */
+    default boolean isPathed() {
+        return this.tid().hasPoly() && Tokens.REL_TID.equals(this.tid().basePath());
+    }
+
+    /**
+     * The types an instance's bracket gives its fibers ({@code person[ninja]} gives {@code role} a ninja), at the
+     * instance's multiplicity ({@code person[ninja]{*}} holds {@code ninja{*}}). Empty unless the vid instantiates
+     * the declaration: an anonymous rec bracket names fields, not types.
+     */
+    default List<Type> recFibers() {
+        return null == this.vid() || this.vid().basePath().equals(this.tid().basePath()) ? List.of() :
+                this.vid().polyParsed().map(Obj::lstValue).orElse(List.of()).stream()
+                        .map(fiber -> fiber.c(fiber.c().mult(this.c()))).map(Obj::asType).toList();
+    }
+
+    /**
+     * The types at a tensor's indices ({@code lst[int,str]}); empty for any other bracket.
+     */
+    default List<Obj> lstIndices() {
+        return this.isTensored() ? this.tid().polyParsed().map(Obj::lstValue).orElse(List.of()) : List.of();
+    }
+
+    /**
+     * The types at a path's vertices ({@code rel[int,str]}); empty for any other bracket.
+     */
+    default List<Obj> relPaths() {
+        return this.isPathed() ? this.tid().polyParsed().map(Obj::lstValue).orElse(List.of()) : List.of();
     }
 
     default Type parentType() {
@@ -345,6 +385,8 @@ public interface Type extends Obj {
             return this.test(rhs.dom());
         if (!rhs.isType())
             return false;
+        if (this.isFibered() && this.recFibers().stream().anyMatch(fiber -> fiber.test(rhs)))
+            return true;
         if (rhs.asType().isNominal())
             return this.testNominally(rhs);
         if (null != this.vid() && Objects.equals(this.vid(), rhs.vid()))
@@ -368,14 +410,6 @@ public interface Type extends Obj {
             return false;
         if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
-        // CONFORMANCE, NOT PREDICATE EQUALITY, WHEN THE ACCEPTANCE CAME FROM A POLY MEMBER. A trait is a supertype
-        // of the instance by NAME (recPolySupertype), so a PREDICATED trait asks the instance's declaration to
-        // SATISFY its predicate -- the same conformance a value makes -- rather than to reproduce it. Without this
-        // the exact comparison below re-vetoed person[ninja]::T against ninja::T[?[name=>str::T]]: the name walk
-        // accepted it and the tail then demanded the two predicates be equal. A same-name claim still needs that
-        // equality, so only a poly-member acceptance takes the conformance branch.
-        if (Helper.recPolySupertype(this, rhs.asType()))
-            return Helper.recPolyConformance(this, rhs.asType());
         return !rhs.asType().hasPredicate() || Objects.equals(this.asType().predicate(), rhs.asType().predicate());
     }
 
@@ -624,14 +658,14 @@ public interface Type extends Obj {
                 return false;
             // identity, not a claim: erasure is explicit here
             if (objType.isBaseType() && testByIdentity(objType.vid(), type.baseTypeID()))
-                return polysCompatible(obj, type); // NOMINAL-POLY
+                return testTypePoly(obj, type);
             while (true) {
                 // LOG.warn("checking %s is a %s",objType, type);
                 if (objType.isRootType())
                     return false;
                 // identity, not a claim: erasure is explicit here
                 if (testByIdentity(objType.vid(), nominalVID))
-                    return polysCompatible(obj, type); // NOMINAL-POLY
+                    return testTypePoly(obj, type);
                 if (objType.isBaseType())
                     return false;
                 // final Type temp = objType.parentType();
@@ -642,88 +676,45 @@ public interface Type extends Obj {
         }
 
         /**
-         * NOMINAL-POLY — back out: remove this method (and {@link #refinesPolys()} plus its four call sites)
-         * to revert to pure vid/base nominal checking, then mirror tid polys as a predicate instead.
-         * <p>
-         * The tid polys are part of the name — {@code cmplx[real,real]} — so a nominal vid match must also
-         * accept the poly refinements. Tests the value itself against each poly (the same check the structural
-         * path does), since a base value's shape lives in its elements, not its tid.
+         * The poly readings {@code object} is held to: every bracketed type on {@code type}'s chain
+         * ({@link Type#refinesPolys()}) reads each member of its own kind — a fibered type a rec
+         * ({@link #testFibration}), a tensored type a lst ({@link #testTensor}), a pathed type a rel
+         * ({@link #testPaths}). A type is read by its own bracket ({@code lst[int]} is not a {@code lst[str]}).
          */
-        public static boolean polysCompatible(final Obj value, final Type type) {
-            // a rec's bracket is its DECLARED SLOTS, not a positional poly: see recSlotsCarried
-            if (!recSlotsCarried(value, type))
-                return false;
-            if (isRecDeclaration(type))
-                return true;
-            for (final Poly<?, ?> poly : type.refinesPolys())
-                if (!value.test(poly))
-                    return false;
-            return true;
+        public static boolean testTypePoly(final Obj object, final Type type) {
+            final List<Type> polys = type.refinesPolys();
+            return object.stream().allMatch(member -> polys.stream().allMatch(poly ->
+                    member.isRec() && poly.isFibered() ? testFibration(member.asRec(), poly)
+                            : member.isLst() && poly.isTensored() ? testTensor(member.asLst(), poly)
+                            : member.isRel() && poly.isPathed() ? testPaths(member.asRel(), poly)
+                            : !member.isType() || !poly.isTensored() || testTensor(lst(member.asType().lstIndices()), poly)));
         }
 
         /**
-         * Is {@code type}'s bracket a rec slot list? {@code rec[k1,k2]} names the keys a rec carries, so its
-         * poly has no positional reading (the tid's {@code polyParsed} would spell a lst of types that no rec
-         * value can match). A lst's bracket is its positional slot binding and an object's is its
-         * instantiation argument; both keep that reading.
+         * A fibered rec carries every field its bracket names ({@code rec[k1,k2]}, or a declaration's fibers
+         * {@code rec[role]::T[…]@person}). A field may be absent only where its entry admits zero ({@code rec[k{?},j]})
+         * or the declaration types it so ({@code role=>?rec::T}); a field nothing types is required.
          */
-        private static boolean isRecDeclaration(final Type type) {
-            return null != type && null != type.tid() && type.tid().hasPoly()
-                    && Tokens.REC_TID.basePath().equals(type.tid().basePath());
+        public static boolean testFibration(final Rec rec, final Type fiberedRec) {
+            return fiberedRec.tid().poly().stream().map(entry -> f(entry.trim())).allMatch(field ->
+                    field.c().isZeroable() || rec.has(field.basePath())
+                            || noobj().test(Optional.ofNullable(declaredField(fiberedRec, field.basePath())).orElse(ALL_TYPE)));
         }
 
         /**
-         * THE REC POLY NAMES ITS DECLARED SLOTS. {@code rec[k1,k2]} declares the keys {@code k1} and {@code k2},
-         * and a parameterized rec declaration names its exposed field the same way
-         * ({@code rec[role]::T[?[…,role=>rec::T]]@person} — the poly entry {@code role} names the field
-         * {@code role}). Every declared slot must be carried by the value: a missing key READS as {@code noobj}
-         * (that stays — {@code >>weapon} on a rec without {@code weapon} is {@code noobj}, and the multiplicity
-         * identity depends on it), and {@code noobj} does not satisfy a slot declared at coefficient one, so the
-         * literal fails conformance.
-         * <p>
-         * ABSENCE IS LEGAL ONLY WHEN THE SLOT ADMITS ZERO, and that comes from the coefficient alone: an entry's
-         * own coefficient ({@code rec[k{?},j]}), or the slot type the declaration's predicate gives the key
-         * ({@code role=>?uri::T}). There is no "missing key" concept and no marker for one.
-         *
-         * @param value the value tested against {@code type}
-         * @param type  the declared type (its tid's bracket is the slot list)
-         * @return false when a slot that cannot be absent is not carried
+         * The type a fibered rec's declaration gives one of its fields: the rec shape in the type's own predicates,
+         * leaf-first ({@code rec[role]::T[?[…,role=>?uri::T]]@person} answers the field {@code role} its declared
+         * type). Null when no predicate types the field — a bare {@code rec[k1,k2]} types nothing.
          */
-        public static boolean recSlotsCarried(final Obj value, final Type type) {
-            if (!value.isRec() || !isRecDeclaration(type))
-                return true;
-            for (final String slot : type.tid().poly()) {
-                final fURI key = f(slot.trim());
-                // the entry's own coefficient is the slot's optionality: rec[k{?},j]
-                if (key.c().isZeroable())
-                    continue;
-                if (!value.asRec().at(key.basePath()).isNoObj())
-                    continue;
-                // NOOBJ'S VERDICT AGAINST THE SLOT TYPE IS EXACTLY ZEROABILITY, so ask the value path rather
-                // than re-deriving the rule. A slot the declaration does not type is required (coefficient one).
-                final Obj declared = recDeclaredSlot(type, key.basePath());
-                if (noobj().test(null == declared ? ALL_TYPE : declared))
-                    continue;
-                return false;
-            }
-            return true;
-        }
-
-        /**
-         * The type a rec declaration gives one of its poly slots: the rec shape in the type's own predicates,
-         * leaf-first ({@code rec[role]::T[?[…,role=>?uri::T]]@person} answers the slot {@code role} its declared
-         * type). Returns null when no predicate of the declaration types the slot — a bare {@code rec[k1,k2]} types
-         * nothing, and the slot then stands at coefficient one.
-         */
-        private static Obj recDeclaredSlot(final Type type, final fURI key) {
-            Type level = type;
+        private static Obj declaredField(final Type fiberedRec, final fURI field) {
+            Type level = fiberedRec;
             for (int hops = 0; !level.isRootType() && hops < 256; hops++) {
                 if (level.hasPredicate()) {
                     final Obj shape = typePredicateObj(level);
                     if (shape.isRec()) {
-                        final Obj slot = shape.asRec().at(key);
-                        if (!slot.isNoObj())
-                            return slot;
+                        final Obj declared = shape.asRec().at(field);
+                        if (!declared.isNoObj())
+                            return declared;
                     }
                 }
                 final Type parent = level.parentType();
@@ -735,83 +726,65 @@ public interface Type extends Obj {
         }
 
         /**
-         * THE REC POLY CONFERS SUPERTYPES. A rec's bracket names the TRAITS the rec implements, so each entry is a
-         * SUPERTYPE of the instance: a value of type {@code person[ninja]} is acceptable wherever {@code ninja::T}
-         * (one of its entries) or {@code person::T} (its vid's base) is expected. This is what makes a
-         * {@code dom=ninja} instruction legal on a {@code person[ninja]} wrapper; the vid's base is already covered
-         * by the ordinary nominal walk, the entries are not, because a trait is not on the vid's parent chain.
-         * <p>
-         * REC ONLY, AND ONE LEVEL DEEP. The guard is the DECLARATION's base form, its tid: a rec instantiation
-         * keeps {@code rec} as its tid ({@code person[ninja]::T} has tid {@code rec}), so its bracket is a trait
-         * list. Every other poly type spells something else there and its bracket is a SLOT/PARAMETER list, which
-         * confers no supertype: {@code lst[int]} has tid {@code lst} (a list of ints is not an int),
-         * {@code object[int]} has tid {@code category} (an object built from an int is not an int) and
-         * {@code rel[...]} has tid {@code rel}. Only THIS vid's entries are supertypes -- a member's own bracket
-         * says nothing about its component.
-         *
-         * @param instance the tested type (the value's type, carrying the poly)
-         * @param expected the expected type (its vid is the name asked for)
-         * @return true when {@code expected}'s vid names one of {@code instance}'s vid poly entries
+         * A tensored lst holds the type at each of its indices ({@code lst[int,str]}): {@link Lst#test(Obj)} asks index
+         * by index, and a missing trailing index passes when its entry admits zero.
          */
-        public static boolean recPolySupertype(final Type instance, final Type expected) {
-            if (null == instance || null == expected)
-                return false;
-            final fURI id = instance.vid();
-            if (null == id || !id.hasPoly() || !Tokens.REC_TID.basePath().equals(instance.tid().basePath()))
-                return false;
-            for (final String entry : id.poly())
-                if (testByIdentity(f(entry.trim()), expected.vid()))
-                    return true;
-            return false;
+        public static boolean testTensor(final Lst lst, final Type tensoredLst) {
+            return lst.test(lst(tensoredLst.lstIndices()));
         }
 
         /**
-         * A POLY MEMBER IS A SUPERTYPE BY CONFORMANCE, NOT BY NAME ALONE. {@link #recPolySupertype} makes the
-         * instance's poly entry a supertype of the instance ({@code person[ninja]} is a {@code ninja}), and a
-         * PREDICATED trait additionally constrains the shape ({@code ninja::T[?[name=>str::T]]}). The instance
-         * then has to SATISFY that shape rather than reproduce it: its own declared shape (the rec of declared
-         * slot types, {@link #typePredicateObj}) is tested against the trait's with the same structural test a
-         * value makes ({@link Rec#test}). A declaration that contradicts the trait -- {@code name=>?int::T} where
-         * the trait requires {@code name=>str::T} -- is not a supertype, however the poly names it.
-         * <p>
-         * This is the type-vs-type half of the conformance a value gets from {@link #typeCheck(Obj, Obj)}'s
-         * predicate stack; it is what lets {@code Type#test}'s tail answer conformance instead of re-vetoing the
-         * acceptance the name walk just made.
-         *
-         * @param instance the instance type (its vid's poly names the trait)
-         * @param expected the trait type the instance is tested against
-         * @return true when the instance's declaration satisfies the trait's predicate
+         * A pathed rel is a right-nested chain through the vertices its bracket names ({@code rel[A,B,C]} is
+         * {@code A => (B => C)}).
          */
-        public static boolean recPolyConformance(final Type instance, final Type expected) {
-            if (null == expected || !expected.hasPredicate())
-                return true; // the trait asks nothing of the shape: the name walk is the whole acceptance
-            final Obj traitShape = typePredicateObj(expected);
-            if (null == traitShape || !traitShape.isRec())
-                return true; // a non-structural predicate is checked on the value, not on the declaration
-            final Obj declaredShape = declarationShape(instance);
-            // NOTHING DECLARED IS NOTHING CONTRADICTED: a bare person[ninja]::T carries no predicate of its own,
-            // and value-vs-type conformance is where a value is held to the trait's shape
-            return null == declaredShape || declaredShape.test(traitShape);
+        public static boolean testPaths(final Rel rel, final Type pathedRel) {
+            return pathTested(rel, pathedRel.relPaths());
         }
 
         /**
-         * The rec shape a type DECLARES: the first predicate rec on its chain to the root, leaf-first (the mirror
-         * of {@link #recDeclaredSlot}'s walk). Null when no level of the declaration types a shape.
+         * The walk behind {@link #testPaths}: a rel's {@code first} is at the next vertex and its {@code second} is the
+         * rest of the path, while an ordinary obj closes the path at a vertex after which every entry admits zero. A
+         * vertex's coefficient is the multiplicity of the value at it, so a vertex that admits zero may be skipped.
          */
-        private static Obj declarationShape(final Type type) {
-            Type level = type;
-            for (int hops = 0; null != level && !level.isRootType() && hops < 256; hops++) {
-                if (level.hasPredicate()) {
-                    final Obj shape = typePredicateObj(level);
-                    if (shape.isRec())
-                        return shape;
-                }
-                final Type parent = level.parentType();
-                if (parent.equals(level))
-                    break;
-                level = parent;
+        private static boolean pathTested(final Obj chain, final List<Obj> vertices) {
+            if (vertices.isEmpty())
+                return false;
+            final Obj vertex = vertices.getFirst();
+            final List<Obj> rest = vertices.subList(1, vertices.size());
+            if (vertex.c().isZeroable() && pathTested(chain, rest))
+                return true;
+            return chain.isRel()
+                    ? chain.asRel().first().test(vertex) && pathTested(chain.asRel().second(), rest)
+                    : chain.test(vertex) && rest.stream().allMatch(next -> next.c().isZeroable());
+        }
+
+        /**
+         * Validates a type's bracket where the type is constructed, so a value is never held to an illegal one: a rel
+         * bracket names a path of at least one hop (two vertices) whose vertex coefficients are multiplicities (not
+         * negative), and an instance of a rec declaration names no more types than the declaration has fibers.
+         *
+         * @param type the type whose bracket is validated
+         */
+        public static void validatePoly(final Type type) {
+            if (type.isPathed()) {
+                final List<Obj> path = type.relPaths();
+                final String first = type.tid().poly().getFirst().trim();
+                if (path.size() < 2)
+                    throw MTronException.of(
+                            "rel[%s] is not a path: a rel poly names the vertices of a chain of at least one hop, so it takes at least two vertices (rel[%s,%s])",
+                            first, first, first);
+                for (final Obj vertex : path)
+                    if (vertex.c().isNeg())
+                        throw MTronException.of(
+                                "rel path vertex coefficient {%s} on %s is not yet matched: a vertex coefficient is the multiplicity of the value at that vertex, which is not negative (one, {?}, {n}, {n,m}, {+} and {*} are matched)",
+                                vertex.c(), vertex);
+            } else if (Tokens.REC_TID.basePath().equals(type.tid().basePath())) {
+                final List<String> fibers = type.isFibered() ? type.tid().poly() : List.of();
+                if (type.recFibers().size() > fibers.size())
+                    throw MTronException.of("%s has no fiber for %s: a bracket entry types a fiber, and the declaration %s names %s",
+                            type.vid(), String.join(",", type.vid().poly().subList(fibers.size(), type.vid().poly().size()).stream().map(String::trim).toList()),
+                            type.tid(), fibers.isEmpty() ? "none" : String.join(",", fibers.stream().map(String::trim).toList()));
             }
-            return null;
         }
 
         /**
@@ -943,14 +916,8 @@ public interface Type extends Obj {
                 }*/
                 if (rhs.vid().isGeneric() || rhs.isObjCall())
                     return true;
-                // A REC'S BRACKET IS ITS DECLARED SLOTS, every one of which the value must carry (see
-                // recSlotsCarried). It has no positional reading, so it never takes the poly test below.
-                if (!recSlotsCarried(lhs, rhs.asType()))
+                if (!testTypePoly(lhs, rhs.asType()))
                     return false;
-                if (rhs.vid().hasPoly() && !isRecDeclaration(rhs.asType())) {
-                    if (!lhs.test(rhs.tid().polyParsed().orElse(null)))
-                        return false;
-                }
                 if (lhs.isObjs() && lhs.c().within(rhs.c()) && lhs.stream().allMatch(o -> o.test(rhs.c(o.c()))))
                     return true;
                 if (rhs.asType().isBaseType() && !lhs.baseTypeID().test(rhs.vid()))

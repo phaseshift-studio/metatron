@@ -60,12 +60,27 @@ public final class Env {
      */
     public static Env snapshot() {
         final Network network = Machine.current().network();
-        // shallow-copy the two maps so the peer/roster SET is frozen; a member's liveness is still read off its live
-        // link (as shardTargets always did)
+        return of(network.peers(), network.machines(), Network.Helper.authorities());
+    }
+
+    /**
+     * AN ENV FROM ITS THREE TABLES — the value factory {@link #snapshot()} is one call of, and the seam a test or a
+     * re-plan is handed instead of a machine (§2 of {@code distributed-qparams-implementation.md}: the emitter is a
+     * function of {@code (plan, code, env)}, so a resolution sweep is a resolution over a synthetic dial set — no
+     * dial, no forked peer).
+     *
+     * <p>It freezes exactly what the snapshot freezes and nothing more: the peer map's members, the roster's members,
+     * and the authority set are <em>shallow-copied</em> into fresh {@link MRec}s and a fresh {@link LinkedHashSet}, so
+     * the two maps' membership (and their order) cannot change under the caller. A member's own liveness is still read
+     * off the member — that is what {@code Places.serves} asks — so a peer that goes offline between the snapshot and
+     * the resolution is dropped, as it always was. The {@link #fingerprint()} is the same hash of the same three
+     * fields.
+     */
+    public static Env of(final Rec peers, final Rec machines, final Set<fURI> authorities) {
         return new Env(
-                new MRec(new LinkedHashMap<>(network.peers().jvm()), network.peers().tid(), network.peers().vid()),
-                new MRec(new LinkedHashMap<>(network.machines().jvm()), network.machines().tid(), network.machines().vid()),
-                new LinkedHashSet<>(Network.Helper.authorities()));
+                new MRec(new LinkedHashMap<>(peers.jvm()), peers.tid(), peers.vid()),
+                new MRec(new LinkedHashMap<>(machines.jvm()), machines.tid(), machines.vid()),
+                new LinkedHashSet<>(authorities));
     }
 
     /**

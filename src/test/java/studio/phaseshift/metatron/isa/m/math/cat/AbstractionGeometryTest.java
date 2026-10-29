@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,6 +74,15 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
     public void clearNetwork() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap()));
         Machine.current().network().at(uri(PEER), noobj(), MUTABLE);
+    }
+
+    /**
+     * The demand row dials two extra peers; drop them, so a later row's "no peers" premise stays true.
+     */
+    @AfterEach
+    public void clearDials() {
+        Machine.current().network().disconnect(f("loop://ginger:8555"));
+        Machine.current().network().disconnect(f("loop://booger:8555"));
     }
 
     /**
@@ -160,9 +170,54 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
         final Obj lifted = catInstSet.realized(PlanInterpreter.lower(catRewrite.planOf("law_shard"), code));
         assertTrue(lifted.isRec() && lifted.asRec().has(uri(WHERE)), "a shipped shard writes a realized where: " + lifted);
         final Obj places = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
-        assertTrue(places.isLst() && 1 == places.asLst().count(), "the AT span maps to the shipped peer: " + lifted);
-        assertEquals(f("//localhost"), Place.of(places.asLst().elements().findFirst().orElse(noobj()).asRec()).obj(),
-                "the realized place is the shipped peer");
+        assertEquals("[//localhost=>1]", places.toString(),
+                "the AT span maps to the one place that ran, with the lane it ran: " + lifted);
+    }
+
+    /**
+     * A HOME LANE'S ROUTE IS READ, NOT SKIPPED BY FAILURE — {@code ?place=[local,peer]} emits one addressless
+     * {@code eval()} (the lane at distance zero) beside the shipped {@code eval(<peer>)}. The realized read-back must
+     * walk the addressless route as the local place, so no {@code arg(0)} is ever asked of it. The local place is
+     * {@link Places#self()}, which a listener-less test VM does not have: the peer is what this row can pin, and the
+     * home lane's own capture is the route's shape, asserted first.
+     */
+    @Test
+    public void testLoweredShardWithAHomeLaneReadsTheAddresslessRoute() {
+        Machine.current().network().connect(f("loop://localhost:8555"));
+        // a synthetic home authority: a test VM listens on nothing, so `local` would name no place on its own
+        final studio.phaseshift.metatron.algebra.rewrite.Env env = studio.phaseshift.metatron.algebra.rewrite.Env.of(
+                Machine.current().network().peers(),
+                Machine.current().network().machines(),
+                java.util.Set.of(f("loop://mantis:8555")));
+        final Code emitted = PlanInterpreter.apply(catRewrite.planOf("law_shard"),
+                ObjmtronSerializer.parse("start?place=[local,peer]({1,2,3,4,5,6}).plus(1).sum()").asCode(), env);
+        assertTrue(emitted.insts().get(1).arg(0).asLst().lstValue().getFirst().asRec().at(uri(CODE)).asInst().args().isEmpty(),
+                "the home lane's route is the addressless eval: " + emitted);
+        final Obj lifted = catInstSet.realized(emitted);
+        assertTrue(lifted.isRec() && lifted.asRec().has(uri(WHERE)), "a home lane writes a realized where: " + lifted);
+        final Obj places = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
+        assertEquals("[local=>1,//localhost=>1]", places.toString(),
+                "both lanes are realized: the home one as `local`, the shipped one by its authority: " + lifted);
+    }
+
+    /**
+     * THE REALIZED DEMANDS, NOT JUST WHO RAN — {@code ?place=[//ginger,//ginger,//booger]} asks ginger for two lanes and
+     * booger for one, and the emitted layout runs exactly that, so {@code path.where} records the COUNTS against the
+     * designators: {@code [[span=><at]=>[//ginger=>2,//booger=>1]]}. This is the realized lane count the emitter
+     * clamped to, not the declared band — the rec is the weighted {@code ?place} spelling, so the read-back is a place
+     * set again.
+     */
+    @Test
+    public void testRealizedWhereRecordsTheRealizedDemands() {
+        Machine.current().network().connect(f("loop://ginger:8555"));
+        Machine.current().network().connect(f("loop://booger:8555"));
+        final Code emitted = PlanInterpreter.lower(catRewrite.planOf("law_shard"),
+                ObjmtronSerializer.parse("start?place=[//ginger,//ginger,//booger]({1,2,3,4,5,6}).plus(1).sum()").asCode());
+        final Obj lifted = catInstSet.realized(emitted);
+        final Obj demands = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
+        assertEquals("[//ginger=>2,//booger=>1]", demands.toString(),
+                "each realized place carries the lanes it actually ran: " + lifted);
+        assertEquals(2, demands.asRec().jvm().size(), "and only the places that ran are recorded: " + lifted);
     }
 
     /**
@@ -196,27 +251,27 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
     }
 
     /**
-     * {@code ?hops=0} opts the fold out, so {@code law_shard} is a proof of identity — pruned even with reach present.
+     * {@code ?hop=0} opts the fold out, so {@code law_shard} is a proof of identity — pruned even with reach present.
      */
     @Test
-    public void testZeroHopsPrunesDistribution() {
+    public void testZeroHopPrunesDistribution() {
         Machine.current().network().connect(f("loop://localhost:8555"));
-        final Code code = ObjmtronSerializer.parse("start?hops=0({1,2,3,4}).plus(1).sum()").asCode();
+        final Code code = ObjmtronSerializer.parse("start?hop=0({1,2,3,4}).plus(1).sum()").asCode();
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(code);
-        assertTrue(path.asRec().at(uri("law_shard")).isNoObj(), "?hops=0 opts the fold out: " + path);
+        assertTrue(path.asRec().at(uri("law_shard")).isNoObj(), "?hop=0 opts the fold out: " + path);
     }
 
     /**
-     * The parser memo must not leak a q from one parse into the next: a {@code ?hops=0} on one source must not make
+     * The parser memo must not leak a q from one parse into the next: a {@code ?hop=0} on one source must not make
      * the next source's seed carry it (the position-keyed memo was cleared by buffer identity, which two consecutive
      * parses can defeat).
      */
     @Test
-    public void testHopsQDoesNotLeakAcrossParses() {
-        final Code first = ObjmtronSerializer.parse("start?hops=0({1,2,3,4}).plus(1).sum()").asCode();
-        assertTrue(first.insts().getFirst().tid().hasQ(HOPS), "the first parse declares ?hops=0: " + first);
+    public void testHopQDoesNotLeakAcrossParses() {
+        final Code first = ObjmtronSerializer.parse("start?hop=0({1,2,3,4}).plus(1).sum()").asCode();
+        assertTrue(first.insts().getFirst().tid().hasQ(HOP), "the first parse declares ?hop=0: " + first);
         final Code second = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
-        assertFalse(second.insts().getFirst().tid().hasQ(HOPS), "?hops=0 must not leak into the next parse: " + second);
+        assertFalse(second.insts().getFirst().tid().hasQ(HOP), "?hop=0 must not leak into the next parse: " + second);
     }
 
     /**

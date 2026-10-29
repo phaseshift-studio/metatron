@@ -86,13 +86,13 @@ are placeholders — the schemas below are motifs, not literal runs.
 
 | pattern                            | law (latex)                                                                                                                        | mtron pre-write motif                                              | mtron rewrite motif                                                               |
 |------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| **A** homomorphism shard ✅        | $h(a \uplus b) = h(a) \oplus h(b)$                                                                                                 | `{1,2,3,4}.plus(1).count()`                                        | `[start?hops=0(p_i).plus(1).count(),…]==[eval(p_i), …]>-.sum()`                   |
-| **B** data-local shard             | $\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)$                                                                                     | `*/usr/data/+/current.plus(1).sum()`                               | `[from?hops=0(</usr/data/+/current>).plus(1).sum(),…]==[eval(p_i),…]>-.sum()`     |
-| **C** authority push-down          | $\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}$ (Thm 5 + a pure chain)                                         | `*<ws://host:8555/n/+>.plus(1).sum()`                              | `[from?hops=0(</n/+>).plus(1).sum()]==[eval(<ws://host:8555>)]>-`                 |
+| **A** homomorphism shard ✅        | $h(a \uplus b) = h(a) \oplus h(b)$                                                                                                 | `{1,2,3,4}.plus(1).count()`                                        | `[start?hop=0(p_i).plus(1).count(),…]==[eval(p_i), …]>-.sum()`                   |
+| **B** data-local shard             | $\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)$                                                                                     | `*/usr/data/+/current.plus(1).sum()`                               | `[from?hop=0(</usr/data/+/current>).plus(1).sum(),…]==[eval(p_i),…]>-.sum()`     |
+| **C** authority push-down          | $\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}$ (Thm 5 + a pure chain)                                         | `*<ws://host:8555/n/+>.plus(1).sum()`                              | `[from?hop=0(</n/+>).plus(1).sum()]==[eval(<ws://host:8555>)]>-`                 |
 | **D** parallel fan-out ✅          | $\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b$ (Thm 5)                                                          | any shard; the transport, not a new fold                           | `[s_i, …]==[virtual::[code=>eval(p_i)],…]==[>>rhs,…]>-.combiner`                  |
-| **E** tree reduction ✅            | $(a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C$                                          | `{1,…,8}.plus(1).sum?hops=2()`                                     | nested `start?hops=n-1(p_i)…` at each interior node — the dial graph is the tree  |
+| **E** tree reduction ✅            | $(a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C$                                          | `{1,…,8}.plus(1).sum?hop=2()`                                     | nested `start?hop=n-1(p_i)…` at each interior node — the dial graph is the tree  |
 | **F** ordered fold                 | $a \cdot (b \cdot c) = (a \cdot b) \cdot c$ (associativity alone)                                                                  | a `lst`-partitioned fold (streams never shard)                     | pipeline — carry the running total, neighbor-to-neighbor                          |
-| **G** keyed reduce ✅              | $\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$ | `{1,2,3,4,5,6}.group([mod(3)=>sum()])`                             | `[start?hops=0(p_i).group([mod(3)=>sum()]),…]==[eval(p_i),…]>-.sum()==[_=>sum()]` |
+| **G** keyed reduce ✅              | $\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])$ | `{1,2,3,4,5,6}.group([mod(3)=>sum()])`                             | `[start?hop=0(p_i).group([mod(3)=>sum()]),…]==[eval(p_i),…]>-.sum()==[_=>sum()]` |
 | **H** redundant / hedged shards    | $x \oplus x = x$                                                                                                                   | a partition shipped to r peers                                     | every reply folds (at-least-once); non-idempotent → hedge, first reply wins       |
 | **I** span/route interpreter       | $\mathrm{plan} \mapsto \mathrm{layout}$ (infrastructure)                                                                           | `[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]` | `PlanInterpreter` lowers `plan.routes()` + a real span `[(lo, hi, role)]`         |
 | **J** algebraic aggregates         | $\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}$                                                           | `{...}.mean()`                                                     | pointwise tuple partials; the finalizer runs once at the master                   |
@@ -158,7 +158,7 @@ to; the rest specialize it.
 ### A — homomorphism shard (`sum`, `prod`, `count`, `order(s)`, rec `sum`)
 
 ```mtron
-slave_i:  start?hops=0(<part_i>).plus(1).count()
+slave_i:  start?hop=0(<part_i>).plus(1).count()
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().sum()
 ```
 
@@ -179,7 +179,7 @@ The cat graph answers lazily: `|count?int<=#{*}().as(morphism::T)>>analysis>>com
 with `kmerge` as the combiner instead of `sum`:
 
 ```mtron
-slave_i:  start?hops=0(<part_i>).order(>>)                     [-- each shard sorts by its key --]
+slave_i:  start?hop=0(<part_i>).order(>>)                     [-- each shard sorts by its key --]
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().kmerge(>>)
 ```
 
@@ -196,22 +196,24 @@ thread — and the second reads each thread's future off its `rhs` slot. The mas
 is `eval` (the client's mini-instset override), and the result hangs off `rhs` as a lazy `auto` over the future, so the
 emitted rec stays serializable.
 
-### E — tree reduction (`?hops=n`)
+### E — tree reduction (`?hop=n`)
 
 ```mtron
-root:      {1,…,8}.plus(1).sum?hops=2()
-        ⇒  start([start?hops=1({1,…,8}).plus(1).sum()]).select([to(p_1)]).merge().sum()
-on p_1:    start([start?hops=0({1,3,5,7}).plus(1).sum(), start?hops=0({2,4,6,8}).plus(1).sum()])
+root:      {1,…,8}.plus(1).sum?hop=2()
+        ⇒  start([start?hop=1({1,…,8}).plus(1).sum()]).select([to(p_1)]).merge().sum()
+on p_1:    start([start?hop=0({1,3,5,7}).plus(1).sum(), start?hop=0({2,4,6,8}).plus(1).sum()])
               .select([to(p_2), to(p_3)]).merge().sum()
 ```
 
-The budget resolves nearest first — a `?hops` on any instruction, else the plan's tree route (default 1, the star). A
-peer re-plans its part because applying a code compiles it (`Machine.applyCode`); at `hops = 0` the part is a leaf.
+The budget resolves nearest first — a `?hop` on any instruction, else the plan's tree route (default 1, the star). A
+peer re-plans its part because applying a code compiles it (`Machine.applyCode`); at `hop = 0` the part is a leaf.
+`?hops` is the deprecated pre-singular spelling of the same key: it is read for one cycle, and `?hop` wins at the same
+position. Generated slaves always state `?hop`.
 
 ### G — keyed reduce (`group([k ⇒ h])`)
 
 ```mtron
-slave_i:  start?hops=0(<part_i>).group([mod(3)=>sum()])              [-- [1=>1,0=>3,2=>5] --]
+slave_i:  start?hop=0(<part_i>).group([mod(3)=>sum()])              [-- [1=>1,0=>3,2=>5] --]
 master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=>sum()]   [-- [1=>{1,4},…] → [1=>5,…] --]
 ```
 

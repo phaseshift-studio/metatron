@@ -105,24 +105,26 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }
 
     /**
-     * The budget the root states travels with the part: the master ships one level fewer on the slave's seed,
-     * {@code ?hops} is not copied onto any instruction below it, and the recombined value is the undistributed one.
-     * Each row: the budget stated on the fold % the recombined value.
+     * The budget the root states travels with the part: the master ships one level fewer on the slave's FOLD (the
+     * seed states the part alone), {@code ?hop} is not copied onto any instruction between them, and the recombined
+     * value is the undistributed one. Each row: the budget stated on the fold % the recombined value.
      */
     @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the layout is the subject, not the value alone")
     @ParameterizedTest
     @CsvSource(value = {
             "2 % 44",
     }, delimiter = '%')
-    void testTreeOverTransport(final int hops, final int expected) {
+    void testTreeOverTransport(final int hop, final int expected) {
         final Code master = Machine.current().compiler().rewriter()
-                .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6,7,8}.plus(1).sum?hops=" + hops + "()")).asCode();
+                .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6,7,8}.plus(1).sum?hop=" + hop + "()")).asCode();
         final DistributedSweep.Layout layout = DistributedSweep.layout(master);
         assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID), layout.ops(),
                 "the root recombines its child's partial: " + master);
         final DistributedSweep.Lane lane = layout.lane(0);
-        checkEquality(LOG, uri(String.valueOf(hops - 1)), uri(lane.budget()), true);
-        checkEquality(LOG, bool(false), bool(lane.code().insts().stream().skip(1).anyMatch(i -> i.tid().hasQ(HOPS))), true);
+        checkEquality(LOG, uri(String.valueOf(hop - 1)), uri(lane.budget()), true);
+        checkEquality(LOG, bool(false), bool(lane.code().insts().getFirst().tid().hasQ(HOP)), true);
+        checkEquality(LOG, bool(false), bool(lane.code().insts()
+                .subList(1, lane.code().insts().size() - 1).stream().anyMatch(i -> i.tid().hasQ(HOP))), true);
         checkEquality(LOG, ObjmtronSerializer.parse(String.valueOf(expected)),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(master)), true);
     }
@@ -136,8 +138,8 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     @Training.SkipTraining(reason = "the rows run over a tree of forked peers; the layout is the subject, not the value alone")
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6,7,8}.plus(1).group?hops=2([mod(3)=>sum()])     % [2=>15,0=>18,1=>11]",
-            "{1,2,3,4,5,6,7,8}.group?hops=2([mod(4)=>count()])           % [1=>2,2=>2,3=>2,0=>2]",
+            "{1,2,3,4,5,6,7,8}.plus(1).group?hop=2([mod(3)=>sum()])     % [2=>15,0=>18,1=>11]",
+            "{1,2,3,4,5,6,7,8}.group?hop=2([mod(4)=>count()])           % [1=>2,2=>2,3=>2,0=>2]",
     }, delimiter = '%')
     void testKeyedTreeOverTransport(final String source, final String expected) {
         final Code master = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source)).asCode();
@@ -151,15 +153,17 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
 
     /**
      * THE INTERIOR NODE: peer 1, handed a slave with budget left, plans it over its own dialed peers — its compiled
-     * code splits its part into one leaf ({@code hops=0}) per child, routed to peers 2 and 3, and recombines through
-     * {@code sum}. Asked of peer 1 itself, so it is that machine's compiler, roster and rule set that decide.
+     * code states its one remaining level on each part's FOLD ({@code sum?hop=0()}), routed to peers 2 and 3, and
+     * recombines through {@code sum}. Asked of peer 1 itself, so it is that machine's compiler, roster and rule set
+     * that decide.
      */
     @Test
     void testInteriorNodeReplans() {
         final String explain = cluster.transport(1)
-                .apply(ObjmtronSerializer.parse("start?hops=1({1,2,3,4,5,6,7,8}).plus(1).sum().explain()>>format")).toString();
+                .apply(ObjmtronSerializer.parse("start?hop=1({1,2,3,4,5,6,7,8}).plus(1).sum().explain()>>format")).toString();
         LOG.debug("interior node plan: %s", explain);
-        checkEquality(LOG, bool(true), bool(explain.contains("start?hops=0({1,3,5,7})") && explain.contains("start?hops=0({2,4,6,8})")), true);
+        checkEquality(LOG, bool(true), bool(explain.contains("start({1,3,5,7})") && explain.contains("start({2,4,6,8})")), true);
+        checkEquality(LOG, bool(true), bool(explain.contains("?hop=0")), true);
         checkEquality(LOG, bool(true), bool(explain.contains(":" + cluster.port(2) + ")") && explain.contains(":" + cluster.port(3) + ")")), true);
     }
 }

@@ -40,6 +40,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -214,28 +216,44 @@ public class catInstSet extends AbstractInstSet {
 
     /**
      * The realized placement of an emitted layout — the fan-out {@code select}'s routes
-     * ({@code virtual::[code=>eval(<uri>)]}), lifted to places, keyed by the shard's AT span. {@code noobj} when the
-     * emitter shipped nothing (the layout has no {@code select}).
+     * ({@code virtual::[code=>eval(<uri>)]}), lifted to their place DESIGNATORS and COUNTED, keyed by the shard's AT
+     * span: {@code [[span=><at]=>[local=>1,//ginger=>2,//booger=>1]]}. {@code noobj} when the emitter shipped nothing
+     * (the layout has no {@code select}).
+     * <p>
+     * THE DEMAND IS THE REALIZED LANE COUNT, NOT THE DECLARED BAND: one route is one lane and one share, so counting
+     * the routes that name a place answers how many shares that place actually ran — after the emitter's clamps
+     * ({@code k = min(Σ demands, seed)} and the hop arity), not what the plan asked for. A band {@code //ginger{2,5}}
+     * that could only fill three lanes records {@code //ginger=>3}. The rec is the weighted {@code ?place} spelling, so
+     * a realized {@code where} can be read back as a place set directly.
+     * <p>
+     * AN ADDRESSLESS ROUTE IS THE LOCAL PLACE ({@code eval()} with no {@code arg(0)}, the lane at distance zero): it
+     * ran part of the fold where the code already stands, so it is recorded as the {@code local} designator — the same
+     * designator {@code ?place} uses, and the honest answer even when this machine has no listening authority to name
+     * ({@link Places#self()} would answer {@code noobj} there, and dropping the lane would report a place set that ran
+     * only its shipped half).
      * <p>
      * MOVE LANDMINE: a {@code move} relocation emits a bare terminal {@code to(<target>)} — no {@code select} — so
      * this read-back would report no realized place for a moved program. When {@code move} ships, it needs its own
      * realized-placement read-back (recognize the terminal {@code to} route), or this must.
      */
     static Obj realizedWhere(final Code emitted) {
-        final List<Obj> places = emitted.insts().stream()
+        final Map<Obj, Long> lanes = new LinkedHashMap<>();
+        emitted.insts().stream()
                 .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
                 .findFirst()
-                .map(select -> select.arg(0).asLst().lstValue().stream()
-                        .map(route -> route.asRec().at(uri(CODE)).asInst().arg(0).uriValue().host())
-                        .filter(Objects::nonNull)
-                        .distinct()
-                        .map(host -> Places.place(uri("//" + host)))
-                        .filter(p -> !p.isNoObj())
-                        .toList())
-                .orElse(List.of());
-        if (places.isEmpty())
+                .ifPresent(select -> select.arg(0).asLst().lstValue().stream()
+                        .map(route -> route.asRec().at(uri(CODE)).asInst())
+                        // the addressless route is the LOCAL place; a shipped one is the `//host` its authority names
+                        .map(eval -> eval.args().isEmpty()
+                                ? uri(LOCAL)
+                                : uri("//" + eval.arg(0).uriValue().host()))
+                        .filter(designator -> !designator.isNoObj() && !designator.isFail())
+                        .forEach(designator -> lanes.merge(designator, 1L, Long::sum)));
+        if (lanes.isEmpty())
             return noobj();
-        return rec(rec(uri(SPAN), uri("at")), lst(places));
+        final Map<Obj, Obj> demands = new LinkedHashMap<>();
+        lanes.forEach((designator, count) -> demands.put(designator, jnt(count)));
+        return rec(rec(uri(SPAN), uri("at")), rec(demands));
     }
 
     /**

@@ -1650,26 +1650,26 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * Coefficient placement in a polynomial — the bracket list is the SLOT SIGNATURE, and where the
+     * Coefficient placement in a polynomial — the bracket list is the INDEX SIGNATURE, and where the
      * coefficient sits decides what it multiplies:
      *
      * <pre>
-     *   lst[int,int,int,int]::T   four slots, each an int
-     *   lst[int{4}]::T            ONE slot, whose value is itself an int{4}   (slot 0 holds four ints)
-     *   lst[{4}int]::T            the list is COMPOSED OF four ints           (four int slots)
-     *   lst[{4}int{4}]::T         FOUR slot, whose values are int{4}          (slots 0-3 hold four ints)
+     *   lst[int,int,int,int]::T   four indices, each an int
+     *   lst[int{4}]::T            ONE index, whose value is itself an int{4}   (index 0 holds four ints)
+     *   lst[{4}int]::T            the list is COMPOSED OF four ints            (four int indices)
+     *   lst[{4}int{4}]::T         FOUR indices, whose values are int{4}        (indices 0-3 hold four ints)
      * </pre>
      * <p>
      * The distinction is what lets one construct serve both as a generic (List&lt;Integer&gt;) and as a
-     * tuple, because position is significant and each slot carries its own type: lst[age,zipcode] is a
-     * two-slot signature, not a bag of two either-or values.
+     * tuple, because position is significant and each index carries its own type: lst[age,zipcode] is a
+     * two-index signature, not a bag of two either-or values.
      * <p>
      * Two things are pinned here because they came out differently than the sketch implies. The container
      * spelling lst[{4}int] does not PARSE — the leading brace inside the brackets is read as a
      * rec/multiplicity, and the parser fails at the '[' — that part awaits the feature and is
-     * disabled ({@code testListContainerCoefficientSpellingIsNotYetParsed}). And the slot signature is checked
-     * as CONTAINMENT rather than equality: fewer slots than the signature fails, but MORE pass, so a
-     * four-element list satisfies a two-slot signature.
+     * disabled ({@code testListContainerCoefficientSpellingIsNotYetParsed}). And the index signature is checked
+     * as CONTAINMENT rather than equality: fewer elements than the signature fails, but MORE pass, so a
+     * four-element list satisfies a two-index signature.
      */
     @ParameterizedTest
     @TestData(value = {
@@ -1677,14 +1677,14 @@ public class TypeTest extends AbstractMetatronTest {
             "zipcode -> str::T@zipcode"})
     @CsvSource(value = {
             // instance          % type                        % matches
-            // ---- the slot signature is exhaustive and ordered ----
+            // ---- the index signature is exhaustive and ordered ----
             "[1,2,3,4]           % lst[int,int,int,int]::T     % true",
             "[1,2,3]             % lst[int,int,int,int]::T     % false",
-            // ---- but MORE slots pass: the signature is a containment, not an equality ----
+            // ---- but MORE elements pass: the signature is a containment, not an equality ----
             "[1,2,3,4]           % lst[int,int]::T             % true",
-            // ---- the element coefficient: slot 0 must itself be an int{4} ----
+            // ---- the element coefficient: index 0 must itself hold an int{4} ----
             "[1,2,3,4]           % lst[int{4}]::T              % false",
-            // ---- a tuple is a simply typed list: position carries the slot type ----
+            // ---- a tuple is a simply typed list: each index carries its type ----
             "[29,'94103']        % lst[age,zipcode]::T         % true",
             "[29,'94103']        % lst[zipcode,age]::T         % false",
             "[29,94103]          % lst[age,zipcode]::T         % false"},
@@ -1723,18 +1723,20 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE REC POLY CONFERS SUPERTYPES. A rec's bracket names the TRAITS the rec implements, so {@code person[ninja]}
-     * is a person that implements {@code ninja} and is acceptable wherever {@code ninja::T} — one of its poly
-     * members — or {@code person::T} — its vid's base — is expected. A name the poly does not carry is not a
-     * supertype, and a two-member poly answers each of its members.
+     * A FIBERED REC IS ACCEPTED WHERE ITS BASE OR ONE OF ITS FIBERS IS. {@code person[ninja]} gives the fiber
+     * {@code role} the type {@code ninja}, so it is acceptable wherever {@code ninja::T} or {@code person::T} is
+     * expected, and a type no fiber has is not accepted. A bracket entry types a fiber, so an instance of a
+     * declaration that names no fiber ({@code drifter}), or that names more entries than its declaration has
+     * fibers, is an error.
      * <p>
-     * SCOPE: rec ONLY. The bracket of a non-rec poly type is a SLOT/PARAMETER list, never a trait list, so
-     * {@code lst[int]} is a list of ints (never an int), {@code object[int]} is an object built from an int (never
-     * an int), and their members confer no supertype. One level deep: a member's own poly members do not propagate.
+     * Only a fibered rec reads its bracket this way: {@code lst[int]} is a list of ints (never an int), and
+     * {@code object[int]} is an object built from an int (never an int).
      */
     @ParameterizedTest
     @TestData(value = {
-            "person -> rec::T[?[name=>?str::T,age=>?int::T]]@person",
+            "person -> rec[role]::T[?[name=>?str::T,age=>?int::T,role=>?rec::T]]@person",
+            "duo -> rec[role,craft]::T[?[role=>?rec::T,craft=>?rec::T]]@duo",
+            "drifter -> rec::T[?[name=>?str::T,age=>?int::T]]@drifter",
             "ninja -> rec::T@ninja",
             "skill -> rec::T@skill",
             "baker -> rec::T@baker",
@@ -1745,46 +1747,49 @@ public class TypeTest extends AbstractMetatronTest {
     })
     @CsvSource(value = {
             // instance                | expected       | matches
-            // ---- a rec poly member is a supertype of the instance ----
+            // ---- the type the bracket gives a fiber is accepted ----
             "person[ninja]            | ninja          | true",
-            // ---- ...and the vid's base stays a supertype (unchanged) ----
+            // ---- ...and so is the vid's base ----
             "person[ninja]            | person         | true",
-            // ---- a name the poly does not carry is not a supertype, whether declared or unknown ----
+            // ---- a type no fiber has is not accepted, whether declared or unknown ----
             "person[ninja]            | baker          | false",
             "person[ninja]            | guru           | false",
             "person[ninja]            | skill          | false",
-            // ---- a two-member poly answers either member ----
-            "person[ninja,skill]      | ninja          | true",
-            "person[ninja,skill]      | skill          | true",
-            "person[ninja,skill]      | person         | true",
-            "person[ninja,skill]      | baker          | false",
-            "person[ninja,skill]      | guru           | false",
-            // ---- SCOPE GUARD: a non-rec poly's bracket is a slot/parameter list, not a trait list ----
+            // ---- two fibers: either fiber's type is accepted ----
+            "duo[ninja,skill]         | ninja          | true",
+            "duo[ninja,skill]         | skill          | true",
+            "duo[ninja,skill]         | duo            | true",
+            "duo[ninja,skill]         | baker          | false",
+            "duo[ninja,skill]         | guru           | false",
+            // ---- a bracket entry types a fiber: drifter names none, and person names one ----
+            "drifter[ninja]           | ninja          | <ERROR>",
+            "person[ninja,skill]      | skill          | <ERROR>",
+            // ---- only a fibered rec: a lst's or an object's bracket is not a fiber ----
             "lst[int]                 | int            | false",
             "/m/lst[/m/int]           | int            | false",
             "object[int]              | int            | false",
             // ...and the same shape spelled structurally: gizmo's declaration tid is trinket, not rec
             "gizmo[int]               | int            | false",
     }, delimiter = '|')
-    public void testRecPolyConfersSupertypes(final String instance, final String expected, final boolean matches) {
+    public void testFiberedRecIsAcceptedWhereAFiberIs(final String instance, final String expected, final String matches) {
+        if (matches.trim().equals("<ERROR>")) {
+            checkCodeParseApply(LOG, instance.trim() + "::T", matches);
+            return;
+        }
         final Type instanceType = T(f(instance.trim()));
         final Type expectedType = T(f(expected.trim()));
-        assertEquals(matches, instanceType.test(expectedType),
-                "%s (vid=%s, tid=%s, supertype=%s) tested against %s (vid=%s, tid=%s) should be %s"
-                        .formatted(instanceType, instanceType.vid(), instanceType.tid(),
-                                Type.Helper.recPolySupertype(instanceType, expectedType),
-                                expectedType, expectedType.vid(), expectedType.tid(), matches));
+        assertEquals(Boolean.parseBoolean(matches.trim()), instanceType.test(expectedType),
+                "%s (vid=%s, tid=%s, fibers=%s) tested against %s (vid=%s, tid=%s) should be %s"
+                        .formatted(instanceType, instanceType.vid(), instanceType.tid(), instanceType.recFibers(),
+                                expectedType, expectedType.vid(), expectedType.tid(), matches.trim()));
     }
 
     /**
-     * A PREDICATED TRAIT IS A SUPERTYPE BY CONFORMANCE, NOT BY PREDICATE EQUALITY. {@code person[ninja]} is a
-     * {@code ninja} by name ({@link Type.Helper#recPolySupertype}), and a trait that declares a shape
-     * ({@code ninja::T[?[name=>str::T]]}) then asks the instance's DECLARATION to satisfy that shape, not to
-     * reproduce it: the declared slots ({@code name=>str::T, role=>rec::T}) conform to the trait's
-     * ({@code name=>str::T}) although the two predicate recs are not equal (the comparison that used to veto the
-     * acceptance the name walk just made). A trait whose slot type the declaration CONTRADICTS
-     * ({@code name=>int::T}) is not a supertype, however the poly names it — the conformance check is what makes
-     * "implements the trait" a claim rather than a spelling.
+     * A PREDICATED FIBER TYPE IS ASKED OF THE TYPE THE BRACKET GIVES THE FIBER. With no value at hand,
+     * {@code person[ninja]} answers for its {@code role} fiber with {@code ninja}, so it is acceptable where
+     * {@code ninja::T[?[name=>str::T]]} is expected because {@code ninja::T} is. The wrapper's own declaration has
+     * no say: {@code person[baker]} is a {@code baker} although person declares {@code name=>str::T} and baker
+     * asks {@code name=>int::T}.
      */
     @ParameterizedTest
     @TestData(value = {
@@ -1794,15 +1799,16 @@ public class TypeTest extends AbstractMetatronTest {
     })
     @CsvSource(value = {
             // instance            | expected   | matches
-            // ---- a predicated trait is satisfied by conformance, not by an equal predicate ----
+            // ---- the type the bracket gives the role fiber is asked ----
             "person[ninja]         | ninja      | true",
-            // ---- ...and the vid's base stays a supertype (unchanged) ----
+            // ---- ...and the vid's base is accepted too ----
             "person[ninja]         | person     | true",
-            // ---- ...while a trait the instance's declaration contradicts is not a supertype ----
-            "person[baker]         | baker      | false",
+            // ---- the wrapper's declaration (name=>str::T) does not veto the fiber's type ----
+            "person[baker]         | baker      | true",
+            // ---- a type no fiber has is not accepted ----
             "person[ninja]         | baker      | false",
     }, delimiter = '|')
-    public void testPredicatedRecPolyMemberIsASupertypeByConformance(final String instance, final String expected, final boolean matches) {
+    public void testPredicatedFiberTypeIsAskedOfTheBracket(final String instance, final String expected, final boolean matches) {
         final Type instanceType = T(f(instance.trim()));
         final Type expectedType = T(f(expected.trim()));
         assertEquals(matches, instanceType.test(expectedType),
@@ -1812,10 +1818,59 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE SAME CONFORMANCE AT THE VALUE LEVEL, on the same predicated traits. A value typed {@code person[ninja]}
-     * conforms to {@code ninja::T[?[name=>str::T]]} because the VALUE satisfies the trait's predicate
-     * ({@code typeCheck}'s predicate stack, which already did this before the type-level fix), and it fails a
-     * trait its value cannot satisfy — the value-level half of the same rule.
+     * THE WRAPPER'S DECLARATION NEVER VETOES A FIBER. A fibered type is acceptable where its own test passes or
+     * where its fiber's type does, and nothing compares the wrapper's declaration with the expected type's shape:
+     * <pre>
+     * ringmaster -> rec[role]::T[?[role=>rec::T]]@ringmaster          the wrapper declares only the fiber
+     * seer       -> rec[role]::T[?[name=>str::T, role=>rec::T]]@seer  the wrapper declares a name of its own
+     * ringmaster[ninja], seer[ninja]  are  ninjas                     ninja::T is a ninja
+     * seer[baker]                     is a baker                      baker::T is a baker, whatever seer declares
+     * </pre>
+     * The fiber's declared type ({@code holder}'s {@code role=>ninja::T}) is not asked either: the bracket gives
+     * the fiber its type.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "ringmaster -> rec[role]::T[?[role=>rec::T]]@ringmaster",
+            "ninja -> rec::T[?[name=>str::T]]@ninja",
+            "baker -> rec::T[?[name=>int::T]]@baker",
+            "seer -> rec[role]::T[?[name=>str::T, role=>rec::T]]@seer",
+            "holder -> rec[role]::T[?[role=>ninja::T]]@holder",
+            "spectre -> rec::T@spectre",
+    })
+    @CsvSource(value = {
+            // instance            | expected   | matches
+            // ---- the fiber's type is asked; the wrapper declares none of its shape ----
+            "ringmaster[ninja]     | ninja      | true",
+            // ---- ...and the vid's base is accepted too ----
+            "ringmaster[ninja]     | ringmaster | true",
+            // ---- the wrapper declares the same field and agrees: the same answer ----
+            "seer[ninja]           | ninja      | true",
+            // ---- the wrapper declares the same field and disagrees: still no veto ----
+            "seer[baker]           | baker      | true",
+            // ---- the bracket's type is asked, not the fiber's declared type ----
+            "holder[ninja]         | ninja      | true",
+            // ---- a type no fiber has is not accepted, whether declared or unknown ----
+            "ringmaster[ninja]     | baker      | false",
+            "ringmaster[ninja]     | guru       | false",
+            // ---- a predicate-free fiber type is asked the same way ----
+            "ringmaster[spectre]   | spectre    | true",
+            "ringmaster[spectre]   | ninja      | false",
+    }, delimiter = '|')
+    public void testWrapperDeclarationNeverVetoesAFiber(final String instance, final String expected, final boolean matches) {
+        final Type instanceType = T(f(instance.trim()));
+        final Type expectedType = T(f(expected.trim()));
+        assertEquals(matches, instanceType.test(expectedType),
+                "%s (vid=%s, tid=%s, predicate=%s) tested against %s (vid=%s, tid=%s, predicate=%s) should be %s"
+                        .formatted(instanceType, instanceType.vid(), instanceType.tid(), instanceType.predicate(),
+                                expectedType, expectedType.vid(), expectedType.tid(), expectedType.predicate(), matches));
+    }
+
+    /**
+     * THE SAME RULE AT THE VALUE LEVEL: a value is asked through the objects at its fibers. A value typed
+     * {@code person[baker]} is acceptable where {@code baker::T[?[name=>int::T]]} is expected when the object at its
+     * {@code role} fiber is a baker, whatever the wrapper's own {@code name} is, and is not when that object fails
+     * the baker's predicate.
      */
     @ParameterizedTest
     @TestData(value = {
@@ -1824,12 +1879,17 @@ public class TypeTest extends AbstractMetatronTest {
             "baker -> rec::T[?[name=>int::T]]@baker",
     })
     @CsvSource(value = {
-            // value                                                         | type        | matches
+            // value                                                          % type        % matches
+            // ---- the object at the role fiber is a ninja ----
             "person[ninja]::[name=>'marko',role=>ninja::[name=>'dark_assassin']]  % ninja::T   % true",
+            // ---- ...and the wrapper is a person ----
             "person[ninja]::[name=>'marko',role=>ninja::[name=>'dark_assassin']]  % person::T  % true",
-            "person[baker]::[name=>'marko',role=>baker::[name=>'crusty']]         % baker::T   % false",
+            // ---- the object at the fiber is a baker, whatever the wrapper's own name is ----
+            "person[baker]::[name=>'marko',role=>baker::[name=>7]]                % baker::T   % true",
+            // ---- the object at the fiber is not a baker: its name is a str ----
+            "person[baker]::[name=>'marko',role=>[name=>'crusty']]                % baker::T   % false",
     }, delimiter = '%')
-    public void testPredicatedRecPolyValueConformsToItsTrait(final String value, final String type, final boolean matches) {
+    public void testPredicatedFiberTypeIsAskedOfTheFiberValue(final String value, final String type, final boolean matches) {
         checkMatches(LOG, value, type, matches);
     }
 
@@ -1874,7 +1934,7 @@ public class TypeTest extends AbstractMetatronTest {
      * <p>
      * The container spelling {@code lst[{4}int]::T} ("the list is composed of four ints") was specified but never
      * built, so this asserts a future that does not exist: the expression parses today rather than being rejected.
-     * The seven slot-signature rows above are independent of it and still run — the assertion lived in that method
+     * The seven index-signature rows above are independent of it and still run — the assertion lived in that method
      * only because the two came out of the same sketch.
      */
     @Disabled("lst[{4}int]::T — the container coefficient spelling is specified but not implemented")
@@ -1886,15 +1946,15 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * Where the slot-signature check goes. Per-slot types are enforced — lst[str,int] takes ['marko',29]
-     * and rejects [12,29] — and the arity follows the OPEN WORLD assumption: a type mandates the slots it
-     * LISTS and says nothing at all about the slots it does not. lst[int,int] is therefore not "a list of
-     * two ints" but "a list whose slot 0 is an int and whose slot 1 is an int" — a longer value is not a
-     * violation, because the surplus slots are outside what the type speaks to, while a shorter one IS,
-     * because a slot the type requires has nothing in it.
+     * Where the index-signature check goes. Per-index types are enforced — lst[str,int] takes ['marko',29]
+     * and rejects [12,29] — and the arity follows the OPEN WORLD assumption: a type mandates the indices it
+     * LISTS and says nothing at all about the indices it does not. lst[int,int] is therefore not "a list of
+     * two ints" but "a list whose index 0 is an int and whose index 1 is an int" — a longer value is not a
+     * violation, because the surplus elements are outside what the type speaks to, while a shorter one IS,
+     * because an index the type requires has nothing at it.
      * <p>
-     * The RANGING forms range over the ELEMENT, not over the slot list. A coefficient inside a bracket is
-     * always the multiplicity of the value in that slot, checked with within(), so a plain value only
+     * The RANGING forms range over the ELEMENT, not over the index list. A coefficient inside a bracket is
+     * always the multiplicity of the value at that index, checked with within(), so a plain value only
      * qualifies when it falls in the range by itself: a lone 1 is an int{1}, which is out of {2,4} but
      * inside {*}. Supplying a multiplicity instead — see testTypeTestElementCoefficient — is what satisfies
      * the bounded form. No spelling here expresses "between 2 and 4 ints IN THE LIST", which is what
@@ -1903,15 +1963,15 @@ public class TypeTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // instance              % type                        % matches
-            // ---- per-slot types work ----
+            // ---- per-index types work ----
             "['marko',29]            % lst[str,int]::T             % true",
             "[12,29]                 % lst[str,int]::T             % false",
             "['marko','x']           % lst[str,int]::T             % false",
-            // ---- open world: the type mandates the slots it lists, and is silent about the rest ----
+            // ---- open world: the type mandates the indices it lists, and is silent about the rest ----
             "[1,2,3,4]               % lst[int,int]::T             % true",
             "[1,2,3]                 % lst[int,int,int,int]::T     % false",
-            // ---- the slot holds an ELEMENT COEFFICIENT, so a plain value is out of range: a lone 1 is
-            //      an int{1}, which is not within {2,4}. The slot wants a multiplicity, not a value. ----
+            // ---- the index holds an ELEMENT COEFFICIENT, so a plain value is out of range: a lone 1 is
+            //      an int{1}, which is not within {2,4}. The index wants a multiplicity, not a value. ----
             "[1,2,3]                 % lst[int{2,4}]::T            % false",
             "[1,2]                   % lst[int{2,4}]::T            % false",
             "[1,2,3,4]               % lst[int{2,4}]::T            % false",
@@ -1919,32 +1979,33 @@ public class TypeTest extends AbstractMetatronTest {
             "[1,2,3]                 % lst[int{*}]::T              % true",
             "[1,2,3]                 % lst[int{+}]::T              % true"},
             delimiter = '%')
-    public void testTypeTestSlotSignature(final String instance, final String type, final boolean matches) {
+    public void testTypeTestIndexSignature(final String instance, final String type, final boolean matches) {
         checkMatches(LOG, instance, type, matches);
     }
 
     /**
-     * The open-world arity read as CONSTRUCTION rather than test. A type requires a value for every slot it
-     * lists, so a signature one slot wider than the list is unsatisfiable; a list one value wider than the
+     * The open-world arity read as CONSTRUCTION rather than test. A type requires a value at every index it
+     * lists, so a signature one index wider than the list is unsatisfiable; a list one value wider than the
      * signature is fine, because the type does not speak to the surplus. Rejections come back as fail::T
      * because a typed literal that violates its type is converted rather than thrown.
      */
     @Test
-    public void testTypeTestSlotArity() {
+    public void testTypeTestIndexArity() {
         final Obj exact = ObjmtronSerializer.parse("lst[int,int,int,int]::[1,2,3,4]");
         LOG.warn("lst[int,int,int,int]::[1,2,3,4]     => %s", exact);
-        assertTrue(exact.stream().noneMatch(Obj::isFail), "four values satisfy four slots: " + exact);
+        assertTrue(exact.stream().noneMatch(Obj::isFail), "four values fill four indices: " + exact);
 
-        final Obj fifthSlot = ObjmtronSerializer.parse("lst[int,int,int,int,int]::[1,2,3,4]");
-        LOG.warn("lst[int,int,int,int,int]::[1,2,3,4] => %s", fifthSlot);
-        assertTrue(fifthSlot.stream().anyMatch(Obj::isFail),
-                "the fifth slot has no value to fill it: " + fifthSlot);
+        final Obj fifthIndex = ObjmtronSerializer.parse("lst[int,int,int,int,int]::[1,2,3,4]");
+        LOG.warn("lst[int,int,int,int,int]::[1,2,3,4] => %s", fifthIndex);
+        assertTrue(fifthIndex.stream().anyMatch(Obj::isFail),
+                "the fifth index has no value at it: " + fifthIndex);
 
         final Obj fifthValue = ObjmtronSerializer.parse("lst[int,int]::[1,2,3,4]");
         LOG.warn("lst[int,int]::[1,2,3,4]             => %s", fifthValue);
         assertTrue(fifthValue.stream().noneMatch(Obj::isFail),
-                "surplus slots are outside what the type speaks to, so they are permitted: " + fifthValue);
+                "surplus elements are outside what the type speaks to, so they are permitted: " + fifthValue);
     }
+
 
     /**
      * The type's OWN coefficient. Three coefficient positions share one {..} syntax, which is most of why
@@ -1952,7 +2013,7 @@ public class TypeTest extends AbstractMetatronTest {
      * <pre>
      *   int{2,4}          the BASE type's coefficient range  — 2 to 4 ints
      *   int{2,4}::T{5}    the TYPE's own coefficient        — five of that type
-     *   lst[int{4}]       the SLOT's element coefficient    — slot 0 holds an int{4}
+     *   lst[int{4}]       the INDEX's element coefficient   — index 0 holds an int{4}
      * </pre>
      * The first is implemented and tested; this pins what the second one actually carries.
      */
@@ -1979,7 +2040,7 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * CLOSING a type, the counterpart to the open-world arity. A slot signature constrains a typed prefix
+     * CLOSING a type, the counterpart to the open-world arity. An index signature constrains a typed prefix
      * and says nothing about the tail; a predicate on the count closes it:
      *
      * <pre>
@@ -2052,8 +2113,8 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * The element coefficient satisfied properly. lst[int{2,4}] does not range the number of slots — it
-     * requires each slot to HOLD a multiplicity in 2..4. So the slot is filled with a multiplicity rather
+     * The element coefficient satisfied properly. lst[int{2,4}] does not range the number of indices — it
+     * requires each index to HOLD a multiplicity in 2..4. So the index is filled with a multiplicity rather
      * than a value, and then the bounded range is satisfied: {3}2 is three copies of 2, an int{3}, which is
      * within {2,4}. A plain 2 is an int{1} and is out of range.
      */
@@ -2062,14 +2123,14 @@ public class TypeTest extends AbstractMetatronTest {
         final Obj inRange = ObjmtronSerializer.parse("lst[int{2,4}]::[{3}2]");
         LOG.warn("lst[int{2,4}]::[{3}2] => %s", inRange);
         assertTrue(inRange.stream().noneMatch(Obj::isFail),
-                "a slot holding an int{3} is within {2,4}: " + inRange);
+                "an index holding an int{3} is within {2,4}: " + inRange);
 
         final Obj outOfRange = ObjmtronSerializer.parse("lst[int{2,4}]::[2]");
         LOG.warn("lst[int{2,4}]::[2]   => %s", outOfRange);
         assertTrue(outOfRange.stream().anyMatch(Obj::isFail),
-                "a slot holding a plain 2 is an int{1}, out of {2,4}: " + outOfRange);
+                "an index holding a plain 2 is an int{1}, out of {2,4}: " + outOfRange);
 
-        // and the multiplicity on its own, to show what the slot is being given
+        // and the multiplicity on its own, to show what the index is being given
         final Obj spread = ObjmtronSerializer.parse("{3}2");
         LOG.warn("{3}2                 => %s [c=%s]", spread, spread.c());
     }

@@ -87,10 +87,22 @@ public @interface TestData {
      */
     class TestDataExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
 
+        private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(TestData.class);
+        private static final String LOADED = "loaded";
+
         /**
-         * Tracks whether test data was loaded for the current test.
+         * Whether a test method's data is loaded is the method's own state: JUnit shares one extension instance across
+         * every method of a class, so the flag lives in the method's store. A {@code @ParameterizedTest} row runs in
+         * an invocation context whose parent is the method's context; a plain {@code @Test} is its own method context.
+         * JUnit discards the store when the method's rows are done, so a method inherited by another class seeds that
+         * class's VM again.
          */
-        protected boolean testDataLoaded = false;
+        private static ExtensionContext.Store methodStore(final ExtensionContext context) {
+            return context.getParent()
+                    .filter(parent -> parent.getTestMethod().equals(context.getTestMethod()))
+                    .orElse(context)
+                    .getStore(NAMESPACE);
+        }
 
         /**
          * Parses and evaluates the test data strings before test execution.
@@ -102,7 +114,8 @@ public @interface TestData {
         public void beforeTestExecution(final @NonNull ExtensionContext context) {
             try {
                 final TestData annotation = context.getRequiredTestMethod().getAnnotation(TestData.class);
-                if (annotation != null && (!this.testDataLoaded || !annotation.oneTime())) {
+                final ExtensionContext.Store store = methodStore(context);
+                if (annotation != null && (null == store.get(LOADED) || !annotation.oneTime())) {
                     // Load from file if source is specified
                     if (!annotation.source().isEmpty()) {
                         System.out.println("==> TestData: loading test data from file: " + annotation.source());
@@ -182,7 +195,7 @@ public @interface TestData {
                                 tempFile.delete();
                             }
                         }
-                        this.testDataLoaded = true;
+                        store.put(LOADED, true);
                     }
 
                     // Also load inline values (with $$ substitution for AbstractSpaceTest)
@@ -190,7 +203,7 @@ public @interface TestData {
                     final Object testInstance = context.getRequiredTestInstance();
                     Arrays.stream(annotation.value())
                             .filter(value -> !value.trim().isEmpty())
-                            .peek(v -> this.testDataLoaded = true)
+                            .peek(v -> store.put(LOADED, true))
                             .forEach(v -> {
                                 final String made = testInstance instanceof studio.phaseshift.metatron.isa.AbstractSpaceTest
                                         ? ((studio.phaseshift.metatron.isa.AbstractSpaceTest) testInstance).make(v, testMethod)
@@ -206,14 +219,14 @@ public @interface TestData {
         }
 
         /**
-         * Clears the test data from the stack after test execution if test data was loaded and the annotation specifies one-time loading.
+         * Clears the test data from the stack after test execution if this method's data was loaded and the annotation specifies one-time loading.
          *
          * @param context the current extension context; never {@code null}
          */
         @Override
         public void afterTestExecution(final ExtensionContext context) {
-            if (context.getRequiredTestMethod().getAnnotation(TestData.class) != null &&
-                    context.getRequiredTestMethod().getAnnotation(TestData.class).oneTime() && this.testDataLoaded) {
+            final TestData annotation = context.getRequiredTestMethod().getAnnotation(TestData.class);
+            if (null != annotation && annotation.oneTime() && null != methodStore(context).get(LOADED)) {
                 Memory.argStack().clear();
                 LOG.debug("clearing %s test data from the stack", context.getRequiredTestMethod().getName());
             }

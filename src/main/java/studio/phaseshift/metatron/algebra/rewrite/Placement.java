@@ -40,33 +40,50 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Placement — a shape plus the {@link Span spans} assembled onto it. Each placement contributes one chain to the
- * emitted layout and a {@code to(...)} that routes its result: {@code [chain, chain...] == [to(), to(a), ...]}.
- * The shape is where the interesting variation lives, not a {@code master}/{@code slave} flag:
+ * Placement — <em>the distribution decision</em>: where a cut's shares go, how deep the application tree may run, and
+ * what counts as one share. Three axes, one decision:
  *
  * <ul>
- *   <li>{@link #local()} — stay home; the master gathers the partials ({@code merge()}, the barrier near-ring
- *       {@code F_b}) and re-applies the {@code F_r} reducer through its combiner.</li>
- *   <li>{@link #peers()} — the live roster, one {@code to(peer)} per peer (the fan-out the seed bulk factors over).</li>
- *   <li>{@link #peer(fURI)} — ship to one peer ({@code to(ws://...)}).</li>
- *   <li>{@link #space(fURI)} — a durable result ({@code to(space://...)}).</li>
- *   <li>{@link #tree(int)} — recursive tree-sharding with a hop budget.</li>
+ *   <li>{@link #place()} — a {@link PlaceSet}: the designators named and the demand each carries (§2);</li>
+ *   <li>{@link #hopAxis()} — a {@link Hop}: the tree's height and its arity (§3);</li>
+ *   <li>{@link #split()} — a {@link Partition}: the partition function and the part count (§4).</li>
  * </ul>
  *
- * <p>A Placement is a {@code rec} — {@code [shape => uri(shape), target => uri(address)?, hops => int?,
- * span => lst(spanRecs), inst => lst(uri)?]}. {@code shape} is the topology token, {@code target} the concrete
- * peer/space address, {@code hops} the tree budget when present, and {@code inst} the instructions the target must
- * serve (the key mirrors a client's {@code inst}). The shape carries its own {@link #obligations()} (§3) — the laws a
- * cut shipped to it and re-applied at home must declare — and its own {@link #inst()} — what its target must serve.
- * Every accessor reads {@code this.at(key)}; there are no Java fields.
+ * <p>Each placement contributes one chain to the emitted layout and a {@code to(...)} that routes its result:
+ * {@code [chain, chain...] == [to(), to(a), ...]}. The rec is
+ * {@code [place => (designator | lst | rec), hop => {arity}height, split => {parts}kind, span => lst(spanRecs),
+ * inst => lst(uri)?]} — a hop whose arity has no coefficient spelling ({@code 0}, {@code 1}) is the pair
+ * {@code [height, arity]}, and a split at its default count is the bare kind.
+ *
+ * <p><b>The topology enum is a read-compat projection.</b> {@link Shape} was three decisions in one enum; it survives
+ * for one cycle as the <em>recorded</em> spelling of the same decision — {@link #shape()} projects it from the axes for
+ * every member the axes can reproduce, and {@link #target()} and {@link #hop()} are read off the place set and the hop
+ * axis. A rec that still states the enum (every plan in the tree today) is migrated into the axes on the way in, by
+ * {@link #of(Rec)} and the <em>one</em> table {@link #legacy}, so a reader never branches on which spelling it got.
+ *
+ * <p><b>The obligations are derived, not declared</b> ({@link #obligations()}): a decision whose shares are
+ * <em>regrouped out of order</em> must declare {@code monoidic} (partials regroup) and — unless the merge is
+ * sequential — {@code commutative} (order-free). A keyed partition folds per bucket; a one-child hop is sequential; a
+ * single home place regroups nothing. The clause is {@link PlaceSet#regroups()}, not "does the set leave home": one
+ * home lane is the local fold, but several home lanes ({@code [local{4}]}) are concurrent partials gathered after the
+ * fact. The enum's declared sets are the refactor's witness ({@code ObligationsTest}), with one recorded exception:
+ * {@link Shape#SPACE}, a <em>landing</em> rather than a fan-out, which the axes do not encode yet.
+ *
+ * <p>{@code local} means two things and they stay apart: the origin's <em>tail</em> decision ({@code local} as the
+ * whole place set, spans AT/POST — {@code merge().<combiner>.<tail>} runs at home) regroups nothing, so it demands
+ * nothing; {@code local} as <em>one designator of a fan-out</em> ({@code [local, peer]}) is the master taking a share,
+ * and the decision still ships. {@link PlaceSet#regroups()} is the predicate that separates them, and
+ * {@link PlanBuilder#where} refuses to bind a regrouping place set to a placement with no seed span — the tail can
+ * never silently become a lane.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class Placement extends MRec {
 
     /**
-     * The topology of a relocation decision — what {@code target} named before the shape coordinate landed. Each
-     * shape declares the laws it demands of a cut shipped to it (§3); a shape with none demands nothing.
+     * The recorded topology of a relocation decision — the enum the axes replace, kept as the read-compat spelling for
+     * one cycle. Each member's declared laws are the obligations the <em>derivation</em> must reproduce
+     * ({@link #obligations()} derives them; {@code ObligationsTest} is the witness).
      */
     public enum Shape {
         /** stay home — no regrouping, no reordering, no duplication */
@@ -134,6 +151,12 @@ public class Placement extends MRec {
         }
     }
 
+    /**
+     * The three axes of one decision — what the shape→axes table answers, and what the builder writes.
+     */
+    private record Axes(PlaceSet place, Hop hop, Partition split) {
+    }
+
     public Placement(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
@@ -172,8 +195,8 @@ public class Placement extends MRec {
         return of(Shape.SPACE, address, 0, spans);
     }
 
-    public static Placement tree(final int hops, final Span... spans) {
-        return of(Shape.TREE, null, hops, spans);
+    public static Placement tree(final int hop, final Span... spans) {
+        return of(Shape.TREE, null, hop, spans);
     }
 
     /**
@@ -183,18 +206,51 @@ public class Placement extends MRec {
         return of(Shape.NONE, null, 0, spans);
     }
 
-    private static Placement of(final Shape shape, final fURI address, final int hops, final Span... spans) {
+    private static Placement of(final Shape shape, final fURI address, final int hop, final Span... spans) {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();
         jvm.put(uri(SHAPE), uri(shape.name().toLowerCase()));
         if (null != address)
             jvm.put(uri(TARGET), uri(address));
-        if (0 != hops)
-            jvm.put(uri(HOPS), jnt(hops));
+        if (0 != hop)
+            jvm.put(uri(HOP), jnt(hop));
         jvm.put(uri(SPAN), lst(Arrays.stream(spans).map(s -> (Obj) s).toList()));
         // what the target must serve, written into the rec so the plan says it: the shape's own requirement
         if (!shape.inst().isEmpty())
             jvm.put(uri(INST), lst(shape.inst().stream().map(tid -> (Obj) uri(tid)).toList()));
         return new Placement(jvm, REC_TID, null);
+    }
+
+    /**
+     * A decision stated in the axes — what {@link PlanBuilder#place}, {@link PlanBuilder#hop} and
+     * {@link PlanBuilder#split} bind to a placement's spans, and the ONLY encoding the plans write now (C9). The
+     * derived enum token and the address are NOT written: the shape is a consequence of the axes
+     * ({@link #shapeOf}) and the target is the place set's sole address ({@link #target}), so a rec that stated
+     * them too could contradict itself. The read side still accepts the legacy encoding for one cycle
+     * ({@link #of(Rec)}), and {@link #shape()} reads a recorded token only where the projection coarsens.
+     */
+    public static Placement of(final PlaceSet place, final Hop hop, final Partition split, final Span... spans) {
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>();
+        jvm.put(uri(PLACE), place.toObj());
+        jvm.put(uri(HOP), hop.toObj());
+        jvm.put(uri(SPLIT), split.toObj());
+        jvm.put(uri(SPAN), lst(Arrays.stream(spans).map(s -> (Obj) s).toList()));
+        // what the target must serve is still read off the projected shape, and written, so the plan says it
+        final Shape shape = shapeOf(place, hop, split);
+        if (!shape.inst().isEmpty())
+            jvm.put(uri(INST), lst(shape.inst().stream().map(tid -> (Obj) uri(tid)).toList()));
+        return new Placement(jvm, REC_TID, null);
+    }
+
+    /**
+     * This placement's decision replaced by {@code place}/{@code hop}/{@code split}, keeping its spans and whatever
+     * {@code inst} it declared — what a builder binds pending axes to.
+     */
+    public Placement axes(final PlaceSet place, final Hop hop, final Partition split) {
+        final Placement rebuilt = of(place, hop, split, this.spans().toArray(Span[]::new));
+        final Obj declared = this.at(INST);
+        return declared.isLst()
+                ? rebuilt.inst(declared.asLst().elements().filter(Obj::isUri).map(Obj::uriValue).toArray(fURI[]::new))
+                : rebuilt;
     }
 
     /**
@@ -224,33 +280,195 @@ public class Placement extends MRec {
     }
 
     /**
-     * The topology token — {@code local/peer/peers/space/tree/shuffle/none}.
+     * THE ONE TABLE — the recorded shape to the axes it stands for (§1 of the design: the enum <em>is</em> three
+     * decisions). This is the whole migration, read in both directions: {@link #of(Rec)} writes these axes over a rec
+     * that stated only the enum, and {@link #shape()} inverts them for a rec that states only the axes. Read it as the
+     * design's own table:
+     *
+     * <ul>
+     *   <li>{@code local} — the home place, no depth;</li>
+     *   <li>{@code none} — the empty place set (nowhere), no depth;</li>
+     *   <li>{@code peer}/{@code star}/{@code space} — one named address at no stated depth; the peer and the star are
+     *       the same decision here (what separates them is the cut, which a placement does not hold), so the axes
+     *       answer one of them and a recorded token keeps the other — see {@link #shape()};</li>
+     *   <li>{@code chain} — one named address on a one-child hop, which is the design's {@code ?hop=n{1}}: a
+     *       sequential forward, so the merge preserves order and the decision demands {@code monoidic} alone;</li>
+     *   <li>{@code peers} — the dialed set at no stated depth, the depth-1 fan-out being the tree's radius one;</li>
+     *   <li>{@code tree} — the dialed set at the budget the rec stated;</li>
+     *   <li>{@code shuffle} — the dialed set, one level, keyed.</li>
+     * </ul>
+     *
+     * <p>Every row is exact for the <em>obligations</em> except {@code space}, whose declared set stands because the
+     * axes cannot say "landing" (the recorded exception, {@link #obligations()}). The <em>shape</em> projection is
+     * exact for every row but the peer/star collapse ({@link #shapeOf}), which is why a rec that records the enum keeps
+     * answering it.
+     */
+    private static Axes legacy(final Shape shape, final fURI address, final int hop) {
+        final PlaceSet places = null == address ? PlaceSet.peer() : PlaceSet.of(address);
+        return switch (shape) {
+            case LOCAL -> new Axes(PlaceSet.local(), Hop.point(), Partition.stream());
+            case NONE -> new Axes(PlaceSet.none(), Hop.point(), Partition.stream());
+            case PEER -> new Axes(places, Hop.point(), Partition.stream());
+            case PEERS -> new Axes(PlaceSet.peer(), Hop.point(), Partition.stream());
+            case SPACE -> new Axes(places, Hop.point(), Partition.stream());
+            case TREE -> new Axes(PlaceSet.peer(), Hop.tree(hop), Partition.stream());
+            case SHUFFLE -> new Axes(PlaceSet.peer(), Hop.tree(1), Partition.key());
+            case CHAIN -> new Axes(places, Hop.chain(hop), Partition.stream());
+            case STAR -> new Axes(places, Hop.point(), Partition.stream());
+        };
+    }
+
+    /**
+     * The inverse of {@link #legacy} — the recorded enum a decision's axes stand for, which is what {@link #shape()}
+     * projects for a rec written in the axes alone. Exact for every member the table inverts, with two coarsenings
+     * that are the axes' own richness and are named rather than forced:
+     *
+     * <ul>
+     *   <li>a single named address at no depth is both the {@code peer} (a one-slave shard) and the {@code star} (a
+     *       move fan-out) — what separates them is the cut, which a placement does not hold — so the projection answers
+     *       {@code peer};</li>
+     *   <li>a landing ({@code space}) is not a fan-out at all and has no axis spelling yet (the design defers it), so
+     *       it projects as the address it names; the recorded token keeps it.</li>
+     * </ul>
+     *
+     * <p>A named set of several addresses has no enum member at all — the axes are strictly richer there — so it is
+     * projected as the fan-out of the same place set.
+     */
+    private static Shape shapeOf(final PlaceSet place, final Hop hop, final Partition split) {
+        if (place.isEmpty())
+            return Shape.NONE;
+        if (!place.regroups())
+            return Shape.LOCAL;
+        if (Partition.Kind.KEY == split.kind())
+            return Shape.SHUFFLE;
+        if (hop.sequential())
+            return Shape.CHAIN;
+        final boolean dialed = place.designators().stream()
+                .anyMatch(designator -> PlaceSet.Form.PEER == designator.form() || PlaceSet.Form.ANY == designator.form());
+        if (dialed)
+            return hop.isPoint() ? Shape.PEERS : Shape.TREE;
+        final boolean named = null != place.soleAddress();
+        if (named)
+            return hop.isPoint() ? Shape.PEER : Shape.STAR;
+        return hop.isPoint() ? Shape.PEERS : Shape.TREE;
+    }
+
+    /**
+     * The place axis — where the decision's shares may go. Read from the {@code place} key when the rec states one;
+     * otherwise from the recorded enum, through the one table ({@link #legacy}).
+     */
+    public PlaceSet place() {
+        final Obj place = this.at(PLACE);
+        return place.isNoObj()
+                ? legacy(this.recordedShape(), this.recordedTarget(), this.recordedHop()).place()
+                : PlaceSet.of(place);
+    }
+
+    /**
+     * The depth axis — the application tree's height and arity. Read from the {@code hop} key when the rec states one
+     * (a counted int: the value is the height, the coefficient the arity); otherwise from the recorded enum.
+     */
+    public Hop hopAxis() {
+        final Obj hop = this.at(HOP);
+        return this.speaksAxes() && !hop.isNoObj()
+                ? Hop.of(hop)
+                : legacy(this.recordedShape(), this.recordedTarget(), this.recordedHop()).hop();
+    }
+
+    /**
+     * The partition axis — what counts as one share. Read from the {@code split} key when the rec states one (a
+     * counted uri: the name is the kind, the coefficient the part count); otherwise from the recorded enum.
+     */
+    public Partition split() {
+        final Obj split = this.at(SPLIT);
+        return this.speaksAxes() && !split.isNoObj()
+                ? Partition.of(split)
+                : legacy(this.recordedShape(), this.recordedTarget(), this.recordedHop()).split();
+    }
+
+    /**
+     * The members the axes COARSEN — where a placement cannot name what a rec recorded: one named address at no depth
+     * is the {@code peer} (a one-slave shard), the {@code star} (a move fan-out) or a {@code space} (a landing), and
+     * what separates them is the cut, which a placement does not hold.
+     */
+    private static final Set<Shape> COARSENED = Set.of(Shape.PEER, Shape.STAR, Shape.SPACE);
+
+    /**
+     * The recorded topology token — the read-compat spelling of the decision, and all that is left of the enum.
+     * <b>The axes have precedence:</b> the decision is projected through {@link #shapeOf}, and the recorded token
+     * answers only where the projection coarsens to {@code peer} and the token is one of the members the axes cannot
+     * tell apart ({@link #COARSENED}). So a rec stating both can never contradict itself — the case the old
+     * token-first order allowed, {@code shape()==TREE} with {@code obligations()=={}}, is unreachable — while every
+     * legacy member still answers its recorded token. {@code plan::T} keeps requiring that token for one cycle (C9
+     * drops it).
      */
     public Shape shape() {
-        return Shape.valueOf(this.at(SHAPE).uriValue().name().toUpperCase());
+        final PlaceSet place = this.place();
+        final Hop hop = this.hopAxis();
+        final Shape projected = shapeOf(place, hop, this.split());
+        final Obj recorded = this.at(SHAPE);
+        if (recorded.isNoObj())
+            return projected;
+        final Shape token = Shape.valueOf(recorded.uriValue().name().toUpperCase());
+        return Shape.PEER == projected && COARSENED.contains(token) ? token : projected;
     }
 
     /**
-     * The concrete peer/space address, or null for the addressless shapes ({@code local/peers/tree}).
+     * The concrete peer/space address, or null when the decision names no single place (the dialed set, the wildcard,
+     * the home place, several places). Read off the place set: one explicit address is the target.
      */
     public fURI target() {
-        final Obj target = this.at(TARGET);
-        return target.isNoObj() ? null : target.uriValue();
+        return this.place().soleAddress();
     }
 
     /**
-     * The laws this placement's shape demands — the forward traversal (§3), read off the shape.
+     * The laws this placement's decision demands — the forward traversal (§3), DERIVED from the axes (§1 of the
+     * plan): a cut re-applied behind an off-machine recombine demands {@code monoidic} (partials regroup) and, unless
+     * the merge is sequential, {@code commutative} (order-free); a keyed partition folds per bucket, so
+     * {@code monoidic} alone; a decision whose shares are never regrouped (one home place, the empty set) demands
+     * nothing.
      */
     public Set<Law> obligations() {
-        return this.shape().obligations();
+        // THE ONE RECORDED EXCEPTION: a landing is not a fan-out. A space write ships a result to a durable store and
+        // nothing comes back to recombine, so the cut is never re-applied off-machine — but the axes cannot say
+        // "landing" (the design defers SPACE past them), so its recorded declared set stands. It is inert: no plan in
+        // the tree carries a space placement.
+        if (Shape.SPACE == this.shape())
+            return Shape.SPACE.obligations();
+        return obligations(this.place(), this.hopAxis(), this.split());
     }
 
     /**
-     * The tree-sharding hop budget, or 0 for the non-tree shapes.
+     * The obligations rule itself, read straight off the axes — the derivation the enum is proved against.
      */
-    public int hops() {
-        final Obj hops = this.at(HOPS);
-        return hops.isNoObj() ? 0 : hops.asInt().intValue().intValue();
+    public static Set<Law> obligations(final PlaceSet place, final Hop hop, final Partition split) {
+        // THE CLAUSE IS "IS ANYTHING REGROUPED OUT OF ORDER?", not "does the set leave home": one home lane is the
+        // local fold, but four home lanes are four concurrent partials gathered after the fact, and a stream split
+        // permutes them — so k > 1 demands the off-machine merge's laws exactly as a fan-out does (`[local{4}]`, the
+        // design's peerless-lanes case). Only a set that neither leaves home nor asks for a second lane demands nothing.
+        if (!place.regroups())
+            return Set.of();
+        if (Partition.Kind.KEY == split.kind())
+            return Set.of(Law.monoidic);
+        if (hop.sequential())
+            return Set.of(Law.monoidic);
+        return Set.of(Law.monoidic, Law.commutative);
+    }
+
+    /**
+     * The pre-singular spelling of the {@link studio.phaseshift.metatron.Tokens#HOP hop} key — a read-only alias for
+     * one cycle: this class migrates it on the way in ({@link #of(Rec)}) and never writes it, and
+     * {@link PlanInterpreter#hop} reads it off a chain.
+     */
+    static final String HOP_ALIAS = "hops";
+
+    /**
+     * The tree-sharding hop budget, or 0 for a decision that states no depth — the pre-axes int accessor, now the
+     * height of the hop axis. The emitter reads the whole axis ({@link PlanInterpreter#hopAxis}) and this accessor
+     * answers where only the height is needed (whether a fold is planned at all).
+     */
+    public int hop() {
+        return this.hopAxis().height();
     }
 
     public List<Span> spans() {
@@ -259,8 +477,33 @@ public class Placement extends MRec {
     }
 
     /**
-     * Reconstruct a Placement from a raw {@code rec} — the read-side of the same {@code shape/target/hops/span}
-     * encoding, migrating the old {@code target/url} keys for one cycle.
+     * Whether the rec SPEAKS THE AXES — it states a {@code place}, which is exactly what {@link #migrate} writes, and
+     * what a plan written in the axes states. Until it does, a {@code hop} key is the pre-axes budget of the recorded
+     * enum's row (a bare int whose arity is unstated, not one child), so the table — not the key — is the answer.
+     */
+    private boolean speaksAxes() {
+        return !this.at(PLACE).isNoObj();
+    }
+
+    private Shape recordedShape() {
+        return Shape.valueOf(this.at(SHAPE).uriValue().name().toUpperCase());
+    }
+
+    private fURI recordedTarget() {
+        final Obj target = this.at(TARGET);
+        return target.isNoObj() ? null : target.uriValue();
+    }
+
+    private int recordedHop() {
+        final Obj hop = this.at(HOP);
+        return hop.isNoObj() ? 0 : hop.asInt().intValue().intValue();
+    }
+
+    /**
+     * Reconstruct a Placement from a raw {@code rec} — the read-side of the same encoding, and THE migration point:
+     * the old {@code target/url} keys and the pre-singular {@code hops} key are folded in, and then a rec that states
+     * only the recorded enum is rewritten into the axes by the one table ({@link #legacy}). The legacy keys are kept —
+     * for one cycle they are the read-compat spelling a plan may still be written in.
      */
     public static Placement of(final Rec rec) {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>(rec.jvm());
@@ -269,6 +512,32 @@ public class Placement extends MRec {
             jvm.put(uri(SHAPE), jvm.remove(uri(TARGET)));
         if (jvm.containsKey(uri(URL)) && !jvm.containsKey(uri(TARGET)))
             jvm.put(uri(TARGET), jvm.remove(uri(URL)));
+        // compat: the pre-singular hop budget
+        if (jvm.containsKey(uri(HOP_ALIAS)) && !jvm.containsKey(uri(HOP)))
+            jvm.put(uri(HOP), jvm.remove(uri(HOP_ALIAS)));
+        migrate(jvm);
         return new Placement(jvm, rec.tid(), rec.vid());
+    }
+
+    /**
+     * THE MIGRATION — a rec that states the recorded enum and no axes is rewritten into the axes by the one table
+     * ({@link #legacy}). A rec that already states a {@code place} speaks the axes and is left alone; so is a rec with
+     * no recorded decision (the spans alone).
+     */
+    private static void migrate(final Map<Obj, Obj> jvm) {
+        if (jvm.containsKey(uri(PLACE)))
+            return;
+        final Obj recorded = jvm.get(uri(SHAPE));
+        if (null == recorded || !recorded.isUri())
+            return;
+        final Shape shape = Shape.valueOf(recorded.uriValue().name().toUpperCase());
+        final Obj address = jvm.get(uri(TARGET));
+        final Obj hop = jvm.get(uri(HOP));
+        final Axes axes = legacy(shape,
+                null == address || !address.isUri() ? null : address.uriValue(),
+                null == hop || !hop.isInt() ? 0 : hop.asInt().intValue().intValue());
+        jvm.put(uri(PLACE), axes.place().toObj());
+        jvm.put(uri(HOP), axes.hop().toObj());
+        jvm.put(uri(SPLIT), axes.split().toObj());
     }
 }

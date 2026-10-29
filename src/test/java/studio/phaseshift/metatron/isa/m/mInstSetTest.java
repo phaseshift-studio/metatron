@@ -1097,6 +1097,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{a,b,c}.dedup()                           % {a,b,c}",
             "{a,a,a,b,c,c}.dedup()                     % {a,b,c}",
             "{1,<1>,'1'}.dedup()                       % {1,<1>,'1'}",
+            // an objs whose members share no path at all: the fold of its members' tids factors into a branch, so
+            // the count has to ride on that union (MObjs.tid) or the objs can not satisfy the type it derives from
+            "{[a,b],1,<c>}.dedup()                     % {[a,b],1,<c>}",
             //"{1,2,3}.dedup(map?int<=int(0))            % 0",
             "{[a=>1,b=>2],[a=>1,b=>3]}.dedup()         % {[a=>1,b=>2],[a=>1,b=>3]}",
             //"{[a=>1,b=>2],[a=>1,b=>3]}.dedup(>>a)      % {[a=>1,b=>2]}",

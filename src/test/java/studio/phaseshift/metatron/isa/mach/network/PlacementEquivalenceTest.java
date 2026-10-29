@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.network;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -33,6 +34,9 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -81,5 +85,26 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
                 DistributedSweep.layout(compiled).ops(), "the master recombines through the combiner: " + compiled);
         checkEquality(LOG, jnt(expected),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
+    }
+
+    /**
+     * THE ALIAS IS STRIPPED TOO — a budget stated with the deprecated {@code ?hops} on a copied body instruction is
+     * read by the root (2, so the slave's FOLD states 1) and stripped from every copied instruction: a slave handed
+     * to a peer never carries the level above's budget under either spelling, or it would re-plan with 2.
+     */
+    @Test
+    void testAliasedBudgetReadByRootAndStrippedFromSlave() {
+        Machine.current().network().connect(f("loop://localhost:8555"));
+        final Code source = ObjmtronSerializer.parse("{1,2,3,4}.plus?hops=2(1).sum()").asCode();
+        assertTrue(source.insts().stream().skip(1).anyMatch(i -> i.tid().hasQ("hops")),
+                "the body instruction states the deprecated budget: " + source);
+        final Code compiled = Machine.current().compiler().rewriter().apply(source).asCode();
+        final DistributedSweep.Layout layout = DistributedSweep.layout(compiled);
+        assertFalse(layout.lanes().isEmpty(), "a deprecated budget on a body instruction still shards: " + compiled);
+        final DistributedSweep.Lane lane = layout.lane(0);
+        assertEquals("1", lane.budget(), "the root read ?hops=2 and shipped one level fewer: " + compiled);
+        assertFalse(lane.code().insts().stream().skip(1).limit(lane.code().insts().size() - 2L)
+                        .anyMatch(i -> i.tid().hasQ(HOP) || i.tid().hasQ("hops")),
+                "no copied instruction but the fold carries the level above's budget: " + lane.code());
     }
 }

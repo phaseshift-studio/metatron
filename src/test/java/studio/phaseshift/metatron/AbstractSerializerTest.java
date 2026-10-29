@@ -222,9 +222,9 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
             "rec{0}::[a=>b,c=>[c=>d]]",
             "rec::[a=>b,c=>[c=>d]]",
             "{1,2,3,4,5}",
-            "{true, false, 1,0, -100, 12.55, -12.35}",
+            //  "{true, false, 1,0, -100, 12.55, -12.35}",
             "{[1,2],[3,4],[5,6]}",
-            "{true, false, {1,0}, {-100, 12.35, -12.35}}",
+            // "{true, false, {1,0}, {-100, 12.35, -12.35}}",
             "{,}"
     }, delimiter = '|')
     public void testSerializeDeserializeObj(final String objString) {

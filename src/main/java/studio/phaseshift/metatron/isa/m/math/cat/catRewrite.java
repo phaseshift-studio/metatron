@@ -23,6 +23,8 @@ import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.algebra.rewrite.Cut;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.Partition;
+import studio.phaseshift.metatron.algebra.rewrite.PlaceSet;
 import studio.phaseshift.metatron.algebra.rewrite.Placement;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.algebra.rewrite.Span;
@@ -62,8 +64,8 @@ public class catRewrite {
      * reduce. {@link PlanInterpreter#lower} consumes the cut.
      * <p>
      * The placement is a TREE: a peer re-plans the part it is handed over its own dialed peers while budget remains, and
-     * recombines its children's partials through the same combiner. The budget is the plan's {@code hops} unless the
-     * chain states one ({@code ?hops=n}); the default of one level is the star — the master's peers fold their parts
+     * recombines its children's partials through the same combiner. The budget is the plan's {@code hop} unless the
+     * chain states one ({@code ?hop=n}); the default of one level is the star — the master's peers fold their parts
      * where they stand.
      */
     private static final Cut SHARD_CUT = Cut.reducer(Law.monoidic, Law.commutative);
@@ -72,7 +74,13 @@ public class catRewrite {
     private static final Span SHARD_POST = Span.after();
     private static final Plan SHARD_PLAN = PlanBuilder.plan("law_shard")
             .cut(SHARD_CUT)
+            // THE ORIGIN'S TAIL, stated in the axes: the home place alone, no depth, strided — so nothing ships and the
+            // cut is re-applied in place. It stays a TAIL (the AT/POST spans, no SEED span and no regrouping set), which
+            // is what keeps the plan's gather from becoming a lane.
+            .place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())
             .where(Placement.local(SHARD_AT, SHARD_POST))
+            // THE FAN-OUT that factors the seed: the dialed set, one level deep, strided
+            .place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())
             .where(Placement.tree(1, Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
             .create();
 
@@ -400,15 +408,15 @@ public class catRewrite {
                         // factor with a local partial reduce, and the combiner is applied once more at home:
                         //
                         //   {1,2,3}.plus(2).sum()
-                        //     |->  start([start?hops=0({1,3}).plus(2).sum(), start?hops=0({2}).plus(2).sum()])
+                        //     |->  start([start?hop=0({1,3}).plus(2).sum(), start?hop=0({2}).plus(2).sum()])
                         //            .select([to(<a>), to(<b>)]).merge().sum()
                         //
                         // select pairs each slave with its route; to(<peer>) ships the slave unquoted, the peer's
                         // evaluation answers its partial, and merge() gathers the partials for the combiner. A peer
                         // with hop budget left re-plans its part over its own peers (the tree).
                         //
-                        // POLICY: the guard requires dialed peers and a hop budget (the plan's tree placement, or ?hops=n
-                        // on the chain; ?hops=0 opts a fold out), so on a lone machine the rule is the identity and the
+                        // POLICY: the guard requires dialed peers and a hop budget (the plan's tree placement, or ?hop=n
+                        // on the chain; ?hop=0 opts a fold out), so on a lone machine the rule is the identity and the
                         // default schedule is unchanged. Whether a NETWORKED machine should auto-distribute every
                         // eligible chain at compile time, or only via an explicit >>law_shard edge, is policy (cf.
                         // derivation_expansion above).

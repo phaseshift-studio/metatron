@@ -67,7 +67,7 @@ public class catTypes {
     public static Lst registered(final InstSet self) {
         return lst(
                 docWrap(CATEGORY_TYPE = Type.Builder.build()
-                                .tid(REC_TID)
+                                .tid(REC_TID.poly(f(OBJ)))
                                 .vid(CATEGORY_TID)
                                 .isaPredicate(rec(
                                         uri(OBJ), ALL_TYPE,
@@ -217,8 +217,8 @@ public class catTypes {
                                             if (!maybeNotIdentity(morphisms, rewrite))
                                                 continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
                                             final Plan plan = catRewrite.planOf(rewrite.tid().name());
-                                            if (null != plan && plan.distributed() && (reach.isNoObj() || 1 > PlanInterpreter.hops(plan, code)))
-                                                continue; // a distribution rule needs reach AND a hop budget: no peers or ?hops=0 → identity
+                                            if (null != plan && plan.distributed() && (reach.isNoObj() || 1 > PlanInterpreter.hop(plan, code)))
+                                                continue; // a distribution rule needs reach AND a hop budget: no peers or ?hop=0 → identity
                                             final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
                                             final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), PLAN_TID, null) : plan;
                                             path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
@@ -300,8 +300,21 @@ public class catTypes {
                                                 uri(LAW).maybe().asUri(), lst(LAW_TYPE),
                                                 uri(ROLE).maybe().asUri(), URI_TYPE),
                                         uri(WHERE).maybe(), lst(rec(
-                                                uri(SHAPE), URI_TYPE,
+                                                // the derived token is OPTIONAL now: a rec stated in the axes alone is
+                                                // a plan::T (C9), and the legacy encoding is still read for one cycle
+                                                uri(SHAPE).maybe().asUri(), URI_TYPE,
                                                 uri(TARGET).maybe(), ALL_TYPE,
+                                                // the decision's three axes (§1 of the qparam plan): the place set
+                                                // (a uri, a lst of designators, or a weighted rec), the depth (a counted
+                                                // int, or [height, arity] for the arities a coefficient cannot spell), and
+                                                // the partition (a counted uri). ALL_TYPE because each axis decides its
+                                                // value's shape; the coefficient is ANY because a COUNTED object fails a
+                                                // plain <#> — the coefficient IS the axis' value (arity, part count) and
+                                                // the type's own coefficient is what a counted obj is tested against.
+                                                // Pinned by DecisionModelTest.testTheAxesArePlanT.
+                                                uri(PLACE).maybe(), ALL_TYPE.c(cInt.ANY()),
+                                                uri(HOP).maybe(), ALL_TYPE.c(cInt.ANY()),
+                                                uri(SPLIT).maybe(), ALL_TYPE.c(cInt.ANY()),
                                                 uri(INST).maybe(), lst(URI_TYPE),
                                                 uri(SPAN), lst(rec(
                                                         uri(SPAN), URI_TYPE,
@@ -475,10 +488,17 @@ public class catTypes {
      */
     private static Obj placeWord(final Rec path) {
         final Obj where = path.at(WHERE);
-        if (where.isRec() && !where.asRec().jvm().isEmpty())
-            // the realized placement is span => [place…] (one entry per shipped span); the word is that flat list of
-            // places — the same shape Places.reachable() returns, never the span-keyed rec it was written as
-            return lst(where.asRec().values().flatMap(v -> v.stream()).toList());
+        if (where.isRec() && !where.asRec().jvm().isEmpty()) {
+            // the realized placement is span => [designator => realized lanes] (one entry per shipped span); the word
+            // is the flat list of PLACES those designators name — the same shape Places.reachable() returns, never the
+            // span-keyed, demand-weighted rec it was written as. `local` is this machine; `//host` is a place.
+            final List<Obj> places = new ArrayList<>();
+            where.asRec().values().filter(Obj::isRec).forEach(realized -> realized.asRec().keys()
+                    .map(designator -> LOCAL.equals(designator.toString()) ? Places.self() : Places.place(designator))
+                    .filter(place -> !place.isNoObj())
+                    .forEach(places::add));
+            return places.isEmpty() ? Places.reachable() : lst(places);
+        }
         // the place-class word is where the code can GO — its dialed peers — not where it starts (the origin)
         return Places.reachable();
     }

@@ -1035,17 +1035,19 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         }
 
         /**
-         * THE POLY RULE — the poly component of a fURI types PARAMETER POSITIONS, never a keyed map. The three legal
+         * THE POLY RULE — the poly component of a fURI types PARAMETER POSITIONS, never a keyed map. The legal
          * readings, and why each is what it is:
          * <ul>
-         *   <li>{@code lst[x,y,z]} — the SLOT types of the list, position by position, so {@code lst[A,A]} is a pair
+         *   <li>{@code lst[x,y,z]} — the types at the list's INDICES, index by index, so {@code lst[A,A]} is a pair
          *       of equal types (not a map from A to A);</li>
-         *   <li>{@code rec[x,y,z]} — the TRAITS the rec implements, composed as a fiber bundle: parallel morphisms
-         *       over one base, so the elements name the rec's behaviour, not its keys;</li>
+         *   <li>{@code rec[x,y,z]} — the rec's FIELDS; a fibered declaration's fields are its fibers
+         *       ({@code rec[role]::T[…]@person}), and an instance's entries are the types at those fibers
+         *       ({@code person[ninja]});</li>
+         *   <li>{@code rel[x,y,z]} — the VERTICES of a right-nested path, {@code x => (y => z)};</li>
          *   <li>{@code object[int]} — the instantiation parameter ({@code int::T.as(object::T)} yields
          *       {@code object[int]::[obj=>int::T, law=>…]}), the argument the object is built from.</li>
          * </ul>
-         * A {@code key=>value} pair inside {@code [ ]} therefore mangles all three: it reads a position as a key and
+         * A {@code key=>value} pair inside {@code [ ]} therefore mangles every one: it reads a position as a key and
          * a type as a value. The per-key VALUE types of a rec belong in the rec's own structure (or in the
          * instruction's {@code args}), and a {@code [ } inside a poly is a second list, not a poly element. Both are
          * category errors, rejected here so every construction path — string parse, {@link #poly(List)}, a form's
@@ -1079,7 +1081,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
          */
         static MTronException polyTypeError(final String element, final String furi) {
             return MTronException.of(
-                    "poly types parameter positions (lst slots, rec traits, object instantiation), never a keyed map: \"%s\" is a category error in %s — a poly element is a TYPE, not a key=>value pair and not a nested [ ... ]",
+                    "poly types parameter positions (lst indices, rec fields, rel vertices, object instantiation), never a keyed map: \"%s\" is a category error in %s — a poly element is a TYPE, not a key=>value pair and not a nested [ ... ]",
                     element, furi);
         }
 
@@ -1328,8 +1330,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     class Singleton {
         public static final Pattern MERGE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
         // One poly element: the leading run stops at `,` so the separator is never swallowed, and the trailing run is
-        // optional so a ONE-CHARACTER element (`lst[A,A]`, `rec[#,#]`) is a slot/trait like any other — the old
-        // `[^,]` required a second character and silently dropped such elements.
+        // optional so a ONE-CHARACTER element (`lst[A,A]`, `rec[#,#]`) is an entry like any other. The element keeps
+        // any whitespace around it, so a reader trims it.
         public static final Pattern POLY_PATTERN = Pattern.compile(
                 "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,]*)");
         // OLD FURI_PATTERN (pre-branch): the path excluded `{`, so a trailing `{...}` was always the coefficient.

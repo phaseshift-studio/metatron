@@ -488,7 +488,7 @@ The application is a **type method**, not a field: `lower(plan::T)` is one instr
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
 and re-lifts the result to `path::T`. The plan carries no `result` λ; `lower` *is* the operator.
 
-A relocation decision in `plan.where` is `[shape, target?, hops?, span]` — `shape` is the topology token (`local` /
+A relocation decision in `plan.where` is `[shape, target?, hop?, span]` — `shape` is the topology token (`local` /
 `none` / `peer` / `peers` / `space` / `tree` / `shuffle`), `target` the concrete address. Each shape
 declares the laws it demands of a cut shipped to it (§3, two directions):
 
@@ -539,9 +539,10 @@ same algebra that says $x + 0 \leadsto x$ (a time rewrite) says $(a+b)\cdot r \l
 
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
 `>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: the seed bulk partitioned into
-shards whose seed carries the remaining hop budget (`start?hops=0` at a leaf), each shard shipped by a
-`select([to(peer)])` to its roster member, merged, and recombined at home through the reducer's combiner (Thm 19). A
-peer handed a shard with budget left plans it again over its own peers, so the shards form a tree. The plan — not its
+shards whose fold carries the remaining hop budget (`sum?hop=0` at a leaf — the depth rides the fold, never the
+seed), each shard shipped by a `select([to(peer)])` to its roster member, merged, and recombined at home through the
+reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+form a tree. The plan — not its
 application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
 

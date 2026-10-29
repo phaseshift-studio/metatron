@@ -36,6 +36,7 @@ public final class Tokens {
     }
 
     // furi tokens
+    public static final fURI LOCALHOST = f("localhost");
     public static final String LAMBDA = "λ";
     public static final fURI LAMBDA_TID = f(LAMBDA);
     public static final fURI M_ISA_TID = f("/m");
@@ -415,7 +416,8 @@ public final class Tokens {
     public static final String SPAN = "span";
     public static final String FLAGS = "flags";
     public static final String SHAPE = "shape";
-    public static final String HOPS = "hops";
+    public static final String HOP = "hop";
+    public static final String PLACE = "place";
     public static final String POSITION = "position";
     public static final String CONTESTED = "contested";
     public static final String ORBIT = "orbit";

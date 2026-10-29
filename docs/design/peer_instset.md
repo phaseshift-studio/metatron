@@ -95,7 +95,7 @@ The distributed rewrite is already instruction-shaped. Applying `law_shard` to a
 lowers to:
 
 ```
-start([start?hops=0({1,2,3,4,5,6}).plus(1).sum()]).select([to(<ws://booger.local:8555>)]).merge().sum()
+start([start({1,2,3,4,5,6}).plus(1).sum?hop=0()]).select([to(<ws://booger.local:8555>)]).merge().sum()
 ```
 
 Shipping a shard is an *ordinary instruction call* — `to(<peer>)` — composed inside `select(...).merge().sum()`. The

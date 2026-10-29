@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
@@ -33,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.REC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -182,12 +182,11 @@ public interface Typer extends Machine.Component {
          * <pre>
          * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
          * </pre>
-         * A wrapper is a {@code rec} whose type INSTANTIATES a declaration whose tid poly names the
-         * exposed fields ({@code rec[role]::T[?[…,role=>rec::T]]@person}), and an instantiation
-         * ({@code person[ninja]}) names their types. The candidate set is the wrapper PLUS every declared
-         * slot that is PRESENT and holds a {@code rec} — one level deep, so a candidate's own slots never
-         * join and the walk never recurses. Every other value (a mono, a plain rec with no such
-         * declaration, a slot holding a {@code str}) has nothing to fan out over and yields the wrapper
+         * A wrapper is a value of a NAMED declaration whose tid poly names the exposed fibers
+         * ({@code rec[role]::T[?[…,role=>rec::T]]@person}); an instantiation ({@code person[ninja]}) names
+         * their types. The candidate set is the wrapper PLUS every fiber that is PRESENT, whatever it holds —
+         * one level deep, so a candidate's own fibers never join and the walk never recurses. Every other
+         * value (a mono, a plain or anonymous-bracket rec) has nothing to fan out over and yields the wrapper
          * alone.
          * <p>
          * A {@code Inst.Form.typer} instruction retypes its subject, so it is OPAQUE: it applies to the
@@ -211,38 +210,18 @@ public interface Typer extends Machine.Component {
         }
 
         /**
-         * The components a wrapper exposes, as declared by its type's tid poly and carried by the value.
-         * Empty unless the value is a {@code rec} whose type is an INSTANTIATION (its tid carries the
-         * arguments) of a DECLARATION whose tid poly names the exposed fields — and only a slot that is
-         * present AND holds a {@code rec} is a part. Every other value (a mono, a plain rec with no such
-         * declaration, a slot holding a {@code str}) has nothing to delegate to and takes the ordinary
-         * single-application path.
+         * The components a wrapper exposes: the values present at its fibers. A wrapper is a value of a NAMED fibered
+         * declaration ({@code rec[role]::T[…]@person}, instantiated as {@code person[ninja]} or not), and a fiber may
+         * hold any obj ({@code rec[o]::T[?[o=>int::T]]@ex} exposes the int at {@code o}). Every other value (a mono, a
+         * plain or anonymous-bracket rec) has nothing to delegate to and takes the ordinary single-application path.
          */
         private static List<Obj> delegationParts(final Obj lhs) {
-            if (!lhs.isRec())
-                return List.of();
-            final fURI tid = lhs.tid();
-            // the value's OWN tid carries the type arguments (person[ninja]), the declaration's carries the fields
-            if (null == tid || !tid.hasPoly())
+            if (!lhs.isRec() || (!lhs.tid().hasPoly() && REC_TID.basePath().equals(lhs.tid().basePath())))
                 return List.of();
             final Type type = lhs.type();
-            final fURI declared = null == type ? null : type.tid();
-            if (null == declared || !declared.hasPoly())
-                return List.of();
-            // AN INSTANTIATION, NOT A SLOT DECLARATION. {@code person[ninja]} instantiates a declaration whose own
-            // tid is {@code rec[role]}, so the value's type family (person) differs from its base (rec). A plain
-            // {@code rec[k1,k2]} literal carries the same base, and its bracket is a slot list, not a set of
-            // traits to delegate to -- it is not a wrapper.
-            if (null == type.vid() || type.vid().basePath().equals(declared.basePath()))
-                return List.of();
-            final Rec rec = lhs.asRec();
-            final List<Obj> parts = new ArrayList<>(declared.poly().size());
-            for (final String slot : declared.poly()) {
-                final Obj part = rec.at(f(slot.trim()));
-                if (part.isRec())
-                    parts.add(part);
-            }
-            return parts;
+            return type.isFibered() && null != type.vid() && !type.vid().basePath().equals(type.tid().basePath())
+                    ? type.tid().poly().stream().map(fiber -> lhs.asRec().<Obj>at(f(fiber.trim()))).filter(part -> !part.isNoObj()).toList()
+                    : List.of();
         }
 
         /**
@@ -250,19 +229,19 @@ public interface Typer extends Machine.Component {
          * candidate is offered the instruction, and the type system says whether it is that candidate's.
          * <ol>
          *   <li>The instruction did not resolve to a callable instruction (noobj, or an unresolved fallback with
-         *       no function) — the candidate simply does not receive it. This is the resolution miss that
-         *       replaced the old name-level selection: nothing has to know which components implement a trait,
-         *       the resolver already refuses the ones that do not.</li>
+         *       no function) — the candidate simply does not receive it. Nothing has to know which fiber an
+         *       instruction is about: the resolver already refuses the candidates it is not about.</li>
          *   <li>A {@code typer} retypes its subject, so it is opaque and never distributed.</li>
          *   <li>A GENERIC/PATTERN domain ("any obj") is about every candidate — the multiplicity reads.</li>
-         *   <li>A BASE-typed domain ({@code rec}, {@code str}, ...) is about the wrapper AS that form: its
-         *       components are not a different subject for it. This is what keeps a type predicate, a rec-typed
-         *       instruction, or {@code count()} from summing over the parts.</li>
+         *   <li>A BASE-typed domain is about the candidate whose own form it is. A {@code rec} domain is the
+         *       wrapper's (its components are not a different subject for it, which keeps a rec-typed instruction
+         *       from summing over the parts); any other base domain is the fibers of that form
+         *       ({@code ex::[o=>12].plus?<=int(45)} adds at {@code o}, since the wrapper is a rec, not an int).</li>
          *   <li>Any other domain NAMES a type, and it reaches the candidate whose own type identity is that name:
          *       the field's value for a typed call ({@code fight?<=ninja()}), the wrapper for its own type
-         *       ({@code ponder?<=person()}). The wrapper only BORROWS a component's type by covariance, which is
-         *       TYPE ACCEPTANCE (passing a wrapper where a trait is expected, {@link Type.Helper#recPolySupertype}),
-         *       NOT dispatch identity — and dispatch is the identity question, so that rule is not consulted here.</li>
+         *       ({@code ponder?<=person()}). The wrapper is acceptable where a fiber's type is expected
+         *       ({@link Type#recFibers()}), but that is TYPE ACCEPTANCE, NOT dispatch identity — and dispatch is
+         *       the identity question, so that rule is not consulted here.</li>
          * </ol>
          * WHEN THE CALLER NAMES A DOMAIN ({@code ?<=ninja()}), that name is the subject, not the overload the
          * resolver happened to bind: {@code describe?<=duo_position()} addresses positions even though
@@ -290,8 +269,12 @@ public interface Typer extends Machine.Component {
             final fURI domID = Obj.Helper.specificTypeId(dom);
             if (domID.isGeneric() || domID.hasPattern())
                 return true;
-            if (dom.isBaseType())
-                return wrapper;
+            // a base domain is about the candidate whose own form it is: the wrapper's is rec, a fiber's is what it
+            // holds (ex::[o=>12].plus?<=int adds at o), and a rec domain stays on the wrapper
+            if (dom.isBaseType()) {
+                final fURI base = dom.baseTypeID().basePath();
+                return candidate.baseTypeID().basePath().equals(base) && (wrapper || !REC_TID.basePath().equals(base));
+            }
             return candidate.testByID(dom);
         }
     }

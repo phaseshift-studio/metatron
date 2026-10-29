@@ -620,7 +620,7 @@ public class machInstSet extends AbstractInstSet {
                                                 // peer. <label> => <full origin> -- a name is denotation, so this is
                                                 // the one field of the four whose key is a LABEL rather than an
                                                 // address, and it is read at the root for exactly that reason.
-                                                uri(PREFIX).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
+                                                uri(PREFIX).maybe().asUri(), rec(URI_TYPE, URI_TYPE).maybe(),
                                                 // the AUTO STATUS INST BasicNetwork installs at construction --
                                                 // a method-shaped field, not a map: the component rec is
                                                 // re-typechecked on every peer write, so this slot must say what

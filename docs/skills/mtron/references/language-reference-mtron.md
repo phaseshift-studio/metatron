@@ -34,7 +34,7 @@ They are distinct, and knowing which is which is most of the uri grammar:
 | spelling | resolved by | declared by |
 |---|---|---|
 | `math:cos` | an **isa prefix** — a scheme with no host names a vocabulary | `import(/m/math, math)`; the table is `*</instset/prefix>` |
-| `//ginger/a` | a **network name** — a host with no scheme and no port names a peer | `</network/prefix/ginger> -> <ws://ginger.local:8555>` |
+| `//ginger/a` | a **network name** — a host with no scheme and no port names a peer | `/network/prefix -> [//ginger => <ws://ginger.local:8555>]`, or `</network/prefix/ginger>` by label |
 | `cos` | a **redirect** — the short name an address already has | derived from what is mounted; `*</memory/redirect>` |
 | `/mcp` | a **route** — a path prefix a space serves | the space's own `route` field, e.g. `http_server::[route=>[/mcp => mcp_mtron]]` |
 

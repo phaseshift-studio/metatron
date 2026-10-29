@@ -5,8 +5,11 @@ A–T, but a reader wants **one expression** and a small amendment that changes 
 conclusion of that design pass: three qparams, each naming one axis of a distribution decision, all sharing a
 single coefficient reading. **Keys and their value tokens are singular** (repo convention): `?place`, `?hop`,
 `?split`; `local`, `peer`, `stream`, `block`. The parser facts here were verified against a running console; the
-emitter sites are named so the change is a checklist. **Status:** proposal. Everything marked ✅ parses today;
-everything else is specified but not yet read by anything.
+emitter sites are named so the change is a checklist. **Status: implemented (2026-10-28)** — all three keys are read
+by the emitter, the plan is stated in them, and the law is the gate. **Not yet:** `Shape`'s deletion (the enum survives
+as the read-compat projection, and the plans no longer write it), the `key`/`owner`/`index` splits (they decline to the
+identity until their premises land), bands inside a bracketed place list (`mParser`'s balanced `{}`), and the `m_uri`
+suffix refusal. Each ✅ below is a parse fact verified against a running console.
 
 The premise is unchanged: **distribution is a theorem, not a feature.** A qparam may only *place* work — it can
 never overrule a law. `mean` does not shard, and no `?place` will make it; `str` `sum` is not commutative, and no
@@ -24,11 +27,11 @@ start([ lane_1 … lane_k ])      -- WHICH places, HOW MANY shares each
   ==[ route_i ]                 -- how each lane travels (eval() / eval(<peer>) / virtual)
   >- combiner                   -- HOW the shares reunite  (computed, never named)
   .tail                         -- where the answer lands
-lane_i = start?hop=n(part_i)   -- HOW FAR it recurses, and WHAT a share is
+lane_i = start(part_i)·…·fold?hop=n  -- HOW FAR it recurses (the budget rides the fold), and WHAT a share is
 ```
 
 **From the decision rec.** `cat-location.md` §13.2 already names almost the same set — `span, shape, target,
-thread, workers, loop, hops, law` — with two gaps: the **partition function** (how the data is cut) and an
+thread, workers, loop, hop, law` — with two gaps: the **partition function** (how the data is cut) and an
 **arrival policy**. And one entry that should go: `shape`, because a shape is a *consequence* of the other axes
 (`tree` = peers + depth > 1, `shuffle` = a keyed cut).
 
@@ -84,6 +87,8 @@ is **weights**):
 ?place=[local=>4,//abc:45=>2,//df:3]           -- weighted; an absent weight is 1  (rec)
 ?place=#                                       -- every remaining reachable place
 ?place=//ginger:8555{2,5}                      -- a band on one designator (scalar form)
+?place={4}local                                  -- a demand is LEADING, and scalar-only on the q surface
+?place=[local=>4,peer=>1]                      -- the weighted LIST is the rec form: place => its share
 ```
 
 | designator | resolves through |
@@ -106,8 +111,18 @@ Rules:
   ginger exactly 2 and the pattern takes the rest.
 - **Exclusion is omission.** Leaving `local` out is how you say "I compute nothing"; `local{0}` is the explicit
   spelling of the same thing (and a real guard once `#` is in the set).
-- **Demand = the coefficient.** Read the designator's value with `stream()` and its demand with `c()`; both
-  coefficient positions are legal (`{2}//abc:45`, `//abc:45{2}`), so the reader never cares which one was written.
+- **Demand = shares (parts), and a share is a lane.** `{2}` on a place asks for two of the parts: with
+  `[{2}ginger,{1}booger]` ginger takes 2 of the 3 parts — two thirds of the bulk **and** two of the three lanes
+  (data weight and concurrency are the same number, because a share is a lane). The counts are **absolute**, so
+  `{4}:{2}` is the same 2 : 1 bias over six lanes: write the ratio in lowest terms unless the extra lanes are
+  wanted.
+- **On the q surface a demand is LEADING, scalar, or a rec** — never a coefficient inside a list. The q-value
+  envelope admits `{}` only as the *whole* value's coefficient (`?place={4}local`), not inside `[...]`
+  (`?place=[{4}local,peer]` does not parse, and `?place=[…]{4}` binds the `{4}` to the queried uri). So the
+  weighted list is the **rec**: `[local=>4,peer=>1]`. It also spells a **zero** demand (`local=>0`), which the
+  coefficient cannot: `{0}local` is `noobj` (*measured*, C3). A trailing `{n}` (`//ginger{2}`, `local{4}`) parses
+  and reads as **1** — never write it. A *placement rec* in mtron is not under the envelope, so a plan may still
+  state `[{2}//host]` there.
 - **`?split` may *produce* the place set.** `stream`/`block`/`key`/`copy` consume a place set (k shares over k
   places); `owner` and `index` produce it — the places *are* the owners, or the range holders. So B needs only
   `?split=owner`, and naming places for it would be redundant.
@@ -134,7 +149,7 @@ not three topologies but the same recursive expansion truncated at radii 0, 1, n
 | `?hop=n{*}` | n | local out-degree | free / irregular tree — **today's behavior** |
 | `?hop=n{1}` | n | 1 | **chain / pipeline** (F's shape; T's snake as a distribution) |
 | `?hop=n{2}` | n | 2 | binary tree, up to 2^n leaves |
-| `?hop=4{2}` | 4 | 2 | 4 fan levels, 16 leaves, 31 roles |
+| `?hop={2}4` | 4 | 2 | 4 fan levels, 16 leaves, 31 roles |
 | `?hop=n{lo,hi}` | n | elastic | fill what is live up to `hi`, at least `lo` |
 
 Arithmetic worth pinning in a test: with `n` fan levels and arity `w`, roles = Σ w^i = (w^{n+1}−1)/(w−1) and
@@ -238,29 +253,30 @@ The **projection** then parses the text into an object, and the mechanism is one
 | `?place=[local=>4,//abc:45=>2]` ✅ | a `rec` (place → weight) | `=>` makes it a rec literal, not a lst; the envelope allows `>,=` |
 | `?split={2}//xxz/dag/3` ✅ | a uri, `c = 2` | a **leading** coefficient on a uri is the uri's coefficient, not a stream |
 | `?hop=4` ✅ | an `int` | a plain run |
-| `?hop=4{2}` ✅ (text) | `4{2}` | the envelope's uri value is coefficient-enabled, so the text is kept whole — *but* see below |
+| `?hop={2}4` ✅ | an `int` 4 with `c = 2` | the leading coefficient is a *value* coefficient |
+| `?hop=4{2}` ✗ | a `fail::T` | a number takes no trailing coefficient — refused, never read as 0 |
 | `?place=[local{0},peer]` ✗ | — | `{}` is not in the *bracket* charset (one lexer line, deferred) |
 | `?split=[key(f)]` ✗ | — | parens are not in the envelope, and should not be |
 | `?place=\\abc` ✗ | a `str` | `\` is only a q-charset character; it is not a uri, so it has no coefficient |
 
-**The one loose thread:** a *trailing* coefficient on a number (`4{2}`) is kept as text by the envelope, but the
-projection's object parser may read it as a **uri** (`4` with `c = 2` — the uri literal is what accepts a trailing
-coefficient, since `m_int()` takes none). The reader should not care: the `uri → int` conversion is a declared,
-sound row (`type/Uri.java:366`, `Integer.parseInt` of the uri's text), so a numeric value may arrive as an `int`
-**or** as a numeric uri and both coerce to the same number. When *we* emit a counted form, prefer the leading
-`{2}4` (a bulked value, unambiguous in every position); accept `4{2}` for symmetry.
+**Settled by measurement (it was a guess here):** a number takes **no trailing coefficient** — `4{2}` is a parse
+error — so the counted form is the **leading** one, and `{2}4` parses to an `int` 4 with `c = 2` (a uri carries
+either position; `{2}//abc:45` and `//abc:45{2}` both work). Consequences: `?hop=4{2}` is **refused** (loudly, with
+the key and the text), `?hop={2}4` reads 4 with the arity coefficient, and when we *emit* a counted form we emit
+the leading spelling. A counted **uri** (`{2}//abc:45`) is the `?place` shape and is read by the place reader, not
+this one — the two readings stay in their own keys.
 
 The reader contract that follows, and it is the whole of it:
 
 ```java
-final Obj v = qValue(tid, key);                             // the projected object (Uri.Helper.parseQ)
+final Obj v = tid.qValue(key, Lst.class);                   // fURI.qValue: the parse, not a second parser
 final Obj one = v.stream().findFirst().orElse(noobj());     // value via stream(), never shape inspection
 final cInt demand = v.c();                                  // {0} | {w} | {lo,hi} | {*}
-if (v.isStr()) throw MTronException.of(...);                // an unparsed value is a malformed spec — refuse
-final int count = (one.isUri() ? one.asInt() : one).intValue().intValue();   // 4{2} may arrive as a numeric uri
+if (v.isFail() || one.isFail() || one.isNothing())
+    throw MTronException.of(...);                           // an unreadable spec is refused, never read as 0
 ```
 
-`str` ⇒ **refuse loudly**. The bug this replaces is real: `hops()` does `Integer.parseInt(qMap().get(HOPS))`,
+`str` ⇒ **refuse loudly**. The bug this replaces is real: `hop()` does `Integer.parseInt(qMap().get(HOP))`,
 so `?hop=4{2}` throws, is caught, and answers `0` — **silently no distribution**. A malformed spec must never
 degrade into the point topology.
 
@@ -294,9 +310,9 @@ scalar and rec forms cover the weighted cases today.
 ## 8. The layouts
 
 ```mtron_pre
-start([ start?hop=0({1,4,5}).plus(10).sum(),          -- local lane: a place, dividing no further
-        start?hop=0({2,3}).plus(10).sum(),           -- shipped: a leaf, and NOT a place
-        start?hop=0({66}).plus(10).sum() ])
+start([ start({1,4,5}).plus(10).sum?hop=0(),          -- local lane: a place, dividing no further
+        start({2,3}).plus(10).sum?hop=0(),            -- shipped: a leaf, and NOT a place
+        start({66}).plus(10).sum?hop=0() ])           -- the budget rides the FOLD, not the seed
   ==[ virtual::[code=>eval()], virtual::[code=>eval(<ws://p1>)], virtual::[code=>eval(<ws://p2>)] ]
   ==[ >>rhs, >>rhs, >>rhs ] >- sum
 ```
@@ -316,7 +332,7 @@ Three properties make this the same mechanism as the existing shard, not a secon
   peers would only re-ship the same parts. So `?hop=0` on the local lane, always.
 
 So the topologies are one family: point (`?hop=0`), star (`1{*}`), tree (`n{*}`, `n{w}`), chain (`n{1}`), lanes
-(`?place=[local{4}]` — a peerless machine shards), and S (`?place=[local,peer]` — a place at distance zero).
+(`?place=[{4}local]` — a peerless machine shards), and S (`?place=[local,peer]` — a place at distance zero).
 
 ---
 
@@ -336,30 +352,44 @@ fan-out has no authority to delete work; the worst it can do is decline.
 
 ---
 
-## 10. What exists today, and what the change touches
+## 10. What exists today, and what is still deferred
 
-**Today:** `?hops` — an int, depth only; the rename to `?hop` is the first chunk, with the old key kept as an alias
-for one cycle — read nearest-first off any instruction (`PlanInterpreter.java:301`), with the plan's `tree(1)` as the
-default (`catRewrite.java:73-78`). `?place` and `?split` are read by nothing; their
-values already parse and project (§6) and are simply inert.
+**Today (after C9):** the plan is stated in the axes — `law_shard` is `.cut(...)` plus
+`.place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())` over the origin's tail and
+`.place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())` over the fan-out — and the assembled rec carries
+no derived `shape`/`target` (both are read off the axes; the legacy encoding is still *read* for one cycle, and the
+`plan::T` predicate admits a rec that states the axes alone).
 
-| site | change |
+- **`?place`** is resolved into lanes (`PlaceResolver`): the designators of §2, one lane per share, the home place's
+  first, `local` routed by the addressless `eval()`; the emitter's lane count is `k = min(Σ demands, seed)`, then the
+  hop's arity caps it.
+- **`?hop`** is the tree shape `height{arity}` (§3): the axis is read in chain order (the first statement wins, `?hop`
+  preferred over the deprecated `?hops` at the same position, both stripped from every copied instruction), the arity
+  caps the fan-out by taking the first `w` lanes of the emitter's own order, and the emitted slave restates the form one
+  height down **on its fold** (the reducer) while its seed carries only the part. Height 0 and arity 0 are the identity.
+- **`?split`** (§4) lowers `stream` (today's stride) and `copy` (the whole seed on every lane, legal only when the cut's
+  combiner declares `idempotent`); `block`, `key`, `owner` and `index` **decline** to the unchanged chain — their
+  premises (order, a key, an addressed seed, a generator) are not held yet — and an unreadable value is refused loudly.
+  A stated part count (`{2}stream`) is not read yet: a share is already a lane, and a second part count is a second
+  knob.
+- **The law stays the gate.** `PlanBuilder.create()` derives `obligations(place, hop, split) ⊆ cut.laws`; the emitter
+  declines the identity when the chain does not match the plan's one-cut shape; a split that cannot check its premise
+  fails closed.
+
+| site | state |
 |---|---|
-| `mParser.java:1207` | *(deferred)* balanced `{}` inside the bracketed value |
-| a `qValue(key)` reader | project the q text, `str` ⇒ refuse, demand from `c()` |
-| `PlanInterpreter.hop` (`:301`) | read `(n, w)`; `{*}` = unbounded; **restate the form, not the number**, on the slave |
-| `PlanInterpreter.shard` (`:199`) | `resolvePlaces` replaces the hard-coded peer scan (`shardTargets`, `:352`); `k = Σ demands`; lane 0 = `eval()`; depth on the fold of the slave, the place claim on the seed |
-| `Placement` | `target` + most of `Shape` collapse into the place set + `hop` + `split` |
-| `catInstSet.realizedWhere` (`:226`) | skip the addressless route, and record `local` as a realized place |
-| `catTypes.PLAN_TYPE.where` (`:292`) | add `place` and `split`, and make the counted form legible (note: `hop` is missing from that predicate today, and a plan carrying it still passes, so extra keys are tolerated) |
-| `Tokens` | add `PLACE`; reuse `SPLIT` for the q key (it is already the profiling rec's key, and one word is better than two); rename `HOPS` → `HOP` |
-| tests | `Reduction.routes`/`slaves` need the lane notion (`null` designator = `local`); `DistributedComputation.of` evaluates the local lane as its own run |
+| `mParser.java:1207` | *(deferred)* balanced `{}` inside the bracketed value — a weighted designator list has no spelling yet |
+| `PlanInterpreter.hopAxis` / `.split` / `.place` | done: one strict q projection (`strictQValue`), a `str`/`fail`/empty value refused naming the key and the text |
+| `PlanInterpreter.shard` | done: lanes from `PlaceResolver`, `k = Σ demands` clamped by the seed then the arity, lane 0 = `eval()`, the budget on the slave's fold |
+| `Placement` | done: the axes are the authority, `target`/`shape` derive from them; the recorded enum is read-compat only (C11 deletes it) |
+| `catInstSet.realizedWhere` | done (C8): each realized place carries its realized lane count (`[//ginger=>2,//booger=>1]`, the weighted `?place` spelling), and the addressless route is the `local` designator — clamped first, so the count is what actually ran |
+| `catTypes.PLAN_TYPE.where` | done: `place`/`hop`/`split` are admitted with their coefficients, and `shape` is optional |
+| `Tokens` | done: `PLACE` added, `SPLIT` reused for the q key, `HOPS` → `HOP` with `?hops` as a read-only alias |
+| tests | done: `PlaceResolverTest`, `PlaceLaneTest`, `SplitLegalityTest`, `TreeShardTransportTest`, `PlanBuilderTest`/`DecisionModelTest`/`ObligationsTest` pins |
 
-**Test rows** (`@CsvSource`, one line each): `0`, `1{*}`, `n{*}`, `n{1}`, `n{2}`, `4{2}`, `n{0}`, `0{0}`;
-`peer`, `[local,peer]`, `[local,//abc:45,//df:3]`, `[local=>4,//abc:45=>2]`, `#`,
-`//ginger:8555{2,5}`; the `str` refusals; and for each, the emitted op chain plus the value equal to the
-undistributed fold. The chain row (`n{1}`) is the one to prove first — it is the shape that does not exist
-today, and if it holds, `{w}` is real.
+**Deferred (C11, in the order of the plan doc):** `Shape`'s deletion and the `TARGET` compat removal; the `key`,
+`owner` and `index` splits (and a stated part count); bands inside a bracketed list; the `m_uri` suffix refusal;
+the visited set; the local lane's `timeout(inst)` deadline.
 
 ---
 
@@ -371,9 +401,8 @@ today, and if it holds, `{w}` is real.
 3. **Split propagation** — does `?split` ride the emitted slave with `n-1{w}`? (Recommended: yes for
    `stream`/`block`/`key`/`owner`, since the partition's premise does not change per level.)
 4. **Bands in lists** — the one lexer line, and whether it is worth it before a pattern needs it.
-5. **The counted form's projection** — `4{2}` may project as a numeric uri. The reader tolerates both (see §6);
-   the open question is only which form we *emit* when restating `n-1{w}` on a slave: the leading `{2}4` is
-   unambiguous, the trailing `4{2}` matches how it was authored.
+5. ~~The counted form's projection~~ — **settled**: a number takes only a **leading** coefficient (`{2}4`);
+   a trailing one (`4{2}`) is a parse error and is refused. We emit the leading form.
 6. **The realized deadline** — the local lane now folds inside the `>>rhs` gather's `FutureObj` deadline
    (5 s), where today the master's combiner runs outside any deadline. The standing answer is the menu's
    `timeout(inst)`, not a longer constant.

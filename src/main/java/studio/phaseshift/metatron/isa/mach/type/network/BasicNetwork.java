@@ -34,6 +34,7 @@ import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -174,23 +175,50 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
 
     @Override
     public Obj read(final fURI vid) {
-        return this.answers(vid) ? super.read(vid) : Network.super.read(vid);
+        final Obj read = this.answers(vid) ? super.read(vid) : Network.super.read(vid);
+        // A NAME IS SPELLED //ginger AND STORED ginger: the door answers with the spelling the table is WRITTEN with,
+        // so what `*</network/prefix>` shows is what may be written back. Network#prefixes reads the stored form --
+        // that is the key resolution asks for -- so the two accessors are one strip apart and neither drifts.
+        return this.isPrefixTable(vid) && read.isRec() ? Network.Helper.markedTable(read.asRec()) : read;
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         if (!this.answers(vid))
             return Network.super.write(vid, obj);
+        // THE DIALECT, TRANSLATED AT THE ONE DOOR. A prefix is spelled //ginger and stored ginger, so the table the
+        // caller wrote is STRIPPED here, once, and a row that carries no marker is REFUSED rather than stored under a
+        // spelling resolution will never ask for -- which is exactly the silent, unresolvable table reported from the
+        // console. A noobj write is the universal close and passes through untouched.
+        final boolean table = !obj.isNoObj() && this.isPrefixTable(vid);
+        final Optional<Rec> stored = table ? Network.Helper.storedTable(obj) : Optional.empty();
+        if (table && stored.isEmpty()) {
+            LOG.warn("a network prefix is spelled //name: %s -> %s refused (a //host, no scheme, no port)", vid, obj);
+            return noobj();
+        }
+        // WHAT IS STORED IS THE STRIPPED TABLE THE CALLER WROTE -- never the table already here: writing this rec
+        // onto itself would accept every write and store none of them, which is the other half of the reported
+        // silence (the write echoed its obj while the table stayed empty).
+        final Obj value = table ? stored.get() : obj;
         // the space's q-procs and its layer, as every space write — but onto THIS rec: Space.Helper.resolveWrite
         // rebuilds the poly above a missing address as a copy, and the machine holds this one
         QProc.Helper.checkQProcs(this, vid);
+        // THE LAYER SEES WHAT THE CALLER WROTE, the rec sees the form it stores, and the ANSWER is the caller's obj:
+        // `x -> y` reports y, so the table keeps its markers on the way out as well as on the way in.
         return QProc.Layer.write(this, vid, obj, () -> {
             if (vid.hasPattern())
-                this.readStream(vid).toList().forEach(at -> this.directWriter().apply(at.furi(), obj));
+                this.readStream(vid).toList().forEach(at -> this.directWriter().apply(at.furi(), value));
             else
-                this.directWriter().apply(vid, obj);
+                this.directWriter().apply(vid, value);
             return obj;
         });
+    }
+
+    /**
+     * whether an address is the name TABLE rather than one of its rows: {@code <vid>/network/prefix}.
+     */
+    private boolean isPrefixTable(final fURI vid) {
+        return this.branch().extend(PREFIX).equals(vid.qLess().resolve().asNode());
     }
 
     /**

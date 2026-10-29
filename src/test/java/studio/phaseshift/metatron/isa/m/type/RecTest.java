@@ -699,58 +699,107 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * THE REC POLY CONFERS SUPERTYPES AT THE VALUE LEVEL TOO. A value typed {@code person[ninja]} carries the
-     * {@code ninja} trait, so it is acceptable wherever {@code ninja::T} (a poly member) or {@code person::T} (its
-     * vid's base) is expected — and nowhere else ({@code guru::T} rejects it). Same rule, same acceptance site as the
-     * type-level check {@code TypeTest.testRecPolyConfersSupertypes}.
+     * A FIBERED REC VALUE IS ACCEPTED WHERE ITS BASE OR THE OBJECT AT ONE OF ITS FIBERS IS. A value typed
+     * {@code person[ninja]} holding a ninja at {@code role} is acceptable wherever {@code ninja::T} or
+     * {@code person::T} is expected, and nowhere else ({@code guru::T} rejects it). An absent fiber is no object, so
+     * it is not accepted where an optional type ({@code ninja{?}::T}) is expected. The type-level counterpart is
+     * {@code TypeTest.testFiberedRecIsAcceptedWhereAFiberIs}, and a bracket on an instance of a declaration that
+     * names no fiber ({@code drifter}) is an error.
      */
     @ParameterizedTest
     @TestData(value = {
-            "person -> rec::T[?[name=>?str::T,age=>?int::T]]@person",
+            "person -> rec[role]::T[?[name=>?str::T,age=>?int::T,role=>?rec::T]]@person",
+            "drifter -> rec::T[?[name=>?str::T,age=>?int::T]]@drifter",
             "ninja -> rec::T@ninja",
     })
     @CsvSource(value = {
-            "person[ninja]::[name=>'marko',age=>29]   % ninja::T    % true",
-            "person[ninja]::[name=>'marko',age=>29]   % person::T   % true",
-            "person[ninja]::[name=>'marko',age=>29]   % guru::T     % false",
+            // value                                                                     % type          % matches
+            "person[ninja]::[name=>'marko',age=>29,role=>ninja::[name=>'dark_assassin']]  % ninja::T      % true",
+            "person[ninja]::[name=>'marko',age=>29,role=>ninja::[name=>'dark_assassin']]  % person::T     % true",
+            "person[ninja]::[name=>'marko',age=>29,role=>ninja::[name=>'dark_assassin']]  % guru::T       % false",
+            // ---- an absent fiber is no object: it does not answer an optional type ----
+            "person[ninja]::[name=>'marko',age=>29]                                       % ninja{?}::T   % false",
+            // ---- a bracket entry types a fiber, and drifter names none ----
+            "drifter[ninja]::[name=>'marko',age=>29]                                      % ninja::T      % <ERROR>",
     }, delimiter = '%')
-    public void testRecPolyValueConformsToItsTraits(final String value, final String type, final boolean matches) {
-        final Obj v = ObjmtronSerializer.parse(value);
-        final Type t = ObjmtronSerializer.parse(type);
-        assertEquals(matches, v.test(t),
-                "value %s (tid=%s, type tid=%s) tested against %s (vid=%s, tid=%s) should be %s"
-                        .formatted(v, v.tid(), v.type().tid(), t, t.vid(), t.tid(), matches));
+    public void testFiberedRecValueIsAcceptedWhereAFiberIs(final String value, final String type, final String matches) {
+        if (matches.trim().equals("<ERROR>"))
+            checkCodeParseApply(LOG, value, matches);
+        else
+            checkMatches(LOG, value, type, Boolean.parseBoolean(matches.trim()));
     }
 
     /**
-     * THE REC POLY NAMES ITS DECLARED SLOTS. {@code rec[k1,k2]} declares the keys {@code k1} and {@code k2}, so a
-     * literal carrying only {@code k1} fails conformance while one carrying both passes. A missing key still READS
-     * as {@code noobj} — the last row is that read, not conformance — which is exactly why a declared slot cannot
-     * be silent. Absence is legal only where the slot's coefficient admits zero ({@code rec[k{?},j]}).
+     * A PREDICATED TYPE IS ASKED OF THE OBJECT AT THE FIBER. {@code person[ninja]} gives its {@code role} fiber a
+     * ninja, so a value is acceptable where {@code ninja::T[?[name=>str::T]]} is expected when {@code wrapper>>role}
+     * passes that predicate. The wrapper below declares only {@code role} and carries no {@code name} of its own:
+     * <pre>
+     * person[ninja]::[role=>ninja::[name=>'dark_assassin']]   1   the ninja at `role` has the name
+     * person[ninja]::[role=>[name=>7]]                        0   the fiber value's name is an int, not a str
+     * person[ninja]::[role=>[age=>29]]                        0   the fiber value has no name at all
+     * </pre>
+     * A predicate-free type ({@code spectre -> rec::T@spectre}) asks nothing of the shape, so any rec at the fiber
+     * answers it.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec[role]::T[?[role=>rec::T]]@person",
+            "ninja -> rec::T[?[name=>str::T]]@ninja",
+            "baker -> rec::T[?[name=>int::T]]@baker",
+            "spectre -> rec::T@spectre",
+    })
+    @CsvSource(value = {
+            // value                                                         % type        % matches
+            // ---- the object at the fiber passes the predicate; the wrapper carries none of its shape ----
+            "person[ninja]::[role=>ninja::[name=>'dark_assassin']]            % ninja::T    % true",
+            // ---- ...and the wrapper is a person ----
+            "person[ninja]::[role=>ninja::[name=>'dark_assassin']]            % person::T   % true",
+            // ---- a wrapper that also carries the field is still the same answer ----
+            "person[ninja]::[name=>'marko',role=>ninja::[name=>'dark_assassin']] % ninja::T % true",
+            // ---- the object at the fiber has an int name: it is not a ninja ----
+            "person[ninja]::[role=>[name=>7]]                                 % ninja::T    % false",
+            // ---- the object at the fiber has no name: it is not a ninja ----
+            "person[ninja]::[role=>[age=>29]]                                 % ninja::T    % false",
+            // ---- the object at the fiber has a str name, and a baker's name is an int ----
+            "person[baker]::[role=>[name=>'dark_assassin']]                   % baker::T    % false",
+            // ---- a type no fiber holds is not accepted ----
+            "person[ninja]::[role=>ninja::[name=>'dark_assassin']]            % guru::T     % false",
+            // ---- a predicate-free type asks nothing of the shape ----
+            "person[spectre]::[role=>[name=>7]]                               % spectre::T  % true",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testPredicatedTypeIsAskedOfTheFiberValue(final String value, final String type, final boolean matches) {
+        checkMatches(LOG, value, type, matches);
+    }
+
+    /**
+     * THE REC POLY NAMES ITS DECLARED FIELDS. {@code rec[k1,k2]} declares the keys {@code k1} and {@code k2}, so a
+     * literal carrying only {@code k1} fails its type while one carrying both passes. A missing key still READS
+     * as {@code noobj} — the last row is that read, not a type test — which is exactly why a declared field cannot
+     * be silent. Absence is legal only where the field's coefficient admits zero ({@code rec[k{?},j]}).
      */
     @Training(
-            instruction = "does {{{literal}}} conform to the rec poly it declares?",
+            instruction = "does {{{literal}}} carry the fields its rec poly declares?",
             output = "{{{result}}}")
     @ParameterizedTest
     @CsvSource(value = {
-            // a declared slot at coefficient one is required: k2 is declared and absent
+            // a declared field at coefficient one is required: k2 is declared and absent
             "rec[k1,k2]::[k1=>a]                                     % <ERROR>",
-            // ... carried, the literal conforms (unchanged)
+            // ... carried, the literal is accepted
             "rec[k1,k2]::[k1=>a,k2=>b]                               % rec[k1,k2]::[k1=>a,k2=>b]",
-            // the failure is per slot: the middle of three is the absent one
+            // the failure is per field: the middle of three is the absent one
             "rec[k1,k2,k3]::[k1=>a,k3=>c]                            % <ERROR>",
-            // a slot whose own coefficient admits zero ({?}) may be absent
+            // a field whose own coefficient admits zero ({?}) may be absent
             "rec[k1{?},k2,k3]::[k2=>b,k3=>c]                         % rec[k1{?},k2,k3]::[k2=>b,k3=>c]",
-            // an absent key still READS as noobj: the read is untouched, only conformance is judged
+            // an absent key still READS as noobj: the read is untouched, only the type test judges absence
             "[k1=>a]>>k2                                             % noobj",
-            // ... and that holds for a conforming literal reading a key its declaration never named
+            // ... and that holds for an accepted literal reading a key its declaration never named
             "rec[k1,k2]::[k1=>a,k2=>b]>>k3                           % noobj",
     }, delimiter = '%')
-    public void testPolyDeclaredSlots(final String code, final String expected) {
+    public void testRecPolyDeclaredFields(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    @Disabled("rec[#=>#] / rec[int=>int] / rec[#=>int] are keyed polys — a category error since the poly ruling (poly types parameter positions: lst slots, rec traits, object instantiation). Re-express against a declared trait once rec traits land: rec[person] where person declares the slot types.")
+    @Disabled("rec[#=>#] / rec[int=>int] / rec[#=>int] are keyed polys — a category error since the poly ruling (poly types parameter positions: lst indices, rec fields, rel vertices, object instantiation). Re-express against a fibered declaration whose predicate types each field.")
     @ParameterizedTest
     @Training(instruction = "does {{{record}}} match {{{type}}}?", output = "{{{matches}}}")
     @CsvSource(value = {
@@ -1167,18 +1216,18 @@ public class RecTest extends AbstractAlgebraTest {
      * </pre>
      * A call whose DOMAIN NAMES a type ({@code fight?dom=ninja}) reaches only the candidate whose OWN type is
      * that name — the ninja component, not the wrapper. There is no selection step: each candidate is resolved
-     * and invoked on its own, and the type system says which one the domain is about. The wrapper is a
-     * {@code ninja} only by covariance ({@link Type.Helper#recPolySupertype}: a poly entry is a supertype), which
-     * is type acceptance, not dispatch identity; the ninja is the object the definition was written for, so a body
-     * reading {@code >>weapon} sees the ninja's. A domain naming no component type ({@code ponder?dom=person})
-     * answers on the wrapper, as before.
+     * and invoked on its own, and the type system says which one the domain is about. The wrapper is accepted
+     * where a {@code ninja} is expected (the object at a fiber answers for it),
+     * which is type acceptance, not dispatch identity; the ninja is the object the definition was written for, so a
+     * body reading {@code >>weapon} sees the ninja's. A domain naming no component type ({@code ponder?dom=person})
+     * answers on the wrapper.
      * <p>
      * A {@code typer} ({@code as}, {@code type}, {@code vid}, {@code tid}) is OPAQUE: it decides what the value IS,
      * so it cannot be distributed over the old basis and applies to the wrapper alone — one result, poly erased.
      * <p>
      * One level only, and only for a wrapper: a candidate's own components do not join
-     * ({@link #testDelegationIsOneLevelDeep}), and a {@code rec[k1,k2]} SLOT declaration is not a wrapper
-     * ({@link #testSlotDeclarationIsNotAWrapper}).
+     * ({@link #testDelegationIsOneLevelDeep}), and a {@code rec[k1,k2]} FIELD declaration is not a wrapper
+     * ({@link #testFieldDeclarationIsNotAWrapper}).
      */
     @ParameterizedTest
     @TestData(value = {
@@ -1231,13 +1280,13 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * A SLOT DECLARATION IS NOT A WRAPPER. {@code rec[k1,k2]} names the keys a literal carries — its bracket is a
-     * slot list, not an instantiation — so it exposes no components and {@code k1}'s rec is not a candidate. The
+     * A FIELD DECLARATION IS NOT A WRAPPER. {@code rec[k1,k2]} names the keys a literal carries — its bracket is a
+     * field list, not an instantiation — so it exposes no fibers and {@code k1}'s rec is not a candidate. The
      * narrowing matters: fanning out here would apply the instruction to {@code [a=>1]} under a domain of
      * {@code rec[k1,k2]}, which the component does not satisfy, and the read would fail instead of answering.
      */
     @Test
-    public void testSlotDeclarationIsNotAWrapper() {
+    public void testFieldDeclarationIsNotAWrapper() {
         AbstractMetatronTest.checkCodeParseApply(LOG, "rec[k1,k2]::[k1=>[a=>1],k2=>2]>>k1", "[a=>1]");
     }
 
@@ -1266,7 +1315,7 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * A WRAPPER MAY EXPOSE TWO COMPONENTS. {@code duo_person} declares {@code rec[role,position]} — two slots — and
+     * A WRAPPER MAY EXPOSE TWO COMPONENTS. {@code duo_person} declares {@code rec[role,position]} — two fibers — and
      * an instance names a type for each ({@code duo_person[duo_ninja,duo_position]}), so the wrapper is a stream of
      * three objects to an instruction: itself, its {@code role} (a {@code duo_ninja}) and its {@code position} (a
      * {@code duo_position}). This test pins the DECLARATION and the VALUE:
@@ -1275,15 +1324,9 @@ public class RecTest extends AbstractAlgebraTest {
      * *marko.type()                  the instantiation keeps both type arguments
      * *marko>>role, >>position       each component reads out as the type the instantiation named for it
      * </pre>
-     * A declared slot at coefficient one is REQUIRED ({@code Type.Helper.recSlotsCarried}): the same literal with
-     * {@code position} omitted does not conform to {@code duo_person[duo_ninja,duo_position]::T} and fails at parse
-     * time. Absence would be legal only for {@code rec[role,position{?}]}.
-     * <p>
-     * The component traits are declared BARE ({@code rec::T@duo_position}), mirroring {@code ninja} in
-     * {@link #testWrapperDelegation}. A trait declared WITH a refinement ({@code position :: rec::T[?[title=>str::T,
-     * rank=>int::T]]@position}, the target snippet's spelling) was not conferred on its wrapper at all when these
-     * tests were written — reported as a finding, and under repair in {@code Type.Helper.recPolyConformance} — so no
-     * assertion here depends on which way the refined form resolves.
+     * A fiber at coefficient one is REQUIRED: the same literal with {@code position} omitted is not a
+     * {@code duo_person[duo_ninja,duo_position]} and fails at parse time. Absence would be legal only for
+     * {@code rec[role,position{?}]} (or a {@code position} the declaration types as optional).
      */
     @ParameterizedTest
     @TestData(value = {
@@ -1297,10 +1340,10 @@ public class RecTest extends AbstractAlgebraTest {
             "*marko               % duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]]",
             // ... and its type round-trips its DECLARATION and both type arguments
             "*marko.type()        % rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position=>rec::T]]@duo_person[duo_ninja,duo_position]",
-            // each component is carried intact, under the type the instantiation named for its slot
+            // each component is carried intact, under the type the instantiation named for its fiber
             "*marko>>role         % duo_ninja::[name=>'dark_assassin']",
             "*marko>>position     % duo_position::[title=>'sniper',rank=>5]",
-            // a declared slot at coefficient one is required: position is declared and absent
+            // a fiber at coefficient one is required: position is declared and absent
             "duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin']] % <ERROR>",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTwoComponentWrapperConstruction(final String code, final String expected) {
@@ -1308,14 +1351,10 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * COVARIANCE REACHES BOTH MEMBERS. A rec's poly names the traits the value implements ({@link
-     * Type.Helper#recPolySupertype}), and a two-member poly answers EACH member: a {@code duo_person[ninja,position]}
-     * value is acceptable where {@code duo_ninja::T}, where {@code duo_position::T} and where its own {@code
-     * duo_person::T} is expected — and nowhere else ({@code duo_baker::T}, an unrelated declared trait, rejects it).
-     * <p>
-     * A row here carries the expected boolean, so a two-column {@code code % expected} row cannot express it: the
-     * assertion is the same Java one {@code testRecPolyValueConformsToItsTraits} makes (parse value, parse type,
-     * {@code value.test(type)}), not {@code checkCodeParseApply}.
+     * EITHER FIBER ANSWERS. A {@code duo_person[duo_ninja,duo_position]} value holds a ninja at {@code role} and a
+     * position at {@code position}, and the object at a fiber answers for it, so it is acceptable where
+     * {@code duo_ninja::T}, where {@code duo_position::T} and where its own {@code duo_person::T} is expected — and
+     * nowhere else ({@code duo_baker::T}, an unrelated declared type, rejects it).
      */
     @ParameterizedTest
     @TestData(value = {
@@ -1331,12 +1370,8 @@ public class RecTest extends AbstractAlgebraTest {
             "duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]] % duo_person::T    % true",
             "duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]] % duo_baker::T     % false",
     }, delimiter = '%', quoteCharacter = '~')
-    public void testTwoComponentWrapperConformsToBothTraits(final String value, final String type, final boolean matches) {
-        final Obj v = ObjmtronSerializer.parse(value);
-        final Type t = ObjmtronSerializer.parse(type);
-        assertEquals(matches, v.test(t),
-                "value %s (tid=%s, type vid=%s) tested against %s (vid=%s, tid=%s) should be %s"
-                        .formatted(v, v.tid(), v.type().vid(), t, t.vid(), t.tid(), matches));
+    public void testTwoFiberWrapperIsAcceptedWhereEitherFiberIs(final String value, final String type, final boolean matches) {
+        checkMatches(LOG, value, type, matches);
     }
 
     /**
@@ -1373,7 +1408,7 @@ public class RecTest extends AbstractAlgebraTest {
      * resolved and invoked on its own, and the type system says which candidate the domain is about (see
      * {@code Processor.Helper#applicable}). {@code duo_aim} is declared {@code dom=duo_position}, so its body's
      * {@code >>title} reads the position component's title, 'sniper' — the wrapper is not a position by identity,
-     * it only borrows the trait by covariance.
+     * it is only accepted where one is expected.
      * <p>
      * The same shape declared {@code dom=duo_ninja} does NOT fire on the position component: it reaches the {@code
      * role} component, whose own {@code >>title} is absent — hence the fail, not 'sniper'. {@code duo_shadow}
@@ -1449,7 +1484,7 @@ public class RecTest extends AbstractAlgebraTest {
 
     /**
      * ONE LEVEL DEEP, WITH TWO PARTS. The candidates are the wrapper and the components its DECLARATION names —
-     * nothing else. Here the {@code role} slot itself holds a wrapper, so the role candidate is applied to AS THE
+     * nothing else. Here the {@code role} fiber itself holds a wrapper, so the role candidate is applied to AS THE
      * OBJECT IT IS: its own fields join the read ({@code 'middle'}, {@code 32}) and its components' fields do not
      * ({@code 'deep'} never answers, and neither does the inner wrapper's position title {@code 'inner_title'}):
      * <pre>
@@ -1480,9 +1515,8 @@ public class RecTest extends AbstractAlgebraTest {
      * DISPATCH IS "GO TO THE FIELD, GET THE VALUE, APPLY THE INSTRUCTION" — the instantiation's poly is NOT the
      * boundary. {@code loaf} is a {@code person[baker]}, so its poly names {@code baker}, but its {@code role} field
      * actually holds a {@code ninja}. A call whose domain is {@code ninja} resolves against that FIELD'S VALUE and
-     * runs on it; nothing about the declared instantiation enters the decision. The old name-level selection
-     * ({@code namesTrait}) refused this call because {@code ninja} was not one of {@code person[baker]}'s entries —
-     * per-candidate resolution plus the identity question is the whole rule now.
+     * runs on it; nothing about the declared instantiation enters the decision, although {@code ninja} is not one
+     * of {@code person[baker]}'s entries: per-candidate resolution plus the identity question is the whole rule.
      * <p>
      * A single-valued expectation is also a multiplicity claim: {@code *loaf.fight()} answering ONE string says the
      * wrapper did not take the call (it would have contributed a second answer), while {@code ponder?dom=person}
@@ -1508,5 +1542,165 @@ public class RecTest extends AbstractAlgebraTest {
     }, delimiter = '%', quoteCharacter = '~')
     public void testDelegationReachesTheFieldValueNotTheInstantiation(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * RECURSIVE FIBRATION: a fiber may hold a fibered rec. A {@code dojo[master]} holds a {@code master} at its
+     * {@code head}, and that {@code master[form]} holds a {@code form} at its {@code style}, so the dojo is accepted
+     * where a master is expected (the object at its fiber) and where a form is expected (the object at its fiber's
+     * fiber). Only fibers answer: {@code name} is a field, not a fiber, so the dojo is not a str.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "form -> rec::T@form",
+            "master -> rec[style]::T[?[name=>str::T,style=>rec::T]]@master",
+            "dojo -> rec[head]::T[?[name=>str::T,head=>rec::T]]@dojo",
+            "rival -> rec::T@rival",
+    })
+    @CsvSource(value = {
+            // value                                                                                          % type       % matches
+            "dojo[master]::[name=>'kodokan',head=>master[form]::[name=>'kano',style=>form::[moves=>7]]]  % dojo::T    % true",
+            "dojo[master]::[name=>'kodokan',head=>master[form]::[name=>'kano',style=>form::[moves=>7]]]  % master::T  % true",
+            "dojo[master]::[name=>'kodokan',head=>master[form]::[name=>'kano',style=>form::[moves=>7]]]  % form::T    % true",
+            "dojo[master]::[name=>'kodokan',head=>master[form]::[name=>'kano',style=>form::[moves=>7]]]  % rival::T   % false",
+            "dojo[master]::[name=>'kodokan',head=>master[form]::[name=>'kano',style=>form::[moves=>7]]]  % rec::T     % true",
+            "dojo[master]::[name=>'kodokan',head=>master[form]::[name=>'kano',style=>form::[moves=>7]]]  % str::T     % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testRecursiveFibration(final String value, final String type, final boolean matches) {
+        checkMatches(LOG, value, type, matches);
+    }
+
+    /**
+     * INSTRUCTIONS ON THE OUTER AND INNER TYPES OF A RECURSIVE FIBRATION. Dispatch is one level deep: the dojo's
+     * candidates are itself and the master at its {@code head}, so a dojo instruction runs on the dojo and a master
+     * instruction on the master, while a form instruction finds no candidate that is a form (the form is two fibers
+     * down) and answers {@code noobj}. Reached through {@code >>head}, the master is a wrapper in its own right, and its
+     * form answers. Untyped reads fan out one level the same way.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "form -> rec::T@form",
+            "master -> rec[style]::T[?[name=>str::T,style=>rec::T]]@master",
+            "dojo -> rec[head]::T[?[name=>str::T,head=>rec::T]]@dojo",
+            "kodokan -> dojo[master]::[name=>'kodokan',head=>master[form]::[name=>'kano',style=>form::[moves=>7]]]@kodokan",
+            "visit -> |inst?<=dojo(){ 'a dojo visit' }",
+            "bow -> |inst?<=master(){ >>name }",
+            "drill -> |inst?<=form(){ >>moves }",
+    })
+    @CsvSource(value = {
+            // ---- the outer type's instruction runs on the wrapper ----
+            "*kodokan.visit()                 % 'a dojo visit'",
+            // ---- the fiber's type: dispatch reaches the master at head ----
+            "*kodokan.bow()                   % 'kano'",
+            // ---- one level deep: the form two fibers down is no candidate of the dojo ----
+            "*kodokan.drill()                 % noobj",
+            // ---- ...but it is a candidate of the master that holds it ----
+            "*kodokan>>head.drill()         % 7",
+            "*kodokan>>head.bow()           % 'kano'",
+            // ---- untyped reads fan out one level: the dojo's and the master's names, never the form's moves ----
+            "*kodokan>>name                   % {'kodokan','kano'}",
+            "*kodokan>>head>>moves          % 7",
+            "*kodokan>>moves                  % noobj",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testRecursiveFibrationInstructions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A REC BRACKET'S FIELDS MUST BE THERE. Every field a bracket names is present unless its entry admits zero; extra
+     * fields are free. A named bracket at a field ({@code pin}'s {@code at} is a {@code coord}) is read in turn, so a
+     * value missing a field one level down fails the outer type as well.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "coord -> rec[x,y]::T@coord",
+            "pin -> rec[aa,bb]::T[?[aa=>coord::T]]@pin",
+    })
+    @CsvSource(value = {
+            // value                        % type                % matches
+            "[a=>1,b=>2]                    % rec[a,b]::T         % true",
+            "[a=>1]                         % rec[a,b]::T         % false",
+            "[a=>1,b=>2,c=>3]               % rec[a,b]::T         % true",
+            "[a=>1]                         % rec[a,b{?}]::T      % true",
+            "[c=>1]                         % rec[a{?},b{?}]::T   % true",
+            "[x=>1,y=>2]                    % coord::T            % true",
+            "[x=>1]                         % coord::T            % false",
+            "[aa=>[x=>1,y=>2],bb=>3]        % pin::T              % true",
+            "[aa=>[x=>1],bb=>3]             % pin::T              % false",
+            "[aa=>[x=>1,y=>2]]              % pin::T              % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testFibrationFields(final String value, final String type, final boolean matches) {
+        checkMatches(LOG, value, type, matches);
+    }
+
+    /**
+     * AN ANONYMOUS REC BRACKET NAMES FIBERS TOO ({@code Type#isFibered}): the value at one of its fields answers for
+     * the rec, so {@code rec[k1,k2]::[k1=>scout::[…],k2=>2]} is accepted where a scout or an int is expected. A plain
+     * rec names no fibers, so its fields never answer for it.
+     */
+    @ParameterizedTest
+    @TestData(value = {"scout -> rec::T@scout"})
+    @CsvSource(value = {
+            // value                                          % type       % matches
+            "rec[k1,k2]::[k1=>scout::[name=>'kai'],k2=>2]     % scout::T   % true",
+            "rec[k1,k2]::[k1=>scout::[name=>'kai'],k2=>2]     % int::T     % true",
+            "rec[k1,k2]::[k1=>scout::[name=>'kai'],k2=>2]     % str::T     % false",
+            "[k1=>scout::[name=>'kai'],k2=>2]                 % int::T     % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testAnonymousFibration(final String value, final String type, final boolean matches) {
+        checkMatches(LOG, value, type, matches);
+    }
+
+    /**
+     * A FIBER MAY HOLD A MULTIPLICITY. A {@code troupe}'s {@code crew} holds any number of recs, so a troupe holding two
+     * scouts is accepted where two scouts are expected and not where one is; a troupe holding one scout is one scout.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "scout -> rec::T@scout",
+            "troupe -> rec[crew]::T[?[crew=>rec{*}::T]]@troupe",
+    })
+    @CsvSource(value = {
+            // value                                                              % type          % matches
+            "troupe[scout]::[crew=>{scout::[name=>'a'],scout::[name=>'b']}]       % scout{2}::T   % true",
+            "troupe[scout]::[crew=>{scout::[name=>'a'],scout::[name=>'b']}]       % scout{*}::T   % true",
+            "troupe[scout]::[crew=>{scout::[name=>'a'],scout::[name=>'b']}]       % scout::T      % false",
+            "troupe[scout]::[crew=>scout::[name=>'a']]                            % scout::T      % true",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testFiberMultiplicity(final String value, final String type, final boolean matches) {
+        checkMatches(LOG, value, type, matches);
+    }
+
+    /**
+     * A FIBER MAY HOLD A MONO. {@code rec[o]::T[?[o=>int::T]]@ex} is a rec whose fiber {@code o} holds an int, so an
+     * {@code ex} is both a rec and an int: it is accepted where an int is expected, and an int instruction reaches the
+     * int at {@code o} (the wrapper itself is a rec, not an int). A domain no candidate has answers {@code noobj}.
+     */
+    @ParameterizedTest
+    @TestData(value = {"rec[o]::T[?[o=>int::T]]@ex"})
+    @CsvSource(value = {
+            "ex::[o=>12].plus?<=int(45)           % 57",
+            "ex::[o=>12].plus(45)                 % <ERROR>",
+            "ex::[o=>12]>>o                       % 12",
+            "ex::[o=>12].plus?<=str('x')          % noobj",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testMonoFiberInstructions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * The same {@code ex} judged as a value: a rec, an {@code ex}, and an int through its fiber, but not a str.
+     */
+    @ParameterizedTest
+    @TestData(value = {"rec[o]::T[?[o=>int::T]]@ex1"})
+    @CsvSource(value = {
+            // value          % type      % matches
+            "ex1::[o=>12]      % int::T    % true",
+            "ex1::[o=>12]      % ex1::T     % true",
+            "ex1::[o=>12]      % rec::T    % true",
+            "ex1::[o=>12]      % str::T    % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testMonoFiberAcceptance(final String value, final String type, final boolean matches) {
+        checkMatches(LOG, value, type, matches);
     }
 }

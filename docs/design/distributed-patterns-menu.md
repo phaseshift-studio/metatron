@@ -49,7 +49,7 @@ architecture, and every entry here lowers to it. `PeerSpawn` (forking a peer JVM
 | B | data-local shard          | the store is the sum of its owners' stores               | needs a denotation decision                          |
 | C | authority push-down       | delegation (Thm 5 + a pure chain)                        | open                                                 |
 | D | parallel fan-out          | Thm 5                                                    | **done** (2026-10-26): virtual-threaded routes, max RTT |
-| E | tree reduction            | associativity + commutativity: any bracketing, any shape | **v1 done**: `?hops=n`                               |
+| E | tree reduction            | associativity + commutativity: any bracketing, any shape | **v1 done**: `?hop=n`                               |
 | F | ordered fold              | associativity alone                                      | struck for streams; `lst` only                       |
 | G | keyed reduce              | Thm 19 per key                                           | **v1 done**: pointwise, `lst` values too             |
 | H | redundant / hedged shards | idempotence                                              | open                                                 |
@@ -63,7 +63,7 @@ architecture, and every entry here lowers to it. `PeerSpawn` (forking a peer JVM
 | P | computed seeds            | partition an index space, not data                       | open                                                 |
 | Q | monad migration           | ship the monad to the address's authority                | open                                                 |
 | R | durable results           | result identity in addressed mailboxes                   | open                                                 |
-| S | master-participates       | §7 re-association over `{master} ∪ peers`                | **ruled 2026-10-24**; Phase 7                        |
+| S | master-participates       | §7 re-association over `{master} ∪ peers`                | **done 2026-10-28** — `?place=[local,peer]`          |
 
 ---
 
@@ -88,7 +88,7 @@ map into such a fold recombines through that fold, looked up on its target objec
 | rec `sum`     | itself      | the deep merge's fold declares `monoidic` + `commutative`: a `lst` is an atom of the merge, so colliding values (lsts included) bag in any order — distributed rec merging |
 
 ```
-slave_i:  start?hops=0(<part_i>).plus(1).count()
+slave_i:  start(<part_i>).plus(1).count?hop=0()
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().sum()
 ```
 
@@ -107,7 +107,7 @@ floatable run and the reducer into each summand.
 
 ```
 source:  */usr/data/+/current.plus(1).sum()
-slave:   from?hops=0(</usr/data/+/current>).plus(1).sum()        [-- the same code to every owner --]
+slave:   from?hop=0(</usr/data/+/current>).plus(1).sum()        [-- the same code to every owner --]
 master:  start([s, s]).select([to(p_1), to(p_2)]).merge().sum()
 ```
 
@@ -129,7 +129,7 @@ a pure chain.
 ```
 source:  *<ws://booger.local:8555/n/+>.plus(1).sum()
 today:   ships from(/n/+); every value crosses; plus·sum run at home
-emit:    start([from?hops=0(</n/+>).plus(1).sum()]).select([to(<ws://booger.local:8555>)]).merge()
+emit:    start([from?hop=0(</n/+>).plus(1).sum()]).select([to(<ws://booger.local:8555>)]).merge()
 ```
 
 **Needs.** `Route.peer` lowered, with the address taken from the seed's authority, and a pushable-span scan that
@@ -153,9 +153,9 @@ the forked-peer suites (`DistributedRewriteTransportTest`, `TreeShardTransportTe
 the transport's eager future-resolution (`Processor.Helper.applyFunction`'s `resolveFuture`) untouched. The
 paradigmatic form is an async `eval`/`to` returning a `future::T` with `merge()` as the await — collapsing the layout
 back to `select([eval(p_i)]).merge().<combiner>` and making the thread invisible (see §5). S (the master's own k+1
-lane) is the remaining piece.
+lane) landed as `?place=[local,peer]` — §S.
 
-### E. Tree reduction — `Route.tree(hops)` — v1 done (2026-10-21)
+### E. Tree reduction — `?hop=height{arity}` — v1 done (2026-10-21, axes 2026-10-28)
 
 **Law.** Associativity licenses any bracketing and commutativity any shape, so a fold over a tree of partials is the
 fold over the bag:
@@ -167,20 +167,27 @@ fold over the bag:
 This is the current shard applied recursively: every interior node runs the master's shape (`merge().<C>`) over its
 children's partials, and every leaf runs the slave's. Because A computes the combiner, E applies to every A-fold.
 
-**Realized (v1).** `law_shard`'s route is `Route.tree(1, …)`, and `?hops=n` replaces `?no_shard`. A peer re-plans the
-part it is handed because applying a code compiles it (`Machine.applyCode`), so the rule fires again where the part
-lands; at `hops = 0` the part is a leaf.
+**Realized (v1).** `law_shard`'s fan-out decision states the axes — `.place(PlaceSet.peer()).hop(1, cInt.ANY())
+.split(Partition.stream())` — and the budget is `?hop=height{arity}`: the height, and as a leading coefficient the
+**arity**, how many children one node may fan out to (`[h,1]` is the chain, the pair form because a coefficient of one
+normalizes away). A peer re-plans the part it is handed because applying a code compiles it (`Machine.applyCode`), so
+the rule fires again where the part lands; at a height of zero the part is a leaf, and a zero arity is the identity.
 
 ```
-root:      {1,…,8}.plus(1).sum?hops=2()
-        ⇒  start([start?hops=1({1,…,8}).plus(1).sum()]).select([to(p_1)]).merge().sum()
-on p_1:    start([start?hops=0({1,3,5,7}).plus(1).sum(), start?hops=0({2,4,6,8}).plus(1).sum()])
+root:      {1,…,8}.plus(1).sum?hop={2}2()                        [-- height 2, at most 2 children per node --]
+        ⇒  start([start({1,…,8}).plus(1).sum?hop={2}1()]).select([to(p_1)]).merge().sum()
+on p_1:    start([start({1,3,5,7}).plus(1).sum?hop={2}0(),
+                  start({2,4,6,8}).plus(1).sum?hop={2}0()])
              .select([to(p_2), to(p_3)]).merge().sum()                 [-- p_1's own dialed peers --]
 ```
 
-The budget resolves nearest first: a `?hops` on any instruction of the chain (the reducer under the `{…}` sugar,
-`sum?hops=2()`), else the plan's tree route. The default of 1 is the star the shard always was. Generated slaves state
-their budget on an explicit `start?hops=n-1`, and `?hops` is stripped from every copied instruction. Witnessed by
+The axis resolves in chain order — the first statement wins: a `?hop` on any instruction of the chain (the reducer
+under the `{…}` sugar, `sum?hop=2()`), else the plan's tree route. The default of height 1, arity the local
+out-degree, is the star the shard always was. The arity caps the fan-out (the first `w` lanes of the emitter's lane
+order, home-first then the resolution order — deterministic), still clamped by `min(shares, seed)`. The emitted slave
+restates the FORM, never the number — the same arity one height down, on the slave's **fold** (its reducer, not its
+seed): `{2}2 ⇒ {2}1 ⇒ 0`. `?hop` is stripped from every copied instruction (`?hops`, the deprecated pre-singular
+spelling, is read as an alias for one cycle and stripped under either spelling). Witnessed by
 `TreeShardTransportTest`: this machine dials p_1, p_1 dials p_2 and p_3, and p_1's own compiler plans the leaves.
 
 **Still open.**
@@ -188,11 +195,12 @@ their budget on an explicit `start?hops=n-1`, and `?hops` is stripped from every
 - **A machine-level default.** The plan carries the default today. A machine-wide one could sit on the compiler's
   rewriter rec (it already takes parameters, `fixpoint_rewriter::[max=>N]`), or plans could live at an address so a
   machine reconfigures one by writing it.
-- **Visited-authority exclusion.** In the live two-host setup each console dials the other, so at `hops ≥ 2` a part
+- **Visited-authority exclusion.** In the live two-host setup each console dials the other, so at `hop ≥ 2` a part
   re-planned on booger bounces back to ginger. That is correct (every level partitions its part exactly) and bounded
   by the budget, but wasteful. The fix is for the slave to carry the authorities already in the tree.
-- **An interior node's own share.** v1 forwards everything and only recombines; keeping a part is S ("the master
-  works too").
+- **An interior node's own share.** v1 forwards everything and only recombines; keeping a part is S, which landed as
+  the `local` designator of `?place` (`?place=[local,peer]`) — the arity is orthogonal to it (`?hop={2}3` at the
+  master takes two children, `?place` decides whether one of the master's shares stays home).
 - The dial graph is the reduction tree, so a machine reachable only through an intermediate host is reached.
   `MachineSwarmMigrationTest` hand-writes the same interior node with barriers (`barrier(uri).sum().to(uri)`).
 
@@ -212,7 +220,7 @@ priority.
 
 ```
 combiner(group([k⇒h])) = sum()==[_=>combiner(h)]
-slave_i:  start?hops=0(<part_i>).group([mod(3)=>sum()])                    [-- [1=>1,0=>3,2=>5] --]
+slave_i:  start(<part_i>).group([mod(3)=>sum()])?hop=0                     [-- [1=>1,0=>3,2=>5] --]
 master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=>sum()]   [-- [1=>{1,4},…] → [1=>5,…] --]
 ```
 
@@ -220,7 +228,7 @@ The rec `sum` is the deep merge: colliding partials append into a bag, and a bul
 ones) reads as its copies — `Rec.plus` now reads coefficients through the merge (`Poly.Helper.distributed`). `==[_=>C]`
 is `select`, the per-key fold. `LawTable.keyed` types a group's spec folds with the carrier, so the combiner is legible
 before resolution. A nested `group` shards (its combiner is a chain, recursively), and E applies unchanged
-(`group?hops=2(…)`). Witnessed by `DistributedRewriteTransportTest` (scalar, uri- and lst-keyed, nested) and
+(`group?hop=2(…)`). Witnessed by `DistributedRewriteTransportTest` (scalar, uri- and lst-keyed, nested) and
 `TreeShardTransportTest` (`testKeyedTreeOverTransport`); `catInstSetTest#testAprioriPruning` pins what is declined.
 `group` itself now keys a bulked member by the member, not its multiplicity (`{1,1,2}.group([_=>count()])` is
 `[1=>2,2=>1]`, no longer `[{2}1=>2,2=>1]`).
@@ -335,15 +343,15 @@ Stage 3).
 
 **Needs.** A `Route.space` lowering and a `shard_result::[authority, round, status, value]`.
 
-### S. Master-participates — the local lane (ruled 2026-10-24)
+### S. Master-participates — the local lane (ruled 2026-10-24, done 2026-10-28)
 
 **Law.** The master is a place at distance zero, so the fan-out is over `{master} ∪ peers`: `k = peers + 1` slices,
 the master folding one locally (its own lane) and shipping the other `k-1`. Re-association is result-preserving (§7),
 so the fold over master-local + peer partials is the fold over the bag.
 
-**Why.** Today `shard` sets `k = min(peers, seed)` and ships **all `k` slices to peers**; the master only runs
-`merge().<combiner>` and folds nothing. With one peer the whole seed leaves the master, and in a 2-cycle the entire
-fold bounces to the leaf and back. Keeping a slice earns the master its share and shrinks every hop's payload.
+**Why.** In v1 `shard` set `k = min(peers, seed)` and shipped **all `k` slices to peers**; the master only ran
+`merge().<combiner>` and folded nothing, so with one peer the whole seed left the master. Keeping a slice earns the
+master its share and shrinks every hop's payload.
 
 ```
 master:  start([ start(own_slice).<run>.<C>,       [-- folded in place: a local lane --]
@@ -353,9 +361,13 @@ master:  start([ start(own_slice).<run>.<C>,       [-- folded in place: a local 
            .merge().<C>
 ```
 
-**Needs.** The emitter's local/keep arm (§12.5) with a non-blocking local fold plus the latch (§13.5 — the lane gap);
-`k = peers + 1` in `shard`'s partition arithmetic. This is the first slice of Phase 7 (lanes): the master's own lane
-is a fan-out target **always**, not just the peerless fallback §13.3 frames it as.
+**Realized (2026-10-28).** The `local` designator of `?place` is the mechanism: `?place=[local,peer]` asks for one home
+share and one per dialed peer, and the lanes are the design's — **lane 0 is the addressless `eval()`** (the home place
+at distance zero, gathered by the same `>>rhs`), then the peers in resolution order. Nothing about the fan-out is
+special-cased: the share is strided over the seed like any other, the local lane is part of `k` in `shard`'s partition
+arithmetic, and the master re-applies the same combiner to its own partial. `[{4}local]` is the same mechanism with
+four home lanes and no peer at all, and the decision still demands the off-machine merge's laws because a home lane is
+a concurrent partial gathered after the fact (`distributed-computing-qparams.md` §2, `PlaceLaneTest`).
 
 ---
 
@@ -373,8 +385,8 @@ is a fan-out target **always**, not just the peerless fallback §13.3 frames it 
 ## 4. Open decisions
 
 1. **B's denotation.** A mounted cluster space at `/usr/data/#`, or another declaration.
-2. **Distribution parameters.** Where a machine-wide default lives (E's `hops` first): the compiler's rewriter rec, or
-   plans written at an address. The expression (`?hops` on any instruction) and the plan's route are the other two
+2. **Distribution parameters.** Where a machine-wide default lives (E's `hop` first): the compiler's rewriter rec, or
+   plans written at an address. The expression (`?hop` on any instruction) and the plan's route are the other two
    layers, nearest first.
 3. **E's visited set.** Carried authorities, the origin only, or the dial graph's own direction.
 4. **G's parametric combiner.** Settled (v1): computed from the value inst directly (`LawTable.pointwise`); a `lst` is
