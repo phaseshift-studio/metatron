@@ -55,10 +55,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * scores each by how specific its signature is, taking the highest-scoring candidate its binder can
  * make concrete.
  *
- * Scoring criteria are in {@link #scoreSpecificity}: concrete domain, exact domain base-path match,
- * a non-base dom/rng, argument specificity (with an exact-argument bonus), the large bonus that
- * makes an as() candidate whose range names the requested type win, and a small bonus for carrying
- * a function body.
+ * Scoring criteria are in {@link #scoreSpecificity}: concrete domain, exact domain base-path match
+ * (or, smaller, the lhs's own base form), a non-base dom/rng, argument specificity (with an
+ * exact-argument bonus), the large bonus that makes an as() candidate whose range names the
+ * requested type win, and a small bonus for carrying a function body.
  *
  * The from/at and as() shortcuts are kept here (they return a finished contract rather than a
  * candidate, so they deliberately bypass the binder).
@@ -268,9 +268,13 @@ public class SpecificitySelector extends MRec implements Selector {
         // domain specificity (most important - 1000 points)
         if (!apiDomID.isGeneric() && !apiDomID.hasPattern()) {
             score += 1000;
-            // bonus for exact domain match (500 points)
+            // bonus for exact domain match (500 points), and a smaller one (250) for the lhs's own base form: a value of a
+            // named type can pass more than one base domain (ex::[o=>12] is a rec, and an int through its fiber o), and
+            // the form it is made of must win that tie, or the pick falls to the order the overloads were registered in
             if (lhsID.basePath().equals(apiDomID.basePath())) {
                 score += 500;
+            } else if (lhs.baseTypeID().basePath().equals(apiDomID.basePath())) {
+                score += 250;
             }
             // bonus for more specific dom/rng matches
             if (!apiInst.dom().isBaseType())

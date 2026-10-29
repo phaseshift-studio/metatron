@@ -255,16 +255,17 @@ candidate. `Processor.Helper.delegate` keeps only the loop.
 `delegate` is the **wrapper's fan-out** — applying an instruction to a wrapper is applying it to a stream of two
 objects, `person[ninja]::[…].xyz()` = `{ person::[…], ninja::[…] }.xyz()`. A wrapper is a `rec` whose type INSTANTIATES
 a declaration that names the fields it exposes (`rec[role]::T[?[…,role=>rec::T]]@person` names `role`; the instance's
-poly is the component TYPES), so `Typer.Helper.candidates` yields the wrapper *plus* each declared slot that is present
-and holds a `rec` — one level deep, since a candidate's own slots never join.
+poly is the component TYPES, `Type#recFibers`), so `Typer.Helper.candidates` yields the wrapper *plus* each fiber
+that is present and holds a `rec` — one level deep, since a candidate's own fibers never join.
 
 EACH CANDIDATE GOES THROUGH THE WHOLE NORMAL PATH: the Processor resolves against THAT candidate, then invokes.
 There is nothing special about a poly type — the resolver and the type checker do what they do, only on the value of
 the field keyed by the poly name — and `Typer.Helper.applicable` asks the type system whether the resolved instruction
 is about the candidate at all: a generic/pattern domain is about every candidate, a base-typed domain is about the
 wrapper as that form, and any other domain reaches the candidate whose own type IDENTITY is that name (the field's
-value for `fight?dom=ninja`, the wrapper for `ponder?dom=person`). The wrapper only BORROWS a component's trait by
-covariance (`Type.Helper.recPolySupertype`), which is type acceptance and not identity, so that rule is not consulted
+value for `fight?dom=ninja`, the wrapper for `ponder?dom=person`). The wrapper is acceptable where a fiber's type is
+expected (the fiber check at the top of `Type.test` and `Obj.Helper.testObjs`), which is type acceptance and not
+identity, so that rule is not consulted
 for dispatch. A candidate the instruction is not applicable to contributes `noobj` — the multiplicity's identity
 (`{noobj,29} = 29`), not a failure; a `fail::` from a candidate it DID apply to propagates. `Inst.Form.typer` (`as`,
 `type`, `vid`, `tid`) is opaque and applies to the wrapper alone.

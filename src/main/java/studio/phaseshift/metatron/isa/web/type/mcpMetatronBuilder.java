@@ -184,33 +184,34 @@ public final class mcpMetatronBuilder {
 
             // machine_info — THE ORIENTATION TOOL: what VM am I in, and what does it call things?
             tools.at(uri(mTool.toolName(toolTid("machine_info"))), docWrap(instC(
-                    toolTid("machine_info").dom(ALL.maybe()).rng(ALL.maybe()),
-                    lst(), (lhs, inst) -> {
-                        if (!Machine.loaded()) return str("no machine loaded");
-                        final Machine machine = Machine.current();
-                        // COUNTS AND NAMES, NEVER THE TABLES. 500+ redirect rows in a tool result would burn an
-                        // agent's whole budget; the actionable facts are the spellings it may write and the short
-                        // names that are AMBIGUOUS, because those are the ones that bite.
-                        final Obj isaPrefix = Machine.read(f("/instset/prefix"));
-                        final Obj redirect = Machine.read(f("/memory/redirect"));
-                        return rec(
-                                uri(MACHINE), rec(uri(VID), uri(machine.vid()), uri(TID), uri(machine.tid())),
-                                uri("spaces"), jnt(machine.memory().spaces().jvm().size()),
-                                // the spellings the vocabulary answers to (math:cos, web:…), and their homes
-                                uri(PREFIX), isaPrefix.isRec() ? isaPrefix : rec(),
-                                // the peers this machine can NAME instead of dial (//ginger/a)
-                                uri(PEER), machine.network().prefixes(),
-                                // the name index: how big, and which names denote more than one home
-                                uri(REDIRECT), rec(
-                                        uri("rows"), jnt(redirect.isRec() ? redirect.asRec().jvm().size() : 0),
-                                        uri("ambiguous"), lst(redirect.isRec()
-                                                ? redirect.asRec().jvm().entrySet().stream()
-                                                .filter(e -> e.getValue().stream().count() > 1)
-                                                .map(e -> str(e.getKey().uriValue().name()))
-                                                .toList().toArray(Obj[]::new)
-                                                : new Obj[0])),
-                                uri("io_stats"), machine.memory().stats().ioStats());
-                    }), "noobj lhs", "the machine's vid and tid, its spaces, and the three naming tables it answers to",
+                            toolTid("machine_info").dom(ALL.maybe()).rng(ALL.maybe()),
+                            lst(), (lhs, inst) -> {
+                                if (!Machine.loaded()) return str("no machine loaded");
+                                final Machine machine = Machine.current();
+                                // COUNTS AND NAMES, NEVER THE TABLES. 500+ redirect rows in a tool result would burn an
+                                // agent's whole budget; the actionable facts are the spellings it may write and the short
+                                // names that are AMBIGUOUS, because those are the ones that bite.
+                                final Obj isaPrefix = Machine.read(f("/instset/prefix"));
+                                final Obj redirect = Machine.read(f("/memory/redirect"));
+                                return rec(
+                                        uri(MACHINE), rec(uri(VID), uri(machine.vid()), uri(TID), uri(machine.tid())),
+                                        uri("spaces"), jnt(machine.memory().spaces().jvm().size()),
+                                        // the spellings the vocabulary answers to (math:cos, web:…), and their homes
+                                        uri(PREFIX), isaPrefix.isRec() ? isaPrefix : rec(),
+                                        // the peers this machine can NAME instead of dial (//ginger/a) — the SPELLING, so a
+                                        // reader copies a name it may write rather than the key the table stores
+                                        uri(PEER), machine.network().prefixes(),
+                                        // the name index: how big, and which names denote more than one home
+                                        uri(REDIRECT), rec(
+                                                uri("rows"), jnt(redirect.isRec() ? redirect.asRec().jvm().size() : 0),
+                                                uri("ambiguous"), lst(redirect.isRec()
+                                                        ? redirect.asRec().jvm().entrySet().stream()
+                                                        .filter(e -> e.getValue().stream().count() > 1)
+                                                        .map(e -> str(e.getKey().uriValue().name()))
+                                                        .toList().toArray(Obj[]::new)
+                                                        : new Obj[0])),
+                                        uri("io_stats"), machine.memory().stats().ioStats());
+                            }), "noobj lhs", "the machine's vid and tid, its spaces, and the three naming tables it answers to",
                     Map.of(uri(MACHINE), "the frame you are standing in: vid and tid",
                             uri("spaces"), "how many spaces are mounted",
                             uri(PREFIX), "the instruction sets' short names: <name> => the vid it denotes",

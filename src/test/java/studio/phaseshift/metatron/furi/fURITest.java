@@ -1478,9 +1478,10 @@ public class fURITest extends AbstractMetatronTest {
     }
 
     /**
-     * THE POLY RULE: a fURI's poly types PARAMETER POSITIONS — lst slots, rec traits, an object's instantiation
-     * parameter — never a keyed map. A {@code key=>value} pair inside {@code [ ]} is a category error, and so is a
-     * nested list there; both are rejected at construction with the rule, the offending element and the fURI named.
+     * THE POLY RULE: a fURI's poly types PARAMETER POSITIONS — lst indices, rec fields, rel vertices, an object's
+     * instantiation parameter — never a keyed map. A {@code key=>value} pair inside {@code [ ]} is a category error,
+     * and so is a nested list there; both are rejected at construction with the rule, the offending element and the
+     * fURI named.
      * The nested spellings are rejected by the grammar (which cannot capture a closed inner list) and still carry the
      * same rule message rather than a generic parse failure.
      */
@@ -1498,8 +1499,8 @@ public class fURITest extends AbstractMetatronTest {
                 () -> "the message must name the rule: " + e.getMessage());
         assertTrue(e.getMessage().contains("never a keyed map"),
                 () -> "the message must state the prohibition: " + e.getMessage());
-        assertTrue(e.getMessage().contains("lst slots, rec traits, object instantiation"),
-                () -> "the message must name the three legal readings: " + e.getMessage());
+        assertTrue(e.getMessage().contains("lst indices, rec fields, rel vertices, object instantiation"),
+                () -> "the message must name the legal readings: " + e.getMessage());
         assertTrue(e.getMessage().contains(furi),
                 () -> "the message must name the offending fURI: " + e.getMessage());
     }
@@ -1518,13 +1519,14 @@ public class fURITest extends AbstractMetatronTest {
     }
 
     /**
-     * The three legal readings survive: lst slots (including a pair of equal types), rec traits, and an object's
-     * instantiation parameter. Each round-trips through its rendered form and the mtron fURI parser.
+     * The legal readings survive: lst indices (including a pair of equal types), rec fields, rel vertices and an
+     * object's instantiation parameter. Each round-trips through its rendered form and the mtron fURI parser.
      */
     @ParameterizedTest
     @CsvSource(value = {
             "lst[A,A]     | A,A",
-            "rec[trait]   | trait",
+            "rec[role]    | role",
+            "rel[A,B]     | A,B",
             "object[int]  | int",
             "lst[int,str] | int,str"
     }, delimiter = '|')

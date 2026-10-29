@@ -140,7 +140,17 @@ public class TheoryHelper extends MRec {
      * algebraic structure. This is the enumeration a law-driven rewrite walks.
      */
     public static Rec instances(final Type type) {
-        return OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0());
+        // A TYPE THAT CANNOT BE LIFTED DECLARES NOTHING — the constructor answers a `fail` for a carrier with no
+        // categorical object (an unresolved rng, a generic), and `orElse` returns its receiver, so an unconditional
+        // read here threw `ClassCastException: MFail cannot be cast to Rec` out of the law lookup (a *crash* where a
+        // law query must answer "no instances" and let its caller decline). A fail is no algebra, never an exception.
+        final Obj object = OBJECT_TYPE.constructor().apply(type);
+        if (object.isFail())
+            return rec0();
+        // ANY OTHER READ ANSWERS THE STORE, noobj included: a type that declares nothing answers the empty rec, and a
+        // carrier whose object the constructor could not mint is not turned into a second, silent "declares nothing"
+        // rule here — the declaration is read exactly as every other caller reads it.
+        return object.orElse(rec0()).at(LAW).orElse(rec0());
     }
 
     /**

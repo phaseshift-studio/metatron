@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.Law;
@@ -39,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.LAW;
@@ -54,6 +57,7 @@ import static studio.phaseshift.metatron.isa.m.mTypes.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.mTypes.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mTypes.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.mTypes.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -325,6 +329,29 @@ public class LawCensusTest extends AbstractMetatronTest {
         assertTrue(mismatched.isEmpty(), () -> """
                 instructions whose declared law is about a different shape than their contract:
                   %s""".formatted(String.join("\n  ", mismatched)));
+    }
+
+    /**
+     * THE MEMO DECISION IS MADE FROM WHAT THE READ OBSERVED. {@link LawTable#memoizable(Rec, boolean)} is a pure
+     * function of the block a law read produced and whether the type's own space answered it, so the rule is pinned
+     * here rather than through a boot/close integration test (which would have to tear the shared VM down inside a
+     * test method). A non-empty block is always safe to memoize. An empty one is safe only when a {@code ?lawq} rec
+     * actually came back; a BLIND read — the owning space was not reachable, or held no declaration yet — must
+     * answer its caller and never enter the table, because the tables are static singletons that outlive every
+     * boot, and memoizing it would answer "this type declares no algebra" for the rest of the JVM's life. Each row:
+     * the block the read produced % how the read went % whether it is memoizable.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "empty     % blind                   % false",
+            "empty     % settled, space answered % true",
+            "non-empty % blind                   % true",
+    }, delimiter = '%')
+    public void testTypeLawsAreMemoizedOnlyFromAnObservedAnswer(final String block, final String read, final boolean memoized) {
+        final Rec laws = block.equals("empty") ? rec0() : rec(uri("ring"), uri("ring_theory"));
+        final boolean spaceAnswered = read.equals("settled, space answered");
+        assertEquals(memoized, LawTable.memoizable(laws, spaceAnswered),
+                "the memo decision for a " + block + " block from a " + read + " read");
     }
 
     /// ------------------------------------------------------------------ the census reads

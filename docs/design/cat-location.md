@@ -74,7 +74,7 @@ The six-sibling table becomes a fold table:
 | laws `theory::T`        | signature recs                             | role bundles as data                  |
 
 `Route.Target` (LOCAL, PEER, PEERS, TREE, SHUFFLE, NONE) becomes the `shape` token of a `plan.where` decision;
-`Route.url`/`hops` become that decision's target and hop budget; `Route.spans` stay the span description, unchanged —
+`Route.url`/`hop` become that decision's target and hop budget; `Route.spans` stay the span description, unchanged —
 and the Java `Route` class survives as the *builder* of those decisions (a helper, not a type). The reduced record
 schema — every field, every reference, what is derived, and the thirteen new tokens — is §11.
 
@@ -262,7 +262,7 @@ several of them, as instructions — so the name never needed to be free; it is 
 
 - `plan::T` becomes `[name, cut, where]`, and **`where` holds relocation recs** — a list, one per span group,
   mirroring today's `route` list (each decision is the `Placement` builder's rec: `span`, `shape`, `target`,
-  `interface?`, `hops?`, `law?`);
+  `interface?`, `hop?`, `law?`);
 - a decision's `target` is a place (or a place class), so "where to execute" is navigable (`plan>>where>>target`) rather
   than buried;
 - a decision's *guard* is `isa` over the place/interface type (§4's declaration-only test), the same distinction the
@@ -339,7 +339,7 @@ Field by field, so it can be transcribed into `catInstSet` / `catTypes` without 
 1. **Every type is a `rec::T` with no Java fields.** State lives in the rec's map; accessors read `this.at(key)` /
    `this.atDirect(key)`, as `morphism::T`, `object::T` and `path::T` do.
 2. **Keys are uris drawn from `Tokens`.** Reuse first: `obj`, `authority`, `instset`, `source`, `cost`, `scheme`,
-   `state`, `transport`, `status`, `cut`, `law`, `span`, `flags`, `target`, `hops`, `interface`, `name`, `result`.
+   `state`, `transport`, `status`, `cut`, `law`, `span`, `flags`, `target`, `hop`, `interface`, `name`, `result`.
    Thirteen are new: `where`, `origin`, `shape`, `dialer`, `capability`, `linked_to`, `linked_from`, `thread`,
    `workers`,
    `capacity`, `cores`, `memory`, `budget` (§11.9).
@@ -367,7 +367,7 @@ path::T ──obj──▶ code::T            path::T ──origin? / where?─�
 
 abstraction::T ──obj──▶ [ morphism… ]     abstraction::T ──where?──▶ [ place patterns… ]
 
-plan::T ──cut?──▶ (form | law | role)     plan::T ──where{+}──▶ { span, shape, target, interface?, hops?, law? }
+plan::T ──cut?──▶ (form | law | role)     plan::T ──where{+}──▶ { span, shape, target, interface?, hop?, law? }
                                                     │              │
                                                     │              └── shape token ──▶ signature rec ──law──▶ law
                                                     └── target ──▶ place::T (or a place pattern)
@@ -386,7 +386,7 @@ plan::T ──cut?──▶ (form | law | role)     plan::T ──where{+}──
 | `abstraction.obj`                 | `morphism::T{*}`  | embed           | the α instruction word                          |
 | `abstraction.where`               | place patterns    | embed           | the α place-class word                          |
 | `plan.cut`                        | a cut selector    | embed           | form/law/role; **absent ⇒ a distribution rule** |
-| `plan.where`                      | relocation recs   | embed           | span + shape + target (+ interface, hops, law)  |
+| `plan.where`                      | relocation recs   | embed           | span + shape + target (+ interface, hop, law)  |
 | `plan.where.shape`                | a signature rec   | token           | the topology and its obligations                |
 | `plan.where.interface`            | a signature rec   | token           | the required interface class                    |
 | `plan.where.target`               | `place::T`        | embed / pattern | an authority, or a place class                  |
@@ -434,7 +434,7 @@ The edge values are the network's own `peer::T` recs — typed and validated in 
 deployment; a path without `origin` is simply a program that cannot be placed.
 
 ```mtron_pre
-path::[obj    => start([start?hops=0({1,2,3}).plus(10).sum()]).select([to(ws://ginger.local:8555)]).merge().sum(),
+path::[obj    => start([start({1,2,3}).plus(10).sum?hop=0()]).select([to(ws://ginger.local:8555)]).merge().sum(),
        origin => place::[obj=>//booger.local, …],
        where  => [[span=>at] => place::[obj=>//ginger.local, …]],
        peer   => {peer::[…]},
@@ -473,12 +473,14 @@ The plan guard reads `obj`; the placement guard reads `where`; there is one lift
 - **`cut?`** — a selector `[form?, law?, role?]`. **Present ⇒ a semantic rule** (`lower`); **absent ⇒ a distribution
   rule** (`bind`).
 - **`where{+}`** — the relocation decisions, each an inline rec (the `Route` shape, not a type):
-  `{span: [{span, flags?}], shape, target, interface?, hops?, thread?, workers?, law?, inst?}`. A distribution rule
-  has exactly one. **`inst?`** (2026-10-24) — the instructions the target must serve, keyed as a client's `inst`
-  names them: the shape supplies the default (every distributing shape ships a program through `to(<target>)`, so it
-  requires `/m/inst/to` for the route and `/m/inst/eval` to apply what the route carries — an http POST `to` writes
-  and evaluates nothing) and a placement may add what its shipped chunk needs. A dialed peer takes the placement when it is
-  online and its client overrides each one (`Places.serves`) — the realized half of §4's liveness test.
+  `{span: [{span, flags?}], shape, target, interface?, hop?, thread?, workers?, law?, inst?}`. A distribution rule
+  has exactly one. The tree budget key is the singular `hop`; a decision rec written before that spelling carries
+  `hops`, migrated to `hop` on read for one cycle. **`inst?`** (2026-10-24) — the instructions the target must serve,
+  keyed as a client's `inst` names them: the shape supplies the default (every distributing shape ships a program
+  through `to(<target>)`, so it requires `/m/inst/to` for the route and `/m/inst/eval` to apply what the route
+  carries — an http POST `to` writes and evaluates nothing) and a placement may add what its shipped chunk needs. A
+  dialed peer takes the placement when it is online and its client overrides each one (`Places.serves`) — the
+  realized half of §4's liveness test.
 
 ```mtron_pre
 [-- semantic + distribution, today's law_shard --]
@@ -489,7 +491,7 @@ plan::[name  => <law_shard>,
 
 [-- distribution only: a cut-less plan (the old placement::T) --]
 plan::[name  => <move_star>,
-       where => [[span=>[[span=>at]], shape=><star>, interface=><ws>, target=><ws://*>, hops=>1]]]
+       where => [[span=>[[span=>at]], shape=><star>, interface=><ws>, target=><ws://*>, hop=>1]]]
 
 [-- distribution over lanes: one machine, four virtual lanes (no target) --]
 plan::[name  => <shard_lanes>,
@@ -524,7 +526,7 @@ maybe().
 
 asUri(),URI_TYPE,
 
-uri(HOPS).
+uri(HOP).
 
 maybe().
 
@@ -579,7 +581,7 @@ addition, not a schema change.
 One **value** per compilation (§6), never a vertex: a plain rec `[instset => {…}, place => {place…}, signature => {…},
 origin => place::[…], capacity => [cores=>{total,free}, memory=>{total,free}, lanes=>{leased,cap}],
 env => <fingerprint>]`. The fingerprint rides the produced code as a q-processor
-(`code.tid().addQ(ENV, uri(fingerprint))`), the `?hops`/`?block`/`?path` mechanism. "Re-plan iff the fingerprint
+(`code.tid().addQ(ENV, uri(fingerprint))`), the `?hop`/`?block`/`?path` mechanism. "Re-plan iff the fingerprint
 differs" is then a q comparison.
 
 ### 11.8 The lifts and the operators
@@ -607,10 +609,10 @@ kinds of equivalence (semantic and distribution).
 | `linked_to`   | `place.linked_to`                               | `morphed_to`   |
 | `linked_from` | `place.linked_from`                             | `morphed_from` |
 | `thread`      | a decision's lane kind (`virtual`, `core`)      | `shape`        |
-| `workers`     | a decision's fan-out width                      | `hops`         |
+| `workers`     | a decision's fan-out width                      | `hop`          |
 | `capacity`    | `place.capacity`                                | `cost`         |
-| `cores`       | capacity / quota / budget                       | `hops`         |
-| `memory`      | capacity / budget                               | `hops`         |
+| `cores`       | capacity / quota / budget                       | `hop`          |
+| `memory`      | capacity / budget                               | `hop`          |
 | `budget`      | `env.capacity`                                  | —              |
 
 Everything else is an existing key. `instset` on a place is the existing `category::T.instset` with its original
@@ -689,7 +691,7 @@ create();
 //                    uri(WHERE).maybe().asUri(), rec(...),
 //                    uri(PEER).maybe().asUri(), lst(REC_TYPE)
 // ABSTRACTION_TYPE += uri(WHERE).maybe().asUri(), lst(T(CATEGORY_TID))
-// PLAN_TYPE      += uri(WHERE).maybe().asUri(), lst(rec(span, shape, target, interface?, hops?, law?))
+// PLAN_TYPE      += uri(WHERE).maybe().asUri(), lst(rec(span, shape, target, interface?, hop?, law?))
 //                    (cut already optional — nothing else changes)
 ```
 
@@ -765,7 +767,7 @@ hard-codes "distributed ⇒ monoidic + commutative". After:
    old `Route`, renamed), not as a registered type; the deprecated `route` overload builds one for read-compat.
 3. **`validateDistributedObligations()` disappears.** `create()` checks: `cut?` present means the shape recs'
    `law` ⊆ `cut.law` (the §3 table is now the shape recs, read as data); every `shape`/`interface` token resolves to a
-   signature rec; span kinds are well formed; `hops` appears only on a `tree`/`chain` shape; `workers` only on a
+   signature rec; span kinds are well formed; `hop` appears only on a `tree`/`chain` shape; `workers` only on a
    `lanes` decision and never above `place.cost.cores` for a `core` lane; a cut-less plan has exactly one decision.
 4. **No reachability at create.** Peers are an environment fact (§6), so `create()` is pure over
    `(definition, registry)` and `apply` performs the env join.
@@ -778,7 +780,7 @@ final Plan shard = PlanBuilder.plan("law_shard")
         .where(Placement.of(SHAPE_TREE).
 interface(SCHEME_WS).
 
-hops(1)
+hop(1)
                         .
 
 spans(Span.seed().
@@ -814,8 +816,8 @@ final Plan lanes = PlanBuilder.plan("law_shard_lanes")
 | today                                                                                                                                             | after                                                                                                                                                                    |
 |---------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `lowerCut(plan, code)` switches on `cut.role()` / `cut.form()`                                                                                    | `locate(plan, code)` keeps that switch (Thm 17 unchanged); a cut-less plan's site is its decision's span                                                                 |
-| `shard(plan, code)` reads `Machine.current().network().peers()`, `hops(plan, code)`, and builds `start([…]).select([to(…)]).merge()` + the retype | `resolve(where, env)` prunes over the declared topology and picks a shape; `emit(shape, regions, targets)` builds the layout — the *same* builder, callable by any shape |
-| a `Route` per plan                                                                                                                                | the decision recs: `span`, `shape`, `target`, `interface`, `hops`, `thread`, `workers`, `law`                                                                            |
+| `shard(plan, code)` reads `Machine.current().network().peers()`, `hop(plan, code)`, and builds `start([…]).select([to(…)]).merge()` + the retype | `resolve(where, env)` prunes over the declared topology and picks a shape; `emit(shape, regions, targets)` builds the layout — the *same* builder, callable by any shape |
+| a `Route` per plan                                                                                                                                | the decision recs: `span`, `shape`, `target`, `interface`, `hop`, `thread`, `workers`, `law`                                                                            |
 | the peer gate inside `shard`                                                                                                                      | `env.candidates(decision)` — declared liveness (§4), no dial                                                                                                             |
 | the interpreter reads `Machine.current()`                                                                                                         | `apply(plan, env)` takes the snapshot; nothing inside reads the machine                                                                                                  |
 
@@ -1089,7 +1091,7 @@ These must not move, and they are the acceptance test for every phase that touch
 | test                                         | what it pins                                                                                                                               |
 |----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
 | `DistributedRewriteTransportTest`            | `law_shard` fires for **real** over a forked peers: the sharded fold equals the expected value, and the rewrite genuinely emitted `select` |
-| `TreeShardTransportTest`                     | the `tree`/`?hops` path                                                                                                                    |
+| `TreeShardTransportTest`                     | the `tree`/`?hop` path                                                                                                                    |
 | `catInstSetTest`, `m_math_cat_Test`          | the `path::T` / `abstraction::T` lifts and the `lower` chain                                                                               |
 | `NetworkWsDialTest`                          | the dial/peer path a placement targets                                                                                                     |
 | **new**: an emitted-`Code` snapshot per plan | a phase-1 guard: the rename must be **inert**, so the emitted code is compared before/after                                                |
@@ -1132,7 +1134,7 @@ Test: `PlaceTest` — roster host → authorities, a declared peer → `linked_t
 `SHAPE`/`DIALER`/`CAPABILITY` tokens; the shape and scheme recs at `/m/math/cat/signature/<token>` (data, no type);
 `Placement.obligations()` reads the shape rec and `admissible(laws)` is the reverse traversal; `Plan.create()` uses
 them; delete `validateDistributedObligations()`; rename the decision keys `target` → `shape`, `url` → `target` (compat
-reads for one cycle); the interpreter sources `hops`/targets from the decision. Tests: `ObligationsTest` (the table,
+reads for one cycle); the interpreter sources `hop`/targets from the decision. Tests: `ObligationsTest` (the table,
 both directions) plus the shard guards.
 
 **Phase 4 — one emitter + `Env` (L; the risky one).**

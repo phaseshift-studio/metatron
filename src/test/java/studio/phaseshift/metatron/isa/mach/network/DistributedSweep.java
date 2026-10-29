@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static studio.phaseshift.metatron.Tokens.HOPS;
+import static studio.phaseshift.metatron.Tokens.HOP;
 
 /**
  * AN EMITTED SHARD, READ AS DATA. One value — {@link Layout} — says what a {@code law_shard}/{@code PlanInterpreter}
@@ -45,7 +45,7 @@ import static studio.phaseshift.metatron.Tokens.HOPS;
  * layout.ops();              // [start, select, select, merge, sum]
  * layout.lanes().size();     // one per route
  * layout.lane(0).part();     // the slice that lane runs
- * layout.lane(0).budget();   // its ?hops, as the lane states it
+ * layout.lane(0).budget();   // its ?hop, as the lane states it
  * }</pre>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -59,8 +59,8 @@ public final class DistributedSweep {
     /**
      * ONE PLACE THE SHARD WAS EMITTED FOR: the authority its route answers at, and the code it runs. The authority is
      * {@code null} for the addressless {@code eval()} — that lane is the local place (a place at distance zero), not a
-     * shipped one. Nothing in today's emitter emits a local lane yet; the reading exists so that when it does, a test
-     * can ask rather than inspect.
+     * shipped one. The emitter emits one whenever the place set names the home place ({@code ?place=[local,peer]}, or
+     * the lanes case {@code ?place=[{4}local]} on a peerless machine), so a test asks this rather than inspects.
      *
      * @param authority the route's target, {@code null} for the local place
      * @param code      the code that lane runs
@@ -82,20 +82,32 @@ public final class DistributedSweep {
         }
 
         /**
-         * The lane's hop budget, exactly as its seed states it ({@code start?hops=n(…)}), or {@code null} when the lane
-         * states none. The emitted text, not a parsed number: the budget is a q value, and parsing it here would be a
-         * second reading of {@code PlanInterpreter.hops}.
+         * The lane's hop budget, exactly as the emitter states it, or {@code null} when the lane states none. THE
+         * BUDGET RIDES THE FOLD: the emitter restates the height on the reducer the lane runs (the fold), so a peer
+         * re-plans from its own recombine; a chain written by hand that states it on the seed still answers, which is
+         * the read-compat the reader keeps. The emitted text, not a parsed number: the budget is a q value, and
+         * parsing it here would be a second reading of {@code PlanInterpreter.hopAxis}.
          */
         public String budget() {
+            final fURI fold = this.fold().tid();
+            if (fold.hasQ(HOP))
+                return fold.qMap().get(HOP);
             final fURI seed = this.seed().tid();
-            return seed.hasQ(HOPS) ? seed.qMap().get(HOPS) : null;
+            return seed.hasQ(HOP) ? seed.qMap().get(HOP) : null;
         }
 
         /**
-         * The lane's seed instruction — the {@code start(…)} head its part and its hop budget are both read off.
+         * The lane's seed instruction — the {@code start(…)} head its part is read off.
          */
         private Inst seed() {
             return this.code.insts().getFirst();
+        }
+
+        /**
+         * The lane's fold — the reducer the lane recombines through, the last instruction it runs.
+         */
+        private Inst fold() {
+            return this.code.insts().getLast();
         }
     }
 

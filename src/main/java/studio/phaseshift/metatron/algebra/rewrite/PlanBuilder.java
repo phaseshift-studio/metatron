@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
@@ -49,13 +50,29 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *         .where(Placement.tree(1, Span.seed().partition(), pre.withoutSeed(), at))  // [to(a), to(b), ...]
  *         .create();
  * }</pre>
+ *
+ * <p>A decision can also be stated in its axes — {@link #place}, {@link #hop}, {@link #split} — which bind to the
+ * {@link #where} that follows them: the place set says where the shares go, the hop says how deep the application tree
+ * may run, and the split says what counts as one share. An axis left unstated is read off the placement being bound, so
+ * a builder states only what it changes:
+ *
+ * <pre>{@code
+ * final Plan shard = PlanBuilder.plan("law_shard")
+ *         .cut(cut)
+ *         .where(Placement.local(at, post))
+ *         .place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())
+ *         .where(Placement.tree(1, Span.seed().partition(), pre.withoutSeed(), at))
+ *         .create();
+ * }</pre>
+ *
  * <p>
  * A plan with a {@code cut} is a semantic rule; a plan with no {@code cut} is a distribution rule — the relocation
  * it authors is its {@code where}, and it has exactly one {@link Placement}. {@link #create()} derives the plan's law
- * obligations from its own shapes — the rewriter does not trust the author. A cut shipped to a shape and re-applied at
- * home must declare every law that shape demands ({@code obligations(shape) ⊆ cut.laws}, Thm 19's hypothesis for the
- * distributed shapes), and it refuses the plan when it does not. The atom-level obligations (a {@code floatable} PRE
- * span, a {@code blocked} AT span) are carried on the spans and enforced by the rewriter at match time, not here.
+ * obligations from each decision's axes — the rewriter does not trust the author. A cut re-applied behind an
+ * off-machine recombine must declare every law the decision's place set, hop and split demand
+ * ({@code obligations(place, hop, split) ⊆ cut.laws}, Thm 19's hypothesis), and it refuses the plan when it does not.
+ * The atom-level obligations (a {@code floatable} PRE span, a {@code blocked} AT span) are carried on the spans and
+ * enforced by the rewriter at match time, not here.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -64,6 +81,9 @@ public final class PlanBuilder {
     private final String name;
     private Cut cut = null;
     private final List<Placement> placements = new ArrayList<>();
+    private PlaceSet place = null;
+    private Hop hop = null;
+    private Partition split = null;
 
     private PlanBuilder(final String name) {
         this.name = name;
@@ -78,21 +98,75 @@ public final class PlanBuilder {
         return this;
     }
 
-    public PlanBuilder where(final Placement placement) {
-        this.placements.add(placement);
+    /**
+     * The place axis of the decision the NEXT {@link #where} binds — where its shares may go (§2). An axis stated here
+     * and not stated in the placement wins; one left unstated is read off the placement itself.
+     */
+    public PlanBuilder place(final PlaceSet place) {
+        this.place = place;
         return this;
     }
 
     /**
-     * Assemble the {@link Plan} value, validating the law obligations the plan's shapes demand (§3). Thm 19's
-     * hypothesis — the reducer is re-applied over regrouped partials behind an order-free barrier — is read
-     * straight off each placement's shape: a cut that appears on a shape's {@code AT} span must declare every law
-     * that shape demands ({@code obligations(shape) ⊆ cut.laws}). A plan with no cut is a distribution rule and
-     * carries exactly one placement.
+     * The depth axis of the decision the NEXT {@link #where} binds — the application tree's height and arity (§3).
+     * {@code cInt.ANY()} is "the receiver's local out-degree", today's behavior; {@code cInt.ONE()} is a one-child
+     * hop, the chain (a sequential forward, so the decision demands {@code monoidic} alone).
+     */
+    public PlanBuilder hop(final int height, final cInt arity) {
+        this.hop = Hop.of(height, arity);
+        return this;
+    }
+
+    /**
+     * The partition axis of the decision the NEXT {@link #where} binds — what counts as one share (§4).
+     */
+    public PlanBuilder split(final Partition split) {
+        this.split = split;
+        return this;
+    }
+
+    /**
+     * Bind a placement's spans to a decision. Pending axes ({@link #place}, {@link #hop}, {@link #split}) belong to
+     * this placement and are consumed here, so a plan states each decision's axes immediately before the spans they
+     * describe.
+     *
+     * <p><b>A regrouping place set binds to a FAN-OUT, not to the gather.</b> The origin's tail ({@code AT}/{@code POST})
+     * re-applies the cut at home and is a single home place; the placement that factors the seed is the one that
+     * carries a {@code SEED} span. Binding a place set that regroups ({@link PlaceSet#regroups()}) to a placement with
+     * no seed span would silently turn the plan's gather into a lane, so it is refused here — the axes are stated
+     * before the {@code where} they belong to.
+     */
+    public PlanBuilder where(final Placement placement) {
+        if (null == this.place && null == this.hop && null == this.split) {
+            this.placements.add(placement);
+            return this;
+        }
+        final PlaceSet place = null == this.place ? placement.place() : this.place;
+        if (place.regroups() && placement.spans().stream().noneMatch(span -> Span.Kind.SEED == span.kind()))
+            throw MTronException.of("a place set that regroups binds to a decision with no SEED span: the tail "
+                    + "(AT/POST) re-applies the cut at home — state the axes before the where() they describe");
+        this.placements.add(placement.axes(
+                place,
+                null == this.hop ? placement.hopAxis() : this.hop,
+                null == this.split ? placement.split() : this.split));
+        this.place = null;
+        this.hop = null;
+        this.split = null;
+        return this;
+    }
+
+    /**
+     * Assemble the {@link Plan} value, validating the law obligations the plan's decision demands (§3). Thm 19's
+     * hypothesis — the reducer is re-applied over regrouped partials behind an order-free barrier — is DERIVED from
+     * each placement's axes ({@link Placement#obligations()}): a cut that appears on a decision's {@code AT} span must
+     * declare every law the axes demand ({@code obligations(place, hop, split) ⊆ cut.laws}). A plan with no cut is a
+     * distribution rule and carries exactly one placement.
      */
     public Plan create() {
         if (null == this.name || this.name.isBlank())
             throw MTronException.of("plan name is required");
+        if (null != this.place || null != this.hop || null != this.split)
+            throw MTronException.of("decision axes are stated with no placement to bind: state them before the where() they describe");
         if (this.placements.isEmpty())
             throw MTronException.of("at least one placement is required");
         if (null == this.cut) {
@@ -115,7 +189,7 @@ public final class PlanBuilder {
             // elsewhere demands nothing of the cut's laws
             if (placement.spans().stream().noneMatch(span -> Span.Kind.AT == span.kind()))
                 continue;
-            // obligations(shape) ⊆ cut.laws — the §3 shape rec, read as data, not hard-coded per target
+            // obligations(place, hop, split) ⊆ cut.laws — the decision's axes, read as data, not hard-coded per target
             final List<Law> missing = placement.obligations().stream()
                     .filter(law -> !this.cut.declares(law))
                     .toList();

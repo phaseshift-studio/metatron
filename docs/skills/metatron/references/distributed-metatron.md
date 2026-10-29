@@ -50,7 +50,7 @@ One function decides local vs remote; everything else is a transport it can call
 | `Network.Helper.sameService`                   | origin equality, loopback-aliased                                            | `Network.java:909`         |
 | `~/network/peer`                               | dialed peers: origin → peer::T (the connection)                              | `Network.java:333`         |
 | `~/network/listener`                           | bound sockets: origin → listener::T (a machine's presence)                    | `Network.java:199`         |
-| `~/network/prefix`                             | the NAMES a peer goes by: label → full origin (scheme-less, port-less slot)   | `Network.java` (`alignPrefix`) |
+| `~/network/prefix`                             | the NAMES a peer goes by: `//ginger => origin`, stored `ginger => origin`     | `Network.java` (`alignPrefix`) |
 | `~/instset/prefix`                             | the NAMES a vocabulary goes by: scheme → vid (`import(/m/math, math)`)        | `AbstractInstSet.java`     |
 | `Machine.Helper.align`                         | the ONE canonicalization door: read, write and the move-extractor all ask it  | `Machine.java`             |
 | `Network.Helper.authorities()`                 | the origins this VM answers on (its listeners)                               | `Network.java:695`         |

@@ -96,7 +96,7 @@ public class MType extends MObj implements Type {
     private static final Set<fURI> POLY_BASE_TYPES = Set.of(LST_TID, REC_TID, REL_TID);
 
     private static Type checkPolyPoly(final Type type) {
-        if (type.vid().poly().isEmpty())
+        if (!type.vid().hasPoly() && !type.tid().hasPoly())
             return type;
         // A LABEL CANNOT BE ASKED FOR ITS BASE. an ephemeral type (tid == vid: the label this method's caller builds
         // for a name the registry did not answer) is a REFERENCE, not a definition. Walking its base type resolves
@@ -107,8 +107,11 @@ public class MType extends MObj implements Type {
         // of T0 validates it there, on the resolved (non-ephemeral) form.
         if (type.asType().isEphemeral())
             return type;
-        if (!POLY_BASE_TYPES.contains(type.baseTypeID().basePath()))
+        if (type.vid().hasPoly() && !POLY_BASE_TYPES.contains(type.baseTypeID().basePath()))
             throw MTronException.of("only poly types can have polynomials: %s X=> %s", type.vid().basePath(), type.vid().poly());
+        // every construction path reaches this point, so a bracket is validated here whether the type is written,
+        // resolved or built, and whether the bracket is on the vid (rel[A]::T) or only on the tid (rel[A]::T@route)
+        Type.Helper.validatePoly(type);
         return type;
     }
 

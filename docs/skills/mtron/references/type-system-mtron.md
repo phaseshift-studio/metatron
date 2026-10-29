@@ -319,7 +319,7 @@ types**; `lst`, `rec` and `rel` are its *readings*, not three words for the same
 
 | construct    | name         | poly denotes                                                                                   | verb     |
 |--------------|--------------|------------------------------------------------------------------------------------------------|----------|
-| `lst[A,B]`   | TENSOR TYPE  | the slot types — the coordinates of an A × B (rank = bracket length, extent = the coefficient) | CONTAINS |
+| `lst[A,B]`   | TENSOR TYPE  | the position types — the coordinates of an A × B (rank = bracket length, extent = the coefficient) | CONTAINS |
 | `rec[F1,F2]` | FIBERED TYPE | the FIBERS (named, distinct objects)                                                           | EXPOSES  |
 | `rel[A,B,C]` | PATH TYPE    | the vertices of the right-nested chain `A => (B => C)`                                         | CHAINS   |
 
@@ -330,19 +330,58 @@ tensor, never a synonym for *poly*.
 
 The reading decides what the bracket's entries *are*, and that decides what a call does to the value.
 
-**A tensor's slots are the object's content.** `lst[int]` is a list whose slots hold ints — it is not an `int`.
-Position is the coordinate, so the type speaks about the value's own contents, one slot per position, and its entries
-are not separate objects a call can reach: `[29,'94103']` satisfies `lst[age,zipcode]::T` (slot 0 is an age, slot 1 a
-zipcode) and fails `lst[zipcode,age]::T`, where the coordinates are swapped.
-Two consequences, and they are the same consequence twice: there is no lifting *into* a tensor's slots (`lst[int]`
-hands a call no second candidate), and a tensor confers no supertype (`lst[int]` is never an `int` — a list of ints is
-not an int). The coefficient is where extent lives, not another coordinate: `lst[int{4}]` is ONE slot holding four
-ints, while `lst[int,int,int,int]` is four slots.
+**A tensor's positions are the object's content.** `lst[int]` is a list whose positions hold ints — it is not an
+`int`. Position is the coordinate, so the type speaks about the value's own contents, one entry per position, and its
+entries are not separate objects a call can reach: `[29,'94103']` satisfies `lst[age,zipcode]::T` (position 0 is an
+age, position 1 a zipcode) and fails `lst[zipcode,age]::T`, where the coordinates are swapped.
+Two consequences, and they are the same consequence twice: there is no lifting *into* a tensor's positions (`lst[int]`
+hands a call no second candidate), and a tensor's entries name no other type (`lst[int]` is never an `int` — a list of
+ints is not an int). The coefficient is where extent lives, not another coordinate: `lst[int{4}]` is ONE position
+holding four ints, while `lst[int,int,int,int]` is four positions.
 
 **A fibered type's entries are distinct objects.** `person[ninja]` is a person *and* a ninja; the ninja is not the
 wrapper's content but an object the wrapper exposes. So a value of that type is acceptable where `ninja::T` is
-expected (its base or any fiber — see *conformance and covariance*), and an instruction declared on `ninja` applies to
+expected (its base or any fiber — see *acceptance and covariance*), and an instruction declared on `ninja` applies to
 the fiber's value as if it had been declared top-level.
+
+### a bracket entry's coefficient: the multiplicity of the value AT that position or vertex
+
+A bracket entry is a *position* (a tensor position, a path vertex), so a **suffix coefficient is the multiplicity of the
+value at that position** — not another position, and not another hop. `lst[int{2},str]` is a two-position list whose
+FIRST position holds two ints; `rel[int,person{2}]` is a two-vertex chain whose SECOND vertex holds two people
+(`1=>{bob,marko}`, two people at that vertex — not two hops):
+
+```mtron_pre
+[HEADER] a suffix coefficient is the multiplicity of the value AT that position / vertex
+wayfarer -> rec::T@wayfarer
+lst[int{2},str]::[{1,2},'a']              [-- position 0 is an int{2}: one position, two ints --]
+rel[int,wayfarer{2}]::(1=>{wayfarer::[name=>'bob'],wayfarer::[name=>'marko']})   [-- the second vertex holds two wayfarers --]
+[ERROR] lst[int{2},str]::[1,'a']          [-- one int is an int{1}: too few for an int{2} position --]
+[ERROR] rel[int,wayfarer{2}]::(1=>wayfarer::[name=>'bob'])   [-- one wayfarer is too few for a wayfarer{2} vertex --]
+```
+
+The coefficient forms say how many values that position admits, exactly as they do anywhere else in a type:
+
+| entry         | value at that position                                  |
+|---------------|---------------------------------------------------------|
+| `T` / `T{1}`  | exactly one                                             |
+| `T{n}`        | exactly n (`lst[int{2},str]` ⇒ `[{1,2},'a']`)           |
+| `T{n,m}`      | an inclusive range — n, …, m                            |
+| `T{+}`        | at least one, so the position is REQUIRED               |
+| `T{?}`        | zero or one — ABSENT, or one that is still its type     |
+| `T{*}`        | zero or more — absent is legal, and so is a multiplicity |
+
+**Absence** is the zero end of the range, and it reads differently in the two readings. In a tensor the value is a
+list, so a zero-admitting TRAILING position is one the shorter list does not fill — `lst[str,int{?}]` accepts `['a']`. In
+a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — `rel[int,wayfarer{?},str]` accepts
+`1=>'tally'` (the middle vertex skipped) while `rel[int,wayfarer{+},str]` does not. A present value must still be the
+entry's type at both: `{?}` is zero-or-one, not "anything when present".
+
+**Not yet supported: a PREFIX coefficient, and repetition.** `lst[{4}int]` — "the list is composed of four ints",
+spelled before the entry rather than after it — is not matchable today. Neither is a position *repetition*: a suffix
+coefficient judges the multiplicity of the value already at that position, and nothing reads it as "this entry
+repeats, so the chain is longer" (whether a repeated vertex should lengthen a path is not settled). A NEGATIVE (anti)
+coefficient is not a multiplicity at all, so a path reports it as not yet matched rather than judging it.
 
 ### declaring a fibered type vs instantiating one
 
@@ -394,19 +433,23 @@ values of the fields the declaration's poly names**, and each candidate is resol
 - a wrapper on which **no candidate** applies yields `noobj` — a miss is not a failure. The same miss on a non-wrapper
   value is still a loud `unable to locate inst-f`, because there is nothing else to try.
 
-### conformance and covariance
+### acceptance and covariance
 
 Two questions, and they must not be confused: *may I pass this value here* (acceptance) and *which object does this
 instruction run on* (dispatch).
 
-- **A declared fiber must be present.** A slot declared at coefficient one that the value does not carry fails
-  conformance. Absence is legal only where the fiber's coefficient admits zero — `rec[role,position{?}]` — and reading
-  a missing key still yields `noobj`. `noobj` is a value, not a hole.
-- **A predicated fiber type is satisfied by conformance.** When the trait declares a shape
-  (`ninja::T[?[name=>str::T]]`), the instance's declaration is tested against that shape rather than asked to
-  reproduce it: `person`'s declared `[name=>str::T, role=>rec::T]` conforms to `[name=>str::T]` although the two
-  predicate recs are not equal. A declaration the trait's shape CONTRADICTS (`name=>int::T` where the trait wants a
-  str) is not a supertype, however the poly names it.
+- **A fiber named at coefficient one must be there.** The value is tested against the declaration, and a field it
+  does not have fails that test. Absence is legal only where the fiber's coefficient admits zero —
+  `rec[role,position{?}]` — and reading a missing key still yields `noobj`. `noobj` is a value, not a hole.
+- **A predicated fiber type is satisfied by the FIBER'S VALUE.** A poly entry types one of the wrapper's fibers
+  (`person[ninja]` puts a ninja at the field the declaration calls `role`), so the object a trait's shape is about
+  (`ninja::T[?[name=>str::T]]`) is the value AT that fiber — `wrapper>>role` — not the wrapper's declaration. A
+  *shaped nominal* trait therefore accepts a wrapper that only exposes the trait-carrying fiber: the trait's shape is
+  asked of `wrapper>>role`, which is why `kestrel[falconer]` is a `falconer` although the wrapper itself declares no
+  `name`. The two fallbacks: with no value at hand (a type-vs-type question) the fiber's DECLARED type answers for its
+  value, and a field the wrapper's declaration itself types incompatibly (`name=>str` where the trait wants
+  `name=>int`) is a veto. A field the declaration stays silent about is not a contradiction — that is exactly the case
+  the fiber's value exists to answer.
 - **Covariance: a fibered value is acceptable where its base OR ANY fiber is expected.** `person[ninja]` is a
   `person` and a `ninja`. The scope guard matters as much as the rule: this is `rec` only — `lst[int]` is not an
   `int`, and `object[int]` is not an `int`.
@@ -414,6 +457,22 @@ instruction run on* (dispatch).
   not thereby fire that fiber's instructions; the object the definition was written for is the object it runs on.
 - **Dispatch is an identity question**: a named domain selects the candidate that IS that type — the fiber whose own
   type is that name, or the wrapper when the name is the wrapper's. Borrowed names are not identities. |
+
+A shaped nominal trait asks the value at the fiber, not the wrapper:
+
+```mtron_pre
+[HEADER] acceptance is asked of the fiber's value, not the wrapper's declaration
+[-- the wrapper declares ONLY the fiber it exposes --]
+kestrel -> rec[role]::T[?[role=>rec::T]]@kestrel
+[-- the shaped nominal trait declares the shape of the fiber's value --]
+falconer -> rec::T[?[name=>str::T]]@falconer
+jarl -> kestrel[falconer]::[role=>falconer::[name=>'sigrid']]@jarl
+[-- the wrapper declares no name; the falconer at `role` carries one, so jarl is a falconer --]
+*jarl.isa(falconer::T)
+[-- a fiber value that CONTRADICTS the trait's field type is refused, however the poly names it --]
+skald -> kestrel[falconer]::[role=>[name=>7]]@skald
+*skald.isa(falconer::T)
+```
 
 The claim rule is what keeps the declaration/instance asymmetry valid at the uri layer:
 
@@ -427,7 +486,7 @@ The claim rule is what keeps the declaration/instance asymmetry valid at the uri
 ### worked example: two fibers
 
 The declaration names both fibers; the instance types them. `position` is declared **bare** (`rec::T@position`) on
-purpose — a trait declared *with* a shape asks the wrapper's declaration to conform, and this wrapper declares
+purpose — a trait declared *with* a shape asks the wrapper's declaration to pass its test, and this wrapper declares
 `name`, `age`, `role` and `position`, not a position's `title`/`rank`:
 
 ```mtron_pre

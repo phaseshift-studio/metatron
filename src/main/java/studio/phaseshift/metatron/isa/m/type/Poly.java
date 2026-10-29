@@ -397,7 +397,60 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         private static final Uri FAIL = uri("X");
 
         public static Obj diffTypeRecursion(final Obj lhs, final Type rhs) {
-            return lhs.isRec() ? diffTypeRecRecursion(lhs.asRec(), rhs) : diffTypeLstRecursion(lhs.asLst(), rhs);
+            return lhs.isRec() ? diffTypeRecRecursion(lhs.asRec(), rhs)
+                    : lhs.isRel() ? diffTypeRelRecursion(lhs.asRel(), rhs)
+                    // a lst's bracket names the types at its indices, each with its own coefficient
+                    : rhs.isTensored() ? diffTypeLstPolyRecursion(lhs.asLst(), rhs)
+                    : diffTypeLstRecursion(lhs.asLst(), rhs);
+        }
+
+        /**
+         * THE PATH DIFF, vertex by vertex — the index diff's shape, chain-shaped. A rel poly names the vertex types
+         * ({@link Type.Helper#testPaths} is the verdict), so the failure report pairs each vertex of the path
+         * with the type at its depth, {@code =} where they agree and {@code X} where they do not, and shows an
+         * ordinary {@code second} as the closing vertex. Diagnostic only: it must never throw.
+         */
+        public static Lst diffTypeRelRecursion(final Rel lhs, final Type rhs) {
+            final Lst result = lst();
+            Obj vertex = lhs;
+            for (final Obj expected : rhs.relPaths()) {
+                final Obj actual = vertex.isRel() ? vertex.asRel().first() : vertex;
+                result.jvm().add(rel(actual.test(expected) ? GOOD : FAIL, actual));
+                if (!vertex.isRel())
+                    break;
+                vertex = vertex.asRel().second();
+            }
+            return result;
+        }
+
+        /**
+         * THE INDEX DIFF, index by index — the tensor's answer to the path diff above. A lst poly IS the value's
+         * shape ({@code lst[int,str]} is a two-index list holding an int and a str), so the failure report pairs each
+         * element of the value with the type at its index, {@code =} where they agree and {@code X} where they do
+         * not: the pairing {@link Lst#test(Obj)} decides against the same {@code polyParsed()} types, and the pairing
+         * the path diff renders for a chain, so a lst mismatch and a rel mismatch read as siblings. An index the
+         * value does not fill is judged by its own coefficient (an index that admits zero conforms), and an element
+         * the poly has no index for is an arity mark, so both are shown in place. Diagnostic only: it must never
+         * throw.
+         */
+        public static Lst diffTypeLstPolyRecursion(final Lst lhs, final Type rhs) {
+            final List<Obj> indices = rhs.lstIndices();
+            final List<Obj> values = lhs.lstValue();
+            final Lst result = lst();
+            boolean conforming = true;
+            for (int i = 0; i < Math.max(indices.size(), values.size()); i++) {
+                // an unfilled index is rendered as the type it wanted, an extra element as the value that has nowhere to go
+                final Obj declared = i < indices.size() ? indices.get(i) : noobj();
+                final Obj value = i < values.size() ? values.get(i) : noobj();
+                final boolean good = !declared.isNoObj() && (value.isNoObj() ? declared.c().isZeroable() : value.test(declared));
+                conforming &= good;
+                result.jvm().add(rel(good ? GOOD : FAIL, value.isNoObj() ? declared : value));
+            }
+            // EVERY INDEX CONFORMS while the value still failed, so the failure is the type's own predicates: the
+            // index reading alone would show no X at all, so keep the predicate chain's reading too.
+            if (conforming)
+                result.jvm().addAll(diffTypeLstRecursion(lhs, rhs).jvm());
+            return result;
         }
 
         public static Lst diffTypeLstRecursion(final Lst lhs, final Type rhs) {

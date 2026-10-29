@@ -281,11 +281,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         final Type rhsType = Obj.Helper.specificType(rhs);
         if (lhsType.isGeneric() || rhsType.isGeneric())
             return lhsType.tid().basePath().equals(rhsType.tid().basePath()) && lhsType.c().within(rhsType.c());
-        // A REC'S POLY ENTRIES ARE ITS TRAITS, hence SUPERTYPES of the instance (person[ninja] is a ninja), so they
-        // are accepted here alongside the vid's own name -- a trait is not on that name's parent chain, so the walk
-        // below would never reach it. Scoped to rec (its tid is rec) and one level deep: see recPolySupertype.
-        if (Type.Helper.recPolySupertype(lhsType, rhsType))
-            return Type.Helper.polysCompatible(this, rhsType);
         // A base type is nominally compatible with any base-or-nominal type of the same base form
         // (rec ⇝ bad_person::T is a re-tag), but NOT with a constructed/predicated subtype
         // (uri ⇝ file::T is a parse). testNominally strips coefficients.
@@ -293,11 +288,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return (rhsType.isBaseType() || rhsType.isNominal())
                     // identity, not a claim: erasure is explicit here
                     && Type.Helper.testByIdentity(lhsType.baseTypeID(), rhsType.baseTypeID())
-                    && Type.Helper.polysCompatible(this, rhsType); // NOMINAL-POLY
+                    && Type.Helper.testTypePoly(this, rhsType);
         while (true) {
             // identity, not a claim: erasure is explicit here
             if (Type.Helper.testByIdentity(lhsType.vid(), rhsType.vid()))
-                return Type.Helper.polysCompatible(this, rhsType); // NOMINAL-POLY
+                return Type.Helper.testTypePoly(this, rhsType);
             if (lhsType.isBaseType())
                 break;
             lhsType = lhsType.parentType();
@@ -1007,8 +1002,20 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 return rhs.tid().c().isZeroable();
             if (rhs.isNoObj())
                 return lhs.c().isZeroable();
+            // a fibered rec is also what the object at one of its fibers is; the fiber of a multiplicity of recs is
+            // that multiplicity of objects, judged apart so the stored object is never re-typed
+            if (rhs.isType() && lhs.isRec() && (lhs.tid().hasPoly() || !REC_TID.basePath().equals(lhs.tid().basePath()))) {
+                final Type type = lhs.type();
+                if (type.isFibered() && type.tid().poly().stream()
+                        .map(fiber -> lhs.asRec().<Obj>at(f(fiber.trim()).basePath()))
+                        .filter(at -> !at.isNoObj())
+                        .anyMatch(at -> at.c().mult(lhs.c()).within(rhs.c()) && at.test(rhs.c(at.c()))))
+                    return true;
+            }
+            // testNominally compares names, and a nominal type's coefficient is on its tid (T(person{2}) is
+            // person::T with tid rec{2}), so the coefficient is judged here
             if (rhs.isType() && rhs.asType().isNominal()) {
-                return lhs.testNominally(rhs);
+                return lhs.c().within(rhs.c()) && lhs.testNominally(rhs);
             }
             //if (!lhs.baseTypeID().test(rhs.baseTypeID()))
             //    return false;
@@ -1034,9 +1041,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     return Type.Helper.nominalTypeChecker(lhs, rhsType);
                 } else if (!rhs.asType().isBaseType()
                         && Type.Helper.testByIdentity(lhs.tid(), rhs.vid())) { // identity, not a claim: erasure is explicit here
-                    return rhs.asType().isRootType()
-                            ? lhs.c().within(rhs.c())
-                            : (!rhs.asType().hasPredicate() ||
+                    // a name match says nothing of multiplicity: the coefficient is judged as on the nominal path
+                    return lhs.c().within(rhs.c()) && (rhs.asType().isRootType() || !rhs.asType().hasPredicate() ||
                             (lhs.isType()
                                     ? Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())
                                     : !rhs.asType().apply(lhs).isNothing()));
@@ -1168,12 +1174,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 throw new TypeMismatchException(obj, obj.type(), "%s value can not be typed generic %s::T", obj.jvm(), obj.tid());
             if (TypeCheck.type_pred.enabled()) {
                 // A GENERIC POLY BINDS AT CONSTRUCTION. A poly written WITH a value is a declaration, not a free
-                // signature: `lst[A,A]::[1,2]` is a pair of equal slot types, so the value's own slots decide that A
+                // signature: `lst[A,A]::[1,2]` gives both indices one type, so the value's own elements decide that A
                 // is int and the value is then typed `lst[int,int]` (its tid, and so what .type() reports). This is
                 // the same path a concrete poly takes — a value that contradicts the declaration (`lst[A,A]::[1,'x']`)
-                // or does not fill every slot (`lst[A,B]::[1]`) keeps its declared tid and is failed by the verdict
+                // or does not fill every index (`lst[A,B]::[1]`) keeps its declared tid and is failed by the verdict
                 // below, so there is ONE error for "the value does not match the poly", whether the poly was concrete
-                // or bound-from-generics. `rec` is deliberately not bound: traits are nominal.
+                // or bound-from-generics. `rec` is deliberately not bound: its bracket names fields.
                 final boolean genericPoly = Machine.loaded() && obj.isLst() && obj.tid().hasPoly() &&
                         Lst.LstType.hasGenericSlot(obj.tid().poly());
                 final fURI boundTID = genericPoly ? Lst.LstType.boundTID(obj.asLst(), obj.tid()) : obj.tid();

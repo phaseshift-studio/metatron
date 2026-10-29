@@ -304,21 +304,30 @@ takes after crossing a wire; an origin with a `transport` is reachable.
 ### prefix — what you call a peer
 
 A fourth field, and the only one that is a **name** rather than an address: `prefix` is
-`<label> => <full origin>` (`ginger => ws://ginger.local:8555`). It answers a different question from the other three —
-`roster` is what the system *knows*, `peer` is what this machine has *dialed*, `listener` is what it *answers on*, and
-`prefix` is what you *call* it.
+`//ginger => ws://ginger.local:8555` — the spelling a peer is *called* by, mapped to the origin it denotes. It answers
+a different question from the other three — `roster` is what the system *knows*, `peer` is what this machine has
+* dialed*, `listener` is what it *answers on*, and `prefix` is what you *call* it.
 
 ```mtron
-</network/prefix/ginger> -> <ws://ginger.local:8555>;   [-- bind: the name --]
-//ginger/mtron?name=marko                               [-- = ws://ginger.local:8555/mtron?name=marko --]
-</network/prefix> -> noobj                              [-- unbind every name at once --]
+/network/prefix -> [//ginger => <ws://ginger.local:8555>];  [-- bind: the name, spelled as it is called --]
+</network/prefix/ginger> -> <ws://ginger.local:8555>;       [-- the same row, addressed by its label --]
+//ginger/mtron?name=marko                                   [-- = ws://ginger.local:8555/mtron?name=marko --]
+/network/prefix -> noobj                                    [-- unbind every name at once --]
 ```
 
+**A name is spelled `//name` and STORED `name`.** The door reads and writes the spelling a peer is called by, so what
+`*</network/prefix>` answers is what may be written back; the table itself keeps the **label**
+(`ginger => ws://ginger.local:8555`), because that is the key resolution asks for. A row whose key carries no `//` is
+**refused** (`noobj`) rather than stored under a spelling no read would ever ask for. An entry is addressed by its
+label — `</network/prefix/ginger>` — since a `//` cannot be a path segment.
+
 **The spelling is the addressed slot**: `//name/a` — a host with **no port and no scheme**. An explicit port is taken
-literally (`//ginger:8555/a` always means that host and port), because *explicit always beats named*, and a real scheme
-is never rewritten (`loop://self` already says which transport it means). The binding is read at the **root**, so no
-frame can change what `//ginger` denotes; an unbound name is answered as written and fails closed, so no name resolves
-to a discovered peer merely because one happens to answer.
+literally (`//ginger:8555/a` always means that host and port), because *explicit always beats named*; a real scheme is
+never rewritten (`loop://self` already says which transport it means); and a dotted host is a **hostname**, never a name
+a binding may shadow. Resolution strips the marker and queries the label, so the whole tail rides to the far side:
+`//ginger/a/b/c` denotes `ws://ginger.local:8555/a/b/c`. The binding is read at the **root**, so no frame can change
+what `//ginger` denotes; an unbound name is answered as written and fails closed, so no name resolves to a discovered
+peer merely because one happens to answer.
 
 **The dial is not the declaration.** A connection is *reach* — per frame, retractable, one member per surface — while a
 name is *denotation*: one listing, at the root, and a `pop` must not change it. So a name is bound by a write and the

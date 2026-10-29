@@ -821,13 +821,34 @@ public abstract class LawTable {
         // int-refinements) share a tid, so a tid-keyed cache would answer one's algebra for the other
         if (null == type.vid())
             return rec0();
-        return this.typeLawsCache.computeIfAbsent(type.vid().basePath(), k -> {
-            // THE DECLARATION BESIDE THE TYPE WINS: an algebra written through `?lawq` (the builder's job, at
-            // registration, before any lift) is the source; the in-code table is the fallback until every type
-            // declares its own. Read on cache miss only -- a declaration is written before the first lift.
-            final Obj declared = lawOf(type);
-            return declared.isRec() && !declared.asRec().isEmpty() ? declared.asRec() : this.typeLawsUncached(type);
-        });
+        final Rec cached = this.typeLawsCache.get(type.vid().basePath());
+        if (null != cached)
+            return cached;
+        // THE DECLARATION BESIDE THE TYPE WINS: an algebra written through `?lawq` (the builder's job, at
+        // registration, before any lift) is the source; the in-code table is the fallback until every type
+        // declares its own. WHETHER THE SPACE ANSWERED is observed here, on the read that produced the block --
+        // never re-derived at the memo, where a second copy of `lawOf`'s own gate would drift from it.
+        final Obj declared = lawOf(type);
+        final boolean spaceAnswered = declared.isRec();
+        final Rec laws = spaceAnswered && !declared.asRec().isEmpty() ? declared.asRec() : this.typeLawsUncached(type);
+        if (memoizable(laws, spaceAnswered))
+            this.typeLawsCache.putIfAbsent(type.vid().basePath(), laws);
+        return laws;
+    }
+
+    /**
+     * WHETHER AN ANSWER MAY BE MEMOIZED — a pure function of what the read OBSERVED. A non-empty block was read
+     * out of a live space (and holds addresses a later boot names identically), so it is always safe to keep. An
+     * EMPTY one is kept only when the type's own space answered the read with a {@code ?lawq} rec: then "declares
+     * nothing" is a declaration. A BLIND read — the space was not reachable, or held no declaration yet — is a
+     * fact about the machine asking, and these tables are static singletons ({@link #TABLES}) that outlive every
+     * boot, so memoizing it would answer "this type declares no algebra" for the rest of the JVM's life: the
+     * theory machinery ({@code TheoryHelper.instances}/{@code unit}, {@code LawTable.declared}) then finds no unit
+     * and no inverse, so {@code plus(0)} never folds and {@code plus(3).minus(3)} never cancels — the two rows of
+     * {@code PlanBuilderTest.testEmittedCodeIsUnchangedByRename} a peer suite left red.
+     */
+    static boolean memoizable(final Rec laws, final boolean spaceAnswered) {
+        return !laws.jvm().isEmpty() || spaceAnswered;
     }
 
     /**

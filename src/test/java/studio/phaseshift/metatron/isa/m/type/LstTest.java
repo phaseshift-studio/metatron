@@ -24,12 +24,14 @@ package studio.phaseshift.metatron.isa.m.type;
 /*
  "/t -> [a,[b,[c,d],e],f]                               % */
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.util.Optional;
 
@@ -427,10 +429,29 @@ public class LstTest extends AbstractAlgebraTest {
             "lst[int,str{0},real]::T                     % lst[int,str{+},real]::T      % false",
             "[{1,2,3},{'a','b'}]                         % lst[int{3},str{+}]::T        % true",
             "[{1,2,3},{'a','b'}]                         % lst[int{*}]::T               % true",
+            // AN INDEX'S COEFFICIENT IS THE MULTIPLICITY OF THE VALUE AT THAT INDEX, not another index:
+            // lst[int{2},str] is a two-index list whose index 0 holds two ints, so {1,2} belongs there and a lone 1
+            // does not. The boundary rows read the coefficient as a multiplicity: {n} exactly n, {n,m} a range, {+}
+            // at least one, {?} zero or one (the absent form is the shorter list above), {*} zero or more.
+            "[{1,2},'a']                                % lst[int{2},str]::T           % true",
+            "[{2}1,'a']                                 % lst[int{2},str]::T           % true",
+            "[1,'a']                                    % lst[int{2},str]::T           % false",
+            "[{1,2,3},'a']                              % lst[int{2},str]::T           % false",
+            "[{1,2},'a']                                % lst[int{2,3},str]::T         % true",
+            "[{1,2,3},'a']                              % lst[int{2,3},str]::T         % true",
+            "[{1,2,3,4},'a']                            % lst[int{2,3},str]::T         % false",
+            "[{1,2},'a']                                % lst[int{+},str]::T           % true",
+            "[{1,2},'a']                                % lst[int{*},str]::T           % true",
+            "['a',{1,2}]                                % lst[str,int{?}]::T           % false",
+            // a plain entry is exactly one value: two ints at index 0 are not an int
+            "[{1,2},'a']                                % lst[int,str]::T              % false",
+            // a trailing index that admits zero may be unfilled
+            "['a']                                      % lst[str,int{?}]::T           % true",
     }, delimiter = '%')
     public void testPoly(final String list, final String type, final boolean matches) {
         AbstractMetatronTest.checkMatches(LOG, list, type, matches);
     }
+
 
     /**
      * A GENERIC list poly BINDS at construction: the poly written with a value is that value's shape position by
@@ -438,7 +459,7 @@ public class LstTest extends AbstractAlgebraTest {
      * typed {@code lst[int,str]}. A variable used twice must resolve to ONE type ({@code lst[A,A]::[1,2]} is a pair of
      * ints) and two different types are a contradiction — failed by the same poly verdict, with the same message, as a
      * concrete poly that does not match ({@code lst[int,int]::[1,'x']}). Arity is the same rule taken literally: a
-     * poly of length n is the type of an n-slot value, so {@code lst[A,B]::[1]} has nothing to bind {@code B} from.
+     * poly of length n is the type of an n-index value, so {@code lst[A,B]::[1]} has nothing to bind {@code B} from.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -458,7 +479,7 @@ public class LstTest extends AbstractAlgebraTest {
      * {@code lst[int,str]} as its tid, which is what {@code .type()} reports, while a concrete annotation keeps the
      * meaning it was written with.
      */
-    @org.junit.jupiter.api.Test
+    @Test
     public void testGenericPolyBindingCarriesTheBoundPoly() {
         final Obj bound = mParser.m_obj().parse("lst[A,B]::[1,'x']").get();
         assertEquals(f("/m/lst[/m/int,/m/str]"), bound.tid());
@@ -468,7 +489,142 @@ public class LstTest extends AbstractAlgebraTest {
         // .type() answers the same bound poly the tid carries
         AbstractMetatronTest.checkCodeParseApply(LOG, "lst[A,B]::[1,'x'].type()", "lst[int,str]::T");
     }
-    
+
+    /**
+     * A LST POLY MISMATCH NAMES ITS INDICES — index by index, the way the rel path diff names its vertices. The
+     * report pairs each element of the value with the type at its index ({@code ==>} where they agree, {@code X=>}
+     * where they do not), so {@code lst[int,int,str]::[1,2,3.5]} names the third index and the value that failed
+     * there.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // code                              % the report pairs each index with its value
+            "lst[int,int,str]::[1,2,3.5]         % [==>1,==>2,X=>3.5]",
+            "lst[int,str]::[1,2]                 % [==>1,X=>2]",
+    }, delimiter = '%')
+    public void testPolyMismatchNamesTheFailingIndex(final String code, final String reported) {
+        final Obj mismatch = ObjmtronSerializer.parse(code);
+        assertTrue(mismatch.isFail(), "a lst poly mismatch must be reported: " + mismatch);
+        assertTrue(mismatch.asFail().message().contains(reported.trim()),
+                "each index is marked with its value: " + mismatch.asFail().message());
+    }
+
+    /**
+     * A NAMED TENSOR TYPE READS ITS TID'S BRACKET like a base one, coefficients included.
+     * {@code pair -> lst[person{2},str]::T@pair} is a two-index list whose index 0 holds two people, so a pair
+     * holding one person is rejected. The coefficient of a predicated entry ({@code pilgrim}) is judged the same way
+     * as that of a bare one ({@code person}). Its seed sits beside {@link #testUpdate}'s one-time seed: each test
+     * method keeps its own loaded flag, so neither seed suppresses the other.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> rec::T@person",
+            "pilgrim -> rec::T[?[name=>str::T]]@pilgrim",
+            "pair -> lst[person{2},str]::T@pair",
+    })
+    @CsvSource(value = {
+            "pair::[{person::[name=>'bob'],person::[name=>'kai']},'a']    % pair::[{person::[name=>'bob'],person::[name=>'kai']},'a']",
+            "pair::[person::[name=>'bob'],'a']                            % <ERROR>",
+            "pair::[{person::[name=>'bob'],person::[name=>'kai']},2]      % <ERROR>",
+            "lst[person{2},str]::[person::[name=>'bob'],'a']              % <ERROR>",
+            "lst[pilgrim{2},str]::[pilgrim::[name=>'bob'],'a']            % <ERROR>",
+            "lst[pilgrim,str]::[pilgrim::[name=>'bob'],'a']               % lst[pilgrim,str]::[pilgrim::[name=>'bob'],'a']",
+    }, delimiter = '%')
+    public void testNamedTensorType(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A TENSOR'S INDICES, EDGE BY EDGE. Each index holds its own type in order; a missing index fails unless its entry
+     * admits zero, and a present zero-admitting index is still typed; an index's coefficient is the multiplicity at that
+     * index; and a poly at an index is read by its base ({@code lst}, {@code rec}, {@code rel}), not unpacked.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // value                      % type                          % matches
+            // ---- each index holds its own type, in order ----
+            "[1,'a',true]                 % lst[int,str,bool]::T          % true",
+            "[1,true,'a']                 % lst[int,str,bool]::T          % false",
+            // ---- a missing index fails unless its entry admits zero ----
+            "[1,'a']                      % lst[int,str,bool]::T          % false",
+            "[1,'a']                      % lst[int,str,bool{?}]::T       % true",
+            "[1]                          % lst[int,str{?},bool{?}]::T    % true",
+            "[1,'a']                      % lst[int,str{?},bool{?}]::T    % true",
+            // ---- a present zero-admitting index is still typed ----
+            "[1,2]                        % lst[int,str{?},bool{?}]::T    % false",
+            // ---- an index's coefficient is the multiplicity at that index ----
+            "[{1,2,3}]                    % lst[int{3}]::T                % true",
+            "[{1,2,3}]                    % lst[int{2,4}]::T              % true",
+            "[{1,2,3,4,5}]                % lst[int{2,4}]::T              % false",
+            "[{1,2},{'a','b','c'}]        % lst[int{+},str{+}]::T         % true",
+            "[{1,2},'a']                  % lst[int{?},str]::T            % false",
+            // ---- a poly at an index is read by its base, not unpacked ----
+            "[[1,2],'a']                  % lst[lst,str]::T               % true",
+            "[[1,2],'a']                  % lst[int,str]::T               % false",
+            "[[[1]]]                      % lst[lst]::T                   % true",
+            "[[a=>1],(1=>2)]              % lst[rec,rel]::T               % true",
+            "[(1=>2),[a=>1]]              % lst[rec,rel]::T               % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTensorIndexEdges(final String value, final String type, final boolean matches) {
+        AbstractMetatronTest.checkMatches(LOG, value, type, matches);
+    }
+
+    /**
+     * NAMED TENSORS NEST: depth comes from naming, since a bracket cannot hold a bracket. A {@code booking} is two
+     * {@code ticket}s and an {@code itinerary} a {@code booking} with an optional {@code ticket}, so constructing a value
+     * reads every level's indices in turn — untyped inner lsts are read as the tensor their index names — and reading
+     * back down walks the same levels.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "ticket -> lst[int,str]::T@ticket",
+            "booking -> lst[ticket,ticket]::T@booking",
+            "itinerary -> lst[booking,ticket{?}]::T@itinerary",
+    })
+    @CsvSource(value = {
+            // ---- a named tensor at an index: its own indices are read in turn ----
+            "booking::[[1,'a'],[2,'b']]                        % booking::[[1,'a'],[2,'b']]",
+            "booking::[[1,'a'],[2,3]]                          % <ERROR>",
+            "booking::[[1,'a']]                                % <ERROR>",
+            "booking::[[1,'a'],[2,'b'],[3,'c']]                % booking::[[1,'a'],[2,'b'],[3,'c']]",
+            // ---- three levels: an itinerary holds a booking, which holds tickets ----
+            "itinerary::[[[1,'a'],[2,'b']]]                    % itinerary::[[[1,'a'],[2,'b']]]",
+            "itinerary::[[[1,'a'],[2,'b']],[3,'c']]            % itinerary::[[[1,'a'],[2,'b']],[3,'c']]",
+            "itinerary::[[[1,'a'],[2,'b']],[3,4]]              % <ERROR>",
+            "itinerary::[[[1,'a'],['b',2]]]                    % <ERROR>",
+            // ---- reading back down through the levels ----
+            "itinerary::[[[1,'a'],[2,'b']],[3,'c']]>>0>>1>>1   % 'b'",
+            "itinerary::[[[1,'a'],[2,'b']],[3,'c']]>>1>>0      % 3",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testNestedTensorTypes(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * INSTRUCTIONS ON A TENSOR TYPE, OUTER AND INNER. An instruction whose domain is a named tensor applies to any lst
+     * whose indices are that tensor's, typed or not, and to nothing else; the outer tensor's instruction hands back an
+     * inner lst, which takes the inner tensor's instructions in turn; and the outer tensor is not the inner one.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "ticket -> lst[int,str]::T@ticket",
+            "booking -> lst[ticket,ticket]::T@booking",
+            "ticket_name -> |inst?<=ticket(){ >>1 }",
+            "booking_first -> |inst?<=booking(){ >>0 }",
+    })
+    @CsvSource(value = {
+            "ticket::[7,'kai'].ticket_name()                          % 'kai'",
+            "[7,'kai'].ticket_name()                                  % 'kai'",
+            "[7,8].ticket_name()                                      % 8",
+            "booking::[[1,'a'],[2,'b']].booking_first()               % [1,'a']",
+            "booking::[[1,'a'],[2,'b']].booking_first().ticket_name() % 'a'",
+            "booking::[[1,'a'],[2,'b']].ticket_name()                 % <ERROR>",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTensorInstructions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE set: should mutate original in-place
@@ -556,7 +712,7 @@ public class LstTest extends AbstractAlgebraTest {
      * through the whole path, not just the first segment.  (Lst uri access wraps its
      * results in an objs, so check by streaming.)
      */
-    @org.junit.jupiter.api.Test
+    @Test
     public void testAtDirectDeepPathRespectsRawToggle() {
         final Obj ptr = auto_from_(f("local:src/a_main")).tryToInst();
         final Lst l = lst(rec(uri("usr/marko/Echo"), ptr));
@@ -573,7 +729,7 @@ public class LstTest extends AbstractAlgebraTest {
      * a rec whose value holds deeper structure (metatron tree layout).  Uri paths with
      * multiple segments may surface results wrapped in an objs, so assert over stream.
      */
-    @org.junit.jupiter.api.Test
+    @Test
     public void testAtCrossesLstRecBoundary() {
         final Lst l = lst(rec(uri("x"), jnt(41)), jnt(7));
         // lst -> rec leaf
