@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.Law;
@@ -40,14 +39,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  *
  */
-public interface Int extends Mono, Ring.O<Int> {
+public interface Int extends Mono {
 
     Int ZERO = jnt(0L);
     Int ONE = jnt(1L);
@@ -87,27 +85,25 @@ public interface Int extends Mono, Ring.O<Int> {
         return (Int) Mono.super.c(c);
     }
 
-    @Override
+
     default Int zero() {
         return ZERO;
     }
 
-    @Override
+
     default Int one() {
         return ONE;
     }
 
-    @Override
+
     default Int plus(final Int rhs) {
         return this.jvm((this.intValue() * this.c().max()) + (rhs.intValue() * rhs.c().max())).c(cInt.ONE());
     }
 
-    @Override
     default Int mult(final Int rhs) {
         return this.jvm((this.intValue() * this.c().max()) * (rhs.intValue() * rhs.c().max())).c(cInt.ONE());
     }
-
-    @Override
+    
     default Int neg() {
         return this.jvm(-1 * this.intValue());
     }

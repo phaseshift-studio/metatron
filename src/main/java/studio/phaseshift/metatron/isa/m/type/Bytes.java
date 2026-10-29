@@ -18,30 +18,25 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.isa.m.type.impl.MBytes;
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.MBytes;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.IntStream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
+public interface Bytes extends Mono {
 
     // Bytes with coefficient {0}: noobj typed as a Bytes, for a method that answers a Bytes or nothing.
     Bytes BYTES_NOOBJ = new MBytes(null, Tokens.BYTES_TID.zero(), null);
@@ -73,12 +68,10 @@ public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
         return (Bytes) Mono.super.c(c);
     }
 
-    @Override
     default Bytes zero() {
         return bytes(ByteBuffer.wrap(new byte[0]));
     }
 
-    @Override
     default Bytes plus(final Bytes rhs) {
         final ByteBuffer buffer = ByteBuffer.allocate(this.jvm().remaining() + rhs.jvm().remaining());
         buffer.put(this.jvm().duplicate());
@@ -117,10 +110,10 @@ public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(!Arrays.stream(lhs.bytesValue().asIntBuffer().array()).allMatch(b -> b == 0), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
+                    instC(AS_INST_TID.dom(Tokens.BYTES_TID).rng(Tokens.BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(!Arrays.stream(lhs.bytesValue().asIntBuffer().array()).allMatch(b -> b == 0), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
                     //instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
                     //instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
-                    instC(WITHIN_INST_TID.dom(Tokens.BYTES_TID).rng(B), lst(T(B)), (lhs, inst) -> IntStream.range(0, lhs.bytesValue().array().length).map(i -> lhs.bytesValue().array()[i]).boxed().map(b -> inst.arg(0).apply(bytes(ByteBuffer.wrap(new byte[]{(byte) b.intValue()})))).map(o -> (PlusMonoid.O) o).reduce((a, b) -> (PlusMonoid.O) a.plus(b)).map(Obj::<Obj>as).orElse(noobj()))
+                    //instC(WITHIN_INST_TID.dom(Tokens.BYTES_TID).rng(B), lst(T(B)), (lhs, inst) -> IntStream.range(0, lhs.bytesValue().array().length).map(i -> lhs.bytesValue().array()[i]).boxed().map(b -> inst.arg(0).apply(bytes(ByteBuffer.wrap(new byte[]{(byte) b.intValue()})))).map(o -> (PlusMonoid.O) o).reduce((a, b) -> (PlusMonoid.O) a.plus(b)).map(Obj::<Obj>as).orElse(noobj()))
 
                     /*instC(SPLIT_INST_TID.dom(BYTES_TID).rng(LST_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                         final byte[] array = lhs.bytesValue().array();

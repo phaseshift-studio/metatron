@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.form.AbstractfURI;
@@ -38,8 +37,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gte_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -50,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
+public interface Uri extends Mono, Comparable<Uri> {
 
     Uri ONE = uri("");
 
@@ -115,14 +112,12 @@ public interface Uri extends Mono, MultMonoid.O<Uri>, Comparable<Uri> {
         return this.clone(this.jvm(), this.tid(), vid);
     }
 
-    @Override
     default Uri one() {
         return ONE;
     }
 
-    @Override
     default Uri mult(final Uri rhs) {
-        return this.isOne() ? rhs : rhs.isOne() ? this : this.jvm(this.uriValue().extend(rhs.uriValue())).c(c -> c.mult(rhs.c())).asUri();
+        return this.equals(ONE) ? rhs : rhs.equals(ONE) ? this : this.jvm(this.uriValue().extend(rhs.uriValue())).c(c -> c.mult(rhs.c())).asUri();
     }
 
     default Uri plus(final Uri rhs) {

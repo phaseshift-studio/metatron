@@ -19,36 +19,30 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.util.*;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.ProjectionFailureException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.autoToggle;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.immutableMap;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
+public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
 
     Rec EMPTY_REC = rec(immutableMap());
     // Rec with coefficient {0}: noobj typed as a Rec, for a method that answers a Rec or nothing.
@@ -155,14 +149,12 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     default <OBJ extends Obj> OBJ at(final Obj key) {
         return Rec.Helper.atToggle(this, key, true);
     }
-
-
+    
     @Override
     default <O extends Obj> O atDirect(final Obj key) {
         return Rec.Helper.atToggle(this, key, false);
     }
 
-    @Override
     default Rec plus(final Rec rhs) {
         return Poly.Helper.mergeObjRecursion(this, rhs).asRec();
     }
@@ -171,7 +163,6 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     default Rec vid(final fURI vid) {
         return (Rec) Poly.super.vid(vid);
     }
-
 
     @Override
     default Rec tid(final fURI tid) {

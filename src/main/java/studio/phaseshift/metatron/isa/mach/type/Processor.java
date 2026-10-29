@@ -142,7 +142,7 @@ public interface Processor extends mThread, Machine.Component {
                                         return null;
                                     // Allow template expansion: if arg is Uri or Str with templates, always return expanded result
                                     final boolean isTemplateExpansion = (arg.isUri() && arg.asUri().hasTemplates()) ||
-                                            (arg.isStr() && (arg.strValue().contains("${") || arg.strValue().contains("{{{")));
+                                            (arg.isStr() && arg.asStr().hasTemplates());
                                     if (!arg.isObjCall() && !isTemplateExpansion && !r.test(arg)) {
                                         return arg;
                                     }

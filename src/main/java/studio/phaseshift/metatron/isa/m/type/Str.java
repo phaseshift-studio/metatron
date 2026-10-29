@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -27,29 +26,24 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.STR_TID;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface Str extends Mono, PlusMonoid.O<Str> {
+public interface Str extends Mono {
     Str ZERO = str("");
 
     // Str with coefficient {0}: noobj typed as a Str, for a method that answers a Str or nothing.
@@ -64,6 +58,10 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
 
     @Override
     String jvm();
+
+    default Str plus(final Str obj) {
+        return this.jvm(this.jvm() + obj.jvm());
+    }
 
     default Str jvm(final String jvm) {
         return this.clone(jvm, this.tid(), this.vid());
@@ -91,10 +89,13 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
      */
     @Override
     default Obj apply(final Obj lhs) {
-        final String value = this.strValue();
-        if (!value.contains("${") && !value.contains("{{{"))
+        if (!this.hasTemplates())
             return this;
-        return this.jvm(expandTemplates(value, lhs));
+        return this.jvm(expandTemplates(this.strValue(), lhs));
+    }
+
+    default boolean hasTemplates() {
+        return (this.strValue().contains("${") && this.strValue().contains("}")) || (this.strValue().contains("{{{") && this.strValue().contains("}}}"));
     }
 
     /**
@@ -270,7 +271,6 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         return value.substring(holdFrom);
     }
 
-    @Override
     default Str zero() {
         return ZERO;
     }
@@ -428,14 +428,14 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
                             "'241G'.regex('(\\d+)([KMGT])') [-- [['241G','241','G']] --]"),
 
                     instC(UPDATE_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)), lhs.tid(), lhs.vid())),
-                    instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Str.Helper.project(lhs.strValue(), inst.arg(0).asRec()))),
+                    instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Str.Helper.project(lhs.strValue(), inst.arg(0).asRec())))
                     //      Map.of(uri(LAW), laws(Category.Law.boolean_)),
 
-                    instC(WITHIN_INST_TID.dom(STR_TID).rng(B), lst(T(B)), (lhs, inst) -> Arrays.stream(lhs.strValue().split("")).map(s -> inst.arg(0).apply(str(s))).
+                    /*instC(WITHIN_INST_TID.dom(STR_TID).rng(B), lst(T(B)), (lhs, inst) -> Arrays.stream(lhs.strValue().split("")).map(s -> inst.arg(0).apply(str(s))).
                             map(o -> (PlusMonoid.O) o).
                             reduce((a, b) -> (PlusMonoid.O) a.plus(b)).
                             map(Obj::<Obj>as).
-                            orElse(noobj()))
+                            orElse(noobj()))*/
             ));
         }
     }

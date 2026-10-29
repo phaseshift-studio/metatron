@@ -18,13 +18,11 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.isa.m.type.impl.MReal;
 import net.objecthunter.exp4j.ExpressionBuilder;
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.MultGroup;
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.MReal;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.util.MathUtil;
 
@@ -39,10 +37,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
-public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
+public interface Real extends Mono {
 
     Real ZERO = real(0.0d);
     Real ONE = real(1.0d);
@@ -83,37 +80,35 @@ public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
         return (Real) Mono.super.c(c);
     }
 
-    @Override
+
     default Real zero() {
         return ZERO;
     }
 
-    @Override
     default Real one() {
         return ONE;
     }
 
-    @Override
     default Real inv() {
         return this.jvm(1.0d / this.realValue());
     }
 
-    @Override
     default Real div(final Real rhs) {
         return this.jvm(this.realValue() / rhs.realValue());
     }
 
-    @Override
     default Real plus(final Real rhs) {
         return this.jvm((this.realValue() * this.c().max()) + (rhs.realValue() * rhs.c().max())).c(cInt.ONE());
     }
 
-    @Override
+    default Real minus(final Real rhs) {
+        return this.jvm((this.realValue() * this.c().max()) - (rhs.realValue() * rhs.c().max())).c(cInt.ONE());
+    }
+
     default Real mult(final Real rhs) {
         return this.jvm((this.realValue() * this.c().max()) * (rhs.realValue() * rhs.c().max())).c(cInt.ONE());
     }
 
-    @Override
     default Real neg() {
         return this.jvm(-1.0d * this.realValue());
     }

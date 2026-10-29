@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.util.MTronException;
@@ -40,7 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Fail extends Obj, PlusMonoid<Fail> {
+public interface Fail extends Obj {
 
     Type FAIL_TYPE = Type.Builder.build().tid(Tokens.FAIL_TID).vid(Tokens.FAIL_TID).create();
 

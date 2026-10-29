@@ -51,9 +51,5 @@ public class MStr extends MObj implements Str {
     public String jvm() {
         return (String) this.jvm;
     }
-
-    @Override
-    public Str plus(final Str obj) {
-        return this.jvm(this.jvm() + obj.jvm());
-    }
+    
 }

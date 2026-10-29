@@ -21,9 +21,6 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.zeroturnaround.exec.ProcessExecutor;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
-import studio.phaseshift.metatron.algebra.MultMonoid;
-import studio.phaseshift.metatron.algebra.PlusMonoid;
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -238,7 +235,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     @Override
     default Obj apply(final Obj other) {
-        return this;//.c(c -> c.mult(other.c())); // need to redefine equality (no c() test)
+        return this;//.c(c -> c.mult(other.c()));
     }
 
     default Obj apply() {
@@ -300,20 +297,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return false;
     }
 
-    /**
-     * True when {@code this} and {@code rhs} carry the same <i>label</i> — the name, ignoring coefficient and
-     * query — or when {@code this} is a base type and {@code rhs} is a subtype of that base form (a re-tag, e.g.
-     * {@code rec ⇝ bad_person::T}). Distinct from {@link #testNominally(Obj)}: that is the directional subtype
-     * check; this is the symmetric same-form check.
-     */
-   /* default boolean testLabelNominal(final Obj rhs) {
-        final Type thisType = Obj.Helper.specificType(this);
-        final Type rhsType = Obj.Helper.specificType(rhs);
-        final fURI thisId = Obj.Helper.specificTypeId(this);
-        final fURI rhsId = Obj.Helper.specificTypeId(rhs);
-        return thisId.basePath().equals(rhsId.basePath())
-                || (thisType.isBaseType() && thisId.basePath().equals(rhsType.tid().basePath()));
-    }*/
     default boolean test(final Obj rhs) {
         if (this == rhs) return true;
         return Obj.Helper.testObjs(this, rhs);
@@ -364,17 +347,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             if (parent.isBaseType() || this.equals(parent))
                 return parent.tid();
             else return parent.baseTypeID();
-        }
-       /* else if (this.isType()) {
-            if(null != this.vid()) {
-                final Obj temp = Machine.read(this.vid());
-                if (temp.isType()) {
-                    return temp.tid();
-                }
-            }
-            return this.tid();
-        }*/
-        else return this.tid();
+        } else return this.tid();
     }
 
     default <O extends Obj> O orElse(final O other) {
@@ -407,14 +380,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         // writes fails to the fail space and casts the result back with as(), so
         // this must not gate on Fail
         return (O) this;
-    }
-
-    default <O extends Obj> O asOrThrow(final String format, final Object... params) {
-        try {
-            return this.as();
-        } catch (final Exception e) {
-            throw MTronException.of(format, params);
-        }
     }
 
     default <O extends Obj> boolean is(final Class<O> clazz) {
@@ -480,18 +445,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default boolean isObjInst() {
         return this.isInst() && !this.isNoObj();
-    }
-
-    default boolean isRing() {
-        return this instanceof Ring.O;
-    }
-
-    default boolean isPlusMonoid() {
-        return this instanceof PlusMonoid.O;
-    }
-
-    default boolean isMultMonoid() {
-        return this instanceof MultMonoid;
     }
 
     default boolean isRel() {
