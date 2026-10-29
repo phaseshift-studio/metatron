@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
+import studio.phaseshift.metatron.isa.mach.type.instset.BasicInstSet;
 
 import java.util.List;
 

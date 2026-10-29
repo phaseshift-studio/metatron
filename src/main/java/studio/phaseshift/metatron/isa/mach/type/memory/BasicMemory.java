@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
+import studio.phaseshift.metatron.isa.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MEMORY_TID;
@@ -98,7 +97,9 @@ public class BasicMemory extends MRec implements Memory {
      */
     private final AtomicLong redirectVersion = new AtomicLong();
 
-    /** a rewrite is serialized: it changes what every reader of the table resolves */
+    /**
+     * a rewrite is serialized: it changes what every reader of the table resolves
+     */
     private final Object redirectWrite = new Object();
 
     /**

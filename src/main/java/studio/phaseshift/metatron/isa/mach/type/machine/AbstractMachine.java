@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.CLOSING;
@@ -55,7 +54,6 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
 public abstract class AbstractMachine extends MRec implements Machine {
 
     public static final Uri PRIMARY = uri("primary");
-    private static final Set<fURI> READ_AS_NOOBJ = Set.of(ALL.maybeSome(), ALL.maybe(), ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     protected final Stats iostats = new MStats();
 

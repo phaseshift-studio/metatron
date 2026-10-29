@@ -56,17 +56,6 @@ public abstract class MObj implements Obj, Cloneable {
         return null == this.parent ? noobj() : this.parent;
     }
 
-   /* protected boolean check() {
-        if (!this.isInstSet() && !this.isNoObj() && !this.isType() && !this.matches(this.type()))
-            throw MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
-        return true;
-    }*/
-
-   /* protected void save() {
-        if (null != vid && !this.isType())
-            Machine.write(this);
-    }*/
-
     @Override
     public <J> J jvm() {
         return (J) this.jvm;

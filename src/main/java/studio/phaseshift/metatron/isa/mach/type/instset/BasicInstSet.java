@@ -1,4 +1,22 @@
-package studio.phaseshift.metatron.isa.mach.type.machine;
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.mach.type.instset;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -11,12 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.ComponentUnion;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.REFERENCE;
@@ -109,13 +122,17 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
 
     // ======================== the frame chain ========================
 
-    /** This level's own component — the ISA itself, whose structure is the level. */
+    /**
+     * This level's own component — the ISA itself, whose structure is the level.
+     */
     @Override
     public InstSet current() {
         return this;
     }
 
-    /** The enclosing machine's instset, or null at the root. */
+    /**
+     * The enclosing machine's instset, or null at the root.
+     */
     @Override
     public InstSet previous() {
         return this.previous;
@@ -234,7 +251,9 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
                 && !isa.pattern().retractPattern().segments().isEmpty();
     }
 
-    /** The imported ISAs, by vid — see {@link #refer(InstSet)}. Resolution reads THIS; the rec is the reflection. */
+    /**
+     * The imported ISAs, by vid — see {@link #refer(InstSet)}. Resolution reads THIS; the rec is the reflection.
+     */
     private final Map<String, InstSet> imports = new LinkedHashMap<>();
 
     /**
@@ -405,7 +424,9 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
                     candidates, seen);
     }
 
-    /** Take a level's candidates, dropping any whose identity a nearer level has already answered. */
+    /**
+     * Take a level's candidates, dropping any whose identity a nearer level has already answered.
+     */
     private void gather(final Obj from, final List<Obj> candidates, final Set<String> seen) {
         if (null == from || from.isNoObj())
             return;
@@ -426,7 +447,9 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         return obj.isInst() ? obj.tid() : obj.vid();
     }
 
-    /** Writes reach only this machine's own structure: the enclosing level and the libraries are read-only here. */
+    /**
+     * Writes reach only this machine's own structure: the enclosing level and the libraries are read-only here.
+     */
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return super.write(vid, obj);
