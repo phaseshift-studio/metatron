@@ -14,20 +14,20 @@ session — using the *same* `mcp_server::T` values and the *same* tool names th
 Read against the code, the stdio server is an **assembly job**, not a protocol job. Every layer above the
 carrier and every layer below it already exists.
 
-| the design needs | what already is | where |
-|---|---|---|
-| JSON-RPC dispatch, transport-agnostic | `mcpServer` — `handleMessage(Obj)`, plus the schema-aware `handleMessage(String rawJson)` two-phase parse | `isa/web/type/mcpServer.java` |
-| the metatron tool set | `mcpMetatronBuilder.build()` — `eval_mtron`, `write_memory`, `read_memory`, `list_space`, `machine_info`, `find_inst`, `spawn_wsclient`, `spawn_wshandler` + skill resources | `isa/web/type/mcpMetatronBuilder.java` |
-| a server from any skill | `mcpServer.of(skill)` and the `as?mcp_server<=skill` row | `mcpServer.java`, `webInstSet.java` |
-| two carriers to imitate | `mcp_wsHandler` (per connection) and `mcp_httpHandler` (Streamable HTTP + SSE) — both *compose* `mcpServer`, neither subclasses the other | `isa/web/space/{ws,http}/handler/` |
-| out-of-band delivery, already proven | `mcp_httpHandler.doGet` opens an `SseStream` and pushes from a `?subq` outbox | `mcp_httpHandler.java`, `SseStream.java` |
-| the process-spawn protocol | `mcpClient.createTransport` picks `StdioMcpTransport` when `command` is present — metatron already *speaks* stdio MCP in the other direction | `isa/llm/type/mcp/mcpClient.java:194` |
-| tokens | `STDIO` (declared, unused in server code), `SERVER`, `IN`, `OUT` | `Tokens.java` |
-| handler-as-type (not space) | `HTTP_MCP_HANDLER_TYPE` / `WS_MCP_HANDLER_TYPE` are handler *types*; `httpSpace` / `wsSpace` own only the socket + route table | `webInstSet.setup()` |
-| "a host owns the process's streams" | `mSystem.in(stream)` / `mSystem.out()`, `Console.installStdoutCapture()`, `ScreenOutputStream` | `isa/sys/mSystem.java`, console |
-| somewhere for a blocking transport to live | `BootLoader.load()` parks the main thread on `SHUTDOWN_LATCH` for headless boots; the console runs its blocking REPL on a virtual thread | `BootLoader.java:508-557` |
-| a portless profile precedent | `boot/console.boot.mtron` — "no ports are bound … safe to boot beside a live server" | `boot/` |
-| declarative config idiom | JSON snippet → `mcp_client::T` (`mcpServers` unwrapping, `args`→`command`, `env`→`headers`) | `webInstSet.java:582-616` |
+| the design needs                           | what already is                                                                                                                                                              | where                                    |
+|--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| JSON-RPC dispatch, transport-agnostic      | `mcpServer` — `handleMessage(Obj)`, plus the schema-aware `handleMessage(String rawJson)` two-phase parse                                                                    | `isa/web/type/mcpServer.java`            |
+| the metatron tool set                      | `mcpMetatronBuilder.build()` — `eval_mtron`, `write_memory`, `read_memory`, `list_space`, `machine_info`, `find_inst`, `spawn_wsclient`, `spawn_wshandler` + skill resources | `isa/web/type/mcpMetatronBuilder.java`   |
+| a server from any skill                    | `mcpServer.of(skill)` and the `as?mcp_server<=skill` row                                                                                                                     | `mcpServer.java`, `webInstSet.java`      |
+| two carriers to imitate                    | `mcp_wsHandler` (per connection) and `mcp_httpHandler` (Streamable HTTP + SSE) — both *compose* `mcpServer`, neither subclasses the other                                    | `isa/web/space/{ws,http}/handler/`       |
+| out-of-band delivery, already proven       | `mcp_httpHandler.doGet` opens an `SseStream` and pushes from a `?subq` outbox                                                                                                | `mcp_httpHandler.java`, `SseStream.java` |
+| the process-spawn protocol                 | `mcpClient.createTransport` picks `StdioMcpTransport` when `command` is present — metatron already *speaks* stdio MCP in the other direction                                 | `isa/llm/type/mcp/mcpClient.java:194`    |
+| tokens                                     | `STDIO` (declared, unused in server code), `SERVER`, `IN`, `OUT`                                                                                                             | `Tokens.java`                            |
+| handler-as-type (not space)                | `HTTP_MCP_HANDLER_TYPE` / `WS_MCP_HANDLER_TYPE` are handler *types*; `httpSpace` / `wsSpace` own only the socket + route table                                               | `webInstSet.setup()`                     |
+| "a host owns the process's streams"        | `mSystem.in(stream)` / `mSystem.out()`, `Console.installStdoutCapture()`, `ScreenOutputStream`                                                                               | `isa/sys/mSystem.java`, console          |
+| somewhere for a blocking transport to live | `BootLoader.load()` parks the main thread on `SHUTDOWN_LATCH` for headless boots; the console runs its blocking REPL on a virtual thread                                     | `BootLoader.java:508-557`                |
+| a portless profile precedent               | `boot/console.boot.mtron` — "no ports are bound … safe to boot beside a live server"                                                                                         | `boot/`                                  |
+| declarative config idiom                   | JSON snippet → `mcp_client::T` (`mcpServers` unwrapping, `args`→`command`, `env`→`headers`)                                                                                  | `webInstSet.java:582-616`                |
 
 **The missing piece is a carrier.** One class, plus the stream discipline that makes stdout trustworthy.
 
@@ -37,11 +37,11 @@ carrier and every layer below it already exists.
 
 Three models are easy to conflate, so name them:
 
-| model | invocation | JVM boots | state |
-|---|---|---|---|
-| one-shot | `bin/metatron -e "1+2"` | per expression (`ONE_SHOT = true`, so `load()` skips the park) | none |
-| **session** | `bin/metatron --mcp` | **once per MCP session** | accumulates in the VM |
-| per-call | a client shelling out per tool call | every call | none |
+| model       | invocation                          | JVM boots                                                      | state                 |
+|-------------|-------------------------------------|----------------------------------------------------------------|-----------------------|
+| one-shot    | `bin/metatron -e "1+2"`             | per expression (`ONE_SHOT = true`, so `load()` skips the park) | none                  |
+| **session** | `bin/metatron --mcp`                | **once per MCP session**                                       | accumulates in the VM |
+| per-call    | a client shelling out per tool call | every call                                                     | none                  |
 
 A stdio MCP server is a **long-lived subprocess**: the client spawns it when the session starts (some clients
 lazily, on first tool use), sends `initialize`, then pushes every `tools/call` down the same pipe until it
@@ -66,24 +66,24 @@ Consequences the design has to own:
 
 What "session" scopes, exactly — because it is *not* per agent:
 
-| the harness does this | the stdio VM sees |
-|---|---|
-| starts up and attaches the server | one boot, one `initialize` |
-| runs agent A, then agent B, then a subagent | the same VM and the same state throughout |
+| the harness does this                                      | the stdio VM sees                                                             |
+|------------------------------------------------------------|-------------------------------------------------------------------------------|
+| starts up and attaches the server                          | one boot, one `initialize`                                                    |
+| runs agent A, then agent B, then a subagent                | the same VM and the same state throughout                                     |
 | fires several tool calls concurrently (parallel subagents) | concurrent requests into one VM — §7's dispatch + the synchronized write side |
-| restarts (editor restart, server crash/restart policy) | a fresh VM; in-memory state is gone, sqlite/fs-backed state is not |
-| exits | EOF → shutdown |
+| restarts (editor restart, server crash/restart policy)     | a fresh VM; in-memory state is gone, sqlite/fs-backed state is not            |
+| exits                                                      | EOF → shutdown                                                                |
 
 ### 1.6 One world or many islands is a property of the boot's spaces, not of the transport
 
-A stdio session is a separate JVM from any server already listening on 8555/8777. Whether that makes it a
-*different world* or merely **another door into the same world** is decided entirely by which spaces the boot
+A stdio session is a separate JVM from any server already listening on 8555/8777. Whether that makes it a *different
+world* or merely **another door into the same world** is decided entirely by which spaces the boot
 profile mounts — the carrier has no opinion, and should have none:
 
-| the profile mounts | N VMs behave as |
-|---|---|
+| the profile mounts                                                                                               | N VMs behave as                                                                                                                          |
+|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
 | `tblespace` (sqlite / MySQL / Postgres), `grphspace`, `dckrspace`, `mqttspace`, `fsspace` — anything with a host | **one world with several entrances.** An agent on stdio and the agent on 8555 are reading and writing the same rows; state outlives both |
-| `memspace::T` only | **isolated ephemeral islands.** Each VM has its own state, gone at EOF, and two agents cannot see each other's memories at all |
+| `memspace::T` only                                                                                               | **isolated ephemeral islands.** Each VM has its own state, gone at EOF, and two agents cannot see each other's memories at all           |
 
 Which means this is not a design axis to choose between — it is a consequence of the boot being used, and it
 should be documented as such rather than as a mode of the transport.
@@ -99,8 +99,8 @@ Two consequences that are worth writing down because they are easy to get wrong:
   file are coordinated by the *database*, not by metatron's lockq — worth knowing before pointing two agents at
   one store with write-heavy tools.
 
-Note the asymmetry this creates for the ledger case: the mirrored dsh conversation
-(`metatron-mirror` → `ws://127.0.0.1:8555/message`, root `/usr/dsh`) is a `tblespace` over
+Note the asymmetry this creates for the ledger case: the mirrored dsh conversation (`metatron-mirror` →
+`ws://127.0.0.1:8555/message`, root `/usr/dsh`) is a `tblespace` over
 `.metatron/dsh.sqlite` in the drstynx profile, so a stdio profile that mounts that file reads the same ledger by
 construction — whereas the same tools against a `memspace` root would read nothing at all. Same tools, same
 code, different answer, decided by one line of boot data.
@@ -109,15 +109,15 @@ code, different answer, decided by one line of boot data.
 
 ## 2. The shape
 
-| # | piece | where | why there |
-|---|---|---|---|
-| 1 | `mcp_stdioHandler` — the carrier | `isa/web/space/stdio/handler/mcp_stdioHandler.java` | third sibling of `mcp_wsHandler` / `mcp_httpHandler`; composes `mcpServer`, owns only transport detail |
-| 2 | `StdioProtocol` — claim fd 1 once, hand everything else to stderr | `isa/web/space/stdio/StdioProtocol.java` | process-global, must be installable *once*, before boot |
-| 3 | `STDIO_MCP_HANDLER_TYPE` registration | `webInstSet.setup()` | makes `mcp_stdio` a resolvable short name, like `mcp_mtron` / `mcp_http` |
-| 4 | `boot/mcp.boot.mtron` — portless profile | `boot/` | the `console.boot.mtron` sibling: capability as data |
-| 5 | `--mcp` flag | `BootLoader.main` | the API the user asked for; sugar over 4, guarantee over any profile |
-| 6 | launcher output discipline | `bin/metatron`, `bin/lib/utility.sh` | the shell must not write to fd 1 before the JVM owns it |
-| 7 | **tool pull-out** — the tool instructions get registered as instructions, and `mcp_server`'s `tool` field accepts a collection of references (§5.3) | `mcpMetatronBuilder`, `webInstSet`, `mTool` | turns a Java-hardcoded tool set into a boot-data selection — the *selection* half of which has landed (§9.1) |
+| # | piece                                                                                                                                               | where                                               | why there                                                                                                    |
+|---|-----------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| 1 | `mcp_stdioHandler` — the carrier                                                                                                                    | `isa/web/space/stdio/handler/mcp_stdioHandler.java` | third sibling of `mcp_wsHandler` / `mcp_httpHandler`; composes `mcpServer`, owns only transport detail       |
+| 2 | `StdioProtocol` — claim fd 1 once, hand everything else to stderr                                                                                   | `isa/web/space/stdio/StdioProtocol.java`            | process-global, must be installable *once*, before boot                                                      |
+| 3 | `STDIO_MCP_HANDLER_TYPE` registration                                                                                                               | `webInstSet.setup()`                                | makes `mcp_stdio` a resolvable short name, like `mcp_mtron` / `mcp_http`                                     |
+| 4 | `boot/mcp.boot.mtron` — portless profile                                                                                                            | `boot/`                                             | the `console.boot.mtron` sibling: capability as data                                                         |
+| 5 | `--mcp` flag                                                                                                                                        | `BootLoader.main`                                   | the API the user asked for; sugar over 4, guarantee over any profile                                         |
+| 6 | launcher output discipline                                                                                                                          | `bin/metatron`, `bin/lib/utility.sh`                | the shell must not write to fd 1 before the JVM owns it                                                      |
+| 7 | **tool pull-out** — the tool instructions get registered as instructions, and `mcp_server`'s `tool` field accepts a collection of references (§5.3) | `mcpMetatronBuilder`, `webInstSet`, `mTool`         | turns a Java-hardcoded tool set into a boot-data selection — the *selection* half of which has landed (§9.1) |
 
 No `stdioSpace`. A space owns an addressable carrier and a route table; stdio's carrier *is* the process, and
 there is no path to route on (one connection, no `Mcp-Session-Id`). This is exactly the split that already
@@ -190,16 +190,16 @@ Design decisions inside the carrier:
 This is where the feature silently fails, so it gets designed first. Every writer that can reach fd 1 during a
 boot or a tool call:
 
-| writer | path to stdout | handled by |
-|---|---|---|
-| logback, dev mode | `conf/logback.xml` has `<target>System.err</target>` | already safe |
-| logback, **installed mode** | `lib/metatron.jar`'s `src/main/resources/logback.xml` has **no `<target>`** → `System.out`, and `bin/metatron` passes no `-Dlogback.configurationFile` in that branch | must be re-pointed explicitly — see below |
-| logback appender start | `ConsoleAppender.start()` calls `ConsoleTarget.getStream()` → `setOutputStream(...)` **once** (confirmed in logback-core 1.6.3), so a later `System.setOut` does **not** move it | same |
-| `GraphittyLogger.none(...)` | `System.out.print` when no pane is attached | the swap |
-| `mSystem.out()` | returns `System.out` ("a host wanting something else replaces the stream rather than calling around it") | the swap |
-| boot-file `print`, banners, `.display()` | Graphitty → stdout | the swap |
-| `CommonUtil.Spinner` | `\r` frames on `System.out` | the swap |
-| `bin/metatron` itself | spinner, maven echo, restart banner | launcher discipline |
+| writer                                   | path to stdout                                                                                                                                                                   | handled by                                |
+|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| logback, dev mode                        | `conf/logback.xml` has `<target>System.err</target>`                                                                                                                             | already safe                              |
+| logback, **installed mode**              | `lib/metatron.jar`'s `src/main/resources/logback.xml` has **no `<target>`** → `System.out`, and `bin/metatron` passes no `-Dlogback.configurationFile` in that branch            | must be re-pointed explicitly — see below |
+| logback appender start                   | `ConsoleAppender.start()` calls `ConsoleTarget.getStream()` → `setOutputStream(...)` **once** (confirmed in logback-core 1.6.3), so a later `System.setOut` does **not** move it | same                                      |
+| `GraphittyLogger.none(...)`              | `System.out.print` when no pane is attached                                                                                                                                      | the swap                                  |
+| `mSystem.out()`                          | returns `System.out` ("a host wanting something else replaces the stream rather than calling around it")                                                                         | the swap                                  |
+| boot-file `print`, banners, `.display()` | Graphitty → stdout                                                                                                                                                               | the swap                                  |
+| `CommonUtil.Spinner`                     | `\r` frames on `System.out`                                                                                                                                                      | the swap                                  |
+| `bin/metatron` itself                    | spinner, maven echo, restart banner                                                                                                                                              | launcher discipline                       |
 
 `StdioProtocol.install()`, called once before `BootLoader.load()`:
 
@@ -406,8 +406,8 @@ afterwards. Three consequences for the pull-out:
    (`constructedObj.self(constructedObj.jvm(), bigTID, vid)`). So the reshape runs *before* any predicate is in
    force, and whatever shape it returns is the shape that gets locked.
 3. **Failing is part of the contract.** `construct()` turns a `fail` return into
-   `MTronException.of("unable to construct %s::T: %s", tid, constructedObj)`, so a reshape should return a
-   **named fail** ("tool entry %s is not an instruction, an mcp_client, a skill or a tool rec") rather than
+   `MTronException.of("unable to construct %s::T: %s", tid, constructedObj)`, so a reshape should return a **named
+   fail** ("tool entry %s is not an instruction, an mcp_client, a skill or a tool rec") rather than
    throwing — the reason then survives as the construction error instead of a bare abort.
 
 Lazy alternatives are closed, not merely discouraged: there is no patching a live server's jvm on the first
@@ -417,19 +417,19 @@ One nuance for the implementer — the unchecked family, and why the reshape may
 `objCheckAndSave` runs only where a caller asks for it (the constructors, and `objClone`'s clone path), and the
 accessors that route through `clone(...)` are the checked ones. The bypasses:
 
-| unchecked | checked counterpart | effect |
-|---|---|---|
-| `jvm()` + `.put(...)` | `at(key, value, MUTABLE)` | writes the raw map — no predicate, no save |
-| `selfJVM(...)` / `selfTID(...)` / `selfVID(...)` / `self(...)` | `jvm(...)` / `tid(...)` / `vid(...)` | mutates **in place**: no clone, no type check, no space save |
-| `atDirect(key)` | `at(key)` | reads the raw stored value, with no auto-pointer resolution — which is why `mTool.tool` reaches for `atDirect(OBJ)` |
+| unchecked                                                      | checked counterpart                  | effect                                                                                                              |
+|----------------------------------------------------------------|--------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| `jvm()` + `.put(...)`                                          | `at(key, value, MUTABLE)`            | writes the raw map — no predicate, no save                                                                          |
+| `selfJVM(...)` / `selfTID(...)` / `selfVID(...)` / `self(...)` | `jvm(...)` / `tid(...)` / `vid(...)` | mutates **in place**: no clone, no type check, no space save                                                        |
+| `atDirect(key)`                                                | `at(key)`                            | reads the raw stored value, with no auto-pointer resolution — which is why `mTool.tool` reaches for `atDirect(OBJ)` |
 
 So the reshape legitimately uses the raw family — it runs *before* tagging — and `mcp_wsHandler`'s constructor
 uses `jvm().put(...)` to add an `on_message` its predicate never declares. After tagging, the typed rec is
 read-only in practice: a checked mutation that violates the predicate throws, and an unchecked one silently
 produces an object that is not the type it claims to be.
 
-Note what the unchecked path is *for*, given metatron's "no Java fields" principle: it is how an object gains
-**state after construction** — the jvm map *is* the object, so runtime state belongs there, and the predicate is
+Note what the unchecked path is *for*, given metatron's "no Java fields" principle: it is how an object gains **state
+after construction** — the jvm map *is* the object, so runtime state belongs there, and the predicate is
 the construction contract rather than a permanent cage. The carrier's `serving`, request counts and last error
 are jvm entries like any other, which is what lets mtron reflect on a running server.
 
@@ -454,8 +454,8 @@ carriers share it, so stdio cannot drift from ws/http on what a "server" is.
 
 ### 5.4 JSON → server, the mirror of JSON → client
 
-drstynx configures clients from a published snippet
-(`{"mcpServers":{"codegraph":{"command":"codegraph","args":[…]}}}` → `.as(mcp_client::T)`). The same idiom
+drstynx configures clients from a published snippet (`{"mcpServers":{"codegraph":{"command":"codegraph","args":[…]}}}` →
+`.as(mcp_client::T)`). The same idiom
 should configure a server:
 
 ```
@@ -476,11 +476,11 @@ Two facts from the code that this path must respect:
 
 Three named points on the same axis, all reached by editing the boot file and nothing else:
 
-| point | the boot mounts | what the agent experiences |
-|---|---|---|
-| **big calculator** | `fsspace::T`, `bash()`, `memspace::T` — basic system orchestration | `-e` with a live VM: compute, orchestrate the machine, remember nothing. State is scratch and is *meant* to be scratch |
-| **island workbench** | the above + `/m/ide`, per-project sqlite, extra inst sets | a real workspace with state that outlives the session, still its own world |
-| **shared world** | the same backends the live server mounts (§1.6) | one world, several entrances — the stdio agent and the 8555 agent see the same rows |
+| point                | the boot mounts                                                    | what the agent experiences                                                                                             |
+|----------------------|--------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| **big calculator**   | `fsspace::T`, `bash()`, `memspace::T` — basic system orchestration | `-e` with a live VM: compute, orchestrate the machine, remember nothing. State is scratch and is *meant* to be scratch |
+| **island workbench** | the above + `/m/ide`, per-project sqlite, extra inst sets          | a real workspace with state that outlives the session, still its own world                                             |
+| **shared world**     | the same backends the live server mounts (§1.6)                    | one world, several entrances — the stdio agent and the 8555 agent see the same rows                                    |
 
 The design test: **nothing in the carrier may key off which one was chosen.** Same class, same `mcp_server`
 rec, same tool names; the boot decides. If a future change makes the transport aware of persistence, the
@@ -503,14 +503,14 @@ Two consequences worth stating:
 
 ## 6. Lifecycle
 
-| event | behavior |
-|---|---|
-| attach | the client spawns the process once per session and sends `initialize`; no re-spawn, no re-boot per call (§1.5) |
-| EOF on stdin | `run()` returns → `BootLoader.close()` → latch release → main returns → exit 0. EOF is how a client shuts a stdio server down. |
-| SIGTERM / SIGINT | the shutdown hook `load()` already registers (`BootLoader::close`); the reader is a daemon thread and dies with the JVM. |
-| `initialize` | answered; **no session id** — `Mcp-Session-Id` is a Streamable-HTTP concept, and stdio is one session by construction. |
-| client dies without EOF | stdin EOF or a failed stdout write ends the loop; both are terminal for the session. |
-| `:reset` / `RESET` | see §10 — the one genuinely load-bearing decision. |
+| event                   | behavior                                                                                                                       |
+|-------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| attach                  | the client spawns the process once per session and sends `initialize`; no re-spawn, no re-boot per call (§1.5)                 |
+| EOF on stdin            | `run()` returns → `BootLoader.close()` → latch release → main returns → exit 0. EOF is how a client shuts a stdio server down. |
+| SIGTERM / SIGINT        | the shutdown hook `load()` already registers (`BootLoader::close`); the reader is a daemon thread and dies with the JVM.       |
+| `initialize`            | answered; **no session id** — `Mcp-Session-Id` is a Streamable-HTTP concept, and stdio is one session by construction.         |
+| client dies without EOF | stdin EOF or a failed stdout write ends the loop; both are terminal for the session.                                           |
+| `:reset` / `RESET`      | see §10 — the one genuinely load-bearing decision.                                                                             |
 
 ---
 
@@ -525,8 +525,8 @@ every other request wait behind it, and the client's timeout becomes the failure
 - `send()` synchronized on the protocol stream: the write side is shared, and a `?subq` subscription's code can
   fire on any thread.
 - Phase 2: `notifications/cancelled` → interrupt the worker (the request id is already in the message), and
-  progress via `logging` notifications. The HTTP carrier already proves out-of-band delivery works
-  (`SseStream` + outbox `?subq`); stdio can push the same notifications **on the same fd, with no second
+  progress via `logging` notifications. The HTTP carrier already proves out-of-band delivery works (`SseStream` + outbox
+  `?subq`); stdio can push the same notifications **on the same fd, with no second
   connection** — a genuine capability gain over the POST-only path.
 
 ---
@@ -558,13 +558,13 @@ every other request wait behind it, and the client's timeout becomes the failure
 
 **New** — *landed*
 
-| file | contents |
-|---|---|
-| `src/main/java/.../isa/web/space/stdio/handler/mcp_stdioHandler.java` | the carrier |
-| `src/main/java/.../isa/web/space/stdio/StdioProtocol.java` | fd-1 claim + logback re-point |
-| `boot/mcp.boot.mtron` | the portless profile |
-| `src/test/java/.../isa/web/space/mcp_stdioHandlerTest.java` | unit, extends `AbstractMcpHandlerTest`, in-memory streams |
-| `bin/test/mcp-stdio-smoke.py` | scripted session over a real pipe (run via `bin/metatron-docker build shell`) — *not yet written; the shell one-liner covers it* |
+| file                                                                  | contents                                                                                                                         |
+|-----------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `src/main/java/.../isa/web/space/stdio/handler/mcp_stdioHandler.java` | the carrier                                                                                                                      |
+| `src/main/java/.../isa/web/space/stdio/StdioProtocol.java`            | fd-1 claim + logback re-point                                                                                                    |
+| `boot/mcp.boot.mtron`                                                 | the portless profile                                                                                                             |
+| `src/test/java/.../isa/web/space/mcp_stdioHandlerTest.java`           | unit, extends `AbstractMcpHandlerTest`, in-memory streams                                                                        |
+| `bin/test/mcp-stdio-smoke.py`                                         | scripted session over a real pipe (run via `bin/metatron-docker build shell`) — *not yet written; the shell one-liner covers it* |
 
 ### 9.1 What landed, and what is still open
 
@@ -598,17 +598,17 @@ Still open: the **full tool pull-out** (registering `read_memory`/`write_memory`
 
 **Changed**
 
-| file | change |
-|---|---|
-| `BootLoader.java` | `--mcp` flag + exclusivity + default profile + `attachStdio()` before the park + help text |
-| `webInstSet.java` | register `STDIO_MCP_HANDLER_TYPE`; **`MCP_SERVER_TYPE`'s predicate is unchanged** — its constructor does the reshaping (§5.3); later, the `as?mcp_stdio<=json` row |
-| `mcpServer.java` | normalize `tool` in the constructor path (the shared ladder); `handleToolsList` / `handleToolsCall` unchanged |
-| `mTool.java` | extract the collection ladder `ToolFeature` uses — `mTool.tools(Obj)` → the name-keyed rec `mcpServer` consumes (fixes the hand-rolled copy in `mcpServer.of(skill)`) |
-| `mcpMetatronBuilder.java` | pull the tool instructions out into a registered space (whose tid decides the tool names); `eval_mtron` → `!*eval` + the `native`/fail question; `resource_root` as config rather than cwd |
-| `bin/metatron`, `bin/lib/utility.sh` | mcp-aware output discipline (spinner/maven/banner → stderr) |
-| `wsSpace.java`, `httpSpace.java` | (optional) shared `mcpServerHelper.resolve` |
-| `.metatron/skills/metatron/references/mcp-mtron.md` | transports already claim STDIO — make it true; tool names in the tables |
-| `.metatron/skills/mtron/references/mcp-server-architecture.md` | still describes the retired `mcp_mtron_wsHandler` and the old tool-name namespace |
+| file                                                           | change                                                                                                                                                                                     |
+|----------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `BootLoader.java`                                              | `--mcp` flag + exclusivity + default profile + `attachStdio()` before the park + help text                                                                                                 |
+| `webInstSet.java`                                              | register `STDIO_MCP_HANDLER_TYPE`; **`MCP_SERVER_TYPE`'s predicate is unchanged** — its constructor does the reshaping (§5.3); later, the `as?mcp_stdio<=json` row                         |
+| `mcpServer.java`                                               | normalize `tool` in the constructor path (the shared ladder); `handleToolsList` / `handleToolsCall` unchanged                                                                              |
+| `mTool.java`                                                   | extract the collection ladder `ToolFeature` uses — `mTool.tools(Obj)` → the name-keyed rec `mcpServer` consumes (fixes the hand-rolled copy in `mcpServer.of(skill)`)                      |
+| `mcpMetatronBuilder.java`                                      | pull the tool instructions out into a registered space (whose tid decides the tool names); `eval_mtron` → `!*eval` + the `native`/fail question; `resource_root` as config rather than cwd |
+| `bin/metatron`, `bin/lib/utility.sh`                           | mcp-aware output discipline (spinner/maven/banner → stderr)                                                                                                                                |
+| `wsSpace.java`, `httpSpace.java`                               | (optional) shared `mcpServerHelper.resolve`                                                                                                                                                |
+| `.metatron/skills/metatron/references/mcp-mtron.md`            | transports already claim STDIO — make it true; tool names in the tables                                                                                                                    |
+| `.metatron/skills/mtron/references/mcp-server-architecture.md` | still describes the retired `mcp_mtron_wsHandler` and the old tool-name namespace                                                                                                          |
 
 ---
 
@@ -665,8 +665,8 @@ tool set would mean writing the boot files twice.
 ## 13. Open questions
 
 1. **Reset under stdio.** `System.exit(EXIT_RESET)` makes `bin/metatron` swap the JVM under a live pipe:
-   in-flight requests hang, and a strict client kills a server that never re-answers `initialize`.
-   *Recommendation:* off by default in stdio mode (log to stderr), opt in with a boot arg; if it is ever
+   in-flight requests hang, and a strict client kills a server that never re-answers `initialize`. *Recommendation:* off
+   by default in stdio mode (log to stderr), opt in with a boot arg; if it is ever
    enabled, write a JSON-RPC error for the triggering request and flush *before* exiting.
 2. **Flag vs wrapper.** `--mcp` on `bin/metatron` (matches the ask, one API) vs a thin `bin/metatron-mcp`
    wrapper that only sets the boot file (matches the `bin/drstynx` / `bin/agent-ide` convention). Both can

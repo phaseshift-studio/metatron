@@ -349,6 +349,13 @@ public final class CommonRewrites {
                 final Inst fromInst = matchedInsts.get(0);
                 final Inst takeInst = matchedInsts.get(1);
 
+                // THE REWRITE ONLY OWNS A TABLE ADDRESS. The matcher is STRUCTURAL — from(<anything>)>>{cols} — so a
+                // computed operand (a rec, a variable, a call, noobj) arrives here too, and asking it for a uri threw
+                // "unable to convert rec::T to uri::T": a rewrite probing a chain it does not own answered with a
+                // failure, which the processor minted and filed (a boot-time program containing web(...).from(<rec>)
+                // enough to leave a frame in the fail stack). A shape it cannot read is a shape it leaves alone.
+                if (!fromInst.arg(0).isUri())
+                    return matchedInsts.stream().map(Obj::asInst).toList();
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
                 final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
 

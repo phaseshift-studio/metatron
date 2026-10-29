@@ -63,6 +63,20 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         assertTrue(written.contains("/a/b/c"), written);
     }
 
+    /**
+     * AN ADDRESSED URI KEEPS BOTH HALVES OF ITS SPELLING. The vid is part of the value's mtron text, and the brackets
+     * are the value's own — the renderer used to infer the brackets from "value + vid" (which ends with the vid, never
+     * with '>') and to emit no vid at all, so `<user@mail>@abc` printed as `user@mail`: unparseable, and silently
+     * unaddressed even though the obj carried the address.
+     */
+    @Test
+    public void testAnAddressedUriRendersItsBracketsAndItsVid() {
+        final Obj obj = uri(f("user@mail")).selfVID(f("abc"));
+        final String written = ObjmtronUISerializer.blackWhite().write(obj);
+        LOG.debug("addressed uri => %s", written);
+        assertEquals("<user@mail>@abc", written);
+    }
+
     @Test
     public void testSmallRecStaysOnOneLine() {
         // a rec whose mtron text is short reads on one line: the stack of newlines a break

@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static studio.phaseshift.metatron.Tokens.BINDER;
 import static studio.phaseshift.metatron.Tokens.SELECTOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -194,7 +195,7 @@ public interface Resolver extends Machine.Component {
                         // the 0 wing ({0,n} → {n,n}) for compile-time typing only, leaving rng() itself maybe
                         // so isFilter()/isPredicate()/gather-classification still read the filter cardinality.
                         token = resolvedInst.isFilter() ? resolvedInst.rng().c(resolvedInst.c().max()) : resolvedInst.rng();
-                        if (resolvedInst.isInitial() && !resolvedInst.hasRng()) {
+                        if (resolvedInst.isInitial() && !resolvedInst.hasRng() && resolvedInst.tid().basePath().equals(START_INST_TID)) {
                             LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
                             token = resolvedInst.arg(0).isType() ? resolvedInst.arg(0) : resolvedInst.arg(0).type();
                         }

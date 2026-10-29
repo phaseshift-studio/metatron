@@ -84,9 +84,7 @@ public class mcpClient extends MRec implements AutoCloseable {
                 .transport(createTransport(
                         this.at(TRANSPORT).orElse(this.at(TYPE)),
                         this.at(uri(HEADERS)).orElse(rec()).jvm(),
-                        Str.Helper.toUriOrStr(Str.Helper.cleanString(pattern.isUri()
-                                ? uri(pattern.uriValue().retractPattern())
-                                : this.at(URL).orElse(this.at(uri(HOST)).orElse(uri("")))), true),
+                        pattern.isUri() ? uri(pattern.uriValue().retractPattern()) : this.at(URL).orElse(this.at(uri(HOST)).orElse(uri(""))),
                         this.at(COMMAND).orElse(lst()).jvm()))
                 .autoHealthCheck(false)
                 .cacheToolList(true)

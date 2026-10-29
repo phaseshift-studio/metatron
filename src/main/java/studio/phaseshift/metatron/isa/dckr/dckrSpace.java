@@ -218,7 +218,9 @@ public class dckrSpace extends AbstractMemorySpace {
                 if (labels.isRec()) {
                     final Obj owner = labels.asRec().at(uri(OWNER_LABEL));
                     if (!owner.isNoObj())
-                        c.jvm().put(uri("owner"), uri(objToString(owner)));
+                        // cleanString, not objToString: a label value is a str now, and a str's mtron text carries
+                        // its quotes — the owner field is compared against the plain authority the reaper passes
+                        c.jvm().put(uri("owner"), uri(Str.Helper.cleanString(owner, true)));
                 }
                 final String imageName = c.at(uri("image")).isNoObj() ? null : objToString(c.at(uri("image")));
                 if (imageName != null) {
@@ -614,6 +616,10 @@ public class dckrSpace extends AbstractMemorySpace {
             final Rec labels = rec();
             if (copy.has("labels") && copy.at(uri("labels")).isRec())
                 labels.jvm().putAll(copy.at(uri("labels")).asRec().jvm());
+            // THE CONFIG SIDE STAYS PLAIN TEXT: this rec is written to the compose YAML, where a str would be
+            // quoted ('/usr/me') and docker would then report that quoting as part of the label's value. The
+            // labels read BACK from docker are strs (ObjDockerSerializer.parseLabels) — the two sides meet in
+            // text, which is what a docker label is.
             labels.jvm().put(uri(OWNER_LABEL), this.owner());
             copy.jvm().put(uri("labels"), labels);
         });

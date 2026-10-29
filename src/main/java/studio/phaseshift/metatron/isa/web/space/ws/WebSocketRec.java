@@ -188,7 +188,11 @@ public class WebSocketRec extends MRec implements WebSocketObj {
             // the single inbound funnel: a client's onMessage delegates into this same method, so counting here
             // counts every frame that arrived on any socket, handled or not
             WireStats.received(this.peerName(), message.vid());
-            this.at(uri(ON_MESSAGE)).apply(message);
+            // A FAIL IS CAUGHT BEFORE THE HANDLER IS ASKED TO RUN. An uncaught fail lhs skips a non-catch
+            // instruction's function (Processor.applyFunction's "a fail lhs skips the function" gate), so a frame
+            // whose answer is a fail would never reach on_message at all — not the socket's round-trip router, not a
+            // user handler. The answer's address is untouched: catching changes what the fail IS, not where it is.
+            this.at(uri(ON_MESSAGE)).apply(message.isFail() ? message.asFail().caughtTransient() : message);
         } catch (final Exception e) {
             LOG.error("error processing message: %s", e);
         }

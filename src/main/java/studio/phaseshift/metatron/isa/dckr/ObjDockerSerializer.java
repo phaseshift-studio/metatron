@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -191,19 +192,22 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
 
     /**
      * Parse Docker label string "key=val,key=val" into a Rec.
+     * <p>
+     * A LABEL VALUE IS A {@code str::T}. Docker labels are arbitrary text — image descriptions, licenses, versions,
+     * timestamps, source urls, compose file paths — and reading them as mtron was wrong twice over. It was LOSSY (a
+     * version like {@code 11.2.6} is not a real, a tag like {@code 16} is not the integer 16, and a number renders
+     * bare, so the text could not be recovered afterwards), and it was EXPENSIVE IN THE LEDGER: a value that is not an
+     * mtron literal produced a parse ERROR, a parse error is a fail, and a fail FILES ITSELF in the machine's fail
+     * stack ({@code MFail.fail} → {@code incrStackWrap} writes {@code ~/sys/fail/_?incrq}). Two attempts per label,
+     * re-read on every refresh, is how a machine that had never failed showed a fail stack in the thousands. A label
+     * is a string; reading it as one says exactly what docker said.
      */
     private static Rec parseLabels(final String content) {
         final Rec labels = rec();
         for (final String pair : content.split(",")) {
             final int eq = pair.indexOf('=');
-            if (eq > 0) {
-                Obj p;
-                p = ObjmtronSerializer.parse(pair.substring(eq + 1).trim());
-                if (p.stream().anyMatch(Obj::isFail))
-                    // a label value that is not mtron literal is a uri-or-str, not an error
-                    p = Str.Helper.toUriOrStr(pair.substring(eq + 1).trim(), true);
-                labels.at(uri(pair.substring(0, eq).trim()), p, MUTABLE);
-            }
+            if (eq > 0)
+                labels.at(uri(pair.substring(0, eq).trim()), str(pair.substring(eq + 1).trim()), MUTABLE);
         }
         return labels;
     }

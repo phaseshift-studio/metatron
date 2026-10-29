@@ -10,16 +10,16 @@ records what we build instead, and why.
 
 ## Status
 
-| Track | State |
-|---|---|
+| Track                                                     | State                  |
+|-----------------------------------------------------------|------------------------|
 | The single door — `Obj parse(String)` returning `fail::T` | done — 156 tests green |
-| M1 — position truth in parser diagnostics | done |
-| Fault corpus (`mParserFaultCorpusTest`) | done — 38 rows green |
-| M2 — expectation labels, delete the heuristics | not started |
-| M3 — `ParseFault` as data, prose as a renderer | not started |
-| Scanner (shared token model) | not started |
-| `bin/metatron-lsp` (stdio JSON-RPC) | not started |
-| `plugin/mtron-ide` (IntelliJ) | not started |
+| M1 — position truth in parser diagnostics                 | done                   |
+| Fault corpus (`mParserFaultCorpusTest`)                   | done — 38 rows green   |
+| M2 — expectation labels, delete the heuristics            | not started            |
+| M3 — `ParseFault` as data, prose as a renderer            | not started            |
+| Scanner (shared token model)                              | not started            |
+| `bin/metatron-lsp` (stdio JSON-RPC)                       | not started            |
+| `plugin/mtron-ide` (IntelliJ)                             | not started            |
 
 ## 1. Goal and non-goals
 
@@ -30,8 +30,8 @@ over LSP, without a second implementation of the language.
 
 **Non-goals, deliberately.**
 
-- **A PSI parser (grammar-kit `.bnf`).** This is where an IntelliJ language plugin gets large
-  (5–15k lines). Everything in the goal above is reachable from a `Lexer` plus IntelliJ's
+- **A PSI parser (grammar-kit `.bnf`).** This is where an IntelliJ language plugin gets large (5–15k lines). Everything
+  in the goal above is reachable from a `Lexer` plus IntelliJ's
   text-level APIs. What it costs us is rename, Find Usages, and refactorings — deferred, not
   refused.
 - **PEG error recovery** (cost-model token insertion/deletion). The scanner keeps the source
@@ -44,12 +44,12 @@ over LSP, without a second implementation of the language.
 
 Three artifacts, each in the place the repository already keeps that kind of thing:
 
-| Path | What | Built by |
-|---|---|---|
-| `src/main/java/studio/phaseshift/metatron/lsp/` | scanner, token model, JSON-RPC server, handlers, vocabulary generator | `./mvnw` (same artifact as the VM) |
-| `bin/metatron-lsp` | launcher — flags and classpath, mirrors `bin/metatron` | — |
-| `plugin/mtron-ide/` | IntelliJ plugin: FileType, Lexer, highlighter, folding, annotator, daemon client | its own `build-plugin.sh` |
-| `plugin/docs-build/` | the existing docs-build plugin, moved | its own `build-plugin.sh` |
+| Path                                            | What                                                                             | Built by                           |
+|-------------------------------------------------|----------------------------------------------------------------------------------|------------------------------------|
+| `src/main/java/studio/phaseshift/metatron/lsp/` | scanner, token model, JSON-RPC server, handlers, vocabulary generator            | `./mvnw` (same artifact as the VM) |
+| `bin/metatron-lsp`                              | launcher — flags and classpath, mirrors `bin/metatron`                           | —                                  |
+| `plugin/mtron-ide/`                             | IntelliJ plugin: FileType, Lexer, highlighter, folding, annotator, daemon client | its own `build-plugin.sh`          |
+| `plugin/docs-build/`                            | the existing docs-build plugin, moved                                            | its own `build-plugin.sh`          |
 
 ### Why `lsp/` and not `isa/` or `util/`
 
@@ -123,17 +123,17 @@ the reason this can be a better language server than most.
 
 ## 4. IntelliJ integration without PSI
 
-| Feature | API | PSI |
-|---|---|---|
-| `.mtron` file type, language | `FileTypeFactory`, `Language` | no |
-| Highlighting | `Lexer` → `SyntaxHighlighter` | no |
-| Folding, comments, brace matching | `FoldingBuilder`, `Commenter`, `PairedBraceMatcher` | no |
-| Diagnostics, quick fixes | `ExternalAnnotator` → `Annotation` + `LocalQuickFix` | no |
-| Hover docs (Ctrl+Q) | `DocumentationProvider` | no |
-| Completion | `CompletionContributor` (token-based) | no |
-| Go to declaration | `GotoDeclarationHandler` | no |
-| Structure view | `StructureViewBuilder` + `StructureViewModel` | no |
-| Rename, Find Usages, refactoring | reference resolution over the index | **yes** |
+| Feature                           | API                                                  | PSI     |
+|-----------------------------------|------------------------------------------------------|---------|
+| `.mtron` file type, language      | `FileTypeFactory`, `Language`                        | no      |
+| Highlighting                      | `Lexer` → `SyntaxHighlighter`                        | no      |
+| Folding, comments, brace matching | `FoldingBuilder`, `Commenter`, `PairedBraceMatcher`  | no      |
+| Diagnostics, quick fixes          | `ExternalAnnotator` → `Annotation` + `LocalQuickFix` | no      |
+| Hover docs (Ctrl+Q)               | `DocumentationProvider`                              | no      |
+| Completion                        | `CompletionContributor` (token-based)                | no      |
+| Go to declaration                 | `GotoDeclarationHandler`                             | no      |
+| Structure view                    | `StructureViewBuilder` + `StructureViewModel`        | no      |
+| Rename, Find Usages, refactoring  | reference resolution over the index                  | **yes** |
 
 The plugin is a thin client: the daemon does the work, the plugin maps results onto these APIs.
 
@@ -168,8 +168,8 @@ thirty-eight grammar rules call `labeled()`.
 **M1 — position truth. Done.** `stripComments` deletes comment regions and `parse()` trimmed, so
 diagnostics were reported in a coordinate space that does not exist in the file; `parseDiagnose`
 did not strip comments at all, so the same text was valid or invalid depending on which entry
-point was used. Now one `prepare()` produces the parsed text plus an index map
-(`Prepared.toOriginal`), both entry points share it, and line, column, position, and buffer all
+point was used. Now one `prepare()` produces the parsed text plus an index map (`Prepared.toOriginal`), both entry
+points share it, and line, column, position, and buffer all
 describe the source the caller sent. The explanation is still derived from the stripped buffer —
 the heuristics only know the characters the grammar actually read.
 
@@ -192,8 +192,8 @@ and the manual `;` loop are gone.
 **M2 — expectations, then subtraction.** Add `labeled()` to the rules that lack it, in the
 language's words ("a type name such as `int` or `my:type`", "`=>` or `,` after a record entry").
 `choice()` already uses the `FURTHEST` strategy, so the deepest label wins and labels compose.
-Then delete `simplifyParseMessage`, `findUnclosedBefore`, `hasMatchingCloser`, `lastNonSpace`.
-**Acceptance criterion: those deletions happen.** If the heuristics are still needed, the labels
+Then delete `simplifyParseMessage`, `findUnclosedBefore`, `hasMatchingCloser`, `lastNonSpace`. **Acceptance criterion:
+those deletions happen.** If the heuristics are still needed, the labels
 are not done. `labeled()` only changes messages, never acceptance, so the risk is low by
 construction — and all 260 `.mtron` files must still parse.
 
@@ -235,16 +235,16 @@ cost-model recovery.
 
 ## 9. Decisions
 
-| Decision | Choice | Why |
-|---|---|---|
-| Primary editor | IntelliJ IDEA | stated; changes the layering |
-| Highlighting in IntelliJ | native `Lexer` + `SyntaxHighlighter` | TextMate bundles paint only; a lexer also drives folding and is no more work |
-| TextMate grammar | generated, deferred | needed for other editors, not for IntelliJ |
-| Semantic engine | one Java server, LSP subset over stdio | single implementation of the language; serves IntelliJ now, other editors later |
-| Client dependency | none (`gson` only) | `docs/intellij-plugin` is deliberately Gradle-free and SDK-download-free |
-| PSI | deferred | everything in §1 is reachable without it; rename/Find Usages are not |
-| Server location | `studio.phaseshift.metatron.lsp` | `docs/` precedent: top-level, `main()`-bearing, consumes the language |
-| Plugin location | `plugin/` | one umbrella for IDE tooling |
+| Decision                 | Choice                                 | Why                                                                             |
+|--------------------------|----------------------------------------|---------------------------------------------------------------------------------|
+| Primary editor           | IntelliJ IDEA                          | stated; changes the layering                                                    |
+| Highlighting in IntelliJ | native `Lexer` + `SyntaxHighlighter`   | TextMate bundles paint only; a lexer also drives folding and is no more work    |
+| TextMate grammar         | generated, deferred                    | needed for other editors, not for IntelliJ                                      |
+| Semantic engine          | one Java server, LSP subset over stdio | single implementation of the language; serves IntelliJ now, other editors later |
+| Client dependency        | none (`gson` only)                     | `docs/intellij-plugin` is deliberately Gradle-free and SDK-download-free        |
+| PSI                      | deferred                               | everything in §1 is reachable without it; rename/Find Usages are not            |
+| Server location          | `studio.phaseshift.metatron.lsp`       | `docs/` precedent: top-level, `main()`-bearing, consumes the language           |
+| Plugin location          | `plugin/`                              | one umbrella for IDE tooling                                                    |
 
 ## 10. Open questions
 

@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.machine.AbstractMachine;
 import studio.phaseshift.metatron.isa.mach.type.machine.MachineSpace;
@@ -372,32 +373,6 @@ public interface Machine extends Rec, AutoCloseable {
         }
     }
 
-    // @Override  (disabled with the apply() below)
-    // ======================== execution ========================
-    // TEMPORARILY DISABLED: this apply() re-homed CURRENT (Machine.current(this)) as a side effect, which made a bare
-    // machine dereference (*X) into a context switch. Dereference must stay pure; the explicit move() instruction in
-    // /m/mach is now the ONLY context switch. Until that is re-integrated, Machine inherits Obj.apply() (identity).
-    /*
-    default Obj apply(final Obj call) {
-        return this.apply(call.asCode(), noobj());
-    }
-
-    default Obj apply(final Code code, final Obj start) {
-        final Machine previous = CURRENT.get();
-        Machine.current(this);
-        this.push();
-        try {
-            return this.processor().code(this.compiler().apply(code).asCode()).apply(start);
-        } finally {
-            this.pop();
-            if (null == previous)
-                CURRENT.remove();
-            else
-                CURRENT.set(previous);
-        }
-    }
-    */
-
     /**
      * Apply code to a lhs <em>in this machine</em>: compile it against the machine's compiler, then run the compiled
      * form on its processor. This is the single place a {@link Code} hands off to a machine, which is what makes the
@@ -640,6 +615,10 @@ public interface Machine extends Rec, AutoCloseable {
         // move(childVID) works from a sibling at any depth. the child's data stays in its own infra, so isolation holds.
         Machine.root().memory().write(childVID, child);
         return child;
+    }
+
+    default Machine move(final fURI machineID) {
+        return Machine.current(machInstSet.Helper.machineAt(Machine.current(), machineID, "move"));
     }
 
     /**

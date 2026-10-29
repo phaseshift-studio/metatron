@@ -70,35 +70,35 @@ Ask each of these of the code, in this order. For every "yes" that should be "no
 
 1. **Is this just 〈something that already exists〉 under a different name?** The repo's own rule is *don't create
    new terms when one exists* (`Tokens.java` is the running list). Check specifically:
-   - **`fURI` already has the reader.** `qValue(key, Class<T>)` (`furi/form/AbstractfURI.java:965`) already
-     projects a q value: for `Lst`/`Rec` it returns `ObjmtronSerializer.parse(text)`, for `Int` it returns
-     `Long.valueOf(text)`, for `Str` the raw string. And `Uri.Helper.parseQ` (`type/Uri.java:439`) parses the same
-     text *with a fail→str fallback*. So the question is not "is a reader needed" but **"what rule does the new
-     reader add that `qValue` lacks, and does it reuse one of those two rather than becoming a third parser?"**
-     The rules it must add, and the only ones: a `fail::T` projection means **malformed** (refuse); a coefficient
-     is legible on a number — **only** in the leading form `{2}4`; a trailing `4{2}` is a parse error and must be
-     refused, not read as something; a counted *uri* is a place's shape, not a number's; a `;`-joined value (a
-     repeated key) is refused. Anything beyond that list is scope creep,
-     and a reader that re-reads `qMap()` with its own splitting is a `MUST FIX` — there must be **one projection**,
-     named in one place.
-   - `Places` (cat) already has `place()`, `self()`, `reachable()`, `serves()`, `admissible()` — is a new
-     `PlaceResolver` a fourth place-vocabulary, or does it belong in `Places`?
-   - `Tokens.SPLIT`, `/m/inst/split`, and `Span.partition()` already name the partition — does the new
-     `Partition` type duplicate one of them?
-   - **A q read is `fURI.qValue`.** `qValue(String, Class)` (`furi/form/AbstractfURI.java:965`) and its
-     `fURI`-key delegate (`furi/fURI.java:852`) *are* the projection — for `Lst`/`Rec` they return
-     `ObjmtronSerializer.parse(text)`. A new class or method whose job is to hand back a q value, or which re-splits
-     `qMap()` itself, is **that under a new name**: MUST FIX — unless it adds one of the named rules (a `fail::T`
-     projection means *malformed* ⇒ refuse; the coefficient is legible on a number; a numeric value may be a numeric
-     uri; a `;`-joined value is refused) **and** calls `qValue` rather than re-parsing. A reader is a *rule*, not a
-     *class*.
-   - `Placement`, `Place`, `PlaceSet` — is the model one concept or three names for it?
+    - **`fURI` already has the reader.** `qValue(key, Class<T>)` (`furi/form/AbstractfURI.java:965`) already
+      projects a q value: for `Lst`/`Rec` it returns `ObjmtronSerializer.parse(text)`, for `Int` it returns
+      `Long.valueOf(text)`, for `Str` the raw string. And `Uri.Helper.parseQ` (`type/Uri.java:439`) parses the same
+      text *with a fail→str fallback*. So the question is not "is a reader needed" but **"what rule does the new
+      reader add that `qValue` lacks, and does it reuse one of those two rather than becoming a third parser?"**
+      The rules it must add, and the only ones: a `fail::T` projection means **malformed** (refuse); a coefficient
+      is legible on a number — **only** in the leading form `{2}4`; a trailing `4{2}` is a parse error and must be
+      refused, not read as something; a counted *uri* is a place's shape, not a number's; a `;`-joined value (a
+      repeated key) is refused. Anything beyond that list is scope creep,
+      and a reader that re-reads `qMap()` with its own splitting is a `MUST FIX` — there must be **one projection**,
+      named in one place.
+    - `Places` (cat) already has `place()`, `self()`, `reachable()`, `serves()`, `admissible()` — is a new
+      `PlaceResolver` a fourth place-vocabulary, or does it belong in `Places`?
+    - `Tokens.SPLIT`, `/m/inst/split`, and `Span.partition()` already name the partition — does the new
+      `Partition` type duplicate one of them?
+    - **A q read is `fURI.qValue`.** `qValue(String, Class)` (`furi/form/AbstractfURI.java:965`) and its
+      `fURI`-key delegate (`furi/fURI.java:852`) *are* the projection — for `Lst`/`Rec` they return
+      `ObjmtronSerializer.parse(text)`. A new class or method whose job is to hand back a q value, or which re-splits
+      `qMap()` itself, is **that under a new name**: MUST FIX — unless it adds one of the named rules (a `fail::T`
+      projection means *malformed* ⇒ refuse; the coefficient is legible on a number; a numeric value may be a numeric
+      uri; a `;`-joined value is refused) **and** calls `qValue` rather than re-parsing. A reader is a *rule*, not a
+      *class*.
+    - `Placement`, `Place`, `PlaceSet` — is the model one concept or three names for it?
 2. **Does every new type earn its existence?** A record/class with one field, or a wrapper restoring one value, is
    usually a parameter. Justify-or-delete.
 3. **Method proliferation.** Count the additions: is there a getter for every field, an overload for each argument
    order, `of`/`from`/`parse` variants that differ only in the shape of their argument? Could an existing method
-   take one more argument instead? Is the new surface the smallest that makes the chunk's tests expressible?
-   **No pointless one-liners.** A method whose whole body is one expression that forwards to another method — an
+   take one more argument instead? Is the new surface the smallest that makes the chunk's tests expressible? **No
+   pointless one-liners.** A method whose whole body is one expression that forwards to another method — an
    alias, a cast, a projection of a list into another list — should be **inlined at its call sites**, e.g.
    `List<Integer> ints(List<Obj> part) { return part.stream().map(o -> o.asInt().intValue()).toList(); }` is not a
    helper, it is a lambda with a name. The one legitimate one-liner is the one that **names a domain concept and
@@ -111,22 +111,22 @@ Ask each of these of the code, in this order. For every "yes" that should be "no
    and every downstream caller inherits it. The sanctioned alternative is a static helper (`XXXUtil`, `XXX.Helper`)
    — say which existing helper the method belongs in.
 5. **Does it obey the law of the design?** The qparam may only *place* work:
-   - the combiner must stay **computed** (no named combiner, no `?combine`);
-   - a qparam must never enable a fold the law forbids (`mean`, `str` `sum`, a non-monoidic fold);
-   - a split must **fail closed** — decline to the identity — rather than quietly change the answer;
-   - an unreadable q value must be **refused loudly**, never degraded (the `parseInt("4{2}") → 0` bug);
-   - reach, never knowledge: only dialed, host-bearing, `serves`-positive peers are targets;
-   - a place is host+authority, never a frame path.
+    - the combiner must stay **computed** (no named combiner, no `?combine`);
+    - a qparam must never enable a fold the law forbids (`mean`, `str` `sum`, a non-monoidic fold);
+    - a split must **fail closed** — decline to the identity — rather than quietly change the answer;
+    - an unreadable q value must be **refused loudly**, never degraded (the `parseInt("4{2}") → 0` bug);
+    - reach, never knowledge: only dialed, host-bearing, `serves`-positive peers are targets;
+    - a place is host+authority, never a frame path.
 6. **Does the default schedule emit the identical layout to before?** Every chunk except C6/C7 must leave the
    C0-pinned layouts byte-identical. A layout change with no test proving the new layout is a `MUST FIX`.
 7. **Are the tests real?** The strongest single question: **if the production change were reverted, would each new
    test go red?** Flag a test that:
-   - computes its expectation from the same code path it tests (tautology),
-   - asserts something weaker than the repo's helpers (`assertTrue`/`assertNotNull` where `checkEquality`,
-     `checkCodeParseApply`, `checkCodeEvaluate` are the idiom, `<ERROR>` for the fail path),
-   - changed an **existing** assertion without the brief naming that migration (weakening — BLOCKING),
-   - is a `@Test` where the repo would want `@ParameterizedTest` + `@CsvSource(delimiter='%')`,
-   - leaves an `@Disabled` without a reason string.
+    - computes its expectation from the same code path it tests (tautology),
+    - asserts something weaker than the repo's helpers (`assertTrue`/`assertNotNull` where `checkEquality`,
+      `checkCodeParseApply`, `checkCodeEvaluate` are the idiom, `<ERROR>` for the fail path),
+    - changed an **existing** assertion without the brief naming that migration (weakening — BLOCKING),
+    - is a `@Test` where the repo would want `@ParameterizedTest` + `@CsvSource(delimiter='%')`,
+    - leaves an `@Disabled` without a reason string.
 8. **Conventions.** `final` on variables and arguments; `this.` for fields; American English; lowercase log and
    terminal text; `MTronException.of()` and never a raw `RuntimeException`; no algorithm duplicated from an
    existing helper; **no shape-inspection of a read result** (`stream()`, not `isLst()`/`isRec()`/`instanceof`);

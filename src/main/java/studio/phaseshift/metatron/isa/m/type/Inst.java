@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.CUT_INST_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.REPLY_INST_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -277,6 +278,10 @@ public interface Inst extends Call {
                 //   select:                  rec arg whose VALUES are per-element projections
                 base.equals(AUTO_INST_TID) ||
                 base.equals(CUT_INST_TID) ||
+                base.equals(REPLY_INST_TID) ||
+                // the anchor stores the SHIPPED PROGRAM as arg(0) and evaluates it in its function: applying
+                // it here would evaluate the payload before the anchor could wrap its answer (and a second
+                // time after), which is the double apply the mtron frame handler documents
                 base.equals(AUTO_FROM_INST_TID) ||
                 base.equals(AUTO_AT_INST_TID) ||
                 base.equals(MAP_INST_TID) ||

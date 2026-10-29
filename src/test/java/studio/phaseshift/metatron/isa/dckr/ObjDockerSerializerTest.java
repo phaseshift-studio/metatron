@@ -27,8 +27,10 @@ import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.STR_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
@@ -153,8 +155,35 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
     void testLabelsParsing() {
         final Obj labels = field("{\"Labels\":\"com.docker.project=my-stack,maintainer=NGINX\"}", "labels");
         assertTrue(labels.isRec(), "labels should be a rec");
-        assertEquals("my-stack", labels.asRec().at(uri("com.docker.project")).uriValue().name());
-        assertEquals("NGINX", labels.asRec().at(uri("maintainer")).uriValue().name());
+        // A LABEL VALUE IS A str::T: docker labels are arbitrary text, never mtron
+        assertEquals("my-stack", labels.asRec().at(uri("com.docker.project")).strValue());
+        assertEquals("NGINX", labels.asRec().at(uri("maintainer")).strValue());
+        assertEquals(STR_TID, labels.asRec().at(uri("com.docker.project")).tid());
+    }
+
+    /**
+     * A LABEL IS TEXT, AND READING IT AS TEXT COSTS NOTHING. Every label value used to be speculatively parsed as
+     * mtron (twice), and a value that is not an mtron literal — a version, a license, a description, a timestamp, a
+     * source url — produced a parse ERROR. A parse error is a fail, and a fail files itself in the machine's fail
+     * stack, so reading one image's labels added a dozen entries to a machine that had never failed. The text also
+     * survived better: {@code 11.2.6} is not a real, and a number renders bare, so the version was unrecoverable.
+     */
+    @Test
+    void testLabelValuesAreStringsAndKeepTheirText() {
+        final Obj labels = field("{\"Labels\":\"org.opencontainers.image.version=11.2.6,"
+                + "org.opencontainers.image.licenses=GPL-2.0,"
+                + "description=MariaDB Database for relational SQL,"
+                + "com.docker.compose.project.config_files=/home/me/stack/compose.yaml\"}", "labels");
+        assertTrue(labels.isRec(), "labels should be a rec");
+        labels.asRec().elements().forEach(kv -> {
+            assertTrue(kv.second().isStr(), Graphitty.string("%s must be a str, got %s", kv.first(), kv.second().tid()));
+            assertFalse(kv.second().isFail(), Graphitty.string("%s must not be a fail", kv.first()));
+        });
+        assertEquals("11.2.6", labels.asRec().at(uri("org.opencontainers.image.version")).strValue());
+        assertEquals("GPL-2.0", labels.asRec().at(uri("org.opencontainers.image.licenses")).strValue());
+        assertEquals("MariaDB Database for relational SQL", labels.asRec().at(uri("description")).strValue());
+        assertEquals("/home/me/stack/compose.yaml",
+                labels.asRec().at(uri("com.docker.compose.project.config_files")).strValue());
     }
 
     @Test

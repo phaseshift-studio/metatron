@@ -29,10 +29,12 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.dckr.dckrSpace.DCKR_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATASIZE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -106,9 +108,15 @@ public class dckrInstSet extends AbstractInstSet {
                                         .vid(DOCKER_RESOURCE_TID)
                                         .isaPredicate(rec(
                                                 uri(ID), URI_TYPE,
-                                                uri("created").maybe(), URI_TYPE))
+                                                uri("created").maybe(), URI_TYPE,
+                                                // LABEL VALUES ARE STRINGS: docker labels are arbitrary text
+                                                // (descriptions, licenses, versions, timestamps, source urls), so
+                                                // the value side is str::T and the key side is the label's name.
+                                                // Reading them as mtron used to file a parse-error fail per label,
+                                                // and lost the text of anything that merely looked typed.
+                                                uri("labels").maybe().asUri(), rec(URI_TYPE, STR_TYPE)))
                                         .create(),
-                                "base type for docker resources — id + created"),
+                                "base type for docker resources — id + created + labels (label name => str)"),
                         docWrap(DOCKER_IMAGE_TYPE = Type.Builder.build()
                                         .tid(DOCKER_RESOURCE_TID)
                                         .vid(DOCKER_IMAGE_TID)

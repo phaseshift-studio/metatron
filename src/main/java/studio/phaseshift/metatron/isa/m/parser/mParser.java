@@ -182,8 +182,16 @@ public class mParser {
     //   delay rather than preempting a runaway parse mid-flight.
     //
 
-    private static final String REDUCED_FURI_CHARS = "~/%$!#_-@+:*";
-    private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". ";
+    /**
+     * THE BARE-URI CHARACTERS. {@code @} is DELIBERATELY ABSENT: it is the vid postfix separator, and while it was
+     * in this set a bare uri swallowed the {@code @} of its own vid — {@code /wire/noobj@<tag>} read back as ONE uri
+     * whose value ended in {@code @}, so an addressed uri could not survive a round trip at all. A uri that really
+     * carries an {@code @} (user-info in an authority, {@code user@host}) is written wrapped — {@code FULL_FURI_CHARS}
+     * below keeps it — so the two spellings stay distinguishable. (Temporary: when user-info is used for real, the
+     * postfix needs a delimiter that is unambiguous in both positions.)
+     */
+    private static final String REDUCED_FURI_CHARS = "~/%$!#_-+:*";
+    private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". @";
     private static final String QMAP_VALUE_CHARS = FULL_FURI_CHARS + "\"\\'";
     private static final String QMAP_POLY_VALUE_CHARS = QMAP_VALUE_CHARS + ">,=";
 
@@ -912,14 +920,15 @@ public class mParser {
     }
 
     /**
-     * Mint the parse fail the way every other fail is minted — a frame in the machine's fail
-     * space, addressable and catchable like any other obj. A fail is an Obj, so the parser hands
-     * back an ordinary one rather than a special parser-only value. Only before a machine exists
-     * (a boot file mid-load, an editor with no VM attached) is a transient fail the best
-     * available value, because there is no fail space yet to put it in.
+     * A PARSE FAULT IS MINTED UNFILED. {@code MFail.fail} writes the fail into the machine's fail space as it mints
+     * it ({@code ~/sys/fail/_?incrq}), which is right for a failure being REPORTED and wrong for one being
+     * INSPECTED: a read that merely asks "is this text mtron?" — a JSON string value, a docker label, an MQTT
+     * discovery field — produced a parse fail per non-mtron string and so added a frame to the fail stack of a
+     * machine that had never failed. The fault travels as an ordinary {@code fail::T} either way, addressable once
+     * a caller reports it; the parser itself costs the ledger nothing.
      */
     private static Obj parseFail(final ParseFault fault) {
-        return Machine.loaded() ? MFail.fail(fault) : MFail.transientFail(fault);
+        return MFail.transientFail(fault);
     }
 
     /**
@@ -1387,11 +1396,18 @@ public class mParser {
                     // build inside-out: the last bracket is the root cause;
                     // each preceding bracket becomes the outer fail of the
                     // one built so far
-                    MTronException chain = MTronException.of(objs.get(n - 1).toString());
+                    // A LEVEL'S MESSAGE IS THE STR'S VALUE when the bracket holds a str (what writeFail emits, so
+                    // any diagnostic text can travel); the older raw spelling — fail::[a] — still reads through the
+                    // obj's own text, so both parses agree on the message a reader sees.
+                    MTronException chain = MTronException.of(messageOf(objs.get(n - 1)));
                     for (int i = n - 2; i >= 0; i--)
-                        chain = MTronException.of(chain, objs.get(i).toString());
+                        chain = MTronException.of(chain, messageOf(objs.get(i)));
                     return fail(chain).vid(pick(t, 3));
                 });
+    }
+
+    private static String messageOf(final Obj level) {
+        return level.isStr() ? level.strValue() : level.toString();
     }
 
     public static Parser m_bool() {

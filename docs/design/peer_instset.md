@@ -32,7 +32,8 @@ carries two maps, deliberately not one:
   one listing. *Knowledge is shared.*
 - **peer** — what *this* machine has dialed, at `~/network/peer`. *Reach is not shared.*
 
-`NetworkUnion` states the two laws explicitly ([`NetworkUnion.java:22-32`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/network/NetworkUnion.java#L22-L32)):
+`NetworkUnion` states the two laws explicitly ([
+`NetworkUnion.java:22-32`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/network/NetworkUnion.java#L22-L32)):
 
 1. **knowledge is shared** — every level reads the one roster at the root address;
 2. **reach is not** — a connection belongs to exactly the machine that dialed it, so `pop()` retracts only its own
@@ -40,48 +41,56 @@ carries two maps, deliberately not one:
 
 ### 1.2 `peer::T` — the peer rec
 
-Defined in [`machInstSet.java:426-460`](../../src/main/java/studio/phaseshift/metatron/isa/mach/machInstSet.java#L426-L460),
+Defined in [
+`machInstSet.java:426-460`](../../src/main/java/studio/phaseshift/metatron/isa/mach/machInstSet.java#L426-L460),
 the `peer::T` type is:
 
-| field       | type        | meaning                                                                 |
-|-------------|-------------|-------------------------------------------------------------------------|
-| `authority` | `uri::T`    | the peer's service uri, `scheme://host:port` — the connection key        |
-| `host`      | `uri::T`    | where to dial it from here, route included (`ws://host:port/mtron`)       |
-| `handler`   | `uri::T`    | the protocol surface (`/m/web/ws/mtron_ws`, `/m/web/http/mtron_http`, …) |
-| `name`      | `str::T`    | the machine's name in a distributed expression                          |
-| `status`    | `rec::T`    | the computed health report                                              |
-| `transport` | `inst::T`   | **the reach: an inst that ships a message and answers with the result**  |
-| `client`    | (any)       | the protocol client — held so `disconnect` can hang up                   |
+| field       | type      | meaning                                                                  |
+|-------------|-----------|--------------------------------------------------------------------------|
+| `authority` | `uri::T`  | the peer's service uri, `scheme://host:port` — the connection key        |
+| `host`      | `uri::T`  | where to dial it from here, route included (`ws://host:port/mtron`)      |
+| `handler`   | `uri::T`  | the protocol surface (`/m/web/ws/mtron_ws`, `/m/web/http/mtron_http`, …) |
+| `name`      | `str::T`  | the machine's name in a distributed expression                           |
+| `status`    | `rec::T`  | the computed health report                                               |
+| `transport` | `inst::T` | **the reach: an inst that ships a message and answers with the result**  |
+| `client`    | (any)     | the protocol client — held so `disconnect` can hang up                   |
 
 ### 1.3 The transport is a single, untyped, mtron-oriented arrow
 
-The `transport` field is declared as bare `INST_TYPE` — no `dom`, no `rng` ([`machInstSet.java:455`](../../src/main/java/studio/phaseshift/metatron/isa/mach/machInstSet.java#L455)). So the type system sees "an inst," full stop, and the capability is *unreadable* from the type.
+The `transport` field is declared as bare `INST_TYPE` — no `dom`, no `rng` ([
+`machInstSet.java:455`](../../src/main/java/studio/phaseshift/metatron/isa/mach/machInstSet.java#L455)). So the type
+system sees "an inst," full stop, and the capability is *unreadable* from the type.
 
 But its *semantics* is unambiguously "evaluate mtron remotely":
 
 - `id_client`'s `send_recv` is literally `inst.arg(0).apply(lhs)` — *take the mtron message and evaluate it*
   ([`machInstSet.java:407`](../../src/main/java/studio/phaseshift/metatron/isa/mach/machInstSet.java#L407)).
-- `Network.read(vid)` builds `from_(vid.localize())` and applies the transport
-  ([`Network.java:446-449`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L446-L449)).
-- `Network.write(vid, obj)` builds `start_(obj).to_(vid.localize())` and applies it
-  ([`Network.java:470-475`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L470-L475)).
+- `Network.read(vid)` builds `from_(vid.localize())` and applies the transport ([
+  `Network.java:446-449`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L446-L449)).
+- `Network.write(vid, obj)` builds `start_(obj).to_(vid.localize())` and applies it ([
+  `Network.java:470-475`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L470-L475)).
 
 So today there is **one** arrow, effectively `inst?dom=code&rng=obj` — "evaluate whatever mtron program I send you."
 `read` and `write` are not separate capabilities; they are two mtron *programs* (`from_`, `start_.to_`) smuggled through
-the same eval arrow. `Helper.asTransport` ([`Network.java:742-760`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L742-L760)) adapts a
+the same eval arrow. `Helper.asTransport` ([
+`Network.java:742-760`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L742-L760)) adapts a
 protocol session's `send_recv` so the message rides as the arg seat with `?block` — but it is still one untyped inst.
 
 The intended elegance is real but incomplete: the *value* of the peer map was always meant to be transport-agnostic —
 `BasicNetwork` says "swapping ws for http, mqtt, a container endpoint or a shared space is a roster change, not a code
-change" ([`BasicNetwork.java:44-46`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/network/BasicNetwork.java#L44-L46)) — but the *contract* was pinned to "the far side evaluates mtron."
+change" ([
+`BasicNetwork.java:44-46`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/network/BasicNetwork.java#L44-L46)) —
+but the *contract* was pinned to "the far side evaluates mtron."
 
 ### 1.4 Indexing is already a background behavior
 
 A protocol client's constructor indexes itself after a successful construction — `Network.Helper.index(client)`
-([`Network.java:581-589`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L581-L589)). `index` is ensure-peered, idempotent, and
+([`Network.java:581-589`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L581-L589)). `index`
+is ensure-peered, idempotent, and
 never fails the construction. Both ws and mcp already do it: `wsSpace.java:132`, `mcpClient.java:107`. The peer's
 `client` is retained so `disconnect` can hang it up, and a `Link` client (`connected` / `hungUp` / `redial`,
-[`Network.java:507-525`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L507-L525)) is supervised — a dropped connection is redialed
+[`Network.java:507-525`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L507-L525)) is
+supervised — a dropped connection is redialed
 in place, never rebuilt.
 
 ### 1.5 `law_shard` already ships through `to(<peer>)`
@@ -115,7 +124,8 @@ mtron*:
 - an MCP server (e.g. codegraph) exposes *tools* (`codegraph_explore`), not an `eval` tool.
 
 The reconciliation is: **the network never learns a protocol** (it already says so,
-[`Network.java:489-491`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L489-L491)). The peer index holds connections keyed by
+[`Network.java:489-491`](../../src/main/java/studio/phaseshift/metatron/isa/mach/type/Network.java#L489-L491)). The peer
+index holds connections keyed by
 authority; each peer's *handler* names its surface; and the mtron↔protocol translation lives in the peer's instruction
 bodies, not in the Network.
 
@@ -152,7 +162,8 @@ The capability is *the peer's custom implementation of an instruction*. Any inst
 
 ### 2.3 The subsumption lattice — and its one false edge
 
-Capabilities are ordered by `dom`/`rng` subtyping, which is already the tid algebra. "EVAL subsumes READ" is just "`code::T`
+Capabilities are ordered by `dom`/`rng` subtyping, which is already the tid algebra. "EVAL subsumes READ" is just "
+`code::T`
 is a supertype of `uri::T`-as-a-program," witnessed by the coercion `from_(uri)`.
 
 ```
@@ -162,7 +173,8 @@ is a supertype of `uri::T`-as-a-program," witnessed by the coercion `from_(uri)`
      (obj→uri)  (uri→obj)
 ```
 
-- EVAL ⇒ READ, EVAL ⇒ WRITE — true: `from_(x)` and `start_(y).to_(x)` are code, so a peer that evaluates code can do both.
+- EVAL ⇒ READ, EVAL ⇒ WRITE — true: `from_(x)` and `start_(y).to_(x)` are code, so a peer that evaluates code can do
+  both.
 - WRITE ⇒ READ — **false**: a telemetry sink writes and can't read; a sensor reads and can't write.
 
 So it is a **lattice**, not a chain — two axes (dom-generality and effect) that don't linearize. Below `READ`, `rng`
@@ -174,9 +186,9 @@ rules** — a peer that overrides `eval` but not `from` gets `from` by lowering 
 
 The whole thread collapses into one boundary:
 
-| axis        | what it is                          | where it lives                       |
-|-------------|-------------------------------------|--------------------------------------|
-| **capability** | pure, typed, declarative — the instruction bodies | `inst => { tid => typed body }` |
+| axis           | what it is                                          | where it lives                                   |
+|----------------|-----------------------------------------------------|--------------------------------------------------|
+| **capability** | pure, typed, declarative — the instruction bodies   | `inst => { tid => typed body }`                  |
 | **liveness**   | stateful, mutable, supervised — the socket + `Link` | `client` (`close`/`connected`/`hungUp`/`redial`) |
 
 `transport` was both at once. Splitting them is what makes the peer map "true" under supervision (redial the socket
@@ -240,17 +252,19 @@ read from instruction memory, with only `f()` replaced — so the signature surv
 lattice can read it. Dispatch never repacks (ruling, 2026-10-24): the network builds the call exactly as a program
 issues it — `from(<uri>)`, `obj.to(<uri>)`, `eval?block(code)` — binds it to the native definition as resolution
 would, and swaps `f()` (`Network.Helper.dispatch`). An inst of any other signature is not accepted as an override
-(`Network.Helper.accepts`, by `Inst.test`). Overriding only `eval` is correct, not an omission: it is "declare the maximum,
-infer the rest" — the loop peer's one maximal capability is "evaluate code (as identity)," and `from`/`to` derive from it.
+(`Network.Helper.accepts`, by `Inst.test`). Overriding only `eval` is correct, not an omission: it is "declare the
+maximum,
+infer the rest" — the loop peer's one maximal capability is "evaluate code (as identity)," and `from`/`to` derive from
+it.
 
 ### 3.3 The `inst` map is a partial instset, open over tids
 
-| client                | `inst` map                                                                   |
-|-----------------------|------------------------------------------------------------------------------|
-| `id_client` (loop)    | `{ eval, from, to }` — each the identity of the wire body (2026-10-24; was `{ eval => identity }`) |
-| `ws_client` (mtron)   | `{ eval => ship-code, from => ship-from_, to => ship-to_ }` — all three declared (ruling 2026-10-24: no `to` derived from `eval`) |
-| `http_client` (web)   | `{ from => GET, to => POST }` — no `eval`: a POST writes an obj and evaluates nothing, so it is no shard target (2026-10-24) |
-| `mcpClient` (codegraph)| `{ codegraph_explore => tool-call, codegraph_search => tool-call, … }`      |
+| client                  | `inst` map                                                                                                                        |
+|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `id_client` (loop)      | `{ eval, from, to }` — each the identity of the wire body (2026-10-24; was `{ eval => identity }`)                                |
+| `ws_client` (mtron)     | `{ eval => ship-code, from => ship-from_, to => ship-to_ }` — all three declared (ruling 2026-10-24: no `to` derived from `eval`) |
+| `http_client` (web)     | `{ from => GET, to => POST }` — no `eval`: a POST writes an obj and evaluates nothing, so it is no shard target (2026-10-24)      |
+| `mcpClient` (codegraph) | `{ codegraph_explore => tool-call, codegraph_search => tool-call, … }`                                                            |
 
 The keys are instruction tids, the values are typed insts, and the set is whatever the peer natively does. The
 `isaPredicate` should be open (`rec` of `inst_tid => inst`), not pinned to a single key.

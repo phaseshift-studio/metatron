@@ -7,8 +7,8 @@ that have already cost time, the design to build, and the acceptance gates.
 
 ## Mission
 
-`mParser` currently has one builder: its grammar rules construct live mtron objs
-(`start(1).plus(2)…`). Add a **second, independent output** so a single parse can produce:
+`mParser` currently has one builder: its grammar rules construct live mtron objs (`start(1).plus(2)…`). Add a **second,
+independent output** so a single parse can produce:
 
 ```java
 Pair<Obj, Rec>   // obj = what the compiler consumes; ast = introspectable syntax tree (a rec::T)
@@ -30,8 +30,7 @@ compilation side effects. The obj half stays exactly what it is today.
    explicit form.
 3. **`parse` must never throw.** Failures are `fail::T` objs carrying `mParser.ParseFault` (source,
    line, column, position), reachable by `mParser.faultOf(obj)`. `cInt.of(String)` throws on a
-   malformed coefficient — it is the authority on coefficient bodies; guard it
-   (`coefficientOrOne` exists).
+   malformed coefficient — it is the authority on coefficient bodies; guard it (`coefficientOrOne` exists).
 4. **Do not touch `Compiler`, `Rewriter`, `Resolver`, `Typer`, `Processor`.** Stage 1 only.
    `Parser.apply` returns `Obj` (a code, a value, or a fail); `Compiler.apply` lifts with
    `Parser.Helper.toCode`.
@@ -51,17 +50,17 @@ compilation side effects. The obj half stays exactly what it is today.
 
 `src/main/java/studio/phaseshift/metatron/isa/m/parser/mParser.java` (~1,400 lines):
 
-| Element | Notes |
-|---|---|
-| `public static Obj parse(String mtron)` | the one door; door-level type-coefficient check; loops over `step(...)`; returns `assemble(statements)` |
-| `private record Step(Obj statement, int next, Obj fault)` + `private static Step step(Prepared, int position, Obj previous)` | the shared walk: parse one statement, adjacency rule, zero-progress probe |
-| `public static final class Incremental { hasNext(); next(); fault(); }` + `incremental(String)` | the same walk as a cursor (currently unused by boot) |
-| `private record Prepared(String original, String text, int[] offsets, int endOffset)` + `prepare(String)` | comment-stripped text + index map back to the source |
-| `ParseFault extends MTronException` + `faultOf(Obj)` | positioned failure, structured |
-| `assemble(List<Obj>)` | one statement → itself; several → a code |
-| `labeled(parser, msg)` / `labeledCloser(parser, msg)` / `LABELS` / `CLOSERS` / `FURTHEST` | expectation labels; `FURTHEST` prefers a declared expectation over a closer at equal offset |
-| `m_chain_element()` | inst (dot optional) · `.` branch `{…}` → `branch(...)` · `.` value → `map(value)` |
-| `m_call_prefix`, `m_code`, `m_obj*`, `m_furi*`, `m_type`, `m_inst_b/c` | ordered-choice grammar; `opt()` swallows failures (no commit/cut yet) |
+| Element                                                                                                                      | Notes                                                                                                   |
+|------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| `public static Obj parse(String mtron)`                                                                                      | the one door; door-level type-coefficient check; loops over `step(...)`; returns `assemble(statements)` |
+| `private record Step(Obj statement, int next, Obj fault)` + `private static Step step(Prepared, int position, Obj previous)` | the shared walk: parse one statement, adjacency rule, zero-progress probe                               |
+| `public static final class Incremental { hasNext(); next(); fault(); }` + `incremental(String)`                              | the same walk as a cursor (currently unused by boot)                                                    |
+| `private record Prepared(String original, String text, int[] offsets, int endOffset)` + `prepare(String)`                    | comment-stripped text + index map back to the source                                                    |
+| `ParseFault extends MTronException` + `faultOf(Obj)`                                                                         | positioned failure, structured                                                                          |
+| `assemble(List<Obj>)`                                                                                                        | one statement → itself; several → a code                                                                |
+| `labeled(parser, msg)` / `labeledCloser(parser, msg)` / `LABELS` / `CLOSERS` / `FURTHEST`                                    | expectation labels; `FURTHEST` prefers a declared expectation over a closer at equal offset             |
+| `m_chain_element()`                                                                                                          | inst (dot optional) · `.` branch `{…}` → `branch(...)` · `.` value → `map(value)`                       |
+| `m_call_prefix`, `m_code`, `m_obj*`, `m_furi*`, `m_type`, `m_inst_b/c`                                                       | ordered-choice grammar; `opt()` swallows failures (no commit/cut yet)                                   |
 
 ## The design to build
 

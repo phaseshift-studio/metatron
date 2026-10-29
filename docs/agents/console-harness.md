@@ -1,6 +1,7 @@
 # Driving and diagnosing the console — agent reference
 
-Moved out of [AGENTS.md](../../AGENTS.md) on 2026-10-21 so that file holds only the rules every session needs; AGENTS.md links here where it applies.
+Moved out of [AGENTS.md](../../AGENTS.md) on 2026-10-21 so that file holds only the rules every session needs; AGENTS.md
+links here where it applies.
 
 ## Driving the console in a pty (`bin/metatron-console`)
 

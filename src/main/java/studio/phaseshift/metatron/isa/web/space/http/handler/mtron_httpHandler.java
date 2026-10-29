@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.space.http.handler;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -72,12 +73,12 @@ public class mtron_httpHandler extends HttpRec {
                 final Obj request = inst.arg(0);
                 final Obj rhs = lhs.apply(request);
                 LOG.debug("processed mtron GET: %s => %s", lhs, rhs);
-                this.send(rhs);
+                this.send(MFail.reported(rhs));
                 return rhs;
             } catch (final Exception e) {
                 LOG.error("error processing GET: %s => %s", lhs, fail(e));
-                final Fail failure = fail(e);
-                this.send(failure);
+                final Fail failure = MFail.fail(e);
+                this.send(MFail.reported(failure));
                 return failure;
             }
         }));
@@ -88,12 +89,12 @@ public class mtron_httpHandler extends HttpRec {
                 final Obj request = inst.arg(0);
                 final Obj rhs = lhs.apply(request);
                 LOG.debug("processed mtron POST: %s => %s", lhs, rhs);
-                this.send(rhs);
+                this.send(MFail.reported(rhs));
                 return rhs;
             } catch (final Exception e) {
                 LOG.error("error processing POST: %s => %s", lhs, fail(e));
-                final Fail failure = fail(e);
-                this.send(failure);
+                final Fail failure = MFail.fail(e);
+                this.send(MFail.reported(failure));
                 return failure;
             }
         }));
@@ -101,7 +102,7 @@ public class mtron_httpHandler extends HttpRec {
         // ON_ERROR — send the error (mirrors mtron_wsHandler.ON_ERROR)
         this.jvm().put(uri(ON_ERROR), instLambda(f("on_error"), lst(T(ALL)), (lhs, _) -> {
             try {
-                this.send(lhs);
+                this.send(MFail.reported(lhs));
                 return noobj();
             } catch (final Exception e) {
                 LOG.error("error processing error: %s", lhs, e);

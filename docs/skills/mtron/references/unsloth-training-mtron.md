@@ -26,8 +26,8 @@ or more training entries. Entry generation is delegated to `Training.Extractor.f
   instruction templates.
 - **Operator context enrichment**: every instruction in the expression is resolved via `?docq>>desc`
   from the metatron VM to weave semantic descriptions into the instruction field.
-- **Declarative reference knowledge**: the extractor also scans 7 evaluated reference docs
-  (`language-reference`, `type-system`, the `tble`/`math`/`sys`/`web` instset docs, and `SKILL.md`),
+- **Declarative reference knowledge**: the extractor also scans 7 evaluated reference docs (`language-reference`,
+  `type-system`, the `tble`/`math`/`sys`/`web` instset docs, and `SKILL.md`),
   emitting one "verbal knowledge" entry per `##` section — so the model can *explain* mtron, not just
   evaluate it.
 
@@ -90,12 +90,12 @@ Alpaca-style JSONL:
 
 ### Entry Types
 
-| Type | Count | Source |
-|------|-------|--------|
-| Expression evaluation | ~2,800 | `@CsvSource` rows from test classes |
-| Meta-knowledge | ~50 | Hardcoded facts about mtron |
-| Sugar reference + pairs | ~75 | Auto-generated from `mInstSet.sugars()` |
-| Declarative reference knowledge | ~100 | One entry per `##` section of 7 reference docs (evaluated) |
+| Type                            | Count  | Source                                                     |
+|---------------------------------|--------|------------------------------------------------------------|
+| Expression evaluation           | ~2,800 | `@CsvSource` rows from test classes                        |
+| Meta-knowledge                  | ~50    | Hardcoded facts about mtron                                |
+| Sugar reference + pairs         | ~75    | Auto-generated from `mInstSet.sugars()`                    |
+| Declarative reference knowledge | ~100   | One entry per `##` section of 7 reference docs (evaluated) |
 
 ### Key Architecture: `Training.java`
 
@@ -144,11 +144,11 @@ private static String escapeJson(String s) {
 
 ### Text-Only Models (✅ Verified Working)
 
-| Model | Params | Size (Q4_K_M) | Best Loss | Notes |
-|-------|--------|:---:|:---:|-------|
-| `Qwen/Qwen3-4B` | 4B | ~2.5 GB | 0.27 | Fast, good for testing |
-| `Qwen/Qwen3-8B` | 8B | ~5.0 GB | 0.22 | First successful model |
-| `Qwen/Qwen3-14B` | 14B | ~8.4 GB | 0.093 | mtron-only assistant (current best) |
+| Model            | Params | Size (Q4_K_M) | Best Loss | Notes                               |
+|------------------|--------|:-------------:|:---------:|-------------------------------------|
+| `Qwen/Qwen3-4B`  | 4B     |    ~2.5 GB    |   0.27    | Fast, good for testing              |
+| `Qwen/Qwen3-8B`  | 8B     |    ~5.0 GB    |   0.22    | First successful model              |
+| `Qwen/Qwen3-14B` | 14B    |    ~8.4 GB    |   0.093   | mtron-only assistant (current best) |
 
 ### Vision-Language Models (Text-Only Strip)
 
@@ -177,13 +177,13 @@ not an assistant (see §1).
 
 ### Loss Interpretation
 
-| Loss | Meaning |
-|------|---------|
-| 3.0–4.0 | Initial random guessing |
-| 1.0–2.0 | Learning syntax |
+| Loss    | Meaning                          |
+|---------|----------------------------------|
+| 3.0–4.0 | Initial random guessing          |
+| 1.0–2.0 | Learning syntax                  |
 | 0.3–0.5 | Decent fluency (~70% confidence) |
-| 0.2–0.3 | Strong recall (~85% confidence) |
-| <0.2 | Near-memorization |
+| 0.2–0.3 | Strong recall (~85% confidence)  |
+| <0.2    | Near-memorization                |
 
 ---
 
@@ -223,6 +223,7 @@ fast linear attention before loading — the message "Installing causal-conv1d f
 expected, not an error.
 
 Key notes:
+
 - `cosine` > `linear` for runs >200 steps — avoids LR bottoming out early.
 - `batch_size=2` + `gradient_accumulation_steps=4` = effective batch 8.
 - 4-bit models cannot do data-parallel multi-GPU (bitsandbytes limitation). Dual GPU with
@@ -256,10 +257,11 @@ ssh ginger.local "docker exec unsloth env \
 Set `TEXT_ONLY=1` for a VLM base (`Qwen3.8-*`); `save_pretrained_gguf` appends `_gguf` to `OUT`.
 
 Notes:
-- **`load_in_4bit=True` is required** — `False` dequantizes the base to bf16 (~54 GB for 27B) and OOMs
-  ("We need an `offload_dir`… layers.61-63, lm_head"). The base is already bnb-4bit; keep it 4-bit.
-- The GGUF is named after the model (`qwen3.8-27b.Q4_K_M.gguf`), and Unsloth skips the auto-Modelfile
-  ("No Ollama template mapping found") — write the Modelfile manually (§5).
+
+- **`load_in_4bit=True` is required** — `False` dequantizes the base to bf16 (~54 GB for 27B) and OOMs ("We need an
+  `offload_dir`… layers.61-63, lm_head"). The base is already bnb-4bit; keep it 4-bit.
+- The GGUF is named after the model (`qwen3.8-27b.Q4_K_M.gguf`), and Unsloth skips the auto-Modelfile ("No Ollama
+  template mapping found") — write the Modelfile manually (§5).
 
 ---
 
@@ -325,6 +327,7 @@ The `OLLAMA_NUM_CTX` environment variable sets a system-wide default but per-mod
 `num_ctx` takes precedence.
 
 To use the extended context without a rebuild, pass `num_ctx` per-request:
+
 ```bash
 curl http://ginger.local:11434/api/generate -d '{
   "model": "mtron-qwen-14b:latest",
@@ -339,12 +342,12 @@ curl http://ginger.local:11434/api/generate -d '{
 
 Models are published under `phaseshift-studio/mtron-qwen`:
 
-| File | Size | Description |
-|------|------|-------------|
-| `mtron-qwen-4b.Q4_K_M.gguf` | ~2.5 GB | Qwen3-4B fine-tune |
-| `mtron-qwen-8b.Q4_K_M.gguf` | ~5.0 GB | Qwen3-8B fine-tune |
-| `mtron-qwen-14b.Q4_K_M.gguf` | ~8.4 GB | Qwen3-14B fine-tune |
-| `training-*.png` | ~70 KB | Training plots per variant |
+| File                         | Size    | Description                |
+|------------------------------|---------|----------------------------|
+| `mtron-qwen-4b.Q4_K_M.gguf`  | ~2.5 GB | Qwen3-4B fine-tune         |
+| `mtron-qwen-8b.Q4_K_M.gguf`  | ~5.0 GB | Qwen3-8B fine-tune         |
+| `mtron-qwen-14b.Q4_K_M.gguf` | ~8.4 GB | Qwen3-14B fine-tune        |
+| `training-*.png`             | ~70 KB  | Training plots per variant |
 
 Upload with:
 
@@ -360,16 +363,16 @@ The `hf` CLI handles LFS >5GB transparently. Web UI uploads silently cap at 5GB.
 
 ## 7. Training History
 
-| Variant | Base Model | Steps | Best Loss | Final Loss | Time | Verified |
-|---------|-----------|:---:|:---:|:---:|------|:---:|
-| 4B | Qwen3-4B (text-only) | 600 | 0.27 | 0.81 | ~15 min | 🆕 |
-| 8B | Qwen3-8B (text-only) | 600 | 0.22 | — | ~20 min | ✅ |
-| 14B | Qwen3-14B (text-only, v2) | 600 | 0.23 | 0.69 | 31 min | ✅ |
-| 2B ❌ | Qwen3.5-2B (multimodal) | 600 | 0.19 | 0.23 | — | Confabulates |
-| 27B ❌ | Qwen3.6-27B (vision-language, *as VLM*) | 600 | 0.25 | 0.50 | — | Template failures |
-| 27B ⚠️ | Qwen3.8-27B (text-only strip) | 600 | 0.12 | 0.50 | ~50 min | Rambles (thinking mode) |
-| 27B ❌ | Qwen3.8-27B (text-only + 80/20 mix) | 600 | 0.405 | — | — | Mix diluted mtron |
-| 14B ✅ | Qwen3-14B (mtron-only, latest dataset) | 600 | 0.093 | 0.550 | ~32 min | Deployed `mtron-qwen-14b:assistant` |
+| Variant | Base Model                              | Steps | Best Loss | Final Loss | Time    |              Verified               |
+|---------|-----------------------------------------|:-----:|:---------:|:----------:|---------|:-----------------------------------:|
+| 4B      | Qwen3-4B (text-only)                    |  600  |   0.27    |    0.81    | ~15 min |                 🆕                  |
+| 8B      | Qwen3-8B (text-only)                    |  600  |   0.22    |     —      | ~20 min |                 ✅                  |
+| 14B     | Qwen3-14B (text-only, v2)               |  600  |   0.23    |    0.69    | 31 min  |                 ✅                  |
+| 2B ❌   | Qwen3.5-2B (multimodal)                 |  600  |   0.19    |    0.23    | —       |            Confabulates             |
+| 27B ❌  | Qwen3.6-27B (vision-language, *as VLM*) |  600  |   0.25    |    0.50    | —       |          Template failures          |
+| 27B ⚠️  | Qwen3.8-27B (text-only strip)           |  600  |   0.12    |    0.50    | ~50 min |       Rambles (thinking mode)       |
+| 27B ❌  | Qwen3.8-27B (text-only + 80/20 mix)     |  600  |   0.405   |     —      | —       |          Mix diluted mtron          |
+| 14B ✅  | Qwen3-14B (mtron-only, latest dataset)  |  600  |   0.093   |   0.550    | ~32 min | Deployed `mtron-qwen-14b:assistant` |
 
 ---
 

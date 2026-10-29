@@ -85,9 +85,10 @@ public String toString() {
 ## Files Modified
 
 -
+
 `/home/killswitch/software/metatron/src/main/java/studio/phaseshift/metatron/isa/mach/type/net/mcp/MetatronMcpServer.java`
-    - Line 95: Changed `(String) args.get("code")` to `args.get("code").toString()`
-    - Line 175: Changed `(String) args.get("filter")` to `args.get("filter").toString()`
+- Line 95: Changed `(String) args.get("code")` to `args.get("code").toString()`
+- Line 175: Changed `(String) args.get("filter")` to `args.get("filter").toString()`
 
 - `/home/killswitch/software/metatron/src/main/java/studio/phaseshift/metatron/isa/mach/type/net/MServer.java`
     - Line 161: Changed `final String sessionId = conn.getAttachment();` to

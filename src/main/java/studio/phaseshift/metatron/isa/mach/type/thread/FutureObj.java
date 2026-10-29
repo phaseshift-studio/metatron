@@ -52,6 +52,12 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  */
 public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
+    /**
+     * THE FALLBACK DEADLINE, for a future nobody set one on. A round trip sets its own ({@code sendRecv} passes the
+     * trip's plus slack), so the trip's wait is the one that governs — an instruction resolving a future ARGUMENT used
+     * to impose this 5 s here ({@code resolveFuture}), which cut a 30 s round trip down to 5 s at the caller while the
+     * transport was still waiting: every slow peer read as a timeout.
+     */
     public static final int DEFAULT_TIMEOUT_MS = 5000;
     public static final fURI FUTURE_TID = M_ISA_TID.extend("future");
 
@@ -93,6 +99,13 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     public FutureObj<T> timeout(final int millis) {
         this.timeout = millis;
         return this;
+    }
+
+    /**
+     * The deadline THIS future was given, or {@link #DEFAULT_TIMEOUT_MS} when none was set.
+     */
+    public int timeout() {
+        return this.timeout;
     }
 
     @Override
@@ -285,7 +298,9 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
      */
     public static <O extends Obj> O resolveFuture(final Obj future) {
         try {
-            return future instanceof FutureObj ? ((FutureObj<O>) future).get(DEFAULT_TIMEOUT_MS) : (O) future;
+            // THE FUTURE'S OWN DEADLINE, never a hardcoded one: a trip sets its wait when it is created, and an
+            // instruction resolving it as an argument must not expire it sooner ({@code get(int)} here is millis)
+            return future instanceof FutureObj ? ((FutureObj<O>) future).get(((FutureObj<O>) future).timeout()) : (O) future;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

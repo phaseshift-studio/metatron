@@ -662,8 +662,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     protected String writeUriExtension(final Uri uri, final String color, final boolean big) {
-        final String uriString = super.writeUri(uri);
-        final boolean quoted = uriString.startsWith("<") && uriString.endsWith(">");
+        // THE QUOTING DECISION BELONGS TO THE VALUE. Asking super.writeUri and testing "starts with < and ends with >"
+        // read the VALUE PLUS ITS VID — an addressed value ends with the vid, so the answer was FALSE and the
+        // brackets were dropped: `<user@mail>@abc` was drawn as `user@mail`, a spelling that does not parse.
+        final boolean quoted = requiresQuoting(uri.uriValue());
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, uri, true);
         sb.append(quoted ? "<" : "");
@@ -673,6 +675,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
             sb.append("{{").append(color).append("}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/").append(color).append("}}");
 
         sb.append(quoted ? ">" : "");
+        // THE VID IS PART OF THE VALUE'S SPELLING, so the renderer appends it exactly as every other type's does —
+        // it was simply never emitted here, which is why an addressed uri printed without its address while the
+        // obj still carried it (a read at that address answered it back).
+        this.handleVID(sb, uri);
         return sb.toString();
     }
 
