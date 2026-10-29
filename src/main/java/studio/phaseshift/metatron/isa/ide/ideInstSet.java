@@ -206,7 +206,7 @@ public class ideInstSet extends AbstractInstSet {
                                         (lhs, inst) -> {
                                             return start_(lhs).rshift_(uri(CODE)).rshift_().
                                                     filter_(from_(id_()).rshift_(uri("location")).has_(inst.arg(CLASS, 0))).
-                                                    repeat_(rec(CODE, rshift_(), EMIT, BOOL_TRUE)).
+                                                    repeat_(rec(CODE, rshift_().tryToInst(), EMIT, BOOL_TRUE)).
                                                     rshift_(uri("members")).rshift_().rshift_().filter_(from_(id_())
                                                             .isa_(rec(
                                                                     NAME, has_(inst.arg(NAME, 1).orElse(str(".*"))),
@@ -225,7 +225,7 @@ public class ideInstSet extends AbstractInstSet {
                         docWrap(instC(IDE_INST_TID.extend("search").dom(URI_TID).rng(URI_TID.maybeSome()), lst(STR_TYPE),
                                         // *scratch/root.repeat(code=>>>,until=>false,emit=>has(<#>)) 
                                         //(lhs, inst) -> from_(lhs.asRec().at(ROOT)).repeat_(rshift_(), BOOL_FALSE, from_(id_()).isa_(IDE_JAVA_TYPE).has_(inst.arg(0))).tryToInst().apply()),
-                                        (lhs, inst) -> start_(lhs).repeat_(rec("code", rshift_(), "emit", BOOL_TRUE)).filter_(from_(id_()).rshift_(uri("name")).has_(inst.arg(0)))
+                                        (lhs, inst) -> start_(lhs).repeat_(rec("code", rshift_().tryToInst(), "emit", BOOL_TRUE)).filter_(from_(id_()).rshift_(uri("name")).has_(inst.arg(0)))
                                 ),
                                 "a project",
                                 "the location of found resources",

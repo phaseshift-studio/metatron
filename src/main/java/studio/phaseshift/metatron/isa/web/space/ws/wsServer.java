@@ -132,6 +132,7 @@ public final class wsServer extends Listener {
                             final studio.phaseshift.metatron.isa.m.type.Obj pattern = config.get(uri(PATTERN));
                             if (null != pattern && pattern.isUri() && !config.containsKey(uri(HOST)))
                                 config.put(uri(HOST), uri(pattern.uriValue().retractPattern()));
+                            config.put(uri(HOST), uri(Machine.current().network().alignPrefix(config.get(uri(HOST)).uriValue())));
                             final WebSocketRec wsRec = new WebSocketRec(config, inst.arg(0).vid());
                             // A PROTOCOL HAT: protocol=>mtron_ws installs the mtron facade's full surface (apply-and-
                             // respond on_message, on_error, state) as guarded defaults, so the client can answer a

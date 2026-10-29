@@ -41,7 +41,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Str extends Mono {
     Str ZERO = str("");
@@ -285,19 +284,7 @@ public interface Str extends Mono {
         }
 
         public final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
-
-        public static Obj toUriOrStr(final String string, final boolean uriFallback) {
-            if (string.startsWith("<") && string.endsWith(">"))
-                return uri(string.substring(1, string.length() - 1));
-            else if (string.contains(" ") ||
-                    string.contains("\n") ||
-                    string.contains("\r") ||
-                    string.contains("\"") ||
-                    string.contains("'"))
-                return str(string);
-            return uriFallback ? uri(string) : str(string);
-        }
-
+        
         public static String stripQuotes(String string) {
             while (string.startsWith("'") || string.startsWith("\"")) {
                 string = string.substring(1);

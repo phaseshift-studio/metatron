@@ -38,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -77,12 +78,12 @@ public final class PeerSpawn {
      * A {@code java.lang.Process} is not an {@code Obj}, so it cannot live in the machine's own rec — the table
      * is the machine/OS boundary, kept beside the object graph rather than inside it.
      */
-    private static final Map<String, Forked> FORKED = new ConcurrentHashMap<>();
+    private static final Map<fURI, Forked> FORKED = new ConcurrentHashMap<>();
 
     /**
      * the roster keys THIS class declared, so a pop only retracts what a push introduced.
      */
-    private static final Set<String> DECLARED = ConcurrentHashMap.newKeySet();
+    private static final Set<fURI> DECLARED = ConcurrentHashMap.newKeySet();
 
     private PeerSpawn() {
         // static only
@@ -96,9 +97,9 @@ public final class PeerSpawn {
      * IDEMPOTENT BY ADDRESS: asking for an authority that is already declared FINDS the peer rather than forking a
      * twin.
      */
-    public static Obj spawn(final fURI requested) {
+    public static fURI spawn(final fURI requested) {
         final fURI authority = resolve(requested);
-        final String key = keyOf(authority);
+        final fURI key = authority.origin();
         // A PEER IS DECLARED ONCE. Hand back the address it already has.
         if (FORKED.containsKey(key) || DECLARED.contains(key))
             return address(authority);
@@ -110,7 +111,7 @@ public final class PeerSpawn {
                 FORKED.put(key, new Forked(process, log));
                 awaitReady(process, log, authority);
             }
-            final Obj address = address(authority);
+            final fURI address = address(authority);
             declare(key, address);
             LOG.warn("spawned node %s (forked=%s)", key, here);
             return address;
@@ -128,7 +129,7 @@ public final class PeerSpawn {
     public static boolean alive(final fURI authority) {
         if (null == authority)
             return false;
-        final Forked forked = FORKED.get(keyOf(authority));
+        final Forked forked = FORKED.get(authority.origin());
         return null != forked && forked.process().isAlive();
     }
 
@@ -157,13 +158,13 @@ public final class PeerSpawn {
                 .filter(Obj::isRec)
                 .map(connection -> connection.asRec().<Obj>atDirect(uri(ORIGIN)))
                 .filter(Obj::isUri)
-                .forEach(authority -> cleanup(keyOf(authority.uriValue())));
+                .forEach(authority -> cleanup(authority.uriValue().origin()));
     }
 
     /**
      * release everything a push for {@code key} established — safe to call whether or not any of it happened.
      */
-    private static void cleanup(final String key) {
+    private static void cleanup(final fURI key) {
         reapForked(key);
         if (DECLARED.remove(key))
             undeclare(key);
@@ -173,15 +174,15 @@ public final class PeerSpawn {
      * Where a spawned node answers: the dial uri of its {@code mtron_ws} endpoint. This is the value the roster
      * stores — an address, knowledge only: a {@code ws_client} dialed at it is what reaches the node.
      */
-    public static Obj address(final fURI authority) {
-        return uri(keyOf(authority) + MachNode.MTRON_ROUTE);
+    public static fURI address(final fURI authority) {
+        return f(authority.origin() + MachNode.MTRON_ROUTE);
     }
 
     // ========================================================================
     // the roster
     // ========================================================================
 
-    private static void declare(final String key, final Obj address) {
+    private static void declare(final fURI key, final fURI address) {
         // INTO roster/machine, and the roster rebuilt around it. The roster is a container now -- it carries
         // `discover` beside `machine` -- so a flat write at its root both loses the discovery registrations and
         // puts the entry where no reader looks.
@@ -189,13 +190,13 @@ public final class PeerSpawn {
         final Map<Obj, Obj> fields = new LinkedHashMap<>(roster.isRec() ? roster.asRec().jvm() : Map.of());
         final Obj known = roster.isRec() ? roster.asRec().at(uri(MACHINE)) : noobj();
         final Map<Obj, Obj> machines = new LinkedHashMap<>(known.isRec() ? known.asRec().jvm() : Map.of());
-        machines.put(uri(key), address);
+        machines.put(uri(key), uri(address));
         fields.put(uri(MACHINE), rec(machines));
         Machine.write(Network.ROOT_ROSTER, rec(fields));
         DECLARED.add(key);
     }
 
-    private static void undeclare(final String key) {
+    private static void undeclare(final fURI key) {
         final Obj roster = Machine.read(Network.ROOT_ROSTER);
         if (!roster.isRec())
             return;
@@ -203,7 +204,7 @@ public final class PeerSpawn {
         if (!known.isRec())
             return;
         final Map<Obj, Obj> machines = new LinkedHashMap<>(known.asRec().jvm());
-        machines.keySet().removeIf(k -> k.isUri() && key.equals(k.uriValue().toString()));
+        machines.keySet().removeIf(k -> k.isUri() && key.equals(k.uriValue()));
         final Map<Obj, Obj> fields = new LinkedHashMap<>(roster.asRec().jvm());
         fields.put(uri(MACHINE), rec(machines));
         Machine.write(Network.ROOT_ROSTER, rec(fields));
@@ -227,7 +228,7 @@ public final class PeerSpawn {
         command.add(String.valueOf(authority.port()));
         // the node's namespace is the LOCALIZED path — what the parent sends over the wire, not the parent's spelling
         command.add(authority.localize().toString());
-        LOG.warn("forking node %s on port %d", keyOf(authority), authority.port());
+        LOG.warn("forking node %s on port %d", authority.origin(), authority.port());
         return new ProcessBuilder(command)
                 .directory(new File(System.getProperty("user.dir")))
                 .redirectErrorStream(true)
@@ -239,20 +240,20 @@ public final class PeerSpawn {
         final long deadline = System.currentTimeMillis() + READY_TIMEOUT_MS;
         while (System.currentTimeMillis() < deadline) {
             if (!process.isAlive())
-                throw MTronException.of("node %s exited before it was ready:\n%s", keyOf(authority), trace(log));
+                throw MTronException.of("node %s exited before it was ready:\n%s", authority.origin(), trace(log));
             if (trace(log).contains(MachNode.READY))
                 return;
             try {
                 Thread.sleep(100L);
             } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw MTronException.of("interrupted while waiting for node %s", keyOf(authority));
+                throw MTronException.of("interrupted while waiting for node %s", authority.origin());
             }
         }
-        throw MTronException.of("node %s did not become ready in time:\n%s", keyOf(authority), trace(log));
+        throw MTronException.of("node %s did not become ready in time:\n%s", authority.origin(), trace(log));
     }
 
-    private static void reapForked(final String key) {
+    private static void reapForked(final fURI key) {
         final Forked forked = FORKED.remove(key);
         if (null == forked)
             return;
@@ -301,19 +302,12 @@ public final class PeerSpawn {
     }
 
     /**
-     * the roster key and the wire origin: {@code scheme://host:port}, with no path
-     */
-    private static String keyOf(final fURI authority) {
-        return authority.path(List.of()).toString();
-    }
-
-    /**
      * The <b>connection key</b> for an authority: {@code scheme://host:port} as a uri — the same service uri the
      * roster is keyed by, and what a frame's {@code network.peer} map is keyed by. Derived rather than spelled so
      * the two homes cannot drift.
      */
     public static Obj service(final fURI authority) {
-        return uri(keyOf(authority));
+        return uri(authority.origin());
     }
 
     private static int freePort() {

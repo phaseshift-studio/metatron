@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
@@ -1417,10 +1418,13 @@ public class Console extends MRec implements Closeable, Runnable {
     }
 
     protected void printResult(final Obj result) {
+        // THE RESULT LINE IS WHERE A FAILURE IS REPORTED TO A PERSON — so this is where an unfiled fail (minting no
+        // longer files; see MFail.transientFail) is given the address that makes it inspectable afterwards.
+        final Obj reported = MFail.reported(result);
         if (this.panes.splitMode() && this.panes.activePane() != null) {
-            this.panes.activePane().appendResult(result);
+            this.panes.activePane().appendResult(reported);
         } else {
-            result.stream().takeWhile(o -> !this.jobs.interruptRequested())
+            reported.stream().takeWhile(o -> !this.jobs.interruptRequested())
                     .forEach(o -> {
                         this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
                         this.write(Highlighter.indentResult(Highlighter.format(this.serializer.write(o))));
@@ -1433,7 +1437,7 @@ public class Console extends MRec implements Closeable, Runnable {
         }
         // emit the fail stack trace after the result is on screen, not during its
         // serialization (which used to interleave the [ERROR] line before the value)
-        result.stream().filter(o -> o.isFail() || o.isCaughtFail())
+        reported.stream().filter(o -> o.isFail() || o.isCaughtFail())
                 .forEach(o -> MTronException.emitStackTrace(o.asFail().jvm()));
     }
 

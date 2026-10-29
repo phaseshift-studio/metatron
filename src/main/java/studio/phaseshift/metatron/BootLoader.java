@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
@@ -340,7 +341,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }, "ws-shutdown");
             Runtime.getRuntime().addShutdownHook(shutdownHook);
             try {
-                final Obj result = client.sendRecv(ObjmtronSerializer.parse(evalExpr));
+                final Obj result = MFail.reported(client.sendRecv(ObjmtronSerializer.parse(evalExpr)));
                 if (!result.isNoObj()) {
                     System.out.print(Graphitty.string("{{-X-}}{{<100}}"));
                     System.out.print(CommonUtil.removeQuotes(ObjmtronSerializer.single().write(result)) + "\n");

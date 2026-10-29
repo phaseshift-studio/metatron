@@ -41,6 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /**
  * The mtron string serializer: the de facto computer-to-computer format of the language.
@@ -202,7 +203,14 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         while (current != null) {
             final String msg = current.message() != null ? current.message() : "";
             if (null == above || !(msg.length() > 0 && above.length() > msg.length() && above.contains(msg)))
-                sb.append("[").append(msg).append("]");
+                // THE MESSAGE IS WRITTEN AS A STR, NOT AS RAW TEXT. A bracket is an OBJ slot in the grammar
+                // (m_fail parses [<obj>]...), so a diagnostic — "inst apply failure: a [value] unable to convert
+                // uri::T" — written raw was not mtron at all and the frame could not be read back: the fail left the
+                // far side addressed and arrived as a parse error, so a round trip whose answer was a fail could never
+                // be matched to its trip. As a str it is escaped and quoted, which the grammar already reads, and its
+                // value is the message (see m_fail). The UI serializer renders fails itself, so the console's
+                // diagnostics are unchanged.
+                sb.append("[").append(this.writeStr(str(msg))).append("]");
             above = msg;
             current = current.cause().orElse(null);
         }
@@ -232,21 +240,32 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     // ── URI writer ───────────────────────────────────────────────
 
+    /**
+     * Whether a uri VALUE has to be written in the bracketed spelling. The decision is the value's alone — never the
+     * value-plus-vid text — so a renderer that draws the brackets itself can ask the same question instead of
+     * inferring it from a text that already has the vid appended.
+     */
+    protected static boolean requiresQuoting(final fURI furi) {
+        if (furi.isEmpty())
+            return true;
+        final String uriString = furi.toString();
+        final char startChar = uriString.charAt(0);
+        return furi.hasTemplates() ||
+                furi.hasBranches() ||
+                CommonUtil.isInt(uriString.substring(0, 1)) ||
+                uriString.contains(" ") ||
+                startChar == 'T' ||
+                startChar == '+' ||
+                startChar == '#' ||
+                // a bare uri can no longer hold an '@' (it is the vid separator — see mParser), so a value
+                // that really carries one is written wrapped, which keeps the postfix unambiguous
+                uriString.contains("@") ||
+                uriString.contains(".");
+    }
+
     private static String wrapUri(final fURI furi) {
         if (furi.isEmpty()) return "<>";
-        final String uriString = furi.toString();
-        final char startChar = uriString.isEmpty() ? ' ' : uriString.charAt(0);
-        final boolean wrap =
-                uriString.isEmpty() ||
-                        furi.hasTemplates() ||
-                        furi.hasBranches() ||
-                        CommonUtil.isInt(uriString.substring(0, 1)) ||
-                        uriString.contains(" ") ||
-                        startChar == 'T' ||
-                        startChar == '+' ||
-                        startChar == '#' ||
-                        uriString.contains(".");
-        return wrap ? ("<" + uriString + ">") : uriString;
+        return requiresQuoting(furi) ? ("<" + furi + ">") : furi.toString();
     }
 
     @Override

@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.transientFail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -263,7 +263,7 @@ public interface Processor extends mThread, Machine.Component {
                 if (cinst.isNoObj())
                     return unresolved(lhs, original);
                 if (!instDomRngMatch(clhs, cinst.dom()))
-                    return fail("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst);
+                    return transientFail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
             }
             final Obj rhs = applyFunction(clhs, cinst, original, isMonadicInst);
             final cInt cc = cinst.c();
@@ -280,7 +280,7 @@ public interface Processor extends mThread, Machine.Component {
         private static Obj unresolved(final Obj lhs, final Inst original) {
             final List<Obj> failed = lhs.stream().filter(Obj::isUncaughtFail).toList();
             return failed.isEmpty() ?
-                    fail(MTronException.of("unable to locate inst-f %s::T => %s", Obj.Helper.specificTypeId(lhs).name(), original)) :
+                    transientFail(MTronException.of("unable to locate inst-f %s::T => %s", Obj.Helper.specificTypeId(lhs).name(), original)) :
                     objs(failed).c(c -> c.mult(original.c()));
         }
 
@@ -310,7 +310,7 @@ public interface Processor extends mThread, Machine.Component {
                             throw MTronException.of("unable to determine inst function:" +
                                     "\n\t%-10s  => %s   | [inst]" +
                                     "\n\t%-10s  => %s   |  \\_dom" +
-                                    "\n\t%-10s %s=> %s   |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
+                                    "\n\t%-10s %s=> %s   |  \\_args", clhs.toCleanString(), cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
                     }
                     final Inst cin1 = cinst;
                     final Obj clhs1 = clhs;
@@ -343,13 +343,13 @@ public interface Processor extends mThread, Machine.Component {
                         Memory.argStack().pop();
                     }
                 } catch (final Exception e) {
-                    rhs = fail(e);
+                    rhs = transientFail(MTronException.of(e));
                 }
                 if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail()
                         && !instDomRngMatch(rhs, cinst.rng())) {
                     final Fail child = Poly.Helper.failChild(rhs);
                     final String text = "rhs does not match inst range -- " + Poly.Helper.mismatchText(cinst.rng(), rhs) + ":" + cinst;
-                    rhs = null == child ? fail(MTronException.of(text)) : fail(MTronException.of(child.jvm(), text));
+                    rhs = null == child ? transientFail(MTronException.of(text)) : transientFail(MTronException.of(child.jvm(), text));
                 }
             } else {
                 rhs = clhs; // propagate fail through inst unless it's a catch inst

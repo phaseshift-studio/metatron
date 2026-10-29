@@ -20,11 +20,12 @@ package studio.phaseshift.metatron.isa.web.space.ws;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.Handshakedata;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
+import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.web.type.MIME;
@@ -34,7 +35,9 @@ import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -42,15 +45,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BLOCK_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.VID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.REPLY_INST_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -132,26 +133,27 @@ public interface WebSocketObj extends Rec, Closeable {
     }
 
     default void send(final Obj message) {
+        // A FAIL LEAVING THIS MACHINE IS BEING REPORTED, so it gets the address it did not get at minting (see
+        // MFail.transientFail / MFail.reported). An addressed one — a trip's answer, a re-homed reply — keeps it.
+        final Obj frame = MFail.reported(message);
         try {
             if (null == this.getWebSocket()) {
-                if (BootLoader.TESTING)
-                    return;
                 return;
             }
             final MIME.MIMEType outType = this.getIO().output();
-            final ByteBuffer bytes = outType.serializer().outputBytes(message);
+            final ByteBuffer bytes = outType.serializer().outputBytes(frame);
             if (outType.isText()) {
                 // send as a websocket text frame so clients using onText listeners receive it
                 final String outgoing = new String(bytes.array(), StandardCharsets.UTF_8);
                 this.getWebSocket().send(outgoing);
-                WireStats.sent(this.peerName(), message.vid());
-                this.logger().status(DEBUG, "sent %s to %s", message, this.getWebSocket().getRemoteSocketAddress());
+                WireStats.sent(this.peerName(), frame.vid());
+                this.logger().status(DEBUG, "sent %s to %s", frame, this.getWebSocket().getRemoteSocketAddress());
             } else {
                 this.getWebSocket().send(bytes);
-                WireStats.sent(this.peerName(), message.vid());
+                WireStats.sent(this.peerName(), frame.vid());
             }
         } catch (final Exception e) {
-            this.logger().status(ERROR, "error sending %s to %s: %s", message, this.getWebSocket().getRemoteSocketAddress(), e);
+            this.logger().status(ERROR, "error sending %s to %s: %s", frame, this.getWebSocket().getRemoteSocketAddress(), e);
         }
     }
 
@@ -304,7 +306,9 @@ public interface WebSocketObj extends Rec, Closeable {
                         waiters.remove(tag);        // a slot outlives neither its deadline nor its reply
                     }
                     final Obj reply = waiter.obj().get();
-                    return minted ? reply.clone().selfVID(null) : reply;
+                    // a fail keeps the address its stack gave it: stripping the vid is for a VALUE whose vid is
+                    // only the trip's minted tag, and a fail's address is never that (see router())
+                    return minted && !reply.isFail() && !reply.isCaughtFail() ? reply.clone().selfVID(null) : reply;
                 }), payload)
                 // the future gives up AFTER the inner wait, so the deadline is reported as the fail the round
                 // trip raised rather than as a bare inspection timeout
@@ -321,39 +325,7 @@ public interface WebSocketObj extends Rec, Closeable {
      * A message that is not code has no chain to append to, so it carries the vid on itself instead.
      */
     default Obj tagged(final Obj message, final fURI tag) {
-        final Inst anchor = instB(VID_INST_TID, lst(uri(tag)));
-        // DESCEND THE BLOCKS FIRST. A payload may arrive quoted -- a user's `|` holds a chain back for the far
-        // side -- and the peer's deserialization evaluates what it is sent, spending a quote. (A network read or
-        // write arrives unquoted: the client's own from/to/eval hand their message over raw, start(...).to(...) and
-        // all, so the anchor simply ends that chain.) The anchor must ride the chain the PEER evaluates, so it
-        // goes on the INNERMOST code and is re-quoted to the same depth; appended outside, it would tag the quote
-        // rather than the chain the peer runs.
-        int blocks = 0;
-        Obj inner = message;
-        while (inner.isObjInst()
-                && BLOCK_INST_TID.equals(inner.asInst().tid().basePath())
-                && 1 == inner.asInst().args().count()) {
-            inner = inner.asInst().arg(0);
-            blocks++;
-        }
-        Obj tagged;
-        if (inner.isCode()) {
-            final List<Inst> insts = new ArrayList<>(inner.asCode().insts());
-            insts.add(anchor);
-            tagged = code(insts);
-        } else if (inner.isObjInst())
-            // a single instruction is a one-element chain: compose rather than anchor, so the vid lands on
-            // what the instruction ANSWERS
-            tagged = code(List.of(inner.asInst(), anchor));
-        else {
-            // a bare value has nothing to evaluate, so it carries the vid itself
-            this.logger().debug("tagging a value message %s (tid %s) -- not a chain", inner, inner.tid());
-            tagged = inner.clone().selfVID(tag);
-        }
-        for (int i = 0; i < blocks; i++)
-            tagged = instB(BLOCK_INST_TID, lst(tagged));
-        this.logger().debug("tagged %s blocks deep with %s", blocks, tag);
-        return tagged;
+        return message.isCall() ? instB(REPLY_INST_TID, lst(message, uri(tag))) : message.clone().selfVID(tag);
     }
 
     /**
@@ -438,7 +410,27 @@ public interface WebSocketObj extends Rec, Closeable {
                     waiter = waiters.remove(waiters.keySet().iterator().next());
                 this.logger().debug("WIRE inbound vid=%s byVid=%s matched=%s outstanding=%s on %s", vid, byVid, null != waiter, waiters.size(), this.peerName());
                 if (null != waiter) {
-                    waiter.fill(lhs);
+                    // A FAIL IS RE-HOMED, NOT RE-ADDRESSED. The vid the frame carries is the TRIP's tag — the
+                    // address the transport used to find this slot — and it belongs to the connection, not to the
+                    // failure. Handing it to the caller would make a transport tag the fail's identity, so it is
+                    // stripped and the fail is thrown into THIS machine's fail stack, which stamps it with the next
+                    // incr id (~/sys/fail/_?incrq, MFail.failStackPattern) — the address a locally raised fail gets.
+                    if (lhs.isFail() || lhs.isCaughtFail()) {
+                        // THE FACTORY IS THE FILER: fail(...) mints an UNCAUGHT fail and writes it at the machine's
+                        // fail stack (~/sys/fail/_?incrq), so the fail the caller receives is addressed where THIS
+                        // machine raises its fails — never at the tag the connection minted to find the slot, and
+                        // never as a caught fail (which is what the wire carries, since an uncaught frame would skip
+                        // the handler's function). The peer's message and cause chain ride through unchanged.
+                        final Fail rehomed = MFail.fail(lhs.asFail().jvm());
+                        this.logger().debug("WIRE inbound fail re-homed at %s on %s", rehomed.vid(), this.peerName());
+                        waiter.fill(rehomed);
+                        return rehomed;
+                    }
+                    // AN ABSENT ANSWER ARRIVES AS THE MARK, NOT AS noobj. Nothing can carry an address (noobj is the
+                    // coefficient-zero singleton, which no writer renders with a vid), so a trip whose answer was
+                    // nothing is answered with the mark that stands for it — see machInstSet#NOOBJ_SENTINEL. The
+                    // slot is filled with what the peer actually answered, never with the wire's spelling of it.
+                    waiter.fill(machInstSet.isNoobjSentinel(lhs) ? noobj() : lhs);
                     return lhs;
                 }
                 // a frame no round trip was waiting for: an unsolicited push, and the only inbound move this VM

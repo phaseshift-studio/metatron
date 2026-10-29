@@ -28,10 +28,12 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PROCESSOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -171,6 +173,67 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
                 String.format("the seeded halted queue is the noobj it is: %s", written));
         final String diagnostic = ObjmtronUISerializer.diagnostic().write(processor);
         assertTrue(diagnostic.contains("halted"), String.format("and the display serializer renders it too: %s", diagnostic));
+    }
+
+    /**
+     * A FAIL'S DIAGNOSTIC TRAVELS. A fail's message is prose — spaces, brackets, colons, a stray {@code @} — and the
+     * grammar reads a bracket as an OBJ slot ({@code fail::[<obj>]…}). Written raw, as it used to be, such a message
+     * was not mtron at all: the fail left one machine addressed and arrived on the other as a parse error, so a round
+     * trip whose answer was a fail could never be matched to its trip (the address was gone, and the trip waited out
+     * its deadline). Writing the message as a str — escaped and quoted, exactly what the slot already reads — makes it
+     * travel, its vid included.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "inst apply failure: a [value] unable to convert uri::T (at /m/inst/plus)",
+            "unable to locate inst-f noobj::T => anchor?block(noobj,/wire/noobj)",
+            "a message with a 'single' quote and a \"double\" one",
+            "''", // an empty message is still a message
+    }, quoteCharacter = '"', emptyValue = "''")
+    public void testAFailsMessageTravels(final String message) {
+        final Obj failed = fail(MTronException.of(message)).selfVID(f("a3f91c2b"));
+        final String written = ObjmtronSerializer.single().write(failed);
+        LOG.debug("a fail on the wire => %s", written);
+        final Obj readBack = ObjmtronSerializer.single().read(written);
+        assertTrue(readBack.isFail(), String.format("a fail must read back as a fail: %s", written));
+        assertEquals(f("a3f91c2b"), readBack.vid(), String.format("round-trip lost the vid: %s", written));
+        assertEquals(message, readBack.asFail().message(), String.format("round-trip lost the message: %s", written));
+    }
+
+    /**
+     * A MULTILINE diagnostic too — the str writer switches to triple quotes for it, and the fail slot reads it back.
+     */
+    @Test
+    public void testAMultilineFailMessageTravels() {
+        final Obj failed = fail(MTronException.of("unable to determine inst function:\n\t2 => plus?dom=int(a) | [inst]\n\tint::T X=> [a]"));
+        final String written = ObjmtronSerializer.single().write(failed);
+        LOG.debug("a multiline fail on the wire => %s", written);
+        final Obj readBack = ObjmtronSerializer.single().read(written);
+        assertEquals(failed.asFail().message(), readBack.<studio.phaseshift.metatron.isa.m.type.Fail>as().message(),
+                String.format("round-trip lost the multiline message: %s", written));
+    }
+
+    /**
+     * A SPECULATIVE READ COSTS THE MACHINE NOTHING. Parsing is how a reader asks "is this text an obj?" — a JSON
+     * string value, a docker label, an MQTT discovery field — and the answer is usually no. Every parse fail used to
+     * be minted through {@code MFail.fail}, which FILES the fail in the machine's fail space as it mints it, so a
+     * machine that had never failed accumulated thousands of frames just from reading payloads. The parser now mints
+     * an unfiled fault; a caller that reports it can still address it.
+     */
+    @Test
+    public void testASpeculativeParseCostsTheFailStackNothing() {
+        final long before = failStackDepth();
+        final Obj first = ObjmtronSerializer.parse("QoS level for MQTT messages of this device");
+        final Obj second = ObjmtronSerializer.parse("SSL/TLS key");
+        final Obj third = Machine.parse("/etc/ssl/mqtt-client.crt");
+        LOG.debug("speculative parses => %s / %s / %s", first, second, third);
+        assertTrue(first.isFail() && second.isFail() && third.isFail(), "these are not mtron, so they are faults");
+        assertEquals(before, failStackDepth(), "a parse attempt must not file into ~/sys/fail");
+    }
+
+    private static long failStackDepth() {
+        final Obj stack = Machine.read(f("~/sys/fail/+"));
+        return stack.isNoObj() ? 0 : stack.stream().count();
     }
 
     @Test

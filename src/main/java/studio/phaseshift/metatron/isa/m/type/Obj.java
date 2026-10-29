@@ -738,12 +738,17 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         }
     }
 
+    /**
+     * The conversion diagnostic. The offending obj is rendered with {@link #toCleanString()} — its TEXT, not its
+     * mtron spelling: a str offender used to read {@code 'a'} (quotes and all), and every message that embeds it
+     * (which is then written as a str on the wire) doubled those quotes. A diagnostic says what the value IS.
+     */
     String xxxValue = "%s [%s] unable to convert %s";
 
     default Throwable failValue() {
         if (this.isFail() || this.isCaughtFail())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, T(tid()), FAIL_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), FAIL_TYPE);
     }
 
     default boolean boolValue() {
@@ -751,7 +756,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), BOOL_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), BOOL_TYPE);
     }
 
     default ByteBuffer bytesValue() {
@@ -759,7 +764,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), BYTES_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), BYTES_TYPE);
     }
 
     default Long intValue() {
@@ -767,7 +772,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, this.isType() ? "type" : "value", T(tid()), INT_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), this.isType() ? "type" : "value", T(tid()), INT_TYPE);
     }
 
     default Double realValue() {
@@ -775,7 +780,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), REAL_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), REAL_TYPE);
     }
 
     default String strValue() {
@@ -783,7 +788,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), STR_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), STR_TYPE);
     }
 
     default fURI uriValue() {
@@ -791,7 +796,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), URI_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), URI_TYPE);
     }
 
     default List<Obj> lstValue() {
@@ -799,7 +804,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), LST_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), LST_TYPE);
     }
 
     default Iterable<Obj> objsValue() {
@@ -807,7 +812,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), OBJS_TID);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), OBJS_TID);
     }
 
 
@@ -816,7 +821,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), REC_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), REC_TYPE);
     }
 
     default Pair<Obj, Obj> relValue() {
@@ -824,7 +829,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), REL_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), REL_TYPE);
     }
 
     default Tuple.Triplet<Poly<?, ?>, Inst.f, Obj> instValue() {
@@ -832,7 +837,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), INST_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), INST_TYPE);
     }
 
     default List<Inst> codeValue() {
@@ -840,7 +845,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), CODE_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), CODE_TYPE);
     }
 
     default Obj typeValue() {
@@ -848,7 +853,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), TYPE_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), TYPE_TYPE);
     }
 
     default List<Obj> monadValue() {
@@ -856,7 +861,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
             return this.jvm();
         if (this.isFail() || this.isCaughtFail())
             throw this.asFail().asException();
-        throw MTronException.of(xxxValue, this, T(tid()), MACH_MONAD_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), MACH_MONAD_TYPE);
     }
 
     default boolean hasVID() {
@@ -1671,7 +1676,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
                             "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
-                    docWrap(instC(THROW_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))), "any obj", "a fail::T carrying the arg message", Map.of(jnt(0), "the failure message"), "a throwing function \\(f(x) \\nearrow \\emptyset\\): fails with the arg message"),
+                    docWrap(instC(THROW_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).isStr()
+                    // A STRING'S MESSAGE IS ITS TEXT, NOT ITS SPELLING: toString() of a str is its mtron literal
+                    // ('bad'), and a fail's message is written as a str on the wire — so the quoted spelling would
+                    // be quoted again (fail::["'bad'"]) and the reader would see quotes that belong to the notation.
+                    ? inst.arg(0).strValue()
+                    : inst.arg(0).toString()))), "any obj", "a fail::T carrying the arg message", Map.of(jnt(0), "the failure message"), "a throwing function \\(f(x) \\nearrow \\emptyset\\): fails with the arg message"),
                     docWrap(instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()), "any obj", "the parent of the lhs obj", Map.of(), "a parent function \\(f(x) \\nearrow x'\\): the parent link of the lhs obj"),
                     docWrap(instC(COUNT_INST_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                             "any objs", "the count of objs", Map.of(), "counts the number of objs"),

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.space.ws;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -221,6 +222,102 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
             client.close();
             if (!checked)
                 TypeCheck.disable(TypeCheck.inst_dom);
+        }
+    }
+
+    /**
+     * AN ABSENT ANSWER COMES BACK, ADDRESSED. A round trip whose answer is {@code noobj} used to be untaggable: the
+     * shipped program was anchored at its END, and nothing can carry an address (noobj is the coefficient-zero
+     * singleton, which no writer renders with a vid), so the reply arrived bare. It is now WRAPPED in
+     * {@code reply?block(<program>, <tag>)} — the tag addresses the ANSWER — and an absent answer travels as the
+     * round trip's mark, which the socket's router turns back into {@code noobj}.
+     * <p>
+     * The rows cover both halves: a payload that answers nothing directly ({@code plus(1)} on the frame's noobj), and
+     * one that dies MID-CHAIN ({@code map(noobj).plus(1)} — the {@code plus} is where the monad is killed, which is
+     * why a trailing anchor could not work), beside the ordinary answers that already worked.
+     */
+    @Training.SkipTraining(reason = "the scenario is a Java client's round trip; the rows are plain values")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "plus(1)                                    % noobj",
+            "map(noobj).plus(1)                         % noobj",
+            "{3}34                                      % {3}34",
+            "34                                         % 34",
+    }, delimiter = '%')
+    void testAnAbsentAnswerComesBackAddressed(final String code, final String expected) {
+        try (final RoundTripClient client = this.roundTripClient()) {
+            final Obj reply = FutureObj.resolveFuture(client.wsRec.sendRecv(ObjmtronSerializer.parse(code), 15_000L));
+            checkEquality(LOG, ObjmtronSerializer.parse(expected), reply, true);
+        }
+    }
+
+    /**
+     * A FAIL COMES BACK AS THE PEER'S FAIL. The far side catches a fail before answering (an uncaught fail would skip
+     * the handler's function — no reply at all), and catching used to DROP THE ADDRESS ({@code MCaughtFail}
+     * forced a null vid), so the frame could not be matched to its trip and the caller saw a deadline instead of the
+     * diagnostic. It is the peer's message that must arrive — not a parse error, not "no reply from" — which is what
+     * distinguishes "the fail travelled" from "the transport timed out".
+     */
+    @Training.SkipTraining(reason = "the scenario is a Java client's round trip")
+    @Test
+    void testAFailComesBackAsThePeersFail() {
+        try (final RoundTripClient client = this.roundTripClient()) {
+            // `plus(a)` on the frame's noobj is NOOBJ (plus's domain refuses a noobj lhs), not a fail: the payload
+            // has to produce a value first for the argument to be the thing that breaks
+            final Obj reply = FutureObj.resolveFuture(client.wsRec.sendRecv(ObjmtronSerializer.parse("1.plus(a)"), 15_000L));
+            LOG.debug("the peer's fail over the wire: %s", reply);
+            assertTrue(reply.isFail() || reply.isCaughtFail(), Graphitty.string("a fail must come back as a fail, not %s", reply));
+            final String message = reply.asFail().message();
+            assertTrue(message.contains("unable to convert"), Graphitty.string("the peer's diagnostic must travel, got %s", message));
+            assertFalse(message.contains("parse error"), Graphitty.string("the fail did not survive the wire: %s", message));
+            assertFalse(message.contains("no reply from"), Graphitty.string("the trip timed out instead of matching its answer: %s", message));
+            // THE TRIP'S TAG IS THE TRANSPORT'S, NOT THE FAIL'S: what comes back is addressed in THIS machine's fail
+            // stack (~/sys/fail/_?incrq), never at the tag the connection minted to find the slot
+            assertNotNull(reply.vid(), Graphitty.string("the re-homed fail must carry the stack address: %s", reply));
+            assertTrue(reply.vid().toString().contains("sys/fail"),
+                    Graphitty.string("a received fail belongs at the receiving machine's fail stack, got %s", reply.vid()));
+        }
+    }
+
+    /**
+     * TWO TRIPS IN FLIGHT, ONE OF THEM ABSENT. This is the case arrival order cannot serve: with more than one trip
+     * outstanding an unanchored reply is not guessed at, so the absent one must arrive carrying its own tag. It is the
+     * round trip equivalent of the pipelining a sharded scatter does — {@code cut} fires one {@code eval} per shard,
+     * all awaited through futures on the same socket.
+     */
+    @Training.SkipTraining(reason = "the scenario is a Java client's two overlapping round trips")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "plus(1)   % 1.plus(1)   % noobj  % 2",
+            "34        % 1.plus(1)   % 34     % 2",
+    }, delimiter = '%')
+    void testOverlappingTripsEachAnswerThemselves(final String absentCode, final String presentCode,
+                                                  final String absentExpected, final String presentExpected) {
+        try (final RoundTripClient client = this.roundTripClient()) {
+            // BOTH ARE SENT BEFORE EITHER IS INSPECTED: sendRecv hands back a future and ships on a virtual thread
+            final Obj absent = client.wsRec.sendRecv(ObjmtronSerializer.parse(absentCode), 15_000L);
+            final Obj present = client.wsRec.sendRecv(ObjmtronSerializer.parse(presentCode), 15_000L);
+            checkEquality(LOG, ObjmtronSerializer.parse(presentExpected), FutureObj.resolveFuture(present), true);
+            checkEquality(LOG, ObjmtronSerializer.parse(absentExpected), FutureObj.resolveFuture(absent), true);
+        }
+    }
+
+    /**
+     * A dialed client for the round-trip rows, closed by try-with-resources. The rec is what a console dials with, so
+     * {@code sendRecv} installs the socket's router here exactly as it does in the console.
+     */
+    private RoundTripClient roundTripClient() {
+        final WebSocketRec wsRec = new WebSocketRec(mutableMap(
+                uri(HOST), uri("ws://127.0.0.1:" + cluster.port(1) + PeerCluster.MTRON_ROUTE),
+                uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
+                uri(OUT), uri(MIME.MIMEType.APPLICATION_MTRON.value)), WS_CLIENT_TID, null);
+        return new RoundTripClient(wsRec, new WebSocketRecClient(wsRec));
+    }
+
+    private record RoundTripClient(WebSocketRec wsRec, WebSocketRecClient client) implements AutoCloseable {
+        @Override
+        public void close() {
+            this.client.close();
         }
     }
 

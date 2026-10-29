@@ -25,8 +25,10 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ALL_STAR;
+import static studio.phaseshift.metatron.Tokens.CODE_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
@@ -163,7 +166,7 @@ public class FailTest extends AbstractObjTest {
         final Fail inner = fail(new RuntimeException("outer", cause), fail("mtron wrapper"));
 
         // Serialize
-        final String serialized = studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer.single().write(inner);
+        final String serialized = ObjmtronSerializer.single().write(inner);
         assertTrue(serialized.contains("outer"), "serialized should contain outer message");
         assertTrue(serialized.contains("mtron wrapper"), "serialized should contain mtron wrapper message");
         assertTrue(serialized.contains("nested"), "serialized should contain nested cause message");
@@ -213,6 +216,42 @@ public class FailTest extends AbstractObjTest {
 
         f.caught();
         assertTrue(Machine.read(vid).isNoObj(), "caught() does delete the fail from its space");
+    }
+
+    /**
+     * MINTING FILES NOTHING; REPORTING GIVES THE ADDRESS. A fail is a value the moment it is minted — tid, message,
+     * cause chain — but the {@code ~/sys/fail/N} address belongs to the boundary that shows it to someone (the
+     * console result line, a ws/http/mcp reply, the headless {@code -e} output). That is what keeps a PROBE free:
+     * a type test or a rewrite matcher asks its question with an application, and "no" must not leave a frame in
+     * the machine's ledger.
+     */
+    @Test
+    public void testMintingFilesNothingAndReportingAddresses() {
+        final Fail fresh = MFail.transientFail(MTronException.of("reported once"));
+        assertNull(fresh.vid(), "minting must not file the fail");
+        final Obj reported = MFail.reported(fresh);
+        assertNotNull(reported.vid(), "reporting must give the fail an address");
+        assertTrue(reported.vid().toString().contains("sys/fail"), "at the machine's fail stack: " + reported.vid());
+        assertEquals(reported.vid(), MFail.reported(reported).vid(), "reporting is idempotent");
+        assertEquals(reported.vid(), MFail.reported(reported.asFail().caughtTransient()).vid(),
+                "a caught fail is reported (addressed) too, and keeps that address");
+    }
+
+    /**
+     * A TYPE TEST IS A QUESTION, NOT A FAILURE. Asking "is this a code::T?" of an int is answered by applying the
+     * type's predicate, which the processor cannot do — and it used to mint that miss through {@code fail(...)},
+     * filing a frame for every probe of every boot.
+     */
+    @Test
+    public void testATypeProbeFilesNothing() {
+        final long before = failStackDepth();
+        assertFalse(Machine.parse("start(1)").apply().test(T(CODE_TID)), "an int is not a code::T");
+        assertEquals(before, failStackDepth(), "a type test must not file into ~/sys/fail");
+    }
+
+    private static long failStackDepth() {
+        final Obj stack = Machine.read(f("~/sys/fail/+"));
+        return stack.isNoObj() ? 0 : stack.stream().count();
     }
 
     @Test

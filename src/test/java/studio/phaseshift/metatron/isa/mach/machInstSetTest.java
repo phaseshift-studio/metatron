@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.mach;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -52,5 +54,27 @@ public class machInstSetTest extends AbstractInstSetTest {
      */
     public machInstSetTest() {
         super(machInstSet::new);
+    }
+
+    /**
+     * A MOVE TO AN UNREACHABLE AUTHORITY IS AN ERROR, NOT A NO-OP. {@code move(<authority>)} is a scatter: the
+     * compiler cuts it into {@code cut(<authority>, |tail|)}, which ships the tail through {@code eval(<origin>)}.
+     * With no peer dialed there, the eval bound to nothing, the NATIVE eval ran the shipped program locally, and the
+     * authority disappeared — {@code 1.move(//abc)} answered {@code 1}, exactly as if it had moved. Both the cut and
+     * the binding now refuse: a machine is a place you reach, and "not reachable" is a failure with a name, not a
+     * silent local answer.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.move(//abc)                                 % <ERROR>",
+            // the authority is dropped and the PATH is shipped, so with no peer this used to run locally: the
+            // pathless form landed on the local root and answered the lhs, this one looked like `move(/a)` at home
+            // ("move(/a) found no machine: resolved /a is empty")
+            "1.move(//abc/a)                               % <ERROR>",
+            "1.move(//nowhere.invalid/abc)                 % <ERROR>",
+            "|start(1)|.eval(//abc)                        % <ERROR>",
+    }, delimiter = '%')
+    void testAnUnreachableAuthorityFails(final String code, final String expected) {
+        checkCodeParseApply(LOG, code, expected);
     }
 }

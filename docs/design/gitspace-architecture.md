@@ -4,6 +4,7 @@
 being landed on main, and the joke holds up.*
 
 *Companion docs:*
+
 - *`addressable-architecture.md`: the contract every space satisfies.*
 - *`distributed-patterns-menu.md`: law_shard, and "construction is connection".*
 - *The dckrspace skill doc: the nearest external-system space.*
@@ -68,15 +69,15 @@ Reads become free. History is data, an agent can analyze a repository without be
 
 ## 3. The object model (proposal)
 
-| address                       | value                                                                              | mutable |
-|-------------------------------|------------------------------------------------------------------------------------|---------|
-| `mgit:HEAD`                   | `!*mgit:refs/heads/<branch>` (a symbolic ref is a link to a link)                  | yes     |
-| `mgit:refs/heads/<branch>`    | `!*mgit:commit/<sha>`                                                              | yes     |
-| `mgit:refs/tags/<tag>`        | `!*mgit:commit/<sha>` or `!*mgit:tag/<sha>`                                        | yes     |
-| `mgit:commit/<sha>`           | `[tree=>!*mgit:tree/…, parent=>{!*mgit:commit/…}, author=>[…], committer=>[…], message=>'…']` | no |
-| `mgit:tree/<sha>`             | `[<name>=>!*mgit:tree/… or !*mgit:blob/…, …]`                                      | no      |
-| `mgit:blob/<sha>`             | the file's bytes (or a `str` through `?mimeq`)                                     | no      |
-| `mgit:tag/<sha>`              | `[object=>!*…, tagger=>[…], message=>'…']`                                         | no      |
+| address                    | value                                                                                         | mutable |
+|----------------------------|-----------------------------------------------------------------------------------------------|---------|
+| `mgit:HEAD`                | `!*mgit:refs/heads/<branch>` (a symbolic ref is a link to a link)                             | yes     |
+| `mgit:refs/heads/<branch>` | `!*mgit:commit/<sha>`                                                                         | yes     |
+| `mgit:refs/tags/<tag>`     | `!*mgit:commit/<sha>` or `!*mgit:tag/<sha>`                                                   | yes     |
+| `mgit:commit/<sha>`        | `[tree=>!*mgit:tree/…, parent=>{!*mgit:commit/…}, author=>[…], committer=>[…], message=>'…']` | no      |
+| `mgit:tree/<sha>`          | `[<name>=>!*mgit:tree/… or !*mgit:blob/…, …]`                                                 | no      |
+| `mgit:blob/<sha>`          | the file's bytes (or a `str` through `?mimeq`)                                                | no      |
+| `mgit:tag/<sha>`           | `[object=>!*…, tagger=>[…], message=>'…']`                                                    | no      |
 
 The scheme is chosen when the space is constructed (`mgit:` here, for the metatron repository), the same way
 `tblespace::[pattern=>mydb:#,…]` and `fsspace::[pattern=>mfs:#,…]` choose theirs.
@@ -87,10 +88,10 @@ The scheme is chosen when the space is constructed (`mgit:` here, for the metatr
 - **Refs are the only mutable addresses.** Every rule in §5 and §6 is about them.
 - **DataPath fits the objects, not the refs.** `DataPath` (`furi/DataPath.java:74`) splits a uri positionally into
   db, collection, entry, field and extension (`withoutDB` at `:148-150`).
-  - Objects fit it as collection/sha/field: `mgit:commit/c5328ae38/message`.
-  - A tree path is the extension: `mgit:commit/c5328ae38/tree/docs/design/…`.
-  - Refs have hierarchical names (`refs/heads/feature/x`), so `refs/#` is path-addressed the way fsSpace is.
-    A ref resolves to a commit before any tree path applies.
+    - Objects fit it as collection/sha/field: `mgit:commit/c5328ae38/message`.
+    - A tree path is the extension: `mgit:commit/c5328ae38/tree/docs/design/…`.
+    - Refs have hierarchical names (`refs/heads/feature/x`), so `refs/#` is path-addressed the way fsSpace is.
+      A ref resolves to a commit before any tree path applies.
 
 ## 4. Reads
 
@@ -120,9 +121,9 @@ gitspace::[pattern => mgit:#, route => [mgit:=><.>]]@/sys/space/git/mgit
   `unique()` turns the walk back into a set. Unverified, but it would make "how many lines of history reach this
   commit" a free read.
 - **Ancestry, diff and blame are idioms, not instructions, until proven otherwise.**
-  - Ancestry is reachability over `>>parent`.
-  - A diff starts as two tree recs compared key by key.
-  - Blame is a log projected through a path, keeping the commits where the blob address changes.
+    - Ancestry is reachability over `>>parent`.
+    - A diff starts as two tree recs compared key by key.
+    - Blame is a log projected through a path, keeping the commits where the blob address changes.
 
 ## 5. Writes: two kinds of address, two disciplines
 
@@ -132,22 +133,23 @@ metatron has two write primitives, `->` (ref) and `>>=` (update). A gitSpace nee
   `mgit:blob/<sha>`. This is how `incrQ` mints a counter for a `_` segment (`furi/q/QCollection.java:634-660`) and how
   `vecIncrQ` mints a UUID (`isa/vec/space/vecIncrQ.java:73-80`), with the content's digest in place of the counter.
   Whether that is the space's own behavior or a `?hashq` is open.
-  - Writing different content to an existing `<sha>` is a contradiction and answers `fail::T`.
-  - Objects behave as if every address had been written `?constq`. `constQ` (`QCollection.java:366-383`) fails a
-    second write with `%s is a constant`, and the gitSpace should answer with the same failure.
+    - Writing different content to an existing `<sha>` is a contradiction and answers `fail::T`.
+    - Objects behave as if every address had been written `?constq`. `constQ` (`QCollection.java:366-383`) fails a
+      second write with `%s is a constant`, and the gitSpace should answer with the same failure.
 - **Refs are moved with compare-and-swap.** `mgit:refs/heads/main -> !*mgit:commit/<sha>` moves a branch, and `-> noobj`
   deletes one, by the general rule that a noobj write is a delete.
-  - The move is atomic against the old value: JGit's `RefUpdate`, or `git update-ref <ref> <new> <old>`.
-  - A ref that moved underneath the writer answers a fail, never a lost update.
+    - The move is atomic against the old value: JGit's `RefUpdate`, or `git update-ref <ref> <new> <old>`.
+    - A ref that moved underneath the writer answers a fail, never a lost update.
 - **A commit is three writes:** the tree objects (from a saved working tree or a rec), the commit object, then the
   ref. Only the third is guarded.
 - **Guards run before side effects.** This is dckrSpace's lesson. Its `write` override
   (`isa/dckr/dckrSpace.java:474-545`) runs the docker command *before* any cache write, so its qprocs see the change
   only after it has happened.
-  - A gitSpace must extend `AbstractSpace` and implement `directWriter` instead.
-  - Then `AbstractSpace.write` (`isa/AbstractSpace.java:122-147`) runs `QProc.Layer.write` (`furi/QProc.java:415-424`):
-    pre_write, then qless_write, then the space's own write.
-  - If either qproc answers, the ref never moves.
+    - A gitSpace must extend `AbstractSpace` and implement `directWriter` instead.
+    - Then `AbstractSpace.write` (`isa/AbstractSpace.java:122-147`) runs `QProc.Layer.write`
+      (`furi/QProc.java:415-424`):
+      pre_write, then qless_write, then the space's own write.
+    - If either qproc answers, the ref never moves.
 
 ## 6. Guards: the AGENTS.md rule as a lock
 
@@ -193,33 +195,33 @@ space is the fsspace (`mfs:`).
 ## 8. Implementation sketch (Java)
 
 - **Package** `isa/dev/git/`, holding:
-  - `gitInstSet.java`, with `@InstSet.JREService(vid = "/m/dev/git")`;
-  - `gitSpace.java`;
-  - `ObjGitSerializer.java`, which maps objects to recs and builds the links.
-  This follows `isa/dckr/` and `isa/tble/`, under Marko's `/m/dev` hierarchy.
+    - `gitInstSet.java`, with `@InstSet.JREService(vid = "/m/dev/git")`;
+    - `gitSpace.java`;
+    - `ObjGitSerializer.java`, which maps objects to recs and builds the links.
+      This follows `isa/dckr/` and `isa/tble/`, under Marko's `/m/dev` hierarchy.
 - **The space** extends `AbstractSpace<Repository>`. It overrides the `directReader` / `directWriter` hooks
   (`isa/Space.java:143-149`), as tbleSpace does. It does not override `read`/`write`, which dckrSpace does at the
   cost described in §5.
-  - The constructor is `(sjvm, config, tid, vid)` (`isa/AbstractSpace.java:52`). It registers itself through
-    `Machine.current().memory().addSpace(this)` (`:68-69`); the Router is gone (`isa/mach/type/Memory.java:122`).
+    - The constructor is `(sjvm, config, tid, vid)` (`isa/AbstractSpace.java:52`). It registers itself through
+      `Machine.current().memory().addSpace(this)` (`:68-69`); the Router is gone (`isa/mach/type/Memory.java:122`).
 - **The type** is `gitspace::T`, with vid `/m/dev/git/space/gitspace`, by analogy with `/m/tble/space/tblespace` and
   `/m/dckr/space/dckrspace`.
-  - Its isaPredicate requires the `route` to a repository root.
-  - It is listed in the instset's TYPE list in `setup()` and in
-    `src/main/resources/META-INF/services/studio.phaseshift.metatron.isa.m.type.InstSet`.
-  - Construction runs through `Obj.Helper.construct` (`isa/m/type/Obj.java:1196-1224`), as every space's does.
+    - Its isaPredicate requires the `route` to a repository root.
+    - It is listed in the instset's TYPE list in `setup()` and in
+      `src/main/resources/META-INF/services/studio.phaseshift.metatron.isa.m.type.InstSet`.
+    - Construction runs through `Obj.Helper.construct` (`isa/m/type/Obj.java:1196-1224`), as every space's does.
 - **Backend: JGit or the git CLI.** Neither is decided; see §11.
-  - **JGit** (`org.eclipse.jgit`) is not in the pom today. It reads loose and packed objects in-process and gives
-    `RefUpdate` compare-and-swap. A log over thousands of commits would cost no subprocesses. It is licensed EDL 1.0,
-    which is BSD-style.
-  - **The CLI through zt-exec** is already a dependency (`pom.xml:175-179`) and is dckrSpace's precedent
-    (`isa/dckr/dckrSpace.java:950-995`). It would use plumbing only: `cat-file --batch` as one long-lived reader,
-    `hash-object -w`, `mktree`, `commit-tree`, and `update-ref <ref> <new> <old>` for compare-and-swap.
-  - The lean is JGit for reads at scale, but adding a dependency is Marko's call.
+    - **JGit** (`org.eclipse.jgit`) is not in the pom today. It reads loose and packed objects in-process and gives
+      `RefUpdate` compare-and-swap. A log over thousands of commits would cost no subprocesses. It is licensed EDL 1.0,
+      which is BSD-style.
+    - **The CLI through zt-exec** is already a dependency (`pom.xml:175-179`) and is dckrSpace's precedent
+      (`isa/dckr/dckrSpace.java:950-995`). It would use plumbing only: `cat-file --batch` as one long-lived reader,
+      `hash-object -w`, `mktree`, `commit-tree`, and `update-ref <ref> <new> <old>` for compare-and-swap.
+    - The lean is JGit for reads at scale, but adding a dependency is Marko's call.
 - **Tests** are CI-agnostic, with no network.
-  - `@BeforeAll` builds a small fixture repository in a temp directory: a few commits, one merge, one tag.
-  - Rows are `@ParameterizedTest` + `@CsvSource` (`%` delimiter) mtron reads over the fixture.
-  - Where the shared space suite applies, its write tests are skipped with `@SkipRegexTest` until phase 3.
+    - `@BeforeAll` builds a small fixture repository in a temp directory: a few commits, one merge, one tag.
+    - Rows are `@ParameterizedTest` + `@CsvSource` (`%` delimiter) mtron reads over the fixture.
+    - Where the shared space suite applies, its write tests are skipped with `@SkipRegexTest` until phase 3.
 
 ## 9. Distribution (later)
 
@@ -228,7 +230,7 @@ space is the fsspace (`mfs:`).
 - **Content addressing makes peers easy.** The same sha is the same obj on every peer. "Do you have this object" is a
   read that is not noobj, and a fetch copies the reachable objects whose reads are noobj. There is no negotiation
   protocol to design: the uri is the negotiation.
-- **law_shard over history.** A long history analysis shards by commit range, one range per satellite, with merge()
+- **law_shard over history.** A long history analysis shards by commit range, one range per satellite, with merge ()
   as the latch, exactly as the multi-server tests shard a table by partition.
 
 ## 10. Phases

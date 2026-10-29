@@ -1229,8 +1229,19 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 return resolved;
             final fURI origin = address.path(List.of());
             final Obj override = machine.network().overrideOf(origin, base);
-            if (!override.isObjInst())
+            if (!override.isObjInst()) {
+                // AN ADDRESSED MACHINE WITH NO PEER HERE IS NOT A LOCAL OPERATION. The hosted form (`//abc` — no
+                // scheme, a host) and a wire scheme (`ws://host/...`) name a machine; with no dialed peer the native
+                // instruction would run LOCALLY and silently drop the authority — `move(//abc)` answered the lhs and
+                // `from(//abc/x)` read nothing, both indistinguishable from success. A SPACE address is a different
+                // thing and keeps falling through: its scheme has no dialer (maria:, docker:, mqtt:, …), so the
+                // instruction is an ordinary local read into that space.
+                final String scheme = address.scheme();
+                if (null == scheme || null != Signatures.dialerOf(scheme))
+                    throw MTronException.of("%s is not reachable from %s: no peer is dialed at %s",
+                            resolved.tid().basePath(), machine.vidOrTid(), origin);
                 return resolved;
+            }
             WIRE_LOG.debug("bound %s to the override %s declares", resolved, origin);
             return resolved.f(Inst.f.of(new AtPeer(machine.network(), origin, override.asInst().f(), read, submit)));
         }

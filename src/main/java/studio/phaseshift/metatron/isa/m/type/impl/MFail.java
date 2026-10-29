@@ -54,16 +54,35 @@ public class MFail extends MObj implements Fail {
             e.setFailRef(this);
     }
 
-    protected static Fail incrStackWrap(final Fail fail, final fURI pattern) {
+    /**
+     * THE FAIL-STACK ENTRY POINT: address an unaddressed fail at {@code pattern} — the machine's
+     * {@code ~/sys/fail/_?incrq} ({@link #failStackPattern()}) — and answer it with that address. A fail that
+     * already has a vid is answered as it stands (it is already filed).
+     */
+    public static Fail incrStackWrap(final Fail fail, final fURI pattern) {
         if (null != fail.vid() && !fail.isNoObj())
             return fail;
         // write AT the pattern: `fail.vid(pattern)` is a tagged clone, which writes itself to that vid on
         // construction, so stamping first consumed a second counter value per fail (the stack held only evens)
         final Obj o = Machine.write(pattern, fail);
-        if (o.isFail())
+        // a CAUGHT fail is a value (isFail() is false by design): it is filed just like an uncaught one
+        if (o.isFail() || o.isCaughtFail())
             return o.as();
         else
             return new MFail(new RuntimeException("expected fail: %s".formatted(o.toCleanString())), FAIL_TID, null);
+    }
+
+    /**
+     * ADDRESS A FAIL FOR REPORTING — the other half of minting unfiled ({@link #transientFail}). Called by the
+     * boundaries that SHOW a failure to someone: the console's result line, a ws/http/mcp reply, the headless
+     * {@code -e} output. A fail that already carries an address keeps it (one re-homed off a wire, one written into a
+     * space, or one asked twice — {@link #incrStackWrap} answers an addressed fail unchanged), so this is idempotent;
+     * anything that is not a fail, and every noobj, is answered as it stands.
+     */
+    public static Obj reported(final Obj obj) {
+        return null != obj && (obj.isFail() || obj.isCaughtFail()) && !obj.hasVID()
+                ? incrStackWrap(obj.asFail(), failStackPattern())
+                : obj;
     }
 
     @Override
@@ -98,7 +117,19 @@ public class MFail extends MObj implements Fail {
      * without writing to the fail space.
      * Preserves the Throwable as-is — no conversion through MTronException.of().
      */
+    /**
+     * MINT A FAIL AND FILE NOTHING. The failure is an ordinary {@code fail::T} value — same tid, message, cause chain
+     * and back-links — it simply has no address, because an address is what REPORTING gives it ({@code
+     * incrStackWrap} at the console, the wire reply, the http/mcp reply). Minting used to file as it minted, so every
+     * question the engine asks — a type test applying a predicate, a rewrite matcher trying a rule, a parser probing
+     * text — left a frame in {@code ~/sys/fail} for a failure that never happened to anyone.
+     */
     public static Fail transientFail(final Throwable t) {
+        // NOTHING BUT THE MINT. No filing (see the doc above) and no chain walk: `ensureFailRefs` follows
+        // Throwable.getCause() with no cycle guard, and a fail chain CAN be cyclic — `fail(t, cause)` threads a
+        // throwable at the tail of another chain, and a throwable already in that chain closes the loop
+        // (testFailPlusSameFailDoesNotCycle pins that the merged chain must not revisit a node). A walker here
+        // would spin forever on exactly that input.
         return new MFail(t, FAIL_TID, null);
     }
 
@@ -245,7 +276,14 @@ public class MFail extends MObj implements Fail {
 
     @Override
     public Fail caughtTransient() {
-        return this instanceof MCaughtFail ? this : new MCaughtFail(this);
+        if (this instanceof MCaughtFail)
+            return this;
+        final MCaughtFail caught = new MCaughtFail(this);
+        // THE ADDRESS IS STILL THE FAIL'S IDENTITY IN MEMORY, SO IT IS STAMPED — WITHOUT A WRITE. `vid()` clones
+        // and SAVES (objCheckAndSave), which would re-file the caught wrapper at the uncaught fail's address:
+        // caught() deletes that entry and the contract test says it must stay deleted. selfVID only re-labels this
+        // wrapper, so a fail leaving a machine for a wire keeps the tag it was answered under.
+        return null == this.vid() ? caught : (Fail) caught.selfVID(this.vid());
     }
 
     @Override
@@ -275,6 +313,10 @@ public class MFail extends MObj implements Fail {
         protected MCaughtFail(final Fail other) {
             // Cause chain is already embedded in other.message().getCause() —
             // no need to re-thread it; this.message() IS other.message()
+            // CONSTRUCTED WITH NO ADDRESS. Constructing an obj at a vid WRITES it there (objCheckAndSave), and a
+            // caught fail is not filed at the uncaught fail's address: caught() deletes that entry, so constructing
+            // at the address resurrected it. The wrapper is stamped IN MEMORY by caughtTransient() with selfVID
+            // instead — which keeps the tag a fail is answered under (the wire needs it) without a write.
             super(other.jvm(), other.tid(), null);
         }
 

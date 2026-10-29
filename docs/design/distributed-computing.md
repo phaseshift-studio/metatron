@@ -483,39 +483,39 @@ one-liners.
 
 ## Appendix — evidence index
 
-| claim                                                     | witness                                                                                         |
-|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------|
-| machine nest: push/pop, unioned memory, root registration | `Machine.java:303`, `:311-341`, `:346`                                                          |
-| `current()` is per-thread                                 | `Machine.java:104`, `:120`; zero machine `:439`                                                 |
-| memory-isolation invariants (stateful scripts)            | `MemoryIsolationScriptTest.java`                                                                |
+| claim                                                     | witness                                                                                                             |
+|-----------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| machine nest: push/pop, unioned memory, root registration | `Machine.java:303`, `:311-341`, `:346`                                                                              |
+| `current()` is per-thread                                 | `Machine.java:104`, `:120`; zero machine `:439`                                                                     |
+| memory-isolation invariants (stateful scripts)            | `MemoryIsolationScriptTest.java`                                                                                    |
 | network-isolation invariants (stateful scripts)           | `NetworkIsolationScriptTest.java`; `NetworkIdentityTest.java`; `[CAPS]` directives in `AbstractMetatronTest.script` |
-| name vs address, and the fix                              | `MemoryUnion.java:118-166`; `Memory.java:194`, `:167`, `:223`, `:254`, `:266`, `:141`           |
-| distributed rewrite                                       | `machInstSet.java:543-676`; `COMPUTE` `:97`; `MACH_HOME` `:82`; `sliceOf` `:113`                |
-| rewrite reads topology + ships code (impure)              | `machInstSet.java:556`, `:637`                                                                  |
-| prefix replicated unconditionally                         | `machInstSet.java:632`                                                                          |
-| the impersonating harness                                 | `AbstractMachineTest.java:106`, `:139-168`; workaround `:154-168`                               |
-| per-space distributed contract                            | `AbstractMultiServerSingleSpaceTest.java:37`, `:124-153`                                        |
-| generated rows                                            | `DistributedRewriteTest.java:44`                                                                |
-| cascade / middle machine                                  | `MachineSwarmMigrationTest.java:42`, `:86-128`, mailbox `:59-74`                                |
-| barrier: subscribe, read-before-wait, await               | `Obj.java:1289-1314`, `:1316`                                                                   |
-| `to(uri)` = `Machine.write`                               | `Obj.java:1450`                                                                                 |
-| gather is syntactic; loop termination                     | `Inst.java:374`; `SwarmProcessor.java:253-262`, `:378-415`                                      |
-| the distributed triple, stated in code                    | `MonadProcessor.java:28-33`                                                                     |
-| Network roster, cluster, status, authority algebra        | `Network.java:284`, `:98`, `:119-139`, `:192-244`                                               |
-| Network dispatch has no callers                           | `Network.java:147-175` (grep: none)                                                             |
-| `own()` / `selfAuthorities()` absent                      | grep `src/main/java`                                                                            |
-| NetworkTest red (current)                                 | `Tests run: 4, Failures: 3` — `testReadAcrossPeer` → `noobj`                                    |
-| Network claims a union that does not exist                | `Network.java:49-51`; no `NetworkUnion` (grep)                                                  |
-| child shares the parent's resolved network                | `AbstractMachine.java:90-94`; `Machine.java:332-334`                                            |
-| executing frame comes from the caller                     | `ThreadExecutor.java:221-241`; `AbstractThread.java:192`                                        |
-| `hasAuthority()` needs an explicit port                   | `fURI.java:176-178`                                                                             |
-| `localize()` exists                                       | `fURI.java:324`                                                                                 |
-| Inst.Form coefficient shapes                              | `Inst.java:60-72`                                                                               |
-| `isFold` = reducer/join + `monoidic`                      | `catInstSet.java:663-668`                                                                       |
-| `floatable` / `blocked` declared, unconsumed              | `catInstSet.java:851`, `:855` (no consumers)                                                    |
-| `sum` monoidic, `mean` magmadic                           | `mInstSetLawTable.java:251`, `:250`                                                             |
-| cat family (4) reserved for relation-driven rules         | `catInstSet.java:338-378`                                                                       |
-| container run / compose --wait / no exec                  | `dckrSpace.java:592`, `:547-576`; grep: no `"exec"`                                             |
-| every backend a container                                 | `boot/spaces.boot.mtron:1-10`; `boot/space/tble/mariadb.mtron`; `boot/space/vec/chromadb.mtron` |
-| shared computing workspace, GC on pop                     | `machInstSet.java:455-463`                                                                      |
-| `BasicMachineTest.testCloseSpace` pre-existing failure    | verified by reverting this work and re-running                                                  |
+| name vs address, and the fix                              | `MemoryUnion.java:118-166`; `Memory.java:194`, `:167`, `:223`, `:254`, `:266`, `:141`                               |
+| distributed rewrite                                       | `machInstSet.java:543-676`; `COMPUTE` `:97`; `MACH_HOME` `:82`; `sliceOf` `:113`                                    |
+| rewrite reads topology + ships code (impure)              | `machInstSet.java:556`, `:637`                                                                                      |
+| prefix replicated unconditionally                         | `machInstSet.java:632`                                                                                              |
+| the impersonating harness                                 | `AbstractMachineTest.java:106`, `:139-168`; workaround `:154-168`                                                   |
+| per-space distributed contract                            | `AbstractMultiServerSingleSpaceTest.java:37`, `:124-153`                                                            |
+| generated rows                                            | `DistributedRewriteTest.java:44`                                                                                    |
+| cascade / middle machine                                  | `MachineSwarmMigrationTest.java:42`, `:86-128`, mailbox `:59-74`                                                    |
+| barrier: subscribe, read-before-wait, await               | `Obj.java:1289-1314`, `:1316`                                                                                       |
+| `to(uri)` = `Machine.write`                               | `Obj.java:1450`                                                                                                     |
+| gather is syntactic; loop termination                     | `Inst.java:374`; `SwarmProcessor.java:253-262`, `:378-415`                                                          |
+| the distributed triple, stated in code                    | `MonadProcessor.java:28-33`                                                                                         |
+| Network roster, cluster, status, authority algebra        | `Network.java:284`, `:98`, `:119-139`, `:192-244`                                                                   |
+| Network dispatch has no callers                           | `Network.java:147-175` (grep: none)                                                                                 |
+| `own()` / `selfAuthorities()` absent                      | grep `src/main/java`                                                                                                |
+| NetworkTest red (current)                                 | `Tests run: 4, Failures: 3` — `testReadAcrossPeer` → `noobj`                                                        |
+| Network claims a union that does not exist                | `Network.java:49-51`; no `NetworkUnion` (grep)                                                                      |
+| child shares the parent's resolved network                | `AbstractMachine.java:90-94`; `Machine.java:332-334`                                                                |
+| executing frame comes from the caller                     | `ThreadExecutor.java:221-241`; `AbstractThread.java:192`                                                            |
+| `hasAuthority()` needs an explicit port                   | `fURI.java:176-178`                                                                                                 |
+| `localize()` exists                                       | `fURI.java:324`                                                                                                     |
+| Inst.Form coefficient shapes                              | `Inst.java:60-72`                                                                                                   |
+| `isFold` = reducer/join + `monoidic`                      | `catInstSet.java:663-668`                                                                                           |
+| `floatable` / `blocked` declared, unconsumed              | `catInstSet.java:851`, `:855` (no consumers)                                                                        |
+| `sum` monoidic, `mean` magmadic                           | `mInstSetLawTable.java:251`, `:250`                                                                                 |
+| cat family (4) reserved for relation-driven rules         | `catInstSet.java:338-378`                                                                                           |
+| container run / compose --wait / no exec                  | `dckrSpace.java:592`, `:547-576`; grep: no `"exec"`                                                                 |
+| every backend a container                                 | `boot/spaces.boot.mtron:1-10`; `boot/space/tble/mariadb.mtron`; `boot/space/vec/chromadb.mtron`                     |
+| shared computing workspace, GC on pop                     | `machInstSet.java:455-463`                                                                                          |
+| `BasicMachineTest.testCloseSpace` pre-existing failure    | verified by reverting this work and re-running                                                                      |

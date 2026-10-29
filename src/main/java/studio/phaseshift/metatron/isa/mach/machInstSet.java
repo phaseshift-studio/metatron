@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
+import studio.phaseshift.metatron.isa.mach.type.network.PeerSpawn;
 import studio.phaseshift.metatron.isa.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -54,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -90,7 +92,7 @@ public class machInstSet extends AbstractInstSet {
      * address they are handed. {@code push} MINTS the address, {@code move} WALKS to it without closing anything,
      * {@code pop} DISCARDS it.
      * <p>
-     * MINTS the address, and that is licence to cross as well as descend: {@code push(<t>)} resolves {@code t} and
+     * MINTS the address, and that is license to cross as well as descend: {@code push(<t>)} resolves {@code t} and
      * mints its LEAF from the frame at {@code t}'s PARENT — so {@code push(<../b>) == move(<..>).push(<b>)}, and a
      * sibling is minted from the shared parent rather than from beside it. An address that names a PROCESS
      * boundary is not split that way: its authority IS its identity, so it is handed to {@code push} whole, which
@@ -100,6 +102,44 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MOVE_INST_TID = MACH_INST_TID.extend("move");
     public static final fURI STAY_INST_TID = MACH_INST_TID.extend("stay");
     public static final fURI CUT_INST_TID = MACH_INST_TID.extend("cut");
+    public static final fURI SPAWN_INST_TID = MACH_INST_TID.extend("spawn");
+
+    /**
+     * The round-trip reply — {@code reply(<payload>, <tag>)}: evaluate a shipped payload and address its
+     * answer by the trip the answer belongs to. It is the ROOT inst of a shipped frame, never a tail inst, because
+     * a {@code noobj} kills the monad at the next inst whose domain does not admit zero ({@code SwarmProcessor}),
+     * so anything appended after the payload's producer would never run. As the frame's root the reply is always
+     * applied, and the payload is evaluated inside its body — where an absent answer is an ordinary return value
+     * the reply can address.
+     * <p>
+     * The tag is an ordinary value argument (not the vid of anything), so what it addresses is the ANSWER: a value
+     * leaves with the tag on it, and nothing leaves as {@link #NOOBJ_SENTINEL} — the mark that says "the answer was
+     * empty, and this is the trip it belonged to".
+     */
+    public static final fURI REPLY_INST_TID = MACH_INST_TID.extend("reply");
+
+    /**
+     * THE MARK AN ABSENT ANSWER TRAVELS UNDER. {@code noobj} cannot be given a vid: it is the coefficient-zero
+     * singleton, so {@code Obj.isNoObj()} is true for it and the serializer's root writer flattens every such obj to
+     * the literal {@code noobj} before a vid could be rendered ({@code ObjSerializer.write}). A round trip whose
+     * answer is nothing therefore has nothing that can carry its correlation tag, and the waiting slot is filled by
+     * arrival order when it is lucky and by a deadline when it is not.
+     * <p>
+     * The sentinel is the smallest value that says the same thing AND can carry the tag: a uri at coefficient one,
+     * which the writer renders with its vid, and whose spelling is a reserved path so no keyword, coefficient or vid
+     * postfix can be mistaken for part of it. {@link #REPLY_INST_TID} mints it on the far side; the socket's
+     * round-trip router ({@code WebSocketObj.router}) is the only reader, and it fills the waiting slot with
+     * {@code noobj}. The spelling is reserved on the wire, so a program that deliberately answers this uri is read
+     * as nothing.
+     */
+    public static final fURI NOOBJ_SENTINEL = f("/wire/noobj");
+
+    /**
+     * Whether an inbound obj is the absent-answer mark (see {@link #NOOBJ_SENTINEL}).
+     */
+    public static boolean isNoobjSentinel(final Obj obj) {
+        return obj.isUri() && obj.uriValue().equals(NOOBJ_SENTINEL);
+    }
 
     /**
      * The one spelling of "up", so {@code move()} and {@code move(<..>)} cannot come to mean different things.
@@ -789,7 +829,7 @@ public class machInstSet extends AbstractInstSet {
                         // pop() destroys the frame it leaves, move() leaves it standing and reachable by address
                         docWrap(instC(MOVE_INST_TID.dom(A.maybe()).rng(A.maybeSome()), lst(T(URI_TID.maybe())), (lhs, inst) -> {
                                     final fURI target = inst.arg(0).isNoObj() ? UP : inst.arg(0).uriValue();
-                                    final Machine moved = Machine.current(Helper.machineAt(Machine.current(), target, "move"));
+                                    final Machine moved = Machine.current().move(target);
                                     MachinePerspective.publish(moved);
                                     return lhs;
                                 }),
@@ -827,11 +867,70 @@ public class machInstSet extends AbstractInstSet {
                             return lhs;
                         }),
                         instC(CUT_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(URI_TYPE, ALL_TYPE), (lhs, inst) -> {
+                            // A CUT SHIPS TO A PEER, so the peer has to exist: with none dialed at the authority, the
+                            // scatter's eval would resolve to the NATIVE eval — which evaluates locally — and the
+                            // authority would vanish without a word (`1.move(//abc)` answered 1). Answering the lhs
+                            // of a move is not a result: nothing was moved to and nothing was computed.
+                            final fURI cutOrigin = inst.arg(0).uriValue().origin();
+                            if (!Machine.current().network().overrideOf(cutOrigin, EVAL_INST_TID).isObjInst())
+                                throw MTronException.of("%s is not reachable from %s: no peer is dialed at %s",
+                                        inst.arg(0).uriValue(), Machine.current().vidOrTid(), cutOrigin);
                             final List<Inst> insts = new ArrayList<>(start_(lhs).insts());
                             insts.addAll(move_(uri(inst.arg(0).uriValue().path().isEmpty() ? ROOT_MACHINE_VID : f().path(inst.arg(0).uriValue().path()))).insts());
                             insts.addAll(inst.arg(1).asCall().insts());
                             return map_(lst(code(insts))).select_(lst(eval_(inst.arg(0).uriValue().origin()).tryToInst())).merge_();
-                        })
+                        }),
+                        instC(SPAWN_INST_TID.dom(ALL.maybeSome()).rng(URI_TID), lst(URI_TYPE, URI_TYPE), (_, inst) -> {
+                            final fURI spawn = PeerSpawn.spawn(inst.arg(0).uriValue());
+                            if (!inst.arg(1).isNoObj())
+                                Machine.current().network().registerPrefix(inst.arg(1).uriValue(), spawn.origin());
+                            return uri(spawn);
+                        }),
+                        // THE ROUND-TRIP REPLY. A wire client appends nothing to the program it ships: it WRAPS it,
+                        // because a noobj produced inside the program kills the monad at the next inst whose domain
+                        // does not admit zero, so a trailing reply would never be reached. As the frame's root this
+                        // inst always runs, and the payload is evaluated in its body — where "the answer is nothing"
+                        // is an ordinary return value, not a dead monad.
+                        docWrap(instC(REPLY_INST_TID.addQ(BLOCK).dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybeSome()), URI_TYPE), (lhs, inst) -> {
+                                    // the payload arrives RAW: the base path is declared in Inst.isBlocking(), so
+                                    // applyArgs neither evaluates nor type-binds it before the reply can wrap it.
+                                    // A CALL is evaluated; anything else IS the answer, answered as it stands — a
+                                    // value's coefficient is part of it, and applying a value to the lhs would
+                                    // compress that coefficient away ({3}34 came back as 34 that way)
+                                    Obj payload;
+                                    try {
+                                        payload = inst.arg(0).apply(noobj());
+                                    } catch (final Exception e) {
+                                        payload = fail(e);
+                                    }
+                                    //final Obj answer = payload.isCall() ? payload.apply(lhs) : payload;
+                                    final fURI tag = inst.arg(1).uriValue();
+                                    return payload.isNoObj()
+                                            // NOTHING CANNOT HOLD AN ADDRESS. noobj is the coefficient-zero singleton and
+                                            // the serializer's root writer flattens it, tag and all, so the absent answer
+                                            // travels as the mark instead — a value that says the same thing and can be
+                                            // addressed (see NOOBJ_SENTINEL)
+                                            ? uri(NOOBJ_SENTINEL).selfVID(tag)
+                                            // clone().selfVID, never vid(): vid() clones AND WRITES the tagged obj at the
+                                            // address (Obj.Helper.objClone -> objCheckAndSave -> Machine.write), so on the
+                                            // far side every trip would leave a bookkeeping entry on its variableStack
+                                            : payload.clone().selfVID(tag);
+                                }),
+                                "the frame the payload is evaluated against — a shipped program starts at noobj",
+                                "the payload's answer, addressed by the trip's tag; the absent-answer mark when the payload answers nothing",
+                                Map.of(jnt(0), "the payload to evaluate on this side",
+                                        jnt(1), "the trip's correlation tag, a uri"),
+                                """
+                                evaluate a shipped payload and address the answer by the trip it belongs to. This is wire
+                                vocabulary, not a user instruction: a round-tripping client wraps the program it ships, so
+                                the frame's root is the reply and the payload is its (blocking) argument. Addressing the
+                                answer is what lets the client match a reply to its request without an envelope on the
+                                wire — the tag rides the obj it answers. An answer that is NOTHING has no address to ride
+                                (noobj is the zero-coefficient singleton, which no writer will render with a vid), so it
+                                travels as the absent-answer mark instead, and the client reads it as noobj.
+                                """,
+                                "reply(3.plus(1), <a1f30b7c>)       [-- the far side answers 4@a1f30b7c --]",
+                                "reply(noobj, <a1f30b7c>)           [-- the far side answers /wire/noobj@a1f30b7c: nothing, addressed --]")
                 ))),
                 uri(REWRITE), lst(
                         docWrap(InstSet.Helper.rewriter(MACH_INST_TID.extend(REWRITE).extend("move_extract"), Helper::extractMove),

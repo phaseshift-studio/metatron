@@ -40,6 +40,7 @@ mtron> tblespace::[pattern    => </log/scratch/#>,
                    q          => [incrq::[=>],subq::[=>],mimeq::[=>]],
                    route      => [/log/scratch/ => <>]]@</sys/space/log/scratch>
 ```
+
 ## understanding source embeddings
 
 A loaded Java file has two embeddings:
@@ -73,6 +74,7 @@ mtron> *<mfs:src/test/resources/scratch/pom.xml>.
          as(rec::T).
          repeat(code=>>>,until=><<.-<[has(Id),has(version)]>-,emit=>false).take(3)
 ```
+
 A `project::T` consolidates source code, various space embeddings, and build commands under one `rec::T`. There exists
 an `as()`-mapping from `uri::T` to `project::T`. The resultant `project::T` is saved to the user home graph. Finally.
 maven build commands are attached to the `project::T` for each of access.
@@ -81,6 +83,7 @@ maven build commands are attached to the `project::T` for each of access.
 mtron> <mfs:src/test/resources/scratch>@</dev/scratch>.as(project::T).to(/dev/scratch)
 ==>fail::[inst apply failure: unable to convert mcode to rec::T (at /m/inst/as@1) [Project<84>]][unable to convert mcode to rec::T [Project<84>]]@/sys/fail/6016
 ```
+
 Now that the project is stored in space, build commands can be added and the project can be built.
 
 ```mtron
@@ -110,6 +113,7 @@ mtron> */dev/scratch/command/mvn_clean
             output=>!*/sys/tmp/991387ef]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
+
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
 
 ```mtron
@@ -131,6 +135,7 @@ mtron> tree_widget::[root=>/dev/scratch, max=>3, xref=>[=>]].as?str<=widget(str:
        └─ Operation
    """
 ```
+
 **NOTE**: The `sub` branch of the project graph maintains pub/sub `?subq` subscriptions (`sub::T`). The actual
 subscription registered with the query processor maintains an auto_from pointer to the code component of the `sub::T`.
 In this way, edits to the subscription code entries will automatically take hold without requiring resubscription.
@@ -139,6 +144,7 @@ The Java source files have a `str::T > web:java::T` encoding accessible via `src
 
 ```mtron
 ```
+
 ## writing code
 
 The file name serves as the key and a lambda `inst` serves as a lazy constructor of an `ide:java::T`. Calling the file
@@ -225,6 +231,7 @@ mtron> tree_widget::[root=>/dev/scratch, max=>4, xref=>[=>]].as?str<=widget(str:
        └─ Operation
    """
 ```
+
 **IMPORTANT**: pulling `Echo` is a inst call -- no `*` should be prefixed. `()` is the inst equivalent of dereference.
 
 `idx` offers a human-readable path scheme that projects to the `code` uri subgraph. Due to the `!@`-nature of the `idx`
@@ -273,6 +280,7 @@ mtron> */dev/scratch/idx/Echo/method/speak
     text=>"""
        public String speak(String wh..."""]
 ```
+
 To edit the existing `Echo::speak` method source code, update the component using an anchored uri. The `>>=` edit lands
 in `code` (due to `idx` redirection) and then the `auto_save` subscription fires and serializes the code `rec::T` to a
 `ide:java::T` before writing to disk.
@@ -289,6 +297,7 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body=> """{ return "marko"; }"""
     text=>"""
        public String speak(String wh..."""]
 ```
+
 A "saved" messages is displayed via `stdout`. However, to be certain the registered `sub::T` wrote the updated
 `Echo::speak` to disk, dereference the respective `fsspace::T` pointer. That is, pull the Java source code (as an
 `str::T`) back into metatron.
@@ -334,6 +343,7 @@ mtron> *<mfs:src/test/resources/scratch/src/main/java/com/example/scratch/Echo.j
    
    
 ```
+
 The standard template for selective editing of code is provided below where `[X=>Y]` is a placeholder for patterns
 itemized in the subsequent table.
 
@@ -408,6 +418,7 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
                    c_dom=>1,
                    c_rng=>1]]]
 ```
+
 **NOTE**: when working in the `console::T`, the the interactive `explain_tool::T` provides a much richer analysis of an
 expression with pre- and post- compilation switching, drill down into nested code structures, and access reified
 information pertaining to any obj displayed.
@@ -439,6 +450,7 @@ mtron> */dev/scratch/code/#?subq
 ==>[,]
 mtron> */dev/scratch/code/#?subq>>0>>code
 ```
+
 ## gotchas (learned the hard way)
 
 - **Edit fields, not `text`.** `text` is derived; writing it (e.g. via
