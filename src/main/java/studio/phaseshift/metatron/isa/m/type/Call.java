@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
@@ -36,7 +35,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
-public interface Call extends Obj, Ring<Call> {
+public interface Call extends Obj {
 
     default boolean hasDomOrRng() {
         return this.hasDom() || this.hasRng();
@@ -106,7 +105,6 @@ public interface Call extends Obj, Ring<Call> {
         return (C) this.tid(this.tid().rng(range.vid().c(range.tid().c())));  // TODO: we need to make the distrinction between vid coeffs and tid coeffs for type (remove c(range...) when refactor complete)
     }
 
-    @Override
     default Call neg() {
         return this.c(cInt::neg).as();
     }
@@ -116,17 +114,14 @@ public interface Call extends Obj, Ring<Call> {
         return obj.isCall() && !obj.tid().basePath().equals(AUTO_FROM_INST_TID) ? this.plus((Call) obj) : objs(List.of(this, obj));
     }
 
-    @Override
     default Call one() {
         return MInst.instB(ID_INST_TID, lst());
     }
 
-    @Override
     default boolean isOne() {
         return this.tryToInst().equals(this.one());
     }
 
-    @Override
     default boolean isZero() {
         return this.isNoObj();
     }
@@ -136,7 +131,6 @@ public interface Call extends Obj, Ring<Call> {
         return (Call) Obj.super.c(func);
     }
 
-    @Override
     default Call plus(final Call rhs) {
         if (rhs.isZero()) return this;
         if (this.isZero()) return rhs;
@@ -145,7 +139,6 @@ public interface Call extends Obj, Ring<Call> {
         return branch_(this, rhs).tryToInst();
     }
 
-    @Override
     default Call mult(final Call rhs) {
         if (rhs.isZero() || this.isZero())
             return noobj();
@@ -156,7 +149,6 @@ public interface Call extends Obj, Ring<Call> {
         return MCode.of(insts).tryToInst().c(c -> this.c().mult(rhs.c()));
     }
 
-    @Override
     default Call zero() {
         return noobj();
     }

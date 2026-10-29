@@ -19,8 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.MultMonoid;
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.Tuple;
@@ -49,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>, PlusMonoid.O<Rel> {
+public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>> {
 
     // Rel with coefficient {0}: noobj typed as a Rel, for a method that answers a Rel or nothing.
     Rel REL_NOOBJ = rel(Pair.with(noobj(), noobj()), REL_TID.zero(), null);
@@ -177,7 +175,6 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
      * Multiplicative identity: the identity relation id()
      * For any relation r, r.mult(one()) = r and one().mult(r) = r
      */
-    @Override
     default Rel one() {
         return rel(instA(ID_INST_TID.dom(A).rng(A)), instA(ID_INST_TID.dom(A).rng(A)));
     }
@@ -186,7 +183,6 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
      * Check if this relation is the multiplicative identity.
      * A relation is one if it's the identity relation id()=>id()
      */
-    @Override
     default boolean isOne() {
         // Check if both domain and range are id() instructions
         // Use path() to get base TID without query parameters (dom/rng qualifiers)
@@ -209,7 +205,6 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
      * Check if this relation is the additive identity.
      * A relation is zero if both domain and range are noobj
      */
-    @Override
     default boolean isZero() {
         return this.jvm().get0().isNoObj() && this.jvm().get1().isNoObj();
     }
@@ -219,7 +214,6 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
      * (a=>b).mult(b=>c) = (a=>c) when the range of first matches domain of second.
      * If they don't compose, returns noobj relation.
      */
-    @Override
     default Rel mult(final Rel rhs) {
         // Handle identity cases first
         if (this.isOne()) return rhs;
@@ -253,7 +247,6 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
      * (a=>b).plus(c=>d) = {(a=>b), (c=>d)}
      * Special case: zero + a = a (additive identity)
      */
-    @Override
     default Rel plus(final Rel rhs) {
         // Handle additive identity: 0 + a = a and a + 0 = a
         if (this.isZero()) return rhs;

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MLst;
@@ -49,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
+public interface Lst extends Poly<Lst, List<Obj>> {
 
     // Lst with coefficient {0}: noobj typed as a Lst, for a method that answers a Lst or nothing.
     // a poly's payload is read unguarded (count(), isEmpty()), so it is empty and immutable rather than null
@@ -167,7 +166,6 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
      * read into its slots ONCE — {@link #elements()} already carries it there — so {@code [] + {2}[1,2]} is
      * {@code [{2}1,{2}2]}, and the result stands alone ({@code c = 1}).
      */
-    @Override
     default Lst plus(final Lst rhs) {
         final List<Obj> list = new ArrayList<>();
         this.<Obj>elements().forEach(list::add);

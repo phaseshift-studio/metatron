@@ -28,8 +28,8 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.FAIL_TID;
-import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -265,8 +265,7 @@ public class MFail extends MObj implements Fail {
         final Throwable merged = rebuildMtronChainWithCause(this.jvm(), rhs.jvm());
         return transientFail(merged);
     }
-
-    @Override
+    
     public Fail zero() {
         return fail(MTronException.of(""));
     }

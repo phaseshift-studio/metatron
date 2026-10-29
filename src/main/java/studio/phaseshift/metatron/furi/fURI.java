@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.furi;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.form.*;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -61,7 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<fURI> {
+public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     /**
      * URI components that can contain template expressions.

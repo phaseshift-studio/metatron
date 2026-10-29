@@ -789,7 +789,7 @@ public interface Type extends Obj {
 
         /**
          * THE REQUESTED BRACKET SURVIVES RESOLUTION. A type's bracket is its TYPE ARGUMENT list, so a
-         * request that names arguments ({@code person[ninja]}, {@code lst[int]}, {@code object[int]})
+         * request that names arguments ({@code person[ninja]}, {@code lst[int]})
          * must keep them on the type it resolves to. Resolving reads the registered declaration, and the
          * declaration's own bracket is its PARAMETER list ({@code person[role]::T}), so the request
          * substitutes that bound positionally: {@code person[role]} + {@code [ninja]} -> {@code
@@ -922,13 +922,7 @@ public interface Type extends Obj {
                     return true;
                 if (rhs.asType().isBaseType() && !lhs.baseTypeID().test(rhs.vid()))
                     return false;
-                // The type's constraints are the conjunction of EVERY predicate from here to the root, not
-                // this level's alone: a stockholmare must satisfy creature[age:int] and human[name:str] and
-                // swedish[name has 'son'] as well as its own city requirement. predicateStack() is leaf-first
-                // and skips levels that carry no predicate of their own.
-                // NOTE: selfTID() prevents infinite recursion on type checking.
                 final fURI lhsTID = lhs.tid();
-                //final Obj predLhs = lhs.clone().selfTID(lhs.baseTypeID());
                 boolean accepted = true;
                 for (final Call pred : rhs.asType().predicateStack()) {
                     if (pred.isNoObj())

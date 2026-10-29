@@ -18,32 +18,19 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.ALL_STAR;
-import static studio.phaseshift.metatron.Tokens.LST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
-public interface Objs extends Obj, PlusMonoid.O<Objs> {
-
-    Type OBJS_TYPE = Type.Builder.build().tid(Tokens.OBJS_TID).vid(Tokens.OBJS_TID).create();
-
+public interface Objs extends Obj {
+    
     static Obj trySingleton(final Obj obj) {
         return null != obj && obj.isObjs() ? objs(obj) : obj;
     }
@@ -105,25 +92,8 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
         return this.stream().flatMap(Obj::elements);
     }
 
-    @Override
     default Objs zero() {
         return MObjs.objs0();
-    }
-
-    @Override
-    default Objs plus(final Objs other) {
-        final Obj first = this.take();
-        final Obj second = other.take();
-        final PlusMonoid.O<?> result = null == first ? (null == second ? this.zero() : (PlusMonoid.O<?>) second) : (PlusMonoid.O<?>) ((PlusMonoid.O) first).plus((PlusMonoid.O) second);
-        return (Objs) objs(List.of(result, this, other), ALL_STAR, null);
-    }
-
-    class ObjsType {
-        public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(lhs.stream().toList(), inst.arg(0).tid(), null))
-            ));
-        }
     }
 
 }
