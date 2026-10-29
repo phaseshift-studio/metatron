@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,6 +23,11 @@ import studio.phaseshift.metatron.furi.fURI;
 import java.util.function.Function;
 
 /*
+ * The foundation of metatron. There are objs.
+ * An obj's form is grounded in Java (jvm).
+ * It has a reference to its type (tid) and a reference to its location (vid).
+ * Finally, every obj is function that maps an obj to an obj -- this(a) -> b.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface PlatonicObj extends Function<Obj, Obj> {
@@ -35,6 +40,5 @@ public interface PlatonicObj extends Function<Obj, Obj> {
 
     @Override
     Obj apply(final Obj lhs);
-
 
 }

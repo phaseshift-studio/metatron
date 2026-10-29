@@ -26,8 +26,8 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.machine.AbstractMachine;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicInstSet;
 import studio.phaseshift.metatron.isa.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.mach.type.memory.MemoryUnion;
@@ -39,28 +39,22 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Machine: a SPACE OF SPACES -- the address space resolution happens in. Its members ({@code instset}, {@code memory},
@@ -316,7 +310,9 @@ public interface Machine extends Rec, AutoCloseable {
                 .filter(o -> !o.isNoObj());
     }
 
-    /** A statement of a source file that failed, with its line and the source it came from. */
+    /**
+     * A statement of a source file that failed, with its line and the source it came from.
+     */
     record FileParseError(int lineNumber, String lineString, Exception parseException) {
     }
 
@@ -483,16 +479,12 @@ public interface Machine extends Rec, AutoCloseable {
      * answered by {@link #read} and {@link #write} before the network and memory. Held by the machine and never indexed
      * by memory; {@code null} for a machine with no vid, which has no address to answer for.
      */
-    default MachineSpace space() {
-        return null;
-    }
+    MachineSpace space();
 
     /**
      * Bind this machine's sphere — {@link #bootstrap()} does, once per machine.
      */
-    default Machine space(final MachineSpace space) {
-        return this;
-    }
+    Machine space(final MachineSpace space);
 
     /**
      * Mount this machine's own data level and bind its sphere. The data level is a space with pattern {@code <vid>/#},
@@ -1048,6 +1040,16 @@ public interface Machine extends Rec, AutoCloseable {
                 if (null == this.memory)
                     this.memory = new BasicMemory();
                 return this.memory;
+            }
+
+            @Override
+            public MachineSpace space() {
+                return null;
+            }
+
+            @Override
+            public Machine space(final MachineSpace space) {
+                return this;
             }
 
             private Network network = null;
